@@ -1,63 +1,127 @@
 {
   "name": "AI Quantitative Trading Techniques",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "created": "2026-03-10",
   "last_updated": "2026-03-10",
-  "description": "Master index of categorized AI/ML techniques for quantitative stock analysis",
+  "description": "Master index of categorized AI/ML techniques for quantitative stock analysis. Compiled from multi-team research operation with independent verification.",
+  "final_report": "../../../storage/api-tools/sonnet-research-api/results/final_report.md",
   "categories": [
     {
       "id": "ml-trading",
       "name": "Machine Learning Trading Strategies",
       "file": "categories/ml-trading.json",
-      "technique_count": 6
+      "technique_count": 6,
+      "description": "Supervised, unsupervised, and reinforcement learning approaches for trade signal generation and strategy discovery.",
+      "populated_by": ["TEAM-1", "TEAM-3"],
+      "verified": true
     },
     {
       "id": "portfolio-opt",
       "name": "AI Portfolio Optimization",
       "file": "categories/portfolio-opt.json",
-      "technique_count": 7
+      "technique_count": 7,
+      "description": "AI-driven portfolio construction, asset allocation, rebalancing, and multi-objective optimization.",
+      "populated_by": ["TEAM-1", "TEAM-2", "TEAM-3", "TEAM-4"],
+      "verified": true
     },
     {
       "id": "risk-mgmt",
       "name": "AI Risk Management",
       "file": "categories/risk-mgmt.json",
-      "technique_count": 5
+      "technique_count": 5,
+      "description": "ML methods for risk modeling, tail-risk estimation, stress testing, anomaly detection, and dynamic hedging.",
+      "populated_by": ["TEAM-1", "TEAM-3"],
+      "verified": true
     },
     {
       "id": "data-infra",
       "name": "Data Pipelines & Infrastructure",
       "file": "categories/data-infra.json",
-      "technique_count": 6
+      "technique_count": 6,
+      "description": "Feature stores, MLOps, backtesting frameworks, data versioning, and model serving for quantitative finance.",
+      "populated_by": ["TEAM-2", "TEAM-4"],
+      "verified": true
     },
     {
       "id": "alt-data",
       "name": "Alternative Data Sources",
       "file": "categories/alt-data.json",
-      "technique_count": 6
+      "technique_count": 6,
+      "description": "Non-traditional data sources including satellite imagery, credit card data, web scraping, geolocation, and ESG signals.",
+      "populated_by": ["TEAM-1", "TEAM-4"],
+      "verified": true
     },
     {
       "id": "hft",
       "name": "High-Frequency Trading",
       "file": "categories/hft.json",
-      "technique_count": 5
+      "technique_count": 5,
+      "description": "AI/ML for microsecond-scale trading: order book modeling, latency optimization, and adaptive execution.",
+      "populated_by": ["TEAM-1", "TEAM-4"],
+      "verified": true
     },
     {
       "id": "nlp-sentiment",
       "name": "NLP & Sentiment Analysis",
       "file": "categories/nlp-sentiment.json",
-      "technique_count": 4
+      "technique_count": 4,
+      "description": "Financial text analysis: earnings calls, news sentiment, SEC filing parsing, and LLM-based market analysis.",
+      "populated_by": ["TEAM-1", "TEAM-3"],
+      "verified": true
     },
     {
       "id": "xai-governance",
       "name": "Explainable AI & Governance",
       "file": "categories/xai-governance.json",
-      "technique_count": 9
+      "technique_count": 9,
+      "description": "Model interpretability, regulatory compliance (EU AI Act, SR 11-7), audit trails, and governance frameworks.",
+      "populated_by": ["TEAM-1", "TEAM-2", "TEAM-3", "TEAM-4"],
+      "verified": true
     }
   ],
+  "research_files": {
+    "team1_research": "../../../storage/api-tools/sonnet-research-api/results/team1_research.json",
+    "team2_research": "../../../storage/api-tools/sonnet-research-api/results/team2_research.json",
+    "team3_verification": "../../../storage/api-tools/sonnet-research-api/results/team3_verification.json",
+    "team4_verification": "../../../storage/api-tools/sonnet-research-api/results/team4_verification.json",
+    "team1_grade": "../../../storage/api-tools/sonnet-research-api/results/team1_grade.json",
+    "final_report": "../../../storage/api-tools/sonnet-research-api/results/final_report.md"
+  },
   "analysis_files": {
     "comparison": "analysis/technique-comparison.md",
     "performance_tracker": "analysis/performance-tracker.json"
   },
-  "contributing_teams": ["TEAM-1", "TEAM-2", "TEAM-3", "TEAM-4"],
-  "total_techniques": 48
+  "contributing_teams": [
+    {
+      "id": "TEAM-1",
+      "role": "Broad research (8 areas)",
+      "grade": "B+",
+      "score": 80
+    },
+    {
+      "id": "TEAM-2",
+      "role": "Deep research (4 areas)",
+      "grade": "B+",
+      "score": 79
+    },
+    {
+      "id": "TEAM-3",
+      "role": "Verification of Team 1",
+      "findings": "2 citation errors, 12 missing citations, 5 inaccuracies"
+    },
+    {
+      "id": "TEAM-4",
+      "role": "Verification of Team 2 + Head-to-Head",
+      "findings": "3 inaccuracies, 8 missing citations, head-to-head comparison"
+    },
+    {
+      "id": "TEAM-5",
+      "role": "Infrastructure + Consolidation",
+      "findings": "Grading script, schemas, final report compilation"
+    }
+  ],
+  "total_techniques": 48,
+  "total_references": 72,
+  "total_tools": 50,
+  "methodology": "Multi-team parallel research with independent verification. Teams 1 and 2 researched via web search. Teams 3 and 4 verified via citation checking, claim verification, and automated grading. Team 5 built infrastructure and compiled final report."
 }
