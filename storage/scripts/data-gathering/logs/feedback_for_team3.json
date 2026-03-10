@@ -1,0 +1,78 @@
+{
+  "from": "TEAM-2",
+  "to": "TEAM-3",
+  "iteration": 1,
+  "timestamp": "2026-03-10T21:30:00Z",
+  "priority_improvements": [
+    {
+      "priority": 1,
+      "description": "Fix DG-0002 (Wikipedia) silent failure — HTTP 403 returns empty results with no error indication",
+      "justification": "Wikipedia method appears to succeed but returns zero data. The wiki_api() function catches exceptions and returns {'error': ...}, but search_articles() checks for 'error' in data and returns [] — the HTTP 403 exception is caught at the urllib level before JSON parsing, so the error dict is created but then search_articles returns empty list. The run() function then proceeds with 0 results and reports success.",
+      "estimated_impact": "high",
+      "fix_suggestion": "Add an 'errors' field to the top-level output (like DG-0003 does). In wiki_api(), ensure error responses propagate to the final output. Update User-Agent to include contact email per Wikipedia policy: 'DataGatheringBot/1.0 (mailto:user@example.com)'"
+    },
+    {
+      "priority": 2,
+      "description": "Switch DG-0003 (arXiv) from HTTP to HTTPS",
+      "justification": "The arXiv API URL uses http://export.arxiv.org which may be blocked by proxies or firewalls. HTTPS is supported and should be the default.",
+      "estimated_impact": "high",
+      "fix_suggestion": "Change 'http://export.arxiv.org/api/query' to 'https://export.arxiv.org/api/query'"
+    },
+    {
+      "priority": 3,
+      "description": "Add retry logic with exponential backoff to all API-calling methods",
+      "justification": "All three API methods (DG-0001, DG-0002, DG-0003) make single attempts with no retries. Network transients cause complete failure.",
+      "estimated_impact": "high",
+      "fix_suggestion": "Implement a shared retry_request() utility function with configurable max_retries (default 3), base_delay (1s), and backoff_factor (2x). Apply to all urllib.request.urlopen calls."
+    },
+    {
+      "priority": 4,
+      "description": "Add rate limiting to DG-0001 (WebSearch) between query variants",
+      "justification": "DG-0001 fires 5 DuckDuckGo requests in rapid succession. This risks rate-limiting/blocking, especially under repeated use.",
+      "estimated_impact": "medium",
+      "fix_suggestion": "Add a configurable delay (default 1s) between search requests via time.sleep()."
+    },
+    {
+      "priority": 5,
+      "description": "Add degradation signaling to DG-0004 (Hybrid)",
+      "justification": "When sub-methods fail, the hybrid method returns results without indicating which sources were unavailable. Users cannot assess result completeness.",
+      "estimated_impact": "medium",
+      "fix_suggestion": "Add 'degraded_sources' and 'active_sources' fields to metadata. Set a 'degraded' boolean flag when any sub-method returns 0 results."
+    },
+    {
+      "priority": 6,
+      "description": "Improve DG-0001 query variant generation with domain-specific terms",
+      "justification": "Current query variants use simple word reordering and generic terms ('overview research', 'techniques methods'). Domain-aware variants would improve recall.",
+      "estimated_impact": "medium",
+      "fix_suggestion": "Add domain-specific expansion (e.g., for finance queries, add 'quantitative', 'algorithmic'; for AI queries, add 'machine learning', 'deep learning')."
+    }
+  ],
+  "bugs_found": [
+    "DG-0002: HTTP 403 from Wikipedia API silently returns empty results — no error in output",
+    "DG-0002: User-Agent string 'DataGatheringBot/1.0 (research tool)' does not comply with Wikipedia API policy (needs contact email)",
+    "DG-0003: Uses HTTP instead of HTTPS for arXiv API (http://export.arxiv.org)",
+    "DG-0003: arXiv requires 3-second delay between requests — no rate limiting implemented",
+    "DG-0004: normalize_url() prefix stripping order is wrong — 'https://www.' should be checked before 'https://' to avoid partial stripping"
+  ],
+  "new_methods_to_build": [
+    {
+      "method_id": "DG-0005",
+      "name": "Semantic Scholar Academic Search",
+      "description": "Use the Semantic Scholar API (api.semanticscholar.org) for academic paper search with citation graph traversal. Free, no key required, 100 req/5min rate limit.",
+      "based_on": "Team 1 research — multiple academic references that could be found via citation graph. Semantic Scholar has better uptime than arXiv API and provides citation counts, influential citations, and paper embeddings."
+    },
+    {
+      "method_id": "DG-0006",
+      "name": "FRED Economic Data Search",
+      "description": "Use the FRED API (Federal Reserve Economic Data) for macroeconomic indicators relevant to trading research. Free API key available.",
+      "based_on": "Team 1 research on Alternative Data and Risk Management — macro indicators are fundamental to many trading strategies discussed."
+    },
+    {
+      "method_id": "DG-0007",
+      "name": "GitHub Repository Search",
+      "description": "Use the GitHub API to find relevant open-source implementations, code examples, and tools. Team 1 identified 11 code examples, all on GitHub.",
+      "based_on": "Team 1 research — 11 code examples cited, all GitHub repos (FinRL, FinBERT, Qlib, SHAP, DeepLOB, etc.). A method to systematically find implementation code would complement academic search."
+    }
+  ],
+  "benchmark_insights": "Only DG-0001 (web search) is currently functional, producing 31 results in 5.68s. DG-0004 (hybrid) effectively degrades to DG-0001 when sub-methods fail. The cross-referencing and corroboration scoring in DG-0004 is the most promising feature but cannot be tested until DG-0002 and DG-0003 are fixed. The code quality across all methods is decent (75-82/100) but robustness is the critical gap (35-72/100). Priority for iteration 2 should be: fix existing methods first, then add new ones."
+}
