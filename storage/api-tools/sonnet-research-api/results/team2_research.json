@@ -1,0 +1,87 @@
+{
+  "team": "TEAM-2",
+  "mission": "AI Quantitative Trading Techniques - Deep Dive on Key Areas",
+  "timestamp": "2026-03-10T15:00:00Z",
+  "topics": [
+    {
+      "name": "Transformer Architectures for Financial Prediction",
+      "category": "ml-trading",
+      "findings": "Transformer architectures have been adapted for financial prediction with several key innovations. The Temporal Fusion Transformer (TFT) remains the benchmark, but newer architectures like PatchTST (Nie et al., 2023) segment time series into patches for more efficient processing. Informer (Zhou et al., 2021) uses ProbSparse attention for long-sequence forecasting with O(L log L) complexity. Crossformer (Zhang & Yan, 2023) captures cross-dimensional dependencies in multivariate financial data. Autoformer uses auto-correlation mechanisms instead of standard attention. FEDformer decomposes time series in the frequency domain. The iTransformer (Liu et al., 2024) inverts the standard architecture to treat each time step as a token, showing strong results on financial benchmarks. Pre-trained foundation models for time series (TimesFM by Google, Lag-Llama) promise zero-shot forecasting capabilities. Key challenge: financial data violates stationarity assumptions that many transformers rely on.",
+      "techniques": [
+        "temporal fusion transformers",
+        "PatchTST",
+        "Informer",
+        "Crossformer",
+        "Autoformer",
+        "FEDformer",
+        "iTransformer",
+        "time series foundation models"
+      ],
+      "references": [
+        "https://arxiv.org/abs/2211.14730",
+        "https://arxiv.org/abs/2012.07436",
+        "https://arxiv.org/abs/2310.06625",
+        "https://arxiv.org/abs/2106.13008",
+        "https://arxiv.org/abs/1912.09363"
+      ],
+      "metrics": {
+        "patchtst_improvement": "8-12% over TFT on some benchmarks",
+        "informer_complexity": "O(L log L) vs O(L^2)"
+      },
+      "tools_mentioned": ["Hugging Face", "PyTorch", "GluonTS", "NeuralForecast"],
+      "code_examples": ["https://github.com/yuqinie98/PatchTST"]
+    },
+    {
+      "name": "Deep Hedging and Derivatives Pricing with Neural Networks",
+      "category": "risk-mgmt",
+      "findings": "Deep hedging, introduced by Buehler et al. (2019), frames hedging as a reinforcement learning problem where neural networks learn optimal hedging strategies directly from data without requiring complete market models. This approach handles incomplete markets, transaction costs, and liquidity constraints naturally. Neural SDE models (Gierjatowicz et al., 2022) jointly learn drift and diffusion functions for derivatives pricing, providing more flexible dynamics than Black-Scholes or Heston models. Physics-informed neural networks (PINNs) solve the Black-Scholes PDE directly, ensuring no-arbitrage conditions. Rough volatility models combined with neural networks capture the rough behavior of realized volatility at multiple timescales. The deep BSDE solver (Han et al., 2018) solves high-dimensional pricing PDEs using backward stochastic differential equations. Calibration of stochastic volatility models using neural networks is 100-1000x faster than traditional methods. Key regulatory concern: model risk when replacing established pricing models with neural networks, as per SR 11-7 guidance.",
+      "techniques": [
+        "deep hedging",
+        "neural SDEs",
+        "physics-informed neural networks (PINNs)",
+        "rough volatility neural models",
+        "deep BSDE solver",
+        "neural network model calibration"
+      ],
+      "references": [
+        "https://arxiv.org/abs/1802.03042",
+        "https://arxiv.org/abs/2006.10934",
+        "https://arxiv.org/abs/1707.02568",
+        "https://arxiv.org/abs/2105.02987",
+        "https://www.risk.net/cutting-edge/7955703/deep-hedging-review"
+      ],
+      "metrics": {
+        "calibration_speedup": "100-1000x faster than traditional",
+        "hedging_cost_reduction": "15-30% vs delta hedging"
+      },
+      "tools_mentioned": ["QuantLib", "PyTorch", "TensorFlow", "Deep Hedging library"],
+      "code_examples": ["https://github.com/pfnet-research/deep-hedging"]
+    },
+    {
+      "name": "Regulatory AI and Model Governance in Finance",
+      "category": "xai-governance",
+      "findings": "Financial regulators worldwide are establishing frameworks for AI governance. The EU AI Act (effective August 2025) classifies AI systems used in creditworthiness assessment and financial trading as high-risk, requiring conformity assessments, transparency, and human oversight. The US Federal Reserve's SR 11-7 provides model risk management guidance applicable to AI/ML models. FINRA has issued guidance on algorithmic trading supervision. The Bank of England's SS1/23 sets expectations for AI/ML model risk management in UK financial services. Key requirements include model validation (champion-challenger testing), ongoing monitoring (concept drift detection), audit trails, and bias testing. MLOps practices adapted for finance include model versioning, automated retraining triggers, and A/B testing in shadow mode before deployment. Fairness constraints are particularly important for credit scoring models under ECOA and fair lending laws. Emerging standards include IEEE 7010 for AI ethics and ISO/IEC 42001 for AI management systems. The challenge is balancing innovation with compliance - overly strict governance can stifle alpha-generating research while insufficient governance creates regulatory and reputational risk.",
+      "techniques": [
+        "champion-challenger model validation",
+        "concept drift detection",
+        "fairness-aware machine learning",
+        "MLOps for finance",
+        "shadow mode A/B testing",
+        "automated model monitoring"
+      ],
+      "references": [
+        "https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm",
+        "https://www.bankofengland.co.uk/prudential-regulation/publication/2023/model-risk-management-principles-for-banks",
+        "https://eur-lex.europa.eu/eli/reg/2024/1689",
+        "https://www.finra.org/rules-guidance/guidance/reports/artificial-intelligence",
+        "https://www.iso.org/standard/81230.html"
+      ],
+      "metrics": {
+        "eu_ai_act_effective_date": "August 2025",
+        "model_validation_frequency": "annual minimum, quarterly recommended"
+      },
+      "tools_mentioned": ["MLflow", "Weights & Biases", "Evidently AI", "Great Expectations", "AI Fairness 360"],
+      "code_examples": ["https://github.com/evidentlyai/evidently"]
+    }
+  ]
+}

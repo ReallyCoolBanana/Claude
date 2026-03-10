@@ -34,15 +34,37 @@
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0003"
+    },
+    {
+      "id": "SCR-0004",
+      "name": "grade-research",
+      "filename": "grade_research.py",
+      "language": "python",
+      "category": "analysis",
+      "description": "Evaluates research JSON quality across five dimensions: citation count/quality, coverage breadth, depth (word count), and specificity (metrics, tools, code). Outputs a graded report with recommendations.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0005"
+    },
+    {
+      "id": "SCR-0005",
+      "name": "merge-research",
+      "filename": "merge_research.py",
+      "language": "python",
+      "category": "analysis",
+      "description": "Merges multiple team research JSON files by topic category. Deduplicates techniques using string similarity, identifies coverage gaps across teams, and outputs a unified research document.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0005"
     }
   ],
   "categories": {
     "data-collection": [],
-    "analysis": [],
+    "analysis": ["SCR-0004", "SCR-0005"],
     "automation": [],
     "utility": ["SCR-0001", "SCR-0002", "SCR-0003"]
   },
   "language_index": {
-    "python": ["SCR-0001", "SCR-0002", "SCR-0003"]
+    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005"]
   }
 }

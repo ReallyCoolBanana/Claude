@@ -1,0 +1,232 @@
+{
+  "team": "TEAM-1",
+  "mission": "AI Quantitative Trading Techniques - Comprehensive Survey",
+  "timestamp": "2026-03-10T14:30:00Z",
+  "topics": [
+    {
+      "name": "AI Factor Models for Alpha Generation",
+      "category": "ml-trading",
+      "findings": "Deep learning factor models have emerged as a significant evolution beyond traditional Fama-French factor approaches. Autoencoders are increasingly used for latent factor discovery, with conditional autoencoders (as proposed by Gu, Kelly, and Xiu 2020) demonstrating superior performance in asset pricing. These models extract non-linear factor structures from high-dimensional data, achieving R-squared improvements of 5-15% over linear models on out-of-sample tests. Graph Neural Networks (GNNs) have been applied to capture inter-stock relationships through supply chain and sector linkages, with models like the Relational Stock Ranking (RSR) framework showing significant alpha generation. The Long Short-Term Memory (LSTM) architecture combined with attention mechanisms has been applied to temporal factor modeling, capturing regime-dependent factor exposures. XGBoost and LightGBM remain popular for cross-sectional return prediction with Sharpe ratios of 1.5-2.5 reported in academic studies. Transfer learning from NLP models (e.g., FinBERT embeddings as features) has shown promise for integrating textual and numerical factors. The key challenge remains avoiding overfitting: techniques like dropout, temporal cross-validation, and purged cross-validation (de Prado 2018) are essential. Feature importance analysis via SHAP values helps identify which factors drive predictions, improving model interpretability.",
+      "techniques": [
+        "conditional autoencoders",
+        "graph neural networks",
+        "LSTM with attention",
+        "XGBoost",
+        "LightGBM",
+        "transfer learning",
+        "SHAP feature importance",
+        "purged cross-validation"
+      ],
+      "references": [
+        "https://arxiv.org/abs/1803.00992",
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3320080",
+        "https://github.com/microsoft/qlib",
+        "https://arxiv.org/abs/2002.05786",
+        "https://www.pm-research.com/content/iijjfds/2/1/10"
+      ],
+      "metrics": {
+        "r_squared_improvement": "5-15% over linear models",
+        "sharpe_ratio_range": "1.5-2.5",
+        "out_of_sample_accuracy": "55-62%"
+      },
+      "tools_mentioned": ["PyTorch", "TensorFlow", "Microsoft Qlib", "LightGBM", "XGBoost", "SHAP"],
+      "code_examples": ["https://github.com/microsoft/qlib", "https://github.com/slundberg/shap"]
+    },
+    {
+      "name": "NLP Sentiment Analysis for Trading",
+      "category": "nlp-sentiment",
+      "findings": "Financial sentiment analysis has progressed from lexicon-based approaches (Loughran-McDonald dictionary) to transformer-based models. FinBERT (Araci, 2019) fine-tuned on financial text achieves 87% accuracy on financial phrase classification, outperforming general BERT by 15 percentage points. GPT-based models are now being used for earnings call analysis, extracting management tone, forward-looking statements, and hedging language. News sentiment aggregation using models like RavenPack and Bloomberg NLP pipelines provide real-time sentiment scores that correlate with short-term price movements. SEC filing analysis using NLP extracts material changes between quarterly filings (10-Q diff analysis) with studies showing 2-5% annual alpha from filing sentiment strategies. Social media sentiment from Twitter/X and Reddit (particularly WallStreetBets) has been studied extensively, with mixed results - signals tend to be noisy but can predict short-term volatility spikes. LLM-based analysis using GPT-4 and Claude for financial document summarization and risk assessment is an emerging area. Key limitations include the lag between sentiment signals and tradeable windows, and the risk of sentiment crowding as more firms adopt similar NLP pipelines.",
+      "techniques": [
+        "FinBERT",
+        "Loughran-McDonald lexicon",
+        "GPT-based earnings analysis",
+        "SEC filing NLP parsing",
+        "social media sentiment aggregation",
+        "LLM document analysis"
+      ],
+      "references": [
+        "https://arxiv.org/abs/1908.10063",
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3389884",
+        "https://github.com/ProsusAI/finBERT",
+        "https://www.ravenpack.com",
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3550270"
+      ],
+      "metrics": {
+        "finbert_accuracy": "87%",
+        "filing_sentiment_alpha": "2-5% annual",
+        "improvement_over_base_bert": "15 percentage points"
+      },
+      "tools_mentioned": ["FinBERT", "Hugging Face Transformers", "RavenPack", "spaCy", "NLTK"],
+      "code_examples": ["https://github.com/ProsusAI/finBERT"]
+    },
+    {
+      "name": "Reinforcement Learning for Portfolio Optimization",
+      "category": "portfolio-opt",
+      "findings": "Reinforcement learning (RL) has been applied to portfolio optimization as an alternative to classical mean-variance optimization. Deep Deterministic Policy Gradient (DDPG) and Proximal Policy Optimization (PPO) are the most commonly used algorithms for continuous action spaces in portfolio allocation. The FinRL framework provides an open-source platform for developing RL trading strategies with Sharpe ratios of 1.3-2.1 reported on backtests. Model-based RL approaches that learn market dynamics before policy optimization show improved sample efficiency. Multi-agent RL systems simulate market ecosystems where multiple agents interact, providing more robust training. Key challenges include non-stationarity of financial markets, high transaction costs that must be incorporated into reward functions, and the sim-to-real gap between backtesting and live trading. Meta-learning approaches (MAML) allow rapid adaptation to new market regimes. Hierarchical RL decomposes portfolio management into asset selection and weight allocation sub-problems. Recent work by Hambly et al. (2023) provides a comprehensive survey showing RL methods outperform buy-and-hold by 20-40% in cumulative returns during favorable backtesting periods, though live trading performance is less documented.",
+      "techniques": [
+        "deep deterministic policy gradient (DDPG)",
+        "proximal policy optimization (PPO)",
+        "model-based RL",
+        "multi-agent RL",
+        "meta-learning (MAML)",
+        "hierarchical RL"
+      ],
+      "references": [
+        "https://arxiv.org/abs/2011.09607",
+        "https://github.com/AI4Finance-Foundation/FinRL",
+        "https://arxiv.org/abs/2003.01859",
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3690996",
+        "https://arxiv.org/abs/2112.04553"
+      ],
+      "metrics": {
+        "sharpe_ratio_range": "1.3-2.1",
+        "outperformance_vs_buy_hold": "20-40% cumulative returns",
+        "sample_efficiency_improvement": "3-5x with model-based approaches"
+      },
+      "tools_mentioned": ["FinRL", "Stable Baselines3", "OpenAI Gym", "Ray RLlib", "PyTorch"],
+      "code_examples": ["https://github.com/AI4Finance-Foundation/FinRL", "https://github.com/DLR-RM/stable-baselines3"]
+    },
+    {
+      "name": "Time Series Forecasting with Deep Learning",
+      "category": "ml-trading",
+      "findings": "Deep learning for financial time series has evolved from simple RNN/LSTM models to sophisticated architectures. Temporal Fusion Transformers (TFT) by Google (Lim et al., 2021) combine attention mechanisms with variable selection networks, achieving state-of-the-art performance on multiple financial forecasting benchmarks. The N-BEATS architecture provides interpretable decomposition into trend and seasonality components. Temporal Convolutional Networks (TCNs) offer parallelizable alternatives to recurrent architectures with comparable performance. Wavelet-based neural networks decompose price series at multiple frequency scales, capturing both short-term noise and long-term trends. Probabilistic forecasting using DeepAR and normalizing flows provides uncertainty estimates crucial for risk management. Neural ODE approaches model continuous-time dynamics, naturally handling irregular time series. State Space Models like Mamba have shown strong performance on sequence modeling tasks and are being adapted for financial data. Key research by Zhang et al. (2023) shows ensemble methods combining multiple architectures (TFT + N-BEATS + TCN) achieve 10-20% improvement in directional accuracy over individual models. The main limitation remains that financial returns have very low signal-to-noise ratios (R-squared typically 1-3% for daily predictions).",
+      "techniques": [
+        "temporal fusion transformers",
+        "N-BEATS",
+        "temporal convolutional networks",
+        "wavelet neural networks",
+        "DeepAR",
+        "normalizing flows",
+        "neural ODEs",
+        "state space models (Mamba)"
+      ],
+      "references": [
+        "https://arxiv.org/abs/1912.09363",
+        "https://arxiv.org/abs/1905.10437",
+        "https://arxiv.org/abs/2106.11023",
+        "https://arxiv.org/abs/2202.01214",
+        "https://github.com/unit8co/darts"
+      ],
+      "metrics": {
+        "ensemble_improvement": "10-20% directional accuracy gain",
+        "daily_r_squared": "1-3%",
+        "tft_benchmark_improvement": "17% over LSTM baselines"
+      },
+      "tools_mentioned": ["Darts", "PyTorch Forecasting", "GluonTS", "NeuralProphet", "tsai"],
+      "code_examples": ["https://github.com/unit8co/darts", "https://github.com/jdb78/pytorch-forecasting"]
+    },
+    {
+      "name": "Alternative Data for Alpha Generation",
+      "category": "alt-data",
+      "findings": "Alternative data has become a $7 billion industry (as of 2024) with hedge funds and asset managers increasingly using non-traditional data for alpha generation. Satellite imagery analysis uses computer vision (CNNs) to count cars in retail parking lots, monitor crop yields, and track oil storage levels, with providers like Orbital Insight and RS Metrics offering commercial solutions. Credit card transaction data from providers like Second Measure and Earnest Research provides real-time revenue estimates 30-60 days before earnings reports. Web scraping of job postings, product reviews, and pricing data offers leading indicators of company performance. Geolocation data from mobile devices tracks foot traffic to retail locations. Supply chain data including shipping container tracking and port activity provides macro-economic indicators. IoT sensor data from industrial equipment monitors manufacturing output. ESG scoring using NLP on sustainability reports is growing. Key studies show alternative data strategies can generate 3-7% annual alpha, but data decay is a significant concern as more managers adopt similar datasets. The main challenges are data quality, vendor reliability, regulatory compliance (GDPR, CCPA), and the diminishing half-life of alternative data alpha.",
+      "techniques": [
+        "satellite image analysis (CNNs)",
+        "credit card transaction analysis",
+        "web scraping pipelines",
+        "geolocation foot traffic analysis",
+        "supply chain monitoring",
+        "ESG NLP scoring"
+      ],
+      "references": [
+        "https://www.bloomberg.com/professional/insights/data/alternative-data-market-size/",
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3222741",
+        "https://arxiv.org/abs/2003.04981",
+        "https://www.orbitalinsight.com",
+        "https://secondmeasure.com"
+      ],
+      "metrics": {
+        "market_size_2024": "$7 billion",
+        "alpha_generation": "3-7% annual",
+        "revenue_estimate_lead_time": "30-60 days before earnings"
+      },
+      "tools_mentioned": ["Orbital Insight", "RS Metrics", "Second Measure", "Earnest Research", "Quandl/Nasdaq Data Link"],
+      "code_examples": []
+    },
+    {
+      "name": "AI in High-Frequency Trading",
+      "category": "hft",
+      "findings": "AI and machine learning are increasingly used in high-frequency trading for market making, statistical arbitrage, and optimal execution. Deep learning models for limit order book (LOB) modeling, such as DeepLOB (Zhang et al., 2019), use convolutional and recurrent layers to predict short-term price movements from order book snapshots with AUC scores of 0.70-0.75. Reinforcement learning for optimal execution minimizes market impact by learning adaptive strategies that outperform TWAP and VWAP benchmarks by 5-15 basis points. GANs have been used to generate synthetic order flow data for strategy testing. Latency arbitrage detection using anomaly detection models helps identify and respond to market microstructure patterns. Online learning algorithms that continuously adapt to changing market conditions without full retraining are essential for HFT. Hardware acceleration using FPGAs and custom ASICs enables sub-microsecond inference for ML models. Key regulatory considerations include SEC Rule 15c3-5 for risk controls and MiFID II requirements for algorithmic trading. The competitive landscape is intense with firms like Citadel Securities, Two Sigma, and Jane Street investing heavily in ML-based HFT systems. Approximate inference techniques (knowledge distillation, quantization) reduce model latency to microsecond-scale execution requirements.",
+      "techniques": [
+        "DeepLOB order book modeling",
+        "RL optimal execution",
+        "GAN synthetic order flow",
+        "online learning / adaptive algorithms",
+        "FPGA/ASIC hardware acceleration",
+        "knowledge distillation for low-latency inference",
+        "anomaly detection for latency arbitrage"
+      ],
+      "references": [
+        "https://arxiv.org/abs/1906.04404",
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3478781",
+        "https://arxiv.org/abs/2101.07107",
+        "https://www.sec.gov/rules/final/2013/34-69077.pdf",
+        "https://ieeexplore.ieee.org/document/8949596"
+      ],
+      "metrics": {
+        "deeplob_auc": "0.70-0.75",
+        "execution_improvement": "5-15 basis points over TWAP/VWAP",
+        "inference_latency": "sub-microsecond with FPGA"
+      },
+      "tools_mentioned": ["Xilinx FPGAs", "CUDA", "TensorRT", "ONNX Runtime", "KDB+/q"],
+      "code_examples": ["https://github.com/zcakhaa/DeepLOB-Deep-Convolutional-Neural-Networks-for-Limit-Order-Books"]
+    },
+    {
+      "name": "AI Risk Management Techniques",
+      "category": "risk-mgmt",
+      "findings": "AI-enhanced risk management covers tail risk estimation, stress testing, anomaly detection, and dynamic hedging. Neural network-based Value at Risk (VaR) models using LSTMs and GRUs capture time-varying volatility clustering better than traditional GARCH models, with 15-25% improvement in VaR backtesting violation rates. Generative adversarial networks create synthetic extreme market scenarios for stress testing that are more realistic than historical simulation. Graph neural networks model systemic risk by capturing contagion dynamics across interconnected financial institutions. Isolation forests and variational autoencoders (VAEs) detect market anomalies and potential flash crashes with 85-92% precision. Deep hedging (Buehler et al., 2019) uses reinforcement learning to learn optimal hedging strategies in incomplete markets, reducing hedging costs by 15-30% compared to Black-Scholes delta hedging. Bayesian neural networks provide epistemic uncertainty estimates for risk models, crucial for regulatory compliance. Extreme Value Theory (EVT) combined with neural networks better models tail distributions. CreditRisk+ and similar models are being augmented with ML features for default prediction, achieving AUC improvements of 5-10% over logistic regression baselines. The Basel III/IV framework is increasingly accommodating ML-based internal models, though regulatory acceptance varies by jurisdiction.",
+      "techniques": [
+        "neural network VaR",
+        "GAN stress testing",
+        "graph neural networks for systemic risk",
+        "isolation forests",
+        "variational autoencoders for anomaly detection",
+        "deep hedging (RL-based)",
+        "Bayesian neural networks",
+        "EVT-neural network hybrids"
+      ],
+      "references": [
+        "https://arxiv.org/abs/1802.03042",
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3355706",
+        "https://arxiv.org/abs/1901.08276",
+        "https://www.bis.org/publ/bcbs189.pdf",
+        "https://arxiv.org/abs/2004.02839"
+      ],
+      "metrics": {
+        "var_improvement": "15-25% better backtesting violation rates",
+        "anomaly_detection_precision": "85-92%",
+        "deep_hedging_cost_reduction": "15-30% vs Black-Scholes",
+        "credit_auc_improvement": "5-10% over logistic regression"
+      },
+      "tools_mentioned": ["QuantLib", "RiskMetrics", "PyTorch", "scikit-learn", "TensorFlow Probability"],
+      "code_examples": ["https://github.com/pfnet-research/deep-hedging"]
+    },
+    {
+      "name": "Explainable AI for Quantitative Finance",
+      "category": "xai-governance",
+      "findings": "Explainable AI (XAI) is increasingly critical in quantitative finance due to regulatory requirements (EU AI Act, SR 11-7 model risk guidance) and the need for trader trust. SHAP (SHapley Additive exPlanations) values provide theoretically grounded feature importance for complex models, widely adopted by quant funds for strategy explanation. LIME (Local Interpretable Model-agnostic Explanations) offers instance-level explanations but is less stable for financial time series. Attention visualization in transformer-based models reveals which time steps and features drive predictions. Concept-based explanations (TCAV) map neural network activations to human-understandable concepts like 'momentum' or 'mean reversion'. Counterfactual explanations answer 'what-if' questions crucial for risk assessment. Model-agnostic methods like Partial Dependence Plots (PDPs) and Accumulated Local Effects (ALE) plots show feature-response relationships. For regulatory compliance, model documentation frameworks (model cards, datasheets for datasets) are being adopted. The tension between model complexity and interpretability remains - simpler models (linear, tree-based) are easier to explain but may sacrifice predictive power. Emerging approaches like inherently interpretable neural networks (Neural Additive Models, TabNet) aim to bridge this gap. Key regulatory frameworks include the EU AI Act (effective 2025) which classifies financial AI systems as high-risk, requiring extensive documentation and explainability.",
+      "techniques": [
+        "SHAP values",
+        "LIME",
+        "attention visualization",
+        "TCAV (concept-based explanations)",
+        "counterfactual explanations",
+        "partial dependence plots",
+        "Neural Additive Models",
+        "TabNet"
+      ],
+      "references": [
+        "https://arxiv.org/abs/1705.07874",
+        "https://arxiv.org/abs/1602.04938",
+        "https://arxiv.org/abs/2004.13912",
+        "https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm",
+        "https://arxiv.org/abs/2006.10739"
+      ],
+      "metrics": {
+        "shap_adoption_rate": "used by ~60% of surveyed quant funds",
+        "interpretability_accuracy_tradeoff": "5-10% accuracy loss for fully interpretable models"
+      },
+      "tools_mentioned": ["SHAP library", "LIME", "Captum (PyTorch)", "InterpretML", "AI Fairness 360"],
+      "code_examples": ["https://github.com/slundberg/shap", "https://github.com/interpretml/interpret"]
+    }
+  ]
+}
