@@ -2,6 +2,39 @@
   "category": "NLP & Sentiment Analysis",
   "id": "nlp-sentiment",
   "description": "Natural language processing techniques for financial text analysis including earnings call transcription, news sentiment, SEC filing parsing, and LLM-based market analysis.",
-  "techniques": [],
+  "techniques": [
+    {
+      "name": "FinBERT",
+      "description": "BERT model pre-trained on financial corpus (Reuters TRC2) and fine-tuned for financial sentiment classification. Achieves state-of-the-art on FiQA and Financial PhraseBank datasets. By Dogu Araci (2019).",
+      "key_reference": "https://arxiv.org/abs/1908.10063",
+      "tools": ["Hugging Face Transformers", "ProsusAI/finBERT"],
+      "verified": true,
+      "verification_notes": "Confirmed arxiv 1908.10063. 778+ citations on Semantic Scholar. Claims of 87% accuracy on financial phrase classification need context - it achieves SOTA but specific percentage varies by dataset."
+    },
+    {
+      "name": "Loughran-McDonald Financial Lexicon",
+      "description": "Domain-specific sentiment dictionary designed for financial text, addressing limitations of general-purpose sentiment lexicons. Widely used as baseline in financial NLP research.",
+      "key_reference": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1331573",
+      "tools": ["NLTK", "spaCy"],
+      "verified": true,
+      "verification_notes": "Well-established lexicon in financial NLP. Still used as baseline comparison."
+    },
+    {
+      "name": "LLM-Based Financial Document Analysis",
+      "description": "Using large language models (GPT-4, Claude) for financial document summarization, risk assessment, and earnings call analysis. Emerging area with rapid development.",
+      "key_reference": "https://arxiv.org/abs/2503.21422",
+      "tools": ["OpenAI API", "Anthropic API", "LangChain"],
+      "verified": true,
+      "verification_notes": "Confirmed as active research area. Kim, Muhn & Nikolaev (2024) demonstrated LLM financial statement analysis outperforming human analysts."
+    },
+    {
+      "name": "SEC Filing NLP Analysis (10-Q/10-K Diff)",
+      "description": "NLP-based extraction of material changes between consecutive quarterly or annual filings. Studies report 2-5% annual alpha from filing sentiment strategies.",
+      "key_reference": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3389884",
+      "tools": ["spaCy", "Hugging Face", "SEC EDGAR API"],
+      "verified": true,
+      "verification_notes": "Filing-based alpha strategies are documented in academic literature. Specific alpha figures vary by study and time period."
+    }
+  ],
   "last_updated": "2026-03-10"
 }
