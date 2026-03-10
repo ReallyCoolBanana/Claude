@@ -5,23 +5,27 @@ The ResearchOrchestrator coordinates multiple SonnetResearcher instances,
 dispatching research tasks through a RequestQueue for parallel execution.
 """
 
+from __future__ import annotations
+
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Callable, Optional
+from datetime import datetime, timezone
+from typing import Any, Callable, Optional
 
-from .client import SonnetResearchClient
-from .config import ANTHROPIC_API_KEY, RESULTS_DIR
-from .queue_manager import RequestQueue
-from .researcher import SonnetResearcher
+from client import SonnetResearchClient
+from config import ANTHROPIC_API_KEY, RESULTS_DIR
+from queue_manager import RequestQueue
+from researcher import SonnetResearcher
 
 
 @dataclass
 class MissionResult:
     """Result of a completed research mission."""
+
     mission_id: str
     objective: str
-    results: list
+    results: list[dict[str, Any]]
     combined_summary: str
     total_tokens: int
     duration_seconds: float
@@ -33,126 +37,133 @@ class ResearchOrchestrator:
     Main entry point for dispatching research tasks to Claude Sonnet.
 
     Creates and coordinates SonnetResearcher instances, manages the request
-    queue, and collects results. Designed to be used by agentic teams
+    queue, and collects results.  Designed to be used by agentic teams
     running inside Claude Code.
 
-    Usage:
+    Usage::
+
         orchestrator = ResearchOrchestrator()
         results = orchestrator.spawn_researchers(["topic1", "topic2"])
         # or
         result = orchestrator.run_research_mission(mission_dict)
     """
 
-    def __init__(self, api_key: Optional[str] = None):
-        """
-        Initialize the orchestrator with a Sonnet client and request queue.
+    def __init__(self, api_key: Optional[str] = None) -> None:
+        """Initialize the orchestrator with a Sonnet client and request queue.
 
         Args:
-            api_key: Anthropic API key. Falls back to env var if not provided.
+            api_key: Anthropic API key.  Falls back to the ANTHROPIC_API_KEY
+                     environment variable when not provided.
         """
         self._api_key = api_key or ANTHROPIC_API_KEY
         self._client = SonnetResearchClient(api_key=self._api_key)
         self._queue = RequestQueue()
-        self._progress_callback: Optional[Callable] = None
+        self._progress_callback: Optional[Callable[[int, int, dict[str, Any]], None]] = None
         self._current_mission_id: Optional[str] = None
-        self._mission_status: dict = {}
-        self._researchers: list[SonnetResearcher] = []
+        self._mission_status: dict[str, Any] = {}
 
-    def on_progress(self, callback: Callable):
-        """
-        Register a progress callback.
+    # ------------------------------------------------------------------
+    # Progress / status helpers
+    # ------------------------------------------------------------------
+
+    def on_progress(self, callback: Callable[[int, int, dict[str, Any]], None]) -> None:
+        """Register a progress callback.
 
         Args:
-            callback: Function receiving (completed: int, total: int, latest_result: dict)
+            callback: Function receiving ``(completed, total, latest_result)``.
         """
         self._progress_callback = callback
 
-    def get_mission_status(self) -> dict:
-        """
-        Get the current mission progress.
+    def get_mission_status(self) -> dict[str, Any]:
+        """Return a snapshot of the current mission progress.
 
         Returns:
-            Dict with mission_id, status, completed, total, and elapsed_seconds.
+            Dict with *mission_id*, *status*, *completed*, *total*, and
+            *elapsed_seconds*.
         """
         return dict(self._mission_status)
+
+    # ------------------------------------------------------------------
+    # spawn_researchers
+    # ------------------------------------------------------------------
 
     def spawn_researchers(
         self,
         topics: list[str],
         depth: str = "standard",
         max_concurrent: int = 3,
-    ) -> list[dict]:
-        """
-        Create one SonnetResearcher per topic and process all in parallel.
+    ) -> list[dict[str, Any]]:
+        """Create one ``SonnetResearcher`` per topic and run them.
+
+        Each researcher is executed sequentially via its own ``research()``
+        call (which internally performs multi-step querying at the requested
+        depth).  The queue is available for lower-level batching inside each
+        researcher if needed.
 
         Args:
             topics: List of research topics.
-            depth: Research depth - "standard" or "deep".
-            max_concurrent: Max parallel requests through the queue.
+            depth: Research depth -- ``"quick"``, ``"standard"``, or ``"deep"``.
+            max_concurrent: Maximum parallel requests through the queue.
 
         Returns:
             List of research result dicts from each researcher.
         """
-        self._researchers = []
-        results = []
-
-        # Create a researcher for each topic and enqueue their work
-        for idx, topic in enumerate(topics):
-            researcher = SonnetResearcher(client=self._client, topic=topic)
-            self._researchers.append(researcher)
-
-            request_id = f"research-{uuid.uuid4().hex[:8]}-{idx}"
-            self._queue.enqueue(
-                request_id=request_id,
-                prompt=f"Research the following topic in depth: {topic}",
-                system_prompt=(
-                    f"You are a thorough research assistant. Conduct {depth}-depth "
-                    f"research on the given topic. Provide structured findings with "
-                    f"key facts, analysis, and sources where possible."
-                ),
-                priority=0,
-                callback=None,
-            )
-
-        # Process the queue
-        self._queue.process_queue(self._client, max_concurrent=max_concurrent)
-
-        # Collect results from each researcher
-        completed = 0
+        results: list[dict[str, Any]] = []
         total = len(topics)
-        for researcher in self._researchers:
-            result = researcher.research(researcher._topic, depth=depth)
+
+        self._mission_status = {
+            "mission_id": f"spawn-{uuid.uuid4().hex[:8]}",
+            "status": "running",
+            "completed": 0,
+            "total": total,
+            "elapsed_seconds": 0.0,
+        }
+        start_time = time.time()
+
+        for idx, topic in enumerate(topics):
+            researcher = SonnetResearcher(client=self._client)
+            result = researcher.research(topic, depth=depth)
             formatted = researcher.format_results()
             results.append(formatted)
 
-            completed += 1
-            if self._progress_callback:
-                self._progress_callback(completed, total, formatted)
+            self._mission_status["completed"] = idx + 1
+            self._mission_status["elapsed_seconds"] = round(time.time() - start_time, 2)
 
+            if self._progress_callback:
+                self._progress_callback(idx + 1, total, formatted)
+
+        self._mission_status["status"] = "completed"
+        self._mission_status["elapsed_seconds"] = round(time.time() - start_time, 2)
         return results
 
-    def run_research_mission(self, mission: dict) -> MissionResult:
-        """
-        Execute a structured research mission.
+    # ------------------------------------------------------------------
+    # run_research_mission
+    # ------------------------------------------------------------------
+
+    def run_research_mission(self, mission: dict[str, Any]) -> MissionResult:
+        """Execute a structured research mission.
 
         Args:
             mission: Dict with keys:
-                - objective (str): High-level mission objective
-                - sub_tasks (list[dict]): Each with topic, depth, priority
-                - max_concurrent (int): Parallel limit (default 3)
-                - output_format (str): "combined" or "individual" (default "combined")
+
+                * **objective** (*str*) -- High-level mission objective.
+                * **sub_tasks** (*list[dict]*) -- Each dict must contain
+                  ``topic`` and optionally ``depth`` and ``priority``.
+                * **max_concurrent** (*int*, default 3) -- Parallel limit.
+                * **output_format** (*str*, ``"combined"`` or ``"individual"``,
+                  default ``"combined"``).
 
         Returns:
-            MissionResult dataclass with all results and metadata.
+            A :class:`MissionResult` dataclass with all results and metadata.
         """
         start_time = time.time()
         mission_id = f"mission-{uuid.uuid4().hex[:12]}"
         self._current_mission_id = mission_id
 
-        objective = mission.get("objective", "Research mission")
-        sub_tasks = mission.get("sub_tasks", [])
-        max_concurrent = mission.get("max_concurrent", 3)
-        output_format = mission.get("output_format", "combined")
+        objective: str = mission.get("objective", "Research mission")
+        sub_tasks: list[dict[str, Any]] = mission.get("sub_tasks", [])
+        max_concurrent: int = mission.get("max_concurrent", 3)
+        output_format: str = mission.get("output_format", "combined")
 
         total_tasks = len(sub_tasks)
         self._mission_status = {
@@ -163,66 +174,39 @@ class ResearchOrchestrator:
             "elapsed_seconds": 0.0,
         }
 
-        self._researchers = []
-        results = []
-
-        # Sort sub_tasks by priority (higher priority first)
+        # Sort sub-tasks by priority (higher priority first).
         sorted_tasks = sorted(
             sub_tasks, key=lambda t: t.get("priority", 0), reverse=True
         )
 
-        # Enqueue all tasks
+        results: list[dict[str, Any]] = []
+
         for idx, task in enumerate(sorted_tasks):
-            topic = task.get("topic", f"sub-task-{idx}")
-            depth = task.get("depth", "standard")
-            priority = task.get("priority", 0)
+            topic: str = task.get("topic", f"sub-task-{idx}")
+            depth: str = task.get("depth", "standard")
 
-            researcher = SonnetResearcher(client=self._client, topic=topic)
-            self._researchers.append((researcher, depth))
-
-            request_id = f"{mission_id}-task-{idx}"
-            self._queue.enqueue(
-                request_id=request_id,
-                prompt=f"Research the following topic: {topic}\nMission objective: {objective}",
-                system_prompt=(
-                    f"You are a research assistant working on a larger mission: {objective}. "
-                    f"Conduct {depth}-depth research on the given sub-topic. "
-                    f"Provide structured, detailed findings."
-                ),
-                priority=priority,
-                callback=None,
-            )
-
-        # Process queue in parallel
-        self._queue.process_queue(self._client, max_concurrent=max_concurrent)
-
-        # Collect results from researchers
-        for researcher, depth in self._researchers:
-            result = researcher.research(researcher._topic, depth=depth)
+            researcher = SonnetResearcher(client=self._client)
+            result = researcher.research(topic, depth=depth)
             formatted = researcher.format_results()
             results.append(formatted)
 
-            self._mission_status["completed"] += 1
-            self._mission_status["elapsed_seconds"] = time.time() - start_time
+            self._mission_status["completed"] = idx + 1
+            self._mission_status["elapsed_seconds"] = round(time.time() - start_time, 2)
 
             if self._progress_callback:
-                self._progress_callback(
-                    self._mission_status["completed"],
-                    total_tasks,
-                    formatted,
-                )
+                self._progress_callback(idx + 1, total_tasks, formatted)
 
-        # Build combined summary
+        # Build combined summary if requested.
         if output_format == "combined":
             combined_summary = self._build_combined_summary(objective, results)
         else:
             combined_summary = ""
 
         duration = time.time() - start_time
-        total_tokens = getattr(self._client, "total_tokens_used", 0)
+        total_tokens = self._client.total_input_tokens + self._client.total_output_tokens
 
         self._mission_status["status"] = "completed"
-        self._mission_status["elapsed_seconds"] = duration
+        self._mission_status["elapsed_seconds"] = round(duration, 2)
 
         return MissionResult(
             mission_id=mission_id,
@@ -231,28 +215,24 @@ class ResearchOrchestrator:
             combined_summary=combined_summary,
             total_tokens=total_tokens,
             duration_seconds=round(duration, 2),
-            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            timestamp=datetime.now(timezone.utc).isoformat(),
         )
 
-    def _build_combined_summary(self, objective: str, results: list[dict]) -> str:
-        """
-        Build a combined summary from all research results.
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
 
-        Args:
-            objective: The mission objective.
-            results: List of formatted result dicts.
-
-        Returns:
-            A combined markdown summary string.
-        """
+    @staticmethod
+    def _build_combined_summary(objective: str, results: list[dict[str, Any]]) -> str:
+        """Build a combined markdown summary from all research results."""
         sections = [f"# Research Mission: {objective}\n"]
 
         for idx, result in enumerate(results, 1):
             topic = result.get("topic", f"Topic {idx}")
             summary = result.get("summary", "No summary available.")
-            sections.append(f"## {idx}. {topic}\n\n{summary}\n")
+            depth = result.get("depth", "standard")
+            sections.append(f"## {idx}. {topic} (depth: {depth})\n\n{summary}\n")
 
-        sections.append(
-            f"\n---\n*Mission completed at {time.strftime('%Y-%m-%d %H:%M:%S UTC')}*\n"
-        )
+        ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        sections.append(f"\n---\n*Mission completed at {ts}*\n")
         return "\n".join(sections)

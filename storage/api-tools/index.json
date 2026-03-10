@@ -1,12 +1,29 @@
 {
   "version": "1.0",
   "last_updated": "2026-03-10",
-  "tools": [],
+  "tools": [
+    {
+      "id": "TOOL-0001",
+      "name": "Sonnet Research API",
+      "description": "Multi-agent research system using Claude Sonnet. Supports variable sub-agents, request queuing, priority scheduling, result sorting, and automated import into repo storage.",
+      "path": "sonnet-research-api/",
+      "category": "integration",
+      "auth_type": "api-key",
+      "date_added": "2026-03-10",
+      "team": "TEAM-0002",
+      "modules": ["client.py", "queue_manager.py", "researcher.py", "orchestrator.py", "sorter.py", "data_importer.py"],
+      "entry_point": "orchestrator.py",
+      "requires": ["anthropic"],
+      "tags": ["sonnet", "research", "multi-agent", "api", "queue"]
+    }
+  ],
   "categories": {
     "data-retrieval": [],
     "analysis": [],
     "communication": [],
-    "integration": []
+    "integration": ["TOOL-0001"]
   },
-  "auth_types": {}
+  "auth_types": {
+    "api-key": ["TOOL-0001"]
+  }
 }
