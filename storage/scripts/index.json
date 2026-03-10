@@ -1,12 +1,48 @@
 {
   "version": "1.0",
   "last_updated": "2026-03-10",
-  "scripts": [],
+  "scripts": [
+    {
+      "id": "SCR-0001",
+      "name": "validate-storage",
+      "filename": "validate-storage.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Comprehensive validation tool for the storage system. Checks schema validation, referential integrity, file existence, orphan detection, ID format, date format, required fields, duplicates, version validation, and length limits across all three subsections.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0003"
+    },
+    {
+      "id": "SCR-0002",
+      "name": "test-edge-cases",
+      "filename": "test-edge-cases.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Edge case and boundary testing suite for the storage system. Runs 35 tests covering malformed JSON, long descriptions, special characters, ID format violations, category mismatches, version field issues, and duplicate detection.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0003"
+    },
+    {
+      "id": "SCR-0003",
+      "name": "repair-storage",
+      "filename": "repair-storage.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Automated repair tool for common storage system issues. Fixes versions, dates, rebuilds category indexes, removes duplicates, truncates long descriptions, and ensures structural completeness. Supports --dry-run mode.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0003"
+    }
+  ],
   "categories": {
     "data-collection": [],
     "analysis": [],
     "automation": [],
-    "utility": []
+    "utility": ["SCR-0001", "SCR-0002", "SCR-0003"]
   },
-  "language_index": {}
+  "language_index": {
+    "python": ["SCR-0001", "SCR-0002", "SCR-0003"]
+  }
 }

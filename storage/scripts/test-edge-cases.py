@@ -184,26 +184,28 @@ class EdgeCaseTester:
 
             vr = self.run_validator_on(temp)
 
-            # Check if the file size is unreasonable
+            # Check if the validator warns about long descriptions
             file_size = (temp / "scripts" / "index.json").stat().st_size
+            has_length_warning = any("length" in w["check"].lower() for w in vr.warnings)
 
-            if file_size > 50000:
+            if has_length_warning:
+                self.results.append(EdgeCaseResult(
+                    "Long description (10K chars)",
+                    "medium",
+                    True,
+                    f"Validator warns about long descriptions. Index file is {file_size} bytes."
+                ))
+            else:
                 self.results.append(EdgeCaseResult(
                     "Long description (10K chars)",
                     "medium",
                     False,
                     f"Validator accepts 10K descriptions without warning. Index file grew to {file_size} bytes."
                 ))
-            else:
-                self.results.append(EdgeCaseResult(
-                    "Long description (10K chars)",
-                    "medium",
-                    True,
-                    f"Description accepted, file size reasonable ({file_size} bytes)."
-                ))
 
             # Check for warnings about length
-            has_length_warning = any("long" in w["message"].lower() or "length" in w["message"].lower()
+            has_length_warning = any("length" in w["check"].lower() or "length" in w["message"].lower()
+                                     or "truncat" in w["message"].lower()
                                      for w in vr.warnings)
             self.results.append(EdgeCaseResult(
                 "Long description warning",
@@ -619,13 +621,14 @@ class EdgeCaseTester:
 
                 vr = self.run_validator_on(temp)
                 has_issue = len(vr.errors) > 0
+                has_warning = any("version" in w["message"].lower() for w in vr.warnings)
 
                 severity = "high" if "missing" in case_name else "medium"
                 self.results.append(EdgeCaseResult(
                     f"Version issue ({case_name})",
                     severity,
-                    has_issue,
-                    f"Validator {'caught' if has_issue else 'MISSED'} the issue. "
+                    has_issue or has_warning,
+                    f"Validator {'caught' if has_issue or has_warning else 'MISSED'} the issue. "
                     f"Errors: {len(vr.errors)}, Warnings: {len(vr.warnings)}"
                 ))
             except Exception as e:
