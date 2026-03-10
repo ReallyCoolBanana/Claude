@@ -2,77 +2,70 @@
 
 ## Overview
 
-Sentiment analysis gauges the collective mood of market participants — investors, analysts, media, and the public — to identify stocks where positioning or expectations are extreme. It is most powerful as a contrarian or confirming signal alongside fundamental or technical analysis.
+Sentiment analysis gauges the mood and positioning of market participants to identify opportunities where crowd behavior creates mispricings. It works as both a contrarian tool (extreme sentiment often marks turning points) and a catalyst detector (shifts in sentiment can precede price moves).
 
-## Signal Categories
+## Sentiment Data Sources
 
 ### News Sentiment
-- **Earnings Coverage** — Tone of post-earnings media coverage. Overwhelmingly positive coverage on a stock that doesn't rally may indicate the good news is priced in.
-- **Analyst Commentary** — Track upgrades, downgrades, and target price changes. Clusters of revisions in one direction are meaningful.
-- **Event-Driven News** — M&A rumors, regulatory actions, product launches, management changes.
-- **Tone Scoring** — Classify articles as positive, negative, or neutral. Track the ratio and direction of change over time.
+- **Earnings call tone** -- Positive/negative language shifts in management commentary
+- **Analyst reports** -- Rating changes, price target revisions, initiation of coverage
+- **Financial news** -- Frequency and tone of coverage (bullish hype vs. negative drumbeat)
+- **Press releases** -- Product launches, partnerships, regulatory approvals
 
 ### Social Media and Retail Sentiment
-- **Mentions Volume** — Unusual spikes in ticker mentions (Twitter/X, Reddit, StockTwits) can precede moves.
-- **Sentiment Polarity** — Is the conversation bullish or bearish? Extreme one-sidedness is a contrarian signal.
-- **Influencer Activity** — Prominent accounts or communities rallying around a name.
-- **Caution** — Social media is noisy. High volume + uniform sentiment is more meaningful than scattered mentions.
+- **Reddit / WallStreetBets** -- Retail interest surges, meme stock candidates
+- **Twitter/X finance community** -- Influencer mentions, trending tickers
+- **StockTwits** -- Bullish/bearish message ratios
+- **Google Trends** -- Search volume for ticker or company name
 
-### Insider Trading Signals
-- **Insider Buys** — Officers and directors purchasing shares with their own money is a strong bullish signal, especially clusters of buys.
-- **Insider Sells** — Less informative (insiders sell for many reasons), but large or unusual sales warrant attention.
-- **Form 4 Filings** — Monitor SEC filings for timely insider transaction data.
-- **Insider Buy/Sell Ratio** — Track over time; rising buy ratios across a sector can signal opportunity.
+### Insider Activity
+| Signal | Interpretation |
+|--------|---------------|
+| **Cluster buying** (multiple insiders buying) | Strong bullish signal; insiders see value |
+| **CEO/CFO buying** | Particularly meaningful; they know the business best |
+| **Insider selling** | Often routine (diversification, tax planning); less informative alone |
+| **Selling after long hold** | More concerning than scheduled sales |
+| **Form 4 filings** | Must be filed within 2 business days of transaction |
 
 ### Institutional Positioning
-- **13F Filings** — Quarterly snapshots of institutional holdings. Look for new positions by respected funds.
-- **Short Interest** — High short interest (% of float) can indicate bearish consensus or set up a squeeze.
-- **Put/Call Ratio** — Elevated put/call ratios suggest bearish positioning; extreme readings are contrarian bullish.
-- **Fund Flows** — Money moving into or out of sector ETFs signals institutional conviction.
+- **13F filings** -- Quarterly hedge fund holdings (delayed but shows conviction)
+- **Short interest** -- High short interest can signal bearish consensus or squeeze potential
+- **Put/call ratio** -- High ratio = bearish sentiment; extreme levels may be contrarian
+- **Fund flows** -- Money moving into/out of sector ETFs
 
-### Analyst Sentiment
-- **Consensus Rating** — Percentage of buy/hold/sell ratings.
-- **Estimate Revisions** — Are analysts raising or lowering earnings estimates? The direction and acceleration matter.
-- **Earnings Surprise History** — Companies that consistently beat estimates may have conservative guidance cultures.
+## Sentiment Indicators
 
-## Analysis Checklist
+### Fear and Greed Metrics
+- **VIX (Volatility Index)** -- Above 30 = fear, below 15 = complacency
+- **CNN Fear & Greed Index** -- Composite of market breadth, momentum, safe haven demand
+- **AAII Sentiment Survey** -- Retail investor bullish/bearish percentage
 
-1. **What is the consensus?** Summarize the prevailing sentiment (bullish, bearish, mixed).
-2. **How extreme is it?** Extreme sentiment is the signal — mild consensus is not actionable.
-3. **Is it contrarian or confirming?** Decide whether to trade against the crowd or with it based on your thesis.
-4. **What are insiders doing?** Check recent Form 4 filings for insider buys or sells.
-5. **What is institutional positioning?** Short interest, 13F changes, options activity.
-6. **Is there a catalyst for sentiment to shift?** Upcoming earnings, product launch, regulatory decision.
+### Contrarian Signals
+- Extreme bullish consensus often precedes corrections
+- Extreme bearish consensus often precedes rallies
+- "Magazine cover indicator" -- When mainstream media declares a trend, it may be ending
 
-## Common Pitfalls
+## Applying Sentiment Analysis
 
-- **Following the herd** — Sentiment analysis is most valuable when it reveals extremes to trade against, not when it confirms what everyone already believes.
-- **Social media noise** — A trending ticker is not a thesis. Filter for quality signals.
-- **Stale data** — 13F filings are delayed by up to 45 days. Insider filings are more timely.
-- **Sentiment without fundamentals** — Pure sentiment trades are speculative. Combine with at least one other method.
+### As a Primary Method
+1. Identify extreme sentiment readings (bullish or bearish).
+2. Confirm with price action (is sentiment already reflected in price?).
+3. Look for catalysts that could shift sentiment.
+4. Trade against the crowd when sentiment is at extremes.
 
-## Template: Sentiment Analysis Section
+### As a Supporting Method
+1. Use sentiment to time entries identified by fundamental or technical analysis.
+2. Avoid buying into euphoria even if fundamentals look good.
+3. Look for buying opportunities when sentiment is irrationally negative.
+4. Monitor insider activity to validate or challenge your thesis.
 
-When writing a pick using this method, include:
+## Checklist for a Sentiment Pick
 
-```
-### Method Applied
-Sentiment analysis — [brief description of signal]
-
-### Key Metrics / Signals
-- **News Sentiment**: [Positive / Negative / Neutral — recent trend]
-- **Social Media**: [Volume and polarity summary]
-- **Insider Activity**: [Recent buys/sells, Form 4 summary]
-- **Short Interest**: XX% of float ([increasing/decreasing])
-- **Analyst Consensus**: X Buy / X Hold / X Sell
-- **Estimate Revisions**: [Direction and magnitude]
-
-### Contrarian or Confirming?
-[Is this a contrarian bet against extreme sentiment or confirmation of a trend?]
-
-### Catalyst for Sentiment Shift
-[What event or development could change the narrative?]
-
-### Risk Factors
-[Key risks — sentiment can stay irrational, crowded trades, etc.]
-```
+- [ ] Identify the prevailing sentiment (bullish, bearish, neutral)
+- [ ] Quantify sentiment if possible (put/call ratio, short interest, social volume)
+- [ ] Determine if sentiment is at an extreme
+- [ ] Check insider activity for confirmation or divergence
+- [ ] Identify potential catalysts that could shift sentiment
+- [ ] Assess whether current price already reflects the sentiment
+- [ ] Define the sentiment shift you expect and what would trigger it
+- [ ] Set risk management rules (sentiment can stay irrational longer than expected)

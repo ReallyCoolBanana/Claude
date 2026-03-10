@@ -2,88 +2,79 @@
 
 ## Overview
 
-Technical analysis studies price action, volume, and chart patterns to forecast future price movements and identify optimal entry/exit points. It operates on the premise that all known information is reflected in the price and that patterns tend to repeat.
+Technical analysis studies price action and volume to identify trends, reversals, and optimal entry/exit points. It assumes that all known information is reflected in the price and that historical patterns tend to repeat. Best used for timing trades and managing risk.
 
-## Key Indicators
+## Trend Indicators
 
-### Trend Indicators
-- **Moving Averages (MA)**
-  - **SMA (Simple Moving Average)** — 20-day (short-term), 50-day (medium), 200-day (long-term).
-  - **EMA (Exponential Moving Average)** — Weights recent prices more heavily; more responsive.
-  - **Golden Cross** — 50-day MA crosses above 200-day MA (bullish).
-  - **Death Cross** — 50-day MA crosses below 200-day MA (bearish).
-- **MACD (Moving Average Convergence Divergence)** — Measures momentum via the difference between 12-day and 26-day EMAs. Signal line crossovers indicate momentum shifts.
-- **ADX (Average Directional Index)** — Measures trend strength (not direction). ADX > 25 suggests a strong trend.
+### Moving Averages
+| Indicator | Usage |
+|-----------|-------|
+| **SMA 50** | Medium-term trend; price above = bullish, below = bearish |
+| **SMA 200** | Long-term trend; the key bull/bear dividing line |
+| **EMA 20** | Short-term trend; responsive to recent price action |
+| **Golden Cross** | 50-day SMA crosses above 200-day SMA; bullish signal |
+| **Death Cross** | 50-day SMA crosses below 200-day SMA; bearish signal |
 
-### Momentum / Oscillators
-- **RSI (Relative Strength Index)** — Ranges 0-100. Above 70 = overbought; below 30 = oversold. Divergences between RSI and price are powerful signals.
-- **Stochastic Oscillator** — Compares closing price to price range over a period. %K and %D crossovers signal momentum shifts.
-- **Williams %R** — Similar to stochastic but inverted scale. Useful for overbought/oversold readings.
+### MACD (Moving Average Convergence Divergence)
+- **Signal line crossover** -- MACD crossing above signal line is bullish
+- **Zero line crossover** -- MACD crossing above zero confirms uptrend
+- **Divergence** -- Price making new highs while MACD isn't warns of reversal
 
-### Volume Indicators
-- **Volume** — Confirms price moves. Rising price on rising volume = conviction. Rising price on falling volume = suspect.
-- **OBV (On-Balance Volume)** — Running total of volume; divergences from price signal potential reversals.
-- **VWAP (Volume-Weighted Average Price)** — Institutional benchmark. Price above VWAP = bullish intraday bias.
+## Momentum Indicators
 
-### Volatility
-- **Bollinger Bands** — Price envelope around a 20-day SMA (typically 2 standard deviations). Squeezes often precede large moves.
-- **ATR (Average True Range)** — Measures volatility. Useful for setting stop-loss distances.
+### RSI (Relative Strength Index)
+- Range: 0-100
+- **Above 70** -- Overbought; potential pullback
+- **Below 30** -- Oversold; potential bounce
+- **Divergence** -- RSI diverging from price signals trend exhaustion
+
+### Stochastic Oscillator
+- Compares closing price to price range over a period
+- Overbought above 80, oversold below 20
+- Crossovers of %K and %D lines generate signals
+
+### Volume
+- **Rising price + rising volume** -- Trend confirmation
+- **Rising price + falling volume** -- Trend weakening
+- **Volume spikes** -- Often mark reversals or breakouts
+- **On-balance volume (OBV)** -- Cumulative volume flow
 
 ## Support and Resistance
 
-- **Support** — Price level where buying interest historically emerges. The more times tested, the stronger it is (until it breaks).
-- **Resistance** — Price level where selling pressure historically emerges.
-- **Breakout** — Price moves decisively through support or resistance, ideally on high volume.
-- **Retest** — After a breakout, price returns to the broken level (former resistance becomes support, and vice versa).
+### Identifying Levels
+- Previous swing highs and lows
+- Round numbers (psychological levels)
+- Moving averages acting as dynamic support/resistance
+- Volume profile (high-volume nodes)
+- Fibonacci retracement levels (23.6%, 38.2%, 50%, 61.8%)
+
+### Breakouts and Breakdowns
+- A breakout above resistance on high volume is bullish
+- A breakdown below support on high volume is bearish
+- Failed breakouts (bull/bear traps) often lead to sharp reversals
 
 ## Chart Patterns
 
-### Reversal Patterns
-- Head and Shoulders / Inverse Head and Shoulders
-- Double Top / Double Bottom
-- Rounding Bottom
-
 ### Continuation Patterns
-- Flags and Pennants
-- Triangles (ascending, descending, symmetrical)
-- Cup and Handle
+- **Flags and pennants** -- Brief consolidation before trend resumes
+- **Triangles** (ascending, descending, symmetrical) -- Compression before breakout
+- **Cup and handle** -- Bullish continuation after a rounded consolidation
 
-## Analysis Checklist
+### Reversal Patterns
+- **Head and shoulders** -- Bearish reversal at top
+- **Inverse head and shoulders** -- Bullish reversal at bottom
+- **Double top / double bottom** -- Two failed attempts at a level
+- **Rounding bottom** -- Gradual shift from bearish to bullish sentiment
 
-1. **What is the trend?** Identify the primary trend using moving averages and higher timeframes.
-2. **Where are key levels?** Map support, resistance, and prior pivots.
-3. **What do indicators say?** Check RSI, MACD, and volume for confirmation or divergence.
-4. **Is there a pattern?** Look for recognizable chart patterns and their implications.
-5. **What is the risk/reward?** Define entry, target, and stop-loss before entering.
-6. **What timeframe?** Ensure indicators match your intended holding period.
+## Checklist for a Technical Pick
 
-## Common Pitfalls
-
-- **Indicator overload** — Using too many indicators leads to contradictory signals. Pick 2-3 that complement each other.
-- **Ignoring the trend** — Counter-trend trades have lower win rates. Trade with the trend unless the reversal setup is very strong.
-- **No stop-loss** — Every technical trade must have a predefined invalidation level.
-- **Curve fitting** — Patterns are probabilistic, not deterministic. No setup works 100% of the time.
-
-## Template: Technical Analysis Section
-
-When writing a pick using this method, include:
-
-```
-### Method Applied
-Technical analysis — [brief description of setup]
-
-### Key Metrics / Signals
-- **Trend**: [Uptrend / Downtrend / Range-bound]
-- **Key Support**: $XX.XX
-- **Key Resistance**: $XX.XX
-- **RSI (14)**: XX
-- **MACD**: [Bullish/Bearish crossover, divergence, etc.]
-- **Volume**: [Above/below average, trend]
-- **Pattern**: [Name of pattern if applicable]
-
-### Entry Trigger
-[What specific condition triggers the trade?]
-
-### Risk Factors
-[Key risks — false breakout, overhead supply, earnings event, etc.]
-```
+- [ ] Identify the primary trend (up, down, sideways)
+- [ ] Confirm trend with multiple indicators (MA, MACD, volume)
+- [ ] Identify key support and resistance levels
+- [ ] Check momentum indicators for overbought/oversold extremes
+- [ ] Look for divergences between price and indicators
+- [ ] Identify any chart patterns forming
+- [ ] Define entry price based on breakout/pullback levels
+- [ ] Set stop loss below support (longs) or above resistance (shorts)
+- [ ] Calculate risk-reward ratio (minimum 2:1 preferred)
+- [ ] Confirm with volume (breakouts need volume confirmation)
