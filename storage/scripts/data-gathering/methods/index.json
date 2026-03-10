@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "2.0",
   "last_updated": "2026-03-10",
   "methods": [
     {
@@ -17,9 +17,9 @@
       "id": "DG-0002",
       "name": "Wikipedia API Deep Extraction",
       "file": "method_wikipedia.py",
-      "description": "Uses Wikipedia API to search articles, extract summaries, sections, references, and categories. Follows 'See also' links for breadth. Falls back to DuckDuckGo site-scoped search if API is unavailable.",
+      "description": "Uses Wikipedia API to search articles, extract summaries, sections, references, and categories. Follows 'See also' links for breadth.",
       "category": "api-based",
-      "data_sources": ["Wikipedia API", "DuckDuckGo HTML (fallback)"],
+      "data_sources": ["Wikipedia API"],
       "requires_api_key": false,
       "avg_duration_seconds": 3,
       "created": "2026-03-10"
@@ -28,40 +28,83 @@
       "id": "DG-0003",
       "name": "arXiv Academic Paper Search",
       "file": "method_arxiv.py",
-      "description": "Uses arXiv API to find academic papers, extracts titles, authors, abstracts, categories, and dates. Falls back to DuckDuckGo site-scoped search if API is unavailable.",
+      "description": "Uses arXiv API to find academic papers, extracts titles, authors, abstracts, categories, and dates.",
       "category": "api-based",
-      "data_sources": ["arXiv API", "DuckDuckGo HTML (fallback)"],
+      "data_sources": ["arXiv API"],
       "requires_api_key": false,
       "avg_duration_seconds": 2,
       "created": "2026-03-10"
     },
     {
       "id": "DG-0004",
-      "name": "Hybrid Multi-Source Aggregation",
+      "name": "Hybrid Multi-Source Aggregation v2",
       "file": "method_hybrid.py",
-      "description": "Combines web search, Wikipedia, and arXiv methods into a single pipeline. Cross-references findings across sources and scores each by corroboration count.",
+      "description": "Combines all 5 methods (web search, Wikipedia, arXiv, OpenAlex, Wikidata) into a parallel pipeline. Cross-references findings, applies credibility tiers, corroboration scoring, and TF-IDF deduplication.",
       "category": "hybrid",
-      "data_sources": ["DuckDuckGo HTML", "Wikipedia API", "arXiv API"],
+      "data_sources": ["DuckDuckGo HTML", "Wikipedia API", "arXiv API", "OpenAlex API", "Wikidata API"],
       "requires_api_key": false,
-      "avg_duration_seconds": 12,
-      "created": "2026-03-10"
+      "avg_duration_seconds": 8,
+      "created": "2026-03-10",
+      "updated": "2026-03-10",
+      "iteration": 2,
+      "improvements": ["parallel execution", "5 sources", "credibility tiers", "TF-IDF dedup", "corroboration scoring"]
     },
     {
       "id": "DG-0005",
       "name": "Iterative Deepening Search",
       "file": "method_iterative.py",
-      "description": "Does 3 rounds of progressively deeper DuckDuckGo searching. Each round analyzes results to generate focused follow-up queries. Returns results organized by depth level with theme synthesis.",
+      "description": "Does 3 rounds of progressively deeper DuckDuckGo searching. Each round analyzes results to generate focused follow-up queries.",
       "category": "ai-enhanced",
       "data_sources": ["DuckDuckGo HTML"],
       "requires_api_key": false,
       "avg_duration_seconds": 8,
       "created": "2026-03-10"
+    },
+    {
+      "id": "DG-0006",
+      "name": "OpenAlex Academic Search",
+      "file": "method_openalex.py",
+      "description": "Uses the OpenAlex API to search 250M+ academic works. Extracts titles, authors, publication year, abstract (reconstructed from inverted index), citation count, DOI, and open access URL. Sorted by citation count.",
+      "category": "api-based",
+      "data_sources": ["OpenAlex API"],
+      "requires_api_key": false,
+      "avg_duration_seconds": 2,
+      "created": "2026-03-10",
+      "iteration": 2
+    },
+    {
+      "id": "DG-0007",
+      "name": "Wikidata Knowledge Extraction",
+      "file": "method_wikidata.py",
+      "description": "Queries Wikidata search API to find structured knowledge about a topic. Extracts entity labels, descriptions, aliases, sitelinks, and related properties.",
+      "category": "api-based",
+      "data_sources": ["Wikidata API"],
+      "requires_api_key": false,
+      "avg_duration_seconds": 3,
+      "created": "2026-03-10",
+      "iteration": 2
+    }
+  ],
+  "utilities": [
+    {
+      "name": "Deduplication Utilities",
+      "file": "dedup_utils.py",
+      "description": "TF-IDF-based similarity scoring, deduplication, and source merging. Importable by all methods.",
+      "created": "2026-03-10",
+      "iteration": 2
+    },
+    {
+      "name": "Benchmark Runner",
+      "file": "benchmark_runner.py",
+      "description": "Runs all methods against a test query and collects performance metrics.",
+      "created": "2026-03-10",
+      "iteration": 2
     }
   ],
   "categories": {
     "web-search": ["DG-0001"],
     "web-scraping": [],
-    "api-based": ["DG-0002", "DG-0003"],
+    "api-based": ["DG-0002", "DG-0003", "DG-0006", "DG-0007"],
     "hybrid": ["DG-0004"],
     "ai-enhanced": ["DG-0005"]
   }
