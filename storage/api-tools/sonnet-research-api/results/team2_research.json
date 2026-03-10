@@ -1,87 +1,238 @@
 {
   "team": "TEAM-2",
-  "mission": "AI Quantitative Trading Techniques - Deep Dive on Key Areas",
-  "timestamp": "2026-03-10T15:00:00Z",
+  "role": "Deep Research (4 areas)",
+  "timestamp": "2026-03-10T14:30:00Z",
+  "objective": "Research AI/ML techniques for quantitative trading across 4 areas: ML Trading Strategies, AI Portfolio Optimization, Data Pipelines & Infrastructure, and Regulatory/XAI Governance",
+  "search_queries_executed": [
+    "machine learning trading strategies 2025 2026 XGBoost LightGBM alpha generation quant fund",
+    "deep learning attention mechanism transformer stock market prediction 2025 graph neural network",
+    "AI portfolio optimization PyPortfolioOpt Riskfolio-Lib Black-Litterman machine learning 2025",
+    "reinforcement learning portfolio optimization transaction cost modeling 2025 hierarchical RL",
+    "quantitative trading data pipeline infrastructure backtesting engine VectorBT Zipline feature store",
+    "SEC FINRA AI algorithmic trading regulation 2025 model risk management SR 11-7 market manipulation",
+    "tsfresh featuretools financial time series feature engineering MLOps trading models cloud",
+    "Microsoft Qlib quantitative investment platform architecture 2025 features alpha research",
+    "ESG integration quantitative investing AI bias trading models flash crash analysis 2025",
+    "flash crash algorithmic trading AI 2024 2025 analysis causes prevention circuit breakers"
+  ],
+  "total_searches": 10,
+  "summary_stats": {
+    "total_topics": 4,
+    "total_techniques": 42,
+    "total_references": 32,
+    "total_tools_mentioned": 31,
+    "total_code_examples": 7
+  },
   "topics": [
     {
-      "name": "Transformer Architectures for Financial Prediction",
+      "name": "ML Trading Strategies: State of the Art 2024-2026",
       "category": "ml-trading",
-      "findings": "Transformer architectures have been adapted for financial prediction with several key innovations. The Temporal Fusion Transformer (TFT) remains the benchmark, but newer architectures like PatchTST (Nie et al., 2023) segment time series into patches for more efficient processing. Informer (Zhou et al., 2021) uses ProbSparse attention for long-sequence forecasting with O(L log L) complexity. Crossformer (Zhang & Yan, 2023) captures cross-dimensional dependencies in multivariate financial data. Autoformer uses auto-correlation mechanisms instead of standard attention. FEDformer decomposes time series in the frequency domain. The iTransformer (Liu et al., 2024) inverts the standard architecture to treat each time step as a token, showing strong results on financial benchmarks. Pre-trained foundation models for time series (TimesFM by Google, Lag-Llama) promise zero-shot forecasting capabilities. Key challenge: financial data violates stationarity assumptions that many transformers rely on.",
+      "findings": "The state of the art in ML trading strategies for 2024-2026 centers on hybrid architectures combining transformer-based models with deep reinforcement learning. Key developments include:\n\n1. TRONformer Architecture: Combines transformer-based self-attention mechanisms with policy-gradient DRL, leveraging superior representational power of transformers for agent-based financial market simulations. Empirical evaluations show TRONformer agents consistently outperform previous RNN-based agents in profitability.\n\n2. LLM + DRL Hybrid Systems: PrimoGPT (transformer-based NLP fine-tuned on financial texts) combined with PrimoRL (DRL using NLP-derived features). Experimental evaluation showed cumulative returns of up to 58.47% for individual stocks and 27.14% for diversified portfolios, with a Sharpe ratio of 1.70.\n\n3. Temporal Fusion Transformers (TFT): Google Research's TFT architecture achieves 40-50% reduction in MAE compared to LSTM and BiLSTM, with MAPE below 2%. Novel TFT-GNN hybrid embeds relational information through graph attention mechanisms for joint temporal-relational learning. CNN-Transformer fusion reduces error rates by 45%, 32%, and 36.8% compared to LSTM, attention-LSTM, and transformer models respectively.\n\n4. FinRL Framework and Contests: The FinRL Contest 2025 featured tasks including FinRL-DeepSeek for Stock Trading and FinRL-AlphaSeek for Crypto Trading. Top model achieved cumulative return of 134.05% vs 72.71% buy-and-hold. Sentiment-enhanced PPO improved Sharpe ratio from 0.69 to 1.08 on NASDAQ-100. Hi-DARTS hierarchical multi-agent RL framework yielded 25.17% cumulative return with Sharpe Ratio of 0.75 on AAPL.\n\n5. LSTM + DQN Hybrid Frameworks: Combine LSTM for temporal dependency capture with Deep Q-Networks for adaptive RL optimization based on real-time feedback. Hybrid approaches show 15-20% improvements over pure RL, with adoption increasing from 15% in 2020 to 42% in 2025. Optimal Sharpe ratio for hybrid approaches is approximately 1.57 vs pure RL at 1.35 and traditional methods at 0.95.\n\n6. Multi-Agent RL (MARL): Emerging paradigm using multiple cooperative or competitive agents for market simulation and strategy discovery. Combined with meta-learning for enhanced market flexibility and regime adaptation.",
       "techniques": [
-        "temporal fusion transformers",
-        "PatchTST",
-        "Informer",
-        "Crossformer",
-        "Autoformer",
-        "FEDformer",
-        "iTransformer",
-        "time series foundation models"
+        "transformer-attention-trading",
+        "deep-reinforcement-learning",
+        "temporal-fusion-transformer",
+        "LLM-DRL-hybrid",
+        "LSTM-DQN-hybrid",
+        "multi-agent-reinforcement-learning",
+        "sentiment-enhanced-PPO",
+        "graph-neural-network-trading",
+        "TFT-GNN-hybrid",
+        "CNN-transformer-fusion",
+        "meta-learning-trading",
+        "hierarchical-MARL"
       ],
       "references": [
-        "https://arxiv.org/abs/2211.14730",
-        "https://arxiv.org/abs/2012.07436",
-        "https://arxiv.org/abs/2310.06625",
-        "https://arxiv.org/abs/2106.13008",
-        "https://arxiv.org/abs/1912.09363"
+        "https://www.sciencedirect.com/science/article/pii/S2590005625000177",
+        "https://neurips.cc/virtual/2025/132495",
+        "https://arxiv.org/html/2504.02281v3",
+        "https://github.com/AI4Finance-Foundation/FinRL",
+        "https://openreview.net/forum?id=w7BGq6ozOL",
+        "https://arxiv.org/html/2512.10913v1",
+        "https://www.mdpi.com/2504-2289/9/12/317",
+        "https://www.mdpi.com/2673-9909/5/4/176",
+        "https://research.google/pubs/temporal-fusion-transformers-for-interpretable-multi-horizon-time-series-forecasting/",
+        "https://ietresearch.onlinelibrary.wiley.com/doi/10.1049/aie2.12004",
+        "https://open-finance-lab.github.io/FinRL_Contest_2025/",
+        "https://www.nature.com/articles/s41598-025-12516-3"
       ],
       "metrics": {
-        "patchtst_improvement": "8-12% over TFT on some benchmarks",
-        "informer_complexity": "O(L log L) vs O(L^2)"
+        "LLM_DRL_cumulative_return": "58.47%",
+        "LLM_DRL_sharpe": 1.70,
+        "TFT_MAE_reduction_vs_LSTM": "40-50%",
+        "FinRL_top_cumulative_return": "134.05%",
+        "hybrid_sharpe_ratio": 1.57,
+        "pure_RL_sharpe_ratio": 1.35,
+        "sentiment_PPO_sharpe_improvement": "0.69 to 1.08",
+        "hybrid_adoption_2025": "42%"
       },
-      "tools_mentioned": ["Hugging Face", "PyTorch", "GluonTS", "NeuralForecast"],
-      "code_examples": ["https://github.com/yuqinie98/PatchTST"]
+      "tools_mentioned": [
+        "FinRL",
+        "PyTorch",
+        "TensorFlow",
+        "DeepSeek-V3",
+        "PrimoGPT",
+        "PrimoRL",
+        "Hi-DARTS",
+        "TRONformer"
+      ],
+      "code_examples": [
+        "FinRL framework: pip install finrl; from finrl.agents.stablebaselines3 import DRLAgent; agent = DRLAgent(env); model = agent.get_model('ppo')",
+        "TFT via PyTorch Forecasting: from pytorch_forecasting import TemporalFusionTransformer; tft = TemporalFusionTransformer.from_dataset(training, learning_rate=0.03, hidden_size=16, attention_head_size=1, dropout=0.1)"
+      ]
     },
     {
-      "name": "Deep Hedging and Derivatives Pricing with Neural Networks",
-      "category": "risk-mgmt",
-      "findings": "Deep hedging, introduced by Buehler et al. (2019), frames hedging as a reinforcement learning problem where neural networks learn optimal hedging strategies directly from data without requiring complete market models. This approach handles incomplete markets, transaction costs, and liquidity constraints naturally. Neural SDE models (Gierjatowicz et al., 2022) jointly learn drift and diffusion functions for derivatives pricing, providing more flexible dynamics than Black-Scholes or Heston models. Physics-informed neural networks (PINNs) solve the Black-Scholes PDE directly, ensuring no-arbitrage conditions. Rough volatility models combined with neural networks capture the rough behavior of realized volatility at multiple timescales. The deep BSDE solver (Han et al., 2018) solves high-dimensional pricing PDEs using backward stochastic differential equations. Calibration of stochastic volatility models using neural networks is 100-1000x faster than traditional methods. Key regulatory concern: model risk when replacing established pricing models with neural networks, as per SR 11-7 guidance.",
+      "name": "AI Portfolio Construction & Optimization",
+      "category": "portfolio-opt",
+      "findings": "AI-driven portfolio optimization has matured significantly with several open-source libraries and emerging academic frameworks:\n\n1. PyPortfolioOpt: Library implementing classical mean-variance optimization, Black-Litterman allocation, and Hierarchical Risk Parity (HRP). Inspired by scikit-learn design principles. Supports Maximum Sharpe ratio optimization (tangency portfolio), covariance shrinkage techniques via sklearn.covariance wrappers, and modular design allowing component swapping. Backend uses scipy/sklearn. Best for beginners and rapid prototyping.\n\n2. Riskfolio-Lib: More comprehensive library built on CVXPY for quantitative strategic asset allocation. Offers 24 convex risk measures including Standard Deviation, Square Root Kurtosis, MAD, GMD, and CVaR Range. Supports Mean Risk and Logarithmic Mean Risk (Kelly Criterion) optimization with 4 objective functions: Minimum Risk, Maximum Return, Maximum Utility Function, and Maximum Risk Adjusted Return Ratio. Latest version 7.2.1 (Feb 2026) supports Python 3.12-3.14. Best for academic research and complex multi-objective optimization.\n\n3. skfolio: Newer Python library for portfolio optimization built on scikit-learn. Enables creation, fine-tuning, cross-validation, and stress-testing of portfolio models. Positioned as a bridge between PyPortfolioOpt and Riskfolio-Lib.\n\n4. PyPortOptimization (2025 Academic Paper): Automated portfolio optimization library consolidating entire process from data acquisition to performance evaluation. Addresses fragmentation issue where users must integrate multiple tools. Published in ScienceDirect.\n\n5. VectorBT PRO Integration: Backtesting framework integrating PyPortfolioOpt, Riskfolio-Lib, and Universal Portfolios for portfolio rebalancing.\n\n6. Deep Learning Approaches: Neural network-based portfolio optimization using autoencoders for asset representation learning, Graph Attention Networks for modeling asset relationships, and RL-based dynamic rebalancing strategies.\n\nComparison Table:\n- PyPortfolioOpt: Classical MVO, Black-Litterman, HRP | scipy/sklearn backend | Simpler, modular | Standard risk measures\n- Riskfolio-Lib: Mean-Risk, Kelly Criterion, 24 risk measures | CVXPY backend | Comprehensive, academic | 24 convex risk measures\n- skfolio: scikit-learn compatible | sklearn backend | Cross-validation focus | Growing feature set",
       "techniques": [
-        "deep hedging",
-        "neural SDEs",
-        "physics-informed neural networks (PINNs)",
-        "rough volatility neural models",
-        "deep BSDE solver",
-        "neural network model calibration"
+        "mean-variance-optimization",
+        "black-litterman-allocation",
+        "hierarchical-risk-parity",
+        "kelly-criterion-optimization",
+        "CVaR-optimization",
+        "covariance-shrinkage",
+        "neural-portfolio-optimization",
+        "graph-attention-portfolio",
+        "RL-dynamic-rebalancing",
+        "autoencoder-asset-representation"
       ],
       "references": [
-        "https://arxiv.org/abs/1802.03042",
-        "https://arxiv.org/abs/2006.10934",
-        "https://arxiv.org/abs/1707.02568",
-        "https://arxiv.org/abs/2105.02987",
-        "https://www.risk.net/cutting-edge/7955703/deep-hedging-review"
+        "https://github.com/PyPortfolio/PyPortfolioOpt",
+        "https://github.com/dcajasn/Riskfolio-Lib",
+        "https://skfolio.org/",
+        "https://github.com/skfolio/skfolio",
+        "https://www.sciencedirect.com/science/article/pii/S2215016125000585",
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC12370148/",
+        "https://vectorbt.pro/tutorials/portfolio-optimization/",
+        "https://pypi.org/project/riskfolio-lib/"
       ],
       "metrics": {
-        "calibration_speedup": "100-1000x faster than traditional",
-        "hedging_cost_reduction": "15-30% vs delta hedging"
+        "riskfolio_risk_measures": 24,
+        "riskfolio_objective_functions": 4,
+        "riskfolio_latest_version": "7.2.1",
+        "pyportfolioopt_github_stars": "4.5k+"
       },
-      "tools_mentioned": ["QuantLib", "PyTorch", "TensorFlow", "Deep Hedging library"],
-      "code_examples": ["https://github.com/pfnet-research/deep-hedging"]
+      "tools_mentioned": [
+        "PyPortfolioOpt",
+        "Riskfolio-Lib",
+        "skfolio",
+        "PyPortOptimization",
+        "VectorBT PRO",
+        "CVXPY",
+        "scipy",
+        "scikit-learn"
+      ],
+      "code_examples": [
+        "PyPortfolioOpt: from pypfopt import EfficientFrontier, risk_models, expected_returns; mu = expected_returns.mean_historical_return(df); S = risk_models.sample_cov(df); ef = EfficientFrontier(mu, S); weights = ef.max_sharpe()",
+        "Riskfolio-Lib: import riskfolio as rp; port = rp.Portfolio(returns=returns); port.assets_stats(method_mu='hist', method_cov='hist'); w = port.optimization(model='Classic', rm='MV', obj='Sharpe')",
+        "skfolio: from skfolio import Portfolio; from skfolio.optimization import MeanRisk; model = MeanRisk(); model.fit(X_train); portfolio = model.predict(X_test)"
+      ]
     },
     {
-      "name": "Regulatory AI and Model Governance in Finance",
+      "name": "Data Pipelines & Infrastructure for Quantitative Finance",
+      "category": "data-infra",
+      "findings": "The MLOps infrastructure landscape for quantitative finance has matured rapidly:\n\n1. Market Scale: Global MLOps market valued at US$1.58 billion in 2024, projected to reach US$2.33 billion by 2025 (CAGR 35.5%). Gartner projects 70% of enterprises will operationalize AI architectures using MLOps.\n\n2. Feature Stores: Critical infrastructure for quant ML pipelines.\n- Feast (Linux Foundation): Leading open-source feature store. Supports online/offline feature retrieval, point-in-time correctness preventing look-ahead bias, batch pipelines for training and low-latency APIs for inference. Modular with BigQuery/Redis/DynamoDB backends. Best for flexible, vendor-neutral deployments.\n- Hopsworks: Enterprise feature store built on HopsFS distributed file system. RonDB online store provides sub-millisecond latency. Built-in alerting for data drift, skew, outliers. Access control, versioning, usage tracking. Best for regulated industries (banking, finance). Integrates with Spark, Python, TensorFlow.\n- Tecton: Managed feature platform for real-time ML. Strong enterprise support.\n\n3. Pipeline Maturity Levels: Level 0 (No MLOps) through Level 4 (Full Automated Operations). Most financial institutions are at Level 1-2, with leading quant firms at Level 3-4.\n\n4. Core MLOps Stack for Quant Trading:\n- Data versioning: DVC, LakeFS\n- Experiment tracking: MLflow, Weights & Biases\n- Workflow orchestration: Airflow, Prefect, Dagster\n- Data validation: Great Expectations, Pandera\n- Model registry: MLflow Model Registry, Seldon\n- CI/CD: GitHub Actions, GitLab CI\n- Monitoring: Evidently AI, WhyLabs\n- Backtesting: Backtrader, Zipline, VectorBT\n\n5. Data Versioning & Lineage: Essential for regulatory compliance. Every model must be trained on known, consistent datasets. Tools like DVC and LakeFS enable dataset versioning and experiment reproducibility.\n\n6. Strategic Importance: MLOps infrastructure represents a competitive moat. Institutions with mature MLOps can move from idea to production strategy in weeks vs months/years for competitors.",
+      "techniques": [
+        "feature-store-architecture",
+        "point-in-time-feature-retrieval",
+        "data-versioning-lineage",
+        "ML-pipeline-orchestration",
+        "model-registry-management",
+        "real-time-feature-serving",
+        "data-drift-monitoring",
+        "automated-backtesting-pipeline",
+        "CI-CD-for-ML",
+        "streaming-feature-ingestion"
+      ],
+      "references": [
+        "https://www.hopsworks.ai/post/feature-store-benchmark-comparison-hopsworks-and-feast",
+        "https://www.gocodeo.com/post/top-5-feature-stores-in-2025-tecton-feast-and-beyond",
+        "https://www.finos.org/blog/scaling-financial-machine-learning-with-mlops",
+        "https://medium.com/@online-inference/mlops-best-practices-for-quantitative-trading-teams-59f063d3aaf8",
+        "https://www.featurestore.org/feature-store-summit-2025",
+        "https://lakefs.io/mlops/mlops-pipeline/",
+        "https://www.growin.com/blog/mlops-developers-guide-toai-deployment-2025/",
+        "https://uplatz.com/blog/a-comparative-analysis-of-modern-feature-stores-feast-vs-tecton-vs-hopsworks/"
+      ],
+      "metrics": {
+        "mlops_market_2024": "$1.58B",
+        "mlops_market_2025_projected": "$2.33B",
+        "mlops_CAGR": "35.5%",
+        "enterprise_AI_adoption_gartner": "70%",
+        "hopsworks_latency": "sub-millisecond"
+      },
+      "tools_mentioned": [
+        "Feast",
+        "Hopsworks",
+        "Tecton",
+        "MLflow",
+        "DVC",
+        "Airflow",
+        "Prefect",
+        "Great Expectations",
+        "Evidently AI",
+        "VectorBT",
+        "Backtrader",
+        "Zipline",
+        "LakeFS",
+        "Dagster",
+        "Weights & Biases",
+        "WhyLabs",
+        "Seldon"
+      ],
+      "code_examples": [
+        "Feast feature definition: from feast import Entity, Feature, FeatureView, FileSource; stock_features = FeatureView(name='stock_features', entities=['ticker'], ttl=timedelta(days=1), features=[Feature(name='momentum_5d', dtype=Float64)])",
+        "MLflow experiment tracking: import mlflow; mlflow.start_run(); mlflow.log_param('model_type', 'PPO'); mlflow.log_metric('sharpe_ratio', 1.57); mlflow.sklearn.log_model(model, 'model')"
+      ]
+    },
+    {
+      "name": "Explainable AI & Regulatory Governance for Trading Systems",
       "category": "xai-governance",
-      "findings": "Financial regulators worldwide are establishing frameworks for AI governance. The EU AI Act (effective August 2025) classifies AI systems used in creditworthiness assessment and financial trading as high-risk, requiring conformity assessments, transparency, and human oversight. The US Federal Reserve's SR 11-7 provides model risk management guidance applicable to AI/ML models. FINRA has issued guidance on algorithmic trading supervision. The Bank of England's SS1/23 sets expectations for AI/ML model risk management in UK financial services. Key requirements include model validation (champion-challenger testing), ongoing monitoring (concept drift detection), audit trails, and bias testing. MLOps practices adapted for finance include model versioning, automated retraining triggers, and A/B testing in shadow mode before deployment. Fairness constraints are particularly important for credit scoring models under ECOA and fair lending laws. Emerging standards include IEEE 7010 for AI ethics and ISO/IEC 42001 for AI management systems. The challenge is balancing innovation with compliance - overly strict governance can stifle alpha-generating research while insufficient governance creates regulatory and reputational risk.",
+      "findings": "Regulatory compliance and explainability are critical for AI-driven trading systems:\n\n1. SR 11-7 (Federal Reserve/OCC, 2011): Cornerstone of model risk management for US banks. Defines model risk as potential for negative outcomes from flawed/misused model outputs. Four pillars: validation, documentation, governance, monitoring. Now explicitly applied to AI, ML, and generative AI models. Federal agencies (Fed, OCC, FDIC) have confirmed SR 11-7 applies to machine learning models.\n\n2. Explainable AI Techniques for Finance:\n- SHAP (SHapley Additive exPlanations): Game-theory based method providing both local and global explanations. Evaluates impact of each variable by computing average contribution across all possible feature combinations. More comprehensive but slower (0.3784s, 1.2MB memory).\n- LIME (Local Interpretable Model-Agnostic Explanations): Approximates complex models locally via interpretable surrogate models. Faster execution (0.1486s, 9.14MB memory) but limited to local explanations only.\n- BIS Paper Warning: Current XAI techniques suffer from fundamental limitations in precision and stability. Regulators may need to accept trade-offs between explainability and model performance.\n\n3. CFA Institute 2025 Report: Comprehensive analysis of XAI needs for diverse financial stakeholders. Addresses needs of portfolio managers, risk officers, compliance teams, and regulators.\n\n4. SEC AI Oversight: SEC launched enforcement actions against AI Washing (companies exaggerating AI capabilities). 2025 examination priorities include reviewing how investment advisers integrate AI into portfolio management, trading, marketing, and compliance. Previous AI-specific rulemaking was withdrawn in June 2025.\n\n5. Global Regulatory Convergence:\n- EU AI Act: Comprehensive AI regulation with risk-based classification\n- UK SS1/23: Supervisory expectations for model risk management\n- FCRA/Regulation B: Require reason codes for adverse actions, addressed via SHAP/LIME explanations\n\n6. Emerging XAI Approaches:\n- Evaluative AI: Focus on hypothesis-driven decision making\n- Neurosymbolic AI: Integrating rule-based reasoning with deep learning for improved interpretability while retaining predictive power\n- Hybrid XAI frameworks combining rule-based explanations with deep learning architectures\n\n7. Practical Compliance: Financial institutions use SHAP for individual-level explanations with specific reason codes meeting FCRA/Regulation B requirements. LightGBM + SHAP combinations outperform traditional logistic regression credit scoring. Trade-off exists between model complexity (XGBoost) and interpretability robustness.",
       "techniques": [
-        "champion-challenger model validation",
-        "concept drift detection",
-        "fairness-aware machine learning",
-        "MLOps for finance",
-        "shadow mode A/B testing",
-        "automated model monitoring"
+        "SHAP-explanations",
+        "LIME-explanations",
+        "model-risk-management-SR11-7",
+        "AI-washing-detection",
+        "neurosymbolic-AI",
+        "evaluative-AI",
+        "hybrid-XAI-frameworks",
+        "model-validation-governance",
+        "bias-detection-fairness",
+        "regulatory-compliance-automation"
       ],
       "references": [
-        "https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm",
-        "https://www.bankofengland.co.uk/prudential-regulation/publication/2023/model-risk-management-principles-for-banks",
-        "https://eur-lex.europa.eu/eli/reg/2024/1689",
-        "https://www.finra.org/rules-guidance/guidance/reports/artificial-intelligence",
-        "https://www.iso.org/standard/81230.html"
+        "https://www.modelop.com/ai-governance/ai-regulations-standards/sr-11-7",
+        "https://validmind.com/blog/sr-11-7-model-risk-management-compliance/",
+        "https://www.bis.org/fsi/fsipapers24.pdf",
+        "https://rpc.cfainstitute.org/research/reports/2025/explainable-ai-in-finance",
+        "https://link.springer.com/article/10.1007/s10462-025-11215-9",
+        "https://advanced.onlinelibrary.wiley.com/doi/10.1002/aisy.202400304",
+        "https://www.mdpi.com/2227-9091/14/2/23",
+        "https://www.meta-intelligence.tech/en/insight-finance-ai",
+        "https://www.innreg.com/blog/ai-risk-management-in-financial-services",
+        "https://consumerbankers.com/wp-content/uploads/2025/10/CBA-Comment-on-Docket-OSTP-TECH-2025-0067-10.27.2025.pdf"
       ],
       "metrics": {
-        "eu_ai_act_effective_date": "August 2025",
-        "model_validation_frequency": "annual minimum, quarterly recommended"
+        "SHAP_runtime": "0.3784s",
+        "LIME_runtime": "0.1486s",
+        "SR_11_7_year": 2011,
+        "SEC_AI_washing_enforcement": "2024-2025"
       },
-      "tools_mentioned": ["MLflow", "Weights & Biases", "Evidently AI", "Great Expectations", "AI Fairness 360"],
-      "code_examples": ["https://github.com/evidentlyai/evidently"]
+      "tools_mentioned": [
+        "SHAP",
+        "LIME",
+        "ModelOp",
+        "ValidMind",
+        "LightGBM",
+        "XGBoost",
+        "Evidently AI"
+      ],
+      "code_examples": [
+        "SHAP: import shap; explainer = shap.TreeExplainer(model); shap_values = explainer.shap_values(X_test); shap.summary_plot(shap_values, X_test)",
+        "LIME: from lime.lime_tabular import LimeTabularExplainer; explainer = LimeTabularExplainer(X_train, feature_names=feature_names); explanation = explainer.explain_instance(X_test[0], model.predict_proba)"
+      ]
     }
   ]
 }

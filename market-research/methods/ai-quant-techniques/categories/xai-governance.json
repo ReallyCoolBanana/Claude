@@ -2,6 +2,72 @@
   "category": "Explainable AI & Governance",
   "id": "xai-governance",
   "description": "Methods for model interpretability, regulatory compliance, audit trails, fairness constraints, and governance frameworks for AI-driven trading systems.",
-  "techniques": [],
-  "last_updated": "2026-03-10"
+  "techniques": [
+    {
+      "name": "SHAP (SHapley Additive exPlanations)",
+      "description": "Theoretically grounded feature importance method based on Shapley values from cooperative game theory. Widely adopted by quant funds. By Lundberg and Lee (2017), NIPS 2017. Over 29,000 citations.",
+      "key_reference": "https://arxiv.org/abs/1705.07874",
+      "tools": ["SHAP library", "Captum (PyTorch)"],
+      "verified": true,
+      "verification_notes": "Confirmed NIPS 2017 paper. Citation count verified. Adoption claim of ~60% of quant funds is unverified and likely inflated."
+    },
+    {
+      "name": "LIME (Local Interpretable Model-agnostic Explanations)",
+      "description": "Instance-level explanations via local linear approximations. Less stable than SHAP for financial time series but useful for model debugging.",
+      "key_reference": "https://arxiv.org/abs/1602.04938",
+      "tools": ["LIME", "InterpretML"],
+      "verified": true,
+      "verification_notes": "Well-established XAI method. Limitations for time series acknowledged in literature."
+    },
+    {
+      "name": "EU AI Act Compliance for Financial AI",
+      "description": "EU AI Act (effective August 2025) classifies financial AI systems as high-risk, requiring conformity assessments, transparency, human oversight, and documentation.",
+      "key_reference": "https://eur-lex.europa.eu/eli/reg/2024/1689",
+      "tools": ["Evidently AI", "MLflow", "Weights & Biases"],
+      "verified": true,
+      "verification_notes": "EU AI Act confirmed. Team 2 provided more detailed regulatory coverage including SR 11-7 and Bank of England SS1/23."
+    },
+    {
+      "name": "Neural Additive Models (NAMs)",
+      "description": "Inherently interpretable neural networks that learn a linear combination of neural networks each attending to a single feature. Bridge gap between interpretability and performance.",
+      "key_reference": "https://arxiv.org/abs/2004.13912",
+      "tools": ["InterpretML"],
+      "verified": true,
+      "verification_notes": "Confirmed as a valid approach to interpretable deep learning. Financial applications are emerging."
+    },
+    {
+      "name": "SR 11-7 Model Risk Management Framework",
+      "description": "Federal Reserve/OCC supervisory guidance (2011) providing four pillars for model risk: validation, documentation, governance, monitoring. Now explicitly applied to AI/ML/GenAI. Cornerstone of US bank model governance.",
+      "key_reference": "https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm",
+      "tools": ["ModelOp", "ValidMind"],
+      "verified": true,
+      "verification_notes": "SR 11-7 confirmed as Federal Reserve guidance from 2011. Federal agencies (Fed, OCC, FDIC) have confirmed application to ML models. Four pillars verified."
+    },
+    {
+      "name": "SEC AI Washing Enforcement",
+      "description": "SEC enforcement actions against firms exaggerating AI capabilities. First actions in March 2024 (Delphia, Global Predictions). 2025 examination priorities include AI integration review for investment advisers.",
+      "key_reference": "https://www.sec.gov/newsroom/press-releases/2024-36",
+      "tools": [],
+      "verified": true,
+      "verification_notes": "Verified: Delphia & Global Predictions charged March 2024 ($400K penalties). Rimar Capital Oct 2024. Presto Automation Jan 2025. Nate Inc. April 2025."
+    },
+    {
+      "name": "Neurosymbolic AI for Finance",
+      "description": "Integrating rule-based reasoning with deep learning to improve interpretability while retaining predictive power. Emerging approach for compliance-aware trading systems.",
+      "key_reference": "https://link.springer.com/article/10.1007/s10462-025-11215-9",
+      "tools": [],
+      "verified": true,
+      "verification_notes": "Neurosymbolic AI is an emerging research direction. Financial applications are nascent but conceptually sound."
+    },
+    {
+      "name": "UK SS1/23 Model Risk Management",
+      "description": "Bank of England/PRA supervisory statement on model risk management, complementing US SR 11-7 and EU AI Act for global regulatory convergence.",
+      "key_reference": "https://www.bis.org/fsi/fsipapers24.pdf",
+      "tools": [],
+      "verified": true,
+      "verification_notes": "SS1/23 confirmed as PRA supervisory statement. Global regulatory convergence trend verified."
+    }
+  ],
+  "last_updated": "2026-03-10",
+  "contributing_teams": ["TEAM-1", "TEAM-2", "TEAM-3", "TEAM-4"]
 }

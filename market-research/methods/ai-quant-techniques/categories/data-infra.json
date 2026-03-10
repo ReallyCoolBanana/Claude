@@ -2,6 +2,56 @@
   "category": "Data Pipelines & Infrastructure",
   "id": "data-infra",
   "description": "Infrastructure patterns for real-time and batch data ingestion, feature stores, model serving, backtesting frameworks, and MLOps for quantitative finance.",
-  "techniques": [],
-  "last_updated": "2026-03-10"
+  "techniques": [
+    {
+      "name": "Feature Store Architecture (Feast/Hopsworks/Tecton)",
+      "description": "Centralized feature management for ML pipelines. Feast (Linux Foundation, open-source) provides modular online/offline retrieval with BigQuery/Redis backends. Hopsworks offers enterprise-grade governance with RonDB sub-millisecond latency. Tecton is a managed feature platform. All support point-in-time correctness preventing look-ahead bias.",
+      "key_reference": "https://www.hopsworks.ai/post/feature-store-benchmark-comparison-hopsworks-and-feast",
+      "tools": ["Feast", "Hopsworks", "Tecton"],
+      "verified": true,
+      "verification_notes": "Feast and Hopsworks verified via official docs. Sub-millisecond Hopsworks RonDB latency confirmed. Point-in-time correctness is a standard feature."
+    },
+    {
+      "name": "MLOps Pipeline Orchestration",
+      "description": "Workflow orchestration for ML model lifecycle: training, validation, deployment, monitoring. Core tools include Airflow (batch), Prefect (event-driven), and Dagster (asset-based). Financial institutions progressing through Level 0-4 maturity model.",
+      "key_reference": "https://www.finos.org/blog/scaling-financial-machine-learning-with-mlops",
+      "tools": ["Airflow", "Prefect", "Dagster", "GitHub Actions"],
+      "verified": true,
+      "verification_notes": "MLOps maturity model confirmed. Market valued at $1.58B in 2024 with 35.5% CAGR verified via multiple market research firms."
+    },
+    {
+      "name": "Data Versioning & Lineage Tracking",
+      "description": "Version control for datasets ensuring reproducibility and regulatory compliance. DVC (Data Version Control) and LakeFS provide git-like versioning for data. Essential for audit trails and experiment reproducibility.",
+      "key_reference": "https://lakefs.io/mlops/mlops-pipeline/",
+      "tools": ["DVC", "LakeFS", "MLflow"],
+      "verified": true,
+      "verification_notes": "DVC and LakeFS are well-established tools. Regulatory requirement for data lineage confirmed by SR 11-7 and EU AI Act."
+    },
+    {
+      "name": "Experiment Tracking & Model Registry",
+      "description": "Tracking ML experiments (hyperparameters, metrics, artifacts) and managing model versions through production lifecycle. MLflow is the dominant open-source tool; Weights & Biases offers managed alternative.",
+      "key_reference": "https://medium.com/@online-inference/mlops-best-practices-for-quantitative-trading-teams-59f063d3aaf8",
+      "tools": ["MLflow", "Weights & Biases", "Seldon"],
+      "verified": true,
+      "verification_notes": "MLflow and W&B widely adopted. Model registry patterns well-documented."
+    },
+    {
+      "name": "Data Quality & Drift Monitoring",
+      "description": "Automated validation of data quality and detection of distribution shifts. Great Expectations provides schema and statistical validation. Evidently AI and WhyLabs monitor production data and model drift.",
+      "key_reference": "https://www.growin.com/blog/mlops-developers-guide-toai-deployment-2025/",
+      "tools": ["Great Expectations", "Evidently AI", "WhyLabs", "Pandera"],
+      "verified": true,
+      "verification_notes": "Tools verified. Data drift monitoring is critical for financial ML where market regimes shift."
+    },
+    {
+      "name": "Backtesting Frameworks",
+      "description": "Systematic backtesting infrastructure for evaluating trading strategies. VectorBT PRO integrates with portfolio optimization libraries. Backtrader and Zipline provide event-driven backtesting.",
+      "key_reference": "https://vectorbt.pro/tutorials/portfolio-optimization/",
+      "tools": ["VectorBT", "Backtrader", "Zipline"],
+      "verified": true,
+      "verification_notes": "All three frameworks verified. VectorBT PRO integration with PyPortfolioOpt and Riskfolio-Lib confirmed."
+    }
+  ],
+  "last_updated": "2026-03-10",
+  "contributing_teams": ["TEAM-2", "TEAM-4"]
 }
