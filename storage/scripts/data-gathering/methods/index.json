@@ -1,0 +1,68 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-03-10",
+  "methods": [
+    {
+      "id": "DG-0001",
+      "name": "Multi-query Web Search",
+      "file": "method_websearch.py",
+      "description": "Generates 3-5 variant search queries from the input, searches DuckDuckGo HTML for each, parses and deduplicates results by URL.",
+      "category": "web-search",
+      "data_sources": ["DuckDuckGo HTML"],
+      "requires_api_key": false,
+      "avg_duration_seconds": 7,
+      "created": "2026-03-10"
+    },
+    {
+      "id": "DG-0002",
+      "name": "Wikipedia API Deep Extraction",
+      "file": "method_wikipedia.py",
+      "description": "Uses Wikipedia API to search articles, extract summaries, sections, references, and categories. Follows 'See also' links for breadth. Falls back to DuckDuckGo site-scoped search if API is unavailable.",
+      "category": "api-based",
+      "data_sources": ["Wikipedia API", "DuckDuckGo HTML (fallback)"],
+      "requires_api_key": false,
+      "avg_duration_seconds": 3,
+      "created": "2026-03-10"
+    },
+    {
+      "id": "DG-0003",
+      "name": "arXiv Academic Paper Search",
+      "file": "method_arxiv.py",
+      "description": "Uses arXiv API to find academic papers, extracts titles, authors, abstracts, categories, and dates. Falls back to DuckDuckGo site-scoped search if API is unavailable.",
+      "category": "api-based",
+      "data_sources": ["arXiv API", "DuckDuckGo HTML (fallback)"],
+      "requires_api_key": false,
+      "avg_duration_seconds": 2,
+      "created": "2026-03-10"
+    },
+    {
+      "id": "DG-0004",
+      "name": "Hybrid Multi-Source Aggregation",
+      "file": "method_hybrid.py",
+      "description": "Combines web search, Wikipedia, and arXiv methods into a single pipeline. Cross-references findings across sources and scores each by corroboration count.",
+      "category": "hybrid",
+      "data_sources": ["DuckDuckGo HTML", "Wikipedia API", "arXiv API"],
+      "requires_api_key": false,
+      "avg_duration_seconds": 12,
+      "created": "2026-03-10"
+    },
+    {
+      "id": "DG-0005",
+      "name": "Iterative Deepening Search",
+      "file": "method_iterative.py",
+      "description": "Does 3 rounds of progressively deeper DuckDuckGo searching. Each round analyzes results to generate focused follow-up queries. Returns results organized by depth level with theme synthesis.",
+      "category": "ai-enhanced",
+      "data_sources": ["DuckDuckGo HTML"],
+      "requires_api_key": false,
+      "avg_duration_seconds": 8,
+      "created": "2026-03-10"
+    }
+  ],
+  "categories": {
+    "web-search": ["DG-0001"],
+    "web-scraping": [],
+    "api-based": ["DG-0002", "DG-0003"],
+    "hybrid": ["DG-0004"],
+    "ai-enhanced": ["DG-0005"]
+  }
+}

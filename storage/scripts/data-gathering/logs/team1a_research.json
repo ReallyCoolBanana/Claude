@@ -1,0 +1,439 @@
+{
+  "team": "TEAM-1A",
+  "focus": "Data gathering best practices",
+  "timestamp": "2026-03-10T12:00:00Z",
+  "findings": [
+    {
+      "area": "Web Scraping & Search Optimization",
+      "key_insights": [
+        "Bing Search API was retired August 2025 -- any code using it must be migrated",
+        "Brave Search reduced free tier to credit-based (~1000 queries/month) for new users as of Feb 2026",
+        "DuckDuckGo Instant Answer API (api.duckduckgo.com) remains fully free with no key, but returns instant answers/related topics rather than full web results",
+        "The duckduckgo-search Python package (pip install duckduckgo-search) provides full web results with no API key via HTML/lite backends",
+        "SearXNG is a self-hosted metasearch engine aggregating 70+ search engines with JSON API output -- completely free and unlimited",
+        "AI-native search APIs (Tavily, Exa, Firecrawl) return LLM-optimized markdown and aggregate 20+ sources per call but require API keys",
+        "Query expansion via synonym generation, boolean operators (OR for synonyms within facets, AND across facets), and LLM-based query rewriting significantly improves recall",
+        "Pseudo-relevance feedback (extracting terms from top-N results to refine queries) is a proven technique for iterative search improvement",
+        "Rate limiting best practice: implement exponential backoff with jitter, respect robots.txt, use polite pool identifiers (email in User-Agent)"
+      ],
+      "recommended_apis": [
+        {
+          "name": "DuckDuckGo Instant Answer API",
+          "url": "https://api.duckduckgo.com/",
+          "free_tier": true,
+          "no_key_required": true,
+          "description": "Free instant answers, related topics, abstracts. No API key needed. Limited to instant answers rather than full search results."
+        },
+        {
+          "name": "duckduckgo-search (Python package)",
+          "url": "https://pypi.org/project/duckduckgo-search/",
+          "free_tier": true,
+          "no_key_required": true,
+          "description": "Full web search results via DuckDuckGo HTML/lite backends. Supports text, images, news, maps. No API key. pip install duckduckgo-search"
+        },
+        {
+          "name": "SearXNG",
+          "url": "https://github.com/searxng/searxng",
+          "free_tier": true,
+          "no_key_required": true,
+          "description": "Self-hosted metasearch engine aggregating 70+ search engines. JSON API output. AGPL-3.0 licensed. Public instances available at searx.space"
+        },
+        {
+          "name": "Tavily Search API",
+          "url": "https://tavily.com",
+          "free_tier": true,
+          "no_key_required": false,
+          "description": "AI-native search API. 1000 free credits/month (1 credit = 1 basic search, 2 = advanced). Aggregates 20 sources per call, returns LLM-optimized content."
+        },
+        {
+          "name": "Exa Search API",
+          "url": "https://exa.ai",
+          "free_tier": true,
+          "no_key_required": false,
+          "description": "Embedding-based semantic search engine. Understands meaning/context rather than keyword matching. Free tier available."
+        },
+        {
+          "name": "Brave Search API",
+          "url": "https://brave.com/search/api/",
+          "free_tier": true,
+          "no_key_required": false,
+          "description": "Web search API with $5 monthly credits (~1000 queries) for new users. Previously had 5000 free queries/month but reduced in Feb 2026."
+        }
+      ],
+      "techniques": [
+        "Boolean query construction: OR for synonyms within concept facets, AND across facets, NOT for exclusion",
+        "Automated query expansion using WordNet synsets, domain-specific thesauri (UMLS for medical), and LLM-based rewriting",
+        "Pseudo-relevance feedback: extract top terms from initial results, add to query, re-search",
+        "Query reduction: systematically remove terms to find minimal effective query",
+        "Wildcard and truncation operators for morphological variants",
+        "Structured data extraction from HTML using CSS selectors and XPath",
+        "Respectful scraping: User-Agent identification, rate limiting with exponential backoff, robots.txt compliance"
+      ],
+      "improvement_ideas_for_team3": [
+        "CRITICAL: Add duckduckgo-search Python package as a no-key-required search backend alongside or replacing current search methods",
+        "Implement query expansion pipeline: (1) extract key concepts from user query, (2) generate synonyms via LLM, (3) construct boolean OR groups, (4) execute multiple expanded queries",
+        "Add SearXNG integration for self-hosted unlimited search -- can be deployed alongside the tool as a Docker container",
+        "Implement pseudo-relevance feedback loop: search -> extract top terms from results -> refine query -> re-search",
+        "Add structured data extraction (JSON-LD, microdata, Open Graph) from HTML pages before falling back to unstructured text extraction",
+        "Create a search backend abstraction layer so different search APIs can be swapped without changing calling code"
+      ],
+      "sources": [
+        {"title": "Best Web Search APIs for AI Applications in 2026", "url": "https://www.firecrawl.dev/blog/best-web-search-apis"},
+        {"title": "7 Free Web Search APIs for AI Agents - KDnuggets", "url": "https://www.kdnuggets.com/7-free-web-search-apis-for-ai-agents"},
+        {"title": "duckduckgo-search on PyPI", "url": "https://pypi.org/project/duckduckgo-search/"},
+        {"title": "SearXNG GitHub", "url": "https://github.com/searxng/searxng"},
+        {"title": "Boolean Search Query Optimization Techniques 2026", "url": "https://techbusinessonline.com/boolean-search-query-optimization-techniques/"},
+        {"title": "Query Expansion - Grokipedia", "url": "https://grokipedia.com/page/Query_expansion"},
+        {"title": "Tavily Pricing", "url": "https://www.tavily.com/pricing"},
+        {"title": "Big List of Free and Open Public APIs (No Auth Needed)", "url": "https://mixedanalytics.com/blog/list-actually-free-open-no-auth-needed-apis/"}
+      ]
+    },
+    {
+      "area": "Academic & Structured Data Sources",
+      "key_insights": [
+        "OpenAlex indexes 240M+ works with 50K added daily -- broadest coverage of any free academic API",
+        "Semantic Scholar has 225M+ papers with AI features (TLDRs, embeddings, citation classification) -- no API key required for basic access",
+        "Cross-referencing between APIs using DOIs is the standard interoperability method",
+        "OpenAlex 'polite pool' (include email in request) gives faster, more consistent response times",
+        "CORE provides 300M+ open access papers with full-text PDF links -- best for full-text retrieval",
+        "arXiv API returns XML (not JSON like others) -- needs special parsing",
+        "Wikipedia Structured Contents API (beta) now returns parsed infoboxes, sections, tables as structured JSON",
+        "Wikidata SPARQL endpoint provides structured knowledge graph queries across all Wikipedia data",
+        "FRED API provides comprehensive US economic data (free with key), SEC EDGAR provides real-time filing data (free, no key for basic access)",
+        "api.data.gov aggregates 450+ APIs across 25 federal agencies under a single gateway"
+      ],
+      "recommended_apis": [
+        {
+          "name": "OpenAlex API",
+          "url": "https://api.openalex.org",
+          "free_tier": true,
+          "no_key_required": true,
+          "description": "240M+ scholarly works, authors, institutions. Free. Include email for polite pool access. 100K requests/day limit. JSON format."
+        },
+        {
+          "name": "Semantic Scholar API",
+          "url": "https://api.semanticscholar.org",
+          "free_tier": true,
+          "no_key_required": true,
+          "description": "225M+ papers with AI features (TLDRs, embeddings, citations). 100 requests/5 min without key. Apply for higher limits."
+        },
+        {
+          "name": "arXiv API",
+          "url": "http://export.arxiv.org/api/query",
+          "free_tier": true,
+          "no_key_required": true,
+          "description": "Preprint papers in STEM fields. Returns XML. No key required. Rate limit: 1 request per 3 seconds."
+        },
+        {
+          "name": "CORE API",
+          "url": "https://core.ac.uk/services/api",
+          "free_tier": true,
+          "no_key_required": false,
+          "description": "300M+ open access papers with full-text and PDF links. Free API key required. Best for full-text retrieval."
+        },
+        {
+          "name": "CrossRef API",
+          "url": "https://api.crossref.org",
+          "free_tier": true,
+          "no_key_required": true,
+          "description": "Bibliographic metadata for 130M+ DOIs. No key required. Include email in User-Agent for polite pool."
+        },
+        {
+          "name": "Wikipedia/MediaWiki API",
+          "url": "https://en.wikipedia.org/w/api.php",
+          "free_tier": true,
+          "no_key_required": true,
+          "description": "Full Wikipedia content, categories, links, search. 200 req/sec rate limit. Set User-Agent header."
+        },
+        {
+          "name": "Wikidata SPARQL",
+          "url": "https://query.wikidata.org/sparql",
+          "free_tier": true,
+          "no_key_required": true,
+          "description": "Structured knowledge graph queries across all Wikidata. SPARQL query language. No key required."
+        },
+        {
+          "name": "FRED API",
+          "url": "https://fred.stlouisfed.org/docs/api/fred/",
+          "free_tier": true,
+          "no_key_required": false,
+          "description": "Federal Reserve Economic Data. Comprehensive US economic/financial time series. Free key required."
+        },
+        {
+          "name": "SEC EDGAR API",
+          "url": "https://data.sec.gov",
+          "free_tier": true,
+          "no_key_required": true,
+          "description": "Real-time SEC filings, XBRL data. RESTful JSON APIs. Updated within seconds of filing. Include User-Agent with email."
+        },
+        {
+          "name": "api.data.gov",
+          "url": "https://api.data.gov",
+          "free_tier": true,
+          "no_key_required": false,
+          "description": "Gateway to 450+ APIs across 25 federal agencies. Single API key covers all. Free."
+        },
+        {
+          "name": "OpenCitations API",
+          "url": "https://opencitations.net/index/api/v2",
+          "free_tier": true,
+          "no_key_required": true,
+          "description": "Open citation data. No restrictions on metadata retrieval. Useful for citation chain analysis."
+        },
+        {
+          "name": "Unpaywall API",
+          "url": "https://api.unpaywall.org",
+          "free_tier": true,
+          "no_key_required": true,
+          "description": "Find open access versions of paywalled papers by DOI. Include email parameter. 100K requests/day."
+        }
+      ],
+      "techniques": [
+        "DOI-based cross-referencing: use DOIs to merge data across OpenAlex, Semantic Scholar, CrossRef, and CORE",
+        "Citation chain traversal: follow references and citations to build comprehensive literature maps",
+        "OpenAlex filters: use works?filter= with parameters like publication_year, cited_by_count, type for precise queries",
+        "Semantic Scholar embeddings: use paper embeddings for semantic similarity search beyond keyword matching",
+        "Wikipedia category traversal: recursively follow categories to discover related topics",
+        "Wikidata SPARQL for structured fact extraction (birth dates, locations, relationships, etc.)",
+        "Combine Unpaywall with DOIs to find open access versions of paywalled papers",
+        "Use polite pool access (email in User-Agent or parameter) for all APIs that support it"
+      ],
+      "improvement_ideas_for_team3": [
+        "Add OpenAlex as a primary academic data source -- 240M works, free, no key required with polite pool",
+        "Implement DOI-based cross-referencing pipeline: query one API, extract DOIs, enrich from other APIs",
+        "Add Semantic Scholar TLDR summaries as quick-scan feature for paper relevance assessment",
+        "Implement citation chain traversal: given a paper, automatically fetch its references and citers for comprehensive coverage",
+        "Add Wikidata SPARQL queries for structured fact extraction (more reliable than scraping Wikipedia text)",
+        "Create a unified academic search that fans out queries to OpenAlex + Semantic Scholar + arXiv simultaneously and deduplicates by DOI",
+        "Add Unpaywall integration to automatically find open access versions of papers",
+        "Integrate SEC EDGAR for financial research tasks -- real-time filing data with JSON API"
+      ],
+      "sources": [
+        {"title": "OpenAlex Developers", "url": "https://developers.openalex.org/"},
+        {"title": "Semantic Scholar API", "url": "https://www.semanticscholar.org/product/api"},
+        {"title": "Semantic Scholar Open Data Platform (arXiv paper)", "url": "https://arxiv.org/html/2301.10140v2"},
+        {"title": "Scholarly Metadata API List - SMU", "url": "https://researchguides.smu.edu.sg/api-list/scholarly-metadata-api"},
+        {"title": "Wikipedia Structured Contents Initiative", "url": "https://enterprise.wikimedia.com/api/structured-contents/"},
+        {"title": "FRED API Documentation", "url": "https://fred.stlouisfed.org/docs/api/fred/"},
+        {"title": "SEC EDGAR APIs", "url": "https://www.sec.gov/search-filings/edgar-application-programming-interfaces"},
+        {"title": "api.data.gov", "url": "https://api.data.gov/"}
+      ]
+    },
+    {
+      "area": "Data Quality & Verification Techniques",
+      "key_insights": [
+        "Modern fact-checking follows a pipeline: claim detection -> evidence retrieval -> cross-referencing -> confidence scoring",
+        "Dual RAG architecture is emerging as best practice: one retriever for trusted/internal sources, one for live external sources, with automatic discrepancy detection",
+        "Minimum viable evidence standard: at least 2 independent high-quality sources for any novel claim",
+        "Restricting AI analysis to user-uploaded/trusted documents as grounding can cut hallucinations by 60%+",
+        "AI fact-checker accuracy reached 72.3% in controlled studies (August 2024) -- useful but not sufficient alone",
+        "Source credibility scoring combines: academic signals (peer review, citations), textual signals (bias detection, fallacies), and metadata signals (domain age, corrections policy)",
+        "TrustRank and Knowledge-Based Trust (KBT) algorithms use web link structure and fact verification against knowledge bases respectively",
+        "Contradiction scanning (searching for 'contradicts', 'retraction', 'fails to replicate' alongside key terms) is a practical technique for finding counter-evidence",
+        "Recency window filtering: default to last 24 months for fast-moving topics, expand for historical claims",
+        "Mean pooling of statement-level credibility scores produces document-level trust scores"
+      ],
+      "recommended_apis": [
+        {
+          "name": "Google Fact Check Tools API",
+          "url": "https://developers.google.com/fact-check/tools/api",
+          "free_tier": true,
+          "no_key_required": false,
+          "description": "Search fact-check articles from ClaimReview markup. Free with Google API key."
+        },
+        {
+          "name": "OpenCitations",
+          "url": "https://opencitations.net",
+          "free_tier": true,
+          "no_key_required": true,
+          "description": "Open citation data for verification of citation chains and reference networks."
+        },
+        {
+          "name": "Retraction Watch Database",
+          "url": "https://retractionwatch.com",
+          "free_tier": true,
+          "no_key_required": true,
+          "description": "Database of retracted scientific papers. Essential for verifying if cited papers have been retracted."
+        }
+      ],
+      "techniques": [
+        "Claim decomposition: break complex statements into atomic, independently verifiable claims",
+        "Dual RAG verification: retrieve evidence from both trusted internal sources and live external sources, flag discrepancies",
+        "Cross-source corroboration: require N >= 2 independent sources agreeing before accepting a claim as verified",
+        "Contradiction scanning: search for negating terms (retraction, contradicts, debunked) alongside key claims",
+        "Citation chain verification: follow citation chains to primary sources, verify claims match cited content",
+        "Temporal filtering: apply recency windows appropriate to topic velocity (24 months for tech, 5+ years for established science)",
+        "Source credibility scoring: combine domain authority, author credentials, publication venue, citation count, and peer review status",
+        "Hallucination detection: compare LLM outputs against retrieved source text, flag unsupported claims",
+        "Confidence tiering: classify claims as high/medium/low confidence based on evidence quality and agreement",
+        "Mean pooling of per-claim scores to produce document-level credibility assessments"
+      ],
+      "improvement_ideas_for_team3": [
+        "Implement claim decomposition: before verifying, break gathered text into atomic claims for individual verification",
+        "Build a dual-source verification pipeline: for each claim, retrieve from 2+ independent sources and score agreement",
+        "Add contradiction scanning as a standard step: for key findings, automatically search for counter-evidence",
+        "Implement source credibility scoring: assign trust scores based on domain, publication type, recency, and citation metrics",
+        "Add confidence labels (high/medium/low/unverified) to all gathered data points",
+        "Create a retraction/correction checker: before citing academic papers, verify they haven't been retracted",
+        "Implement hallucination detection by comparing LLM-generated summaries against actual source text with semantic similarity",
+        "Add a 'verification depth' parameter: quick (single source check), standard (2 sources), thorough (3+ sources with contradiction scan)"
+      ],
+      "sources": [
+        {"title": "AI-Powered Automated Fact-Checking - PressMaster", "url": "https://www.pressmaster.ai/article/how-fact-checking-automation-works"},
+        {"title": "Verify AI Data Accuracy with Real-Time Cross-Checking - AIQ Labs", "url": "https://aiqlabs.ai/blog/how-to-verify-data-source-accuracy-for-trusted-ai"},
+        {"title": "VERIFAID: RAG-Based Fact-Checking System (ScienceDirect)", "url": "https://www.sciencedirect.com/science/article/pii/S0045790625006895"},
+        {"title": "Veracity: Open-Source AI Fact-Checking System (IJCAI 2025)", "url": "https://www.ijcai.org/proceedings/2025/1254.pdf"},
+        {"title": "Automated Source Credibility Scoring - Sourcely", "url": "https://www.sourcely.net/resources/what-is-automated-source-credibility-scoring"},
+        {"title": "How Generative Engines Rank Trustworthy Content - Search Engine Land", "url": "https://searchengineland.com/how-generative-engines-define-rank-trustworthy-content-461575"},
+        {"title": "Stanford Web Credibility Research", "url": "https://cs.stanford.edu/~merrie/papers/WebCredibility_CHI2011.pdf"}
+      ]
+    },
+    {
+      "area": "Efficiency Optimization",
+      "key_insights": [
+        "Token inflation from Chain-of-Thought reasoning is a critical bottleneck -- CoT can 3-10x token usage with diminishing returns",
+        "Poor data serialization consumes 40-70% of available tokens through unnecessary formatting overhead",
+        "Selective token-level optimization outperforms naive breadth -- going deeper on fewer tokens beats going broader",
+        "In multi-agent systems, giving each agent full shared context is wasteful -- selective context routing (RCR-Router pattern) is more efficient",
+        "4-5 sub-agents per team is the sweet spot for efficiency (confirmed by Team 3's findings in TEAM-0003 session log)",
+        "Multi-agent systems frequently underperform single-agent baselines due to coordination overhead (MAST taxonomy: 41.77% design failures, 36.94% coordination failures)",
+        "Caching strategies: KV-cache for LLM inference, semantic caching for repeated similar queries, result caching with TTL for API responses",
+        "Asynchronous operations with parallel fan-out for independent queries, sequential deepening for dependent queries",
+        "Algorithmic progress reducing inference costs ~3x per year independent of hardware improvements",
+        "Iterative refinement strategy: start broad to identify promising directions, then go deep on highest-signal areas"
+      ],
+      "recommended_apis": [],
+      "techniques": [
+        "Token-efficient data serialization: use compact formats (CSV, TSV) instead of verbose JSON/XML when passing data to LLMs",
+        "Semantic caching: hash query embeddings to detect and serve cached results for semantically similar (not just identical) queries",
+        "Result caching with TTL: cache API responses with time-to-live appropriate to data freshness needs (minutes for news, days for academic)",
+        "Parallel fan-out: execute independent searches/API calls simultaneously, merge results",
+        "Sequential deepening: only drill down on high-signal results, skip low-relevance branches early",
+        "Selective context routing: give each agent only the context it needs, not the full shared memory",
+        "Prompt compression: remove formatting overhead, use abbreviations, strip boilerplate before sending to LLM",
+        "Iterative refinement with early stopping: set quality thresholds and stop searching when met rather than exhausting all sources",
+        "Batch API requests where possible: many APIs support bulk queries (OpenAlex, Semantic Scholar) that are more efficient than individual calls",
+        "Progressive disclosure: gather summaries first, only fetch full content for high-relevance items"
+      ],
+      "improvement_ideas_for_team3": [
+        "Implement semantic caching: before making API calls, check if a semantically similar query was recently answered",
+        "Add parallel fan-out for independent data sources: search web, academic, and structured data simultaneously",
+        "Implement progressive disclosure: fetch abstracts/summaries first, only retrieve full text for items passing relevance threshold",
+        "Optimize data serialization before LLM processing: strip HTML/formatting, use compact representations to reduce token waste by 40-70%",
+        "Add early stopping: define quality thresholds (e.g., 3 corroborating sources found) and stop searching when met",
+        "Implement selective context routing in multi-agent research: each sub-agent gets only its relevant slice of shared context",
+        "Add batch API support: use OpenAlex/Semantic Scholar bulk endpoints instead of individual queries where possible",
+        "Create a cost estimator: before executing a research plan, estimate token/API call costs and suggest optimizations",
+        "Implement iterative broadening: start with narrow high-precision queries, progressively broaden only if insufficient results found"
+      ],
+      "sources": [
+        {"title": "Token-Efficient RL for LLM Reasoning (arXiv)", "url": "https://arxiv.org/abs/2504.20834"},
+        {"title": "OPTIMA: Optimizing LLM Effectiveness and Efficiency (ACL 2025)", "url": "https://aclanthology.org/2025.findings-acl.601.pdf"},
+        {"title": "Token Optimization for AI Efficiency - SparkCo", "url": "https://sparkco.ai/blog/optimizing-token-usage-for-ai-efficiency-in-2025"},
+        {"title": "Token Optimization: Backbone of Prompt Engineering - IBM", "url": "https://developer.ibm.com/articles/awb-token-optimization-backbone-of-effective-prompt-engineering"},
+        {"title": "RCR-Router: Role-Aware Context Routing for Multi-Agent LLM (arXiv)", "url": "https://arxiv.org/pdf/2508.04903"},
+        {"title": "Hermes: Optimizing Multi-Stage AI Inference - MIT CSAIL", "url": "https://people.csail.mit.edu/suvinay/pubs/2025.hermes.arxiv.pdf"},
+        {"title": "LLM x Data Survey - Tsinghua University", "url": "https://dbgroup.cs.tsinghua.edu.cn/ligl/papers/DataAI-2025.pdf"},
+        {"title": "Guide to Token-Efficient Data Prep - The New Stack", "url": "https://thenewstack.io/a-guide-to-token-efficient-data-prep-for-llm-workloads/"}
+      ]
+    }
+  ],
+  "top_recommendations": [
+    "1. Add duckduckgo-search Python package as primary no-key search backend -- immediate capability gain with zero API cost",
+    "2. Implement parallel fan-out across data sources (web + academic + structured) with DOI-based deduplication",
+    "3. Build query expansion pipeline: concept extraction -> synonym generation -> boolean query construction -> multi-query execution",
+    "4. Add dual-source verification: every key claim cross-referenced against 2+ independent sources with confidence scoring",
+    "5. Implement semantic caching to avoid redundant API calls for similar queries",
+    "6. Add OpenAlex + Semantic Scholar as academic search backends (both free, no key required for basic access)",
+    "7. Optimize token usage by stripping formatting overhead from retrieved content before LLM processing (40-70% savings)",
+    "8. Implement progressive disclosure: summaries first, full text only for relevant items",
+    "9. Add source credibility scoring combining domain authority, recency, citation metrics, and peer review status",
+    "10. Create search backend abstraction layer enabling easy swapping between search providers"
+  ],
+  "new_apis_discovered": [
+    {
+      "name": "DuckDuckGo Instant Answer API",
+      "base_url": "https://api.duckduckgo.com/",
+      "docs_url": "https://api.duckduckgo.com/api",
+      "no_key_required": true,
+      "notes": "Instant answers only, not full search results"
+    },
+    {
+      "name": "duckduckgo-search (Python package)",
+      "base_url": "https://html.duckduckgo.com/html/",
+      "docs_url": "https://pypi.org/project/duckduckgo-search/",
+      "no_key_required": true,
+      "notes": "Full web search results. pip install duckduckgo-search. Supports text, images, news, maps."
+    },
+    {
+      "name": "SearXNG (self-hosted metasearch)",
+      "base_url": "http://localhost:8888/search",
+      "docs_url": "https://docs.searxng.org/",
+      "no_key_required": true,
+      "notes": "Self-hosted. Aggregates 70+ engines. JSON API. Docker deployment. Public instances at searx.space"
+    },
+    {
+      "name": "OpenAlex API",
+      "base_url": "https://api.openalex.org",
+      "docs_url": "https://docs.openalex.org/",
+      "no_key_required": true,
+      "notes": "240M+ scholarly works. Include email for polite pool. 100K req/day."
+    },
+    {
+      "name": "Semantic Scholar API",
+      "base_url": "https://api.semanticscholar.org/graph/v1",
+      "docs_url": "https://api.semanticscholar.org/api-docs/",
+      "no_key_required": true,
+      "notes": "225M+ papers with TLDRs and embeddings. 100 req/5min without key."
+    },
+    {
+      "name": "CrossRef API",
+      "base_url": "https://api.crossref.org",
+      "docs_url": "https://api.crossref.org/swagger-ui/index.html",
+      "no_key_required": true,
+      "notes": "130M+ DOIs. Include email in User-Agent for polite pool."
+    },
+    {
+      "name": "Wikidata SPARQL Endpoint",
+      "base_url": "https://query.wikidata.org/sparql",
+      "docs_url": "https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service",
+      "no_key_required": true,
+      "notes": "Structured knowledge graph queries. SPARQL language."
+    },
+    {
+      "name": "SEC EDGAR Data API",
+      "base_url": "https://data.sec.gov",
+      "docs_url": "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+      "no_key_required": true,
+      "notes": "Real-time SEC filings. JSON format. Include User-Agent with email."
+    },
+    {
+      "name": "OpenCitations API",
+      "base_url": "https://opencitations.net/index/api/v2",
+      "docs_url": "https://opencitations.net/index/api/v2",
+      "no_key_required": true,
+      "notes": "Open citation data. No restrictions on metadata retrieval."
+    },
+    {
+      "name": "Unpaywall API",
+      "base_url": "https://api.unpaywall.org/v2",
+      "docs_url": "https://unpaywall.org/products/api",
+      "no_key_required": true,
+      "notes": "Find open access versions of papers by DOI. Include email parameter."
+    },
+    {
+      "name": "Tavily Search API",
+      "base_url": "https://api.tavily.com",
+      "docs_url": "https://docs.tavily.com",
+      "no_key_required": false,
+      "notes": "1000 free credits/month. AI-native search. Requires API key."
+    },
+    {
+      "name": "Exa Search API",
+      "base_url": "https://api.exa.ai",
+      "docs_url": "https://docs.exa.ai",
+      "no_key_required": false,
+      "notes": "Semantic embedding-based search. Free tier available. Requires API key."
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "description": "Benchmark schema for data gathering methods",
+  "benchmark_entry": {
+    "method_id": "string — e.g. DG-0001",
+    "method_name": "string",
+    "iteration": "int — which loop iteration",
+    "timestamp": "ISO 8601",
+    "metrics": {
+      "speed_seconds": "float — time to complete",
+      "data_points_collected": "int — number of facts/items returned",
+      "source_quality_score": "0-100 — quality of sources found",
+      "accuracy_score": "0-100 — verified accuracy by Team 2",
+      "relevance_score": "0-100 — relevance to query",
+      "token_efficiency": "float — data points per 1000 tokens used",
+      "unique_sources": "int — number of distinct sources",
+      "citation_rate": "float — % of claims with citations"
+    },
+    "test_query": "string — the query used for benchmarking",
+    "raw_results_summary": "string — brief description of results",
+    "notes": "string — observations, failure modes, etc.",
+    "team_feedback": {
+      "from_team2": "string — verification team insights",
+      "from_team3": "string — software team improvement notes"
+    }
+  }
+}

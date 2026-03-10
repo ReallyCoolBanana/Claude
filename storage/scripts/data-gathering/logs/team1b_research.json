@@ -1,0 +1,459 @@
+{
+  "team": "TEAM-1B",
+  "focus": "Emerging data sources and novel techniques",
+  "timestamp": "2026-03-10T12:00:00Z",
+  "findings": [
+    {
+      "area": "Free Financial Data APIs",
+      "data_sources_found": [
+        {
+          "name": "SEC EDGAR XBRL APIs",
+          "url": "https://data.sec.gov/",
+          "type": "api",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "10 requests/second (User-Agent header required)",
+          "data_types": ["financial_statements", "company_filings", "insider_trading", "institutional_holdings"],
+          "quality_assessment": "high",
+          "notes": "Best free source for US company fundamentals. Company Facts API returns all XBRL disclosures in JSON. Frames API aggregates data across companies. Bulk download available (companyfacts.zip). Real-time updates. No authentication needed - just User-Agent header with email."
+        },
+        {
+          "name": "FRED (Federal Reserve Economic Data) API",
+          "url": "https://fred.stlouisfed.org/docs/api/fred/",
+          "type": "api",
+          "free": true,
+          "requires_key": true,
+          "rate_limit": "120 requests/minute",
+          "data_types": ["economic_indicators", "interest_rates", "gdp", "inflation", "employment", "monetary_data"],
+          "quality_assessment": "high",
+          "notes": "812,000+ economic time series. Free API key via FRED account. Python wrapper 'fredapi' available. Official Federal Reserve data - highest reliability. Returns pandas DataFrames."
+        },
+        {
+          "name": "Alpha Vantage",
+          "url": "https://www.alphavantage.co/",
+          "type": "api",
+          "free": true,
+          "requires_key": true,
+          "rate_limit": "25 requests/day (free tier)",
+          "data_types": ["stock_prices", "forex", "crypto", "technical_indicators", "fundamentals"],
+          "quality_assessment": "medium",
+          "notes": "Covers 200,000+ tickers across 20+ exchanges. 50+ technical indicators. Free tier very limited at 25 req/day. Good for real-time prices and forex."
+        },
+        {
+          "name": "Finnhub",
+          "url": "https://finnhub.io/",
+          "type": "api",
+          "free": true,
+          "requires_key": true,
+          "rate_limit": "60 requests/minute (free tier)",
+          "data_types": ["stock_prices", "company_fundamentals", "economic_data", "forex", "crypto", "alternative_data"],
+          "quality_assessment": "high",
+          "notes": "Strong free tier with real-time data. Includes alternative data (sentiment, ESG). WebSocket support for streaming. Good documentation."
+        },
+        {
+          "name": "Financial Modeling Prep (FMP)",
+          "url": "https://site.financialmodelingprep.com/developer/docs",
+          "type": "api",
+          "free": true,
+          "requires_key": true,
+          "rate_limit": "250 requests/day (free tier)",
+          "data_types": ["stock_prices", "financial_statements", "ratios", "dcf", "news"],
+          "quality_assessment": "medium",
+          "notes": "Best free option for US fundamentals. Financial statements, ratios, DCF calculations. Free tier limited but useful for prototyping."
+        },
+        {
+          "name": "Polygon.io (now Massive.com)",
+          "url": "https://massive.com/",
+          "type": "api",
+          "free": true,
+          "requires_key": true,
+          "rate_limit": "5 requests/minute (free tier)",
+          "data_types": ["stock_prices", "options", "forex", "crypto"],
+          "quality_assessment": "medium",
+          "notes": "Rebranded to Massive.com in Oct 2025. Free tier only 5 calls/min - very restrictive. End-of-day and historical data only on free plan. Python client library available."
+        },
+        {
+          "name": "yfinance (Python library)",
+          "url": "https://pypi.org/project/yfinance/",
+          "type": "api",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "Unofficial, varies (can be throttled without warning)",
+          "data_types": ["stock_prices", "dividends", "splits", "basic_fundamentals", "options_chains"],
+          "quality_assessment": "medium",
+          "notes": "v1.2.0 released Feb 2026, actively maintained. No API key needed. Scrapes Yahoo Finance - can break without warning. Good for research/prototyping, risky for production. Historical data downloads now require Yahoo Gold ($50/mo)."
+        },
+        {
+          "name": "Twelve Data",
+          "url": "https://twelvedata.com/",
+          "type": "api",
+          "free": true,
+          "requires_key": true,
+          "rate_limit": "800 requests/day (free tier)",
+          "data_types": ["stock_prices", "forex", "crypto", "technical_indicators", "time_series"],
+          "quality_assessment": "medium",
+          "notes": "Best free tier daily limit (800/day). Built-in technical indicators. Multi-asset time series focus. Good for prototyping dashboards."
+        },
+        {
+          "name": "IEX Exchange (residual data)",
+          "url": "https://www.iexexchange.io/products/market-data-connectivity",
+          "type": "api",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "N/A (bulk download)",
+          "data_types": ["exchange_volume", "iex_specific_stats"],
+          "quality_assessment": "low",
+          "notes": "IEX Cloud shut down Aug 2024. Only IEX Exchange-specific data remains free (T+1 historical downloads). Very limited coverage - only IEX exchange activity."
+        }
+      ],
+      "techniques": [
+        "Combine SEC EDGAR (fundamentals) + yfinance (prices) + FRED (macro) for comprehensive free coverage",
+        "Use SEC EDGAR bulk download (companyfacts.zip) for offline analysis instead of per-request API calls",
+        "Layer Finnhub alternative data (sentiment/ESG) on top of SEC fundamental data",
+        "Use Twelve Data's generous free tier for technical analysis while SEC EDGAR handles fundamentals"
+      ],
+      "implementation_ideas": [
+        "Build a SEC EDGAR XBRL parser that extracts standardized financial statements (income, balance sheet, cash flow) from companyfacts.zip - this is the highest-value free data source",
+        "Create a multi-API financial data aggregator that routes requests to the API with available quota (Twelve Data > FMP > Alpha Vantage > Polygon fallback chain)",
+        "Implement a FRED macro indicator dashboard pulling key series (GDP, CPI, unemployment, fed funds rate) with automatic refresh",
+        "Build a yfinance wrapper with automatic retry/fallback to handle Yahoo's frequent breaking changes"
+      ],
+      "sources": [
+        {"title": "SEC EDGAR APIs", "url": "https://www.sec.gov/search-filings/edgar-application-programming-interfaces"},
+        {"title": "FRED API Documentation", "url": "https://fred.stlouisfed.org/docs/api/fred/"},
+        {"title": "Best Financial Data APIs in 2026", "url": "https://www.nb-data.com/p/best-financial-data-apis-in-2026"},
+        {"title": "Financial Data APIs Compared 2026", "url": "https://www.ksred.com/the-complete-guide-to-financial-data-apis-building-your-own-stock-market-data-pipeline-in-2025/"},
+        {"title": "Best Free Finance APIs 2025", "url": "https://noteapiconnector.com/best-free-finance-apis"},
+        {"title": "yfinance on PyPI", "url": "https://pypi.org/project/yfinance/"}
+      ]
+    },
+    {
+      "area": "Open Knowledge Graphs & Datasets",
+      "data_sources_found": [
+        {
+          "name": "Wikidata SPARQL Endpoint",
+          "url": "https://query.wikidata.org/",
+          "type": "knowledge-graph",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "Concurrent query limits, no strict per-minute cap",
+          "data_types": ["structured_facts", "entity_relationships", "company_data", "geographic_data", "biographical_data"],
+          "quality_assessment": "high",
+          "notes": "1.3 billion+ structured facts. 500,000 updates/day. REST API and SPARQL endpoint both available, no key needed. In 2025, Wikidata split its query service into two graphs due to scaling issues with Blazegraph. Can query company info, industry classifications, executive relationships."
+        },
+        {
+          "name": "DBpedia",
+          "url": "https://www.dbpedia.org/",
+          "type": "knowledge-graph",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "Fair use policy on SPARQL endpoint",
+          "data_types": ["structured_wikipedia_data", "entity_types", "abstracts", "infobox_data"],
+          "quality_assessment": "medium",
+          "notes": "Structured data extracted from Wikipedia. SPARQL endpoint available. 2025 research showed LLMs can now auto-translate SPARQL queries between DBpedia and Wikidata schemas. Good for entity enrichment."
+        },
+        {
+          "name": "OpenAlex",
+          "url": "https://openalex.org/",
+          "type": "knowledge-graph",
+          "free": true,
+          "requires_key": true,
+          "rate_limit": "100,000 requests/day with free API key (100/day without key)",
+          "data_types": ["academic_papers", "authors", "institutions", "concepts", "citations"],
+          "quality_assessment": "high",
+          "notes": "240M+ works indexed, 50,000 added daily. CC0 licensed. Replaced Microsoft Academic Graph. Free API key gives 100K calls/day. Monthly data snapshots available for bulk download. R and Python libraries available."
+        },
+        {
+          "name": "SemOpenAlex (RDF Knowledge Graph)",
+          "url": "https://semopenalex.org/",
+          "type": "knowledge-graph",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "SPARQL endpoint fair use",
+          "data_types": ["academic_papers_rdf", "author_networks", "institution_data", "concept_hierarchies"],
+          "quality_assessment": "high",
+          "notes": "26 billion+ RDF triples about scientific publications. CC0 licensed. SPARQL endpoint, RDF dumps, and Linked Open Data URIs. Concepts linked to Wikidata for multi-lingual labels."
+        },
+        {
+          "name": "Common Crawl",
+          "url": "https://commoncrawl.org/",
+          "type": "dataset",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "N/A (S3 hosted, pay for compute only)",
+          "data_types": ["web_pages_html", "extracted_text", "metadata", "link_graphs"],
+          "quality_assessment": "high",
+          "notes": "Latest crawl CC-MAIN-2026-08. 2.42 billion+ pages per crawl, 419 TiB. Hosted free on AWS S3. WARC/WAT/WET formats. Since March 2025, page truncation increased to 5 MiB. Used to train GPT-3 and most major LLMs. Good for web-scale text mining."
+        },
+        {
+          "name": "Hugging Face Datasets - financial-news-multisource",
+          "url": "https://huggingface.co/datasets/Brianferrell787/financial-news-multisource",
+          "type": "dataset",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "N/A (download-based)",
+          "data_types": ["financial_news", "news_articles", "sentiment_data"],
+          "quality_assessment": "high",
+          "notes": "57.1M+ rows across 24 subsets spanning 1990-2025. Sources include Benzinga, NYT, Yahoo Finance, Reddit finance. Parquet format with HF streaming. Trading-session anchored to prevent look-ahead bias. Best unified financial news dataset available."
+        },
+        {
+          "name": "Hugging Face Datasets - FNSPID",
+          "url": "https://huggingface.co/datasets/Zihan1004/FNSPID",
+          "type": "dataset",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "N/A (download-based)",
+          "data_types": ["financial_news", "stock_prices", "time_series"],
+          "quality_assessment": "medium",
+          "notes": "Financial news + stock prices for S&P 500 companies in time series format. Good for training prediction models. Includes tool for updating dataset."
+        },
+        {
+          "name": "Hugging Face Datasets - financial_phrasebank",
+          "url": "https://huggingface.co/datasets/takala/financial_phrasebank",
+          "type": "dataset",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "N/A (download-based)",
+          "data_types": ["financial_sentiment", "labeled_phrases"],
+          "quality_assessment": "high",
+          "notes": "Labeled financial phrases with sentiment annotations. Standard benchmark for financial NLP. Good for training/evaluating sentiment models."
+        }
+      ],
+      "techniques": [
+        "Use Wikidata SPARQL to build company knowledge graphs (executives, subsidiaries, industry classifications)",
+        "Cross-reference OpenAlex papers with company R&D to identify innovation signals",
+        "Use Common Crawl WET files (text-only) for domain-specific corpus building",
+        "Stream Hugging Face financial-news-multisource via Parquet for real-time NLP training data"
+      ],
+      "implementation_ideas": [
+        "Build a Wikidata company enrichment service: given a ticker, pull structured data about the company (CEO, founding date, subsidiaries, industry, HQ location) via SPARQL",
+        "Create a financial news pipeline using HF financial-news-multisource dataset as training data for sentiment classifiers",
+        "Use OpenAlex to track research paper citations and institutional affiliations as signals for biotech/pharma stock analysis",
+        "Build a Common Crawl filter pipeline to extract financial content from web crawls for domain-specific language model fine-tuning"
+      ],
+      "sources": [
+        {"title": "Wikidata SPARQL Tutorial", "url": "https://www.wikidata.org/wiki/Wikidata:SPARQL_tutorial"},
+        {"title": "OpenAlex Technical Docs", "url": "https://developers.openalex.org/"},
+        {"title": "SemOpenAlex Paper", "url": "https://link.springer.com/chapter/10.1007/978-3-031-47243-5_6"},
+        {"title": "Common Crawl Get Started", "url": "https://commoncrawl.org/get-started"},
+        {"title": "financial-news-multisource Dataset", "url": "https://huggingface.co/datasets/Brianferrell787/financial-news-multisource"},
+        {"title": "Wikidata Enterprise Innovation", "url": "https://itbusinessnet.com/2025/08/harnessing-wikidatas-open-knowledge-graph-for-enterprise-innovation/"}
+      ]
+    },
+    {
+      "area": "Real-Time & Social Data Sources",
+      "data_sources_found": [
+        {
+          "name": "Reddit API (Free Tier via PRAW)",
+          "url": "https://www.reddit.com/dev/api/",
+          "type": "api",
+          "free": true,
+          "requires_key": true,
+          "rate_limit": "100 requests/minute, 10,000/month (free tier)",
+          "data_types": ["posts", "comments", "subreddit_data", "user_activity", "sentiment"],
+          "quality_assessment": "medium",
+          "notes": "Free for non-commercial/research use. OAuth required. PRAW (Python Reddit API Wrapper) is the standard library. Monthly cap of 10K requests severely limits sustained monitoring. 2025 crackdown requires pre-approval for many use cases."
+        },
+        {
+          "name": "Reddit RSS Feeds",
+          "url": "https://www.reddit.com/r/wallstreetbets/.rss",
+          "type": "feed",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "No strict limit (reasonable use)",
+          "data_types": ["posts", "titles", "links"],
+          "quality_assessment": "low",
+          "notes": "Append .rss to any subreddit URL. No auth needed. Lightweight alternative to Reddit API for basic monitoring. Limited to recent posts, no comments. Good for headline scanning of r/wallstreetbets, r/stocks, r/investing."
+        },
+        {
+          "name": "FreshRSS (Self-hosted RSS Aggregator)",
+          "url": "https://freshrss.org/",
+          "type": "feed",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "N/A (self-hosted)",
+          "data_types": ["rss_feeds", "atom_feeds", "news_aggregation"],
+          "quality_assessment": "high",
+          "notes": "Self-hosted, handles 1M+ articles and 50K+ feeds. Multi-user. Can aggregate financial news RSS feeds from SEC, Reuters, Bloomberg (free feeds), Yahoo Finance, and niche sources. API available for programmatic access."
+        },
+        {
+          "name": "SEC EDGAR Real-Time Filing Feed",
+          "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=&dateb=&owner=include&count=40",
+          "type": "feed",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "10 requests/second",
+          "data_types": ["sec_filings", "8k_events", "insider_trades", "earnings"],
+          "quality_assessment": "high",
+          "notes": "Real-time SEC filing stream. EDGAR full-text search API also available. No key required. Can filter by form type (8-K for material events, Form 4 for insider trading). RSS feed available at sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=&dateb=&owner=include&count=40&output=atom"
+        },
+        {
+          "name": "GitHub Trending (via GiTrends API)",
+          "url": "https://github.com/maulikshetty/GiTrends",
+          "type": "api",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "Depends on deployment",
+          "data_types": ["trending_repos", "developer_trends", "tech_discovery"],
+          "quality_assessment": "medium",
+          "notes": "No official GitHub trending API exists. GiTrends fills the gap with Node.js backend. Can track trending by language, time range. Good for tech/tool discovery signals."
+        },
+        {
+          "name": "GitHub Trending API (NiklasTiede)",
+          "url": "https://github.com/NiklasTiede/Github-Trending-API",
+          "type": "api",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "Depends on deployment",
+          "data_types": ["trending_repos", "trending_developers"],
+          "quality_assessment": "medium",
+          "notes": "Routes: /repositories and /developers. Filter by programming language, date range (daily/weekly/monthly), spoken language. Lightweight alternative to GiTrends."
+        },
+        {
+          "name": "Pushshift (Reddit Historical Data)",
+          "url": "https://pushshift.io/",
+          "type": "dataset",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "Varies by access method",
+          "data_types": ["historical_reddit_posts", "historical_reddit_comments"],
+          "quality_assessment": "medium",
+          "notes": "Billions of Reddit posts/comments dating back to 2005. Valuable for historical sentiment analysis. Access has become more restricted since Reddit API changes in 2023. Check current availability."
+        },
+        {
+          "name": "RSS.app",
+          "url": "https://rss.app/",
+          "type": "api",
+          "free": false,
+          "requires_key": true,
+          "rate_limit": "Processes 1.5M+ daily articles",
+          "data_types": ["news_feeds", "sec_filings", "market_news"],
+          "quality_assessment": "high",
+          "notes": "Commercial service but notable for SEC filing monitoring, financial report tracking. API processes 1.5M+ daily articles. Can generate RSS from any webpage. Free tier limited."
+        },
+        {
+          "name": "New Sloth (AI-powered RSS Generator)",
+          "url": "https://newsloth.com/",
+          "type": "api",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "Free tier available",
+          "data_types": ["generated_rss_feeds", "web_scraping", "structured_data"],
+          "quality_assessment": "medium",
+          "notes": "AI-powered content auto-detection generates RSS/XML and JSON feeds from any public webpage. Useful for creating feeds from sites that don't offer RSS. Good for monitoring financial sites without native RSS support."
+        }
+      ],
+      "techniques": [
+        "Use Reddit RSS feeds (no auth) for lightweight subreddit monitoring instead of rate-limited API",
+        "Combine SEC EDGAR real-time feed with FreshRSS for automated filing alerts",
+        "Monitor GitHub trending repos to identify emerging fintech tools and datasets",
+        "Use New Sloth to generate RSS feeds from financial sites that lack native RSS"
+      ],
+      "implementation_ideas": [
+        "Build a SEC EDGAR 8-K event monitor that alerts on material events (earnings surprises, M&A, executive changes) using the real-time filing feed",
+        "Create a Reddit sentiment pipeline: RSS feeds from r/wallstreetbets + r/stocks -> NLP sentiment scoring -> signal generation",
+        "Deploy FreshRSS as a centralized financial news aggregator pulling from 50+ RSS sources (SEC, financial blogs, company newsrooms)",
+        "Build a GitHub trending fintech tracker that identifies new open-source financial tools and datasets weekly"
+      ],
+      "sources": [
+        {"title": "Reddit API Pricing 2026", "url": "https://easyreadernews.com/reddit-api-pricing-explained-costs-limits-and-what-you-should-know-in-2026/"},
+        {"title": "Reddit Data API Wiki", "url": "https://support.reddithelp.com/hc/en-us/articles/16160319875092-Reddit-Data-API-Wiki"},
+        {"title": "FreshRSS on GitHub", "url": "https://github.com/FreshRSS/FreshRSS"},
+        {"title": "GiTrends GitHub", "url": "https://github.com/maulikshetty/GiTrends"},
+        {"title": "SEC EDGAR APIs", "url": "https://www.sec.gov/search-filings/edgar-application-programming-interfaces"},
+        {"title": "Best Reddit API Alternatives 2026", "url": "https://www.xpoz.ai/blog/comparisons/best-reddit-api-alternatives-2026/"}
+      ]
+    },
+    {
+      "area": "AI-Enhanced Data Gathering Techniques",
+      "data_sources_found": [
+        {
+          "name": "Pinecone (Vector Database)",
+          "url": "https://www.pinecone.io/",
+          "type": "api",
+          "free": true,
+          "requires_key": true,
+          "rate_limit": "Free tier: 1 index, 100K vectors",
+          "data_types": ["vector_embeddings", "semantic_search"],
+          "quality_assessment": "high",
+          "notes": "Zero-ops managed vector database. Free starter plan. Industry leader for RAG deployments. Good documentation."
+        },
+        {
+          "name": "Qdrant (Vector Database)",
+          "url": "https://qdrant.tech/",
+          "type": "api",
+          "free": true,
+          "requires_key": false,
+          "rate_limit": "N/A (self-hosted) or free cloud tier",
+          "data_types": ["vector_embeddings", "semantic_search", "metadata_filtering"],
+          "quality_assessment": "high",
+          "notes": "Open-source, can self-host for free. Excels at complex metadata filtering. Rust-based for performance. Free cloud tier available. Best for on-premise deployments."
+        },
+        {
+          "name": "Voyage AI Embeddings",
+          "url": "https://www.voyageai.com/",
+          "type": "api",
+          "free": false,
+          "requires_key": true,
+          "rate_limit": "Varies by plan",
+          "data_types": ["text_embeddings", "code_embeddings"],
+          "quality_assessment": "high",
+          "notes": "Leads MTEB benchmarks as of late 2025. voyage-3-large outperforms OpenAI text-embedding-3-large by 9.74%. 32K token context. $0.06/million tokens. Best quality-to-cost ratio for embeddings."
+        }
+      ],
+      "techniques": [
+        "Hybrid retrieval: Combine BM25 keyword search with dense vector embeddings for 10-30% precision improvement",
+        "Semantic chunking: Split documents by semantic boundaries instead of fixed sizes for up to 9% recall improvement",
+        "Graph RAG: Build entity-centric graphs from retrieved passages, use community summarization for multi-hop QA (6.4 point recall improvement)",
+        "Embedding cache: Store vector representations and reuse on repeat queries - cuts p95 response time from 2.1s to 450ms",
+        "Chain-of-thought search refinement: Use LLM reasoning to iteratively refine search queries based on initial results",
+        "Multi-hop reasoning: Connect disparate data sources by following entity relationships across documents",
+        "Semantic deduplication: Use cosine similarity thresholds on embeddings to identify near-duplicate content across sources",
+        "RAG as Context Engine: Evolving pattern where retrieval layer understands agent intent, dynamically coordinates across data sources, performs fusion/dedup/ranking",
+        "Reranking: Apply cross-encoder reranking after initial retrieval for 10-30% precision boost with only 50-100ms latency cost",
+        "Granularity-aware retrieval: Optimize retrieval unit size (LongRAG for long-context, fine-grained for precision)"
+      ],
+      "implementation_ideas": [
+        "Build a financial research RAG pipeline: SEC filings + news articles -> semantic chunking -> embeddings -> Qdrant -> hybrid retrieval with BM25+dense vectors -> reranking -> LLM synthesis",
+        "Implement semantic deduplication across multiple financial news sources to eliminate redundant articles before analysis",
+        "Create an embedding-based financial document clustering system that groups related SEC filings, news, and research papers by topic",
+        "Build a multi-hop reasoning system: Start with a stock ticker -> retrieve financials -> find related companies -> compare metrics -> synthesize investment thesis",
+        "Implement Graph RAG over SEC filings to map corporate entity relationships (subsidiaries, joint ventures, supply chains)",
+        "Create a query refinement agent that uses chain-of-thought to iteratively improve financial research queries based on initial retrieval results",
+        "Deploy Qdrant (self-hosted, free) as the vector store for a financial knowledge base, using metadata filtering by date/ticker/filing-type"
+      ],
+      "sources": [
+        {"title": "RAG Comprehensive Survey 2025", "url": "https://arxiv.org/html/2506.00054v1"},
+        {"title": "RAG Definitive Guide 2025", "url": "https://www.chitika.com/retrieval-augmented-generation-rag-the-definitive-guide-2025/"},
+        {"title": "7 RAG Strategies at Scale", "url": "https://www.morphik.ai/blog/retrieval-augmented-generation-strategies"},
+        {"title": "From RAG to Context 2025", "url": "https://ragflow.io/blog/rag-review-2025-from-rag-to-context"},
+        {"title": "Pinecone RAG Guide", "url": "https://www.pinecone.io/learn/retrieval-augmented-generation/"},
+        {"title": "RAG Production Infrastructure", "url": "https://introl.com/blog/rag-infrastructure-production-retrieval-augmented-generation-guide"}
+      ]
+    }
+  ],
+  "top_new_sources": [
+    "1. SEC EDGAR XBRL APIs (data.sec.gov) - FREE, NO KEY, high-quality US company fundamentals with 10 req/sec limit. Bulk download available. Best bang-for-buck free financial data source.",
+    "2. FRED API - FREE with key, 812K+ economic time series. Official Federal Reserve data. Essential for macro analysis.",
+    "3. Hugging Face financial-news-multisource - FREE, NO KEY, 57M+ rows of financial news 1990-2025. Ready-to-use for NLP/sentiment analysis.",
+    "4. OpenAlex - FREE with key, 240M+ academic works. 100K API calls/day. Valuable for research-driven investment signals (biotech, pharma, tech).",
+    "5. Wikidata SPARQL - FREE, NO KEY, 1.3B+ structured facts. Company enrichment, entity relationships, industry classification.",
+    "6. Finnhub - FREE with key, 60 req/min. Best free tier for real-time stock data plus alternative data (sentiment, ESG).",
+    "7. Reddit RSS Feeds - FREE, NO KEY, no rate limit. Lightweight subreddit monitoring without API restrictions.",
+    "8. SEC EDGAR Real-Time Filing Feed - FREE, NO KEY. Instant alerts on material corporate events.",
+    "9. Common Crawl - FREE, NO KEY. Petabyte-scale web data for corpus building. Latest crawl Feb 2026.",
+    "10. Twelve Data - FREE with key, 800 req/day. Best daily limit among free financial APIs."
+  ],
+  "top_technique_ideas": [
+    "1. SEC EDGAR XBRL bulk parser -> structured financial statements database (highest value, most feasible - just download and parse companyfacts.zip)",
+    "2. Financial research RAG pipeline using Qdrant (free self-hosted) + hybrid BM25/dense retrieval over SEC filings and news",
+    "3. Reddit RSS + financial news RSS -> FreshRSS aggregation -> NLP sentiment scoring pipeline (all free, no API keys)",
+    "4. SEC 8-K real-time event monitor for material corporate events (earnings, M&A, insider trading signals)",
+    "5. Semantic deduplication across multiple news sources using embedding similarity to eliminate redundant coverage",
+    "6. Multi-API financial data aggregator with intelligent routing (Twelve Data -> FMP -> Alpha Vantage -> Polygon fallback chain)",
+    "7. Wikidata company enrichment service for structured entity data (executives, subsidiaries, industry classification)",
+    "8. Graph RAG over SEC filings for corporate relationship mapping (supply chains, subsidiaries, joint ventures)",
+    "9. OpenAlex research paper tracking for biotech/pharma innovation signals",
+    "10. Chain-of-thought search refinement agent for iterative financial research query improvement"
+  ]
+}
