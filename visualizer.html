@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Agent Repository Visualizer</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0e17;
+      color: #c9d1d9;
+      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #e6edf3;
+      white-space: nowrap;
+    }
+
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 6px 16px;
+      color: #8b949e;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .tab-btn:hover {
+      background: #21262d;
+      color: #c9d1d9;
+    }
+
+    .tab-btn.active {
+      background: #1f6feb22;
+      border-color: #1f6feb;
+      color: #58a6ff;
+    }
+
+    .stats {
+      margin-left: auto;
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: #8b949e;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stat-value {
+      color: #58a6ff;
+      font-weight: 600;
+    }
+
+    .view-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .view {
+      display: none;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .help-hint {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      background: #161b22ee;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 11px;
+      color: #8b949e;
+      pointer-events: none;
+      z-index: 5;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Claude Agent Repository</h1>
+    <div class="tab-bar">
+      <button class="tab-btn active" data-view="teams" onclick="switchView('teams')">Team Hierarchy</button>
+      <button class="tab-btn" data-view="kb" onclick="switchView('kb')">Knowledge Graph</button>
+      <button class="tab-btn" data-view="flow" onclick="switchView('flow')">Data Flow</button>
+    </div>
+    <div class="stats">
+      <div class="stat-item"><span class="stat-value">13</span> Teams</div>
+      <div class="stat-item"><span class="stat-value">13</span> KB Entries</div>
+      <div class="stat-item"><span class="stat-value">28</span> Scripts</div>
+      <div class="stat-item"><span class="stat-value">35</span> Sources</div>
+    </div>
+  </header>
+
+  <div class="view-container">
+    <div id="view-teams" class="view active"></div>
+    <div id="view-kb" class="view"></div>
+    <div id="view-flow" class="view"></div>
+    <div class="help-hint">Scroll to zoom &middot; Drag to pan &middot; Click nodes for details</div>
+  </div>
+
+  <script src="storage/scripts/viz_team_hierarchy.js"></script>
+  <script src="storage/scripts/viz_kb_graph.js"></script>
+  <script src="storage/scripts/viz_data_flow.js"></script>
+
+  <script>
+    const initialized = { teams: false, kb: false, flow: false };
+
+    function switchView(viewId) {
+      // Update tabs
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === viewId);
+      });
+
+      // Update views
+      document.querySelectorAll('.view').forEach(view => {
+        view.classList.toggle('active', view.id === 'view-' + viewId);
+      });
+
+      // Lazy-initialize views
+      if (!initialized[viewId]) {
+        initialized[viewId] = true;
+        requestAnimationFrame(() => {
+          if (viewId === 'teams') {
+            renderTeamHierarchy('view-teams', TEAM_DATA);
+          } else if (viewId === 'kb') {
+            renderKBGraph('view-kb', KB_DATA);
+          } else if (viewId === 'flow') {
+            renderDataFlow('#view-flow', FLOW_DATA);
+          }
+        });
+      }
+    }
+
+    // Initialize first view
+    switchView('teams');
+  </script>
+</body>
+</html>
