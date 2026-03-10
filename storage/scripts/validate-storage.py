@@ -33,6 +33,10 @@ PLACEHOLDER_VALUES = {"", "YYYY-MM-DD", "TEAM-XXXX", "SRC-XXXX", "SCR-XXXX",
                        "none|api-key|oauth|bearer-token", "json|xml|csv|html",
                        "high|medium|low|unknown"}
 
+MAX_DESCRIPTION_LENGTH = 5000  # Warn if description exceeds this
+MAX_NAME_LENGTH = 200  # Warn if name exceeds this
+KNOWN_VERSIONS = {"1.0"}  # Known valid schema versions
+
 ID_PATTERNS = {
     "scripts": re.compile(r"^SCR-\d{4}$"),
     "api-tools": re.compile(r"^TOOL-\d{4}$"),
@@ -135,8 +139,13 @@ def validate_scripts(result):
             result.error(subsection, "schema", f"Missing top-level field: {field}")
 
     # Validate version
-    if "version" in data and not isinstance(data["version"], str):
-        result.error(subsection, "schema", "version must be a string")
+    if "version" in data:
+        if not isinstance(data["version"], str):
+            result.error(subsection, "schema", "version must be a string")
+        elif not data["version"]:
+            result.error(subsection, "schema", "version must not be empty")
+        elif data["version"] not in KNOWN_VERSIONS:
+            result.warning(subsection, "schema", f"Unknown version '{data['version']}' (known: {KNOWN_VERSIONS})")
 
     # Validate last_updated
     if "last_updated" in data:
@@ -192,6 +201,16 @@ def validate_scripts(result):
         if "category" in entry and entry["category"] not in valid_categories:
             result.error(subsection, "schema", f"{eid}: invalid category '{entry['category']}'")
 
+        # Length checks
+        if "description" in entry and isinstance(entry["description"], str):
+            if len(entry["description"]) > MAX_DESCRIPTION_LENGTH:
+                result.warning(subsection, "length",
+                               f"{eid}: description is {len(entry['description'])} chars (max recommended: {MAX_DESCRIPTION_LENGTH})")
+        if "name" in entry and isinstance(entry["name"], str):
+            if len(entry["name"]) > MAX_NAME_LENGTH:
+                result.warning(subsection, "length",
+                               f"{eid}: name is {len(entry['name'])} chars (max recommended: {MAX_NAME_LENGTH})")
+
     # Referential integrity: IDs in category lists must exist in main array
     if "categories" in data:
         for cat, ids in data["categories"].items():
@@ -233,6 +252,15 @@ def validate_api_tools(result):
         if not validate_date(data["last_updated"]):
             result.error(subsection, "date-format", f"Invalid last_updated date: {data['last_updated']}")
 
+    # Validate version
+    if "version" in data:
+        if not isinstance(data["version"], str):
+            result.error(subsection, "schema", "version must be a string")
+        elif not data["version"]:
+            result.error(subsection, "schema", "version must not be empty")
+        elif data["version"] not in KNOWN_VERSIONS:
+            result.warning(subsection, "schema", f"Unknown version '{data['version']}' (known: {KNOWN_VERSIONS})")
+
     valid_categories = {"data-retrieval", "analysis", "communication", "integration"}
     if "categories" in data:
         for cat in data["categories"]:
@@ -272,6 +300,16 @@ def validate_api_tools(result):
 
         if "category" in entry and entry["category"] not in valid_categories:
             result.error(subsection, "schema", f"{eid}: invalid category '{entry['category']}'")
+
+        # Length checks
+        if "description" in entry and isinstance(entry["description"], str):
+            if len(entry["description"]) > MAX_DESCRIPTION_LENGTH:
+                result.warning(subsection, "length",
+                               f"{eid}: description is {len(entry['description'])} chars (max recommended: {MAX_DESCRIPTION_LENGTH})")
+        if "name" in entry and isinstance(entry["name"], str):
+            if len(entry["name"]) > MAX_NAME_LENGTH:
+                result.warning(subsection, "length",
+                               f"{eid}: name is {len(entry['name'])} chars (max recommended: {MAX_NAME_LENGTH})")
 
     # Referential integrity
     if "categories" in data:
@@ -317,6 +355,15 @@ def validate_sources(result):
     if "last_updated" in data:
         if not validate_date(data["last_updated"]):
             result.error(subsection, "date-format", f"Invalid last_updated date: {data['last_updated']}")
+
+    # Validate version
+    if "version" in data:
+        if not isinstance(data["version"], str):
+            result.error(subsection, "schema", "version must be a string")
+        elif not data["version"]:
+            result.error(subsection, "schema", "version must not be empty")
+        elif data["version"] not in KNOWN_VERSIONS:
+            result.warning(subsection, "schema", f"Unknown version '{data['version']}' (known: {KNOWN_VERSIONS})")
 
     valid_data_types = {"financial", "news", "social-media", "government",
                         "scientific", "geospatial", "general"}
