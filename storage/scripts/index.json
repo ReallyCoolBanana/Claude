@@ -56,15 +56,81 @@
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0005"
+    },
+    {
+      "id": "SCR-0006",
+      "name": "data-gathering-websearch",
+      "filename": "data-gathering/methods/method_websearch.py",
+      "language": "python",
+      "category": "data-collection",
+      "description": "Multi-query web search via DuckDuckGo. Generates 3-5 query variants and deduplicates results by URL.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0003"
+    },
+    {
+      "id": "SCR-0007",
+      "name": "data-gathering-wikipedia",
+      "filename": "data-gathering/methods/method_wikipedia.py",
+      "language": "python",
+      "category": "data-collection",
+      "description": "Wikipedia API deep extraction with DuckDuckGo fallback. Extracts summaries, sections, references, categories, and follows See Also links.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0003"
+    },
+    {
+      "id": "SCR-0008",
+      "name": "data-gathering-arxiv",
+      "filename": "data-gathering/methods/method_arxiv.py",
+      "language": "python",
+      "category": "data-collection",
+      "description": "arXiv academic paper search with DuckDuckGo fallback. Extracts titles, authors, abstracts, categories, and publication dates.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0003"
+    },
+    {
+      "id": "SCR-0009",
+      "name": "data-gathering-hybrid",
+      "filename": "data-gathering/methods/method_hybrid.py",
+      "language": "python",
+      "category": "data-collection",
+      "description": "Hybrid multi-source aggregation combining web search, Wikipedia, and arXiv. Cross-references findings and scores by corroboration count.",
+      "dependencies": ["SCR-0006", "SCR-0007", "SCR-0008"],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0003"
+    },
+    {
+      "id": "SCR-0010",
+      "name": "data-gathering-iterative",
+      "filename": "data-gathering/methods/method_iterative.py",
+      "language": "python",
+      "category": "data-collection",
+      "description": "Iterative deepening search doing 3 rounds of progressively deeper DuckDuckGo queries. Each round refines queries based on previous results.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0003"
+    },
+    {
+      "id": "SCR-0011",
+      "name": "data-gathering-benchmark",
+      "filename": "data-gathering/benchmark_runner.py",
+      "language": "python",
+      "category": "analysis",
+      "description": "Benchmark harness that runs all data gathering methods against a test query, times them, and calculates quality scores based on result count, source diversity, and information density.",
+      "dependencies": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010"],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0003"
     }
   ],
   "categories": {
-    "data-collection": [],
-    "analysis": ["SCR-0004", "SCR-0005"],
+    "data-collection": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010"],
+    "analysis": ["SCR-0004", "SCR-0005", "SCR-0011"],
     "automation": [],
     "utility": ["SCR-0001", "SCR-0002", "SCR-0003"]
   },
   "language_index": {
-    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005"]
+    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011"]
   }
 }
