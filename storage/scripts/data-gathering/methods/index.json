@@ -1,17 +1,33 @@
 {
   "version": "2.0",
   "last_updated": "2026-03-10",
+  "verified_by": "TEAM-2",
+  "updated_by": "TEAM-3-iteration-2",
   "methods": [
     {
       "id": "DG-0001",
       "name": "Multi-query Web Search",
       "file": "method_websearch.py",
-      "description": "Generates 3-5 variant search queries from the input, searches DuckDuckGo HTML for each, parses and deduplicates results by URL.",
+      "description": "Generates 5 variant search queries from the input, searches DuckDuckGo HTML for each, parses and deduplicates results by URL.",
       "category": "web-search",
       "data_sources": ["DuckDuckGo HTML"],
       "requires_api_key": false,
-      "avg_duration_seconds": 7,
-      "created": "2026-03-10"
+      "avg_duration_seconds": 4.86,
+      "status": "functional",
+      "created": "2026-03-10",
+      "verification": {
+        "iteration": 1,
+        "test_query": "artificial intelligence trading strategies",
+        "results_count": 31,
+        "code_quality": 78,
+        "robustness": 72,
+        "output_compliance": 85
+      },
+      "iteration2_benchmark": {
+        "speed_seconds": 4.86,
+        "data_points": 32,
+        "quality_score": 75
+      }
     },
     {
       "id": "DG-0002",
@@ -21,8 +37,20 @@
       "category": "api-based",
       "data_sources": ["Wikipedia API"],
       "requires_api_key": false,
-      "avg_duration_seconds": 3,
-      "created": "2026-03-10"
+      "avg_duration_seconds": 1.47,
+      "status": "partially functional — returns limited results",
+      "created": "2026-03-10",
+      "verification": {
+        "iteration": 1,
+        "results_count": 0,
+        "bugs": ["Silent HTTP 403 error", "Non-compliant User-Agent"]
+      },
+      "iteration2_benchmark": {
+        "speed_seconds": 1.47,
+        "data_points": 1,
+        "quality_score": 10,
+        "notes": "Improved from 0 to 1 result vs iteration 1"
+      }
     },
     {
       "id": "DG-0003",
@@ -32,8 +60,20 @@
       "category": "api-based",
       "data_sources": ["arXiv API"],
       "requires_api_key": false,
-      "avg_duration_seconds": 2,
-      "created": "2026-03-10"
+      "avg_duration_seconds": 2.66,
+      "status": "functional",
+      "created": "2026-03-10",
+      "verification": {
+        "iteration": 1,
+        "results_count": 0,
+        "bugs": ["HTTP instead of HTTPS", "No rate limiting"]
+      },
+      "iteration2_benchmark": {
+        "speed_seconds": 2.66,
+        "data_points": 9,
+        "quality_score": 50,
+        "notes": "Now functional — improved from 0 to 9 results vs iteration 1"
+      }
     },
     {
       "id": "DG-0004",
@@ -43,11 +83,18 @@
       "category": "hybrid",
       "data_sources": ["DuckDuckGo HTML", "Wikipedia API", "arXiv API", "OpenAlex API", "Wikidata API"],
       "requires_api_key": false,
-      "avg_duration_seconds": 8,
+      "avg_duration_seconds": 5.11,
+      "status": "functional — 4 of 5 sub-sources active",
       "created": "2026-03-10",
       "updated": "2026-03-10",
       "iteration": 2,
-      "improvements": ["parallel execution", "5 sources", "credibility tiers", "TF-IDF dedup", "corroboration scoring"]
+      "improvements": ["parallel execution via ThreadPoolExecutor", "5 sources (up from 3)", "credibility tiers", "TF-IDF deduplication", "weighted corroboration scoring"],
+      "iteration2_benchmark": {
+        "speed_seconds": 5.11,
+        "data_points": 46,
+        "quality_score": 92,
+        "notes": "Best quality score. Faster than iteration 1 despite more sources due to parallel execution."
+      }
     },
     {
       "id": "DG-0005",
@@ -57,20 +104,33 @@
       "category": "ai-enhanced",
       "data_sources": ["DuckDuckGo HTML"],
       "requires_api_key": false,
-      "avg_duration_seconds": 8,
-      "created": "2026-03-10"
+      "avg_duration_seconds": 7.88,
+      "status": "functional",
+      "created": "2026-03-10",
+      "iteration2_benchmark": {
+        "speed_seconds": 7.88,
+        "data_points": 43,
+        "quality_score": 75
+      }
     },
     {
       "id": "DG-0006",
       "name": "OpenAlex Academic Search",
       "file": "method_openalex.py",
-      "description": "Uses the OpenAlex API to search 250M+ academic works. Extracts titles, authors, publication year, abstract (reconstructed from inverted index), citation count, DOI, and open access URL. Sorted by citation count.",
+      "description": "Uses the OpenAlex API to search 250M+ academic works. Extracts titles, authors, publication year, abstract, citation count, DOI, and open access URL. Sorted by citation count.",
       "category": "api-based",
       "data_sources": ["OpenAlex API"],
       "requires_api_key": false,
-      "avg_duration_seconds": 2,
+      "avg_duration_seconds": 0.5,
+      "status": "functional",
       "created": "2026-03-10",
-      "iteration": 2
+      "iteration": 2,
+      "iteration2_benchmark": {
+        "speed_seconds": 0.5,
+        "data_points": 15,
+        "quality_score": 65,
+        "notes": "Fastest academic source. Rich metadata including citation counts and DOIs."
+      }
     },
     {
       "id": "DG-0007",
@@ -80,9 +140,16 @@
       "category": "api-based",
       "data_sources": ["Wikidata API"],
       "requires_api_key": false,
-      "avg_duration_seconds": 3,
+      "avg_duration_seconds": 0.16,
+      "status": "blocked — wikidata.org returns 403 from this environment",
       "created": "2026-03-10",
-      "iteration": 2
+      "iteration": 2,
+      "iteration2_benchmark": {
+        "speed_seconds": 0.16,
+        "data_points": 0,
+        "quality_score": 0,
+        "notes": "Code is correct but wikidata.org blocks requests from this network environment."
+      }
     }
   ],
   "utilities": [

@@ -1,21 +1,123 @@
 {
+  "version": "2.0",
   "iteration": 2,
-  "timestamp": "2026-03-10",
+  "timestamp": "2026-03-10T21:03:02.353531+00:00",
   "test_query": "artificial intelligence trading strategies",
-  "methods": [
-    {"method_id": "DG-0001", "name": "WebSearch", "time_seconds": 3.56, "data_points": 10, "sources": 10, "quality_score": 60.0},
-    {"method_id": "DG-0002", "name": "Wikipedia", "time_seconds": 2.85, "data_points": 5, "sources": 5, "quality_score": 40.0},
-    {"method_id": "DG-0003", "name": "arXiv", "time_seconds": 1.62, "data_points": 10, "sources": 10, "quality_score": 68.0},
-    {"method_id": "DG-0004", "name": "Hybrid v2", "time_seconds": 5.48, "data_points": 71, "sources": 51, "quality_score": 100.0},
-    {"method_id": "DG-0005", "name": "Iterative", "time_seconds": 9.38, "data_points": 30, "sources": 28, "quality_score": 82.0},
-    {"method_id": "DG-0006", "name": "OpenAlex", "time_seconds": 1.38, "data_points": 15, "sources": 15, "quality_score": 72.0},
-    {"method_id": "DG-0007", "name": "Wikidata", "time_seconds": 1.41, "data_points": 10, "sources": 10, "quality_score": 64.0}
+  "benchmarks": [
+    {
+      "method_id": "DG-0001",
+      "method_name": "WebSearch",
+      "iteration": 2,
+      "timestamp": "2026-03-10T21:03:02.353531+00:00",
+      "metrics": {
+        "speed_seconds": 4.86,
+        "data_points_collected": 32,
+        "source_quality_score": 75,
+        "unique_sources": 32
+      },
+      "test_query": "artificial intelligence trading strategies",
+      "raw_results_summary": "32 results in 4.86s from 32 sources",
+      "notes": ""
+    },
+    {
+      "method_id": "DG-0002",
+      "method_name": "Wikipedia",
+      "iteration": 2,
+      "timestamp": "2026-03-10T21:03:02.353531+00:00",
+      "metrics": {
+        "speed_seconds": 1.47,
+        "data_points_collected": 1,
+        "source_quality_score": 10,
+        "unique_sources": 1
+      },
+      "test_query": "artificial intelligence trading strategies",
+      "raw_results_summary": "1 results in 1.47s from 1 sources",
+      "notes": ""
+    },
+    {
+      "method_id": "DG-0003",
+      "method_name": "arXiv",
+      "iteration": 2,
+      "timestamp": "2026-03-10T21:03:02.353531+00:00",
+      "metrics": {
+        "speed_seconds": 2.66,
+        "data_points_collected": 9,
+        "source_quality_score": 50,
+        "unique_sources": 9
+      },
+      "test_query": "artificial intelligence trading strategies",
+      "raw_results_summary": "9 results in 2.66s from 9 sources",
+      "notes": ""
+    },
+    {
+      "method_id": "DG-0004",
+      "method_name": "Hybrid v2",
+      "iteration": 2,
+      "timestamp": "2026-03-10T21:03:02.353531+00:00",
+      "metrics": {
+        "speed_seconds": 5.11,
+        "data_points_collected": 46,
+        "source_quality_score": 92,
+        "unique_sources": 46
+      },
+      "test_query": "artificial intelligence trading strategies",
+      "raw_results_summary": "46 results in 5.11s from 46 sources",
+      "notes": "Corroborated: 33. Avg corroboration: 1.55. Deduplication applied. "
+    },
+    {
+      "method_id": "DG-0005",
+      "method_name": "Iterative",
+      "iteration": 2,
+      "timestamp": "2026-03-10T21:03:02.353531+00:00",
+      "metrics": {
+        "speed_seconds": 7.88,
+        "data_points_collected": 43,
+        "source_quality_score": 75,
+        "unique_sources": 43
+      },
+      "test_query": "artificial intelligence trading strategies",
+      "raw_results_summary": "43 results in 7.88s from 43 sources",
+      "notes": ""
+    },
+    {
+      "method_id": "DG-0006",
+      "method_name": "OpenAlex",
+      "iteration": 2,
+      "timestamp": "2026-03-10T21:03:02.353531+00:00",
+      "metrics": {
+        "speed_seconds": 0.5,
+        "data_points_collected": 15,
+        "source_quality_score": 65,
+        "unique_sources": 15
+      },
+      "test_query": "artificial intelligence trading strategies",
+      "raw_results_summary": "15 results in 0.5s from 15 sources",
+      "notes": "Total citations: 122805. "
+    },
+    {
+      "method_id": "DG-0007",
+      "method_name": "Wikidata",
+      "iteration": 2,
+      "timestamp": "2026-03-10T21:03:02.353531+00:00",
+      "metrics": {
+        "speed_seconds": 0.16,
+        "data_points_collected": 0,
+        "source_quality_score": 0,
+        "unique_sources": 0
+      },
+      "test_query": "artificial intelligence trading strategies",
+      "raw_results_summary": "0 results in 0.16s from 0 sources",
+      "notes": ""
+    }
   ],
-  "comparison_to_iteration1": {
-    "hybrid_improvement": {"data_points": "+173%", "speed": "-29%", "quality": "+14%"},
-    "new_methods_added": 2,
-    "total_methods": 7,
-    "best_method": "DG-0004 Hybrid v2",
-    "fastest_method": "DG-0006 OpenAlex"
+  "summary": {
+    "methods_tested": 7,
+    "methods_succeeded": 6,
+    "avg_speed_seconds": 3.23,
+    "total_data_points": 146,
+    "avg_quality_score": 52.4,
+    "best_quality": 92,
+    "fastest_method": "Wikidata",
+    "highest_quality_method": "Hybrid v2"
   }
 }
