@@ -122,15 +122,48 @@
       "dependencies": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010"],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0003"
+    },
+    {
+      "id": "SCR-0012",
+      "name": "kb-validator",
+      "filename": "kb_validator.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Validates knowledge base entries and index.json consistency. Checks YAML frontmatter required fields, builds_on references, index entry/file matching, tag_index completeness, category consistency, and team ID format. Outputs structured JSON report.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0006"
+    },
+    {
+      "id": "SCR-0013",
+      "name": "index-rebuilder",
+      "filename": "index_rebuilder.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Auto-generates index.json files by scanning knowledge-base/entries/ and teams/sessions/ directories. Parses YAML frontmatter, rebuilds entries, categories, and tag_index. Supports --dry-run and --fix modes with diff output.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0006"
+    },
+    {
+      "id": "SCR-0014",
+      "name": "cross-ref-checker",
+      "filename": "cross_ref_checker.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Validates all cross-references across the repository. Checks KB builds_on chains, team session KB references, script dependencies. Detects cycles via DFS, finds orphan files and dangling index entries. Outputs dependency tree and structured JSON report.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0006"
     }
   ],
   "categories": {
     "data-collection": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010"],
     "analysis": ["SCR-0004", "SCR-0005", "SCR-0011"],
     "automation": [],
-    "utility": ["SCR-0001", "SCR-0002", "SCR-0003"]
+    "utility": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0012", "SCR-0013", "SCR-0014"]
   },
   "language_index": {
-    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011"]
+    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014"]
   }
 }

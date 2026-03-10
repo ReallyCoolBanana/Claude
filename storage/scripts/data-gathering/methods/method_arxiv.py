@@ -16,10 +16,12 @@ import json
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
-from html.parser import HTMLParser
 from xml.etree import ElementTree
+
+from ddg_utils import search_duckduckgo as _ddg_search
 
 
 METHOD_ID = "DG-0003"
@@ -31,69 +33,6 @@ ARXIV_NS = "http://arxiv.org/schemas/atom"
 
 
 # ---------------------------------------------------------------------------
-# DuckDuckGo fallback parser
-# ---------------------------------------------------------------------------
-
-class DuckDuckGoParser(HTMLParser):
-    """Parse DuckDuckGo HTML search results page."""
-
-    def __init__(self):
-        super().__init__()
-        self.results = []
-        self._current = {}
-        self._in_result_title = False
-        self._in_snippet = False
-        self._capture_text = ""
-
-    def handle_starttag(self, tag, attrs):
-        attrs_dict = dict(attrs)
-        cls = attrs_dict.get("class", "")
-        if tag == "a" and "result__a" in cls:
-            self._in_result_title = True
-            self._capture_text = ""
-            href = attrs_dict.get("href", "")
-            if "uddg=" in href:
-                match = re.search(r'uddg=([^&]+)', href)
-                if match:
-                    href = urllib.parse.unquote(match.group(1))
-            self._current["url"] = href
-        if tag == "a" and "result__snippet" in cls:
-            self._in_snippet = True
-            self._capture_text = ""
-
-    def handle_endtag(self, tag):
-        if tag == "a" and self._in_result_title:
-            self._in_result_title = False
-            self._current["title"] = self._capture_text.strip()
-        if tag == "a" and self._in_snippet:
-            self._in_snippet = False
-            self._current["snippet"] = self._capture_text.strip()
-            if self._current.get("url") and self._current.get("title"):
-                self.results.append(dict(self._current))
-            self._current = {}
-
-    def handle_data(self, data):
-        if self._in_result_title or self._in_snippet:
-            self._capture_text += data
-
-
-def _ddg_search(query):
-    """Search DuckDuckGo HTML and return parsed results."""
-    encoded = urllib.parse.quote_plus(query)
-    url = f"https://html.duckduckgo.com/html/?q={encoded}"
-    headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"}
-    req = urllib.request.Request(url, headers=headers)
-    try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-            html = resp.read().decode("utf-8", errors="replace")
-        parser = DuckDuckGoParser()
-        parser.feed(html)
-        return parser.results
-    except Exception:
-        return []
-
-
-# ---------------------------------------------------------------------------
 # arXiv API methods
 # ---------------------------------------------------------------------------
 
@@ -101,7 +40,7 @@ def search_arxiv(query, max_results=20, sort_by="relevance"):
     """Search arXiv API and return parsed paper entries."""
     encoded = urllib.parse.quote(query)
     url = (
-        f"http://export.arxiv.org/api/query"
+        f"https://export.arxiv.org/api/query"
         f"?search_query=all:{encoded}"
         f"&start=0&max_results={max_results}"
         f"&sortBy={sort_by}&sortOrder=descending"
@@ -112,8 +51,12 @@ def search_arxiv(query, max_results=20, sort_by="relevance"):
         with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
             xml_data = resp.read().decode("utf-8")
         return parse_arxiv_response(xml_data)
-    except Exception as e:
-        return [{"error": str(e)}]
+    except urllib.error.HTTPError as e:
+        return [{"error": f"HTTP {e.code}: {e.reason}", "source": "arxiv", "query": query}]
+    except urllib.error.URLError as e:
+        return [{"error": f"URL error: {e.reason}", "source": "arxiv", "query": query}]
+    except OSError as e:
+        return [{"error": f"Network error: {e}", "source": "arxiv", "query": query}]
 
 
 def parse_arxiv_response(xml_data):
@@ -205,7 +148,7 @@ def fallback_arxiv_search(query):
     search_queries = [
         f"site:arxiv.org {query}",
         f"site:arxiv.org {query} paper",
-        f"arxiv {query} machine learning",
+        f"arxiv {query} research",
     ]
     for sq in search_queries:
         hits = _ddg_search(sq)

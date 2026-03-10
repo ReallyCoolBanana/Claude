@@ -16,77 +16,14 @@ import json
 import re
 import sys
 import time
-import urllib.parse
-import urllib.request
 from collections import Counter
-from html.parser import HTMLParser
+
+from ddg_utils import search_duckduckgo
 
 
 METHOD_ID = "DG-0005"
 METHOD_NAME = "Iterative Deepening Search"
-TIMEOUT = 10
 MAX_ROUNDS = 3
-
-
-class DuckDuckGoParser(HTMLParser):
-    """Parse DuckDuckGo HTML search results page."""
-
-    def __init__(self):
-        super().__init__()
-        self.results = []
-        self._current = {}
-        self._in_result_title = False
-        self._in_snippet = False
-        self._capture_text = ""
-
-    def handle_starttag(self, tag, attrs):
-        attrs_dict = dict(attrs)
-        cls = attrs_dict.get("class", "")
-        if tag == "a" and "result__a" in cls:
-            self._in_result_title = True
-            self._capture_text = ""
-            href = attrs_dict.get("href", "")
-            if "uddg=" in href:
-                match = re.search(r'uddg=([^&]+)', href)
-                if match:
-                    href = urllib.parse.unquote(match.group(1))
-            self._current["url"] = href
-        if tag == "a" and "result__snippet" in cls:
-            self._in_snippet = True
-            self._capture_text = ""
-
-    def handle_endtag(self, tag):
-        if tag == "a" and self._in_result_title:
-            self._in_result_title = False
-            self._current["title"] = self._capture_text.strip()
-        if tag == "a" and self._in_snippet:
-            self._in_snippet = False
-            self._current["snippet"] = self._capture_text.strip()
-            if self._current.get("url") and self._current.get("title"):
-                self.results.append(dict(self._current))
-            self._current = {}
-
-    def handle_data(self, data):
-        if self._in_result_title or self._in_snippet:
-            self._capture_text += data
-
-
-def search_duckduckgo(query):
-    """Search DuckDuckGo HTML and return parsed results."""
-    encoded = urllib.parse.quote_plus(query)
-    url = f"https://html.duckduckgo.com/html/?q={encoded}"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
-    }
-    req = urllib.request.Request(url, headers=headers)
-    try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-            html = resp.read().decode("utf-8", errors="replace")
-        parser = DuckDuckGoParser()
-        parser.feed(html)
-        return parser.results
-    except Exception as e:
-        return [{"error": str(e)}]
 
 
 def extract_key_terms(results, min_len=4):

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "last_updated": "2026-03-10",
-  "entry_count": 5,
+  "entry_count": 7,
   "entries": [
     {
       "id": "KB-0001",
@@ -9,19 +9,35 @@
       "date": "2026-03-10",
       "team": "TEAM-0001",
       "category": "optimization",
-      "tags": ["storage-system", "stress-testing", "benchmarks", "scaling", "cross-references", "validation"],
+      "tags": [
+        "storage-system",
+        "stress-testing",
+        "benchmarks",
+        "scaling",
+        "cross-references",
+        "validation"
+      ],
       "status": "validated",
       "confidence": "high"
     },
     {
       "id": "KB-0002",
-      "title": "Sonnet Research API — Multi-Agent Research System",
+      "title": "Sonnet Research API \u2014 Multi-Agent Research System",
       "date": "2026-03-10",
       "team": "TEAM-0002",
       "category": "integration",
-      "tags": ["sonnet-api", "multi-agent", "research-system", "queue-management", "data-import"],
+      "tags": [
+        "sonnet-api",
+        "multi-agent",
+        "research-system",
+        "queue-management",
+        "data-import"
+      ],
       "status": "validated",
-      "confidence": "high"
+      "confidence": "high",
+      "builds_on": [
+        "KB-0001"
+      ]
     },
     {
       "id": "KB-0003",
@@ -29,9 +45,19 @@
       "date": "2026-03-10",
       "team": "TEAM-0003",
       "category": "market-research",
-      "tags": ["quantitative-analysis", "ai-trading", "stock-analysis", "multi-team", "competitive-research"],
+      "tags": [
+        "quantitative-analysis",
+        "ai-trading",
+        "stock-analysis",
+        "multi-team",
+        "competitive-research"
+      ],
       "status": "validated",
-      "confidence": "high"
+      "confidence": "high",
+      "builds_on": [
+        "KB-0001",
+        "KB-0002"
+      ]
     },
     {
       "id": "KB-0004",
@@ -39,9 +65,18 @@
       "date": "2026-03-10",
       "team": "TEAM-2",
       "category": "methodology",
-      "tags": ["data-gathering", "benchmarks", "improvement-loop", "api-methods", "verification"],
+      "tags": [
+        "data-gathering",
+        "benchmarks",
+        "improvement-loop",
+        "api-methods",
+        "verification"
+      ],
       "status": "validated",
-      "confidence": "high"
+      "confidence": "high",
+      "builds_on": [
+        "KB-0003"
+      ]
     },
     {
       "id": "KB-0005",
@@ -49,45 +84,198 @@
       "date": "2026-03-10",
       "team": "TEAM-0005",
       "category": "methodology",
-      "tags": ["data-gathering", "openalex", "wikidata", "parallel-execution", "deduplication", "tf-idf", "benchmarks", "iteration-2"],
+      "tags": [
+        "data-gathering",
+        "openalex",
+        "wikidata",
+        "parallel-execution",
+        "deduplication",
+        "tf-idf",
+        "benchmarks",
+        "iteration-2"
+      ],
       "status": "validated",
       "confidence": "high",
-      "builds_on": ["KB-0004"]
+      "builds_on": [
+        "KB-0004"
+      ]
+    },
+    {
+      "id": "KB-0006",
+      "title": "Archive Tools for Knowledge Base System",
+      "date": "2026-03-10",
+      "team": "TEAM-0006",
+      "category": "tool-usage",
+      "tags": [
+        "archive-tools",
+        "validation",
+        "index-rebuild",
+        "cross-references",
+        "knowledge-base",
+        "automation"
+      ],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": [
+        "KB-0001"
+      ]
+    },
+    {
+      "id": "KB-0007",
+      "title": "Research Team Configuration Testing & System Improvements",
+      "date": "2026-03-10",
+      "team": "TEAM-0007",
+      "category": "methodology",
+      "tags": [
+        "agent-scaling",
+        "configuration-testing",
+        "research-methodology",
+        "team-sizing",
+        "benchmarks",
+        "archive-tools",
+        "efficiency-fixes"
+      ],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": [
+        "KB-0004",
+        "KB-0005",
+        "KB-0006"
+      ]
     }
   ],
   "categories": {
-    "methodology": ["KB-0004", "KB-0005"],
-    "tool-usage": [],
-    "debugging": [],
-    "optimization": ["KB-0001"],
-    "integration": ["KB-0002"],
-    "market-research": ["KB-0003"]
+    "optimization": [
+      "KB-0001"
+    ],
+    "integration": [
+      "KB-0002"
+    ],
+    "market-research": [
+      "KB-0003"
+    ],
+    "methodology": [
+      "KB-0004",
+      "KB-0005",
+      "KB-0007"
+    ],
+    "tool-usage": [
+      "KB-0006"
+    ],
+    "debugging": []
   },
   "tag_index": {
-    "storage-system": ["KB-0001"],
-    "stress-testing": ["KB-0001"],
-    "benchmarks": ["KB-0001", "KB-0004", "KB-0005"],
-    "scaling": ["KB-0001"],
-    "cross-references": ["KB-0001"],
-    "validation": ["KB-0001"],
-    "sonnet-api": ["KB-0002"],
-    "multi-agent": ["KB-0002", "KB-0003"],
-    "research-system": ["KB-0002"],
-    "queue-management": ["KB-0002"],
-    "data-import": ["KB-0002"],
-    "quantitative-analysis": ["KB-0003"],
-    "ai-trading": ["KB-0003"],
-    "stock-analysis": ["KB-0003"],
-    "competitive-research": ["KB-0003"],
-    "data-gathering": ["KB-0004", "KB-0005"],
-    "improvement-loop": ["KB-0004"],
-    "api-methods": ["KB-0004"],
-    "verification": ["KB-0004"],
-    "openalex": ["KB-0005"],
-    "wikidata": ["KB-0005"],
-    "parallel-execution": ["KB-0005"],
-    "deduplication": ["KB-0005"],
-    "tf-idf": ["KB-0005"],
-    "iteration-2": ["KB-0005"]
+    "storage-system": [
+      "KB-0001"
+    ],
+    "stress-testing": [
+      "KB-0001"
+    ],
+    "benchmarks": [
+      "KB-0001",
+      "KB-0004",
+      "KB-0005",
+      "KB-0007"
+    ],
+    "scaling": [
+      "KB-0001"
+    ],
+    "cross-references": [
+      "KB-0001",
+      "KB-0006"
+    ],
+    "validation": [
+      "KB-0001",
+      "KB-0006"
+    ],
+    "sonnet-api": [
+      "KB-0002"
+    ],
+    "multi-agent": [
+      "KB-0002"
+    ],
+    "research-system": [
+      "KB-0002"
+    ],
+    "queue-management": [
+      "KB-0002"
+    ],
+    "data-import": [
+      "KB-0002"
+    ],
+    "quantitative-analysis": [
+      "KB-0003"
+    ],
+    "ai-trading": [
+      "KB-0003"
+    ],
+    "stock-analysis": [
+      "KB-0003"
+    ],
+    "multi-team": [
+      "KB-0003"
+    ],
+    "competitive-research": [
+      "KB-0003"
+    ],
+    "data-gathering": [
+      "KB-0004",
+      "KB-0005"
+    ],
+    "improvement-loop": [
+      "KB-0004"
+    ],
+    "api-methods": [
+      "KB-0004"
+    ],
+    "verification": [
+      "KB-0004"
+    ],
+    "openalex": [
+      "KB-0005"
+    ],
+    "wikidata": [
+      "KB-0005"
+    ],
+    "parallel-execution": [
+      "KB-0005"
+    ],
+    "deduplication": [
+      "KB-0005"
+    ],
+    "tf-idf": [
+      "KB-0005"
+    ],
+    "iteration-2": [
+      "KB-0005"
+    ],
+    "archive-tools": [
+      "KB-0006",
+      "KB-0007"
+    ],
+    "index-rebuild": [
+      "KB-0006"
+    ],
+    "knowledge-base": [
+      "KB-0006"
+    ],
+    "automation": [
+      "KB-0006"
+    ],
+    "agent-scaling": [
+      "KB-0007"
+    ],
+    "configuration-testing": [
+      "KB-0007"
+    ],
+    "research-methodology": [
+      "KB-0007"
+    ],
+    "team-sizing": [
+      "KB-0007"
+    ],
+    "efficiency-fixes": [
+      "KB-0007"
+    ]
   }
 }

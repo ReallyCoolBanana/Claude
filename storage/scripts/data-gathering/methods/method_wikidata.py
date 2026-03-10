@@ -12,6 +12,7 @@ Usage:
 import json
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -32,8 +33,12 @@ def search_wikidata(query, limit=15):
             headers={"User-Agent": "DataGatheringBot/1.0"})
         with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
             return json.loads(resp.read().decode()).get("search", [])
-    except Exception:
-        return []
+    except urllib.error.HTTPError as e:
+        return [{"error": f"HTTP {e.code}: {e.reason}", "source": "wikidata"}]
+    except urllib.error.URLError as e:
+        return [{"error": f"URL error: {e.reason}", "source": "wikidata"}]
+    except json.JSONDecodeError as e:
+        return [{"error": f"JSON decode error: {e}", "source": "wikidata"}]
 
 
 def get_entity_details(entity_id):
@@ -49,8 +54,12 @@ def get_entity_details(entity_id):
         with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
             data = json.loads(resp.read().decode())
             return data.get("entities", {}).get(entity_id, {})
-    except Exception:
-        return {}
+    except urllib.error.HTTPError as e:
+        return {"error": f"HTTP {e.code}: {e.reason}", "source": "wikidata", "entity_id": entity_id}
+    except urllib.error.URLError as e:
+        return {"error": f"URL error: {e.reason}", "source": "wikidata", "entity_id": entity_id}
+    except json.JSONDecodeError as e:
+        return {"error": f"JSON decode error: {e}", "source": "wikidata", "entity_id": entity_id}
 
 
 def extract_info(entity):
