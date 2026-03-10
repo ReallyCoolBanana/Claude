@@ -1,0 +1,31 @@
+{
+  "config": "3-triad",
+  "agents_used": 3,
+  "subagents_used": 6,
+  "duration_ms": 48179,
+  "topic_a_inefficiencies": [
+    {"id": "INEFF-001", "area": "Code Duplication", "description": "DuckDuckGoParser copy-pasted across 4 files.", "severity": "high", "fix_complexity": "simple"},
+    {"id": "INEFF-002", "area": "Silent Failures", "description": "method_wikidata.py swallows all exceptions with bare except.", "severity": "high", "fix_complexity": "simple"},
+    {"id": "INEFF-003", "area": "Inconsistent Error Reporting", "description": "No standard error envelope across methods.", "severity": "medium", "fix_complexity": "moderate"},
+    {"id": "INEFF-004", "area": "O(n^2) Deduplication", "description": "deduplicate_results uses nested loop comparing every pair.", "severity": "low", "fix_complexity": "complex"},
+    {"id": "INEFF-005", "area": "Redundant TF-IDF", "description": "similarity_score computes IDF from only 2 documents, making it meaningless.", "severity": "medium", "fix_complexity": "simple"},
+    {"id": "INEFF-006", "area": "Corroboration Inflation", "description": "Keyword overlap check (>=3) is too loose, producing false corroboration.", "severity": "medium", "fix_complexity": "moderate"},
+    {"id": "INEFF-007", "area": "Sequential Variant Queries", "description": "websearch and iterative execute DDG queries sequentially instead of parallel.", "severity": "medium", "fix_complexity": "simple"},
+    {"id": "INEFF-008", "area": "arXiv HTTP Not HTTPS", "description": "Flagged in iteration 1 but never fixed.", "severity": "medium", "fix_complexity": "simple"},
+    {"id": "INEFF-009", "area": "No Rate Limiting", "description": "No rate limiting anywhere. Hybrid sends bursts of requests.", "severity": "medium", "fix_complexity": "moderate"},
+    {"id": "INEFF-010", "area": "No Result Caching", "description": "Benchmark runs execute each method twice (standalone + inside hybrid).", "severity": "medium", "fix_complexity": "moderate"},
+    {"id": "INEFF-011", "area": "Duplicate benchmark_runner.py", "description": "Exists in two locations with different implementations.", "severity": "low", "fix_complexity": "simple"},
+    {"id": "INEFF-012", "area": "URL Normalization Bug", "description": "Prefix stripping order means 'https://www.' never matches.", "severity": "medium", "fix_complexity": "simple"},
+    {"id": "INEFF-013", "area": "Stale Index Metadata", "description": "SCR-0009 describes hybrid as 3 sources but code uses 5.", "severity": "medium", "fix_complexity": "simple"},
+    {"id": "INEFF-014", "area": "Missing Registration", "description": "DG-0006, DG-0007, dedup_utils not registered in parent scripts index.", "severity": "low", "fix_complexity": "simple"},
+    {"id": "INEFF-015", "area": "Manual Index Maintenance", "description": "No validation that index.json matches files on disk.", "severity": "high", "fix_complexity": "moderate"},
+    {"id": "INEFF-016", "area": "No Cross-Ref Validation", "description": "builds_on field never validated for cycles or dangling refs.", "severity": "medium", "fix_complexity": "moderate"},
+    {"id": "INEFF-017", "area": "Inconsistent ID Formats", "description": "TEAM-2 vs TEAM-0002 format inconsistency.", "severity": "medium", "fix_complexity": "simple"},
+    {"id": "INEFF-018", "area": "No Handoff Verification", "description": "Recommendations systematically ignored across iterations.", "severity": "medium", "fix_complexity": "complex"},
+    {"id": "INEFF-019", "area": "All Activity Same Date", "description": "All entries share 2026-03-10, undermining temporal tracking.", "severity": "low", "fix_complexity": "simple"}
+  ],
+  "topic_b_archive_tools_count": 6,
+  "unique_findings": ["IDF computed from 2 docs makes TF-IDF meaningless", "URL normalization prefix ordering bug", "Corroboration inflation via loose keyword matching"],
+  "coordination_notes": "3+6 structure optimal. Agent 3A (code) found algorithmic bugs via deep subagent analysis. Agent 3B (structural) found workflow gaps. Agent 3C (tools) provided concrete specs. Total: 19 findings in 48s.",
+  "research_quality_self_assessment": {"coverage": 88, "depth": 82, "actionability": 90}
+}
