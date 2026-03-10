@@ -134,22 +134,42 @@
     },
     {
       "id": "DG-0007",
-      "name": "Wikidata Knowledge Extraction",
+      "name": "Semantic Scholar Paper Search",
+      "file": "method_semantic_scholar.py",
+      "description": "Uses Semantic Scholar Academic Graph API to search papers. Extracts titles, authors, abstracts, AI-generated TLDRs, citation counts, fields of study, external IDs (DOI, ArXiv), and open access PDF links. Respects 1 req/sec rate limit.",
+      "category": "api-based",
+      "data_sources": ["Semantic Scholar API"],
+      "requires_api_key": false,
+      "avg_duration_seconds": null,
+      "status": "new",
+      "created": "2026-03-10",
+      "iteration": 3
+    },
+    {
+      "id": "DG-0008",
+      "name": "Wikidata Knowledge Graph Search",
       "file": "method_wikidata.py",
-      "description": "Queries Wikidata search API to find structured knowledge about a topic. Extracts entity labels, descriptions, aliases, sitelinks, and related properties.",
+      "description": "Two-phase Wikidata search: finds entities via wbsearchentities, then fetches full details including labels, descriptions, aliases, instance_of/subclass_of claims, and Wikipedia sitelinks.",
       "category": "api-based",
       "data_sources": ["Wikidata API"],
       "requires_api_key": false,
-      "avg_duration_seconds": 0.16,
-      "status": "blocked — wikidata.org returns 403 from this environment",
+      "avg_duration_seconds": null,
+      "status": "new",
       "created": "2026-03-10",
-      "iteration": 2,
-      "iteration2_benchmark": {
-        "speed_seconds": 0.16,
-        "data_points": 0,
-        "quality_score": 0,
-        "notes": "Code is correct but wikidata.org blocks requests from this network environment."
-      }
+      "iteration": 3
+    },
+    {
+      "id": "DG-0009",
+      "name": "GitHub Repository Search",
+      "file": "method_github.py",
+      "description": "Searches GitHub repositories sorted by stars and code via REST API. Extracts full_name, description, stars, language, topics, license, forks, and open issues. Handles 403 rate limits gracefully.",
+      "category": "api-based",
+      "data_sources": ["GitHub API"],
+      "requires_api_key": false,
+      "avg_duration_seconds": null,
+      "status": "new",
+      "created": "2026-03-10",
+      "iteration": 3
     }
   ],
   "utilities": [
@@ -171,7 +191,7 @@
   "categories": {
     "web-search": ["DG-0001"],
     "web-scraping": [],
-    "api-based": ["DG-0002", "DG-0003", "DG-0006", "DG-0007"],
+    "api-based": ["DG-0002", "DG-0003", "DG-0006", "DG-0007", "DG-0008", "DG-0009"],
     "hybrid": ["DG-0004"],
     "ai-enhanced": ["DG-0005"]
   }
