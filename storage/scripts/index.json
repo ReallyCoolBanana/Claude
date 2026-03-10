@@ -155,15 +155,104 @@
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0006"
+    },
+    {
+      "id": "SCR-0015",
+      "name": "fast-search",
+      "filename": "fast_search/main.go",
+      "language": "go",
+      "category": "utility",
+      "description": "High-speed full-text search index compiled in Go. Builds an inverted index of all .md, .json, .py, .go files. Supports exact match, multi-word AND, and phrase search modes. Query time <5ms on current corpus (126 files). Outputs JSON results with file, line, column, and context.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0008"
+    },
+    {
+      "id": "SCR-0016",
+      "name": "fast-validate",
+      "filename": "fast_validate/main.go",
+      "language": "go",
+      "category": "utility",
+      "description": "High-speed repository structure validator compiled in Go. Validates all index.json files, cross-references (KB builds_on, script dependencies), file existence, orphan detection, and dependency cycle detection in a single pass. Completes in <2ms. Outputs JSON report with pass/fail and all issues.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0008"
+    },
+    {
+      "id": "SCR-0017",
+      "name": "fast-cache",
+      "filename": "fast_cache/main.go",
+      "language": "go",
+      "category": "utility",
+      "description": "High-speed file-based key-value cache for API responses, compiled in Go. Keys are SHA-256 of URL. Supports get, set (with TTL), delete, stats, gc (garbage collection), and keys commands. Uses index file + data directory for sub-millisecond cache hits. CLI interface with JSON output.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0008"
+    },
+    {
+      "id": "SCR-0018",
+      "name": "kb-search",
+      "filename": "kb_search.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Full-text search across KB entries, team logs, and script metadata using TF-IDF ranking. CLI with argparse supporting query, --tags, --category, and --type filters. Returns ranked results with context snippets.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0008"
+    },
+    {
+      "id": "SCR-0019",
+      "name": "handoff-tracker",
+      "filename": "handoff_tracker.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Parses Handoff Notes sections from team session logs, extracts action items, and checks if subsequent teams addressed each item. Tracks resolution rate across all iterations.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0008"
+    },
+    {
+      "id": "SCR-0020",
+      "name": "staleness-detector",
+      "filename": "staleness_detector.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Repository health checker with 6 checks: stale statuses, regressions, unaddressed handoffs, broken references, index mismatches, and orphan files. Outputs scored health report.",
+      "dependencies": ["SCR-0012", "SCR-0014", "SCR-0019"],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0008"
+    },
+    {
+      "id": "SCR-0021",
+      "name": "ddg-utils",
+      "filename": "data-gathering/methods/ddg_utils.py",
+      "language": "python",
+      "category": "data-collection",
+      "description": "Shared DuckDuckGo search utilities. Contains DuckDuckGoParser class, search_duckduckgo function, rate limiting (0.5s between requests), and configurable User-Agent. Extracted from 4 duplicate implementations.",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0007"
+    },
+    {
+      "id": "SCR-0022",
+      "name": "request-cache",
+      "filename": "data-gathering/methods/request_cache.py",
+      "language": "python",
+      "category": "data-collection",
+      "description": "File-based HTTP response cache with SHA-256 keys, base64 storage, and configurable TTL (default 1 hour). Functions: cached_request(), clear_cache(), cache_stats().",
+      "dependencies": [],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0007"
     }
   ],
   "categories": {
-    "data-collection": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010"],
+    "data-collection": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0021", "SCR-0022"],
     "analysis": ["SCR-0004", "SCR-0005", "SCR-0011"],
     "automation": [],
-    "utility": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0012", "SCR-0013", "SCR-0014"]
+    "utility": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0015", "SCR-0016", "SCR-0017", "SCR-0018", "SCR-0019", "SCR-0020"]
   },
   "language_index": {
-    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014"]
+    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0021", "SCR-0022"],
+    "go": ["SCR-0015", "SCR-0016", "SCR-0017"]
   }
 }

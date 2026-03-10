@@ -18,6 +18,19 @@ import time
 
 from ddg_utils import search_duckduckgo
 
+# ---------------------------------------------------------------------------
+# Cache integration (graceful fallback if unavailable)
+# ---------------------------------------------------------------------------
+USE_CACHE = True
+
+try:
+    if USE_CACHE:
+        from request_cache import cached_request as _cached_request
+    else:
+        _cached_request = None
+except ImportError:
+    _cached_request = None
+
 
 METHOD_ID = "DG-0001"
 METHOD_NAME = "Multi-query Web Search"

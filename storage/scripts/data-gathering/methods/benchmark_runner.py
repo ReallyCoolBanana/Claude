@@ -5,17 +5,25 @@ Benchmark Runner for Data Gathering Methods
 Runs all data gathering methods against a test query and collects
 performance metrics. Saves results to the benchmarks directory.
 
+Supports parallel execution (default) for faster benchmarking and
+sequential mode for comparison.
+
 Usage:
     python3 benchmark_runner.py "test query" [output_file]
+    python3 benchmark_runner.py "test query" --sequential [output_file]
 
 If output_file is not specified, results are printed to stdout.
 """
 
+import argparse
+import glob
 import importlib.util
 import json
 import os
+import re
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 
@@ -23,16 +31,20 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BENCHMARKS_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "benchmarks")
 
 
-# All methods to benchmark
-METHODS = [
+# All methods to benchmark — standalone methods first, hybrid last
+STANDALONE_METHODS = [
     {"id": "DG-0001", "name": "WebSearch", "file": "method_websearch.py"},
     {"id": "DG-0002", "name": "Wikipedia", "file": "method_wikipedia.py"},
     {"id": "DG-0003", "name": "arXiv", "file": "method_arxiv.py"},
-    {"id": "DG-0004", "name": "Hybrid v2", "file": "method_hybrid.py"},
     {"id": "DG-0005", "name": "Iterative", "file": "method_iterative.py"},
     {"id": "DG-0006", "name": "OpenAlex", "file": "method_openalex.py"},
     {"id": "DG-0007", "name": "Wikidata", "file": "method_wikidata.py"},
 ]
+
+HYBRID_METHOD = {"id": "DG-0004", "name": "Hybrid v2", "file": "method_hybrid.py"}
+
+# Combined list for backward compatibility
+METHODS = STANDALONE_METHODS + [HYBRID_METHOD]
 
 
 def _load_method(filename):
@@ -42,6 +54,38 @@ def _load_method(filename):
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
+
+
+def _detect_iteration():
+    """Auto-detect iteration number from existing benchmark files.
+
+    Scans the benchmarks directory for files matching the expected naming
+    pattern and returns one greater than the highest iteration found.
+    Falls back to 1 if no previous benchmarks exist.
+    """
+    if not os.path.isdir(BENCHMARKS_DIR):
+        return 1
+
+    max_iteration = 0
+    for fname in os.listdir(BENCHMARKS_DIR):
+        if not fname.endswith(".json"):
+            continue
+        fpath = os.path.join(BENCHMARKS_DIR, fname)
+        try:
+            with open(fpath, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+            it = data.get("iteration", 0)
+            if isinstance(it, int) and it > max_iteration:
+                max_iteration = it
+            # Also check individual benchmark entries
+            for entry in data.get("benchmarks", []):
+                eit = entry.get("iteration", 0)
+                if isinstance(eit, int) and eit > max_iteration:
+                    max_iteration = eit
+        except (json.JSONDecodeError, OSError, KeyError):
+            continue
+
+    return max_iteration + 1 if max_iteration > 0 else 1
 
 
 def compute_quality_score(result):
@@ -94,87 +138,256 @@ def compute_quality_score(result):
     return min(score, 100)
 
 
-def run_benchmark(query, methods_to_run=None):
-    """Run benchmarks for specified methods (or all if None)."""
+def _run_single_method(method_info, query, iteration, timestamp):
+    """Run a single method and return its benchmark entry.
+
+    Returns a tuple of (method_info, benchmark_entry, raw_result).
+    The raw_result is returned so the hybrid method can reuse standalone
+    results instead of re-executing them.
+    """
+    method_id = method_info["id"]
+    method_name = method_info["name"]
+    filename = method_info["file"]
+
+    print(f"  Running {method_name} ({method_id})...", file=sys.stderr, flush=True)
+
+    try:
+        mod = _load_method(filename)
+        start = time.time()
+        result = mod.run(query)
+        duration = round(time.time() - start, 2)
+
+        metadata = result.get("metadata", {})
+        data_points = metadata.get("data_points", len(result.get("results", [])))
+        sources_count = metadata.get("sources_count", 0)
+        quality = compute_quality_score(result)
+
+        benchmark_entry = {
+            "method_id": method_id,
+            "method_name": method_name,
+            "iteration": iteration,
+            "timestamp": timestamp,
+            "metrics": {
+                "speed_seconds": duration,
+                "data_points_collected": data_points,
+                "source_quality_score": quality,
+                "unique_sources": sources_count,
+            },
+            "test_query": query,
+            "raw_results_summary": f"{data_points} results in {duration}s from {sources_count} sources",
+            "notes": "",
+        }
+
+        # Add method-specific notes
+        if "corroborated_findings" in metadata:
+            benchmark_entry["notes"] += f"Corroborated: {metadata['corroborated_findings']}. "
+        if "avg_corroboration_score" in metadata:
+            benchmark_entry["notes"] += f"Avg corroboration: {metadata['avg_corroboration_score']}. "
+        if metadata.get("deduplication_applied"):
+            benchmark_entry["notes"] += "Deduplication applied. "
+        if "total_citations" in metadata:
+            benchmark_entry["notes"] += f"Total citations: {metadata['total_citations']}. "
+        if metadata.get("error"):
+            benchmark_entry["notes"] += f"Error: {metadata['error']}. "
+
+        print(f"    Done: {data_points} pts, {duration}s, quality={quality}",
+              file=sys.stderr, flush=True)
+
+        return (method_info, benchmark_entry, result)
+
+    except Exception as e:
+        benchmark_entry = {
+            "method_id": method_id,
+            "method_name": method_name,
+            "iteration": iteration,
+            "timestamp": timestamp,
+            "metrics": {
+                "speed_seconds": 0,
+                "data_points_collected": 0,
+                "source_quality_score": 0,
+                "unique_sources": 0,
+            },
+            "test_query": query,
+            "raw_results_summary": f"FAILED: {e}",
+            "notes": f"Exception: {e}",
+        }
+        print(f"    FAILED: {e}", file=sys.stderr, flush=True)
+        return (method_info, benchmark_entry, None)
+
+
+def _run_hybrid_with_precomputed(query, standalone_results, iteration, timestamp):
+    """Run the hybrid method, passing pre-computed standalone results to avoid re-execution.
+
+    Parameters
+    ----------
+    query : str
+        The search query.
+    standalone_results : dict
+        Mapping of source name -> raw result data from standalone methods.
+    iteration : int
+        Current benchmark iteration number.
+    timestamp : str
+        ISO timestamp for this benchmark run.
+    """
+    method_info = HYBRID_METHOD
+    method_id = method_info["id"]
+    method_name = method_info["name"]
+
+    print(f"  Running {method_name} ({method_id}) [using cached standalone results]...",
+          file=sys.stderr, flush=True)
+
+    try:
+        mod = _load_method(method_info["file"])
+        start = time.time()
+
+        # If the hybrid module has a run_with_results function, use it
+        # to avoid re-running standalone methods. Otherwise fall back to run().
+        if hasattr(mod, "run_with_results"):
+            result = mod.run_with_results(query, standalone_results)
+        else:
+            result = mod.run(query)
+
+        duration = round(time.time() - start, 2)
+
+        metadata = result.get("metadata", {})
+        data_points = metadata.get("data_points", len(result.get("results", [])))
+        sources_count = metadata.get("sources_count", 0)
+        quality = compute_quality_score(result)
+
+        benchmark_entry = {
+            "method_id": method_id,
+            "method_name": method_name,
+            "iteration": iteration,
+            "timestamp": timestamp,
+            "metrics": {
+                "speed_seconds": duration,
+                "data_points_collected": data_points,
+                "source_quality_score": quality,
+                "unique_sources": sources_count,
+            },
+            "test_query": query,
+            "raw_results_summary": f"{data_points} results in {duration}s from {sources_count} sources",
+            "notes": "",
+        }
+
+        if "corroborated_findings" in metadata:
+            benchmark_entry["notes"] += f"Corroborated: {metadata['corroborated_findings']}. "
+        if "avg_corroboration_score" in metadata:
+            benchmark_entry["notes"] += f"Avg corroboration: {metadata['avg_corroboration_score']}. "
+        if metadata.get("deduplication_applied"):
+            benchmark_entry["notes"] += "Deduplication applied. "
+        if metadata.get("error"):
+            benchmark_entry["notes"] += f"Error: {metadata['error']}. "
+
+        print(f"    Done: {data_points} pts, {duration}s, quality={quality}",
+              file=sys.stderr, flush=True)
+
+        return (method_info, benchmark_entry, result)
+
+    except Exception as e:
+        benchmark_entry = {
+            "method_id": method_id,
+            "method_name": method_name,
+            "iteration": iteration,
+            "timestamp": timestamp,
+            "metrics": {
+                "speed_seconds": 0,
+                "data_points_collected": 0,
+                "source_quality_score": 0,
+                "unique_sources": 0,
+            },
+            "test_query": query,
+            "raw_results_summary": f"FAILED: {e}",
+            "notes": f"Exception: {e}",
+        }
+        print(f"    FAILED: {e}", file=sys.stderr, flush=True)
+        return (method_info, benchmark_entry, None)
+
+
+def run_benchmark(query, methods_to_run=None, parallel=True):
+    """Run benchmarks for specified methods (or all if None).
+
+    Parameters
+    ----------
+    query : str
+        The search query to benchmark.
+    methods_to_run : list, optional
+        List of method dicts to run. If None, runs all methods.
+    parallel : bool
+        If True (default), run standalone methods concurrently using
+        ThreadPoolExecutor, then pass results into hybrid. If False,
+        run all methods sequentially.
+    """
     if methods_to_run is None:
         methods_to_run = METHODS
 
-    results = []
+    iteration = _detect_iteration()
     timestamp = datetime.now(timezone.utc).isoformat()
+    overall_start = time.time()
 
-    for method_info in methods_to_run:
-        method_id = method_info["id"]
-        method_name = method_info["name"]
-        filename = method_info["file"]
+    results = []
 
-        print(f"  Running {method_name} ({method_id})...", file=sys.stderr, flush=True)
+    # Separate standalone from hybrid
+    standalone = [m for m in methods_to_run if m["id"] != HYBRID_METHOD["id"]]
+    include_hybrid = any(m["id"] == HYBRID_METHOD["id"] for m in methods_to_run)
 
-        try:
-            mod = _load_method(filename)
-            start = time.time()
-            result = mod.run(query)
-            duration = round(time.time() - start, 2)
+    if parallel and len(standalone) > 1:
+        # --- Parallel execution of standalone methods ---
+        print(f"  [Parallel mode: {len(standalone)} standalone methods]", file=sys.stderr, flush=True)
+        standalone_raw = {}
 
-            metadata = result.get("metadata", {})
-            data_points = metadata.get("data_points", len(result.get("results", [])))
-            sources_count = metadata.get("sources_count", 0)
-            quality = compute_quality_score(result)
+        with ThreadPoolExecutor(max_workers=len(standalone)) as executor:
+            futures = {}
+            for method_info in standalone:
+                future = executor.submit(
+                    _run_single_method, method_info, query, iteration, timestamp
+                )
+                futures[future] = method_info
 
-            benchmark_entry = {
-                "method_id": method_id,
-                "method_name": method_name,
-                "iteration": 2,
-                "timestamp": timestamp,
-                "metrics": {
-                    "speed_seconds": duration,
-                    "data_points_collected": data_points,
-                    "source_quality_score": quality,
-                    "unique_sources": sources_count,
-                },
-                "test_query": query,
-                "raw_results_summary": f"{data_points} results in {duration}s from {sources_count} sources",
-                "notes": "",
-            }
+            for future in as_completed(futures):
+                method_info, benchmark_entry, raw_result = future.result()
+                results.append(benchmark_entry)
+                if raw_result is not None:
+                    # Map method file to source name for hybrid reuse
+                    name_map = {
+                        "method_websearch.py": "web_search",
+                        "method_wikipedia.py": "wikipedia",
+                        "method_arxiv.py": "arxiv",
+                        "method_openalex.py": "openalex",
+                        "method_wikidata.py": "wikidata",
+                    }
+                    source_name = name_map.get(method_info["file"])
+                    if source_name:
+                        standalone_raw[source_name] = raw_result
 
-            # Add method-specific notes
-            if "corroborated_findings" in metadata:
-                benchmark_entry["notes"] += f"Corroborated: {metadata['corroborated_findings']}. "
-            if "avg_corroboration_score" in metadata:
-                benchmark_entry["notes"] += f"Avg corroboration: {metadata['avg_corroboration_score']}. "
-            if metadata.get("deduplication_applied"):
-                benchmark_entry["notes"] += "Deduplication applied. "
-            if "total_citations" in metadata:
-                benchmark_entry["notes"] += f"Total citations: {metadata['total_citations']}. "
-            if metadata.get("error"):
-                benchmark_entry["notes"] += f"Error: {metadata['error']}. "
-
+        # Now run hybrid with pre-computed results (eliminates double-execution)
+        if include_hybrid:
+            _, hybrid_entry, _ = _run_hybrid_with_precomputed(
+                query, standalone_raw, iteration, timestamp
+            )
+            results.append(hybrid_entry)
+    else:
+        # --- Sequential execution ---
+        print(f"  [Sequential mode: {len(methods_to_run)} methods]", file=sys.stderr, flush=True)
+        for method_info in methods_to_run:
+            _, benchmark_entry, _ = _run_single_method(
+                method_info, query, iteration, timestamp
+            )
             results.append(benchmark_entry)
-            print(f"    Done: {data_points} pts, {duration}s, quality={quality}",
-                  file=sys.stderr, flush=True)
 
-        except Exception as e:
-            results.append({
-                "method_id": method_id,
-                "method_name": method_name,
-                "iteration": 2,
-                "timestamp": timestamp,
-                "metrics": {
-                    "speed_seconds": 0,
-                    "data_points_collected": 0,
-                    "source_quality_score": 0,
-                    "unique_sources": 0,
-                },
-                "test_query": query,
-                "raw_results_summary": f"FAILED: {e}",
-                "notes": f"Exception: {e}",
-            })
-            print(f"    FAILED: {e}", file=sys.stderr, flush=True)
+    overall_duration = round(time.time() - overall_start, 2)
+
+    # Sort results by method order in METHODS for consistent output
+    method_order = {m["id"]: i for i, m in enumerate(METHODS)}
+    results.sort(key=lambda r: method_order.get(r["method_id"], 999))
 
     return {
         "version": "2.0",
-        "iteration": 2,
+        "iteration": iteration,
         "timestamp": timestamp,
         "test_query": query,
+        "execution_mode": "parallel" if (parallel and len(standalone) > 1) else "sequential",
+        "overall_duration_seconds": overall_duration,
         "benchmarks": results,
         "summary": _compute_summary(results),
     }
@@ -202,25 +415,36 @@ def _compute_summary(results):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print(f"Usage: python3 {sys.argv[0]} \"test query\" [output_file]", file=sys.stderr)
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Benchmark data gathering methods.",
+        usage='python3 benchmark_runner.py "test query" [output_file] [--sequential]',
+    )
+    parser.add_argument("query", help="The test query to benchmark")
+    parser.add_argument("output_file", nargs="?", default=None,
+                        help="Optional output file path")
+    parser.add_argument("--sequential", action="store_true", default=False,
+                        help="Run methods sequentially instead of in parallel")
+    parser.add_argument("--parallel", action="store_true", default=True,
+                        help="Run methods in parallel (default)")
 
-    query = sys.argv[1]
-    output_file = sys.argv[2] if len(sys.argv) > 2 else None
+    args = parser.parse_args()
+    use_parallel = not args.sequential
 
-    print(f"Running iteration 2 benchmarks for: \"{query}\"", file=sys.stderr)
+    iteration = _detect_iteration()
+    mode_label = "parallel" if use_parallel else "sequential"
+    print(f"Running iteration {iteration} benchmarks ({mode_label}) for: \"{args.query}\"",
+          file=sys.stderr)
     print("=" * 60, file=sys.stderr)
 
-    benchmark_results = run_benchmark(query)
+    benchmark_results = run_benchmark(args.query, parallel=use_parallel)
 
     output = json.dumps(benchmark_results, indent=2, ensure_ascii=False)
 
-    if output_file:
-        os.makedirs(os.path.dirname(output_file) or ".", exist_ok=True)
-        with open(output_file, "w") as f:
+    if args.output_file:
+        os.makedirs(os.path.dirname(args.output_file) or ".", exist_ok=True)
+        with open(args.output_file, "w") as f:
             f.write(output)
-        print(f"\nResults saved to: {output_file}", file=sys.stderr)
+        print(f"\nResults saved to: {args.output_file}", file=sys.stderr)
     else:
         print(output)
 
@@ -232,4 +456,7 @@ if __name__ == "__main__":
         m = r["metrics"]
         print(f"{r['method_name']:<20} {m['speed_seconds']:>7.1f}s {m['data_points_collected']:>7} {m['source_quality_score']:>7}",
               file=sys.stderr)
+    print("-" * 50, file=sys.stderr)
+    print(f"Overall duration: {benchmark_results['overall_duration_seconds']}s ({mode_label})",
+          file=sys.stderr)
     print("=" * 60, file=sys.stderr)

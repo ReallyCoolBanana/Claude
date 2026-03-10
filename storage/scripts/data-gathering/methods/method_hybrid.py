@@ -25,6 +25,7 @@ import re
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from urllib.parse import urlparse, urlunparse
 
 
 METHOD_ID = "DG-0004"
@@ -60,24 +61,57 @@ def _load_dedup():
         return None
 
 
+# ---------------------------------------------------------------------------
+# Shared stop words — imported from dedup_utils if available, else fallback
+# ---------------------------------------------------------------------------
+def _get_stop_words():
+    """Get stop words set, preferring dedup_utils.STOP_WORDS."""
+    dedup = _load_dedup()
+    if dedup and hasattr(dedup, "STOP_WORDS"):
+        return dedup.STOP_WORDS
+    # Fallback inline set
+    return {
+        "this", "that", "with", "from", "have", "been", "were", "also",
+        "which", "their", "about", "would", "there", "these", "other",
+        "more", "some", "than", "into", "only", "over", "such", "after",
+        "most", "when", "what", "they", "each", "does", "will", "many",
+    }
+
+STOP_WORDS = _get_stop_words()
+
+
 def normalize_url(url):
-    """Normalize a URL for comparison."""
-    url = url.strip().rstrip("/")
-    for prefix in ("https://", "http://", "https://www.", "http://www."):
-        if url.lower().startswith(prefix):
-            url = url[len(prefix):]
+    """Normalize a URL for comparison.
+
+    Strips scheme, 'www.' prefix, trailing slashes, query params, and fragments.
+    """
+    url = url.strip()
+    if not url:
+        return ""
+
+    # Parse the URL properly to strip query and fragment
+    try:
+        parsed = urlparse(url)
+        # Reconstruct without query and fragment
+        clean = urlunparse((parsed.scheme, parsed.netloc, parsed.path, "", "", ""))
+    except Exception:
+        clean = url
+
+    clean = clean.strip().rstrip("/")
+
+    # Strip scheme and www prefix — check 'https://www.' BEFORE 'https://'
+    for prefix in ("https://www.", "http://www.", "https://", "http://"):
+        if clean.lower().startswith(prefix):
+            clean = clean[len(prefix):]
             break
-    return url.lower()
+
+    return clean.lower().rstrip("/")
 
 
 def extract_keywords(text, min_len=4):
     """Extract significant words from text for cross-referencing."""
     words = re.findall(r'\b[a-zA-Z]{%d,}\b' % min_len, text.lower())
-    stop = {"this", "that", "with", "from", "have", "been", "were", "also",
-            "which", "their", "about", "would", "there", "these", "other",
-            "more", "some", "than", "into", "only", "over", "such", "after",
-            "most", "when", "what", "they", "each", "does", "will", "many"}
-    return set(w for w in words if w not in stop)
+    return set(w for w in words if w not in STOP_WORDS)
 
 
 def _run_method(method_name, mod, query):
@@ -157,10 +191,15 @@ def cross_reference_results(all_source_results):
     if not unified:
         return unified
 
+    # Precompute keywords for ALL results once (instead of per-pair)
+    keywords_cache = []
+    for entry in unified:
+        kw = extract_keywords(entry["title"] + " " + entry["snippet"])
+        keywords_cache.append(kw)
+
     # Cross-reference using keyword overlap
-    # For each pair of source types, check keyword overlap
     for i, entry in enumerate(unified):
-        keywords_i = extract_keywords(entry["title"] + " " + entry["snippet"])
+        keywords_i = keywords_cache[i]
         if not keywords_i:
             continue
 
@@ -174,9 +213,10 @@ def cross_reference_results(all_source_results):
             if other_key in entry["corroborating_sources"]:
                 continue
 
-            keywords_j = extract_keywords(other["title"] + " " + other["snippet"])
+            keywords_j = keywords_cache[j]
             overlap = keywords_i & keywords_j
-            if len(overlap) >= 3:
+            # Require >=4 keyword overlap (was 3) to reduce false corroboration
+            if len(overlap) >= 4:
                 entry["corroboration_score"] += 0.5
                 entry["corroborating_sources"].append(other_key)
 
@@ -193,14 +233,62 @@ def cross_reference_results(all_source_results):
                         entry["corroboration_score"] += 1
                         entry["corroborating_sources"].append(src)
 
-    # Apply credibility weighting to final score
+    # Apply credibility weighting and quality penalties/bonuses
     for entry in unified:
         weight = entry.get("credibility_weight", 1.0)
+
+        # Penalize results that are just URL+title with no real content
+        snippet = (entry.get("snippet") or "").strip()
+        if len(snippet) < 20:
+            weight *= 0.6  # 40% penalty for content-less results
+
+        # Bonus for results corroborated by 2+ distinct sources
+        distinct_sources = set()
+        for src in entry.get("corroborating_sources", []):
+            # Normalize "foo_related" -> "foo"
+            base = src.replace("_related", "")
+            distinct_sources.add(base)
+        if len(distinct_sources) >= 3:
+            # Corroborated by 2+ other sources (original + 2)
+            weight *= 1.2
+
         entry["weighted_score"] = round(entry["corroboration_score"] * weight, 2)
 
     # Sort by weighted score descending, then corroboration score
     unified.sort(key=lambda x: (x.get("weighted_score", 0), x["corroboration_score"]), reverse=True)
     return unified
+
+
+def run_with_results(query, precomputed_results):
+    """Execute hybrid aggregation using pre-computed standalone method results.
+
+    This avoids re-executing standalone methods when called from the benchmark
+    runner, eliminating double-execution overhead.
+
+    Parameters
+    ----------
+    query : str
+        The search query.
+    precomputed_results : dict
+        Mapping of source_name -> raw result data from standalone methods.
+        Keys should be: web_search, wikipedia, arxiv, openalex, wikidata.
+    """
+    start = time.time()
+
+    sub_method_stats = {}
+    raw_results = {}
+
+    for name, data in precomputed_results.items():
+        if data is not None:
+            raw_results[name] = data
+            sub_method_stats[name] = {
+                "results": data.get("metadata", {}).get("data_points", 0),
+                "duration": data.get("metadata", {}).get("duration_seconds", 0),
+                "error": data.get("metadata", {}).get("error"),
+                "source": "precomputed",
+            }
+
+    return _aggregate(query, raw_results, sub_method_stats, start)
 
 
 def run(query):
@@ -243,6 +331,11 @@ def run(query):
                 "error": data.get("metadata", {}).get("error"),
             }
 
+    return _aggregate(query, raw_results, sub_method_stats, start)
+
+
+def _aggregate(query, raw_results, sub_method_stats, start):
+    """Shared aggregation logic for run() and run_with_results()."""
     # Normalize results from each source
     all_source_results = {}
     for source_type, data in raw_results.items():

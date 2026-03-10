@@ -16,6 +16,19 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+# ---------------------------------------------------------------------------
+# Cache integration (graceful fallback if unavailable)
+# ---------------------------------------------------------------------------
+USE_CACHE = True
+
+_cached_request = None
+try:
+    if USE_CACHE:
+        from request_cache import cached_request as _cached_request
+except ImportError:
+    pass
+
+
 METHOD_ID = "DG-0007"
 METHOD_NAME = "Wikidata SPARQL"
 ENDPOINT = "https://www.wikidata.org/w/api.php"
@@ -27,12 +40,16 @@ def search_wikidata(query, limit=15):
         "action": "wbsearchentities", "search": query,
         "language": "en", "limit": str(limit), "format": "json",
     })
+    url = f"{ENDPOINT}?{params}"
+    headers = {"User-Agent": "DataGatheringBot/1.0"}
     try:
-        req = urllib.request.Request(
-            f"{ENDPOINT}?{params}",
-            headers={"User-Agent": "DataGatheringBot/1.0"})
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-            return json.loads(resp.read().decode()).get("search", [])
+        if _cached_request is not None:
+            raw = _cached_request(url, headers=headers, timeout=TIMEOUT)
+            return json.loads(raw.decode()).get("search", [])
+        else:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
+                return json.loads(resp.read().decode()).get("search", [])
     except urllib.error.HTTPError as e:
         return [{"error": f"HTTP {e.code}: {e.reason}", "source": "wikidata"}]
     except urllib.error.URLError as e:
@@ -47,13 +64,18 @@ def get_entity_details(entity_id):
         "languages": "en", "props": "labels|descriptions|aliases|sitelinks",
         "format": "json",
     })
+    url = f"{ENDPOINT}?{params}"
+    headers = {"User-Agent": "DataGatheringBot/1.0"}
     try:
-        req = urllib.request.Request(
-            f"{ENDPOINT}?{params}",
-            headers={"User-Agent": "DataGatheringBot/1.0"})
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-            data = json.loads(resp.read().decode())
+        if _cached_request is not None:
+            raw = _cached_request(url, headers=headers, timeout=TIMEOUT)
+            data = json.loads(raw.decode())
             return data.get("entities", {}).get(entity_id, {})
+        else:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
+                data = json.loads(resp.read().decode())
+                return data.get("entities", {}).get(entity_id, {})
     except urllib.error.HTTPError as e:
         return {"error": f"HTTP {e.code}: {e.reason}", "source": "wikidata", "entity_id": entity_id}
     except urllib.error.URLError as e:

@@ -21,6 +21,18 @@ import urllib.request
 
 from ddg_utils import search_duckduckgo as _ddg_search
 
+# ---------------------------------------------------------------------------
+# Cache integration (graceful fallback if unavailable)
+# ---------------------------------------------------------------------------
+USE_CACHE = True
+
+_cached_request = None
+try:
+    if USE_CACHE:
+        from request_cache import cached_request as _cached_request
+except ImportError:
+    pass
+
 
 METHOD_ID = "DG-0002"
 METHOD_NAME = "Wikipedia API Deep Extraction"
@@ -37,10 +49,14 @@ def wiki_api(params):
     params["format"] = "json"
     url = f"{API_BASE}?{urllib.parse.urlencode(params)}"
     headers = {"User-Agent": "DataGatheringBot/1.0 (research tool)"}
-    req = urllib.request.Request(url, headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-            return json.loads(resp.read().decode("utf-8"))
+        if _cached_request is not None:
+            raw = _cached_request(url, headers=headers, timeout=TIMEOUT)
+            return json.loads(raw.decode("utf-8"))
+        else:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
+                return json.loads(resp.read().decode("utf-8"))
     except Exception as e:
         return {"error": str(e)}
 

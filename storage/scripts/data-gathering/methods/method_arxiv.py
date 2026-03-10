@@ -23,6 +23,18 @@ from xml.etree import ElementTree
 
 from ddg_utils import search_duckduckgo as _ddg_search
 
+# ---------------------------------------------------------------------------
+# Cache integration (graceful fallback if unavailable)
+# ---------------------------------------------------------------------------
+USE_CACHE = True
+
+_cached_request = None
+try:
+    if USE_CACHE:
+        from request_cache import cached_request as _cached_request
+except ImportError:
+    pass
+
 
 METHOD_ID = "DG-0003"
 METHOD_NAME = "arXiv Academic Paper Search"
@@ -46,10 +58,14 @@ def search_arxiv(query, max_results=20, sort_by="relevance"):
         f"&sortBy={sort_by}&sortOrder=descending"
     )
     headers = {"User-Agent": "DataGatheringBot/1.0 (research tool)"}
-    req = urllib.request.Request(url, headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-            xml_data = resp.read().decode("utf-8")
+        if _cached_request is not None:
+            raw = _cached_request(url, headers=headers, timeout=TIMEOUT)
+            xml_data = raw.decode("utf-8")
+        else:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
+                xml_data = resp.read().decode("utf-8")
         return parse_arxiv_response(xml_data)
     except urllib.error.HTTPError as e:
         return [{"error": f"HTTP {e.code}: {e.reason}", "source": "arxiv", "query": query}]

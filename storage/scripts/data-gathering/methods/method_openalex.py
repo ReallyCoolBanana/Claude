@@ -20,6 +20,18 @@ import time
 import urllib.parse
 import urllib.request
 
+# ---------------------------------------------------------------------------
+# Cache integration (graceful fallback if unavailable)
+# ---------------------------------------------------------------------------
+USE_CACHE = True
+
+_cached_request = None
+try:
+    if USE_CACHE:
+        from request_cache import cached_request as _cached_request
+except ImportError:
+    pass
+
 
 METHOD_ID = "DG-0006"
 METHOD_NAME = "OpenAlex Academic Search"
@@ -40,10 +52,14 @@ def search_openalex(query, per_page=PER_PAGE):
         "User-Agent": "DataGatheringBot/1.0 (research tool; mailto:research@example.com)",
         "Accept": "application/json",
     }
-    req = urllib.request.Request(url, headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
+        if _cached_request is not None:
+            raw = _cached_request(url, headers=headers, timeout=TIMEOUT)
+            data = json.loads(raw.decode("utf-8"))
+        else:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
         return parse_openalex_response(data)
     except Exception as e:
         return [{"error": str(e)}]

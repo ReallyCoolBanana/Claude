@@ -28,6 +28,15 @@ DEFAULT_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
 DEFAULT_TIMEOUT = 10
 RATE_LIMIT_SECONDS = 0.5
 
+# Cache integration (graceful fallback if unavailable)
+USE_CACHE = True
+_cached_request = None
+try:
+    if USE_CACHE:
+        from request_cache import cached_request as _cached_request
+except ImportError:
+    pass
+
 # Module-level state for rate limiting
 _last_request_time = 0.0
 
@@ -132,10 +141,15 @@ def search_duckduckgo(query, timeout=None, user_agent=None):
     encoded = urllib.parse.quote_plus(query)
     url = f"https://html.duckduckgo.com/html/?q={encoded}"
     headers = {"User-Agent": _ua}
-    req = urllib.request.Request(url, headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=_timeout) as resp:
-            html = resp.read().decode("utf-8", errors="replace")
+        # Use cache if available
+        if _cached_request is not None:
+            raw = _cached_request(url, headers=headers, timeout=_timeout)
+            html = raw.decode("utf-8", errors="replace")
+        else:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=_timeout) as resp:
+                html = resp.read().decode("utf-8", errors="replace")
         parser = DuckDuckGoParser()
         parser.feed(html)
         return parser.results
