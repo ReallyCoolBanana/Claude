@@ -1,0 +1,23 @@
+{
+  "id": "SRC-0006",
+  "name": "Wikipedia / MediaWiki REST API",
+  "url": "https://en.wikipedia.org/api/rest_v1/",
+  "api_docs_url": "https://www.mediawiki.org/wiki/API:REST_API",
+  "data_types": [
+    "encyclopedia-articles",
+    "article-summaries",
+    "article-html",
+    "page-metadata",
+    "revision-history",
+    "media-files",
+    "search-results"
+  ],
+  "access_type": "free",
+  "auth_method": "none",
+  "rate_limits": "200 req/s with unique User-Agent header. New rate limiting system being deployed in 2026. HTTP 429 returned when exceeded.",
+  "response_format": "json",
+  "reliability": "high",
+  "last_verified": "2026-03-10",
+  "notes": "6.8M+ English articles. Three API interfaces: REST API (rest.php/v1/), Wikimedia REST API (/api/rest_v1/), and Action API (/w/api.php). REST API is best for structured data retrieval. Action API provides the most comprehensive access. Must set a descriptive User-Agent header. Available for all Wikimedia projects (Wikipedia, Wiktionary, Wikiquote, etc.). No API key needed. Content is CC BY-SA licensed.",
+  "added_by_team": "TEAM-0010"
+}

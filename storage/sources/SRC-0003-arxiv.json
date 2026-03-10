@@ -1,0 +1,21 @@
+{
+  "id": "SRC-0003",
+  "name": "arXiv API",
+  "url": "http://export.arxiv.org/api/query",
+  "api_docs_url": "https://info.arxiv.org/help/api/index.html",
+  "data_types": [
+    "preprints",
+    "academic-papers",
+    "paper-metadata",
+    "abstracts",
+    "full-text-pdf-links"
+  ],
+  "access_type": "free",
+  "auth_method": "none",
+  "rate_limits": "1 request per 3 seconds. Max 2000 results per request, 30000 total per query. PDF downloads: 4 req/s with 1s sleep between bursts.",
+  "response_format": "xml",
+  "reliability": "high",
+  "last_verified": "2026-03-10",
+  "notes": "Cornell University's open-access preprint repository. 2M+ articles in physics, math, CS, quantitative biology, finance, statistics, and more. Returns Atom 1.0 XML. Supports complex search queries with boolean operators across title, author, abstract, category. No authentication needed. Python wrapper library 'arxiv.py' available on PyPI. Use export.arxiv.org subdomain for API calls.",
+  "added_by_team": "TEAM-0010"
+}

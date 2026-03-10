@@ -1,0 +1,29 @@
+{
+  "id": "SRC-0035",
+  "name": "Hugging Face Inference Providers API",
+  "url": "https://router.huggingface.co/v1",
+  "api_docs_url": "https://huggingface.co/docs/inference-providers/en/index",
+  "data_types": [
+    "text-generation",
+    "text-embeddings",
+    "image-generation",
+    "image-classification",
+    "object-detection",
+    "speech-to-text",
+    "text-to-speech",
+    "summarization",
+    "translation",
+    "named-entity-recognition",
+    "sentiment-analysis",
+    "question-answering",
+    "video-generation"
+  ],
+  "access_type": "freemium",
+  "auth_method": "bearer-token",
+  "rate_limits": "Free tier: approximately a few hundred requests per hour with monthly credit cap. PRO ($9/mo) provides 20x more credits. Exact limits intentionally undocumented and subject to change.",
+  "response_format": "json",
+  "reliability": "high",
+  "last_verified": "2026-03-10",
+  "notes": "Unified gateway to hundreds of ML models across 18+ inference providers (Cerebras, Groq, Together, Replicate, etc.). OpenAI-compatible chat completions endpoint. Supports text generation (LLM/VLM), embeddings, image/video generation, speech, NER, summarization, and more. Free tier includes monthly credits for experimentation. Provider selection: automatic (fastest/cheapest) or explicit. Drop-in OpenAI SDK replacement. Extremely valuable for AI self-improvement: access to thousands of specialized models, feature extraction, embeddings for RAG, multi-modal capabilities. Requires HF token with inference permissions.",
+  "added_by_team": "TEAM-0012"
+}

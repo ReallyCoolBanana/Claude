@@ -1,0 +1,15 @@
+{
+  "id": "SRC-0016",
+  "name": "Mediastack",
+  "url": "https://api.mediastack.com/v1",
+  "api_docs_url": "https://mediastack.com/documentation",
+  "data_types": ["news-articles", "live-headlines", "historical-news", "categories", "sources", "languages"],
+  "access_type": "freemium",
+  "auth_method": "api-key",
+  "rate_limits": "100 requests/month on free tier (previously 500); news has 30-minute delay on free plan",
+  "response_format": "json",
+  "reliability": "medium",
+  "last_verified": "2026-03-10",
+  "notes": "Covers 7,500+ news sources globally. Free tier is very limited (100 req/month) and does NOT support HTTPS — must use HTTP, which is a security concern. No commercial use on free plan. Filters available: countries, languages, categories, keywords, sources, dates. Useful for AI due to structured JSON with pagination, but the extremely low free tier and HTTP-only restriction make it the weakest option in this set. Best used as a backup or for light testing only.",
+  "added_by_team": "TEAM-0010"
+}

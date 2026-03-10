@@ -1,0 +1,26 @@
+{
+  "id": "SRC-0030",
+  "name": "Hacker News Official API (Firebase)",
+  "url": "https://hacker-news.firebaseio.com/v0/",
+  "api_docs_url": "https://github.com/HackerNews/API",
+  "data_types": [
+    "stories",
+    "comments",
+    "polls",
+    "users",
+    "top-stories",
+    "new-stories",
+    "best-stories",
+    "ask-hn",
+    "show-hn",
+    "jobs"
+  ],
+  "access_type": "free",
+  "auth_method": "none",
+  "rate_limits": "No published rate limits. Reasonable use expected. Throttling and temporary IP bans for excessive requests.",
+  "response_format": "json",
+  "reliability": "high",
+  "last_verified": "2026-03-10",
+  "notes": "Official Y Combinator HN API on Firebase. No auth required. Near real-time data. Key endpoints: /topstories.json (500 IDs), /newstories.json, /beststories.json, /askstories.json, /showstories.json, /jobstories.json (200 IDs each), /item/{id}.json, /user/{id}.json, /maxitem.json. Supports Firebase change notifications for real-time subscriptions. No search capability (use Algolia API for search). Items returned individually by ID, so fetching lists requires multiple requests. Best for monitoring current front page and tracking stories over time.",
+  "added_by_team": "TEAM-0010"
+}

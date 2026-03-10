@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""DG-0007: Wikidata Knowledge Extraction.
-
-Queries Wikidata's search API to find structured knowledge
-about a given topic. Extracts entity labels, descriptions, aliases,
-and related properties.
+"""
+DG-0008: Wikidata Knowledge Graph Search
+==========================================
+Uses the Wikidata API to search for entities, then fetches detailed
+properties including labels, descriptions, claims, and sitelinks.
 
 Usage:
-    python3 method_wikidata.py "query string"
+    python3 method_wikidata.py "your search query"
+
+Returns JSON to stdout with standardized format.
 """
 
 import json
@@ -29,128 +31,172 @@ except ImportError:
     pass
 
 
-METHOD_ID = "DG-0007"
-METHOD_NAME = "Wikidata SPARQL"
-ENDPOINT = "https://www.wikidata.org/w/api.php"
-TIMEOUT = 15
+METHOD_ID = "DG-0008"
+METHOD_NAME = "Wikidata Knowledge Graph Search"
+TIMEOUT = 10
+API_BASE = "https://www.wikidata.org/w/api.php"
+
+HEADERS = {
+    "User-Agent": "DataGatheringBot/1.0 (research tool)",
+}
+
+# Well-known property IDs for extraction
+P_INSTANCE_OF = "P31"
+P_SUBCLASS_OF = "P279"
 
 
-def search_wikidata(query, limit=15):
-    params = urllib.parse.urlencode({
-        "action": "wbsearchentities", "search": query,
-        "language": "en", "limit": str(limit), "format": "json",
-    })
-    url = f"{ENDPOINT}?{params}"
-    headers = {"User-Agent": "DataGatheringBot/1.0"}
+# ---------------------------------------------------------------------------
+# Wikidata API methods
+# ---------------------------------------------------------------------------
+
+def wikidata_api(params):
+    """Make a Wikidata API call and return JSON response."""
+    params["format"] = "json"
+    url = f"{API_BASE}?{urllib.parse.urlencode(params)}"
     try:
         if _cached_request is not None:
-            raw = _cached_request(url, headers=headers, timeout=TIMEOUT)
-            return json.loads(raw.decode()).get("search", [])
+            raw = _cached_request(url, headers=HEADERS, timeout=TIMEOUT)
+            return json.loads(raw.decode("utf-8"))
         else:
-            req = urllib.request.Request(url, headers=headers)
+            req = urllib.request.Request(url, headers=HEADERS)
             with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-                return json.loads(resp.read().decode()).get("search", [])
-    except urllib.error.HTTPError as e:
-        return [{"error": f"HTTP {e.code}: {e.reason}", "source": "wikidata"}]
-    except urllib.error.URLError as e:
-        return [{"error": f"URL error: {e.reason}", "source": "wikidata"}]
-    except json.JSONDecodeError as e:
-        return [{"error": f"JSON decode error: {e}", "source": "wikidata"}]
+                return json.loads(resp.read().decode("utf-8"))
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def search_entities(query, limit=10):
+    """Search Wikidata for entities matching query."""
+    data = wikidata_api({
+        "action": "wbsearchentities",
+        "search": query,
+        "language": "en",
+        "limit": str(limit),
+    })
+    if "error" in data:
+        return []
+    return data.get("search", [])
 
 
 def get_entity_details(entity_id):
-    params = urllib.parse.urlencode({
-        "action": "wbgetentities", "ids": entity_id,
-        "languages": "en", "props": "labels|descriptions|aliases|sitelinks",
-        "format": "json",
+    """Fetch detailed info for a Wikidata entity."""
+    data = wikidata_api({
+        "action": "wbgetentities",
+        "ids": entity_id,
+        "props": "labels|descriptions|claims|sitelinks",
     })
-    url = f"{ENDPOINT}?{params}"
-    headers = {"User-Agent": "DataGatheringBot/1.0"}
-    try:
-        if _cached_request is not None:
-            raw = _cached_request(url, headers=headers, timeout=TIMEOUT)
-            data = json.loads(raw.decode())
-            return data.get("entities", {}).get(entity_id, {})
-        else:
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-                data = json.loads(resp.read().decode())
-                return data.get("entities", {}).get(entity_id, {})
-    except urllib.error.HTTPError as e:
-        return {"error": f"HTTP {e.code}: {e.reason}", "source": "wikidata", "entity_id": entity_id}
-    except urllib.error.URLError as e:
-        return {"error": f"URL error: {e.reason}", "source": "wikidata", "entity_id": entity_id}
-    except json.JSONDecodeError as e:
-        return {"error": f"JSON decode error: {e}", "source": "wikidata", "entity_id": entity_id}
+    if "error" in data:
+        return {"id": entity_id, "error": data["error"]}
 
+    entities = data.get("entities", {})
+    entity = entities.get(entity_id)
+    if not entity:
+        return {"id": entity_id, "error": "Entity not found"}
 
-def extract_info(entity):
+    # Label (English)
     labels = entity.get("labels", {})
+    label = labels.get("en", {}).get("value", "")
+
+    # Description (English)
     descriptions = entity.get("descriptions", {})
-    aliases = entity.get("aliases", {})
-    sitelinks = entity.get("sitelinks", {})
-    label = labels.get("en", {}).get("value", "Unknown")
     description = descriptions.get("en", {}).get("value", "")
-    alias_list = [a["value"] for a in aliases.get("en", [])]
-    wp_url = ""
-    if "enwiki" in sitelinks:
-        title = sitelinks["enwiki"].get("title", "")
-        wp_url = f"https://en.wikipedia.org/wiki/{urllib.parse.quote(title)}"
+
+    # Aliases (English)
+    aliases_raw = entity.get("aliases", {}).get("en", [])
+    aliases = [a.get("value", "") for a in aliases_raw]
+
+    # Claims: extract instance_of and subclass_of
+    claims = entity.get("claims", {})
+    instance_of = _extract_claim_labels(claims, P_INSTANCE_OF)
+    subclass_of = _extract_claim_labels(claims, P_SUBCLASS_OF)
+
+    # Wikipedia sitelink
+    sitelinks = entity.get("sitelinks", {})
+    enwiki = sitelinks.get("enwiki", {})
+    wikipedia_title = enwiki.get("title", "")
+    wikipedia_url = ""
+    if wikipedia_title:
+        wikipedia_url = f"https://en.wikipedia.org/wiki/{urllib.parse.quote(wikipedia_title.replace(' ', '_'))}"
+
     return {
-        "label": label, "description": description, "aliases": alias_list,
-        "wikipedia_url": wp_url, "entity_id": entity.get("id", ""),
-        "wikidata_url": f"https://www.wikidata.org/wiki/{entity.get('id', '')}",
+        "id": entity_id,
+        "label": label,
+        "description": description,
+        "aliases": aliases,
+        "instance_of": instance_of,
+        "subclass_of": subclass_of,
+        "wikipedia_title": wikipedia_title,
+        "wikipedia_url": wikipedia_url,
+        "wikidata_url": f"https://www.wikidata.org/wiki/{entity_id}",
     }
 
 
-def gather(query):
+def _extract_claim_labels(claims, property_id):
+    """Extract human-readable values from a claim property.
+
+    Returns Q-IDs and labels where available.
+    """
+    results = []
+    claim_list = claims.get(property_id, [])
+    for claim in claim_list:
+        mainsnak = claim.get("mainsnak", {})
+        datavalue = mainsnak.get("datavalue", {})
+        value = datavalue.get("value", {})
+        if isinstance(value, dict) and "id" in value:
+            results.append(value["id"])
+    return results
+
+
+# ---------------------------------------------------------------------------
+# Main run function
+# ---------------------------------------------------------------------------
+
+def run(query):
+    """Execute the Wikidata knowledge graph search method."""
     start = time.time()
-    results, sources = [], set()
-    search_results = search_wikidata(query)
-    words = query.split()
-    if len(words) > 2:
-        for i in range(0, len(words) - 1, 2):
-            search_results.extend(search_wikidata(" ".join(words[i:i+3]), 5))
-    seen = set()
-    unique = []
-    for sr in search_results:
-        eid = sr.get("id", "")
-        if eid not in seen:
-            seen.add(eid)
-            unique.append(sr)
-    for sr in unique[:15]:
-        eid = sr.get("id", "")
-        if not eid:
+    results = []
+    errors = []
+
+    # Step 1: Search for matching entities
+    search_hits = search_entities(query, limit=10)
+
+    if not search_hits:
+        errors.append({"error": "No entities found", "query": query})
+
+    # Step 2: Fetch details for each entity
+    for hit in search_hits:
+        entity_id = hit.get("id", "")
+        if not entity_id:
             continue
-        details = get_entity_details(eid)
-        info = extract_info(details) if details else {
-            "label": sr.get("label", ""), "description": sr.get("description", ""),
-            "aliases": [], "wikipedia_url": "", "entity_id": eid,
-            "wikidata_url": f"https://www.wikidata.org/wiki/{eid}",
-        }
-        results.append({
-            "title": info["label"], "content": info["description"],
-            "url": info["wikidata_url"], "source": "wikidata",
-            "metadata": {"entity_id": info["entity_id"],
-                         "aliases": info["aliases"],
-                         "wikipedia_url": info["wikipedia_url"]},
-        })
-        sources.add(info["wikidata_url"])
-        if info["wikipedia_url"]:
-            sources.add(info["wikipedia_url"])
+        details = get_entity_details(entity_id)
+        if "error" in details:
+            errors.append(details)
+            continue
+        # Include the search-level description as a fallback
+        if not details.get("description") and hit.get("description"):
+            details["description"] = hit["description"]
+        results.append(details)
+
+    duration = round(time.time() - start, 2)
+
     return {
-        "method_id": METHOD_ID, "method_name": METHOD_NAME, "query": query,
+        "method_id": METHOD_ID,
+        "method_name": METHOD_NAME,
+        "query": query,
         "results": results,
-        "metadata": {"duration_seconds": round(time.time() - start, 2),
-                     "sources_count": len(sources), "data_points": len(results)},
+        "metadata": {
+            "duration_seconds": duration,
+            "sources_count": len(results),
+            "data_points": len(results),
+            "entities_searched": len(search_hits),
+            "errors": errors if errors else None,
+        },
     }
-
-
-run = gather
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python3 method_wikidata.py \"query\"", file=sys.stderr)
+        print(f"Usage: python3 {sys.argv[0]} \"query string\"", file=sys.stderr)
         sys.exit(1)
-    print(json.dumps(gather(sys.argv[1]), indent=2))
+    result = run(sys.argv[1])
+    print(json.dumps(result, indent=2, ensure_ascii=False))

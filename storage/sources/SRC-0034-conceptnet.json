@@ -1,0 +1,23 @@
+{
+  "id": "SRC-0034",
+  "name": "ConceptNet API",
+  "url": "http://api.conceptnet.io",
+  "api_docs_url": "https://github.com/commonsense/conceptnet5/wiki/API",
+  "data_types": [
+    "commonsense-knowledge",
+    "semantic-relationships",
+    "word-embeddings",
+    "multilingual-concepts",
+    "knowledge-graph-edges",
+    "word-associations",
+    "concept-relatedness"
+  ],
+  "access_type": "free",
+  "auth_method": "none",
+  "rate_limits": "3600 requests per hour, bursts of 120 per minute. /related and /relatedness count as 2 requests each.",
+  "response_format": "json",
+  "reliability": "high",
+  "last_verified": "2026-03-10",
+  "notes": "Open multilingual semantic knowledge graph with 13M+ links between concepts. REST API returns JSON-LD. Key endpoints: /c/{lang}/{concept} for lookups, /query for edge searches, /related for similarity, /relatedness for pairwise scores. Sources include crowdsourced data (Open Mind Common Sense), Wiktionary, DBpedia, and WordNet. Also provides Numberbatch word embeddings (state of the art at SemEval 2017). Critical for AI self-improvement: commonsense reasoning, semantic understanding, multilingual concept mapping, knowledge graph augmentation. CC BY-SA 4.0 license.",
+  "added_by_team": "TEAM-0012"
+}

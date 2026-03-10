@@ -1,0 +1,21 @@
+{
+  "id": "SRC-0027",
+  "name": "PyPI JSON API",
+  "url": "https://pypi.org/pypi/",
+  "api_docs_url": "https://docs.pypi.org/api/json/",
+  "data_types": [
+    "package-metadata",
+    "package-versions",
+    "download-urls",
+    "vulnerability-data",
+    "release-history"
+  ],
+  "access_type": "free",
+  "auth_method": "none",
+  "rate_limits": "No published rate limits. All responses are CDN-cached. Reasonable use expected.",
+  "response_format": "json",
+  "reliability": "high",
+  "last_verified": "2026-03-10",
+  "notes": "Official Python Package Index API. No auth required. Key endpoints: GET /pypi/<project>/json for latest version metadata, GET /pypi/<project>/<version>/json for specific version. Returns info (author, description, classifiers), releases, download URLs, and vulnerability data from the OSV project. PyPI Stats API at pypistats.org/api provides aggregate download statistics. Essential for Python ecosystem analysis, security auditing, and dependency research.",
+  "added_by_team": "TEAM-0010"
+}

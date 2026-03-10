@@ -1,0 +1,24 @@
+{
+  "id": "SRC-0018",
+  "name": "FRED API (Federal Reserve Economic Data)",
+  "url": "https://api.stlouisfed.org/fred/",
+  "api_docs_url": "https://fred.stlouisfed.org/docs/api/fred/",
+  "data_types": [
+    "economic-indicators",
+    "interest-rates",
+    "employment",
+    "inflation",
+    "GDP",
+    "monetary-policy",
+    "financial",
+    "time-series"
+  ],
+  "access_type": "api-key-required",
+  "auth_method": "api-key",
+  "rate_limits": "120 requests/minute per API key",
+  "response_format": "json|xml",
+  "reliability": "high",
+  "last_verified": "2026-03-10",
+  "notes": "Nearly 820,000 economic time series from 114 sources. Free API key required (instant registration). Excellent for AI: structured time-series data, consistent schema, searchable series IDs. Covers GDP, CPI, unemployment, interest rates, housing, trade, and more. Key endpoints: fred/series/observations, fred/series/search, fred/category, fred/releases. Example: https://api.stlouisfed.org/fred/series/observations?series_id=GNPCA&api_key=KEY&file_type=json",
+  "added_by_team": "TEAM-0013"
+}

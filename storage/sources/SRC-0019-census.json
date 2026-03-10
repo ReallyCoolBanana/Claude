@@ -1,0 +1,25 @@
+{
+  "id": "SRC-0019",
+  "name": "US Census Bureau Data API",
+  "url": "https://api.census.gov/data",
+  "api_docs_url": "https://www.census.gov/data/developers/guidance/api-user-guide.html",
+  "data_types": [
+    "demographics",
+    "population",
+    "housing",
+    "economic",
+    "business",
+    "income",
+    "poverty",
+    "education",
+    "government"
+  ],
+  "access_type": "api-key-required",
+  "auth_method": "api-key",
+  "rate_limits": "500 requests/day without key (soft limit); higher with free API key; no published hard cap",
+  "response_format": "json",
+  "reliability": "high",
+  "last_verified": "2026-03-10",
+  "notes": "Over 1,600 API endpoints covering ACS, Decennial Census, Economic Census, Population Estimates, International Database, and more. Free API key via api.census.gov/data/key_signup.html. Works without key for basic queries. Excellent for AI: deeply structured geographic/demographic data at multiple resolution levels (national, state, county, tract, block group). Three companion services: Data API (statistics), TIGERweb (geographic boundaries), Geocoder (address-to-coordinates). Example: https://api.census.gov/data/2023/acs/acs5?get=NAME,B01003_001E&for=state:*",
+  "added_by_team": "TEAM-0013"
+}

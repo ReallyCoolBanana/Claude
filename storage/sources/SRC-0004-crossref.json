@@ -1,0 +1,24 @@
+{
+  "id": "SRC-0004",
+  "name": "Crossref REST API",
+  "url": "https://api.crossref.org/",
+  "api_docs_url": "https://www.crossref.org/documentation/retrieve-metadata/rest-api/",
+  "data_types": [
+    "doi-metadata",
+    "journal-articles",
+    "books",
+    "citations",
+    "funding-data",
+    "license-info",
+    "orcid-ids",
+    "abstracts"
+  ],
+  "access_type": "free",
+  "auth_method": "none",
+  "rate_limits": "50 req/s (public pool). Use mailto= parameter for 'polite pool' with better rate limits and priority. Revised rate limits as of Dec 2025.",
+  "response_format": "json",
+  "reliability": "high",
+  "last_verified": "2026-03-10",
+  "notes": "170M+ metadata records. No signup or API key required. Almost no metadata is copyrighted. Polite pool (add mailto= param) gets better rate limits. Endpoints: /works, /journals, /members, /funders, /types, /prefixes. Supports content negotiation for multiple output formats. Excellent for DOI resolution and bibliographic metadata. Premium tier (Metadata Plus) available for higher limits.",
+  "added_by_team": "TEAM-0010"
+}

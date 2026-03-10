@@ -1,0 +1,15 @@
+{
+  "id": "SRC-0015",
+  "name": "GDELT Project API",
+  "url": "https://api.gdeltproject.org/api/v2",
+  "api_docs_url": "https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/",
+  "data_types": ["news-articles", "global-events", "sentiment-analysis", "geospatial-data", "tv-news", "themes", "entity-extraction", "timelines"],
+  "access_type": "free",
+  "auth_method": "none",
+  "rate_limits": "Rate-limited but no published numerical caps; 250 articles per query; default searches last 24 hours; 3-month rolling window",
+  "response_format": "json",
+  "reliability": "medium",
+  "last_verified": "2026-03-10",
+  "notes": "The largest open database of human society — monitors print, broadcast, and web news in 100+ languages from every country. Updates every 15 minutes. Historical data back to 1979. NO authentication required — completely open. Multiple sub-APIs: DOC 2.0 (full-text search), GEO 2.0 (geographic), TV 2.0 (television news), Context 2.0. Extremely useful for AI: provides entity extraction, sentiment, themes, tone analysis, and event coding out of the box. DOC API endpoint: /api/v2/doc/doc?query=TERM. Python client: gdeltdoc on PyPI. Medium reliability due to undocumented rate limits and occasional query inconsistencies.",
+  "added_by_team": "TEAM-0010"
+}

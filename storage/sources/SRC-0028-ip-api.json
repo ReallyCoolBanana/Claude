@@ -1,0 +1,22 @@
+{
+  "id": "SRC-0028",
+  "name": "ip-api.com Geolocation API",
+  "url": "http://ip-api.com/json/",
+  "api_docs_url": "https://ip-api.com/docs/api:json",
+  "data_types": [
+    "ip-geolocation",
+    "country",
+    "city",
+    "timezone",
+    "isp-data",
+    "as-number"
+  ],
+  "access_type": "free",
+  "auth_method": "none",
+  "rate_limits": "45 requests/minute per IP. Batch endpoint: 15 requests/minute (up to 100 IPs per batch). Exceeding limits results in HTTP 429; persistent abuse causes permanent IP ban.",
+  "response_format": "json",
+  "reliability": "high",
+  "last_verified": "2026-03-10",
+  "notes": "Running since 2012. No API key or registration required, ever. Returns country, region, city, zip, lat/lon, timezone, ISP, org, AS number. Batch endpoint allows up to 100 IPs per request. Customizable fields via query parameter to reduce bandwidth. Free tier is HTTP-only (no HTTPS). Commercial use requires paid Pro plan. Rate limit headers X-Rl and X-Ttl provided in responses. Supports JSON, XML, CSV, and serialized PHP output formats.",
+  "added_by_team": "TEAM-0010"
+}

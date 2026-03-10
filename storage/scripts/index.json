@@ -243,16 +243,82 @@
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0007"
+    },
+    {
+      "id": "SCR-0023",
+      "name": "data-gathering-openalex",
+      "filename": "data-gathering/methods/method_openalex.py",
+      "language": "python",
+      "category": "data-collection",
+      "description": "OpenAlex academic search via REST API. Searches 250M+ scholarly works, extracts titles, authors, abstracts (from inverted index), citation counts, DOIs, and open access status. Uses polite pool for higher rate limits.",
+      "dependencies": ["SCR-0022"],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0010"
+    },
+    {
+      "id": "SCR-0024",
+      "name": "data-gathering-hackernews",
+      "filename": "data-gathering/methods/method_hackernews.py",
+      "language": "python",
+      "category": "data-collection",
+      "description": "Hacker News search via Algolia API plus Firebase top stories. Extracts titles, URLs, authors, points, comment counts. Deduplicates across both sources.",
+      "dependencies": ["SCR-0022"],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0010"
+    },
+    {
+      "id": "SCR-0025",
+      "name": "data-gathering-guardian",
+      "filename": "data-gathering/methods/method_guardian.py",
+      "language": "python",
+      "category": "data-collection",
+      "description": "Guardian news search via Open Platform API. Extracts headlines, body text, sections, and publication dates. Falls back to DuckDuckGo site-scoped search if API fails.",
+      "dependencies": ["SCR-0021", "SCR-0022"],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0010"
+    },
+    {
+      "id": "SCR-0026",
+      "name": "data-gathering-semantic-scholar",
+      "filename": "data-gathering/methods/method_semantic_scholar.py",
+      "language": "python",
+      "category": "data-collection",
+      "description": "Semantic Scholar paper search via Academic Graph API. Extracts titles, authors, abstracts, AI-generated TLDRs, citation counts, fields of study, and open access PDF links. Respects 1 req/sec rate limit.",
+      "dependencies": ["SCR-0022"],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0010"
+    },
+    {
+      "id": "SCR-0027",
+      "name": "data-gathering-wikidata",
+      "filename": "data-gathering/methods/method_wikidata.py",
+      "language": "python",
+      "category": "data-collection",
+      "description": "Wikidata knowledge graph search. Two-phase: searches entities then fetches full details including labels, descriptions, key properties (instance of, subclass of), and Wikipedia sitelinks.",
+      "dependencies": ["SCR-0022"],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0010"
+    },
+    {
+      "id": "SCR-0028",
+      "name": "data-gathering-github",
+      "filename": "data-gathering/methods/method_github.py",
+      "language": "python",
+      "category": "data-collection",
+      "description": "GitHub repository and code search via REST API. Searches repos by stars, extracts descriptions, languages, topics, licenses, and fork counts. Also searches code with graceful rate-limit handling.",
+      "dependencies": ["SCR-0022"],
+      "added": "2026-03-10",
+      "added_by_team": "TEAM-0010"
     }
   ],
   "categories": {
-    "data-collection": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0021", "SCR-0022"],
+    "data-collection": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028"],
     "analysis": ["SCR-0004", "SCR-0005", "SCR-0011"],
     "automation": [],
     "utility": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0015", "SCR-0016", "SCR-0017", "SCR-0018", "SCR-0019", "SCR-0020"]
   },
   "language_index": {
-    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0021", "SCR-0022"],
+    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028"],
     "go": ["SCR-0015", "SCR-0016", "SCR-0017"]
   }
 }
