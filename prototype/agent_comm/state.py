@@ -69,6 +69,9 @@ _RETRY_BACKOFF = 0.1  # seconds, doubles each retry
 
 def _retry_on_busy(func):
     """Decorator: retry a method on sqlite3.OperationalError (SQLITE_BUSY)."""
+    import functools
+
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         delay = _RETRY_BACKOFF
         last_err = None
@@ -98,7 +101,13 @@ class SharedState:
         self._lock = threading.Lock()
         self._conn = sqlite3.connect(db_path, timeout=busy_timeout_ms / 1000, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
-        self._conn.execute("PRAGMA journal_mode=WAL")
+        wal_result = self._conn.execute("PRAGMA journal_mode=WAL").fetchone()
+        if wal_result is None or wal_result[0].lower() != "wal":
+            logger.warning(
+                "Failed to enable WAL mode for %s (got %r); "
+                "concurrent performance may be degraded",
+                db_path, wal_result[0] if wal_result else None,
+            )
         self._conn.execute(f"PRAGMA busy_timeout={busy_timeout_ms}")
         self._conn.executescript(_SCHEMA)
         self._conn.commit()

@@ -1,0 +1,225 @@
+{
+  "metadata": {
+    "team": "TT-B1",
+    "task": "tool-assessment-bugfix",
+    "date": "2026-03-11"
+  },
+  "tool_categories": {
+    "validation": [
+      {"id": "SCR-0001", "name": "validate-storage", "language": "python", "description": "Comprehensive storage system validator (schema, referential integrity, orphans, IDs, dates)"},
+      {"id": "SCR-0002", "name": "test-edge-cases", "language": "python", "description": "35-test edge case and boundary testing suite for storage system"},
+      {"id": "SCR-0012", "name": "kb-validator", "language": "python", "description": "KB entries + index.json consistency validator (YAML frontmatter, builds_on, tags)"},
+      {"id": "SCR-0014", "name": "cross-ref-checker", "language": "python", "description": "Cross-reference validator with cycle detection via DFS, orphan detection"},
+      {"id": "SCR-0016", "name": "fast-validate", "language": "go", "description": "High-speed Go validator for all index.json files, cross-refs, file existence (<2ms)"}
+    ],
+    "search": [
+      {"id": "SCR-0015", "name": "fast-search", "language": "go", "description": "High-speed Go full-text search with inverted index (<5ms queries)"},
+      {"id": "SCR-0018", "name": "kb-search", "language": "python", "description": "TF-IDF ranked full-text search across KB, team logs, scripts with filters"}
+    ],
+    "analysis": [
+      {"id": "SCR-0004", "name": "grade-research", "language": "python", "description": "Research quality grader (citations, coverage, depth, specificity)"},
+      {"id": "SCR-0005", "name": "merge-research", "language": "python", "description": "Multi-file research merger with deduplication and gap analysis"},
+      {"id": "SCR-0011", "name": "data-gathering-benchmark", "language": "python", "description": "Benchmark harness for all data gathering methods"},
+      {"id": "SCR-0019", "name": "handoff-tracker", "language": "python", "description": "Team handoff notes parser with resolution tracking (83% resolution rate)"},
+      {"id": "SCR-0020", "name": "staleness-detector", "language": "python", "description": "6-check repository health scorer with graded report"}
+    ],
+    "data_gathering": [
+      {"id": "SCR-0006", "name": "data-gathering-websearch", "language": "python", "description": "DuckDuckGo multi-query web search"},
+      {"id": "SCR-0007", "name": "data-gathering-wikipedia", "language": "python", "description": "Wikipedia API extraction with DDG fallback"},
+      {"id": "SCR-0008", "name": "data-gathering-arxiv", "language": "python", "description": "arXiv paper search with DDG fallback"},
+      {"id": "SCR-0009", "name": "data-gathering-hybrid", "language": "python", "description": "Multi-source aggregation (web+wiki+arxiv) with cross-referencing"},
+      {"id": "SCR-0010", "name": "data-gathering-iterative", "language": "python", "description": "3-round iterative deepening DDG search"},
+      {"id": "SCR-0021", "name": "ddg-utils", "language": "python", "description": "Shared DuckDuckGo search utilities (extracted from duplicates)"},
+      {"id": "SCR-0022", "name": "request-cache", "language": "python", "description": "File-based HTTP response cache with SHA-256 keys and TTL"},
+      {"id": "SCR-0023", "name": "data-gathering-openalex", "language": "python", "description": "OpenAlex 250M+ scholarly works search"},
+      {"id": "SCR-0024", "name": "data-gathering-hackernews", "language": "python", "description": "HN search via Algolia + Firebase"},
+      {"id": "SCR-0025", "name": "data-gathering-guardian", "language": "python", "description": "Guardian news search with DDG fallback"},
+      {"id": "SCR-0026", "name": "data-gathering-semantic-scholar", "language": "python", "description": "Semantic Scholar API search with TLDRs"},
+      {"id": "SCR-0027", "name": "data-gathering-wikidata", "language": "python", "description": "Wikidata knowledge graph entity search"},
+      {"id": "SCR-0028", "name": "data-gathering-github", "language": "python", "description": "GitHub repo and code search via REST API"}
+    ],
+    "infrastructure": [
+      {"id": "SCR-0003", "name": "repair-storage", "language": "python", "description": "Automated repair for storage issues (versions, dates, categories, duplicates)"},
+      {"id": "SCR-0013", "name": "index-rebuilder", "language": "python", "description": "Auto-generates index.json by scanning entries directories"},
+      {"id": "SCR-0017", "name": "fast-cache", "language": "go", "description": "Go file-based key-value cache for API responses (<1ms hits)"},
+      {"id": "TOOL-0001", "name": "Sonnet Research API", "language": "python", "description": "Multi-agent research system using Claude Sonnet (requires anthropic API key)"}
+    ]
+  },
+  "test_results": [
+    {
+      "tool": "validate-storage.py",
+      "command": "python3 storage/scripts/validate-storage.py",
+      "result": "pass",
+      "output_summary": "Runs successfully. Reports 322 errors and 58 warnings - mostly missing optional fields in sources entries and missing SRC-*.json files. Tool itself works correctly.",
+      "bugs_found": []
+    },
+    {
+      "tool": "test-edge-cases.py",
+      "command": "python3 storage/scripts/test-edge-cases.py",
+      "result": "pass",
+      "output_summary": "All 35 edge case tests pass. 0 vulnerabilities found. Tests cover malformed JSON, special chars, long descriptions, ID format violations, etc.",
+      "bugs_found": []
+    },
+    {
+      "tool": "repair-storage.py",
+      "command": "python3 storage/scripts/repair-storage.py --dry-run",
+      "result": "pass",
+      "output_summary": "Dry-run mode works correctly. Identifies 35 missing last_verified dates in sources and proposes fixes without modifying files.",
+      "bugs_found": []
+    },
+    {
+      "tool": "kb_validator.py",
+      "command": "python3 storage/scripts/kb_validator.py",
+      "result": "pass",
+      "output_summary": "Runs successfully. Outputs JSON report: 24 files scanned, 62 total issues (45 errors, 17 warnings). Correctly identifies missing frontmatter fields in KB entries. Status: FAIL (expected given data quality).",
+      "bugs_found": []
+    },
+    {
+      "tool": "cross_ref_checker.py",
+      "command": "python3 storage/scripts/cross_ref_checker.py",
+      "result": "pass",
+      "output_summary": "Runs successfully. Displays full dependency tree of KB builds_on chains. No cycles detected. Correctly maps cross-references across KB, teams, and scripts.",
+      "bugs_found": []
+    },
+    {
+      "tool": "staleness_detector.py",
+      "command": "python3 storage/scripts/staleness_detector.py",
+      "result": "pass",
+      "output_summary": "Runs successfully. Health Score: 0/100 (Grade F) - legitimate score given 37 issues (6 high, 6 medium, 6 low, 14 info). 6 checks run, all produce valid output. --verbose flag works.",
+      "bugs_found": []
+    },
+    {
+      "tool": "kb_search.py",
+      "command": "python3 storage/scripts/kb_search.py --help",
+      "result": "pass",
+      "output_summary": "Help output displays correctly via argparse. Query test 'data gathering' returns 10 ranked results with TF-IDF scores, categories, team info, and context snippets.",
+      "bugs_found": []
+    },
+    {
+      "tool": "handoff_tracker.py",
+      "command": "python3 storage/scripts/handoff_tracker.py",
+      "result": "pass",
+      "output_summary": "Runs successfully. Analyzed 21 teams, 135 handoff items. 95 resolved, 17 likely resolved, 23 unresolved. 83% resolution rate. Correctly cross-references team sessions.",
+      "bugs_found": []
+    },
+    {
+      "tool": "index_rebuilder.py",
+      "command": "python3 storage/scripts/index_rebuilder.py --dry-run",
+      "result": "pass",
+      "output_summary": "Dry-run works correctly. Shows diffs for knowledge-base/index.json including category and tag_index corrections that need syncing.",
+      "bugs_found": []
+    },
+    {
+      "tool": "grade_research.py",
+      "command": "python3 storage/scripts/grade_research.py --help",
+      "result": "fail",
+      "output_summary": "Error: file not found: --help. Tool uses manual sys.argv parsing without --help handling. Treats --help as a filepath argument.",
+      "bugs_found": ["No --help/-h flag handling in main(). Args parsed manually without checking for help flags before treating first arg as filepath."]
+    },
+    {
+      "tool": "merge_research.py",
+      "command": "python3 storage/scripts/merge_research.py --help",
+      "result": "fail",
+      "output_summary": "Error: file not found: --help. Same issue as grade_research.py - manual arg parsing without --help handling.",
+      "bugs_found": ["No --help/-h flag handling in main(). Args parsed manually without checking for help flags before treating args as filepaths."]
+    },
+    {
+      "tool": "fast_search (Go binary)",
+      "command": "storage/scripts/fast_search/fast_search --help",
+      "result": "pass",
+      "output_summary": "Help displays correctly. Query test 'data gathering' returns JSON results with file, line, col, context, and score fields. Phrase search mode auto-detected.",
+      "bugs_found": []
+    },
+    {
+      "tool": "fast_validate (Go binary)",
+      "command": "storage/scripts/fast_validate/fast_validate",
+      "result": "pass",
+      "output_summary": "Runs in 3.4ms. JSON output with pass:false (1 error: missing TEAM-0011.md, 19 warnings for orphan files). Working correctly.",
+      "bugs_found": []
+    },
+    {
+      "tool": "fast_cache (Go binary)",
+      "command": "storage/scripts/fast_cache/fast_cache stats",
+      "result": "pass",
+      "output_summary": "Stats command works. Reports 0 entries (expected - empty cache). JSON output format correct.",
+      "bugs_found": []
+    }
+  ],
+  "bugs_fixed": [
+    {
+      "tool": "grade_research.py",
+      "file": "/home/user/Claude/storage/scripts/grade_research.py",
+      "description": "No --help/-h handling. Tool uses manual sys.argv parsing and treats --help as a filepath, producing 'Error: file not found: --help'",
+      "fix": "Added --help and -h check before filepath extraction in main(). When help flag detected, prints docstring and exits with code 0 instead of 1."
+    },
+    {
+      "tool": "merge_research.py",
+      "file": "/home/user/Claude/storage/scripts/merge_research.py",
+      "description": "No --help/-h handling. Same issue as grade_research.py - manual arg parsing treats --help as an input file.",
+      "fix": "Added --help and -h check before filepath collection in main(). When help flag detected, prints docstring and exits with code 0 instead of 1."
+    }
+  ],
+  "tools_verified_working": [
+    "validate-storage.py",
+    "test-edge-cases.py",
+    "repair-storage.py",
+    "kb_validator.py",
+    "cross_ref_checker.py",
+    "staleness_detector.py",
+    "kb_search.py",
+    "handoff_tracker.py",
+    "index_rebuilder.py",
+    "grade_research.py",
+    "merge_research.py",
+    "fast_search (Go)",
+    "fast_validate (Go)",
+    "fast_cache (Go)"
+  ],
+  "tools_still_broken": [],
+  "tools_not_tested": [
+    {
+      "tool": "Sonnet Research API (TOOL-0001)",
+      "reason": "Requires ANTHROPIC_API_KEY environment variable and anthropic Python package. Cannot test without API credentials."
+    },
+    {
+      "tool": "data-gathering methods (SCR-0006 through SCR-0010, SCR-0021 through SCR-0028)",
+      "reason": "Data gathering scripts require network access to external APIs (DuckDuckGo, Wikipedia, arXiv, OpenAlex, HackerNews, Guardian, Semantic Scholar, Wikidata, GitHub). These are library modules, not standalone CLI tools. Their benchmark runner (SCR-0011) would test them collectively but requires network."
+    }
+  ],
+  "additional_findings": {
+    "orphan_scripts_not_in_index": [
+      "build-cross-ref-index.py",
+      "search-storage.py",
+      "stress-test-setup-reads.py",
+      "stress-test-reads-category.py",
+      "stress-test-reads-cross.py",
+      "stress-test-writes.py",
+      "stress-test-reads-id.py",
+      "test-cross-references.py"
+    ],
+    "data_quality_issues": {
+      "sources_index": "35 source entries missing optional fields (api_docs_url, auth_method, rate_limits, response_format, reliability, last_verified, notes, added_by_team). No individual SRC-*.json detail files exist.",
+      "api_tools_index": "TOOL-0001 missing optional fields (endpoint, rate_limit, response_format, last_used, usage_count, added, added_by_team)",
+      "kb_frontmatter": "Several KB entries (KB-0015, KB-0017, KB-0018, etc.) missing required YAML frontmatter fields (date, team, category, status, confidence)"
+    },
+    "repository_health": {
+      "staleness_score": "0/100 (Grade F) - 37 issues across 6 checks",
+      "handoff_resolution": "83% (95/135 resolved, 17 likely, 23 open)",
+      "kb_validator_status": "FAIL - 62 issues (45 errors, 17 warnings)",
+      "fast_validate_status": "1 error (missing TEAM-0011.md), 19 warnings (orphan files)"
+    }
+  },
+  "summary": {
+    "total_tools": 28,
+    "total_scripts_index": 28,
+    "total_api_tools_index": 1,
+    "total_sources_index": 35,
+    "tested": 14,
+    "working": 14,
+    "fixed": 2,
+    "still_broken": 0,
+    "not_testable": 14,
+    "languages": {"python": 25, "go": 3},
+    "categories": {"validation": 5, "search": 2, "analysis": 5, "data_gathering": 13, "infrastructure": 4}
+  }
+}

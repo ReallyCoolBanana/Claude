@@ -1,0 +1,156 @@
+{
+  "metadata": {
+    "team": "Think-Tank-Y",
+    "task": "unknown-bug-hunt",
+    "date": "2026-03-11",
+    "files_analyzed": [
+      "prototype/agent_comm/bus.py",
+      "prototype/agent_comm/state.py",
+      "prototype/agent_comm/coordinator.py",
+      "prototype/agent_comm/core.py",
+      "prototype/agent_comm_b/bus.py",
+      "prototype/agent_comm_b/state.py",
+      "prototype/agent_comm_b/coordinator.py",
+      "prototype/agent_comm_b/core.py",
+      "storage/scripts/kb_validator.py",
+      "storage/scripts/validate-storage.py",
+      "storage/scripts/cross_ref_checker.py"
+    ],
+    "existing_reports_reviewed": [
+      "hub/bug-report-core.json (BUG-CORE-001 through BUG-CORE-024)",
+      "hub/bug-report-infra.json (BUG-INFRA-001 through BUG-INFRA-032)",
+      "hub/bug-report-proto.json (BUG-PROTO-001 through BUG-PROTO-025)",
+      "hub/unknown-bugs-report-x.json (UNKNOWN-X-001 through UNKNOWN-X-010)"
+    ]
+  },
+  "unknown_bugs": [
+    {
+      "id": "UNKNOWN-Y-001",
+      "file": "prototype/agent_comm/bus.py",
+      "description": "Channel name sanitization only replaces '/' and '..' but allows null bytes, control characters, and other dangerous filesystem characters. A channel name containing \\x00 passes through the sanitizer unchanged, which can cause filesystem errors or security issues when used in file paths.",
+      "severity": "medium",
+      "reproduction": "BusWriter._channel_path('test\\x00evil') returns a path containing a null byte. On some systems os.open() with a null byte in the path raises ValueError; on others it truncates at the null.",
+      "fix_suggestion": "Use a whitelist approach: re.sub(r'[^a-zA-Z0-9_-]', '_', channel) to only allow safe characters."
+    },
+    {
+      "id": "UNKNOWN-Y-002",
+      "file": "prototype/agent_comm_b/core.py",
+      "description": "Proto B CommDir._check_canonical_match() compares self._requested != self._path using raw string equality, but self._requested may have a trailing slash that os.path.realpath() strips. Proto A uses os.path.realpath(self._requested) != self._path which is correct. This means Proto B falsely rejects valid paths that end with '/' or contain './'. ",
+      "severity": "medium",
+      "reproduction": "CommDir(requested_path='/valid/path/').validate() raises CommDirError even though the path is valid. The trailing slash causes _requested != _path because realpath strips it.",
+      "fix_suggestion": "Change the comparison to: if os.path.realpath(self._requested) != self._path, matching Proto A's approach."
+    },
+    {
+      "id": "UNKNOWN-Y-003",
+      "file": "prototype/agent_comm_b/core.py",
+      "description": "Proto B CommDir._check_writable() uses os.access(path, os.W_OK) without handling root user. Proto A checks os.geteuid() == 0 and falls back to stat-based permission checks because os.access() always returns True for root. Proto B will incorrectly report non-writable directories as writable when run as root.",
+      "severity": "medium",
+      "reproduction": "As root, create a directory with 0o444 permissions. Proto B's _check_writable passes (os.access returns True for root). Proto A's _check_writable correctly fails (checks stat bits).",
+      "fix_suggestion": "Add the root user check from Proto A: if os.geteuid() == 0: check st_mode & 0o200."
+    },
+    {
+      "id": "UNKNOWN-Y-004",
+      "file": "prototype/agent_comm/coordinator.py",
+      "description": "Coordinator.stop() closes the SharedState connection but never unregisters itself from the agents table. The coordinator row remains with status='alive' and a stale heartbeat. Workers' CoordinatorWatchdog must wait for the heartbeat to expire (default 300s timeout) before detecting the coordinator is gone, even though stop() was called gracefully.",
+      "severity": "high",
+      "reproduction": "Start coordinator, register workers with watchdog. Call coordinator.stop(). Workers wait up to 300 seconds before detecting coordinator death, even though the stop was intentional.",
+      "fix_suggestion": "Add self._state.execute('UPDATE agents SET status=\"stopped\" WHERE agent_id=?') before self._state.close() in stop(). Or add an unregister_agent method to SharedState."
+    },
+    {
+      "id": "UNKNOWN-Y-005",
+      "file": "prototype/agent_comm_b/coordinator.py",
+      "description": "Proto B CoordinatorWatchdog._monitor_loop() has no grace period for coordinator startup, unlike Proto A which implements a grace_deadline. If a worker starts before the coordinator, the Proto B watchdog will never fire death callbacks because coordinator_was_alive never becomes True (there's no transition from True to False). The worker hangs indefinitely waiting for a coordinator that crashed during startup.",
+      "severity": "high",
+      "reproduction": "Start Proto B worker before coordinator. Coordinator crashes during startup before its first heartbeat. Watchdog never fires because coordinator_was_alive is always False. Worker waits forever.",
+      "fix_suggestion": "Add a grace period matching Proto A: grace_deadline = time.time() + self._timeout. After grace_deadline expires with coordinator_was_alive still False, fire callbacks."
+    },
+    {
+      "id": "UNKNOWN-Y-006",
+      "file": "prototype/agent_comm/bus.py",
+      "description": "repair_bus_file() reads the file with open() (no file locking), filters corrupt lines, then writes a temp file and renames it. If a BusWriter appends a message between the read and the rename (using atomic O_APPEND), the appended message is lost because the rename overwrites the file with the snapshot taken before the append.",
+      "severity": "high",
+      "reproduction": "Start repair_bus_file on a file with corrupt lines. While it's processing, a BusWriter.publish() appends a new valid message. The repair completes and renames, discarding the new message.",
+      "fix_suggestion": "Acquire an exclusive flock on the bus file before reading and release after the rename. Or use a cooperative locking protocol between repair and write operations."
+    },
+    {
+      "id": "UNKNOWN-Y-007",
+      "file": "storage/scripts/kb_validator.py",
+      "description": "The simple YAML frontmatter parser cannot handle block-style (multi-line) list values. YAML lists using '- item' syntax on separate lines are parsed as separate key-value pairs with '-' prefix, resulting in incorrect metadata. Only inline [item1, item2] lists are supported.",
+      "severity": "medium",
+      "reproduction": "Create a KB entry with block-style tags: 'tags:\\n  - python\\n  - testing'. The parser sees 'tags:' with empty value (parsed as None) and '  - python' as an invalid key-value line.",
+      "fix_suggestion": "Either document that only inline list syntax is supported, or enhance the parser to detect indented '- item' lines following a key with empty value and collect them into a list."
+    },
+    {
+      "id": "UNKNOWN-Y-008",
+      "file": "storage/scripts/validate-storage.py",
+      "description": "validate_scripts() calls scripts_dir.iterdir() at line 233 to check for orphan files, but does not verify the directory exists first. If storage/scripts/ is missing or was renamed, iterdir() raises FileNotFoundError, crashing the entire validation run.",
+      "severity": "low",
+      "reproduction": "Run validate-storage.py when the scripts/ directory doesn't exist. FileNotFoundError crashes the script instead of reporting a validation error.",
+      "fix_suggestion": "Wrap the orphan file check in 'if scripts_dir.is_dir():' guard, similar to how kb_validator.py checks entries_dir.is_dir()."
+    },
+    {
+      "id": "UNKNOWN-Y-009",
+      "file": "storage/scripts/cross_ref_checker.py",
+      "description": "detect_cycles_dfs() uses recursive DFS with no depth limit. For deep dependency chains (>1000 nodes), this hits Python's default recursion limit and raises RecursionError, crashing the checker instead of reporting an error.",
+      "severity": "medium",
+      "reproduction": "Create a knowledge base with >1000 KB entries in a linear builds_on chain (KB-0001 -> KB-0002 -> ... -> KB-1500). Running cross_ref_checker crashes with RecursionError.",
+      "fix_suggestion": "Convert to an iterative DFS using an explicit stack, or add sys.setrecursionlimit() with a try/except RecursionError fallback."
+    },
+    {
+      "id": "UNKNOWN-Y-010",
+      "file": "prototype/agent_comm/state.py",
+      "description": "SharedState.heartbeat() updates last_heartbeat for a given agent_id but does not check whether the UPDATE affected any rows. If the agent_id was never registered, the UPDATE silently affects 0 rows and returns None. The caller has no way to detect that the heartbeat had no effect, potentially masking registration failures.",
+      "severity": "medium",
+      "reproduction": "state.heartbeat('nonexistent-agent') returns None with no error. The agent's heartbeat loop thinks it's working fine but no heartbeat is actually recorded.",
+      "fix_suggestion": "Check cursor.rowcount after UPDATE and return a boolean (True if updated, False if agent not found), or raise ValueError. Proto B's SharedStateMap.heartbeat() already returns a boolean."
+    },
+    {
+      "id": "UNKNOWN-Y-011",
+      "file": "prototype/agent_comm/state.py",
+      "description": "SharedState.close() has no guard against double-close. If close() is called twice, the second call tries to close an already-closed sqlite3.Connection. Depending on the sqlite3 version, this may raise ProgrammingError. Other modules in the codebase (coordinator_hub.py, direct_channels.py) use a _closed flag to guard against this.",
+      "severity": "low",
+      "reproduction": "state = SharedState(path); state.close(); state.close() -- may raise ProgrammingError on the second call.",
+      "fix_suggestion": "Add a self._closed = False flag in __init__ and check it in close(): if self._closed: return; self._closed = True."
+    },
+    {
+      "id": "UNKNOWN-Y-012",
+      "file": "prototype/agent_comm_b/core.py",
+      "description": "Proto B CommConfig is missing the busy_timeout_ms parameter that Proto A CommConfig has. This cross-prototype API inconsistency means code written against Proto A's CommConfig that accesses config.busy_timeout_ms will break when used with Proto B's CommConfig. It also means Proto B has no standard way to configure timeout-related behavior.",
+      "severity": "low",
+      "reproduction": "config = CommConfig(comm_dir='/path'); config.busy_timeout_ms raises AttributeError. Proto A: config.busy_timeout_ms returns 30000.",
+      "fix_suggestion": "Add busy_timeout_ms: int = 30_000 to Proto B's CommConfig, even if it's unused by mmap operations, for API compatibility."
+    }
+  ],
+  "cross_module_inconsistencies": [
+    {
+      "modules": ["agent_comm/core.py", "agent_comm_b/core.py"],
+      "issue": "Proto A _check_no_tmp checks BOTH self._requested and self._path against /tmp. Proto B only checks self._path. A symlink from /tmp/x -> /safe/dir would pass Proto B's check but fail Proto A's."
+    },
+    {
+      "modules": ["agent_comm/core.py", "agent_comm_b/core.py"],
+      "issue": "Proto A _check_canonical_match uses os.path.realpath(self._requested) != self._path. Proto B uses self._requested != self._path (raw string comparison). Proto B is stricter and rejects valid paths with trailing slashes or redundant separators."
+    },
+    {
+      "modules": ["agent_comm/core.py", "agent_comm_b/core.py"],
+      "issue": "Proto A _check_writable handles root user (euid==0) with stat-based checks. Proto B uses only os.access() which is unreliable for root."
+    },
+    {
+      "modules": ["agent_comm/coordinator.py", "agent_comm_b/coordinator.py"],
+      "issue": "Proto A CoordinatorWatchdog has a grace period (grace_deadline) for coordinator startup. Proto B CoordinatorWatchdog does not, causing workers to hang forever if coordinator never starts."
+    },
+    {
+      "modules": ["agent_comm/coordinator.py", "agent_comm_b/coordinator.py"],
+      "issue": "Proto A check_agents() returns list[dict] (agent['agent_id']). Proto B check_agents() returns list[AgentSlotView] (agent.agent_id). Code copied between prototypes will crash due to dict-vs-attribute access mismatch."
+    },
+    {
+      "modules": ["agent_comm/state.py", "agent_comm_b/state.py"],
+      "issue": "Proto A SharedState.heartbeat() returns None regardless of success. Proto B SharedStateMap.heartbeat() returns bool. Callers must handle both conventions, and Proto A callers cannot detect unregistered agents."
+    },
+    {
+      "modules": ["agent_comm/core.py", "agent_comm_b/core.py"],
+      "issue": "Proto A CommConfig has busy_timeout_ms field. Proto B CommConfig does not. Cross-prototype code that accesses this field will break on Proto B."
+    }
+  ],
+  "tests_written": 20,
+  "tests_passing": 20
+}

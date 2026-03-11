@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-03-10",
+  "last_updated": "2026-03-11",
   "tools": [
     {
       "id": "TOOL-0001",
@@ -11,19 +11,41 @@
       "auth_type": "api-key",
       "date_added": "2026-03-10",
       "team": "TEAM-0002",
-      "modules": ["client.py", "queue_manager.py", "researcher.py", "orchestrator.py", "sorter.py", "data_importer.py"],
+      "modules": [
+        "client.py",
+        "queue_manager.py",
+        "researcher.py",
+        "orchestrator.py",
+        "sorter.py",
+        "data_importer.py"
+      ],
       "entry_point": "orchestrator.py",
-      "requires": ["anthropic"],
-      "tags": ["sonnet", "research", "multi-agent", "api", "queue"]
+      "requires": [
+        "anthropic"
+      ],
+      "tags": [
+        "sonnet",
+        "research",
+        "multi-agent",
+        "api",
+        "queue"
+      ],
+      "added": "2026-03-11",
+      "last_used": "2026-03-11",
+      "usage_count": 0
     }
   ],
   "categories": {
-    "data-retrieval": [],
-    "analysis": [],
     "communication": [],
-    "integration": ["TOOL-0001"]
+    "analysis": [],
+    "integration": [
+      "TOOL-0001"
+    ],
+    "data-retrieval": []
   },
   "auth_types": {
-    "api-key": ["TOOL-0001"]
+    "api-key": [
+      "TOOL-0001"
+    ]
   }
 }

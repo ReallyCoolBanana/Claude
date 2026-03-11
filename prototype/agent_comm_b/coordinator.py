@@ -14,6 +14,7 @@ Uses only the Python standard library.
 
 from __future__ import annotations
 
+import errno
 import glob as _glob
 import json
 import logging
@@ -129,6 +130,12 @@ class Coordinator:
     on one of its FIFO channels, or a timeout fires for periodic housekeeping
     (heartbeat, dead-agent checks, spillover cleanup).
 
+    **API note (BUG-PROTO-006)**: ``get_status()`` returns a plain ``dict``
+    (not a dataclass) for JSON-serialisation convenience.  The ``agents``
+    list inside that dict contains ``dataclasses.asdict()`` representations
+    of ``AgentSlotView`` instances.  This is intentionally different from
+    Prototype A which returns raw SQLite ``Row`` dicts.
+
     Parameters
     ----------
     comm_dir:
@@ -234,10 +241,24 @@ class Coordinator:
                     # No FDs available; fall back to a short sleep.
                     time.sleep(min(timeout, 1.0))
                     readable = []
-            except (OSError, ValueError):
+            except (OSError, ValueError) as exc:
                 # FD may have been closed during shutdown.
                 if self._stop_event.is_set():
                     break
+                # EBADF means a FIFO was recreated and our fd is stale.
+                # Refresh the readers so subsequent iterations get new fds.
+                if isinstance(exc, OSError) and exc.errno == errno.EBADF:
+                    log.warning("Stale fd detected (EBADF), refreshing FIFO readers")
+                    try:
+                        self._global_reader.close()
+                        self._global_reader.open()
+                    except OSError:
+                        pass
+                    try:
+                        self._blocker_reader.close()
+                        self._blocker_reader.open()
+                    except OSError:
+                        pass
                 time.sleep(0.5)
                 continue
 
@@ -569,24 +590,35 @@ class Worker:
     # -- lifecycle ----------------------------------------------------------
 
     def start(self) -> None:
-        """Register in SharedStateMap, start heartbeat thread, start watchdog."""
-        self._state.register_agent(
-            self.agent_id, self.team, self.role, os.getpid(),
-        )
+        """Register in SharedStateMap, start heartbeat thread, start watchdog.
 
-        # Start heartbeat loop.
-        self._stop_event.clear()
-        self._hb_thread = threading.Thread(
-            target=self.heartbeat_loop,
-            name=f"worker-hb-{self.agent_id}",
-            daemon=True,
-        )
-        self._hb_thread.start()
+        On partial failure (e.g. watchdog creation fails after heartbeat
+        thread is already running), ``stop()`` is called to clean up any
+        resources that were successfully initialised before re-raising.
+        """
+        try:
+            self._state.register_agent(
+                self.agent_id, self.team, self.role, os.getpid(),
+            )
 
-        # Start coordinator watchdog.
-        self._watchdog = CoordinatorWatchdog(self._comm.path)
-        self._watchdog.on_coordinator_death(self._on_coordinator_death)
-        self._watchdog.start_monitoring()
+            # Start heartbeat loop.
+            self._stop_event.clear()
+            self._hb_thread = threading.Thread(
+                target=self.heartbeat_loop,
+                name=f"worker-hb-{self.agent_id}",
+                daemon=True,
+            )
+            self._hb_thread.start()
+
+            # Start coordinator watchdog.  Reuse existing SharedStateMap
+            # instead of creating a redundant one inside the watchdog.
+            self._watchdog = CoordinatorWatchdog(self._comm.path)
+            self._watchdog.on_coordinator_death(self._on_coordinator_death)
+            self._watchdog.start_monitoring()
+        except Exception:
+            log.exception("Worker %s start() failed, cleaning up", self.agent_id)
+            self.stop()
+            raise
 
         log.info(
             "Worker %s started (team=%s, pid=%d)",

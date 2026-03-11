@@ -260,9 +260,9 @@ def merge_research(filepaths):
 
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 2 or "--help" in sys.argv or "-h" in sys.argv:
         print(__doc__)
-        sys.exit(1)
+        sys.exit(0 if ("--help" in sys.argv or "-h" in sys.argv) else 1)
 
     filepaths = []
     output_path = None

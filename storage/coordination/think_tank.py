@@ -108,24 +108,44 @@ def _normalise_finding(raw: dict, source: str) -> dict:
 # ---------------------------------------------------------------------------
 
 def _collect_from_sqlite() -> list[dict]:
-    """Read all findings from the SQLite team_findings table."""
+    """Read all findings from the SQLite team_findings table.
+
+    Uses WAL journal mode and busy_timeout for efficient concurrent access.
+    Handles missing DB files and missing tables gracefully.
+    """
     if not os.path.exists(_DB_PATH):
         log.warning("Database not found at %s — skipping SQLite source", _DB_PATH)
         return []
 
     findings = []
+    conn = None
     try:
-        conn = sqlite3.connect(_DB_PATH, timeout=10)
+        conn = sqlite3.connect(_DB_PATH, timeout=10, check_same_thread=False)
         conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA busy_timeout=5000")
         rows = conn.execute(
             "SELECT * FROM team_findings ORDER BY ts"
         ).fetchall()
-        conn.close()
         for row in rows:
             findings.append(_normalise_finding(dict(row), "sqlite"))
         log.info("Collected %d findings from SQLite", len(findings))
     except sqlite3.OperationalError as e:
-        log.warning("Failed to read team_findings table: %s", e)
+        msg = str(e).lower()
+        if "no such table" in msg:
+            log.warning("team_findings table does not exist yet: %s", e)
+        elif "locked" in msg or "busy" in msg:
+            log.warning("Database busy/locked, could not read findings: %s", e)
+        else:
+            log.warning("Failed to read team_findings table: %s", e)
+    except sqlite3.DatabaseError as e:
+        log.error("Database file corrupt or unreadable at %s: %s", _DB_PATH, e)
+    finally:
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
     return findings
 
 

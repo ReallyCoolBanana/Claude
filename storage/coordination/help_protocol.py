@@ -10,8 +10,10 @@ All writes use BEGIN IMMEDIATE for atomic operations and threading.Lock for
 connection safety, following Proto A patterns (SQLite WAL mode).
 """
 
+import functools
 import json
 import logging
+import re
 import sqlite3
 import threading
 import time
@@ -100,6 +102,7 @@ def _is_busy_or_locked(exc: sqlite3.OperationalError) -> bool:
 
 def _retry_on_busy(func):
     """Decorator: retry a method on sqlite3.OperationalError (SQLITE_BUSY)."""
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         delay = _RETRY_BACKOFF
         last_err = None
@@ -150,6 +153,11 @@ class HelpProtocol:
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute("PRAGMA busy_timeout=30000")
         self._conn.executescript(_HELP_SCHEMA)
+        # Add performance indexes (INEFF-PERF-006)
+        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_work_items_status ON work_items(status)")
+        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_help_requests_status ON help_requests(status)")
+        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_work_items_team ON work_items(assigned_to)")
+        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_help_requests_work ON help_requests(work_item_id)")
         self._conn.commit()
 
     def _check_closed(self) -> None:
@@ -196,7 +204,7 @@ class HelpProtocol:
                 "body": body,
             }
             raw = json.dumps(msg, separators=(",", ":")).encode("utf-8") + b"\n"
-            safe_ch = channel.replace("/", "_").replace("..", "_")
+            safe_ch = re.sub(r'[^a-zA-Z0-9_-]', '_', channel)
             filepath = os.path.join(self.bus_dir, f"{safe_ch}.jsonl")
             os.makedirs(self.bus_dir, exist_ok=True)
             fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
@@ -739,16 +747,47 @@ class HelpProtocol:
         if not open_requests:
             return []
 
+        # Fetch idle teams ONCE to avoid N+1 query pattern (INEFF-PERF-005)
+        all_idle_teams = self.get_idle_teams()
+        if not all_idle_teams:
+            return []
+
         assignments = []
         assigned_teams = set()
 
         for req in open_requests:
             request_id = req["id"]
-            helpers = self.find_compatible_helpers(request_id)
+
+            # Get required capabilities for this request
+            with self._lock:
+                row = self._conn.execute(
+                    "SELECT required_capabilities FROM help_requests WHERE id = ?",
+                    (request_id,),
+                ).fetchone()
+
+            required = []
+            if row and row["required_capabilities"]:
+                required = json.loads(row["required_capabilities"])
+
+            if required:
+                # Score idle teams by capability match
+                helpers = []
+                required_set = set(required)
+                for team_info in all_idle_teams:
+                    team_caps = set(team_info.get("capabilities", []))
+                    match_count = len(team_caps & required_set)
+                    if match_count > 0:
+                        helper = dict(team_info)
+                        helper["match_score"] = match_count / len(required_set)
+                        helpers.append(helper)
+                helpers.sort(key=lambda t: t.get("match_score", 0), reverse=True)
+            else:
+                # No specific capabilities needed — all idle teams are compatible
+                helpers = list(all_idle_teams)
 
             if not helpers:
                 # Fall back to any idle team
-                helpers = self.get_idle_teams()
+                helpers = list(all_idle_teams)
 
             for helper in helpers:
                 helper_team = helper["team"]
@@ -763,12 +802,25 @@ class HelpProtocol:
                 # for the helper team to offer help
                 conn = self._conn
                 with self._lock:
-                    try:
-                        conn.execute("BEGIN IMMEDIATE")
-                    except sqlite3.OperationalError as e:
-                        logger.warning(
-                            "BEGIN IMMEDIATE failed for request %d, team %s: %s",
-                            request_id, helper_team, e,
+                    begin_ok = False
+                    for _attempt in range(_MAX_RETRIES):
+                        try:
+                            conn.execute("BEGIN IMMEDIATE")
+                            begin_ok = True
+                            break
+                        except sqlite3.OperationalError as e:
+                            if _is_busy_or_locked(e):
+                                logger.warning(
+                                    "BEGIN IMMEDIATE failed for request %d, team %s (attempt %d/%d): %s",
+                                    request_id, helper_team, _attempt + 1, _MAX_RETRIES, e,
+                                )
+                                time.sleep(_RETRY_BACKOFF * (2 ** _attempt))
+                            else:
+                                raise
+                    if not begin_ok:
+                        logger.error(
+                            "BEGIN IMMEDIATE exhausted retries for request %d, team %s",
+                            request_id, helper_team,
                         )
                         continue
 

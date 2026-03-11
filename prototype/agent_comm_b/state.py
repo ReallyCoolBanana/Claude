@@ -212,24 +212,13 @@ class SharedStateMap:
 
     # -- locking ------------------------------------------------------------
 
-    class _lock:
-        """Context manager for flock-based critical sections.
-
-        Can be used as ``SharedStateMap._lock()`` (class-level) or
-        as ``self._lock()`` (instance-level); the instance form is a
-        convenience wrapper that captures ``self._fd``.
-        """
-
-        def __init__(self, fd: int | None = None) -> None:
-            self._fd = fd
-
-        def __enter__(self) -> None:
-            if self._fd is not None:
-                fcntl.flock(self._fd, fcntl.LOCK_EX)
-
-        def __exit__(self, *exc) -> None:
-            if self._fd is not None:
-                fcntl.flock(self._fd, fcntl.LOCK_UN)
+    # NOTE: The ``_lock`` inner class below is unused legacy code.
+    # The correct locking mechanism is ``_flock()`` which returns a
+    # ``_combined_lock`` that acquires both a threading.Lock (for
+    # intra-process thread safety) and an fcntl.flock (for inter-process
+    # safety).  The ``_lock`` class only acquires flock without the
+    # thread lock, so it must NOT be used.  It is retained here only
+    # for historical reference and should be removed in a future cleanup.
 
     class _combined_lock:
         """Context manager that acquires both a threading.Lock and an flock."""

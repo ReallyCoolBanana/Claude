@@ -1,0 +1,346 @@
+{
+  "id": "SOP-021",
+  "version": "1.0",
+  "created": "2026-03-11",
+  "team": "doc-team-4",
+  "title": "Failure Recovery Runbook",
+  "purpose": "Comprehensive runbook for recovering from common failure modes in the multi-agent coordination system. Covers agent crashes, SQLite lock contention, bus file corruption, coordinator failures, and network/resource failures. Each section provides detection, diagnosis, and recovery procedures with concrete commands.",
+  "sections": {
+    "agent_crash_recovery": {
+      "title": "Agent Crash Recovery",
+      "overview": "Agents may crash due to errors, resource exhaustion, or timeout. Recovery involves detecting the crash via stale heartbeats, preserving any partial output, and relaunching with context.",
+      "detection": {
+        "method": "Monitor agent heartbeats via the coordinator hub. A heartbeat older than 2x the expected interval indicates a crash.",
+        "command": "python3 -c \"from storage.coordination.coordinator_hub import CoordinatorHub; h = CoordinatorHub(); [print(f'{a[\\\"agent_id\\\"]}: last_heartbeat={a[\\\"last_heartbeat\\\"]}') for a in h.get_stale_agents(timeout_seconds=60)]\"",
+        "indicators": [
+          "Heartbeat timestamp older than 60 seconds (for 30s heartbeat interval)",
+          "Agent status shows 'registered' but no recent bus messages",
+          "Output file has not been updated despite agent being 'active'"
+        ]
+      },
+      "diagnosis": {
+        "steps": [
+          {
+            "step": 1,
+            "action": "Check the agent's last bus messages for error indicators",
+            "command": "python3 storage/coordination/bus_cli.py read_msgs <team_channel> --last 10"
+          },
+          {
+            "step": 2,
+            "action": "Check for partial output from the crashed agent",
+            "command": "ls -la storage/coordination/teams/<team-name>/output/"
+          },
+          {
+            "step": 3,
+            "action": "Check system resources to rule out OOM or disk full",
+            "command": "free -h && df -h ."
+          }
+        ]
+      },
+      "recovery": {
+        "steps": [
+          {
+            "step": 1,
+            "action": "Deregister the stale agent from the coordinator",
+            "command": "python3 -c \"from storage.coordination.coordinator_hub import CoordinatorHub; h = CoordinatorHub(); h.deregister_agent('<agent_id>')\""
+          },
+          {
+            "step": 2,
+            "action": "Preserve any partial output by copying it to a backup location",
+            "command": "cp storage/coordination/teams/<team>/output/<file> storage/coordination/teams/<team>/output/<file>.partial_backup"
+          },
+          {
+            "step": 3,
+            "action": "Relaunch the agent with its original prompt plus context about what was already completed",
+            "prompt_addition": "NOTE: You are replacing a previous agent that crashed. Partial output from the previous run is at: <path>. Review it and continue from where it left off. Do not redo completed work."
+          },
+          {
+            "step": 4,
+            "action": "Verify the relaunched agent registers and begins sending heartbeats",
+            "command": "python3 storage/coordination/bus_cli.py read_msgs <team_channel> --last 5"
+          }
+        ],
+        "if_repeated_crashes": "If the same agent crashes more than twice on the same task: (1) Split the task into smaller subtasks, (2) Check for systematic issues like infinite loops or memory leaks, (3) Assign the task to a different team with adjusted instructions."
+      }
+    },
+    "sqlite_lock_contention": {
+      "title": "SQLite Lock Contention",
+      "overview": "Multiple agents writing to the SQLite database simultaneously can cause lock contention. The system uses WAL mode and busy_timeout to mitigate this, but under heavy load, additional intervention may be needed.",
+      "prevention": {
+        "measures": [
+          {
+            "measure": "WAL mode",
+            "description": "Write-Ahead Logging allows concurrent reads during writes",
+            "verify_command": "sqlite3 storage/coordination/db/state.db 'PRAGMA journal_mode;'",
+            "expected": "wal",
+            "fix_if_wrong": "sqlite3 storage/coordination/db/state.db 'PRAGMA journal_mode=WAL;'"
+          },
+          {
+            "measure": "busy_timeout",
+            "description": "Set a timeout so writers wait instead of immediately failing on lock",
+            "recommended_value": "5000 (5 seconds)",
+            "verify_command": "sqlite3 storage/coordination/db/state.db 'PRAGMA busy_timeout;'",
+            "fix_command": "sqlite3 storage/coordination/db/state.db 'PRAGMA busy_timeout=5000;'"
+          },
+          {
+            "measure": "BEGIN IMMEDIATE transactions",
+            "description": "Acquire write lock at transaction start to fail fast rather than at commit time",
+            "pattern": "Use BEGIN IMMEDIATE for all write transactions. Never use plain BEGIN for writes."
+          }
+        ]
+      },
+      "detection": {
+        "symptoms": [
+          "OperationalError: database is locked",
+          "Agents reporting write failures in bus messages",
+          "Slow agent registration or status updates",
+          "Repeated transaction retries in logs"
+        ],
+        "diagnostic_command": "sqlite3 storage/coordination/db/state.db 'PRAGMA wal_checkpoint(PASSIVE);'",
+        "interpretation": "If WAL file is very large (>10MB), writes are backing up faster than checkpoints can flush them."
+      },
+      "recovery": {
+        "steps": [
+          {
+            "step": 1,
+            "action": "Force a WAL checkpoint to flush pending writes",
+            "command": "sqlite3 storage/coordination/db/state.db 'PRAGMA wal_checkpoint(TRUNCATE);'"
+          },
+          {
+            "step": 2,
+            "action": "Increase busy_timeout if agents are timing out",
+            "command": "sqlite3 storage/coordination/db/state.db 'PRAGMA busy_timeout=10000;'",
+            "note": "This is a per-connection setting. Each agent's Python code should also set it."
+          },
+          {
+            "step": 3,
+            "action": "Implement retry logic for BEGIN IMMEDIATE failures",
+            "pattern": "import time, random\nfor attempt in range(5):\n    try:\n        cursor.execute('BEGIN IMMEDIATE')\n        # ... do work ...\n        conn.commit()\n        break\n    except sqlite3.OperationalError as e:\n        if 'locked' in str(e):\n            wait = (2 ** attempt) + random.uniform(0, 1)\n            time.sleep(wait)\n        else:\n            raise"
+          },
+          {
+            "step": 4,
+            "action": "If contention persists, stagger agent write operations by adding jitter",
+            "technique": "Each agent adds random.uniform(0, 0.5) seconds before writes to spread out lock acquisition"
+          }
+        ],
+        "emergency": {
+          "description": "If the database is completely locked and no agents can write",
+          "steps": [
+            "Stop all agents (terminate via coordinator)",
+            "Run: sqlite3 storage/coordination/db/state.db 'PRAGMA wal_checkpoint(TRUNCATE);'",
+            "Verify: sqlite3 storage/coordination/db/state.db 'PRAGMA integrity_check;'",
+            "Restart agents one at a time with staggered startup (2s delay between each)"
+          ]
+        }
+      }
+    },
+    "bus_file_corruption": {
+      "title": "Bus File Corruption",
+      "overview": "JSONL bus files can become corrupted if a write is interrupted mid-line (crash, disk full) or if atomic write guarantees are violated (message > 4096 bytes).",
+      "detection": {
+        "symptoms": [
+          "JSON parse errors when reading bus messages",
+          "bus_cli.py crashes with 'Expecting value' or 'Extra data' errors",
+          "Agents report communication failures"
+        ],
+        "diagnostic_command": "python3 -c \"import json; f=open('storage/coordination/bus/<channel>.jsonl'); [json.loads(l) for l in f]\" 2>&1 | tail -5",
+        "interpretation": "A JSONDecodeError with a line number indicates exactly where corruption occurred."
+      },
+      "recovery": {
+        "steps": [
+          {
+            "step": 1,
+            "action": "Try the built-in repair function first",
+            "command": "python3 -c \"from storage.coordination.bus_cli import repair_bus_file; repair_bus_file('storage/coordination/bus/<channel>.jsonl')\"",
+            "what_it_does": "Reads each line, discards unparseable lines, writes clean lines to a new file, replaces the original."
+          },
+          {
+            "step": 2,
+            "action": "If repair_bus_file is unavailable, manually repair",
+            "commands": [
+              "cp storage/coordination/bus/<channel>.jsonl storage/coordination/bus/<channel>.jsonl.corrupt_backup",
+              "python3 -c \"\nimport json\nclean_lines = []\nwith open('storage/coordination/bus/<channel>.jsonl.corrupt_backup') as f:\n    for line in f:\n        try:\n            json.loads(line.strip())\n            clean_lines.append(line)\n        except json.JSONDecodeError:\n            pass\nwith open('storage/coordination/bus/<channel>.jsonl', 'w') as f:\n    f.writelines(clean_lines)\nprint(f'Recovered {len(clean_lines)} messages')\n\""
+            ]
+          },
+          {
+            "step": 3,
+            "action": "If the file is beyond repair or most messages are lost, backup and recreate",
+            "commands": [
+              "mv storage/coordination/bus/<channel>.jsonl storage/coordination/bus/<channel>.jsonl.dead_$(date +%s)",
+              "touch storage/coordination/bus/<channel>.jsonl"
+            ],
+            "warning": "This loses all historical messages on this channel. Only do this as a last resort."
+          },
+          {
+            "step": 4,
+            "action": "Notify affected teams via a working channel that the corrupted channel has been repaired/reset",
+            "command": "python3 storage/coordination/bus_cli.py send global --type info --body 'Channel <channel> was repaired. Some messages may have been lost. Re-send any critical pending messages.'"
+          }
+        ],
+        "prevention": [
+          "Keep messages under 4096 bytes to ensure atomic POSIX writes",
+          "Monitor disk space: df -h . (corruption risk increases when disk is >90% full)",
+          "Use the bus_cli.py for all bus writes instead of direct file I/O"
+        ]
+      }
+    },
+    "coordinator_failure": {
+      "title": "Coordinator Failure",
+      "overview": "If the coordinator hub process crashes or hangs, agents lose their central monitoring point. Recovery involves detecting the failure, preserving state, and restarting.",
+      "detection": {
+        "method": "The multi_team_runner.py includes a watchdog that monitors the coordinator's heartbeat.",
+        "indicators": [
+          "Watchdog reports 'Coordinator heartbeat stale'",
+          "Dashboard shows no updates",
+          "Agents cannot register or update status",
+          "No new entries in the coordinator's SQLite tables"
+        ],
+        "manual_check": "python3 -c \"from storage.coordination.coordinator_hub import CoordinatorHub; h = CoordinatorHub(); print(h.get_hub_status())\""
+      },
+      "recovery": {
+        "steps": [
+          {
+            "step": 1,
+            "action": "Preserve the current database state before any recovery action",
+            "command": "cp storage/coordination/db/state.db storage/coordination/db/state.db.backup_$(date +%s)"
+          },
+          {
+            "step": 2,
+            "action": "Verify database integrity",
+            "command": "sqlite3 storage/coordination/db/state.db 'PRAGMA integrity_check;'",
+            "expected": "ok",
+            "if_corrupt": "Restore from backup: cp storage/coordination/db/state.db.backup_<latest> storage/coordination/db/state.db"
+          },
+          {
+            "step": 3,
+            "action": "Restart the coordinator hub",
+            "command": "python3 storage/coordination/coordinator_hub.py",
+            "note": "The hub will re-read state from SQLite. Agent registrations persist across restarts."
+          },
+          {
+            "step": 4,
+            "action": "Verify agents reconnect and heartbeats resume",
+            "command": "python3 -c \"from storage.coordination.coordinator_hub import CoordinatorHub; h = CoordinatorHub(); agents = h.list_agents(); print(f'{len(agents)} agents registered'); [print(f'  {a[\\\"agent_id\\\"]}: {a[\\\"status\\\"]}') for a in agents]\""
+          },
+          {
+            "step": 5,
+            "action": "If agents do not reconnect within 30 seconds, re-register them manually",
+            "command": "python3 -c \"from storage.coordination.coordinator_hub import CoordinatorHub; h = CoordinatorHub(); h.register_agent('<agent_id>', '<team_name>')\""
+          }
+        ],
+        "if_state_lost": {
+          "description": "If the database is corrupted and no backup exists",
+          "steps": [
+            "Create a fresh database: rm storage/coordination/db/state.db && python3 -c \"from storage.coordination.coordinator_hub import CoordinatorHub; CoordinatorHub()\"",
+            "Re-register all active agents from bus message history",
+            "Reconstruct team assignments from team output directories",
+            "Resume operations — agents continue working even without coordinator monitoring"
+          ]
+        }
+      }
+    },
+    "network_resource_failures": {
+      "title": "Network and Resource Failures",
+      "overview": "External API calls, web searches, and resource-intensive operations can fail due to network issues, rate limits, or resource exhaustion. Use exponential backoff with jitter for all retries.",
+      "retry_strategy": {
+        "algorithm": "Exponential backoff with jitter",
+        "parameters": {
+          "base_delay": "1 second",
+          "max_delay": "60 seconds",
+          "max_retries": 5,
+          "jitter": "random(0, base_delay * 0.5)"
+        },
+        "formula": "delay = min(max_delay, base_delay * 2^attempt) + random(0, base_delay * 0.5)",
+        "implementation": "import time, random\ndef retry_with_backoff(func, max_retries=5, base_delay=1, max_delay=60):\n    for attempt in range(max_retries):\n        try:\n            return func()\n        except Exception as e:\n            if attempt == max_retries - 1:\n                raise\n            delay = min(max_delay, base_delay * (2 ** attempt))\n            delay += random.uniform(0, base_delay * 0.5)\n            print(f'Retry {attempt+1}/{max_retries} after {delay:.1f}s: {e}')\n            time.sleep(delay)"
+      },
+      "failure_types": {
+        "connection_timeout": {
+          "symptom": "ConnectionError or TimeoutError after long wait",
+          "action": "Retry with doubled timeout value",
+          "max_timeout": "30 seconds per request"
+        },
+        "rate_limit_429": {
+          "symptom": "HTTP 429 Too Many Requests",
+          "action": "Respect Retry-After header if present. Otherwise, backoff starting at 5 seconds.",
+          "note": "Do not treat 429 as an error — it is a signal to slow down"
+        },
+        "server_error_5xx": {
+          "symptom": "HTTP 500, 502, 503, or 504",
+          "action": "Retry with exponential backoff. These are usually transient.",
+          "give_up_after": "5 retries or 2 minutes total"
+        },
+        "disk_full": {
+          "symptom": "OSError: No space left on device",
+          "action": "Do NOT retry. Clean up disk space first.",
+          "cleanup_commands": [
+            "du -sh storage/coordination/bus/* | sort -rh | head -10",
+            "du -sh storage/coordination/db/* | sort -rh | head -10",
+            "Remove old bus files: find storage/coordination/bus/ -name '*.jsonl' -mtime +1 -exec rm {} \\;",
+            "Compact database: sqlite3 storage/coordination/db/state.db 'VACUUM;'"
+          ]
+        },
+        "out_of_memory": {
+          "symptom": "MemoryError or process killed by OOM killer",
+          "action": "Reduce batch sizes, process data in chunks, or split the task across more agents",
+          "diagnostic": "free -h && ps aux --sort=-%mem | head -10"
+        }
+      },
+      "circuit_breaker": {
+        "description": "If an external service fails repeatedly, stop trying and fail fast instead of wasting time on retries.",
+        "trigger": "5 consecutive failures to the same endpoint within 2 minutes",
+        "action": "Mark the service as 'down' and skip all requests to it for 5 minutes",
+        "recovery": "After 5 minutes, attempt a single probe request. If it succeeds, resume normal operation. If it fails, extend the cooldown to 15 minutes."
+      }
+    }
+  },
+  "checklists": {
+    "agent_crash": [
+      "Detect stale heartbeat (>2x interval)",
+      "Check last bus messages for error context",
+      "Check for partial output",
+      "Deregister stale agent",
+      "Backup partial output",
+      "Relaunch with context about prior progress",
+      "Verify new agent registers and heartbeats"
+    ],
+    "sqlite_lock": [
+      "Verify WAL mode is enabled",
+      "Check busy_timeout is set (>=5000ms)",
+      "Force WAL checkpoint if WAL file is large",
+      "Verify BEGIN IMMEDIATE is used for writes",
+      "Add jitter to write operations if contention persists",
+      "Emergency: stop all agents, checkpoint, integrity check, staggered restart"
+    ],
+    "bus_corruption": [
+      "Identify corrupted channel from error messages",
+      "Try repair_bus_file first",
+      "Manual repair if repair function unavailable",
+      "Backup and recreate as last resort",
+      "Notify affected teams",
+      "Verify channel is functional after repair"
+    ],
+    "coordinator_failure": [
+      "Backup current database",
+      "Run integrity check",
+      "Restart coordinator hub",
+      "Verify agent reconnection within 30s",
+      "Re-register agents manually if needed",
+      "If state lost: recreate DB, re-register from bus history"
+    ],
+    "network_resource": [
+      "Identify failure type (timeout, 429, 5xx, disk, memory)",
+      "Apply appropriate retry strategy",
+      "Check if circuit breaker should trigger",
+      "For disk full: clean up old files before retrying",
+      "For OOM: reduce batch size or split task",
+      "Log all failures for post-operation review"
+    ]
+  },
+  "quick_reference": {
+    "agent_crash": "Detect stale heartbeat → deregister → backup partial output → relaunch with context",
+    "sqlite_lock": "Verify WAL + busy_timeout → checkpoint → retry with BEGIN IMMEDIATE → add jitter",
+    "bus_corruption": "repair_bus_file → manual repair → backup and recreate → notify teams",
+    "coordinator_down": "Backup DB → integrity check → restart hub → verify reconnection",
+    "network_failure": "Exponential backoff with jitter → circuit breaker after 5 failures → fail fast and report"
+  }
+}

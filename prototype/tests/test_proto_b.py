@@ -844,34 +844,24 @@ class TestMmapIntegrity:
         sm2.close()
 
     def test_init_header_lock_bug(self, shm_dir):
-        """_init_header() calls self._lock() which creates _lock(fd=None),
-        resulting in a NO-OP lock. This is a bug — it should use self._flock().
+        """Verify that the _lock inner class bug (BUG-PROTO-004) has been fixed.
+        The unused _lock class should be removed, and _init_header should use _flock().
         """
         sm = SharedStateMap(shm_dir)
-        # The _lock class when called with no args (as self._lock())
-        # creates _lock(fd=None) which silently does nothing in __enter__/__exit__.
-        # Verify by checking the _lock class behavior:
-        noop_lock = SharedStateMap._lock()  # fd=None
-        noop_lock.__enter__()
-        noop_lock.__exit__()
-        # This doesn't actually lock anything!
+        # BUG-PROTO-004 fix: _lock class should no longer exist
+        assert not hasattr(SharedStateMap, '_lock'), \
+            "_lock inner class should be removed (BUG-PROTO-004 fix)"
 
-        # The correct call would be self._flock() which passes self._fd.
-        # Check if _init_header uses self._lock() (class call, broken)
-        # vs self._flock() (instance method, correct).
+        # Verify _init_header uses _flock (the correct locking mechanism)
         import inspect
         source = inspect.getsource(sm._init_header)
-        uses_lock = "self._lock()" in source
-        uses_flock = "self._flock()" in source
+        uses_flock = "self._flock()" in source or "_flock" in source
 
         sm.close()
 
-        if uses_lock and not uses_flock:
-            pytest.fail(
-                "BUG: _init_header() uses self._lock() which creates a "
-                "_lock(fd=None) — a NO-OP lock. It should use self._flock() "
-                "which correctly passes self._fd for real locking."
-            )
+        # _flock should be the locking mechanism used
+        assert uses_flock or "self._lock()" not in source, \
+            "_init_header should use _flock(), not the removed _lock() class"
 
 
 # ===================================================================

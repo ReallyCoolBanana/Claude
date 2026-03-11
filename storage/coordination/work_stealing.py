@@ -16,9 +16,11 @@ Only uses the Python standard library.
 
 from __future__ import annotations
 
+import functools
 import json
 import logging
 import os
+import re
 import sqlite3
 import threading
 import time
@@ -38,6 +40,7 @@ _RETRY_BACKOFF = 0.1
 
 def _retry_on_busy(func):
     """Decorator: retry a method on sqlite3.OperationalError (SQLITE_BUSY)."""
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         delay = _RETRY_BACKOFF
         last_err = None
@@ -159,7 +162,7 @@ def _bus_notify(bus_dir: str, channel: str, agent_id: str, team: str, body: dict
             "body": body,
         }
         raw = json.dumps(msg, separators=(",", ":")).encode("utf-8") + b"\n"
-        safe_ch = channel.replace("/", "_").replace("..", "_")
+        safe_ch = re.sub(r'[^a-zA-Z0-9_-]', '_', channel)
         filepath = os.path.join(bus_dir, f"{safe_ch}.jsonl")
         fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
         try:
@@ -504,14 +507,13 @@ class PipelineManager:
                 (pipeline_id, stage_name),
             ).fetchone()
 
-        if row is None:
-            return False
+            if row is None:
+                return False
 
-        deps = json.loads(row["depends_on"])
-        if not deps:
-            return True
+            deps = json.loads(row["depends_on"])
+            if not deps:
+                return True
 
-        with self._lock:
             for dep in deps:
                 dep_row = self._conn.execute(
                     "SELECT status FROM pipeline_stages WHERE pipeline_id = ? AND stage_name = ?",
@@ -519,7 +521,7 @@ class PipelineManager:
                 ).fetchone()
                 if dep_row is None or dep_row["status"] != "completed":
                     return False
-        return True
+            return True
 
     @_retry_on_busy
     def start_stage(self, pipeline_id: int, stage_name: str) -> None:
@@ -595,30 +597,37 @@ class PipelineManager:
     def get_ready_stages(self, pipeline_id: int) -> list[dict]:
         """Return stages whose dependencies are all met (status = 'ready' or newly ready)."""
         with self._lock:
-            # First get all stages for this pipeline
-            all_stages = self._conn.execute(
-                "SELECT * FROM pipeline_stages WHERE pipeline_id = ?",
-                (pipeline_id,),
-            ).fetchall()
+            self._conn.execute("BEGIN IMMEDIATE")
+            try:
+                # Get all stages for this pipeline
+                all_stages = self._conn.execute(
+                    "SELECT * FROM pipeline_stages WHERE pipeline_id = ?",
+                    (pipeline_id,),
+                ).fetchall()
 
-        completed = {s["stage_name"] for s in all_stages if s["status"] == "completed"}
-        ready = []
-        for stage in all_stages:
-            if stage["status"] in ("completed", "in_progress"):
-                continue
-            deps = json.loads(stage["depends_on"])
-            if all(d in completed for d in deps):
-                ready.append(dict(stage))
+                completed = {s["stage_name"] for s in all_stages if s["status"] == "completed"}
+                ready = []
+                for stage in all_stages:
+                    if stage["status"] in ("completed", "in_progress"):
+                        continue
+                    deps = json.loads(stage["depends_on"])
+                    if all(d in completed for d in deps):
+                        ready.append(dict(stage))
 
-        # Update any 'waiting' stages to 'ready' if their deps are met
-        with self._lock:
-            for r in ready:
-                if r["status"] == "waiting":
-                    self._conn.execute(
-                        "UPDATE pipeline_stages SET status = 'ready' WHERE id = ?",
-                        (r["id"],),
-                    )
-            self._conn.commit()
+                # Update any 'waiting' stages to 'ready' if their deps are met
+                for r in ready:
+                    if r["status"] == "waiting":
+                        self._conn.execute(
+                            "UPDATE pipeline_stages SET status = 'ready' WHERE id = ?",
+                            (r["id"],),
+                        )
+                self._conn.execute("COMMIT")
+            except Exception:
+                try:
+                    self._conn.execute("ROLLBACK")
+                except sqlite3.OperationalError:
+                    pass
+                raise
 
         return ready
 
@@ -664,29 +673,36 @@ class PipelineManager:
         Returns the names of stages that became ready.
         """
         with self._lock:
-            all_stages = self._conn.execute(
-                "SELECT * FROM pipeline_stages WHERE pipeline_id = ?",
-                (pipeline_id,),
-            ).fetchall()
+            self._conn.execute("BEGIN IMMEDIATE")
+            try:
+                all_stages = self._conn.execute(
+                    "SELECT * FROM pipeline_stages WHERE pipeline_id = ?",
+                    (pipeline_id,),
+                ).fetchall()
 
-        completed = {s["stage_name"] for s in all_stages if s["status"] == "completed"}
-        newly_ready: list[str] = []
+                completed = {s["stage_name"] for s in all_stages if s["status"] == "completed"}
+                newly_ready: list[str] = []
 
-        for stage in all_stages:
-            if stage["status"] != "waiting":
-                continue
-            deps = json.loads(stage["depends_on"])
-            if completed_stage in deps and all(d in completed for d in deps):
-                newly_ready.append(stage["stage_name"])
+                for stage in all_stages:
+                    if stage["status"] != "waiting":
+                        continue
+                    deps = json.loads(stage["depends_on"])
+                    if completed_stage in deps and all(d in completed for d in deps):
+                        newly_ready.append(stage["stage_name"])
 
-        # Update status to ready
-        with self._lock:
-            for name in newly_ready:
-                self._conn.execute(
-                    "UPDATE pipeline_stages SET status = 'ready' WHERE pipeline_id = ? AND stage_name = ?",
-                    (pipeline_id, name),
-                )
-            self._conn.commit()
+                # Update status to ready
+                for name in newly_ready:
+                    self._conn.execute(
+                        "UPDATE pipeline_stages SET status = 'ready' WHERE pipeline_id = ? AND stage_name = ?",
+                        (pipeline_id, name),
+                    )
+                self._conn.execute("COMMIT")
+            except Exception:
+                try:
+                    self._conn.execute("ROLLBACK")
+                except sqlite3.OperationalError:
+                    pass
+                raise
 
         # Bus notification for each newly-ready stage
         for name in newly_ready:

@@ -10,9 +10,11 @@ Uses SQLite WAL mode for concurrent access and the existing JSONL bus for
 real-time message delivery.  Stdlib only.
 """
 
+import functools
 import json
 import logging
 import os
+import re
 import sqlite3
 import threading
 import time
@@ -82,6 +84,7 @@ VALID_CHANNEL_TYPES = frozenset({"direct", "team", "topic", "broadcast"})
 
 def _retry_on_busy(func):
     """Decorator: retry a method on sqlite3.OperationalError (SQLITE_BUSY)."""
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         delay = _RETRY_BACKOFF
         last_err = None
@@ -111,7 +114,7 @@ def _direct_channel_name(team_a: str, team_b: str) -> str:
 
 def _safe_channel(name: str) -> str:
     """Sanitize a channel name for filesystem use."""
-    return name.replace("/", "_").replace("..", "_")
+    return re.sub(r'[^a-zA-Z0-9_-]', '_', name)
 
 
 def _bus_publish(bus_dir: str, channel: str, agent_id: str, team: str,
@@ -159,50 +162,51 @@ def _bus_read(bus_dir: str, channel: str, since_offset: int = 0):
     before that line so it can be re-read once the write completes.
 
     Uses binary mode ('rb') for consistent byte-offset tracking regardless
-    of unicode content.
+    of unicode content.  Reads line-by-line to avoid loading the entire
+    remaining file into memory (INEFF-PERF-010).
     """
     safe = _safe_channel(channel)
     filepath = os.path.join(bus_dir, f"{safe}.jsonl")
     if not os.path.exists(filepath):
         return [], 0
-    with open(filepath, "rb") as f:
-        f.seek(since_offset)
-        data = f.read()
-    if not data:
-        return [], since_offset
     msgs = []
     now = time.time()
-    consumed_bytes = 0
-    lines = data.split(b"\n")
-    for i, raw_line in enumerate(lines):
-        line_len = len(raw_line)
-        sep_len = 1 if i < len(lines) - 1 else 0  # account for \n between splits
-        if not raw_line.strip():
-            consumed_bytes += line_len + sep_len
-            continue
-        try:
-            line_str = raw_line.decode("utf-8")
-        except UnicodeDecodeError:
-            # Corrupt data; skip if it's a complete line
-            if i == len(lines) - 1 and not data.endswith(b"\n"):
+    current_offset = since_offset
+    with open(filepath, "rb") as f:
+        f.seek(since_offset)
+        while True:
+            line_start = f.tell()
+            raw_line = f.readline()
+            if not raw_line:
+                # EOF
                 break
-            consumed_bytes += line_len + sep_len
-            continue
-        try:
-            m = json.loads(line_str)
-        except json.JSONDecodeError:
-            # If this is the last chunk and doesn't end with \n, it's a partial
-            # line -- don't advance past it.
-            if i == len(lines) - 1 and not data.endswith(b"\n"):
+            # readline() returns the line including the trailing \n if present.
+            # A line without \n at EOF is a partial/incomplete write.
+            if not raw_line.endswith(b"\n"):
+                # Partial line — don't advance past it; leave offset before it
                 break
-            # Otherwise it's a corrupt complete line; skip over it.
-            consumed_bytes += line_len + sep_len
-            continue
-        if m.get("ts", 0) + m.get("ttl", 300) > now:
-            msgs.append(m)
-        consumed_bytes += line_len + sep_len
-    new_offset = since_offset + consumed_bytes
-    return msgs, new_offset
+            # Complete line (ends with \n)
+            stripped = raw_line.rstrip(b"\n")
+            line_byte_len = len(raw_line)  # includes the \n
+            if not stripped.strip():
+                current_offset += line_byte_len
+                continue
+            try:
+                line_str = stripped.decode("utf-8")
+            except UnicodeDecodeError:
+                # Corrupt data in a complete line; skip it
+                current_offset += line_byte_len
+                continue
+            try:
+                m = json.loads(line_str)
+            except json.JSONDecodeError:
+                # Corrupt complete line; skip it
+                current_offset += line_byte_len
+                continue
+            if m.get("ts", 0) + m.get("ttl", 300) > now:
+                msgs.append(m)
+            current_offset += line_byte_len
+    return msgs, current_offset
 
 
 # ===========================================================================
@@ -242,6 +246,7 @@ class DirectChannels:
 
         # Track read offsets per channel for bus polling — loaded from DB
         self._read_offsets: dict[str, int] = {}
+        self._persisted_offsets: dict[str, int] = {}  # last offset written to DB
         self._closed = False
         self._load_read_offsets()
 
@@ -505,7 +510,21 @@ class DirectChannels:
     def get_presence(self, team: str = None) -> dict | list[dict]:
         """Get presence info for one team or all teams.
 
-        If *team* is given, returns a single dict.  Otherwise returns a list.
+        Parameters
+        ----------
+        team:
+            If provided, return presence for that specific team.
+            If None, return presence for all teams.
+
+        Returns
+        -------
+        dict
+            When *team* is given: a single dict with keys ``team``,
+            ``status``, ``current_channels``, ``last_seen``.  Returns a
+            default dict with ``status="unknown"`` if the team is not found.
+        list[dict]
+            When *team* is None: a list of dicts, one per registered team,
+            each with the same keys as above.
         """
         self._check_closed()
         with self._lock:
@@ -658,10 +677,18 @@ class DirectChannels:
             ).fetchall()
         for row in rows:
             self._read_offsets[row["channel"]] = row["offset"]
+            self._persisted_offsets[row["channel"]] = row["offset"]
 
     @_retry_on_busy
     def _save_read_offset(self, channel: str, offset: int) -> None:
-        """Persist a read offset to the database."""
+        """Persist a read offset to the database.
+
+        Only writes when the offset has actually changed to reduce write
+        amplification (INEFF-PERF-013).
+        """
+        # Check if the offset actually changed from what's persisted (INEFF-PERF-013)
+        if self._persisted_offsets.get(channel) == offset:
+            return
         with self._lock:
             self._conn.execute(
                 """
@@ -672,6 +699,7 @@ class DirectChannels:
                 (self.team, channel, offset),
             )
             self._conn.commit()
+        self._persisted_offsets[channel] = offset
 
     @_retry_on_busy
     def _ensure_direct_channel(self, target_team: str) -> str:

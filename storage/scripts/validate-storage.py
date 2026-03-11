@@ -113,7 +113,7 @@ def is_placeholder(value):
 def load_index(path, result, subsection):
     """Load and parse an index.json file."""
     try:
-        with open(path, "r") as f:
+        with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
         return data
     except json.JSONDecodeError as e:

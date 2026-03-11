@@ -6,6 +6,15 @@ Addresses:
 
 Uses only the Python standard library.  Background loops run on daemon
 threads controlled by ``threading.Event`` for clean shutdown.
+
+**Import note (NEW-PROTO-012)**: The imports below (``agent_comm.bus``,
+``agent_comm.core``, ``agent_comm.state``) are bare package-relative
+imports.  They require that ``prototype/`` (or the directory containing
+the ``agent_comm`` package) is on ``sys.path``.  When running from
+outside the prototype directory, callers must ensure the path is
+configured, e.g.::
+
+    sys.path.insert(0, "/path/to/prototype")
 """
 
 from __future__ import annotations
@@ -462,15 +471,36 @@ class CoordinatorWatchdog:
     # -- internal -----------------------------------------------------------
 
     def _monitor_loop(self) -> None:
-        """Background loop: periodically check coordinator liveness."""
-        # Give the coordinator a grace period on first start.
+        """Background loop: periodically check coordinator liveness.
+
+        A startup grace period (equal to the configured timeout) is applied
+        so the watchdog does not fire if the coordinator has never heartbeated
+        yet (e.g. it crashed before its first heartbeat, or it simply hasn't
+        started yet).  During the grace period, the watchdog waits for the
+        coordinator to appear; once the grace period expires with no
+        heartbeat, the callbacks fire.
+        """
         coordinator_was_alive = False
+        # Grace period: don't fire callbacks until the coordinator has had
+        # a chance to start and register its first heartbeat.
+        grace_deadline = time.time() + self._timeout
         while not self._stop_event.is_set():
             alive = self.is_coordinator_alive()
+            if alive:
+                coordinator_was_alive = True
             if coordinator_was_alive and not alive:
                 log.warning("Coordinator death detected!")
                 self._fire_callbacks()
-            coordinator_was_alive = alive
+            elif not coordinator_was_alive and not alive and time.time() > grace_deadline:
+                log.warning(
+                    "Coordinator never appeared within grace period (%.1fs) — "
+                    "firing death callbacks",
+                    self._timeout,
+                )
+                self._fire_callbacks()
+                # Treat as if it was alive then died, so we don't fire again
+                # every poll interval.
+                coordinator_was_alive = True
             self._stop_event.wait(self._poll_interval)
 
     def _fire_callbacks(self) -> None:

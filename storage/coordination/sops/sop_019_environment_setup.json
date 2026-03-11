@@ -1,0 +1,171 @@
+{
+  "id": "SOP-019",
+  "version": "1.0",
+  "created": "2026-03-11",
+  "team": "doc-team-4",
+  "title": "Environment Setup for Fresh Deployment",
+  "purpose": "Standard procedure for setting up a fresh environment from scratch. Covers Python installation, dependency management, Go binary compilation, directory initialization, and verification. Ensures every new team or deployment starts from a known-good state.",
+  "sections": {
+    "python_setup": {
+      "title": "Python 3 Setup",
+      "overview": "Python 3 is required for all coordination tools, research scripts, and test suites.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Verify Python 3 is available",
+          "command": "python3 --version",
+          "expected": "Python 3.8 or higher",
+          "if_missing": "Install Python 3: sudo apt-get update && sudo apt-get install -y python3 python3-pip python3-venv"
+        },
+        {
+          "step": 2,
+          "action": "Verify pip is available",
+          "command": "pip3 --version",
+          "if_missing": "sudo apt-get install -y python3-pip"
+        },
+        {
+          "step": 3,
+          "action": "Install pytest for running test suites",
+          "command": "pip install pytest",
+          "verify": "pytest --version"
+        },
+        {
+          "step": 4,
+          "action": "Install any additional Python dependencies if a requirements.txt exists",
+          "command": "if [ -f requirements.txt ]; then pip install -r requirements.txt; fi"
+        }
+      ]
+    },
+    "go_binary_compilation": {
+      "title": "Go Binary Compilation",
+      "overview": "Performance-critical tools are written in Go and must be compiled before use.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Verify Go is available",
+          "command": "go version",
+          "expected": "Go 1.19 or higher",
+          "if_missing": "Install Go from https://go.dev/dl/ or via package manager"
+        },
+        {
+          "step": 2,
+          "action": "Find all Go-based fast tools that need compilation",
+          "command": "ls -d storage/scripts/fast_*/"
+        },
+        {
+          "step": 3,
+          "action": "Compile each Go binary",
+          "command": "for dir in storage/scripts/fast_*/; do (cd \"$dir\" && go build -o \"$(basename $dir)\" .); done",
+          "note": "Each fast_* directory should produce a binary named after the directory"
+        },
+        {
+          "step": 4,
+          "action": "Verify binaries were created",
+          "command": "for dir in storage/scripts/fast_*/; do ls -la \"$dir/$(basename $dir)\"; done"
+        }
+      ]
+    },
+    "directory_initialization": {
+      "title": "Directory Initialization",
+      "overview": "Ensure all required directories exist for coordination, bus messages, databases, and team outputs.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Create all required coordination directories",
+          "command": "mkdir -p storage/coordination/bus storage/coordination/db storage/coordination/teams storage/coordination/sops storage/coordination/tests storage/coordination/stress-tests"
+        },
+        {
+          "step": 2,
+          "action": "Create knowledge base and market research directories",
+          "command": "mkdir -p knowledge-base/entries market-research/methods market-research/picks"
+        },
+        {
+          "step": 3,
+          "action": "Create prototype directories if needed",
+          "command": "mkdir -p prototype/agent_comm prototype/agent_comm_b"
+        },
+        {
+          "step": 4,
+          "action": "Set appropriate permissions on coordination database directory",
+          "command": "chmod 755 storage/coordination/db"
+        }
+      ]
+    },
+    "database_initialization": {
+      "title": "Database Initialization",
+      "overview": "Initialize the SQLite coordination database in WAL mode.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Initialize the coordination database if it does not exist",
+          "command": "python3 -c \"from storage.coordination.coordinator_hub import CoordinatorHub; hub = CoordinatorHub(); print('DB initialized')\"",
+          "fallback": "If the import fails, the database will be auto-created on first use by any coordination tool"
+        },
+        {
+          "step": 2,
+          "action": "Verify WAL mode is enabled",
+          "command": "sqlite3 storage/coordination/db/state.db 'PRAGMA journal_mode;'",
+          "expected": "wal"
+        }
+      ]
+    },
+    "verification": {
+      "title": "Verification Commands",
+      "overview": "Run these commands to verify the environment is correctly set up.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Run the test suite to verify coordination tools work",
+          "command": "cd storage/coordination && pytest tests/ -v --tb=short",
+          "expected": "All tests pass"
+        },
+        {
+          "step": 2,
+          "action": "Verify bus CLI works",
+          "command": "python3 storage/coordination/bus_cli.py --help",
+          "expected": "Help output showing available commands"
+        },
+        {
+          "step": 3,
+          "action": "Verify Python imports work for all coordination modules",
+          "command": "python3 -c \"import sys; sys.path.insert(0,'.'); from storage.coordination import help_protocol, direct_channels, work_stealing; print('All modules imported successfully')\"",
+          "expected": "Success message with no import errors"
+        },
+        {
+          "step": 4,
+          "action": "Verify Go binaries execute",
+          "command": "for dir in storage/scripts/fast_*/; do bin=\"$dir/$(basename $dir)\"; if [ -x \"$bin\" ]; then echo \"OK: $bin\"; else echo \"MISSING: $bin\"; fi; done"
+        },
+        {
+          "step": 5,
+          "action": "Run a quick smoke test of the full coordination stack",
+          "command": "python3 -c \"from storage.coordination.coordinator_hub import CoordinatorHub; h = CoordinatorHub(); h.register_agent('test-agent', 'test-team'); print('Smoke test passed'); h.deregister_agent('test-agent')\"",
+          "expected": "Smoke test passed"
+        }
+      ]
+    }
+  },
+  "checklists": {
+    "full_setup": [
+      "Python 3.8+ installed and accessible as python3",
+      "pip installed and accessible",
+      "pytest installed (pip install pytest)",
+      "Go compiler installed (if Go tools are needed)",
+      "All fast_* Go binaries compiled",
+      "Coordination directories created (bus/, db/, teams/, sops/)",
+      "Knowledge base and market research directories exist",
+      "SQLite database initialized in WAL mode",
+      "Test suite passes (pytest tests/ -v)",
+      "Bus CLI responds to --help",
+      "All Python coordination modules import without errors",
+      "Smoke test of coordinator hub passes"
+    ],
+    "quick_verify": [
+      "python3 --version  (3.8+)",
+      "pytest --version",
+      "go version  (1.19+ if Go tools needed)",
+      "pytest storage/coordination/tests/ -v --tb=short",
+      "ls storage/coordination/db/state.db"
+    ]
+  }
+}

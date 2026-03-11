@@ -407,9 +407,9 @@ def generate_recommendations(citations, coverage, depth, specificity):
 
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 2 or "--help" in sys.argv or "-h" in sys.argv:
         print(__doc__)
-        sys.exit(1)
+        sys.exit(0 if ("--help" in sys.argv or "-h" in sys.argv) else 1)
 
     filepath = sys.argv[1]
     output_path = None

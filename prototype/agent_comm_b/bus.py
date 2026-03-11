@@ -9,6 +9,13 @@ Fallback: when no reader has the FIFO open, writes go to a spillover file
 ``pipes/{channel}.spill`` so messages are not lost.
 
 Messages are JSON, kept under 4096 bytes for the PIPE_BUF atomic guarantee.
+
+**Ordering limitation (BUG-PROTO-002)**: Messages that cross the FIFO/spillover
+boundary are not guaranteed to be read in send order.  The reader drains
+spillover first, then reads the FIFO, so a message written to the FIFO
+*before* a later message spills may be returned *after* it.  Callers that
+require strict global ordering must use the ``Message.ts`` timestamp (or
+add their own sequence numbers) to re-sort after ``poll()``.
 """
 
 from __future__ import annotations
@@ -68,11 +75,21 @@ class Message:
             + b"\n"
         )
 
+    # Known fields for filtering extra keys in from_json_line.
+    _KNOWN_FIELDS = frozenset({
+        "id", "type", "channel", "team", "agent_id", "ts", "ttl", "body", "in_reply_to",
+    })
+
     @classmethod
     def from_json_line(cls, line: str) -> Message:
-        """Deserialize from a single JSON line."""
+        """Deserialize from a single JSON line.
+
+        Extra fields not part of the Message schema are silently ignored
+        so that forward-compatible producers do not break older readers.
+        """
         d = json.loads(line)
-        return cls(**d)
+        filtered = {k: v for k, v in d.items() if k in cls._KNOWN_FIELDS}
+        return cls(**filtered)
 
 
 # ---------------------------------------------------------------------------
@@ -86,13 +103,22 @@ def _sanitize_channel(channel: str) -> str:
 
 
 def _ensure_fifo(path: str) -> None:
-    """Create a named pipe (FIFO) at *path* if it does not already exist."""
+    """Create a named pipe (FIFO) at *path* if it does not already exist.
+
+    Handles the TOCTOU race where another process may create the FIFO
+    between our existence check and our ``mkfifo`` call by catching
+    ``FileExistsError``.
+    """
     if os.path.exists(path):
         if stat.S_ISFIFO(os.stat(path).st_mode):
             return
         # Not a FIFO — remove and recreate (stale regular file, etc.)
         os.unlink(path)
-    os.mkfifo(path, 0o644)
+    try:
+        os.mkfifo(path, 0o644)
+    except FileExistsError:
+        # Another process created it between our check and mkfifo — that's fine.
+        pass
 
 
 # ---------------------------------------------------------------------------
@@ -251,6 +277,14 @@ class PipeBusReader:
 
         Returns a list of non-expired ``Message`` objects.  Handles EAGAIN
         gracefully (no data available is not an error).
+
+        **Note on partial results**: If a write is in progress when this
+        method reads, the buffer may contain an incomplete trailing JSON
+        line.  Such partial data is retained in an internal buffer and
+        will be completed on the next ``poll()`` call.  The returned list
+        therefore only contains fully-parsed messages; callers should
+        poll repeatedly if they need to guarantee all pending messages
+        have been consumed.
         """
         messages: list[Message] = []
         now = time.time()
