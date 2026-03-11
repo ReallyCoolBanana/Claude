@@ -1,0 +1,372 @@
+{
+  "id": "SOP-031",
+  "version": "1.0",
+  "created": "2026-03-11",
+  "team": "A1-Gamma",
+  "title": "AI-Efficient Language Guide",
+  "purpose": "Defines the controlled vocabulary, abbreviation dictionary, tag taxonomy, and token-efficient writing conventions for this repository. Every file should minimize boilerplate and use canonical terms only. Addresses the A1-Alpha finding of same-concept-different-names across the repo and think-tank-beta's token cost analysis showing 57% index bloat from derived data and redundant keys.",
+  "builds_on": ["SOP-029", "SOP-030"],
+
+  "section_1_controlled_vocabulary": {
+    "title": "Canonical Terms for This Repository",
+    "description": "Use ONLY the preferred term. Never use the discouraged synonyms. Zero-synonym policy: one concept, one word.",
+    "terms": [
+      {
+        "preferred": "entry",
+        "discouraged": ["record", "item", "document", "artifact", "object"],
+        "definition": "A single indexed resource in any directory (KB entry, SOP entry, source entry).",
+        "context": "Use in indexes, cross-references, and documentation."
+      },
+      {
+        "preferred": "finding",
+        "discouraged": ["result", "outcome", "discovery", "observation", "insight"],
+        "definition": "A discrete piece of knowledge produced by a team during a session.",
+        "context": "Use in team outputs, think tank reports, and KB entries."
+      },
+      {
+        "preferred": "team",
+        "discouraged": ["group", "squad", "unit", "crew"],
+        "definition": "A group of agents working together in one session.",
+        "context": "Use in session logs, attribution fields, and coordination."
+      },
+      {
+        "preferred": "agent",
+        "discouraged": ["instance", "worker", "bot", "assistant", "model"],
+        "definition": "A single AI instance performing work.",
+        "context": "Use when referring to individual agents within a team."
+      },
+      {
+        "preferred": "session",
+        "discouraged": ["run", "execution", "operation", "deployment", "iteration"],
+        "definition": "One team's complete work period from launch to log submission.",
+        "context": "Use in team logs and performance tracking."
+      },
+      {
+        "preferred": "operation",
+        "discouraged": ["mission", "project", "campaign", "initiative"],
+        "definition": "A multi-team coordinated effort spanning multiple sessions.",
+        "context": "Use in multi_team_runner plans and coordinator instructions."
+      },
+      {
+        "preferred": "index",
+        "discouraged": ["registry", "catalog", "manifest", "directory listing", "inventory"],
+        "definition": "The index.json file that lists all entries in a directory.",
+        "context": "REGISTRY.json at root is the exception (legacy name)."
+      },
+      {
+        "preferred": "tag",
+        "discouraged": ["label", "keyword", "marker", "classifier"],
+        "definition": "A kebab-case term from the controlled taxonomy applied to entries.",
+        "context": "Use in entry metadata and search."
+      },
+      {
+        "preferred": "category",
+        "discouraged": ["type", "kind", "class", "group", "bucket"],
+        "definition": "The primary classification of an entry from the fixed category list.",
+        "context": "One category per entry. Tags provide secondary classification."
+      },
+      {
+        "preferred": "script",
+        "discouraged": ["utility", "tool", "helper", "program"],
+        "definition": "A standalone executable file in storage/scripts/.",
+        "context": "Distinguished from 'tool' which is an API tool in storage/api-tools/."
+      },
+      {
+        "preferred": "tool",
+        "discouraged": ["service", "module", "library", "package"],
+        "definition": "An API tool or integration in storage/api-tools/.",
+        "context": "Distinguished from 'script' and 'coordination module'."
+      },
+      {
+        "preferred": "source",
+        "discouraged": ["provider", "endpoint", "feed", "data source", "API"],
+        "definition": "An external data source cataloged in storage/sources/.",
+        "context": "Use 'source' for the catalog entry. Use the specific API name when referring to the external service."
+      },
+      {
+        "preferred": "method",
+        "discouraged": ["approach", "technique", "strategy", "methodology", "framework"],
+        "definition": "A research or analysis method in market-research/methods/.",
+        "context": "Use for market research methods specifically."
+      },
+      {
+        "preferred": "pick",
+        "discouraged": ["recommendation", "call", "trade", "position", "bet"],
+        "definition": "A market research pick logged in market-research/picks/.",
+        "context": "Use per SOP-018 market research operations."
+      }
+    ]
+  },
+
+  "section_2_abbreviation_dictionary": {
+    "title": "Standard Abbreviations",
+    "description": "Use these abbreviations in filenames, path references, comments, and compact headers. Always expand in titles and prose meant for human reading.",
+    "abbreviations": [
+      {"abbr": "coord", "full": "coordination", "use_in": "paths, filenames, comments"},
+      {"abbr": "kb", "full": "knowledge base", "use_in": "paths, references, comments"},
+      {"abbr": "mkt", "full": "market research", "use_in": "paths, references, comments"},
+      {"abbr": "sop", "full": "standard operating procedure", "use_in": "paths, IDs, filenames"},
+      {"abbr": "src", "full": "source", "use_in": "IDs, filenames"},
+      {"abbr": "scr", "full": "script", "use_in": "IDs only (SCR-NNNN)"},
+      {"abbr": "cfg", "full": "configuration", "use_in": "filenames, comments"},
+      {"abbr": "proto", "full": "prototype", "use_in": "paths, comments"},
+      {"abbr": "mgmt", "full": "management", "use_in": "filenames, comments"},
+      {"abbr": "auth", "full": "authentication", "use_in": "filenames, field names"},
+      {"abbr": "api", "full": "application programming interface", "use_in": "everywhere"},
+      {"abbr": "cli", "full": "command-line interface", "use_in": "filenames, comments"},
+      {"abbr": "sdk", "full": "software development kit", "use_in": "filenames, comments"},
+      {"abbr": "db", "full": "database", "use_in": "filenames, comments"},
+      {"abbr": "idx", "full": "index", "use_in": "variable names, comments"},
+      {"abbr": "ref", "full": "reference", "use_in": "filenames, comments"},
+      {"abbr": "xref", "full": "cross-reference", "use_in": "filenames, comments"},
+      {"abbr": "ops", "full": "operations", "use_in": "filenames, team names"},
+      {"abbr": "perf", "full": "performance", "use_in": "filenames, comments"},
+      {"abbr": "viz", "full": "visualization", "use_in": "filenames (viz_ prefix)"},
+      {"abbr": "val", "full": "validation", "use_in": "filenames, comments"},
+      {"abbr": "dedup", "full": "deduplication", "use_in": "filenames, comments"}
+    ]
+  },
+
+  "section_3_tag_taxonomy": {
+    "title": "Normalized Tag Taxonomy",
+    "description": "All tags MUST be kebab-case, from this controlled list. Maximum 5 tags per entry. Tags must not duplicate the entry's category.",
+    "taxonomy": {
+      "infrastructure": [
+        "coordination", "communication", "bus", "monitoring", "pipeline",
+        "database", "caching", "deployment", "configuration"
+      ],
+      "methodology": [
+        "research", "testing", "benchmarking", "analysis", "auditing",
+        "data-gathering", "prompt-engineering", "team-sizing"
+      ],
+      "domain": [
+        "market-research", "fundamental-analysis", "technical-analysis",
+        "sentiment-analysis", "quantitative", "api-integration"
+      ],
+      "quality": [
+        "optimization", "debugging", "recovery", "validation", "deduplication",
+        "naming", "documentation"
+      ],
+      "process": [
+        "sop", "workflow", "lifecycle", "anti-recursion", "handoff"
+      ]
+    },
+    "rules": [
+      {
+        "id": "TAG-01",
+        "rule": "Maximum 5 tags per entry",
+        "rationale": "More than 5 tags dilutes specificity and increases index token cost."
+      },
+      {
+        "id": "TAG-02",
+        "rule": "Tags must be from the taxonomy above",
+        "rationale": "A1-Alpha found 149 unique tags with overlapping synonyms (e.g., 'sops' vs 'SOPs' vs 'sop-improvements'). The taxonomy reduces this to ~45 normalized terms.",
+        "extension": "New tags may be added to the taxonomy by updating this SOP. Do not invent ad-hoc tags."
+      },
+      {
+        "id": "TAG-03",
+        "rule": "Tags must not duplicate the category",
+        "example_bad": "category: methodology, tags: [methodology, research]",
+        "example_good": "category: methodology, tags: [research, benchmarking]"
+      },
+      {
+        "id": "TAG-04",
+        "rule": "All tags are kebab-case lowercase",
+        "example_bad": "SOPs, SOP-improvements, Data_Gathering",
+        "example_good": "sop, optimization, data-gathering"
+      },
+      {
+        "id": "TAG-05",
+        "rule": "Use the most specific tag available",
+        "example_bad": "tags: [infrastructure]",
+        "example_good": "tags: [coordination, monitoring]"
+      }
+    ]
+  },
+
+  "section_4_categories": {
+    "title": "Fixed Category List",
+    "description": "Every indexed entry has exactly one category from this list. Categories are mutually exclusive.",
+    "categories": [
+      {"name": "methodology", "definition": "Research methods, analysis techniques, testing approaches"},
+      {"name": "integration", "definition": "System integration, API connections, tool interoperability"},
+      {"name": "optimization", "definition": "Performance improvements, efficiency gains, resource reduction"},
+      {"name": "debugging", "definition": "Bug reports, failure analysis, error resolution"},
+      {"name": "testing", "definition": "Test frameworks, stress tests, validation suites"},
+      {"name": "tool-usage", "definition": "How to use specific tools, scripts, or APIs"},
+      {"name": "market-research", "definition": "Stock analysis, picks, market data evaluation"},
+      {"name": "configuration", "definition": "Setup, environment, deployment configuration"},
+      {"name": "architecture", "definition": "System design, data flow, structural decisions"},
+      {"name": "reference", "definition": "Lookup tables, catalogs, inventories, standards"}
+    ]
+  },
+
+  "section_5_path_references": {
+    "title": "Path Reference Format",
+    "description": "When referencing files in documentation, use the shortest unambiguous path.",
+    "rules": [
+      {
+        "id": "PATH-01",
+        "rule": "Use shortest unambiguous path from repo root",
+        "example_verbose": "/home/user/Claude/storage/coordination/sops/sop_029_file_naming.json",
+        "example_good": "storage/coordination/sops/sop_029_file_naming.json",
+        "example_best": "sops/sop_029_file_naming.json (if context makes the parent clear)"
+      },
+      {
+        "id": "PATH-02",
+        "rule": "For cross-references between entries, use the ID not the path",
+        "example_bad": "See storage/coordination/sops/sop_023_anti_recursion.json",
+        "example_good": "See SOP-023",
+        "rationale": "IDs are shorter (7 tokens vs 15+ tokens for a full path) and survive renames."
+      },
+      {
+        "id": "PATH-03",
+        "rule": "Never use relative paths with ../",
+        "evidence": "A1-Alpha found SCR-0029 through SCR-0033 using relative paths (../) in scripts/index.json. These break when the index is read from a different working directory.",
+        "fix": "Use paths relative to repo root, never relative to the current file."
+      },
+      {
+        "id": "PATH-04",
+        "rule": "In index.json, the 'file' field is filename only",
+        "example_bad": "\"file\": \"entries/KB-0001.md\"",
+        "example_good": "\"file\": \"KB-0001.md\"",
+        "rationale": "The directory is implicit from the index location. Adding it wastes tokens."
+      }
+    ]
+  },
+
+  "section_6_token_budget_awareness": {
+    "title": "Token-Efficient Writing Conventions",
+    "description": "Every file should minimize boilerplate without sacrificing clarity.",
+    "guidelines": [
+      {
+        "id": "TOKEN-01",
+        "guideline": "Put the most important information first",
+        "rationale": "Agents that read only the first N tokens of a file should get the highest-value content. Summaries before details. Findings before methodology. Recommendations before evidence.",
+        "evidence": "Think-tank-beta A1-TC03: mandatory summary in first 500 bytes saves 80% of wasted reads."
+      },
+      {
+        "id": "TOKEN-02",
+        "guideline": "Use IDs for cross-references, not titles or descriptions",
+        "example_bad": "Builds on the 'Anti-Recursion Protocol: Preventing Inward-Facing Gravity' SOP",
+        "example_good": "Builds on SOP-023",
+        "savings": "~15 tokens per reference"
+      },
+      {
+        "id": "TOKEN-03",
+        "guideline": "Avoid redundant metadata in JSON files",
+        "example_bad": "{\"sop_id\": \"SOP-029\", \"sop_title\": \"File Naming\", \"sop_version\": \"1.0\"}",
+        "example_good": "{\"id\": \"SOP-029\", \"title\": \"File Naming\", \"version\": \"1.0\"}",
+        "rationale": "The 'sop_' prefix on every key is redundant when the file is already in the sops/ directory."
+      },
+      {
+        "id": "TOKEN-04",
+        "guideline": "Use arrays instead of objects for tabular data",
+        "rationale": "Think-tank-beta A1-TC04: 31 entries repeating 9 keys each = 560 tokens of pure key repetition. For bulk data, consider header+rows format.",
+        "note": "Standard JSON with named keys is preferred for < 20 entries. Header+rows only for large datasets."
+      },
+      {
+        "id": "TOKEN-05",
+        "guideline": "Keep YAML frontmatter compact",
+        "rationale": "10-12 lines of YAML frontmatter per KB entry costs ~30 tokens. Across 31 entries, 930 tokens of boilerplate. Keep frontmatter to essential fields only.",
+        "required_fields": ["id", "date", "team", "category", "tags", "status"],
+        "optional_fields": ["confidence", "builds_on"],
+        "remove": "Fields duplicated in the index (title is in both frontmatter and index -- keep in both as it aids standalone reading)"
+      },
+      {
+        "id": "TOKEN-06",
+        "guideline": "Do not repeat information available in the index",
+        "example_bad": "A KB entry that lists all related entries with their full titles and dates",
+        "example_good": "builds_on: [KB-0008, KB-0015] (let the reader look up titles in the index if needed)"
+      }
+    ]
+  },
+
+  "section_7_anti_patterns": {
+    "title": "Anti-Patterns to Avoid",
+    "description": "Common token-wasting patterns found in the repository.",
+    "anti_patterns": [
+      {
+        "id": "AP-01",
+        "name": "Verbose frontmatter",
+        "description": "YAML frontmatter with inline comments, multi-line descriptions, or fields that belong in the body.",
+        "example_bad": "---\nid: KB-0032\ntitle: A Comprehensive Analysis of Storage Patterns and Their Implications for Multi-Agent Systems  # This entry analyzes...\ndescription: |\n  This knowledge base entry provides a detailed examination of\n  various storage patterns...\n---",
+        "example_good": "---\nid: KB-0032\ndate: 2026-03-11\nteam: TEAM-0030\ncategory: architecture\ntags: [database, caching, optimization]\nstatus: validated\n---",
+        "savings": "~50 tokens per file"
+      },
+      {
+        "id": "AP-02",
+        "name": "Redundant JSON keys with type prefixes",
+        "description": "Prefixing every key with the object type when context already provides it.",
+        "example_bad": "{\"sop_id\": \"SOP-029\", \"sop_purpose\": \"...\", \"sop_version\": \"1.0\", \"sop_created\": \"...\"}",
+        "example_good": "{\"id\": \"SOP-029\", \"purpose\": \"...\", \"version\": \"1.0\", \"created\": \"...\"}",
+        "savings": "~3-5 tokens per key, compounds across large files"
+      },
+      {
+        "id": "AP-03",
+        "name": "Derived data stored alongside source data",
+        "description": "Storing tag_index, categories, by_data_type alongside the entries they are derived from.",
+        "evidence": "A1-Alpha: knowledge-base/index.json has tag_index (3,500 tokens) fully derivable from entries[].tags",
+        "savings": "~3,500 tokens per index read"
+      },
+      {
+        "id": "AP-04",
+        "name": "Full paths instead of IDs in cross-references",
+        "description": "Using file paths where an ID reference would suffice.",
+        "example_bad": "\"reference\": \"storage/coordination/sops/sop_023_anti_recursion.json\"",
+        "example_good": "\"reference\": \"SOP-023\"",
+        "savings": "~10 tokens per reference"
+      },
+      {
+        "id": "AP-05",
+        "name": "Repetitive boilerplate sections",
+        "description": "KB entries with empty or template-text sections that add no information.",
+        "example_bad": "## Lessons Learned\n\nNo additional lessons beyond those stated above.\n\n## Recommendations\n\nSee the recommendations in the Result section.",
+        "example_good": "Omit empty sections entirely. Only include sections with substantive content.",
+        "savings": "~30 tokens per omitted empty section"
+      },
+      {
+        "id": "AP-06",
+        "name": "Inconsistent synonyms across files",
+        "description": "Using 'entry' in one file and 'record' in another for the same concept.",
+        "evidence": "A1-Alpha: 'team' vs 'added_by_team' vs 'populated_by' across different indexes",
+        "fix": "Use section_1 controlled vocabulary. One concept, one word."
+      },
+      {
+        "id": "AP-07",
+        "name": "Large files without summaries",
+        "description": "Files >2000 tokens that require reading the entire content to determine relevance.",
+        "evidence": "Five KB entries exceed 25KB (167KB total). Agents reading them to check relevance waste ~42,000 tokens.",
+        "fix": "Per SOP-029 SIZE-01, add summary in first 500 bytes."
+      }
+    ]
+  },
+
+  "checklists": {
+    "before_writing_any_file": [
+      "All terms match the controlled vocabulary in section_1",
+      "Tags are from the taxonomy in section_3 (max 5, kebab-case)",
+      "Category is from the fixed list in section_4",
+      "Cross-references use IDs not paths (section_5 PATH-02)",
+      "No redundant type prefixes on JSON keys (section_7 AP-02)",
+      "No derived data stored (section_7 AP-03)",
+      "Summary present if file >2000 tokens (section_7 AP-07)"
+    ],
+    "vocabulary_quick_reference": {
+      "use_entry_not": "record, item, document",
+      "use_finding_not": "result, outcome, discovery",
+      "use_team_not": "group, squad, crew",
+      "use_agent_not": "instance, worker, bot",
+      "use_session_not": "run, execution, deployment",
+      "use_operation_not": "mission, project, campaign",
+      "use_index_not": "registry, catalog, manifest",
+      "use_tag_not": "label, keyword, marker",
+      "use_category_not": "type, kind, class",
+      "use_script_not": "utility, helper, program",
+      "use_tool_not": "service, module, library",
+      "use_source_not": "provider, endpoint, feed",
+      "use_method_not": "approach, technique, strategy",
+      "use_pick_not": "recommendation, call, trade"
+    }
+  }
+}
