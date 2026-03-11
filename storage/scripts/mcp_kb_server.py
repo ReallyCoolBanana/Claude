@@ -127,5 +127,30 @@ def kb_related(entry_id: str) -> dict:
             "shared_tags": [dict(r) for r in shared]}
 
 
+@mcp.tool()
+def kb_semantic_search(query: str, top_k: int = 10, source_type: str = None) -> list[dict]:
+    """Semantic search the knowledge base using vector similarity. Finds conceptually related entries even without exact keyword matches."""
+    try:
+        from semantic_search import semantic_search
+    except ImportError:
+        return [{"error": "semantic_search module not available. Ensure lancedb and sentence-transformers are installed."}]
+    try:
+        raw = semantic_search(query, top_k=top_k, source_type=source_type)
+    except SystemExit as e:
+        return [{"error": str(e)}]
+    except Exception as e:
+        return [{"error": f"Semantic search failed: {e}"}]
+    results = []
+    for r in raw:
+        results.append({
+            "entry_id": r.get("entry_id", ""),
+            "title": r.get("title", ""),
+            "source_type": r.get("source_type", ""),
+            "score": r.get("_distance", r.get("_relevance_score")),
+            "snippet": (r.get("text", "") or "")[:200].replace("\n", " "),
+        })
+    return results
+
+
 if __name__ == "__main__":
     mcp.run()
