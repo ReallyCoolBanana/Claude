@@ -138,14 +138,28 @@ class SharedStateMap:
     # -- lifecycle ----------------------------------------------------------
 
     def _open(self) -> None:
-        """Open (or create) the mmap file and map it into memory."""
-        created = not os.path.exists(self._state_path)
+        """Open (or create) the mmap file and map it into memory.
 
-        self._fd = os.open(
-            self._state_path,
-            os.O_RDWR | os.O_CREAT,
-            0o644,
-        )
+        Uses O_EXCL for atomic creation detection to avoid a TOCTOU race
+        where two processes both see the file as missing, both create it,
+        and both attempt to initialize the header (potentially clobbering
+        each other's writes).  Only the process that successfully creates
+        the file via O_EXCL will initialize the header.
+        """
+        created = False
+        try:
+            self._fd = os.open(
+                self._state_path,
+                os.O_RDWR | os.O_CREAT | os.O_EXCL,
+                0o644,
+            )
+            created = True
+        except FileExistsError:
+            self._fd = os.open(
+                self._state_path,
+                os.O_RDWR,
+                0o644,
+            )
 
         # Ensure file is the correct size.
         file_size = os.fstat(self._fd).st_size
@@ -154,7 +168,7 @@ class SharedStateMap:
 
         self._mm = mmap.mmap(self._fd, _TOTAL_SIZE)
 
-        if created or file_size == 0:
+        if created:
             self._init_header()
 
         # Validate magic on existing files.
@@ -252,7 +266,14 @@ class SharedStateMap:
         return magic, version, coord_idx, agent_count, phase
 
     def _write_agent_count(self, count: int) -> None:
-        """Update the agent_count field in the header."""
+        """Update the agent_count field in the header.
+
+        NOTE: agent_count is maintained for potential future optimization
+        (e.g. short-circuiting slot scans) but is not currently used for
+        slot scanning.  All scan methods (_find_slot_by_agent_id,
+        _find_empty_slot, get_all_agents, get_dead_agents) iterate over
+        all _MAX_AGENTS slots regardless of this counter.
+        """
         # agent_count is at offset 8+4+4 = 16, size 4 (unsigned int).
         self._mm[16:20] = struct.pack("<I", count)
 

@@ -1,0 +1,393 @@
+{
+  "agent_id": "bug-tt-3",
+  "scope": "infrastructure, dashboards, tests, scripts",
+  "generated_at": "2026-03-11",
+  "bugs": [
+    {
+      "id": "BUG-INFRA-001",
+      "file": "storage/coordination/dashboard.py",
+      "line_range": "L103-L112",
+      "severity": "medium",
+      "category": "logic",
+      "description": "_status_indicator() treats any status != 'alive' as [DEAD], but never checks if the agent has a 'complete' or 'stopped' status. An agent that gracefully completed its work would show as [DEAD] instead of a more appropriate indicator, misleading the operator.",
+      "reproduction": "Register an agent, set status='complete', view dashboard. Agent shows [DEAD] even though it completed normally.",
+      "suggested_fix": "Add a check: if status in ('complete', 'stopped'): return '[DONE]' before the DEAD check. Also add status=='dead' explicit check.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-002",
+      "file": "storage/coordination/dashboard.py",
+      "line_range": "L131-L146",
+      "severity": "medium",
+      "category": "performance",
+      "description": "Each render section (_get_agents, _get_phase_signals, _get_findings_summary, _get_runner_state, _get_bus_activity) opens and closes its own SQLite connection independently. A single dashboard render makes 4 separate DB connections. This is inefficient and can cause WAL contention under load.",
+      "reproduction": "Run dashboard in --watch mode with short interval while multi_team_runner is active. Each refresh opens 4 connections.",
+      "suggested_fix": "Pass a shared connection through the render pipeline, or use a connection pool / single connection with a context manager.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-003",
+      "file": "storage/coordination/dashboard.py",
+      "line_range": "L62",
+      "severity": "medium",
+      "category": "security",
+      "description": "os.system('clear') is used for terminal clearing in watch mode. This invokes a shell and is susceptible to environment manipulation (e.g., a malicious PATH or shell alias). Not a critical vulnerability in this context but is a code smell.",
+      "reproduction": "Set PATH to include a malicious 'clear' binary, run dashboard --watch.",
+      "suggested_fix": "Use sys.stdout.write('\\033[2J\\033[H') for ANSI-capable terminals, or subprocess.run(['clear'], check=False) for safer invocation.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-INFRA-004",
+      "file": "storage/coordination/dashboard.py",
+      "line_range": "L235-L261",
+      "severity": "low",
+      "category": "logic",
+      "description": "_get_bus_activity() reads the last 20KB of each JSONL file, but when seeking near the end it may start in the middle of a JSON line. The first partial line read after f.seek() will fail json.loads() and be silently dropped, which is handled, but the offset-based 'since_offset' logic in bus_cli.py (L57-78) computes new_offset from byte length of data but uses f.read() which returns string length — these differ for non-ASCII content.",
+      "reproduction": "Write a bus message containing multi-byte UTF-8 characters (e.g., emoji), then call read_msgs() with the returned offset. The offset will be incorrect for subsequent reads, potentially re-reading old data or skipping messages.",
+      "suggested_fix": "In bus_cli.py read_msgs(), compute new_offset using f.tell() after reading rather than len(data.encode('utf-8')), which double-encodes.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-005",
+      "file": "storage/coordination/bus_cli.py",
+      "line_range": "L57-L66",
+      "severity": "high",
+      "category": "integration",
+      "description": "read_msgs() opens the file without specifying encoding='utf-8', unlike write_msg() which explicitly uses UTF-8 encoding. On systems where the default encoding is not UTF-8, this creates a read/write asymmetry that can cause UnicodeDecodeError or data corruption.",
+      "reproduction": "Set PYTHONIOENCODING or locale to a non-UTF-8 encoding, write a message with bus_cli.py (uses UTF-8 bytes), then read it back (uses system default encoding).",
+      "suggested_fix": "Change line 63 to: with open(filepath, 'r', encoding='utf-8') as f:",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-006",
+      "file": "storage/coordination/bus_cli.py",
+      "line_range": "L47",
+      "severity": "medium",
+      "category": "security",
+      "description": "Channel name sanitization only replaces '/' and '..' with '_'. Other path-traversal characters or OS-reserved names (e.g., backslash on Windows, NUL, CON, PRN) are not handled. More importantly, a channel name like '....' would not be caught since only exact '..' is replaced.",
+      "reproduction": "Call write_msg with channel='..../etc/passwd' on a Unix system — the '../' still passes through since only '..' (exact match) gets replaced, not '..' within a longer string. Actually the replace does work on substrings, but other dangerous patterns like absolute paths starting with '/' get partially sanitized (replaced with _).",
+      "suggested_fix": "Use a whitelist approach: re.sub(r'[^a-zA-Z0-9_-]', '_', channel) to only allow safe characters.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-007",
+      "file": "storage/coordination/bus_cli.py",
+      "line_range": "L249-L380",
+      "severity": "medium",
+      "category": "error-handling",
+      "description": "The CLI __main__ block catches no exceptions from the help protocol commands (help-request, help-offer, status-update, work-add, idle-teams, help-needed, auto-assign). If the help_protocol module is not found or the DB is not initialized, the user gets an unhandled ImportError or sqlite3.OperationalError traceback instead of a friendly error message.",
+      "reproduction": "Run 'python bus_cli.py help-request team1 agent1 desc' without first running 'python bus_cli.py init'.",
+      "suggested_fix": "Wrap the help protocol commands in try/except blocks that catch ImportError and sqlite3.OperationalError with user-friendly messages suggesting to run 'init' first.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-008",
+      "file": "storage/coordination/bus_cli.py",
+      "line_range": "L30",
+      "severity": "low",
+      "category": "integration",
+      "description": "VALID_MSG_TYPES = {'info', 'blocker', 'phase-signal', 'heartbeat', 'request', 'response'} is defined but NEVER used to validate the msg_type argument in write_msg() or anywhere else. Invalid message types are silently accepted.",
+      "reproduction": "Run: python bus_cli.py write global agent1 team1 invalid-type '{}'  -- succeeds without error.",
+      "suggested_fix": "Add validation in write_msg(): if msg_type not in VALID_MSG_TYPES: raise ValueError(...)",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-009",
+      "file": "storage/coordination/bus_cli.py",
+      "line_range": "L189-L197",
+      "severity": "low",
+      "category": "error-handling",
+      "description": "get_all_findings() does not check if the DB file exists before attempting to connect. If state.db does not exist, sqlite3.connect() will silently create an empty DB, then the SELECT will fail with 'no such table: team_findings'. Unlike get_status() which checks os.path.exists(db_path), this function does not.",
+      "reproduction": "Call get_all_findings() when no state.db exists. Gets sqlite3.OperationalError instead of empty list.",
+      "suggested_fix": "Add: if not os.path.exists(db_path): return []",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-010",
+      "file": "storage/coordination/multi_team_runner.py",
+      "line_range": "L63-L70",
+      "severity": "medium",
+      "category": "config",
+      "description": "logging.basicConfig() with a FileHandler(_LOG_FILE) is called at module import time. _LOG_FILE resolves to the script's directory. If that directory is read-only or doesn't exist yet, importing this module will raise a FileNotFoundError/PermissionError at import time, crashing any code that imports it.",
+      "reproduction": "Import multi_team_runner from a context where the script directory is read-only.",
+      "suggested_fix": "Defer logging setup to main() or use a lazy handler, or wrap the FileHandler in a try/except.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-011",
+      "file": "storage/coordination/multi_team_runner.py",
+      "line_range": "L256-L267",
+      "severity": "medium",
+      "category": "performance",
+      "description": "_set_runner_state() calls conn.executescript(_SCHEMA) every time it is invoked to ensure the runner_state table exists. This re-executes the entire schema (all CREATE TABLE IF NOT EXISTS statements) on every status update, which is wasteful and adds latency. In the heartbeat loop, this happens every 30 seconds.",
+      "reproduction": "Start runner in foreground mode, observe that every heartbeat triggers full schema re-execution.",
+      "suggested_fix": "Remove the conn.executescript(_SCHEMA) call from _set_runner_state and ensure the table exists once during _init_db().",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-INFRA-012",
+      "file": "storage/coordination/multi_team_runner.py",
+      "line_range": "L714-L727",
+      "severity": "high",
+      "category": "logic",
+      "description": "In non-foreground mode (no --foreground flag), the main() function returns after printing status. Since the heartbeat and cleanup threads are daemon threads (daemon=True), they will be terminated as soon as main() returns and the process exits. The runner effectively does nothing in non-foreground mode unless the caller keeps the process alive, which the CLI usage does not explain clearly.",
+      "reproduction": "Run: python multi_team_runner.py --teams 3. Process starts, prints status, and immediately exits. All daemon threads die.",
+      "suggested_fix": "Either make non-foreground mode default to foreground, or add a --background flag that forks/daemonizes properly using os.fork() or multiprocessing.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-013",
+      "file": "storage/coordination/multi_team_runner.py",
+      "line_range": "L584-L590",
+      "severity": "medium",
+      "category": "logic",
+      "description": "_signal_handler calls sys.exit(0) which raises SystemExit, but this happens in the signal handler context. If runner.stop() writes to the bus or DB and encounters an error, it may be swallowed. Also, calling sys.exit(0) in a signal handler prevents the normal finally blocks from running in the main thread.",
+      "reproduction": "Send SIGTERM while runner is performing a DB write in stop(). The sys.exit(0) may interrupt the write.",
+      "suggested_fix": "Set a flag in the signal handler and let the main loop check it, rather than calling sys.exit(0) directly.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-014",
+      "file": "storage/coordination/think_tank.py",
+      "line_range": "L117-L129",
+      "severity": "low",
+      "category": "resource-leak",
+      "description": "_collect_from_sqlite() opens a SQLite connection and closes it in the try block (L123: conn.close()), but if fetchall() or the list comprehension raises an exception after conn is opened but before conn.close(), the connection leaks. This is unlike other functions in the codebase that use finally blocks.",
+      "reproduction": "Corrupt the team_findings table schema. _collect_from_sqlite() catches OperationalError but conn.close() is in the try block, not finally.",
+      "suggested_fix": "Move conn.close() to a finally block, consistent with dashboard.py's pattern.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-015",
+      "file": "storage/coordination/think_tank.py",
+      "line_range": "L186-L212",
+      "severity": "medium",
+      "category": "logic",
+      "description": "_deduplicate() has a mutable aliasing bug. When a duplicate is found and the existing entry is kept, the code does: sources = existing.get('also_from', []) then sources.append(f['source']). If 'also_from' was not set yet, get() returns a new empty list that is never stored back. If it WAS set, the append modifies the list in-place. This means the first duplicate for any given fingerprint silently loses its source tracking.",
+      "reproduction": "Have 3 findings with the same fingerprint. The first duplicate's source is lost because existing.get('also_from', []) returns a new list that is appended to but never stored.",
+      "suggested_fix": "Change to: sources = existing.setdefault('also_from', []) to ensure the list is stored in the dict.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-016",
+      "file": "storage/coordination/think_tank.py",
+      "line_range": "L440-L447",
+      "severity": "low",
+      "category": "logic",
+      "description": "main() calls sys.exit(1) if there are critical findings, but this happens after the report has been successfully written. The exit code 1 may be confusing for CI/CD pipelines that expect 0 on success — the script succeeded at generating the report, but the content has critical findings. This mixes 'tool success' with 'analysis result'.",
+      "reproduction": "Run think_tank.py with critical findings present. Script exits with code 1 even though it worked correctly.",
+      "suggested_fix": "Add a --fail-on-critical flag to opt into this behavior, default to exit(0) on successful report generation.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-INFRA-017",
+      "file": "prototype/tests/test_stress_deep.py",
+      "line_range": "L38",
+      "severity": "medium",
+      "category": "test-infra",
+      "description": "The proto fixture does sys.path.insert(0, ...) on every test invocation but never removes it. Over a test session with many tests, this pollutes sys.path with duplicate entries. More critically, the path inserted is relative to __file__ using os.path.join(os.path.dirname(__file__), '..') which could resolve differently depending on working directory.",
+      "reproduction": "Run the full test suite. sys.path accumulates duplicate entries with each test that uses the proto fixture.",
+      "suggested_fix": "Move the sys.path manipulation to a conftest.py or a session-scoped fixture, and use os.path.abspath() to normalize.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-INFRA-018",
+      "file": "prototype/tests/test_stress_deep.py",
+      "line_range": "L232-L245",
+      "severity": "medium",
+      "category": "test-infra",
+      "description": "TestInterleavedReaderWriter.test_concurrent_read_write has a reader_fn that will never terminate naturally. The condition 'while not stop_flag.is_set() or True' always evaluates to True due to the 'or True'. Readers rely solely on the 'if stop_flag.is_set() and not msgs: break' inner condition, which may not trigger if messages keep arriving. The thread.join(timeout=10) will timeout.",
+      "reproduction": "Run test_concurrent_read_write. Reader threads may not terminate cleanly, relying on join timeout.",
+      "suggested_fix": "Change 'while not stop_flag.is_set() or True:' to 'while True:' (same effect but clearer intent) or better, 'while not stop_flag.is_set():' with a final drain loop after.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-INFRA-019",
+      "file": "prototype/tests/test_stress_deep.py",
+      "line_range": "L296-L334",
+      "severity": "low",
+      "category": "test-infra",
+      "description": "TestRateLimitExtremeContention.test_20_threads_10_slots assumes that exactly 10 threads will succeed and 10 will fail. This is inherently racy — if the rate limit implementation uses a time window, the test could pass in some runs and fail in others depending on timing. The Barrier helps but doesn't guarantee simultaneous execution.",
+      "reproduction": "Run on a slow or heavily loaded system where threads execute sequentially rather than concurrently. Results may vary.",
+      "suggested_fix": "Make the assertion more robust: assert 10 <= successes <= 10 or use a mock clock to eliminate timing dependency.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-INFRA-020",
+      "file": "prototype/tests/test_stress_deep.py",
+      "line_range": "L371-L424",
+      "severity": "low",
+      "category": "test-infra",
+      "description": "TestHeartbeatUnderLoad.test_heartbeat_during_heavy_writes uses a single SharedState instance across multiple threads (heartbeat_fn and io_load_fn). If SharedState is not thread-safe internally, this can cause intermittent test failures that appear as bugs in heartbeat logic but are actually test setup issues.",
+      "reproduction": "Run test_heartbeat_during_heavy_writes repeatedly. If SharedState uses a non-thread-safe connection pattern, intermittent failures occur.",
+      "suggested_fix": "Document the thread-safety assumption. Consider using separate SharedState instances per thread if thread-safety is not guaranteed.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-INFRA-021",
+      "file": "prototype/tests/think_tank_efficiency.py",
+      "line_range": "L26",
+      "severity": "high",
+      "category": "config",
+      "description": "COMM_DIR points to the real production coordination directory (storage/coordination/) rather than a temporary directory. Running this test script writes real messages to the production bus and registers agents in the production state.db. This contaminates production data with test data.",
+      "reproduction": "Run: python think_tank_efficiency.py all. Production bus/ and db/ directories get test messages and agent registrations.",
+      "suggested_fix": "Use tempfile.mkdtemp() for COMM_DIR, or at minimum use a separate subdirectory like storage/coordination/test-runs/.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-022",
+      "file": "prototype/tests/think_tank_efficiency.py",
+      "line_range": "L581",
+      "severity": "medium",
+      "category": "logic",
+      "description": "Think tank threads are launched as daemon=True. If any tank thread hangs or takes longer than the 60-second join timeout, the main thread continues without its results. Results dict will be missing that tank's entry, but this is not checked — the report proceeds with partial data and no error.",
+      "reproduction": "Introduce a delay > 60s in one think tank function. The report generates with missing results silently.",
+      "suggested_fix": "After joining, check if all expected tanks are in results dict. Log a warning or raise an error for missing results.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-023",
+      "file": "prototype/tests/proto_benchmark_runner.py",
+      "line_range": "L469-L476",
+      "severity": "high",
+      "category": "logic",
+      "description": "S4 failure injection uses stop_event.set() to stop ALL workers, then stop_event.clear() after 0.5s. This does not kill just one worker — it signals all workers to stop, then after 0.5s clears the flag. This is a fundamentally wrong approach to failure injection: it stops all workers temporarily rather than killing one worker permanently.",
+      "reproduction": "Run scenario S4. All workers stop for 0.5s then resume. No single worker is permanently killed, defeating the purpose of failure injection testing.",
+      "suggested_fix": "Give each worker its own stop event. For failure injection, only set the target worker's stop event, not the shared one.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-024",
+      "file": "prototype/tests/proto_benchmark_runner.py",
+      "line_range": "L506-L507",
+      "severity": "low",
+      "category": "logic",
+      "description": "peak_memory_kb is calculated as get_memory_usage_kb() - mem_before, which measures RSS difference. On Linux, resource.getrusage(RUSAGE_SELF).ru_maxrss returns peak RSS in KB. This value only increases monotonically (it's the PEAK, not current). So the delta will always be >= 0 but measures 'new peak since measurement started' which may be from any thread or subprocess, not just this benchmark.",
+      "reproduction": "Run multiple benchmarks sequentially. After the first run, ru_maxrss may not increase further even if new memory was allocated and freed.",
+      "suggested_fix": "Use a more accurate memory measurement: read /proc/self/status VmRSS or use tracemalloc for Python-level memory tracking.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-INFRA-025",
+      "file": "prototype/tests/proto_benchmark_runner.py",
+      "line_range": "L283-L285",
+      "severity": "medium",
+      "category": "integration",
+      "description": "run_worker_prototype_b imports from 'agent_comm_b.bus' (PipeBusWriter, PipeBusReader) and 'agent_comm_b.state' (SharedStateMap). These modules likely do not exist — there is no evidence of an agent_comm_b package in the codebase. Running any benchmark with prototype='B' will always fail with ImportError.",
+      "reproduction": "Run: python proto_benchmark_runner.py --scenario S1 --prototype B. Fails with ImportError: No module named 'agent_comm_b'.",
+      "suggested_fix": "Either implement agent_comm_b or remove Prototype B from the benchmark runner, or add a try/except ImportError with a clear skip message.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-026",
+      "file": "prototype/tests/proto_benchmark_runner.py",
+      "line_range": "L175-L179",
+      "severity": "low",
+      "category": "test-infra",
+      "description": "SYNTHETIC_SOURCES is defined at module level with mutable state (_call_count in each SyntheticDataSource). Across multiple benchmark runs in the same process, the call counters accumulate rather than resetting. This means result_ids in later runs start from where previous runs left off, potentially affecting analysis that relies on result_id values.",
+      "reproduction": "Run --scenario all --prototype baseline --runs 3. The third run's result_ids start at a much higher number than 1.",
+      "suggested_fix": "Reset _call_count at the start of each run_scenario() invocation, or create new SyntheticDataSource instances per run.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-INFRA-027",
+      "file": "storage/scripts/grade_research.py",
+      "line_range": "L127",
+      "severity": "medium",
+      "category": "logic",
+      "description": "grade_citations() checks if 'any(hq in domain for hq in HIGH_QUALITY_DOMAINS)' — this does a substring match rather than exact domain match. For example, domain 'notarxiv.org' would match 'arxiv.org' since 'arxiv.org' is a substring. This inflates quality scores.",
+      "reproduction": "Add a reference URL like 'https://notarxiv.org/paper/123'. It will be counted as a high-quality citation.",
+      "suggested_fix": "Change to exact match: if domain in HIGH_QUALITY_DOMAINS or use endswith() for subdomain matching.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-INFRA-028",
+      "file": "storage/scripts/staleness_detector.py",
+      "line_range": "L136",
+      "severity": "low",
+      "category": "logic",
+      "description": "bug_indicators list contains 'broken' twice (index 0 and 2). This causes a minor issue: the word 'broken' would appear twice in the found_bugs list for any entry containing it, making the diagnostic message misleading.",
+      "reproduction": "Have a KB entry with the word 'broken' in it. found_bugs will be ['broken', 'broken', ...] with 'broken' appearing twice.",
+      "suggested_fix": "Remove the duplicate 'broken' from the bug_indicators list.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-INFRA-029",
+      "file": "storage/scripts/handoff_tracker.py",
+      "line_range": "L293-L312",
+      "severity": "medium",
+      "category": "performance",
+      "description": "When --unresolved-only is used, track_handoffs() processes all handoff items twice: once in the main loop (L270-L291) filtered to unresolved, and then AGAIN in the recount block (L301-L312) to get accurate resolved/likely_resolved/unresolved counts. The second pass re-runs check_resolution() for every item, which re-scans all subsequent logs and KB entries. This is O(n^2) in the number of team logs.",
+      "reproduction": "Run with --unresolved-only on a repository with many team session logs. Processing time approximately doubles.",
+      "suggested_fix": "Track status counts during the first pass regardless of the --unresolved-only filter, eliminating the need for the second pass.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-INFRA-030",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line_range": "L78-L98",
+      "severity": "low",
+      "category": "logic",
+      "description": "_retry_on_busy decorator does not preserve the wrapped function's __name__, __doc__, or other metadata. This can cause issues with debugging, logging, and introspection. The decorator also doesn't pass 'self' awareness through for methods decorated with @_retry_on_busy before the method binding happens, though in practice this works because *args captures self.",
+      "reproduction": "Inspect AgentReporter.update_status.__name__ — returns 'wrapper' instead of 'update_status'.",
+      "suggested_fix": "Use @functools.wraps(func) on the wrapper function.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-INFRA-031",
+      "file": "storage/coordination/multi_team_runner.py",
+      "line_range": "L198",
+      "severity": "low",
+      "category": "logic",
+      "description": "_get_db() passes busy_timeout_ms / 1000 to sqlite3.connect(timeout=...) for the connection timeout, then ALSO sets PRAGMA busy_timeout to busy_timeout_ms. The sqlite3.connect timeout parameter and PRAGMA busy_timeout serve different purposes (connect timeout vs query retry timeout). The connect timeout of 30 seconds is unnecessarily long for most operations.",
+      "reproduction": "Not directly reproducible as a bug, but the dual timeout mechanism is confusing and could lead to unexpected 30-second hangs.",
+      "suggested_fix": "Use a shorter connect timeout (e.g., 5 seconds) separate from the PRAGMA busy_timeout.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-INFRA-032",
+      "file": "storage/scripts/repair-storage.py",
+      "line_range": "L23",
+      "severity": "low",
+      "category": "config",
+      "description": "STORAGE_ROOT = Path(__file__).resolve().parent.parent resolves to storage/ (scripts is a child of storage). This is correct. However, TODAY = date.today().isoformat() is computed at import time, meaning if the script runs past midnight, all repairs use the date from when the module was loaded, not the current date.",
+      "reproduction": "Import the module before midnight, call repair functions after midnight. Dates will reflect the pre-midnight date.",
+      "suggested_fix": "Compute TODAY inside each repair function, or use a function call instead of a module-level constant.",
+      "test_gap": false
+    }
+  ],
+  "cross_module_issues": [
+    {
+      "modules": ["bus_cli.py", "multi_team_runner.py", "dashboard.py"],
+      "issue": "Three different modules each define their own message types set (VALID_MSG_TYPES) or make assumptions about valid types. bus_cli.py defines VALID_MSG_TYPES but never enforces it. multi_team_runner.py defines its own identical VALID_MSG_TYPES as a frozenset. dashboard.py has no validation at all. These should be unified into a shared constant."
+    },
+    {
+      "modules": ["coordinator_hub.py", "bus_cli.py", "multi_team_runner.py"],
+      "issue": "Different status enums across modules: coordinator_hub uses VALID_AGENT_STATUSES = {'initializing', 'working', 'blocked', 'complete', 'error'}. bus_cli.py/multi_team_runner.py agents table uses status DEFAULT 'alive'. help_protocol.py uses VALID_STATUSES = {'idle', 'working', 'needs_help', 'helping', 'complete'}. These three status systems are incompatible and there is no mapping between them."
+    },
+    {
+      "modules": ["dashboard.py", "coordinator_hub.py"],
+      "issue": "Two completely separate dashboard/monitoring systems exist: dashboard.py reads from db/state.db (agents table with 'alive'/'dead' status), while coordinator_hub.py uses hub/monitor.db (agent_status table with 'initializing'/'working'/'complete' etc). They monitor different databases with different schemas and different status values, creating a confusing dual-monitoring situation."
+    },
+    {
+      "modules": ["think_tank.py", "bus_cli.py"],
+      "issue": "think_tank.py and bus_cli.py both have post_finding/post_proposal functions that write to the same team_findings/think_tank tables but through different code paths with different error handling. think_tank.py reads the table in _collect_from_sqlite() but bus_cli.py's post_finding is the primary writer. Changes to the schema in bus_cli.py init_db() would silently break think_tank.py's reads."
+    },
+    {
+      "modules": ["kb_validator.py", "kb_search.py", "staleness_detector.py", "handoff_tracker.py", "index_rebuilder.py"],
+      "issue": "Five different scripts each implement their own YAML frontmatter parser (parse_yaml_frontmatter / parse_frontmatter). These are nearly identical but have subtle differences: kb_validator.py handles '#' comments and 'null'/'~' values; the others do not. This code duplication means a bug fix in one parser is not applied to the others."
+    },
+    {
+      "modules": ["think_tank_efficiency.py", "proto_benchmark_runner.py"],
+      "issue": "Both test files import from agent_comm (Prototype A) using sys.path manipulation at module level. think_tank_efficiency.py also uses the production COMM_DIR. Neither file can run in isolation without the prototype package being available, and neither has graceful handling if imports fail."
+    },
+    {
+      "modules": ["bus_cli.py", "multi_team_runner.py"],
+      "issue": "Both modules define their own _bus_write / write_msg functions with identical logic (atomic JSONL append) but different implementations. bus_cli.py's write_msg has no message size limit while multi_team_runner.py's _bus_write enforces a 4096-byte limit. Writing a message via bus_cli.py that exceeds 4096 bytes would succeed but then be unreadable by any component that enforces the limit."
+    },
+    {
+      "modules": ["dashboard.py", "bus_cli.py"],
+      "issue": "dashboard.py _get_bus_activity() filters messages by TTL (msg.ts + msg.ttl < now = expired). bus_cli.py read_msgs() also filters by TTL. However, dashboard.py uses default TTL of 300 (5 min) while bus_cli.py write_msg sets TTL to 3600 (1 hour). Dashboard renders may show expired messages that the reader would filter out, or vice versa depending on the actual TTL in the message."
+    }
+  ]
+}

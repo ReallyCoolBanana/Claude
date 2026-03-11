@@ -137,6 +137,26 @@ class SharedState:
             self._conn.commit()
 
     @_retry_on_busy
+    def get_all_agents(self) -> list[dict]:
+        """Return all registered agents as a list of dicts."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT agent_id, team, role, status, last_heartbeat FROM agents"
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    @_retry_on_busy
+    def get_coordinator_heartbeat(self) -> float | None:
+        """Return the last heartbeat timestamp of the alive coordinator, or None."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT last_heartbeat FROM agents WHERE role = 'coordinator' AND status = 'alive'"
+            ).fetchone()
+        if row is None:
+            return None
+        return row["last_heartbeat"]
+
+    @_retry_on_busy
     def get_dead_agents(self, timeout: float = 120.0) -> list[dict]:
         cutoff = time.time() - timeout
         with self._lock:

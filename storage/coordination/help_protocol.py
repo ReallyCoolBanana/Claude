@@ -160,8 +160,9 @@ class HelpProtocol:
     def close(self) -> None:
         """Close the database connection."""
         with self._lock:
-            self._closed = True
-            self._conn.close()
+            if not self._closed:
+                self._closed = True
+                self._conn.close()
 
     def __enter__(self):
         return self
@@ -319,6 +320,11 @@ class HelpProtocol:
     ) -> int:
         """Add a work item for this team. Returns the work item ID."""
         self._check_closed()
+        valid_priorities = {'critical', 'high', 'medium', 'low'}
+        if priority not in valid_priorities:
+            raise ValueError(
+                f"Invalid priority {priority!r}. Must be one of: {', '.join(sorted(valid_priorities))}"
+            )
         now = time.time()
         caps_json = json.dumps(required_caps) if required_caps is not None else None
         with self._lock:
@@ -341,7 +347,7 @@ class HelpProtocol:
         self._check_closed()
         now = time.time()
         with self._lock:
-            self._conn.execute(
+            cur = self._conn.execute(
                 """
                 UPDATE work_items
                 SET status = 'available_for_help', updated_at = ?
@@ -349,6 +355,11 @@ class HelpProtocol:
                 """,
                 (now, work_item_id, self.team),
             )
+            if cur.rowcount == 0:
+                self._conn.rollback()
+                raise ValueError(
+                    f"Work item {work_item_id} not found for team {self.team!r}"
+                )
             self._conn.commit()
 
     @_retry_on_busy
@@ -357,14 +368,19 @@ class HelpProtocol:
         self._check_closed()
         now = time.time()
         with self._lock:
-            self._conn.execute(
+            cur = self._conn.execute(
                 """
                 UPDATE work_items
                 SET status = 'completed', updated_at = ?
-                WHERE id = ?
+                WHERE id = ? AND team = ?
                 """,
-                (now, work_item_id),
+                (now, work_item_id, self.team),
             )
+            if cur.rowcount == 0:
+                self._conn.rollback()
+                raise ValueError(
+                    f"Work item {work_item_id} not found for team {self.team!r}"
+                )
             self._conn.commit()
 
     # ------------------------------------------------------------------
@@ -386,8 +402,10 @@ class HelpProtocol:
                 "SELECT required_capabilities, estimated_minutes FROM work_items WHERE id = ?",
                 (work_item_id,),
             ).fetchone()
-            caps = row["required_capabilities"] if row else None
-            est = row["estimated_minutes"] if row else None
+            if row is None:
+                raise ValueError(f"Work item {work_item_id} does not exist")
+            caps = row["required_capabilities"]
+            est = row["estimated_minutes"]
 
             # Mark work item available
             self._conn.execute(
@@ -522,16 +540,24 @@ class HelpProtocol:
         now = time.time()
         with self._lock:
             row = self._conn.execute(
-                "SELECT work_item_id, accepted_by_team FROM help_requests WHERE id = ?",
+                "SELECT work_item_id, accepted_by_team, status FROM help_requests WHERE id = ?",
                 (request_id,),
             ).fetchone()
 
-            if row is not None and row["accepted_by_team"] is not None:
-                if row["accepted_by_team"] != self.team:
-                    raise ValueError(
-                        f"Team {self.team!r} is not the accepted helper for request {request_id}. "
-                        f"Accepted by {row['accepted_by_team']!r}."
-                    )
+            if row is None:
+                raise ValueError(f"Help request {request_id} does not exist")
+
+            if row["status"] != "accepted":
+                raise ValueError(
+                    f"Help request {request_id} has status {row['status']!r}, "
+                    f"expected 'accepted'. Cannot fulfill an un-accepted request."
+                )
+
+            if row["accepted_by_team"] != self.team:
+                raise ValueError(
+                    f"Team {self.team!r} is not the accepted helper for request {request_id}. "
+                    f"Accepted by {row['accepted_by_team']!r}."
+                )
 
             self._conn.execute(
                 "UPDATE help_requests SET status = 'fulfilled', resolved_at = ? WHERE id = ?",
@@ -655,6 +681,14 @@ class HelpProtocol:
         Returns
         -------
         List of team dicts with matching capabilities, sorted by match quality.
+
+        Note
+        ----
+        This method releases the lock between querying the help request and
+        querying idle teams (via ``get_idle_teams``). The result is eventually
+        consistent: a team's status may change between the two queries.
+        Callers should use atomic assignment (e.g. ``auto_assign_idle_teams``)
+        to handle races.
         """
         self._check_closed()
         with self._lock:
@@ -706,6 +740,7 @@ class HelpProtocol:
             return []
 
         assignments = []
+        assigned_teams = set()
 
         for req in open_requests:
             request_id = req["id"]
@@ -720,6 +755,9 @@ class HelpProtocol:
                 # Skip self-assignment
                 if helper_team == req["requesting_team"]:
                     continue
+                # Skip teams already assigned in this round
+                if helper_team in assigned_teams:
+                    continue
 
                 # Try to atomically claim — create a temporary HelpProtocol
                 # for the helper team to offer help
@@ -727,7 +765,11 @@ class HelpProtocol:
                 with self._lock:
                     try:
                         conn.execute("BEGIN IMMEDIATE")
-                    except sqlite3.OperationalError:
+                    except sqlite3.OperationalError as e:
+                        logger.warning(
+                            "BEGIN IMMEDIATE failed for request %d, team %s: %s",
+                            request_id, helper_team, e,
+                        )
                         continue
 
                     try:
@@ -777,6 +819,7 @@ class HelpProtocol:
 
                         conn.execute("COMMIT")
 
+                        assigned_teams.add(helper_team)
                         assignments.append({
                             "request_id": request_id,
                             "team": helper_team,

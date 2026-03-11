@@ -192,22 +192,59 @@ def _bus_write(channel: str, agent_id: str, team: str, msg_type: str,
 # Database helpers
 # ---------------------------------------------------------------------------
 
+_shared_conn: sqlite3.Connection | None = None
+_shared_conn_lock = threading.Lock()
+
+
+def _get_connection(busy_timeout_ms: int = 30000) -> sqlite3.Connection:
+    """Return a lazily-created persistent SQLite connection (thread-safe).
+
+    The connection is shared across all helper functions to avoid the
+    overhead of opening and closing a new connection on every call.
+    WAL mode and busy_timeout are configured once on creation.
+    """
+    global _shared_conn
+    with _shared_conn_lock:
+        if _shared_conn is None:
+            os.makedirs(_DB_DIR, exist_ok=True)
+            _shared_conn = sqlite3.connect(
+                _DB_PATH,
+                timeout=busy_timeout_ms / 1000,
+                check_same_thread=False,
+            )
+            _shared_conn.row_factory = sqlite3.Row
+            _shared_conn.execute("PRAGMA journal_mode=WAL")
+            _shared_conn.execute(f"PRAGMA busy_timeout={busy_timeout_ms}")
+        return _shared_conn
+
+
+def _close_connection() -> None:
+    """Close the shared connection if open.  Safe to call multiple times."""
+    global _shared_conn
+    with _shared_conn_lock:
+        if _shared_conn is not None:
+            try:
+                _shared_conn.close()
+            except Exception:
+                pass
+            _shared_conn = None
+
+
 def _get_db(busy_timeout_ms: int = 30000) -> sqlite3.Connection:
-    """Open (or create) the shared SQLite database with WAL mode."""
-    os.makedirs(_DB_DIR, exist_ok=True)
-    conn = sqlite3.connect(_DB_PATH, timeout=busy_timeout_ms / 1000)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute(f"PRAGMA busy_timeout={busy_timeout_ms}")
-    return conn
+    """Return the shared persistent connection.
+
+    Kept for backward-compatibility with any external callers; now
+    delegates to _get_connection().
+    """
+    return _get_connection(busy_timeout_ms)
 
 
 def _init_db() -> None:
     """Initialise the database schema."""
-    conn = _get_db()
-    conn.executescript(_SCHEMA)
-    conn.commit()
-    conn.close()
+    conn = _get_connection()
+    with _shared_conn_lock:
+        conn.executescript(_SCHEMA)
+        conn.commit()
     log.info("Database initialised at %s", _DB_PATH)
 
 
@@ -216,72 +253,66 @@ def _register_agent(agent_id: str, team: str, role: str,
     """Register or re-register an agent in the agents table."""
     now = time.time()
     pid = pid or os.getpid()
-    conn = _get_db()
-    conn.execute("""
-        INSERT INTO agents (agent_id, team, role, pid, status,
-                            last_heartbeat, registered_at)
-        VALUES (?, ?, ?, ?, 'alive', ?, ?)
-        ON CONFLICT(agent_id) DO UPDATE SET
-            team=excluded.team, role=excluded.role, pid=excluded.pid,
-            status='alive', last_heartbeat=excluded.last_heartbeat
-    """, (agent_id, team, role, pid, now, now))
-    conn.commit()
-    conn.close()
+    conn = _get_connection()
+    with _shared_conn_lock:
+        conn.execute("""
+            INSERT INTO agents (agent_id, team, role, pid, status,
+                                last_heartbeat, registered_at)
+            VALUES (?, ?, ?, ?, 'alive', ?, ?)
+            ON CONFLICT(agent_id) DO UPDATE SET
+                team=excluded.team, role=excluded.role, pid=excluded.pid,
+                status='alive', last_heartbeat=excluded.last_heartbeat
+        """, (agent_id, team, role, pid, now, now))
+        conn.commit()
 
 
 def _heartbeat(agent_id: str) -> None:
     """Update the heartbeat timestamp for an agent."""
-    conn = _get_db()
-    conn.execute(
-        "UPDATE agents SET last_heartbeat = ?, status = 'alive' "
-        "WHERE agent_id = ?",
-        (time.time(), agent_id),
-    )
-    conn.commit()
-    conn.close()
+    conn = _get_connection()
+    with _shared_conn_lock:
+        conn.execute(
+            "UPDATE agents SET last_heartbeat = ?, status = 'alive' "
+            "WHERE agent_id = ?",
+            (time.time(), agent_id),
+        )
+        conn.commit()
 
 
 def _get_dead_agents(timeout: float = 120.0) -> list[dict]:
     """Return agents whose heartbeat is older than *timeout* seconds."""
     cutoff = time.time() - timeout
-    conn = _get_db()
-    rows = conn.execute(
-        "SELECT * FROM agents WHERE last_heartbeat < ? AND status = 'alive'",
-        (cutoff,),
-    ).fetchall()
-    conn.close()
+    conn = _get_connection()
+    with _shared_conn_lock:
+        rows = conn.execute(
+            "SELECT * FROM agents WHERE last_heartbeat < ? AND status = 'alive'",
+            (cutoff,),
+        ).fetchall()
     return [dict(r) for r in rows]
 
 
 def _set_runner_state(key: str, value: str) -> None:
     """Persist a key/value pair in the runner_state table."""
-    conn = _get_db()
-    conn.executescript(_SCHEMA)  # ensure table exists
-    conn.execute("""
-        INSERT INTO runner_state (key, value, updated_at)
-        VALUES (?, ?, ?)
-        ON CONFLICT(key) DO UPDATE SET
-            value=excluded.value, updated_at=excluded.updated_at
-    """, (key, value, time.time()))
-    conn.commit()
-    conn.close()
+    conn = _get_connection()
+    with _shared_conn_lock:
+        conn.execute("""
+            INSERT INTO runner_state (key, value, updated_at)
+            VALUES (?, ?, ?)
+            ON CONFLICT(key) DO UPDATE SET
+                value=excluded.value, updated_at=excluded.updated_at
+        """, (key, value, time.time()))
+        conn.commit()
 
 
 def _get_runner_state(key: str) -> str | None:
     """Read a value from the runner_state table."""
-    conn = _get_db()
-    try:
-        conn.executescript(
-            "CREATE TABLE IF NOT EXISTS runner_state "
-            "(key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at REAL NOT NULL)"
-        )
-        row = conn.execute(
-            "SELECT value FROM runner_state WHERE key = ?", (key,)
-        ).fetchone()
-    except sqlite3.OperationalError:
-        return None
-    finally:
-        conn.close()
+    conn = _get_connection()
+    with _shared_conn_lock:
+        try:
+            row = conn.execute(
+                "SELECT value FROM runner_state WHERE key = ?", (key,)
+            ).fetchone()
+        except sqlite3.OperationalError:
+            return None
     return row["value"] if row else None
 
 
@@ -454,6 +485,7 @@ class MultiTeamRunner:
             "uptime": time.time() - (self._started_at or time.time()),
         })
         _set_runner_state("status", "stopped")
+        _close_connection()
         log.info("Multi-team runner stopped")
 
     def _heartbeat_loop(self) -> None:
@@ -502,19 +534,19 @@ class MultiTeamRunner:
     def _run_cleanup(self) -> None:
         """Purge expired rate_limits and messages from SQLite."""
         now = time.time()
-        conn = _get_db()
-        cur1 = conn.execute(
-            "DELETE FROM rate_limits WHERE called_at < ?",
-            (now - 3600,),
-        )
-        cur2 = conn.execute(
-            "DELETE FROM messages WHERE expires_at IS NOT NULL "
-            "AND expires_at < ?",
-            (now,),
-        )
-        total = cur1.rowcount + cur2.rowcount
-        conn.commit()
-        conn.close()
+        conn = _get_connection()
+        with _shared_conn_lock:
+            cur1 = conn.execute(
+                "DELETE FROM rate_limits WHERE called_at < ?",
+                (now - 3600,),
+            )
+            cur2 = conn.execute(
+                "DELETE FROM messages WHERE expires_at IS NOT NULL "
+                "AND expires_at < ?",
+                (now,),
+            )
+            total = cur1.rowcount + cur2.rowcount
+            conn.commit()
         if total:
             log.info("Cleanup: removed %d expired rows", total)
 
@@ -525,14 +557,14 @@ class MultiTeamRunner:
         old_phase = self._phase
         self._phase = new_phase
 
-        conn = _get_db()
-        conn.execute(
-            "INSERT INTO phase_signals (phase, signal_type, agent_id, ts, data) "
-            "VALUES (?, 'transition', 'runner', ?, ?)",
-            (new_phase, time.time(), json.dumps(data) if data else None),
-        )
-        conn.commit()
-        conn.close()
+        conn = _get_connection()
+        with _shared_conn_lock:
+            conn.execute(
+                "INSERT INTO phase_signals (phase, signal_type, agent_id, ts, data) "
+                "VALUES (?, 'transition', 'runner', ?, ?)",
+                (new_phase, time.time(), json.dumps(data) if data else None),
+            )
+            conn.commit()
 
         body = {"event": "phase-transition", "from": old_phase, "to": new_phase}
         if data:
@@ -546,22 +578,21 @@ class MultiTeamRunner:
     def get_status(self) -> dict:
         """Return current runner state for diagnostics."""
         uptime = time.time() - self._started_at if self._started_at else 0.0
-        conn = _get_db()
-        try:
-            agents = [
-                dict(r) for r in conn.execute(
-                    "SELECT agent_id, team, role, status, last_heartbeat "
-                    "FROM agents"
-                ).fetchall()
-            ]
-            findings_count = conn.execute(
-                "SELECT COUNT(*) as cnt FROM team_findings"
-            ).fetchone()["cnt"]
-        except sqlite3.OperationalError:
-            agents = []
-            findings_count = 0
-        finally:
-            conn.close()
+        conn = _get_connection()
+        with _shared_conn_lock:
+            try:
+                agents = [
+                    dict(r) for r in conn.execute(
+                        "SELECT agent_id, team, role, status, last_heartbeat "
+                        "FROM agents"
+                    ).fetchall()
+                ]
+                findings_count = conn.execute(
+                    "SELECT COUNT(*) as cnt FROM team_findings"
+                ).fetchone()["cnt"]
+            except sqlite3.OperationalError:
+                agents = []
+                findings_count = 0
 
         return {
             "phase": self._phase,
@@ -601,22 +632,21 @@ def _print_status() -> None:
         print("No runner state found.  Has the runner been started?")
         return
 
-    conn = _get_db()
-    try:
-        agents = [
-            dict(r) for r in conn.execute(
-                "SELECT agent_id, team, role, status, last_heartbeat "
-                "FROM agents ORDER BY team, role"
-            ).fetchall()
-        ]
-        findings = conn.execute(
-            "SELECT COUNT(*) as cnt FROM team_findings"
-        ).fetchone()["cnt"]
-    except sqlite3.OperationalError:
-        agents = []
-        findings = 0
-    finally:
-        conn.close()
+    conn = _get_connection()
+    with _shared_conn_lock:
+        try:
+            agents = [
+                dict(r) for r in conn.execute(
+                    "SELECT agent_id, team, role, status, last_heartbeat "
+                    "FROM agents ORDER BY team, role"
+                ).fetchall()
+            ]
+            findings = conn.execute(
+                "SELECT COUNT(*) as cnt FROM team_findings"
+            ).fetchone()["cnt"]
+        except sqlite3.OperationalError:
+            agents = []
+            findings = 0
 
     info = {
         "runner_status": status,

@@ -1,0 +1,372 @@
+{
+  "agent_id": "bug-tt-1",
+  "scope": "core coordination modules",
+  "bugs": [
+    {
+      "id": "BUG-CORE-001",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line_range": "L78-L98",
+      "severity": "medium",
+      "category": "api-contract-violation",
+      "description": "_retry_on_busy decorator does not preserve the wrapped function's __name__, __doc__, or signature. This means functools.wraps is missing, which breaks introspection, logging (func.__name__ in the decorator itself still works since it captures the closure variable), and any code relying on method metadata.",
+      "reproduction": "Call help(AgentReporter.update_status) or inspect.signature(AgentReporter.update_status) -- it will show wrapper(*args, **kwargs) instead of the real signature.",
+      "suggested_fix": "Add @functools.wraps(func) to the wrapper function inside _retry_on_busy.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-002",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line_range": "L266-L279",
+      "severity": "high",
+      "category": "logic-error",
+      "description": "update_status uses INSERT OR REPLACE which deletes and re-inserts the row. The COALESCE subquery for started_at tries to preserve the original value, but because INSERT OR REPLACE deletes first, the subquery SELECT started_at FROM agent_status WHERE agent_id = ? may return NULL (the row was just deleted). This is a race with SQLite's implementation -- in practice SQLite evaluates the VALUES before deleting, so it works, but this is an undocumented implementation detail and fragile.",
+      "reproduction": "Call update_status multiple times and check if started_at is preserved. Currently works due to SQLite internals, but is not guaranteed by the SQL standard.",
+      "suggested_fix": "Use INSERT ... ON CONFLICT(agent_id) DO UPDATE SET ... (UPSERT) instead of INSERT OR REPLACE, matching the pattern used in _register(). Or use a simple UPDATE since _register already ensures the row exists.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-CORE-003",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line_range": "L236-L264",
+      "severity": "low",
+      "category": "missing-validation",
+      "description": "update_status does not validate that progress_pct is in the range [0, 100]. Negative values or values > 100 are accepted and stored without error.",
+      "reproduction": "Call reporter.update_status('working', -50, 'task') or reporter.update_status('working', 999, 'task'). No error is raised.",
+      "suggested_fix": "Add validation: if not (0 <= progress_pct <= 100): raise ValueError(...)",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-004",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line_range": "L288-L312",
+      "severity": "medium",
+      "category": "logic-error",
+      "description": "report_error does not update progress_pct. If an agent was at 50% progress and then reports an error, the progress_pct remains at 50. This can confuse get_summary() which averages progress_pct across all agents, including errored ones.",
+      "reproduction": "Register agent, update_status to 50% working, then report_error. The agent_status row still has progress_pct=50 with status='error'.",
+      "suggested_fix": "Either reset progress_pct to 0 on error, or document this behavior and exclude errored agents from average progress calculation.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-005",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line_range": "L354-L377",
+      "severity": "medium",
+      "category": "race-condition",
+      "description": "check_instructions performs a SELECT then UPDATE as separate operations within a single lock acquisition. While the threading lock protects against same-process concurrency, if multiple processes share the same DB (the intended use case for multi-agent coordination), two processes could both SELECT the same pending instructions before either marks them as read, leading to duplicate instruction delivery.",
+      "reproduction": "Run two AgentReporter instances with the same agent_id in separate processes. Both call check_instructions() simultaneously. Both may receive the same instructions.",
+      "suggested_fix": "Use BEGIN IMMEDIATE before the SELECT/UPDATE pair, or use a single UPDATE ... RETURNING statement (SQLite 3.35+), or use a CTE: WITH pending AS (SELECT id FROM coordinator_instructions WHERE target_agent=? AND status='pending') UPDATE ... WHERE id IN (SELECT id FROM pending) RETURNING *.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-006",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line_range": "L125-L157",
+      "severity": "low",
+      "category": "missing-validation",
+      "description": "_bus_notify sanitizes channel names by replacing '/' and '..' but does not handle other dangerous filesystem characters (null bytes, backslashes on some systems). Also, the channel name 'global' combined with team names containing special characters could produce unexpected file paths.",
+      "reproduction": "Pass a channel name with null bytes or unusual unicode characters to _bus_notify.",
+      "suggested_fix": "Use a stricter sanitization: allow only alphanumeric, dash, and underscore characters.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-007",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line_range": "L518-L556",
+      "severity": "low",
+      "category": "missing-validation",
+      "description": "send_instruction does not verify that target_agent exists in the agent_status table. Instructions can be sent to nonexistent agents with no warning, creating orphaned instruction rows that will never be read.",
+      "reproduction": "Call dash.send_instruction('nonexistent-agent', 'redirect', None). Succeeds without error but the instruction is never picked up.",
+      "suggested_fix": "Optionally validate that the target agent exists, or add a cleanup method for orphaned instructions.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-008",
+      "file": "storage/coordination/help_protocol.py",
+      "line_range": "L160-L164",
+      "severity": "medium",
+      "category": "resource-leak",
+      "description": "HelpProtocol.close() sets self._closed = True and closes the connection but does NOT check if already closed first. If close() is called twice, the second call will try to close an already-closed connection, which may raise a ProgrammingError in some SQLite versions. Compare with coordinator_hub.py which checks 'if not self._closed' before closing.",
+      "reproduction": "Create a HelpProtocol instance and call close() twice. May raise sqlite3.ProgrammingError: Cannot operate on a closed database.",
+      "suggested_fix": "Add 'if not self._closed:' guard before closing, matching the pattern in coordinator_hub.py and direct_channels.py.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-009",
+      "file": "storage/coordination/help_protocol.py",
+      "line_range": "L374-L419",
+      "severity": "medium",
+      "category": "logic-error",
+      "description": "request_help does not verify that the work_item exists or belongs to the requesting team. If work_item_id is invalid (e.g., -1 or a nonexistent ID), the method silently creates a help request with NULL capabilities and proceeds to publish a bus message with None values.",
+      "reproduction": "Call hp.request_help(99999, 'help') where work item 99999 does not exist. A help request is created with NULL capabilities/estimated_minutes.",
+      "suggested_fix": "Check that the work item exists and belongs to self.team before proceeding. Raise ValueError if not found.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-010",
+      "file": "storage/coordination/help_protocol.py",
+      "line_range": "L516-L548",
+      "severity": "medium",
+      "category": "logic-error",
+      "description": "fulfill_help allows fulfillment even when the help request's accepted_by_team is NULL (i.e., the request was never accepted). The condition 'if row is not None and row[\"accepted_by_team\"] is not None' only validates team ownership when accepted_by_team is set. If the request is still 'open' (accepted_by_team = NULL), any team can fulfill it, bypassing the accept step entirely.",
+      "reproduction": "Create a help request but don't accept it. Call hp.fulfill_help(request_id) -- it will mark the request as fulfilled without it ever being accepted.",
+      "suggested_fix": "Add a check: if row is None, raise ValueError('Request not found'). If row['status'] != 'accepted', raise ValueError('Request has not been accepted yet').",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-011",
+      "file": "storage/coordination/help_protocol.py",
+      "line_range": "L692-L804",
+      "severity": "medium",
+      "category": "race-condition",
+      "description": "auto_assign_idle_teams calls get_open_help_requests() and find_compatible_helpers() outside of the transaction, then tries to claim inside a BEGIN IMMEDIATE. Between the read and the claim, the idle team's status could have changed (e.g., another auto_assign call or manual offer_help could have already assigned the team). The method doesn't update the helper team's status in get_idle_teams cache, so the same idle team could be attempted for multiple requests.",
+      "reproduction": "Run auto_assign_idle_teams concurrently from two different coordinator instances. Both may try to assign the same idle team to different requests.",
+      "suggested_fix": "Track already-assigned teams within the loop iteration. After successfully assigning a team, add it to an exclusion set so it's not re-offered for subsequent requests in the same call.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-012",
+      "file": "storage/coordination/help_protocol.py",
+      "line_range": "L726-L731",
+      "severity": "medium",
+      "category": "error-handling",
+      "description": "In auto_assign_idle_teams, when BEGIN IMMEDIATE fails with OperationalError (line 730), the code does 'continue' to try the next helper. However, the _retry_on_busy decorator on the outer method will NOT help here because the exception is caught and swallowed inside the loop. If the database is persistently busy, the method silently skips all helpers without ever succeeding.",
+      "reproduction": "Lock the database (e.g., long-running transaction in another process) and call auto_assign_idle_teams. All assignment attempts silently fail.",
+      "suggested_fix": "Add retry logic around the BEGIN IMMEDIATE, or log a warning when it fails, or re-raise after exhausting retries.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-013",
+      "file": "storage/coordination/direct_channels.py",
+      "line_range": "L402-L423",
+      "severity": "high",
+      "category": "logic-error",
+      "description": "send_direct returns the result of _bus_publish directly, but _bus_publish can return None on I/O failure. The method signature and docstring say it 'Returns the message id' (a str), but callers may receive None without any exception. The type annotation is missing, making this easy to miss.",
+      "reproduction": "Call send_direct when the bus directory is unwritable. The method returns None instead of raising or returning a valid message ID.",
+      "suggested_fix": "Either raise an exception when _bus_publish returns None, or update the return type annotation to Optional[str] and document that None means the bus write failed.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-014",
+      "file": "storage/coordination/direct_channels.py",
+      "line_range": "L425-L436",
+      "severity": "low",
+      "category": "thread-safety",
+      "description": "read_direct reads and writes self._read_offsets (a dict) without holding self._lock. If read_direct is called concurrently from multiple threads for the same channel, there could be a race between reading the offset and writing it back, potentially causing duplicate message delivery or missed messages.",
+      "reproduction": "Call read_direct from two threads simultaneously for the same from_team. Both may read the same offset, process the same messages, and then both update the offset.",
+      "suggested_fix": "Wrap the entire read_direct body (offset read, bus_read, offset write) inside 'with self._lock:'.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-015",
+      "file": "storage/coordination/direct_channels.py",
+      "line_range": "L154-L199",
+      "severity": "medium",
+      "category": "logic-error",
+      "description": "_bus_read uses text mode (open with 'r') and splits on '\\n', but message offsets are tracked in bytes (since_offset is used with f.seek). This mismatch between text-mode reading and byte-offset tracking can cause incorrect offsets with multi-byte UTF-8 characters, because f.seek(since_offset) in text mode treats the offset as a character position on some platforms, while consumed_bytes counts actual byte lengths.",
+      "reproduction": "Send a message with multi-byte unicode characters (e.g., emoji or CJK characters). The offset calculation using len(line.encode('utf-8')) will differ from the text-mode seek position, causing messages to be re-read or skipped.",
+      "suggested_fix": "Open the file in binary mode ('rb') and decode lines individually, or open in text mode but track character offsets instead of byte offsets.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-016",
+      "file": "storage/coordination/direct_channels.py",
+      "line_range": "L154-L199",
+      "severity": "low",
+      "category": "logic-error",
+      "description": "_bus_read filters out expired messages (ts + ttl < now) but still advances the offset past them. This is correct behavior for offset tracking, but the empty-line handling at lines 175-179 has a subtle bug: for the very last empty line produced by split('\\n') on a string ending with '\\n', it does NOT add 1 for the separator (because i == len(lines)-1), but the actual file does end with '\\n'. This is fine because the '\\n' was already counted as part of the previous line's separator. However, if the file ends with multiple consecutive newlines, the empty lines between them are counted with +1 separators correctly only for non-last lines.",
+      "reproduction": "Write a bus file that ends with multiple trailing newlines. The offset calculation should still be correct, but edge cases with consecutive empty lines may cause off-by-one errors.",
+      "suggested_fix": "Simplify the offset tracking by using binary mode and tracking the raw byte position with f.tell() or cumulative line lengths.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-017",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line_range": "L106-L117",
+      "severity": "low",
+      "category": "logic-error",
+      "description": "_open_db converts busy_timeout_ms to seconds for sqlite3.connect(timeout=...) via division by 1000, but also sets PRAGMA busy_timeout which is in milliseconds. These are redundant but could conflict: sqlite3.connect(timeout=30) sets the Python-level timeout, while PRAGMA busy_timeout=30000 sets the SQLite-level timeout. The Python timeout is used for initial connection locking, while the PRAGMA controls per-statement waits. Having both is not harmful but is confusing.",
+      "reproduction": "Not a runtime bug per se, but the dual timeout configuration could lead to confusion when debugging timeout issues.",
+      "suggested_fix": "Document that both are intentional, or remove the sqlite3.connect(timeout=...) parameter and rely solely on PRAGMA busy_timeout.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-CORE-018",
+      "file": "storage/coordination/help_protocol.py",
+      "line_range": "L646-L690",
+      "severity": "low",
+      "category": "thread-safety",
+      "description": "find_compatible_helpers releases the lock after the initial SELECT, then calls self.get_idle_teams() which acquires the lock again. Between these two lock acquisitions, the help request could be modified or deleted, meaning the method operates on stale data for the required_capabilities.",
+      "reproduction": "Call find_compatible_helpers while another thread is modifying the help request. The capabilities read may not match the current state.",
+      "suggested_fix": "Read both the help request and idle teams within a single lock acquisition, or accept the eventual consistency and document it.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-019",
+      "file": "storage/coordination/help_protocol.py",
+      "line_range": "L338-L352",
+      "severity": "low",
+      "category": "missing-validation",
+      "description": "mark_work_available does not check the result of the UPDATE (affected rows). If the work_item_id doesn't exist or doesn't belong to self.team, the UPDATE silently does nothing. No error is raised.",
+      "reproduction": "Call hp.mark_work_available(99999) for a nonexistent work item. No error is raised.",
+      "suggested_fix": "Check cursor.rowcount after the UPDATE and raise ValueError if no rows were affected.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-020",
+      "file": "storage/coordination/help_protocol.py",
+      "line_range": "L354-L368",
+      "severity": "low",
+      "category": "missing-validation",
+      "description": "complete_work_item does not filter by team. Any HelpProtocol instance can complete any work item regardless of team ownership. This violates the expected ownership model.",
+      "reproduction": "Team A creates a work item. Team B calls hp_b.complete_work_item(work_item_id). The work item is marked completed even though Team B doesn't own it.",
+      "suggested_fix": "Add 'AND (team = ? OR assigned_to = ?)' to the WHERE clause to restrict completion to the owning or assigned team.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-021",
+      "file": "storage/coordination/direct_channels.py",
+      "line_range": "L486-L509",
+      "severity": "low",
+      "category": "api-contract-violation",
+      "description": "get_presence returns different types depending on the team parameter: a single dict when team is specified, or a list of dicts when team is None. The return type annotation 'dict | list[dict]' is correct but this polymorphic return makes the API error-prone. Callers must check the type of the return value.",
+      "reproduction": "Call dc.get_presence() and try to access result['status'] -- it will fail because the result is a list, not a dict.",
+      "suggested_fix": "Consider splitting into two methods: get_presence(team) -> dict and get_all_presence() -> list[dict], or keep the current API but document it clearly.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-CORE-022",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line_range": "L587-L641",
+      "severity": "medium",
+      "category": "race-condition",
+      "description": "broadcast_instruction selects active agents and inserts instructions within a single lock acquisition, but uses self._conn (no BEGIN IMMEDIATE). Between the SELECT and the INSERT loop, another process could change agent statuses (e.g., an agent completes). Also, the bus notification loop (lines 633-639) accesses 'rows' (the sqlite3.Row objects) after the lock is released. SQLite Row objects may be invalidated if the connection is used for other queries between the lock release and the notification loop.",
+      "reproduction": "Call broadcast_instruction while agents are completing in another process. The instruction may be sent to an agent that just completed.",
+      "suggested_fix": "Use BEGIN IMMEDIATE for the SELECT+INSERT block. Convert rows to plain dicts before releasing the lock.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-CORE-023",
+      "file": "storage/coordination/direct_channels.py",
+      "line_range": "L242-L247",
+      "severity": "low",
+      "category": "resource-leak",
+      "description": "DirectChannels.close() properly checks _closed before closing, but there is no __del__ method. If a DirectChannels instance is garbage collected without close() being called, the database connection remains open indefinitely.",
+      "reproduction": "Create a DirectChannels instance, discard all references to it without calling close(). The DB connection leaks until the process exits.",
+      "suggested_fix": "Add a __del__ method that calls close(), or rely on the context manager pattern and document that close() must be called.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-CORE-024",
+      "file": "storage/coordination/help_protocol.py",
+      "line_range": "L311-L336",
+      "severity": "low",
+      "category": "missing-validation",
+      "description": "add_work_item does not validate the priority parameter. Any string is accepted, including invalid values. The CASE expression in get_open_help_requests (lines 433-438) handles unknown priorities by assigning them sort order 4 (ELSE), but there is no constraint on what values can be stored.",
+      "reproduction": "Call hp.add_work_item('task', priority='banana'). No error is raised. The work item is stored with an invalid priority.",
+      "suggested_fix": "Add priority validation against a set of valid values: {'critical', 'high', 'medium', 'low'}.",
+      "test_gap": true
+    }
+  ],
+  "test_coverage_gaps": [
+    {
+      "file": "storage/coordination/tests/test_coordinator_hub.py",
+      "untested_scenario": "progress_pct boundary values (negative, > 100, NaN, infinity) are not tested"
+    },
+    {
+      "file": "storage/coordination/tests/test_coordinator_hub.py",
+      "untested_scenario": "No test for sending instructions to nonexistent agents"
+    },
+    {
+      "file": "storage/coordination/tests/test_coordinator_hub.py",
+      "untested_scenario": "No test for bus notifications -- all bus_dir parameters are left as None (default)"
+    },
+    {
+      "file": "storage/coordination/tests/test_coordinator_hub.py",
+      "untested_scenario": "No test for multi-process concurrent access (only threading tested)"
+    },
+    {
+      "file": "storage/coordination/tests/test_coordinator_hub.py",
+      "untested_scenario": "No test for duplicate agent IDs registered from different AgentReporter instances simultaneously"
+    },
+    {
+      "file": "storage/coordination/tests/test_coordinator_hub.py",
+      "untested_scenario": "No test for very long strings in agent_id, team, role, current_task, or error_message fields"
+    },
+    {
+      "file": "storage/coordination/tests/test_coordinator_hub.py",
+      "untested_scenario": "No test for unicode characters in any text fields"
+    },
+    {
+      "file": "storage/coordination/tests/test_coordinator_hub.py",
+      "untested_scenario": "No test for check_instructions race condition between SELECT and UPDATE in multi-process scenario"
+    },
+    {
+      "file": "storage/coordination/tests/test_coordinator_hub.py",
+      "untested_scenario": "get_summary does not have a test verifying avg_progress handles errored agents with non-zero progress"
+    },
+    {
+      "file": "storage/coordination/tests/test_help_protocol.py",
+      "untested_scenario": "No test for double-close safety of HelpProtocol (calling close() twice)"
+    },
+    {
+      "file": "storage/coordination/tests/test_help_protocol.py",
+      "untested_scenario": "No test for request_help with nonexistent work_item_id"
+    },
+    {
+      "file": "storage/coordination/tests/test_help_protocol.py",
+      "untested_scenario": "No test for fulfill_help on an open (not accepted) help request"
+    },
+    {
+      "file": "storage/coordination/tests/test_help_protocol.py",
+      "untested_scenario": "No test for fulfill_help on a nonexistent request_id"
+    },
+    {
+      "file": "storage/coordination/tests/test_help_protocol.py",
+      "untested_scenario": "No test for complete_work_item cross-team authorization (any team can complete any item)"
+    },
+    {
+      "file": "storage/coordination/tests/test_help_protocol.py",
+      "untested_scenario": "No test for mark_work_available with invalid work_item_id"
+    },
+    {
+      "file": "storage/coordination/tests/test_help_protocol.py",
+      "untested_scenario": "No test for add_work_item with invalid priority values"
+    },
+    {
+      "file": "storage/coordination/tests/test_help_protocol.py",
+      "untested_scenario": "No test for auto_assign_idle_teams preventing same team from being assigned to multiple requests"
+    },
+    {
+      "file": "storage/coordination/tests/test_help_protocol.py",
+      "untested_scenario": "No test for get_zombie_work_items or get_expired_help_requests"
+    },
+    {
+      "file": "storage/coordination/tests/test_direct_channels.py",
+      "untested_scenario": "No test for send_direct returning None when bus write fails"
+    },
+    {
+      "file": "storage/coordination/tests/test_direct_channels.py",
+      "untested_scenario": "No test for read_direct thread safety (concurrent reads on same channel)"
+    },
+    {
+      "file": "storage/coordination/tests/test_direct_channels.py",
+      "untested_scenario": "No test for _bus_read with multi-byte unicode characters (text vs byte offset mismatch)"
+    },
+    {
+      "file": "storage/coordination/tests/test_direct_channels.py",
+      "untested_scenario": "No test for expired message filtering in _bus_read (messages past TTL)"
+    },
+    {
+      "file": "storage/coordination/tests/test_direct_channels.py",
+      "untested_scenario": "No test for leave_channel on a nonexistent channel (silently succeeds)"
+    },
+    {
+      "file": "storage/coordination/tests/test_direct_channels.py",
+      "untested_scenario": "No test for channel name collision between topic channels and direct channels"
+    },
+    {
+      "file": "storage/coordination/tests/test_direct_channels.py",
+      "untested_scenario": "No test for get_presence with a team parameter (type dispatch behavior)"
+    }
+  ]
+}

@@ -358,12 +358,9 @@ class Coordinator:
         Keys: ``agent_id``, ``phase``, ``uptime``, ``agents``, ``started_at``.
         """
         uptime = time.time() - self._started_at if self._started_at else 0.0
-        # Fetch all known agents.
+        # Fetch all known agents via public API.
         try:
-            rows = self._state._conn.execute(
-                "SELECT agent_id, team, role, status, last_heartbeat FROM agents"
-            ).fetchall()
-            agents = [dict(r) for r in rows]
+            agents = self._state.get_all_agents()
         except Exception:
             agents = []
 
@@ -415,14 +412,12 @@ class CoordinatorWatchdog:
         is within the configured timeout window.
         """
         try:
-            row = self._state._conn.execute(
-                "SELECT last_heartbeat FROM agents WHERE role = 'coordinator' AND status = 'alive'"
-            ).fetchone()
+            last_hb = self._state.get_coordinator_heartbeat()
         except Exception:
             return False
-        if row is None:
+        if last_hb is None:
             return False
-        return (time.time() - row["last_heartbeat"]) < self._timeout
+        return (time.time() - last_hb) < self._timeout
 
     def wait_for_coordinator(self, timeout: float = 60.0) -> bool:
         """Block until a coordinator appears or *timeout* seconds elapse.

@@ -1,0 +1,311 @@
+{
+  "metadata": {
+    "author_agent": "feature-tt-2",
+    "team": "feature-think-tank",
+    "role": "control-analysis",
+    "date": "2026-03-11",
+    "summary": "Feature proposals for CONTROL (agent lifecycle/coordination management) and DATASTREAM (real-time monitoring/pipelines) enhancements to the Hub and Spoke monitoring system.",
+    "source_files_analyzed": [
+      "storage/coordination/coordinator_hub.py",
+      "storage/coordination/direct_channels.py",
+      "storage/coordination/help_protocol.py",
+      "storage/coordination/work_stealing.py",
+      "storage/coordination/teams/think-tank-hub/output/hub_spoke_analysis.json"
+    ]
+  },
+  "system_analysis": {
+    "current_capabilities": {
+      "coordinator_hub": {
+        "agent_registration": "Agents register with agent_id, team, role. Status tracked in SQLite agent_status table.",
+        "status_reporting": "Agents update status (initializing/working/blocked/complete/error), progress_pct, current_task, blockers.",
+        "stale_detection": "get_stale_agents(timeout_seconds=300) identifies agents whose last_updated exceeds threshold.",
+        "instruction_delivery": "Coordinator sends typed instructions (redirect, pause, priority_change) to specific agents or broadcasts to teams.",
+        "summary_dashboard": "get_summary() returns aggregate counts (total, active, blocked, complete, error, avg_progress)."
+      },
+      "direct_channels": {
+        "channel_types": "direct (team-to-team), topic, team, broadcast",
+        "presence_tracking": "Teams set presence (available/busy/helping/away) with channel membership.",
+        "progress_broadcasting": "Teams broadcast phase, progress_pct, items, bottleneck via progress table.",
+        "bottleneck_detection": "get_slowest_team() and get_teams_below_progress(threshold) for identifying laggards."
+      },
+      "help_protocol": {
+        "work_items": "Teams create work items with priority and required_capabilities.",
+        "help_flow": "request_help -> find_compatible_helpers -> offer_help (atomic) -> fulfill_help.",
+        "capability_matching": "team_capabilities table with proficiency scoring for matching helpers to requests.",
+        "idle_detection": "get_idle_teams() finds teams with idle/complete status for reassignment.",
+        "auto_assignment": "auto_assign_idle_teams() atomically matches idle teams to open help requests.",
+        "zombie_detection": "get_zombie_work_items() and get_expired_help_requests() for timeout-based cleanup."
+      },
+      "work_stealing": {
+        "shared_queue": "Teams enqueue work; idle teams atomically steal highest-priority unclaimed items via BEGIN IMMEDIATE.",
+        "pipelines": "Multi-stage pipelines with DAG dependency tracking (Kahn's cycle detection) and auto-triggering of downstream stages.",
+        "scratchpad": "Namespaced key-value store with TTL for sharing intermediate results across agents."
+      }
+    },
+    "identified_gaps": [
+      "No agent health monitoring beyond stale timestamp detection -- no heartbeat protocol, no auto-restart.",
+      "No load balancing -- agents self-report but coordinator has no mechanism to redistribute work based on load.",
+      "No dynamic scaling -- cannot spawn or retire agents in response to workload changes.",
+      "No capability discovery at the agent (not team) level -- help_protocol tracks team capabilities, not individual agent capabilities.",
+      "No dependency graph between tasks across agents -- pipeline_stages tracks within a pipeline but not cross-pipeline or cross-agent task dependencies.",
+      "No session state snapshots -- if coordinator crashes, it can read last status files but has no structured recovery mechanism.",
+      "No rate limiting or resource quotas -- agents can consume unlimited resources.",
+      "No real-time aggregation dashboard -- get_summary() is a point-in-time snapshot, not a streaming view.",
+      "No cross-agent data pipelines -- scratchpad is key-value, not a streaming data pipeline.",
+      "No filtered event streams -- bus is append-only JSONL with no topic filtering at read time.",
+      "No historical replay -- bus messages expire via TTL; no archive or replay capability.",
+      "No metrics collection or alerting -- no counters, histograms, or threshold-based alerts."
+    ]
+  },
+  "control_features": [
+    {
+      "id": "CTRL-001",
+      "name": "Agent Heartbeat Protocol",
+      "description": "A structured heartbeat mechanism where agents send periodic lightweight heartbeat signals (distinct from full status updates) at a configurable interval (default 15s). The coordinator monitors heartbeats and transitions agents to a 'suspected_dead' state after missing N consecutive heartbeats. Currently, stale detection relies on last_updated from full status updates, which agents may delay for 30+ seconds. A dedicated heartbeat decouples liveness detection from progress reporting.",
+      "use_case": "Coordinator launches 8 agents. Agent 5 crashes silently after 2 minutes. Without heartbeats, the coordinator only detects this when the 300-second stale timeout fires. With heartbeats at 15s intervals and a 3-miss threshold, the coordinator knows within 45 seconds that agent 5 is dead.",
+      "complexity": "low",
+      "priority": "critical",
+      "dependencies": [],
+      "implementation_sketch": {
+        "schema_addition": "ALTER TABLE agent_status ADD COLUMN last_heartbeat REAL; CREATE TABLE heartbeat_config (agent_id TEXT PRIMARY KEY, interval_seconds REAL DEFAULT 15, miss_threshold INTEGER DEFAULT 3);",
+        "agent_side": "AgentReporter gains a heartbeat() method that does a lightweight UPDATE agent_status SET last_heartbeat = time.time() WHERE agent_id = ?. No lock contention with full status updates because it touches a different column.",
+        "coordinator_side": "CoordinatorDashboard gains get_dead_agents(heartbeat_interval, miss_threshold) that returns agents where time.time() - last_heartbeat > interval * miss_threshold.",
+        "bus_integration": "Heartbeats optionally publish to a 'heartbeat' bus channel for external monitoring tools.",
+        "estimated_lines": 60
+      }
+    },
+    {
+      "id": "CTRL-002",
+      "name": "Agent Auto-Restart with Escalation",
+      "description": "When a dead or errored agent is detected (via CTRL-001 heartbeat or error status), the coordinator can issue an auto-restart instruction. The restart follows an escalation policy: first attempt a soft restart (send 'restart' instruction and wait for acknowledgment), then a hard restart (mark agent as dead, spawn a replacement with the same role/task), and finally escalate to the coordinator for manual intervention after N failed restarts. Tracks restart history to prevent infinite restart loops.",
+      "use_case": "Agent processing a large analysis crashes due to a transient SQLite lock timeout. Auto-restart spawns a replacement agent that picks up the same task. The original agent's partial output files remain on disk for the replacement to resume from.",
+      "complexity": "medium",
+      "priority": "high",
+      "dependencies": ["CTRL-001"],
+      "implementation_sketch": {
+        "schema_addition": "CREATE TABLE restart_history (id INTEGER PRIMARY KEY, agent_id TEXT, restart_type TEXT, reason TEXT, previous_progress REAL, new_agent_id TEXT, created_at REAL); ALTER TABLE agent_status ADD COLUMN restart_count INTEGER DEFAULT 0, max_restarts INTEGER DEFAULT 3;",
+        "coordinator_side": "CoordinatorDashboard gains restart_agent(agent_id, reason) which: (1) reads agent's last known state, (2) marks old agent as 'restarting', (3) creates a new agent_status entry with a derived agent_id (e.g., 'original-id-r1'), (4) sends instruction to new agent with the old agent's task context and partial output files, (5) logs restart in restart_history.",
+        "escalation_policy": "RestartPolicy class with configurable max_restarts (default 3), cooldown_seconds (default 60), escalation_callback (function called when max restarts exceeded).",
+        "state_recovery": "New agent reads the old agent's output_files and scratchpad entries to resume from the last checkpoint rather than starting from scratch.",
+        "estimated_lines": 150
+      }
+    },
+    {
+      "id": "CTRL-003",
+      "name": "Load-Aware Work Distribution",
+      "description": "Extends the coordinator with a load scoring system that considers each agent's current progress rate (progress_pct delta over time), queue depth (from work_stealing), and reported bottlenecks. When new work arrives (via work_stealing.enqueue_work or help_protocol.request_help), the coordinator can route it to the least-loaded agent rather than relying on self-service steal semantics. This is complementary to work stealing: work stealing is pull-based (idle agents grab work), while this is push-based (coordinator assigns work to underloaded agents).",
+      "use_case": "Three agents are working. Agent A is at 90% progress, Agent B at 30% with a bottleneck, Agent C at 50% with no bottleneck. New work arrives. Instead of waiting for an agent to become idle and steal it, the coordinator proactively assigns it to Agent A (about to finish) or Agent C (healthy progress, no bottleneck).",
+      "complexity": "medium",
+      "priority": "high",
+      "dependencies": [],
+      "implementation_sketch": {
+        "load_score_calculation": "load_score(agent) = (100 - progress_pct) * (1 + has_blocker * 0.5) * (1 + queue_depth * 0.1). Lower score = less loaded = better candidate. Factor in progress velocity: agents progressing faster are better candidates for additional work.",
+        "schema_addition": "CREATE TABLE load_snapshots (agent_id TEXT, progress_pct REAL, timestamp REAL). Insert on every status update. Calculate velocity as (current_progress - prev_progress) / time_delta.",
+        "coordinator_method": "CoordinatorDashboard.assign_work(work_item, strategy='least_loaded'|'fastest'|'round_robin') evaluates load scores and sends an instruction to the selected agent.",
+        "integration_with_work_stealing": "When get_stealable_work() returns items and get_active_agents() shows some agents are underloaded, coordinator proactively pushes work rather than waiting for steal.",
+        "estimated_lines": 120
+      }
+    },
+    {
+      "id": "CTRL-004",
+      "name": "Dynamic Agent Scaling",
+      "description": "A scaling controller that monitors aggregate workload metrics (queue depth, average progress rate, blocked agent count) and recommends or enacts scaling decisions: spawn additional agents when queue depth exceeds threshold, retire idle agents when queue is empty, or split a large task across newly spawned agents. The scaling controller does NOT directly spawn processes (that is the coordinator's job via bash) but produces scaling recommendations as coordinator_instructions entries.",
+      "use_case": "A think-tank session starts with 3 agents. The coordinator pushes 20 work items to the queue. The scaling controller detects queue_depth/active_agents > 5 and recommends spawning 2 more agents. Once all work is done and 2 agents are idle with an empty queue, it recommends retiring them.",
+      "complexity": "high",
+      "priority": "medium",
+      "dependencies": ["CTRL-003"],
+      "implementation_sketch": {
+        "schema_addition": "CREATE TABLE scaling_events (id INTEGER PRIMARY KEY, event_type TEXT, reason TEXT, recommended_count INTEGER, current_count INTEGER, enacted BOOLEAN DEFAULT FALSE, created_at REAL);",
+        "scaling_rules": "ScalingPolicy class with: scale_up_threshold (queue_depth_per_agent > 3), scale_down_threshold (idle_agents > 1 AND queue_depth == 0), min_agents (1), max_agents (10), cooldown_seconds (120 between scaling events).",
+        "coordinator_integration": "CoordinatorDashboard.check_scaling() evaluates rules and inserts scaling_events. Coordinator reads these and decides whether to enact them (spawn/retire agents via bash).",
+        "agent_retirement": "Soft retirement: send 'retire' instruction, agent finishes current task and shuts down. Hard retirement: send 'abort' instruction, agent stops immediately.",
+        "estimated_lines": 180
+      }
+    },
+    {
+      "id": "CTRL-005",
+      "name": "Agent Capability Registry and Task Matching",
+      "description": "Extends the hub's agent_status with a capabilities field (list of strings) at the individual agent level (not just team level as in help_protocol). Provides a matching engine that pairs incoming tasks with agents based on declared capabilities, proficiency levels, and current availability. This enables the coordinator to make intelligent routing decisions without manual task assignment.",
+      "use_case": "Agent A declares capabilities ['python', 'testing', 'sqlite']. Agent B declares ['research', 'analysis', 'documentation']. A new task arrives requiring 'testing' and 'sqlite'. The matching engine routes it to Agent A. Currently, help_protocol does this at the team level, but within a team of multiple agents, there is no capability-based routing.",
+      "complexity": "medium",
+      "priority": "medium",
+      "dependencies": [],
+      "implementation_sketch": {
+        "schema_addition": "CREATE TABLE agent_capabilities (agent_id TEXT NOT NULL, capability TEXT NOT NULL, proficiency TEXT DEFAULT 'standard', PRIMARY KEY (agent_id, capability)); CREATE TABLE task_requirements (task_id TEXT NOT NULL, capability TEXT NOT NULL, importance TEXT DEFAULT 'required');",
+        "agent_side": "AgentReporter gains register_capabilities(capabilities: list[str]) that inserts into agent_capabilities.",
+        "matching_engine": "match_agents_to_task(task_requirements) returns a ranked list of agents. Scoring: +2 for each 'required' capability match, +1 for 'preferred', -5 for missing 'required'. Filtered by agent status (only 'working' or 'initializing' agents considered). Ties broken by current load score (CTRL-003).",
+        "integration": "Coordinator calls match_agents_to_task() before send_instruction() to pick the best target.",
+        "estimated_lines": 100
+      }
+    },
+    {
+      "id": "CTRL-006",
+      "name": "Cross-Agent Task Dependency Graph",
+      "description": "A DAG (directed acyclic graph) tracker that models dependencies between tasks assigned to different agents. Unlike work_stealing's PipelineManager (which tracks stages within a single pipeline), this tracks inter-agent dependencies: 'Agent A's output file X is needed by Agent B's task Y'. The coordinator uses this graph to (1) avoid launching dependent tasks before prerequisites are met, (2) detect dependency cycles, and (3) identify the critical path for time estimation.",
+      "use_case": "Think-tank Agent 1 produces a design doc. Coding Agent 3 needs that design doc before implementing feature X, but can start feature Y independently. The dependency graph encodes: Agent3.featureX depends_on Agent1.design_doc. Agent3.featureY has no dependencies. The coordinator launches Agent 3 immediately for featureY and sends a 'start featureX' instruction only after Agent 1 completes its design doc.",
+      "complexity": "high",
+      "priority": "high",
+      "dependencies": [],
+      "implementation_sketch": {
+        "schema_addition": "CREATE TABLE task_dependencies (id INTEGER PRIMARY KEY, task_id TEXT NOT NULL, agent_id TEXT NOT NULL, depends_on_task TEXT NOT NULL, depends_on_agent TEXT NOT NULL, status TEXT DEFAULT 'pending', satisfied_at REAL); CREATE INDEX idx_task_deps ON task_dependencies(depends_on_agent, depends_on_task);",
+        "dependency_resolution": "When an agent completes a task (report_complete or status -> complete), scan task_dependencies for rows where depends_on_agent = agent_id. Mark matching rows as 'satisfied'. If all dependencies for a downstream task are satisfied, send 'unblocked' instruction to the downstream agent.",
+        "cycle_detection": "Reuse PipelineManager._detect_cycles (Kahn's algorithm) on the cross-agent dependency graph before registering new dependencies.",
+        "critical_path": "Compute longest path through the DAG using topological sort + dynamic programming. Report estimated completion time as sum of remaining work on the critical path.",
+        "visualization": "get_dependency_graph() returns adjacency list representation suitable for rendering (DOT format or JSON).",
+        "estimated_lines": 200
+      }
+    },
+    {
+      "id": "CTRL-007",
+      "name": "Session State Snapshots and Recovery",
+      "description": "Periodic snapshots of the entire coordinator state (all agent statuses, pending instructions, work queue, pipeline states, scratchpad contents) written as a single JSON file. On coordinator restart, the snapshot is loaded to reconstruct the last known state. This addresses DIS-002 from the hub_spoke_analysis (coordinator as single point of failure) by enabling recovery.",
+      "use_case": "Coordinator session crashes after 10 minutes of coordinating 6 agents. On restart, it loads the latest snapshot and sees: 3 agents complete, 2 working (now stale), 1 blocked. It can resume coordination: restart stale agents, address the blocked agent's needs, and collect completed outputs.",
+      "complexity": "medium",
+      "priority": "high",
+      "dependencies": [],
+      "implementation_sketch": {
+        "snapshot_format": "JSON file at storage/coordination/hub/snapshots/snapshot_{timestamp}.json containing: {agents: {...}, instructions: [...], work_queue: [...], pipelines: [...], scratchpad: {...}, metadata: {snapshot_time, coordinator_id, session_id}}.",
+        "snapshot_trigger": "CoordinatorDashboard.take_snapshot() called by coordinator every N poll cycles (default: every 5 cycles = ~60 seconds). Also triggered on significant state changes (agent error, all agents complete).",
+        "recovery": "CoordinatorDashboard.recover_from_snapshot(path) loads the snapshot, identifies stale/dead agents (via heartbeat), and returns a RecoveryPlan with actions: agents_to_restart, agents_completed, instructions_pending, work_items_orphaned.",
+        "rotation": "Keep last 10 snapshots, delete older ones. Configurable via max_snapshots parameter.",
+        "estimated_lines": 150
+      }
+    },
+    {
+      "id": "CTRL-008",
+      "name": "Resource Quotas and Rate Limiting",
+      "description": "Per-agent and per-team resource quotas that limit: (1) maximum concurrent work items claimed, (2) maximum status update frequency (to prevent bus flooding), (3) maximum scratchpad storage per namespace, (4) maximum instruction queue depth. The coordinator enforces quotas by rejecting operations that exceed limits and sending 'quota_exceeded' instructions to offending agents.",
+      "use_case": "A runaway agent enters a tight loop that writes status updates 100 times per second, flooding the SQLite database and the bus. Rate limiting caps updates to 1 per 5 seconds. Another agent claims 50 work items from the queue without completing any, starving other agents. The concurrent claims quota (default: 3) prevents this.",
+      "complexity": "medium",
+      "priority": "medium",
+      "dependencies": [],
+      "implementation_sketch": {
+        "schema_addition": "CREATE TABLE resource_quotas (entity_id TEXT PRIMARY KEY, entity_type TEXT NOT NULL, max_concurrent_claims INTEGER DEFAULT 3, max_updates_per_minute INTEGER DEFAULT 12, max_scratchpad_bytes INTEGER DEFAULT 1048576, max_instruction_queue INTEGER DEFAULT 10);",
+        "enforcement_agent_side": "AgentReporter.update_status() checks a local timestamp and skips the DB write if the last update was within min_interval (default 5s). This is client-side rate limiting -- cooperative but lightweight.",
+        "enforcement_coordinator_side": "CoordinatorDashboard.check_quotas() scans for agents exceeding their quotas (e.g., claimed_count > max_concurrent_claims) and sends 'quota_exceeded' instructions.",
+        "work_stealing_integration": "WorkStealing.steal_work() checks the caller's current claimed-but-not-completed count against their quota before allowing a new claim.",
+        "estimated_lines": 130
+      }
+    }
+  ],
+  "datastream_features": [
+    {
+      "id": "DATA-001",
+      "name": "Real-Time Progress Aggregation Dashboard",
+      "description": "A structured dashboard output that aggregates progress data from all coordination systems (coordinator_hub's agent_status, direct_channels' progress table, help_protocol's team_status) into a single unified view. Includes per-agent progress, team-level rollups, estimated time remaining, and highlighted anomalies (stale agents, blocked agents, stalled progress). Output as JSON suitable for rendering by the coordinator or external tools.",
+      "use_case": "Coordinator polls the dashboard every 15 seconds and gets a single JSON object with: overall progress (weighted average), per-team breakdown, per-agent breakdown, anomalies list, and ETA. No need to query three separate databases and manually correlate.",
+      "complexity": "medium",
+      "priority": "critical",
+      "dependencies": [],
+      "implementation_sketch": {
+        "unified_reader": "AggregatedDashboard class that takes db_path for each subsystem (coordinator_hub, direct_channels, help_protocol) and provides get_unified_view() -> dict.",
+        "output_format": "{overall: {total_agents, active, blocked, complete, error, avg_progress, eta_seconds}, teams: [{team, agents_count, avg_progress, slowest_agent, bottleneck}], agents: [{agent_id, team, status, progress, task, blockers, last_updated_age_seconds}], anomalies: [{type, agent_id, description, severity}], snapshot_time}.",
+        "anomaly_detection": "Flag agents where: progress has not changed in >120s (stalled), status is 'blocked' for >60s (stuck blocker), progress_pct regressed (possible reset/restart), update frequency dropped below expected heartbeat rate.",
+        "eta_calculation": "For each agent: eta = (100 - progress_pct) / progress_velocity. Overall ETA = max(agent ETAs) since the session completes when the last agent finishes.",
+        "estimated_lines": 180
+      }
+    },
+    {
+      "id": "DATA-002",
+      "name": "Cross-Agent Data Pipelines",
+      "description": "A streaming data pipeline layer on top of the scratchpad that enables producer-consumer patterns between agents. Unlike the scratchpad (point-in-time key-value reads), a data pipeline allows an agent to subscribe to a key prefix and receive all values written to it in order. Implemented via a sequence-numbered append log in SQLite, with consumer cursors tracking each reader's position.",
+      "use_case": "Think-tank Agent 1 produces partial findings as it works (finding-001, finding-002, etc.). Coding Agent 3 subscribes to think-tank-1/findings/* and processes each finding as it arrives, without polling for specific keys. This enables the 'incremental output' pattern recommended in the hub_spoke_analysis (PREV-002).",
+      "complexity": "high",
+      "priority": "high",
+      "dependencies": [],
+      "implementation_sketch": {
+        "schema_addition": "CREATE TABLE data_streams (id INTEGER PRIMARY KEY AUTOINCREMENT, stream_name TEXT NOT NULL, sequence_num INTEGER NOT NULL, producer_agent TEXT NOT NULL, data TEXT NOT NULL, created_at REAL NOT NULL); CREATE TABLE stream_cursors (consumer_agent TEXT NOT NULL, stream_name TEXT NOT NULL, last_sequence INTEGER DEFAULT 0, PRIMARY KEY (consumer_agent, stream_name)); CREATE INDEX idx_streams ON data_streams(stream_name, sequence_num);",
+        "producer_api": "DataPipeline.publish(stream_name, data) appends a row with auto-incrementing sequence_num.",
+        "consumer_api": "DataPipeline.consume(stream_name) reads all rows with sequence_num > cursor, advances cursor, returns list of data items in order. Non-destructive: multiple consumers can read the same stream independently.",
+        "backpressure": "Optional max_unconsumed parameter. If the slowest consumer is more than max_unconsumed items behind the producer, publish() blocks (raises BackpressureError) to prevent unbounded growth.",
+        "cleanup": "DataPipeline.compact(stream_name) deletes rows below the minimum cursor of all consumers, reclaiming space.",
+        "estimated_lines": 200
+      }
+    },
+    {
+      "id": "DATA-003",
+      "name": "Filtered Event Streams",
+      "description": "A topic-based event filtering layer over the JSONL bus. Currently, all events go to a single 'global' channel or specific direct channels. This feature adds topic tags to bus messages and provides efficient filtered reads: 'give me all events with topic=progress from team=think-tank in the last 5 minutes'. Implemented as a SQLite index over bus messages rather than modifying the JSONL format.",
+      "use_case": "The coordinator wants to see only 'help-request' events to decide on resource reallocation. Currently it must read the entire global bus and filter client-side. With filtered streams, it calls read_events(topic='help-request', since=5_minutes_ago) and gets exactly the relevant events.",
+      "complexity": "medium",
+      "priority": "medium",
+      "dependencies": [],
+      "implementation_sketch": {
+        "schema_addition": "CREATE TABLE event_index (id INTEGER PRIMARY KEY AUTOINCREMENT, message_id TEXT UNIQUE NOT NULL, channel TEXT NOT NULL, topic TEXT NOT NULL, team TEXT, agent_id TEXT, timestamp REAL NOT NULL, bus_offset INTEGER NOT NULL); CREATE INDEX idx_event_topic ON event_index(topic, timestamp); CREATE INDEX idx_event_team ON event_index(team, timestamp);",
+        "indexer": "EventIndexer class that reads JSONL bus files (using _bus_read from direct_channels) and indexes messages by topic (extracted from body.event field), team, and timestamp. Runs as part of coordinator's poll cycle.",
+        "query_api": "EventIndexer.query(topic=None, team=None, agent_id=None, since_timestamp=None, limit=100) -> list[dict]. Returns matching events from the index, with the full message body retrieved from the bus file via stored offset.",
+        "topic_extraction": "Default: use body['event'] field as topic. Custom: allow registering topic extractors for specific message types.",
+        "estimated_lines": 140
+      }
+    },
+    {
+      "id": "DATA-004",
+      "name": "Historical Data Replay for Debugging",
+      "description": "An archival and replay system that preserves all bus messages, status changes, and instructions beyond their TTL. Provides a replay API: 'show me everything that happened between T1 and T2, optionally filtered by agent/team/topic'. This is essential for post-mortem debugging of coordination failures, but is explicitly NOT part of the hot path -- it archives to a separate SQLite database to avoid bloating the coordination DB.",
+      "use_case": "A session completed with unexpected results. The coordinator replays the event history and discovers that Agent 3 received a 'redirect' instruction at T+5min that contradicted Agent 3's current task, causing it to restart and lose 4 minutes of work. This would be invisible without replay because the bus messages have expired.",
+      "complexity": "high",
+      "priority": "medium",
+      "dependencies": ["DATA-003"],
+      "implementation_sketch": {
+        "archive_db": "Separate SQLite database at storage/coordination/hub/archive.db. Schema mirrors event_index plus full message body storage.",
+        "archiver": "EventArchiver class that periodically (every 60s) reads new bus messages and agent_status changes and appends them to the archive DB. Runs alongside the coordinator's poll cycle.",
+        "replay_api": "EventArchiver.replay(start_time, end_time, agent_id=None, team=None, topic=None, include_status_changes=True) -> list[dict]. Returns a chronologically ordered list of all events and status transitions in the window.",
+        "status_change_tracking": "On every agent_status update, capture a delta (what changed) and store it in a status_history table in the archive DB. This provides a full audit trail of every agent's state transitions.",
+        "retention_policy": "Configurable retention_days (default: 7). Archiver deletes records older than retention on each run.",
+        "estimated_lines": 200
+      }
+    },
+    {
+      "id": "DATA-005",
+      "name": "Metrics Collection and Alerting",
+      "description": "A lightweight metrics system that collects counters, gauges, and histograms from all coordination subsystems. Provides threshold-based alerting: 'if avg_progress has not increased in 5 minutes, emit an alert'. Metrics are stored in SQLite with time-bucketed aggregation (1-minute buckets) to enable trend analysis without unbounded storage growth.",
+      "use_case": "Coordinator monitors a 'blocked_agent_count' gauge. When it exceeds 2 for more than 3 consecutive poll cycles, an alert fires and the coordinator receives an 'alert' entry in its dashboard output. This enables proactive intervention rather than manual checking.",
+      "complexity": "medium",
+      "priority": "high",
+      "dependencies": ["DATA-001"],
+      "implementation_sketch": {
+        "schema_addition": "CREATE TABLE metrics (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, metric_type TEXT NOT NULL, value REAL NOT NULL, labels TEXT, bucket_start REAL NOT NULL, bucket_duration INTEGER DEFAULT 60); CREATE TABLE alert_rules (id INTEGER PRIMARY KEY, name TEXT NOT NULL, metric_name TEXT NOT NULL, condition TEXT NOT NULL, threshold REAL NOT NULL, duration_seconds INTEGER DEFAULT 180, status TEXT DEFAULT 'active'); CREATE TABLE alert_events (id INTEGER PRIMARY KEY AUTOINCREMENT, rule_id INTEGER REFERENCES alert_rules(id), triggered_at REAL NOT NULL, resolved_at REAL, current_value REAL);",
+        "built_in_metrics": [
+          "active_agent_count (gauge)",
+          "blocked_agent_count (gauge)",
+          "avg_progress_pct (gauge)",
+          "status_updates_per_minute (counter)",
+          "work_queue_depth (gauge)",
+          "help_requests_open (gauge)",
+          "instruction_delivery_latency_seconds (histogram: time from send to read_at)",
+          "agent_restart_count (counter)",
+          "scratchpad_entries_count (gauge)",
+          "bus_messages_per_minute (counter)"
+        ],
+        "alert_evaluation": "MetricsCollector.evaluate_alerts() checks each alert_rule. For condition='gt', fires if metric > threshold for duration_seconds consecutive. For 'lt', fires if metric < threshold. Creates alert_events entries.",
+        "coordinator_integration": "AggregatedDashboard (DATA-001) includes an 'alerts' section with currently firing alerts.",
+        "estimated_lines": 200
+      }
+    }
+  ],
+  "feature_dependency_graph": {
+    "description": "Shows dependencies between proposed features. Arrows indicate 'depends on' relationships.",
+    "edges": [
+      {"from": "CTRL-002", "to": "CTRL-001", "reason": "Auto-restart requires heartbeat-based death detection"},
+      {"from": "CTRL-004", "to": "CTRL-003", "reason": "Scaling decisions require load scoring to determine when to scale"},
+      {"from": "DATA-004", "to": "DATA-003", "reason": "Historical replay builds on event index infrastructure"},
+      {"from": "DATA-005", "to": "DATA-001", "reason": "Alerting feeds into the aggregated dashboard"}
+    ],
+    "independent_features": ["CTRL-003", "CTRL-005", "CTRL-006", "CTRL-007", "CTRL-008", "DATA-001", "DATA-002", "DATA-003"],
+    "implementation_order_recommendation": [
+      {"phase": 1, "features": ["CTRL-001", "CTRL-005", "CTRL-007", "DATA-001"], "rationale": "Foundation: heartbeats, capabilities, snapshots, and unified dashboard. All independent, can be built in parallel."},
+      {"phase": 2, "features": ["CTRL-002", "CTRL-003", "CTRL-006", "DATA-002", "DATA-003", "DATA-005"], "rationale": "Core control features (auto-restart, load balancing, dependencies) and data features (pipelines, event filtering, metrics). Some depend on phase 1."},
+      {"phase": 3, "features": ["CTRL-004", "CTRL-008", "DATA-004"], "rationale": "Advanced features (dynamic scaling, quotas, replay) that build on phase 2 infrastructure."}
+    ]
+  },
+  "cross_references": {
+    "complements_agent_1": "Agent 1 (feature-tt-1) should be proposing COMMUNICATION and PROTOCOL features. The DATASTREAM features here (DATA-001 through DATA-005) are designed to be complementary: Agent 1's protocol features define HOW data flows between agents, while these DATASTREAM features define WHAT data is collected, aggregated, and analyzed. For example, if Agent 1 proposes a 'structured message envelope' protocol, DATA-003 (Filtered Event Streams) would index those envelopes by topic for efficient querying.",
+    "builds_on_hub_spoke_analysis": "Several features directly address gaps identified in hub_spoke_analysis.json: CTRL-001 addresses stale detection limitations (ADV-007), CTRL-006 addresses the sequential-vs-parallel problem (SEQ-002, SEQ-005, SEQ-006), CTRL-007 addresses DIS-002 (coordinator single point of failure), DATA-002 implements PREV-002 (incremental output from think tanks).",
+    "extends_existing_code": {
+      "coordinator_hub.py": "CTRL-001, CTRL-002, CTRL-007, CTRL-008 extend AgentReporter and CoordinatorDashboard directly.",
+      "work_stealing.py": "CTRL-003, CTRL-008 integrate with WorkStealing queue; CTRL-006 extends PipelineManager's dependency model cross-agent.",
+      "help_protocol.py": "CTRL-005 extends team_capabilities to agent-level; CTRL-003 integrates with auto_assign_idle_teams.",
+      "direct_channels.py": "DATA-003, DATA-004 build on _bus_read/_bus_publish infrastructure."
+    }
+  }
+}

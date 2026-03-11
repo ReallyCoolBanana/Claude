@@ -157,12 +157,15 @@ def _bus_read(bus_dir: str, channel: str, since_offset: int = 0):
     Only advances the offset past complete lines that parse as valid JSON.
     If the file ends with a partial (incomplete) line, the offset is left
     before that line so it can be re-read once the write completes.
+
+    Uses binary mode ('rb') for consistent byte-offset tracking regardless
+    of unicode content.
     """
     safe = _safe_channel(channel)
     filepath = os.path.join(bus_dir, f"{safe}.jsonl")
     if not os.path.exists(filepath):
         return [], 0
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, "rb") as f:
         f.seek(since_offset)
         data = f.read()
     if not data:
@@ -170,31 +173,34 @@ def _bus_read(bus_dir: str, channel: str, since_offset: int = 0):
     msgs = []
     now = time.time()
     consumed_bytes = 0
-    lines = data.split("\n")
-    for i, line in enumerate(lines):
-        if not line.strip():
-            # Account for the newline separator (empty lines between records)
-            consumed_bytes += len(line.encode("utf-8"))
-            if i < len(lines) - 1:
-                consumed_bytes += 1  # the \n separator
+    lines = data.split(b"\n")
+    for i, raw_line in enumerate(lines):
+        line_len = len(raw_line)
+        sep_len = 1 if i < len(lines) - 1 else 0  # account for \n between splits
+        if not raw_line.strip():
+            consumed_bytes += line_len + sep_len
             continue
         try:
-            m = json.loads(line)
+            line_str = raw_line.decode("utf-8")
+        except UnicodeDecodeError:
+            # Corrupt data; skip if it's a complete line
+            if i == len(lines) - 1 and not data.endswith(b"\n"):
+                break
+            consumed_bytes += line_len + sep_len
+            continue
+        try:
+            m = json.loads(line_str)
         except json.JSONDecodeError:
             # If this is the last chunk and doesn't end with \n, it's a partial
-            # line — don't advance past it.
-            if i == len(lines) - 1 and not data.endswith("\n"):
+            # line -- don't advance past it.
+            if i == len(lines) - 1 and not data.endswith(b"\n"):
                 break
             # Otherwise it's a corrupt complete line; skip over it.
-            consumed_bytes += len(line.encode("utf-8"))
-            if i < len(lines) - 1:
-                consumed_bytes += 1
+            consumed_bytes += line_len + sep_len
             continue
         if m.get("ts", 0) + m.get("ttl", 300) > now:
             msgs.append(m)
-        consumed_bytes += len(line.encode("utf-8"))
-        if i < len(lines) - 1:
-            consumed_bytes += 1  # the \n separator
+        consumed_bytes += line_len + sep_len
     new_offset = since_offset + consumed_bytes
     return msgs, new_offset
 
@@ -245,6 +251,13 @@ class DirectChannels:
             if not self._closed:
                 self._closed = True
                 self._conn.close()
+
+    def __del__(self) -> None:
+        """Ensure the database connection is closed on garbage collection."""
+        try:
+            self.close()
+        except Exception:
+            pass
 
     # ------------------------------------------------------------------
     # Channel management
@@ -399,11 +412,11 @@ class DirectChannels:
     # Direct messaging
     # ------------------------------------------------------------------
 
-    def send_direct(self, target_team: str, msg_type: str, body: dict) -> str:
+    def send_direct(self, target_team: str, msg_type: str, body: dict) -> Optional[str]:
         """Send a message on the direct channel to *target_team*.
 
         Creates the direct channel if it does not yet exist.
-        Returns the message id.
+        Returns the message id, or None if the bus publish failed.
         """
         self._check_closed()
         channel_name = _direct_channel_name(self.team, target_team)
@@ -418,9 +431,14 @@ class DirectChannels:
         if msg_type not in VALID_MSG_TYPES:
             raise ValueError(f"Invalid message type {msg_type!r}")
 
-        return _bus_publish(
+        msg_id = _bus_publish(
             self.bus_dir, channel_name, self.agent_id, self.team, msg_type, body,
         )
+        if msg_id is None:
+            logger.warning(
+                "send_direct to %s failed: bus publish returned None", target_team,
+            )
+        return msg_id
 
     def read_direct(self, from_team: str) -> list[dict]:
         """Read new messages from the direct channel with *from_team*.
@@ -428,10 +446,11 @@ class DirectChannels:
         Returns messages since the last read (tracked internally and persisted).
         """
         self._check_closed()
-        channel_name = _direct_channel_name(self.team, from_team)
-        offset = self._read_offsets.get(channel_name, 0)
-        msgs, new_offset = _bus_read(self.bus_dir, channel_name, offset)
-        self._read_offsets[channel_name] = new_offset
+        with self._lock:
+            channel_name = _direct_channel_name(self.team, from_team)
+            offset = self._read_offsets.get(channel_name, 0)
+            msgs, new_offset = _bus_read(self.bus_dir, channel_name, offset)
+            self._read_offsets[channel_name] = new_offset
         self._save_read_offset(channel_name, new_offset)
         return msgs
 

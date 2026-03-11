@@ -12,9 +12,11 @@ Stdlib only (no external dependencies).
 
 from __future__ import annotations
 
+import functools
 import json
 import logging
 import os
+import re
 import sqlite3
 import threading
 import time
@@ -77,6 +79,7 @@ CREATE INDEX IF NOT EXISTS idx_coordinator_instructions_target_status
 
 def _retry_on_busy(func):
     """Decorator: retry a method on sqlite3.OperationalError (SQLITE_BUSY)."""
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         delay = _RETRY_BACKOFF
         last_err = None
@@ -104,7 +107,14 @@ def _retry_on_busy(func):
 
 
 def _open_db(db_path: str, busy_timeout_ms: int = 30000) -> sqlite3.Connection:
-    """Open a WAL-mode SQLite connection and ensure schema exists."""
+    """Open a WAL-mode SQLite connection and ensure schema exists.
+
+    Note: Both ``sqlite3.connect(timeout=...)`` and ``PRAGMA busy_timeout``
+    are set intentionally.  The connect *timeout* governs Python-level
+    retry/sleep behaviour inside the sqlite3 module, while the PRAGMA
+    controls SQLite's internal busy handler.  Keeping both aligned ensures
+    consistent behaviour regardless of which layer handles contention first.
+    """
     os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
     conn = sqlite3.connect(
         db_path, timeout=busy_timeout_ms / 1000, check_same_thread=False,
@@ -143,7 +153,7 @@ def _bus_notify(bus_dir: Optional[str], channel: str, agent_id: str,
             "body": body,
         }
         raw = json.dumps(msg, separators=(",", ":")).encode("utf-8") + b"\n"
-        safe_ch = channel.replace("/", "_").replace("..", "_")
+        safe_ch = re.sub(r'[^a-zA-Z0-9_-]', '_', channel)
         filepath = os.path.join(bus_dir, f"{safe_ch}.jsonl")
         fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
         try:
@@ -262,19 +272,33 @@ class AgentReporter:
                 f"Invalid status {status!r}. Must be one of: "
                 f"{', '.join(sorted(VALID_AGENT_STATUSES))}"
             )
+        if not (0 <= progress_pct <= 100):
+            raise ValueError(
+                f"progress_pct must be between 0 and 100, got {progress_pct}"
+            )
         now = time.time()
         with self._lock:
             self._conn.execute(
-                """INSERT OR REPLACE INTO agent_status
+                """INSERT INTO agent_status
                    (agent_id, team, role, status, progress_pct, current_task,
                     blockers, findings_count, output_files, error_message,
                     started_at, last_updated)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL,
-                           COALESCE((SELECT started_at FROM agent_status WHERE agent_id = ?), ?),
-                           ?)""",
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
+                   ON CONFLICT(agent_id) DO UPDATE SET
+                       team = excluded.team,
+                       role = excluded.role,
+                       status = excluded.status,
+                       progress_pct = excluded.progress_pct,
+                       current_task = excluded.current_task,
+                       blockers = excluded.blockers,
+                       findings_count = excluded.findings_count,
+                       output_files = excluded.output_files,
+                       error_message = NULL,
+                       last_updated = excluded.last_updated
+                """,
                 (self.agent_id, self.team, self.role, status, progress_pct,
                  current_task, blockers, findings_count, output_files,
-                 self.agent_id, now, now),
+                 now, now),
             )
             self._conn.commit()
 
@@ -299,7 +323,8 @@ class AgentReporter:
         with self._lock:
             self._conn.execute(
                 """UPDATE agent_status
-                   SET status = 'error', error_message = ?, last_updated = ?
+                   SET status = 'error', error_message = ?, progress_pct = 0,
+                       last_updated = ?
                    WHERE agent_id = ?""",
                 (error_message, now, self.agent_id),
             )
@@ -354,25 +379,30 @@ class AgentReporter:
         self._check_closed()
         now = time.time()
         with self._lock:
-            rows = self._conn.execute(
-                """SELECT * FROM coordinator_instructions
-                   WHERE target_agent = ? AND status = 'pending'
-                   ORDER BY created_at ASC""",
-                (self.agent_id,),
-            ).fetchall()
+            self._conn.execute("BEGIN IMMEDIATE")
+            try:
+                rows = self._conn.execute(
+                    """SELECT * FROM coordinator_instructions
+                       WHERE target_agent = ? AND status = 'pending'
+                       ORDER BY created_at ASC""",
+                    (self.agent_id,),
+                ).fetchall()
 
-            instructions = [dict(r) for r in rows]
+                instructions = [dict(r) for r in rows]
 
-            if instructions:
-                ids = [inst["id"] for inst in instructions]
-                placeholders = ",".join("?" for _ in ids)
-                self._conn.execute(
-                    f"""UPDATE coordinator_instructions
-                        SET status = 'read', read_at = ?
-                        WHERE id IN ({placeholders})""",
-                    [now] + ids,
-                )
-                self._conn.commit()
+                if instructions:
+                    ids = [inst["id"] for inst in instructions]
+                    placeholders = ",".join("?" for _ in ids)
+                    self._conn.execute(
+                        f"""UPDATE coordinator_instructions
+                            SET status = 'read', read_at = ?
+                            WHERE id IN ({placeholders})""",
+                        [now] + ids,
+                    )
+                self._conn.execute("COMMIT")
+            except Exception:
+                self._conn.execute("ROLLBACK")
+                raise
 
         return instructions
 
@@ -517,7 +547,8 @@ class CoordinatorDashboard:
 
     @_retry_on_busy
     def send_instruction(self, target_agent: str, instruction_type: str,
-                         payload: Optional[str] = None) -> int:
+                         payload: Optional[str] = None,
+                         verify_exists: bool = False) -> int:
         """Post an instruction for an agent to pick up.
 
         Parameters
@@ -528,6 +559,9 @@ class CoordinatorDashboard:
             Type of instruction (e.g., 'redirect', 'pause', 'priority_change').
         payload:
             Optional JSON string with instruction details.
+        verify_exists:
+            If True, raise ValueError when *target_agent* is not registered
+            in the agent_status table.
 
         Returns
         -------
@@ -537,6 +571,15 @@ class CoordinatorDashboard:
         self._check_closed()
         now = time.time()
         with self._lock:
+            if verify_exists:
+                row = self._conn.execute(
+                    "SELECT 1 FROM agent_status WHERE agent_id = ?",
+                    (target_agent,),
+                ).fetchone()
+                if row is None:
+                    raise ValueError(
+                        f"Target agent {target_agent!r} not found in agent_status"
+                    )
             cur = self._conn.execute(
                 """INSERT INTO coordinator_instructions
                    (target_agent, instruction_type, payload, status, created_at)
@@ -606,34 +649,43 @@ class CoordinatorDashboard:
         self._check_closed()
         now = time.time()
         with self._lock:
-            if team is not None:
-                rows = self._conn.execute(
-                    """SELECT agent_id FROM agent_status
-                       WHERE status NOT IN ('complete', 'error')
-                         AND team = ?""",
-                    (team,),
-                ).fetchall()
-            else:
-                rows = self._conn.execute(
-                    """SELECT agent_id FROM agent_status
-                       WHERE status NOT IN ('complete', 'error')""",
-                ).fetchall()
+            self._conn.execute("BEGIN IMMEDIATE")
+            try:
+                if team is not None:
+                    rows = self._conn.execute(
+                        """SELECT agent_id FROM agent_status
+                           WHERE status NOT IN ('complete', 'error')
+                             AND team = ?""",
+                        (team,),
+                    ).fetchall()
+                else:
+                    rows = self._conn.execute(
+                        """SELECT agent_id FROM agent_status
+                           WHERE status NOT IN ('complete', 'error')""",
+                    ).fetchall()
 
-            instruction_ids: list[int] = []
-            for row in rows:
-                cur = self._conn.execute(
-                    """INSERT INTO coordinator_instructions
-                       (target_agent, instruction_type, payload, status, created_at)
-                       VALUES (?, ?, ?, 'pending', ?)""",
-                    (row["agent_id"], instruction_type, payload, now),
-                )
-                instruction_ids.append(cur.lastrowid)
-            self._conn.commit()
+                # Convert Row objects to plain dicts before any further
+                # statements can invalidate them.
+                agent_ids = [row["agent_id"] for row in rows]
 
-        for agent_row, inst_id in zip(rows, instruction_ids):
+                instruction_ids: list[int] = []
+                for aid in agent_ids:
+                    cur = self._conn.execute(
+                        """INSERT INTO coordinator_instructions
+                           (target_agent, instruction_type, payload, status, created_at)
+                           VALUES (?, ?, ?, 'pending', ?)""",
+                        (aid, instruction_type, payload, now),
+                    )
+                    instruction_ids.append(cur.lastrowid)
+                self._conn.execute("COMMIT")
+            except Exception:
+                self._conn.execute("ROLLBACK")
+                raise
+
+        for aid, inst_id in zip(agent_ids, instruction_ids):
             _bus_notify(self.bus_dir, "global", "coordinator", "coordinator", {
                 "event": "instruction-sent",
-                "target_agent": agent_row["agent_id"],
+                "target_agent": aid,
                 "instruction_type": instruction_type,
                 "instruction_id": inst_id,
             })
