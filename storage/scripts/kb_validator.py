@@ -44,18 +44,32 @@ def parse_yaml_frontmatter(filepath):
     except Exception as e:
         return metadata, [f"Cannot read file: {e}"]
 
-    # Check for frontmatter delimiters
+    # Check for frontmatter delimiters.
+    # Use a more robust approach: find the first line that is exactly '---',
+    # then find the next '---' line.  This avoids false splits on '---'
+    # that appear inside YAML values.
     if not content.startswith("---"):
         return metadata, ["No YAML frontmatter found (missing opening ---)"]
 
-    parts = content.split("---", 2)
-    if len(parts) < 3:
+    lines_all = content.split("\n")
+    # First line is '---'; find the closing '---'.
+    closing_idx = None
+    for idx, ln in enumerate(lines_all[1:], start=1):
+        if ln.strip() == "---":
+            closing_idx = idx
+            break
+
+    if closing_idx is None:
         return metadata, ["Malformed YAML frontmatter (missing closing ---)"]
 
-    yaml_text = parts[1].strip()
+    yaml_text = "\n".join(lines_all[1:closing_idx]).strip()
     if not yaml_text:
         return metadata, ["Empty YAML frontmatter"]
 
+    # Parse YAML key: value pairs.
+    # Limitation: multi-line values (block scalars with | or >) are NOT
+    # supported by this simple parser.  Such values will be parsed only
+    # up to the first line.  Use a proper YAML library for full support.
     for line in yaml_text.split("\n"):
         line = line.strip()
         if not line or line.startswith("#"):

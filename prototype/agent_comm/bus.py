@@ -38,10 +38,21 @@ class Message:
         """Serialize to a single JSON line (bytes, newline-terminated)."""
         return json.dumps(asdict(self), separators=(",", ":")).encode("utf-8") + b"\n"
 
+    # Known fields for filtering extra keys in from_json_line.
+    _KNOWN_FIELDS = frozenset({
+        "id", "type", "channel", "team", "agent_id", "ts", "ttl", "body", "in_reply_to",
+    })
+
     @classmethod
     def from_json_line(cls, line: str) -> "Message":
+        """Deserialize from a single JSON line.
+
+        Extra fields not part of the Message schema are silently ignored
+        so that forward-compatible producers do not break older readers.
+        """
         d = json.loads(line)
-        return cls(**d)
+        filtered = {k: v for k, v in d.items() if k in cls._KNOWN_FIELDS}
+        return cls(**filtered)
 
 
 class BusWriter:
@@ -166,12 +177,34 @@ class BusReader:
 
 
 def repair_bus_file(filepath: str) -> int:
-    """Remove corrupt (non-JSON) lines from a bus file. Returns count of lines removed."""
+    """Remove corrupt (non-JSON) lines from a bus file. Returns count of lines removed.
+
+    Uses rename-then-repair to avoid a TOCTOU race where a concurrent
+    writer appends between our read and our replacement write.  The
+    original file is renamed to a temporary name first; writers will
+    create a fresh file while we repair the snapshot.
+    """
     if not os.path.exists(filepath):
         return 0
 
-    with open(filepath, "r", encoding="utf-8") as f:
-        raw_lines = f.readlines()
+    # Rename the file so concurrent writers create a new one instead of
+    # appending to the file we are about to read/repair.
+    tmp_read = filepath + f".repair-src.{os.getpid()}"
+    try:
+        os.rename(filepath, tmp_read)
+    except FileNotFoundError:
+        return 0
+
+    try:
+        with open(tmp_read, "r", encoding="utf-8") as f:
+            raw_lines = f.readlines()
+    except OSError:
+        # Put the file back if we can't read the snapshot.
+        try:
+            os.rename(tmp_read, filepath)
+        except OSError:
+            pass
+        return 0
 
     good_lines: list[str] = []
     removed = 0
@@ -190,12 +223,32 @@ def repair_bus_file(filepath: str) -> int:
         except json.JSONDecodeError:
             removed += 1
 
+    # Write repaired content to a temp file, then atomically replace.
+    tmp_write = filepath + ".repair.tmp"
+    with open(tmp_write, "w", encoding="utf-8") as f:
+        f.writelines(good_lines)
+
+    # If a new file was created by a writer in the meantime, prepend our
+    # repaired lines to it.  Otherwise just rename.
+    if os.path.exists(filepath):
+        # A writer created a new file; append new data to our repaired copy.
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                new_data = f.read()
+            with open(tmp_write, "a", encoding="utf-8") as f:
+                f.write(new_data)
+        except OSError:
+            pass
+
+    os.replace(tmp_write, filepath)
+
+    # Clean up the snapshot.
+    try:
+        os.unlink(tmp_read)
+    except OSError:
+        pass
+
     if removed > 0:
-        # Write repaired content atomically via temp file + rename
-        tmp = filepath + ".repair.tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            f.writelines(good_lines)
-        os.replace(tmp, filepath)
         logger.info("Repaired %s: removed %d corrupt lines", filepath, removed)
 
     return removed

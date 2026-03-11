@@ -1,0 +1,212 @@
+{
+  "id": "SOP-020",
+  "version": "1.0",
+  "created": "2026-03-11",
+  "team": "doc-team-4",
+  "title": "Systematic Bug Fix Workflow",
+  "purpose": "Standard procedure for receiving bug reports, prioritizing them, making targeted fixes, verifying with tests, and documenting outcomes. Ensures bugs are fixed safely with minimal regression risk.",
+  "sections": {
+    "reading_bug_reports": {
+      "title": "Reading and Understanding Bug Reports",
+      "overview": "Before fixing anything, fully understand the bug and its context.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Read the complete bug report including reproduction steps, expected vs actual behavior, and environment details",
+          "where_to_find": "Bug reports may be in team session logs (teams/), knowledge base entries, bus messages (storage/coordination/bus/), or direct user reports"
+        },
+        {
+          "step": 2,
+          "action": "Reproduce the bug to confirm it exists and understand its behavior",
+          "command_example": "Run the failing test or execute the reproduction steps from the bug report",
+          "if_cannot_reproduce": "Document the attempted reproduction steps and request more information. Do not guess at a fix."
+        },
+        {
+          "step": 3,
+          "action": "Identify the root cause by reading the relevant source code",
+          "technique": "Start from the error message or symptom, trace backwards through the call stack to find where behavior diverges from expectation"
+        },
+        {
+          "step": 4,
+          "action": "Document your understanding: what the bug is, what causes it, and what files are affected",
+          "output": "Write a brief root cause analysis before making any code changes"
+        }
+      ]
+    },
+    "prioritization": {
+      "title": "Prioritizing by Severity",
+      "overview": "Fix the most impactful bugs first. Use this severity classification.",
+      "severity_levels": {
+        "critical": {
+          "definition": "System crashes, data loss, security vulnerabilities, or complete feature failure",
+          "response": "Fix immediately. Drop other work. This is a P0.",
+          "examples": [
+            "SQLite database corruption on concurrent writes",
+            "Agent crash that loses all progress",
+            "Bus file corruption that blocks all communication"
+          ]
+        },
+        "high": {
+          "definition": "Major feature degradation, significant performance issues, or blocking other teams",
+          "response": "Fix within current session. High priority in the work queue.",
+          "examples": [
+            "Help protocol fails to detect idle agents",
+            "Work stealing queue loses items under load",
+            "Dashboard shows stale data"
+          ]
+        },
+        "medium": {
+          "definition": "Minor feature issues, non-blocking workarounds exist, or cosmetic problems with functional impact",
+          "response": "Fix after critical and high bugs. Can be queued for next session if current session is full.",
+          "examples": [
+            "Heartbeat interval slightly off",
+            "Log messages have wrong severity level",
+            "Error messages are unclear but functionality works"
+          ]
+        },
+        "low": {
+          "definition": "Cosmetic issues, minor inconveniences, or nice-to-have improvements",
+          "response": "Fix when convenient. Log for future sessions.",
+          "examples": [
+            "Formatting inconsistencies in output",
+            "Unused imports",
+            "Documentation typos"
+          ]
+        }
+      },
+      "prioritization_rules": [
+        "Fix all critical bugs before starting on high",
+        "Fix all high bugs before starting on medium",
+        "If multiple bugs at the same severity, fix the one blocking the most teams first",
+        "If no blocking impact difference, fix the simplest one first to build momentum"
+      ]
+    },
+    "making_fixes": {
+      "title": "Making Minimal Targeted Fixes",
+      "overview": "Every fix should be the smallest possible change that resolves the bug without introducing new issues.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Plan the fix before writing code",
+          "checklist": [
+            "What exact change resolves the root cause?",
+            "What is the minimal set of files to modify?",
+            "Could this change break anything else?",
+            "Is there a simpler approach?"
+          ]
+        },
+        {
+          "step": 2,
+          "action": "Make the fix in the minimal number of lines possible",
+          "rules": [
+            "Change only what is necessary to fix the bug",
+            "Do not refactor surrounding code in the same fix",
+            "Do not add unrelated improvements",
+            "Preserve existing code style and conventions"
+          ]
+        },
+        {
+          "step": 3,
+          "action": "Add a comment explaining the fix if the change is non-obvious",
+          "example": "# Fix: Use BEGIN IMMEDIATE to prevent SQLite lock contention (SOP-021)"
+        },
+        {
+          "step": 4,
+          "action": "If the fix requires changes to multiple files, make all changes before testing",
+          "rationale": "Partial fixes can create intermediate states that are harder to debug than the original bug"
+        }
+      ]
+    },
+    "testing": {
+      "title": "Running Tests",
+      "overview": "Every fix must be verified with tests before being considered complete.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Write a test that reproduces the bug (if one does not already exist)",
+          "command": "Add test to storage/coordination/tests/ or the appropriate test directory",
+          "rule": "The test must FAIL without the fix and PASS with the fix"
+        },
+        {
+          "step": 2,
+          "action": "Run the specific test to verify the fix works",
+          "command": "pytest storage/coordination/tests/test_<module>.py -v -k <test_name>"
+        },
+        {
+          "step": 3,
+          "action": "Run the full test suite to check for regressions",
+          "command": "pytest storage/coordination/tests/ -v --tb=short"
+        },
+        {
+          "step": 4,
+          "action": "If stress tests exist for the affected module, run those too",
+          "command": "pytest storage/coordination/stress-tests/ -v --tb=short -x",
+          "rationale": "Concurrency bugs often only appear under load"
+        },
+        {
+          "step": 5,
+          "action": "If any test fails, investigate whether it is related to your fix or a pre-existing issue",
+          "if_related": "Revise your fix. Do not merge a fix that breaks other tests.",
+          "if_pre_existing": "Document the pre-existing failure and proceed with your fix."
+        }
+      ]
+    },
+    "documenting_fixes": {
+      "title": "Documenting Fixes",
+      "overview": "Every fix must be documented for future teams to understand what changed and why.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Write a fix summary in your team output",
+          "format": {
+            "bug_id": "Reference to the original bug report",
+            "severity": "critical|high|medium|low",
+            "root_cause": "One-sentence description of what caused the bug",
+            "fix_description": "One-sentence description of what was changed",
+            "files_modified": ["list", "of", "files"],
+            "tests_added": ["list", "of", "new", "tests"],
+            "tests_passing": "X/Y tests pass after fix"
+          }
+        },
+        {
+          "step": 2,
+          "action": "If the fix reveals a pattern that could cause similar bugs elsewhere, create a knowledge base entry",
+          "template": "knowledge-base/TEMPLATE.md"
+        },
+        {
+          "step": 3,
+          "action": "Update the bug report status to resolved",
+          "fields_to_update": [
+            "status: resolved",
+            "fixed_by: <team-id>",
+            "fix_date: <YYYY-MM-DD>",
+            "fix_summary: <brief description>"
+          ]
+        }
+      ]
+    }
+  },
+  "checklists": {
+    "per_bug": [
+      "Read and understand the full bug report",
+      "Reproduce the bug",
+      "Identify root cause",
+      "Classify severity (critical/high/medium/low)",
+      "Plan minimal fix",
+      "Implement fix with minimal changes",
+      "Write regression test that fails without fix",
+      "Run specific test to verify fix",
+      "Run full test suite to check for regressions",
+      "Document fix summary",
+      "Update bug report status"
+    ],
+    "session_complete": [
+      "All critical bugs fixed",
+      "All high bugs fixed or documented with workarounds",
+      "Full test suite passes",
+      "Fix summaries written for every resolved bug",
+      "Knowledge base updated if fix reveals reusable patterns",
+      "Bug report statuses updated"
+    ]
+  }
+}

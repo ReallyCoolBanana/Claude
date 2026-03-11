@@ -118,12 +118,17 @@ class CommDir:
     # -- internal checks ----------------------------------------------------
 
     def _check_no_tmp(self) -> None:
-        """Reject paths under ``/tmp`` (EN-4: systemd-tmpfiles cleanup)."""
-        if self._path.startswith("/tmp"):
-            raise CommDirError(
-                f"Communication directory must not reside under /tmp "
-                f"(systemd-tmpfiles may purge it): {self._path}"
-            )
+        """Reject paths under ``/tmp`` (EN-4: systemd-tmpfiles cleanup).
+
+        Checks both the canonical path and the originally-requested path
+        so that symlinks pointing into /tmp are also caught.
+        """
+        for p in (self._path, self._requested):
+            if p.startswith("/tmp"):
+                raise CommDirError(
+                    f"Communication directory must not reside under /tmp "
+                    f"(systemd-tmpfiles may purge it): {p}"
+                )
 
     def _check_canonical_match(self) -> None:
         """Verify canonical path matches requested path (SB-1/SB-2)."""

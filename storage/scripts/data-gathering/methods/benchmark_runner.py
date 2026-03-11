@@ -424,8 +424,6 @@ if __name__ == "__main__":
                         help="Optional output file path")
     parser.add_argument("--sequential", action="store_true", default=False,
                         help="Run methods sequentially instead of in parallel")
-    parser.add_argument("--parallel", action="store_true", default=True,
-                        help="Run methods in parallel (default)")
 
     args = parser.parse_args()
     use_parallel = not args.sequential

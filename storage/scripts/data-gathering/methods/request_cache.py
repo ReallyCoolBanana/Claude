@@ -14,8 +14,8 @@ Usage:
     from request_cache import cached_request, clear_cache
 
     body = cached_request("https://example.com/api", ttl=3600)
-    clear_cache()          # purge expired entries
-    clear_cache(all=True)  # purge everything
+    clear_cache()                # purge expired entries
+    clear_cache(purge_all=True)  # purge everything
 """
 
 import base64
@@ -101,18 +101,19 @@ def cached_request(
     path = _cache_path(key)
 
     # --- cache hit? ---
-    if os.path.exists(path):
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            entry = json.load(fh)
+        if time.time() - entry.get("timestamp", 0) < ttl:
+            return base64.b64decode(entry["data"])
+    except FileNotFoundError:
+        pass  # No cached entry — proceed to network fetch
+    except (json.JSONDecodeError, KeyError, OSError):
+        # Corrupt cache file — delete and refetch
         try:
-            with open(path, "r", encoding="utf-8") as fh:
-                entry = json.load(fh)
-            if time.time() - entry.get("timestamp", 0) < ttl:
-                return base64.b64decode(entry["data"])
-        except (json.JSONDecodeError, KeyError, OSError):
-            # Corrupt cache file — delete and refetch
-            try:
-                os.remove(path)
-            except OSError:
-                pass
+            os.remove(path)
+        except OSError:
+            pass
 
     # --- cache miss: fetch from network ---
     req = urllib.request.Request(url, headers=headers or {})
@@ -134,12 +135,12 @@ def cached_request(
     return data
 
 
-def clear_cache(all: bool = False) -> int:
+def clear_cache(purge_all: bool = False) -> int:
     """Remove cache entries.
 
     Parameters
     ----------
-    all : bool
+    purge_all : bool
         If True, remove every entry. If False (default), only remove entries
         whose TTL has expired (using DEFAULT_TTL as the threshold).
 
@@ -155,7 +156,7 @@ def clear_cache(all: bool = False) -> int:
         if not fname.endswith(".json"):
             continue
         fpath = os.path.join(_CACHE_DIR, fname)
-        if all:
+        if purge_all:
             try:
                 os.remove(fpath)
                 removed += 1

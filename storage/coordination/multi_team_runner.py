@@ -57,18 +57,30 @@ _TEAMS_DIR = os.path.join(_SCRIPT_DIR, "teams")
 _LOG_FILE = os.path.join(_SCRIPT_DIR, "runner.log")
 
 # ---------------------------------------------------------------------------
-# Logging
+# Logging — configured lazily via _setup_logging() so that importing this
+# module as a library does not trigger basicConfig at import time
+# (BUG-INFRA-010 / NEW-COORD-006).
 # ---------------------------------------------------------------------------
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stderr),
-        logging.FileHandler(_LOG_FILE, mode="a"),
-    ],
-)
 log = logging.getLogger("multi_team_runner")
+
+_logging_configured = False
+
+
+def _setup_logging() -> None:
+    """Configure logging once, guarded by a module-level flag."""
+    global _logging_configured
+    if _logging_configured:
+        return
+    _logging_configured = True
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        handlers=[
+            logging.StreamHandler(sys.stderr),
+            logging.FileHandler(_LOG_FILE, mode="a"),
+        ],
+    )
 
 # ---------------------------------------------------------------------------
 # Valid message types (matches bus.py)
@@ -192,6 +204,10 @@ def _bus_write(channel: str, agent_id: str, team: str, msg_type: str,
 # Database helpers
 # ---------------------------------------------------------------------------
 
+# NOTE (NEW-COORD-004): The shared connection and its lock are encapsulated
+# behind _get_connection() / _close_connection().  The module-level variables
+# are an implementation detail; external code should only call those two
+# functions.
 _shared_conn: sqlite3.Connection | None = None
 _shared_conn_lock = threading.Lock()
 
@@ -202,6 +218,9 @@ def _get_connection(busy_timeout_ms: int = 30000) -> sqlite3.Connection:
     The connection is shared across all helper functions to avoid the
     overhead of opening and closing a new connection on every call.
     WAL mode and busy_timeout are configured once on creation.
+
+    Callers must not cache the returned connection object; always call
+    this function to ensure the connection is still valid.
     """
     global _shared_conn
     with _shared_conn_lock:
@@ -609,6 +628,11 @@ class MultiTeamRunner:
 # Signal handling
 # ---------------------------------------------------------------------------
 
+# NOTE (NEW-COORD-005): Only one MultiTeamRunner instance per process is
+# supported.  This global is set in main() and read by the signal handler
+# so that SIGINT/SIGTERM can trigger a clean shutdown.  Do not create
+# multiple runners in the same process — the signal handler will only
+# reference the most recently assigned instance.
 _runner_instance: MultiTeamRunner | None = None
 
 
@@ -679,6 +703,7 @@ def _request_shutdown() -> None:
 def main() -> None:
     """CLI entry point."""
     global _runner_instance
+    _setup_logging()
 
     parser = argparse.ArgumentParser(
         description="Multi-team runner for Proto A coordination",
@@ -705,8 +730,15 @@ def main() -> None:
         help="Number of agents per team (when not using --config)",
     )
     parser.add_argument(
-        "--foreground", action="store_true",
-        help="Run in foreground (block until shutdown signal)",
+        "--foreground", action="store_true", default=True,
+        help="Run in foreground (block until shutdown signal).  This is the "
+             "default; pass --no-foreground to detach (requires an external "
+             "process manager to keep the process alive).",
+    )
+    parser.add_argument(
+        "--no-foreground", action="store_false", dest="foreground",
+        help="Run in non-foreground mode.  The caller must keep the process "
+             "alive (e.g. by importing this module as a library).",
     )
 
     args = parser.parse_args()

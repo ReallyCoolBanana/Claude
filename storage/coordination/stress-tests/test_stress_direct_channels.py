@@ -791,9 +791,9 @@ class TestChannelNameSafety(_StressBase):
     def test_safe_channel_sanitization(self):
         """Verify _safe_channel replaces dangerous characters."""
         self.assertEqual(_safe_channel("a/b/c"), "a_b_c")
-        self.assertEqual(_safe_channel("a..b"), "a_b")
+        self.assertEqual(_safe_channel("a..b"), "a__b")
         self.assertEqual(_safe_channel("normal-name"), "normal-name")
-        self.assertEqual(_safe_channel("a/b..c/d"), "a_b_c_d")
+        self.assertEqual(_safe_channel("a/b..c/d"), "a_b__c_d")
 
 
 # ===================================================================

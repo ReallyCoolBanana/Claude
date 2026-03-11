@@ -1,0 +1,166 @@
+{
+  "id": "SOP-017",
+  "version": "1.0",
+  "created": "2026-03-11",
+  "team": "doc-team-4",
+  "title": "Data Gathering Operations",
+  "purpose": "Standard procedure for selecting, configuring, and running data-gathering methods. Covers method selection, rate limiting, caching, error handling, and result grading to ensure consistent, high-quality data collection across all teams.",
+  "sections": {
+    "method_selection": {
+      "title": "Method Selection",
+      "overview": "Choose the right data-gathering method based on your quality and speed requirements.",
+      "methods": {
+        "hybrid": {
+          "description": "Combines multiple data sources for highest quality results. Recommended for production research and market analysis.",
+          "when_to_use": [
+            "Quality is more important than speed",
+            "Research findings will drive investment decisions",
+            "Multiple data sources need cross-validation"
+          ],
+          "command": "python storage/scripts/research_methods/hybrid_method.py --query \"<topic>\""
+        },
+        "openalex": {
+          "description": "Fast academic/publication search via OpenAlex API. Best for speed when academic sources suffice.",
+          "when_to_use": [
+            "Speed is the priority",
+            "Academic or scientific data is the target",
+            "Initial broad surveys before deep dives"
+          ],
+          "command": "python storage/scripts/research_methods/openalex_method.py --query \"<topic>\""
+        }
+      },
+      "decision_rule": "Default to hybrid for quality. Use openalex only when speed is critical or academic sources are specifically needed."
+    },
+    "rate_limiting": {
+      "title": "Rate Limiting",
+      "overview": "All data gathering must respect rate limits to avoid IP blocks and API bans.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Check the API's documented rate limits before starting any batch operation",
+          "example": "OpenAlex: 100 requests/second for polite pool (with email in User-Agent)"
+        },
+        {
+          "step": 2,
+          "action": "Configure request delays between calls",
+          "example": "Set minimum 100ms between requests for APIs without documented limits"
+        },
+        {
+          "step": 3,
+          "action": "Use exponential backoff on 429 (Too Many Requests) responses",
+          "example": "Wait 1s, then 2s, then 4s, up to 60s max. Retry up to 5 times before failing."
+        },
+        {
+          "step": 4,
+          "action": "Log all rate limit events for post-operation review",
+          "example": "print(f'Rate limited at {datetime.now()}, waiting {delay}s')"
+        }
+      ]
+    },
+    "caching": {
+      "title": "Caching with request_cache.py",
+      "overview": "Use the request cache to avoid redundant API calls and speed up repeat queries.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Import and initialize the request cache before making API calls",
+          "example": "from storage.scripts.request_cache import RequestCache; cache = RequestCache()"
+        },
+        {
+          "step": 2,
+          "action": "Check cache before making any external request",
+          "example": "cached = cache.get(url); if cached: return cached"
+        },
+        {
+          "step": 3,
+          "action": "Store successful responses in cache with appropriate TTL",
+          "example": "cache.set(url, response_data, ttl=3600)  # 1 hour TTL for volatile data"
+        },
+        {
+          "step": 4,
+          "action": "Use longer TTLs for stable data, shorter for volatile data",
+          "guidelines": {
+            "academic_publications": "TTL 86400 (24 hours) - data changes infrequently",
+            "market_data": "TTL 3600 (1 hour) - prices change frequently",
+            "static_reference": "TTL 604800 (7 days) - reference material rarely changes"
+          }
+        }
+      ]
+    },
+    "error_handling": {
+      "title": "Error Handling",
+      "overview": "Handle errors gracefully to avoid losing partial results and to enable recovery.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Wrap all external API calls in try/except blocks",
+          "handle": {
+            "ConnectionError": "Retry with exponential backoff up to 3 times",
+            "TimeoutError": "Retry once with doubled timeout, then skip and log",
+            "HTTPError 4xx": "Log the error, do not retry (client-side issue)",
+            "HTTPError 5xx": "Retry with exponential backoff up to 3 times"
+          }
+        },
+        {
+          "step": 2,
+          "action": "Save partial results after every batch of 10 queries",
+          "example": "Write intermediate results to a temp file: storage/coordination/teams/<team>/output/partial_results.json"
+        },
+        {
+          "step": 3,
+          "action": "On complete failure, write an error report with what succeeded and what failed",
+          "example": "{'completed': 47, 'failed': 3, 'errors': [{'query': '...', 'error': '...'}]}"
+        },
+        {
+          "step": 4,
+          "action": "Never let one failed query abort the entire operation. Use continue-on-error pattern."
+        }
+      ]
+    },
+    "result_grading": {
+      "title": "Result Grading with grade_research.py",
+      "overview": "Grade all gathered results for quality and relevance before using them in analysis.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Run the grading script on completed research output",
+          "command": "python storage/scripts/grade_research.py --input <results_file> --output <graded_file>"
+        },
+        {
+          "step": 2,
+          "action": "Review the grade distribution. Expect: A (top 10%), B (next 30%), C (next 40%), D/F (bottom 20%)",
+          "threshold": "Only use A and B graded results for decision-making. C results are supplementary only."
+        },
+        {
+          "step": 3,
+          "action": "If more than 50% of results grade C or below, re-run with different search terms or a different method"
+        },
+        {
+          "step": 4,
+          "action": "Include grade summary in team output file for downstream consumers"
+        }
+      ]
+    }
+  },
+  "checklists": {
+    "pre_gathering": [
+      "Select method (hybrid for quality, openalex for speed)",
+      "Verify API keys and access are configured",
+      "Initialize request cache",
+      "Set rate limit parameters",
+      "Create output directory for results"
+    ],
+    "during_gathering": [
+      "Monitor for rate limit responses (429s)",
+      "Save partial results every 10 queries",
+      "Check cache hit rate (should be >0% for repeat topics)",
+      "Log any errors with full context"
+    ],
+    "post_gathering": [
+      "Run grade_research.py on results",
+      "Verify grade distribution meets quality threshold",
+      "Write final results to team output directory",
+      "Report metrics: total queries, cache hits, errors, grade distribution"
+    ]
+  }
+}

@@ -296,89 +296,117 @@ if __name__ == "__main__":
                 i += 2
             else:
                 i += 1
-        hp = _get_help_protocol(team, agent)
-        # Create a work item first, then request help
-        wid = hp.add_work_item(desc, description=desc, priority=priority, required_caps=caps)
-        rid = hp.request_help(wid, desc)
-        hp.close()
-        print(json.dumps({"request_id": rid, "work_item_id": wid}))
+        try:
+            hp = _get_help_protocol(team, agent)
+            # Create a work item first, then request help
+            wid = hp.add_work_item(desc, description=desc, priority=priority, required_caps=caps)
+            rid = hp.request_help(wid, desc)
+            hp.close()
+            print(json.dumps({"request_id": rid, "work_item_id": wid}))
+        except Exception as e:
+            print(f"Error: help-request failed: {e}", file=sys.stderr)
+            sys.exit(1)
 
     elif cmd == "help-offer":
         if len(sys.argv) < 5:
             print("Usage: bus_cli.py help-offer <team> <agent> <request_id>")
             sys.exit(1)
-        team, agent, request_id = sys.argv[2], sys.argv[3], int(sys.argv[4])
-        hp = _get_help_protocol(team, agent)
-        won = hp.offer_help(request_id)
-        hp.close()
-        print(json.dumps({"accepted": won, "request_id": request_id}))
+        try:
+            team, agent, request_id = sys.argv[2], sys.argv[3], int(sys.argv[4])
+            hp = _get_help_protocol(team, agent)
+            won = hp.offer_help(request_id)
+            hp.close()
+            print(json.dumps({"accepted": won, "request_id": request_id}))
+        except Exception as e:
+            print(f"Error: help-offer failed: {e}", file=sys.stderr)
+            sys.exit(1)
 
     elif cmd == "status-update":
         if len(sys.argv) < 6:
             print("Usage: bus_cli.py status-update <team> <agent> <status> <progress_pct> [--task 'current task']")
             sys.exit(1)
-        team, agent = sys.argv[2], sys.argv[3]
-        st, pct = sys.argv[4], float(sys.argv[5])
-        task = ""
-        i = 6
-        while i < len(sys.argv):
-            if sys.argv[i] == "--task" and i + 1 < len(sys.argv):
-                task = sys.argv[i + 1]
-                i += 2
-            else:
-                i += 1
-        hp = _get_help_protocol(team, agent)
-        hp.update_status(st, pct, task)
-        hp.close()
-        print(f"Updated {team} status: {st} ({pct}%)")
+        try:
+            team, agent = sys.argv[2], sys.argv[3]
+            st, pct = sys.argv[4], float(sys.argv[5])
+            task = ""
+            i = 6
+            while i < len(sys.argv):
+                if sys.argv[i] == "--task" and i + 1 < len(sys.argv):
+                    task = sys.argv[i + 1]
+                    i += 2
+                else:
+                    i += 1
+            hp = _get_help_protocol(team, agent)
+            hp.update_status(st, pct, task)
+            hp.close()
+            print(f"Updated {team} status: {st} ({pct}%)")
+        except Exception as e:
+            print(f"Error: status-update failed: {e}", file=sys.stderr)
+            sys.exit(1)
 
     elif cmd == "work-add":
         if len(sys.argv) < 5:
             print("Usage: bus_cli.py work-add <team> <agent> <title> [--description '...'] [--priority medium] [--est-minutes 10]")
             sys.exit(1)
-        team, agent, title = sys.argv[2], sys.argv[3], sys.argv[4]
-        desc = ""
-        priority = "medium"
-        est_min = 0.0
-        i = 5
-        while i < len(sys.argv):
-            if sys.argv[i] == "--description" and i + 1 < len(sys.argv):
-                desc = sys.argv[i + 1]
-                i += 2
-            elif sys.argv[i] == "--priority" and i + 1 < len(sys.argv):
-                priority = sys.argv[i + 1]
-                i += 2
-            elif sys.argv[i] == "--est-minutes" and i + 1 < len(sys.argv):
-                est_min = float(sys.argv[i + 1])
-                i += 2
-            else:
-                i += 1
-        hp = _get_help_protocol(team, agent)
-        wid = hp.add_work_item(title, description=desc, priority=priority, est_minutes=est_min)
-        hp.close()
-        print(json.dumps({"work_item_id": wid}))
+        try:
+            team, agent, title = sys.argv[2], sys.argv[3], sys.argv[4]
+            desc = ""
+            priority = "medium"
+            est_min = 0.0
+            i = 5
+            while i < len(sys.argv):
+                if sys.argv[i] == "--description" and i + 1 < len(sys.argv):
+                    desc = sys.argv[i + 1]
+                    i += 2
+                elif sys.argv[i] == "--priority" and i + 1 < len(sys.argv):
+                    priority = sys.argv[i + 1]
+                    i += 2
+                elif sys.argv[i] == "--est-minutes" and i + 1 < len(sys.argv):
+                    est_min = float(sys.argv[i + 1])
+                    i += 2
+                else:
+                    i += 1
+            hp = _get_help_protocol(team, agent)
+            wid = hp.add_work_item(title, description=desc, priority=priority, est_minutes=est_min)
+            hp.close()
+            print(json.dumps({"work_item_id": wid}))
+        except Exception as e:
+            print(f"Error: work-add failed: {e}", file=sys.stderr)
+            sys.exit(1)
 
     elif cmd == "idle-teams":
-        hp = _get_help_protocol("_system", "_cli")
-        teams = hp.get_idle_teams()
-        hp.close()
-        print(json.dumps({"idle_teams": teams}, indent=2, default=str))
+        try:
+            hp = _get_help_protocol("_system", "_cli")
+            teams = hp.get_idle_teams()
+            hp.close()
+            print(json.dumps({"idle_teams": teams}, indent=2, default=str))
+        except Exception as e:
+            print(f"Error: idle-teams failed: {e}", file=sys.stderr)
+            sys.exit(1)
 
     elif cmd == "help-needed":
-        hp = _get_help_protocol("_system", "_cli")
-        needed = hp.get_teams_needing_help()
-        open_reqs = hp.get_open_help_requests()
-        hp.close()
-        print(json.dumps({
-            "teams_needing_help": needed,
-            "open_requests": open_reqs,
-        }, indent=2, default=str))
+        try:
+            hp = _get_help_protocol("_system", "_cli")
+            needed = hp.get_teams_needing_help()
+            open_reqs = hp.get_open_help_requests()
+            hp.close()
+            print(json.dumps({
+                "teams_needing_help": needed,
+                "open_requests": open_reqs,
+            }, indent=2, default=str))
+        except Exception as e:
+            print(f"Error: help-needed failed: {e}", file=sys.stderr)
+            sys.exit(1)
 
     elif cmd == "auto-assign":
-        hp = _get_help_protocol("_system", "_cli")
-        assignments = hp.auto_assign_idle_teams()
-        hp.close()
-        print(json.dumps({"assignments": assignments}, indent=2, default=str))
+        try:
+            hp = _get_help_protocol("_system", "_cli")
+            assignments = hp.auto_assign_idle_teams()
+            hp.close()
+            print(json.dumps({"assignments": assignments}, indent=2, default=str))
+        except Exception as e:
+            print(f"Error: auto-assign failed: {e}", file=sys.stderr)
+            sys.exit(1)
 
     else:
         print(f"Unknown command: {cmd}")

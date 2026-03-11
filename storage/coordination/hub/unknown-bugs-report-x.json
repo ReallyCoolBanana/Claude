@@ -1,0 +1,200 @@
+{
+  "metadata": {
+    "team": "Think-Tank-X",
+    "task": "unknown-bug-hunt",
+    "date": "2026-03-11",
+    "files_analyzed": [
+      "storage/coordination/coordinator_hub.py",
+      "storage/coordination/help_protocol.py",
+      "storage/coordination/direct_channels.py",
+      "storage/coordination/work_stealing.py"
+    ],
+    "existing_reports_reviewed": [
+      "hub/bug-report-core.json (BUG-CORE-001 through BUG-CORE-024)",
+      "hub/bug-report-infra.json (BUG-INFRA-001 through BUG-INFRA-032)",
+      "hub/bug-report-proto.json (BUG-PROTO-001 through BUG-PROTO-025)",
+      "hub/infrastructure-bugs-coordination.json (NEW-COORD-001 through NEW-COORD-019)",
+      "hub/infrastructure-bugs-prototypes.json (NEW-PROTO-001 through NEW-PROTO-015)"
+    ]
+  },
+  "unknown_bugs": [
+    {
+      "id": "UNKNOWN-X-001",
+      "file": "storage/coordination/help_protocol.py",
+      "line": 243,
+      "description": "HelpProtocol.update_status() has NO validation on progress_pct range, unlike coordinator_hub.AgentReporter which validates 0 <= progress_pct <= 100. NaN is accepted silently but SQLite converts it to NULL, causing silent data corruption. Negative values and infinity are also accepted and stored. This is a missing-validation bug AND a data-corruption bug.",
+      "severity": "medium",
+      "category": "missing-validation",
+      "reproduction": "hp.update_status('working', float('nan'), 'task') -- NaN accepted, stored as NULL. hp.update_status('working', -50, 'task') -- negative accepted. hp.update_status('working', float('inf'), 'task') -- infinity accepted.",
+      "fix_suggestion": "Add validation matching coordinator_hub: if not (0 <= progress_pct <= 100) or math.isnan(progress_pct): raise ValueError. Also guard against math.isinf."
+    },
+    {
+      "id": "UNKNOWN-X-002",
+      "file": "storage/coordination/work_stealing.py",
+      "line": 756,
+      "description": "Scratchpad.write() with ttl=0 creates an entry that expires immediately and can never be read back. Negative TTL creates entries that expired BEFORE creation (expires_at < created_at). No validation on TTL value. The write succeeds, wasting a DB operation and creating garbage data.",
+      "severity": "low",
+      "category": "missing-validation",
+      "reproduction": "sp.write('key', 'value', ttl=0) -- entry created but sp.read('key') returns None. sp.write('key', 'value', ttl=-3600) -- entry with expires_at < created_at.",
+      "fix_suggestion": "Add validation: if ttl <= 0: raise ValueError('TTL must be positive'). Or at minimum ttl >= 1."
+    },
+    {
+      "id": "UNKNOWN-X-003",
+      "file": "storage/coordination/work_stealing.py",
+      "line": 220,
+      "description": "WorkStealing.enqueue_work() accepts any integer for priority including negative values and zero. Since steal_work() sorts by priority ASC, negative priorities are stolen first, allowing queue gaming. HelpProtocol.add_work_item validates priority against a fixed set, but WorkStealing has no such validation.",
+      "severity": "medium",
+      "category": "missing-validation",
+      "reproduction": "ws.enqueue_work('cheater', priority=-999999) -- this item is always stolen first, jumping the queue ahead of all legitimate items.",
+      "fix_suggestion": "Add priority validation: if priority < 1 or priority > 10: raise ValueError. Or document valid range and enforce it."
+    },
+    {
+      "id": "UNKNOWN-X-004",
+      "file": "storage/coordination/direct_channels.py",
+      "line": 270,
+      "description": "DirectChannels.create_direct_channel() allows a team to create a channel to itself ('direct-X-X'). This self-loop channel is semantically meaningless but accepted without error. send_direct to self also works, creating unnecessary bus traffic.",
+      "severity": "low",
+      "category": "missing-validation",
+      "reproduction": "dc = DirectChannels(db, bus, 'team-a', 'agent-1'); dc.create_direct_channel('team-a') -- creates 'direct-team-a-team-a' channel.",
+      "fix_suggestion": "Add validation: if target_team == self.team: raise ValueError('Cannot create direct channel to self')."
+    },
+    {
+      "id": "UNKNOWN-X-005",
+      "file": "storage/coordination/work_stealing.py",
+      "line": 436,
+      "description": "PipelineManager.create_pipeline() accepts an empty stages list. get_pipeline_status() then reports the empty pipeline as 'completed' because all([]) returns True (vacuous truth). An empty pipeline should not be considered 'completed'.",
+      "severity": "medium",
+      "category": "logic-error",
+      "reproduction": "pid = pm.create_pipeline('empty', []); pm.get_pipeline_status(pid)['status'] == 'completed'. The pipeline was never started, has no stages, but claims to be completed.",
+      "fix_suggestion": "Either reject empty stages: if not stages: raise ValueError('Pipeline must have at least one stage'). Or handle the empty case: if not stages: effective_status = 'active'."
+    },
+    {
+      "id": "UNKNOWN-X-006",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line": 214,
+      "description": "AgentReporter._register() uses ON CONFLICT DO UPDATE, which means creating a second AgentReporter with the same agent_id but different team/role silently overwrites the first registration, resetting progress_pct to 0, findings_count to 0, and all other fields. No warning is logged. This can cause data loss if agent IDs are accidentally reused.",
+      "severity": "medium",
+      "category": "silent-data-loss",
+      "reproduction": "r1 = AgentReporter(db, 'agent-1', 'team-a', 'researcher'); r1.update_status('working', 50, 'halfway', findings_count=10); r2 = AgentReporter(db, 'agent-1', 'team-b', 'analyst') -- r1's progress and findings are lost.",
+      "fix_suggestion": "Log a warning when ON CONFLICT triggers. Or add a strict mode that raises ValueError if the agent_id already exists with a different team."
+    },
+    {
+      "id": "UNKNOWN-X-007",
+      "file": "storage/coordination/help_protocol.py",
+      "line": 348,
+      "description": "HelpProtocol allows invalid work item state transitions. A completed work item can be marked available_for_help again via mark_work_available(). There is no state machine enforcing valid transitions (pending -> in_progress -> completed is the expected flow). Backward transitions silently succeed.",
+      "severity": "medium",
+      "category": "missing-state-machine",
+      "reproduction": "hp.add_work_item('task'); hp.complete_work_item(wid); hp.mark_work_available(wid) -- completed item reverts to 'available_for_help' without error.",
+      "fix_suggestion": "Add status guards: mark_work_available should only accept items in 'pending' or 'in_progress' status. complete_work_item should only accept 'pending' or 'in_progress' items."
+    },
+    {
+      "id": "UNKNOWN-X-008",
+      "file": "storage/coordination/direct_channels.py",
+      "line": 567,
+      "description": "DirectChannels.update_progress() has no validation on any numeric parameters. items_done can exceed items_total (100 out of 5 items), progress_pct can be negative, and items can be negative integers. All are silently stored.",
+      "severity": "low",
+      "category": "missing-validation",
+      "reproduction": "dc.update_progress('testing', 50.0, items_total=5, items_done=100) -- items_done > items_total. dc.update_progress('testing', -50.0, items_total=-1, items_done=-5) -- all negative.",
+      "fix_suggestion": "Add validation: 0 <= progress_pct <= 100, items_total >= 0, 0 <= items_done <= items_total."
+    },
+    {
+      "id": "UNKNOWN-X-009",
+      "file": "storage/coordination/work_stealing.py",
+      "line": 436,
+      "description": "PipelineManager.create_pipeline() does not validate that depends_on references actually exist as stage names. A stage can depend on a non-existent 'phantom' stage, creating a permanently stuck pipeline where the dependent stage can never become ready. _detect_cycles only checks for cycles among existing stages and silently ignores references to non-existent stages.",
+      "severity": "high",
+      "category": "missing-validation",
+      "reproduction": "pm.create_pipeline('stuck', [{'name': 'A'}, {'name': 'B', 'depends_on': ['A', 'phantom']}]). After completing A, B can never become ready because 'phantom' will never be 'completed'. Pipeline stuck forever.",
+      "fix_suggestion": "Validate all depends_on references: for s in stages: for dep in s.get('depends_on',[]): if dep not in stage_names: raise ValueError(f'Unknown dependency {dep}')."
+    },
+    {
+      "id": "UNKNOWN-X-010",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line": 549,
+      "description": "CoordinatorDashboard.send_instruction() accepts arbitrary strings as payload (documented as 'Optional JSON string') but performs no JSON validation. When an agent reads the instruction and tries to parse the payload as JSON, it gets a JSONDecodeError. The payload contract is not enforced at write time.",
+      "severity": "low",
+      "category": "missing-validation",
+      "reproduction": "dash.send_instruction('agent-1', 'redirect', payload='not valid JSON {{{') -- succeeds. Agent calls json.loads(inst['payload']) -- JSONDecodeError.",
+      "fix_suggestion": "Add optional JSON validation: if payload is not None: try: json.loads(payload) except json.JSONDecodeError: raise ValueError('payload must be valid JSON')."
+    },
+    {
+      "id": "UNKNOWN-X-011",
+      "file": "storage/coordination/work_stealing.py",
+      "line": 326,
+      "description": "WorkStealing.fail_work() has NO authorization check, unlike complete_work() which validates that the calling team is the claimer or owner. Any team can fail any work item without being the claimer or owner, enabling sabotage of other teams' work.",
+      "severity": "high",
+      "category": "missing-authorization",
+      "reproduction": "ws_rogue.fail_work(work_id, 'sabotaged') -- succeeds even though team-rogue never claimed or owned the item. Compare: ws_rogue.complete_work(work_id, {}) -- raises ValueError('not authorized').",
+      "fix_suggestion": "Add the same authorization check from complete_work(): row = self._conn.execute('SELECT claimed_by, owner_team FROM work_queue WHERE id=?', (work_id,)).fetchone(); if row['claimed_by'] != self.team and row['owner_team'] != self.team: raise ValueError(...)."
+    },
+    {
+      "id": "UNKNOWN-X-012",
+      "file": "storage/coordination/help_protocol.py",
+      "line": 467,
+      "description": "HelpProtocol.offer_help() allows a team to accept its own help request. While auto_assign_idle_teams() has a self-assignment check (line 759: if helper_team == req['requesting_team']: continue), the manual offer_help() path has no such check. A team can be both requester and helper.",
+      "severity": "medium",
+      "category": "missing-validation",
+      "reproduction": "hp.add_work_item('task'); rid = hp.request_help(wid, 'help'); hp.offer_help(rid) -- True. Team is both requesting_team and accepted_by_team.",
+      "fix_suggestion": "Add self-help check in offer_help: row = conn.execute('SELECT requesting_team FROM help_requests WHERE id=?', (request_id,)); if row['requesting_team'] == self.team: raise ValueError('Cannot accept own help request')."
+    },
+    {
+      "id": "UNKNOWN-X-013",
+      "file": "storage/coordination/direct_channels.py",
+      "line": 157,
+      "description": "_bus_read() does not validate that since_offset is non-negative. A corrupted or buggy read offset of -1 causes f.seek(-1) which raises OSError on most systems. No defensive check at the function boundary.",
+      "severity": "low",
+      "category": "missing-validation",
+      "reproduction": "msgs, offset = _bus_read(bus_dir, 'channel', since_offset=-1) -- raises OSError.",
+      "fix_suggestion": "Add: since_offset = max(0, since_offset) at the start of _bus_read, or raise ValueError for negative offsets."
+    },
+    {
+      "id": "UNKNOWN-X-014",
+      "file": "storage/coordination/work_stealing.py",
+      "line": 756,
+      "description": "Two Scratchpad instances for agents in the same team share the same default namespace, causing silent cross-agent data overwrites. The written_by field records which agent wrote last but there is no conflict detection, versioning, or notification. Data from the first agent is silently lost.",
+      "severity": "low",
+      "category": "silent-data-loss",
+      "reproduction": "sp1 = Scratchpad(db, 'team-a', 'agent-1'); sp2 = Scratchpad(db, 'team-a', 'agent-2'); sp1.write('key', 'A'); sp2.write('key', 'B'); sp1.read('key') == 'B' -- agent-1's data is gone.",
+      "fix_suggestion": "Add optional conflict detection: check if key exists with a different written_by before overwriting. Or use agent_id as part of the namespace by default."
+    },
+    {
+      "id": "UNKNOWN-X-015",
+      "file": "storage/coordination/help_protocol.py",
+      "line": 270,
+      "description": "HelpProtocol.update_status() counts work_items_total and work_items_done using WHERE team=self.team. Work items assigned to this team's agent (via help protocol from another team) are NOT counted because the work item's team field still refers to the original requesting team. Helper team's progress tracking is inaccurate.",
+      "severity": "medium",
+      "category": "logic-error",
+      "reproduction": "Team-helper accepts help for team-requester's work item. hp_helper.update_status() shows work_items_total=0 even though the helper is actively working on an assigned item.",
+      "fix_suggestion": "Expand the count query: SELECT COUNT(*) FROM work_items WHERE team = ? OR assigned_to LIKE ? to include assigned items."
+    },
+    {
+      "id": "UNKNOWN-X-016",
+      "file": "storage/coordination/direct_channels.py",
+      "line": 303,
+      "description": "Topic channels with different names can map to the same bus file after sanitization, causing message cross-contamination. For example, 'topic-my/topic' and 'topic-my.topic' both sanitize to 'topic-my_topic.jsonl'. Messages from one channel appear in reads from the other.",
+      "severity": "medium",
+      "category": "name-collision",
+      "reproduction": "dc.create_topic_channel('my/topic', [...]); dc.create_topic_channel('my.topic', [...]). Both topics share the same bus file. Messages leak between unrelated channels.",
+      "fix_suggestion": "Use a hash-based filename: safe_ch = hashlib.sha256(channel.encode()).hexdigest()[:16]. Or validate topic names to only contain safe characters."
+    }
+  ],
+  "tests_written": 18,
+  "tests_passing": 18,
+  "test_file": "storage/coordination/tests/test_unknown_bugs_x.py",
+  "methodology": "Fuzz testing (NaN, infinity, negative values, zero-length inputs), boundary testing (empty pipelines, self-references, zero TTL), authorization gap analysis (comparing complete_work vs fail_work auth patterns), state machine analysis (invalid work item transitions), namespace collision analysis (sanitized filename collisions), integration testing (cross-agent scratchpad overwrites, help protocol work item counting). Each bug was verified to be absent from all 5 existing reports (bug-report-core.json, bug-report-infra.json, bug-report-proto.json, infrastructure-bugs-coordination.json, infrastructure-bugs-prototypes.json).",
+  "severity_summary": {
+    "high": 2,
+    "medium": 8,
+    "low": 6
+  },
+  "category_summary": {
+    "missing-validation": 7,
+    "logic-error": 2,
+    "missing-authorization": 1,
+    "missing-state-machine": 1,
+    "silent-data-loss": 2,
+    "name-collision": 1,
+    "missing-validation-and-data-corruption": 1
+  }
+}

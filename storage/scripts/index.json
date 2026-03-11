@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-03-10",
+  "last_updated": "2026-03-11",
   "scripts": [
     {
       "id": "SCR-0001",
@@ -309,16 +309,148 @@
       "dependencies": ["SCR-0022"],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0010"
+    },
+    {
+      "id": "SCR-0029",
+      "name": "bus-cli",
+      "filename": "../coordination/bus_cli.py",
+      "language": "python",
+      "category": "automation",
+      "description": "CLI for JSONL message bus operations. Provides command-line interface for reading, writing, and managing messages on the JSONL-based inter-agent communication bus.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0025"
+    },
+    {
+      "id": "SCR-0030",
+      "name": "multi-team-runner",
+      "filename": "../coordination/multi_team_runner.py",
+      "language": "python",
+      "category": "automation",
+      "description": "Production multi-team launcher with heartbeat monitoring. Manages lifecycle of multiple agent teams with health checks, restart logic, and coordinated startup/shutdown.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0025"
+    },
+    {
+      "id": "SCR-0031",
+      "name": "think-tank",
+      "filename": "../coordination/think_tank.py",
+      "language": "python",
+      "category": "analysis",
+      "description": "Convergence script for cross-referencing team findings. Aggregates and reconciles results from multiple teams to identify consensus, conflicts, and coverage gaps.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0025"
+    },
+    {
+      "id": "SCR-0032",
+      "name": "dashboard",
+      "filename": "../coordination/dashboard.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Real-time text-based agent monitoring dashboard. Displays live status of running agent teams, message throughput, task progress, and system health in a terminal UI.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0025"
+    },
+    {
+      "id": "SCR-0033",
+      "name": "coordinator-hub",
+      "filename": "../coordination/coordinator_hub.py",
+      "language": "python",
+      "category": "automation",
+      "description": "Hub-and-spoke agent coordination via SQLite. Central coordinator that manages task assignment, result collection, and agent communication through a SQLite-based shared state.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0025"
+    },
+    {
+      "id": "SCR-0034",
+      "name": "build-cross-ref-index",
+      "filename": "build-cross-ref-index.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Cross-reference index builder. Scans repository to build a comprehensive index of all cross-references between KB entries, team logs, scripts, and other artifacts.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0001"
+    },
+    {
+      "id": "SCR-0035",
+      "name": "search-storage",
+      "filename": "search-storage.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Storage search utility. Provides search capabilities across the storage system including scripts, API tools, and data sources.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0001"
+    },
+    {
+      "id": "SCR-0036",
+      "name": "stress-test-setup-reads",
+      "filename": "stress-test-setup-reads.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Read stress test setup. Prepares the environment and test data for storage system read stress testing.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0001"
+    },
+    {
+      "id": "SCR-0037",
+      "name": "stress-test-reads-category",
+      "filename": "stress-test-reads-category.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Category read stress testing. Stress tests the storage system's category-based read operations under high load conditions.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0001"
+    },
+    {
+      "id": "SCR-0038",
+      "name": "stress-test-reads-cross",
+      "filename": "stress-test-reads-cross.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Cross-reference read stress testing. Stress tests the storage system's cross-reference lookup operations under high load conditions.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0001"
+    },
+    {
+      "id": "SCR-0039",
+      "name": "stress-test-reads-id",
+      "filename": "stress-test-reads-id.py",
+      "language": "python",
+      "category": "utility",
+      "description": "ID lookup read stress testing. Stress tests the storage system's ID-based lookup operations under high load conditions.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0001"
+    },
+    {
+      "id": "SCR-0040",
+      "name": "stress-test-writes",
+      "filename": "stress-test-writes.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Write stress testing. Stress tests the storage system's write operations including concurrent writes, large payloads, and rapid sequential writes.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0001"
     }
   ],
   "categories": {
     "data-collection": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028"],
-    "analysis": ["SCR-0004", "SCR-0005", "SCR-0011"],
-    "automation": [],
-    "utility": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0015", "SCR-0016", "SCR-0017", "SCR-0018", "SCR-0019", "SCR-0020"]
+    "analysis": ["SCR-0004", "SCR-0005", "SCR-0011", "SCR-0031"],
+    "automation": ["SCR-0029", "SCR-0030", "SCR-0033"],
+    "utility": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0015", "SCR-0016", "SCR-0017", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0032", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040"]
   },
   "language_index": {
-    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028"],
+    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028", "SCR-0029", "SCR-0030", "SCR-0031", "SCR-0032", "SCR-0033", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040"],
     "go": ["SCR-0015", "SCR-0016", "SCR-0017"]
   }
 }

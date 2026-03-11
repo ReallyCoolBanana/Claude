@@ -14,6 +14,7 @@ This module was extracted from duplicated code in:
 """
 
 import re
+import threading
 import time
 import urllib.parse
 import urllib.request
@@ -39,18 +40,22 @@ except ImportError:
 
 # Module-level state for rate limiting
 _last_request_time = 0.0
+_rate_limit_lock = threading.Lock()
+_config_lock = threading.Lock()
 
 
 def set_user_agent(ua: str):
     """Override the default User-Agent for all DDG requests."""
     global DEFAULT_USER_AGENT
-    DEFAULT_USER_AGENT = ua
+    with _config_lock:
+        DEFAULT_USER_AGENT = ua
 
 
 def set_rate_limit(seconds: float):
     """Override the delay between consecutive DDG requests."""
     global RATE_LIMIT_SECONDS
-    RATE_LIMIT_SECONDS = seconds
+    with _config_lock:
+        RATE_LIMIT_SECONDS = seconds
 
 
 # ---------------------------------------------------------------------------
@@ -107,11 +112,12 @@ class DuckDuckGoParser(HTMLParser):
 def _enforce_rate_limit():
     """Sleep if needed to respect the rate limit between requests."""
     global _last_request_time
-    now = time.monotonic()
-    elapsed = now - _last_request_time
-    if _last_request_time > 0 and elapsed < RATE_LIMIT_SECONDS:
-        time.sleep(RATE_LIMIT_SECONDS - elapsed)
-    _last_request_time = time.monotonic()
+    with _rate_limit_lock:
+        now = time.monotonic()
+        elapsed = now - _last_request_time
+        if _last_request_time > 0 and elapsed < RATE_LIMIT_SECONDS:
+            time.sleep(RATE_LIMIT_SECONDS - elapsed)
+        _last_request_time = time.monotonic()
 
 
 def search_duckduckgo(query, timeout=None, user_agent=None):

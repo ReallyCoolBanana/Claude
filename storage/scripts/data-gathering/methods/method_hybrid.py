@@ -77,7 +77,15 @@ def _get_stop_words():
         "most", "when", "what", "they", "each", "does", "will", "many",
     }
 
-STOP_WORDS = _get_stop_words()
+_STOP_WORDS = None
+
+
+def _lazy_stop_words():
+    """Return stop words, initializing on first call."""
+    global _STOP_WORDS
+    if _STOP_WORDS is None:
+        _STOP_WORDS = _get_stop_words()
+    return _STOP_WORDS
 
 
 def normalize_url(url):
@@ -111,7 +119,7 @@ def normalize_url(url):
 def extract_keywords(text, min_len=4):
     """Extract significant words from text for cross-referencing."""
     words = re.findall(r'\b[a-zA-Z]{%d,}\b' % min_len, text.lower())
-    return set(w for w in words if w not in STOP_WORDS)
+    return set(w for w in words if w not in _lazy_stop_words())
 
 
 def _run_method(method_name, mod, query):

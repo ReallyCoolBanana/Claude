@@ -1,0 +1,181 @@
+{
+  "id": "SOP-018",
+  "version": "1.0",
+  "created": "2026-03-11",
+  "team": "doc-team-4",
+  "title": "Market Research Operations",
+  "purpose": "Standard procedure for conducting market research, selecting analysis methods, logging stock picks, tracking performance, and maintaining the picks index. Ensures consistent, auditable market research across all teams.",
+  "sections": {
+    "method_selection": {
+      "title": "Selecting Analysis Methods",
+      "overview": "Analysis methods are stored in market-research/methods/. Each method defines a systematic approach to evaluating stocks or market conditions.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "List available methods",
+          "command": "ls market-research/methods/",
+          "purpose": "See all available analysis approaches before starting research"
+        },
+        {
+          "step": 2,
+          "action": "Read the method file to understand its criteria, inputs, and scoring system",
+          "command": "cat market-research/methods/<method_name>.md"
+        },
+        {
+          "step": 3,
+          "action": "Select the method that best matches your research objective",
+          "guidelines": {
+            "fundamental_analysis": "For long-term value investing, earnings-based decisions",
+            "technical_analysis": "For pattern-based, momentum, or timing decisions",
+            "quantitative_screening": "For filtering large universes down to candidates",
+            "hybrid_methods": "For combining multiple approaches (recommended for comprehensive analysis)"
+          }
+        },
+        {
+          "step": 4,
+          "action": "Document which method you selected and why in your team output"
+        }
+      ]
+    },
+    "research_workflow": {
+      "title": "Conducting Research",
+      "overview": "Follow a structured workflow from data gathering through analysis to pick generation.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Gather data using SOP-017 (Data Gathering Operations)",
+          "note": "Use hybrid method for quality when making investment-grade research"
+        },
+        {
+          "step": 2,
+          "action": "Apply the selected analysis method's scoring criteria to gathered data",
+          "output": "A scored list of candidates with rationale for each score"
+        },
+        {
+          "step": 3,
+          "action": "Rank candidates by composite score and identify top picks",
+          "threshold": "Only picks scoring in the top 20% of the analysis should be logged"
+        },
+        {
+          "step": 4,
+          "action": "Write a brief thesis for each pick: why it was selected, key catalysts, risk factors"
+        },
+        {
+          "step": 5,
+          "action": "Cross-validate picks against at least one alternative method or data source"
+        }
+      ]
+    },
+    "logging_picks": {
+      "title": "Logging Picks with TEMPLATE.md",
+      "overview": "Every pick must be formally logged using the standard template for auditability and performance tracking.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Copy the template for your new pick",
+          "command": "cp market-research/picks/TEMPLATE.md market-research/picks/<YYYY-MM-DD>_<ticker>.md"
+        },
+        {
+          "step": 2,
+          "action": "Fill in all required fields in the template",
+          "required_fields": [
+            "Ticker symbol",
+            "Date of pick",
+            "Entry price (current price at time of pick)",
+            "Target price and timeframe",
+            "Stop-loss level",
+            "Method used (reference to market-research/methods/)",
+            "Thesis (2-5 sentences on why this pick was made)",
+            "Key risks (at least 2)",
+            "Confidence level (high/medium/low)"
+          ]
+        },
+        {
+          "step": 3,
+          "action": "Verify all fields are populated. Incomplete picks must not be submitted.",
+          "validation": "Every required field must have a non-empty value"
+        }
+      ]
+    },
+    "tracking_performance": {
+      "title": "Performance Tracking",
+      "overview": "Track pick performance over time to evaluate method effectiveness and improve future research.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Update pick status at defined checkpoints: 1 week, 1 month, 3 months, or when target/stop-loss is hit",
+          "fields_to_update": [
+            "Current price",
+            "Return percentage",
+            "Status (open/closed/stopped-out)",
+            "Notes on any material developments"
+          ]
+        },
+        {
+          "step": 2,
+          "action": "When a pick is closed (target hit, stop-loss hit, or time expired), calculate final return",
+          "formula": "return_pct = ((exit_price - entry_price) / entry_price) * 100"
+        },
+        {
+          "step": 3,
+          "action": "Record lessons learned: what the method got right, what it missed, what to improve"
+        }
+      ]
+    },
+    "updating_index": {
+      "title": "Updating picks/index.json",
+      "overview": "The picks index is the central registry of all picks. It must be updated whenever a pick is created or its status changes.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Read the current index",
+          "command": "cat market-research/picks/index.json"
+        },
+        {
+          "step": 2,
+          "action": "Add a new entry for each new pick with these fields",
+          "entry_format": {
+            "ticker": "<SYMBOL>",
+            "date": "<YYYY-MM-DD>",
+            "method": "<method_name>",
+            "entry_price": "<number>",
+            "target_price": "<number>",
+            "status": "open",
+            "file": "<YYYY-MM-DD>_<ticker>.md",
+            "confidence": "high|medium|low"
+          }
+        },
+        {
+          "step": 3,
+          "action": "When updating an existing pick, modify only the changed fields (status, current_price, return_pct, notes)"
+        },
+        {
+          "step": 4,
+          "action": "Validate the JSON is well-formed after editing",
+          "command": "python -c \"import json; json.load(open('market-research/picks/index.json'))\""
+        }
+      ]
+    }
+  },
+  "checklists": {
+    "before_research": [
+      "Review available methods in market-research/methods/",
+      "Select and document the analysis method",
+      "Verify data gathering tools are working (SOP-017)",
+      "Check existing picks to avoid duplicate research"
+    ],
+    "during_research": [
+      "Apply method scoring criteria consistently",
+      "Document rationale for each score",
+      "Cross-validate top candidates",
+      "Write thesis for each pick candidate"
+    ],
+    "after_research": [
+      "Log each pick using TEMPLATE.md with all required fields",
+      "Update market-research/picks/index.json",
+      "Validate index.json is well-formed",
+      "Record method used and team in pick file",
+      "Set calendar reminders for performance check dates"
+    ]
+  }
+}

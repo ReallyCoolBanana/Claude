@@ -119,8 +119,38 @@ def _status_indicator(status: str, last_hb: float) -> str:
 # Data access
 # ---------------------------------------------------------------------------
 
+class _SharedDB:
+    """Context manager that provides a single shared DB connection for a render cycle."""
+
+    def __init__(self):
+        self.conn: sqlite3.Connection | None = None
+
+    def __enter__(self):
+        if not os.path.exists(_DB_PATH):
+            return self
+        try:
+            self.conn = sqlite3.connect(_DB_PATH, timeout=5)
+            self.conn.row_factory = sqlite3.Row
+        except sqlite3.OperationalError:
+            self.conn = None
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.conn is not None:
+            self.conn.close()
+            self.conn = None
+        return False
+
+
+# Module-level shared DB instance for a single render cycle.
+# Functions below use this when available, otherwise open their own connection.
+_shared_db: _SharedDB | None = None
+
+
 def _get_db() -> sqlite3.Connection | None:
-    """Open the shared database.  Returns None if unavailable."""
+    """Return the shared DB connection if available, or open a new one."""
+    if _shared_db is not None and _shared_db.conn is not None:
+        return _shared_db.conn
     if not os.path.exists(_DB_PATH):
         return None
     try:
@@ -133,6 +163,7 @@ def _get_db() -> sqlite3.Connection | None:
 
 def _get_agents() -> list[dict]:
     """Fetch all registered agents."""
+    is_shared = _shared_db is not None and _shared_db.conn is not None
     conn = _get_db()
     if conn is None:
         return []
@@ -146,11 +177,13 @@ def _get_agents() -> list[dict]:
     except sqlite3.OperationalError:
         return []
     finally:
-        conn.close()
+        if not is_shared:
+            conn.close()
 
 
 def _get_phase_signals() -> list[dict]:
     """Fetch recent phase signals."""
+    is_shared = _shared_db is not None and _shared_db.conn is not None
     conn = _get_db()
     if conn is None:
         return []
@@ -163,11 +196,13 @@ def _get_phase_signals() -> list[dict]:
     except sqlite3.OperationalError:
         return []
     finally:
-        conn.close()
+        if not is_shared:
+            conn.close()
 
 
 def _get_findings_summary() -> dict:
     """Get a summary of team findings."""
+    is_shared = _shared_db is not None and _shared_db.conn is not None
     conn = _get_db()
     if conn is None:
         return {"total": 0, "by_category": {}, "by_priority": {}, "recent": []}
@@ -204,11 +239,13 @@ def _get_findings_summary() -> dict:
     except sqlite3.OperationalError:
         return {"total": 0, "by_category": {}, "by_priority": {}, "recent": []}
     finally:
-        conn.close()
+        if not is_shared:
+            conn.close()
 
 
 def _get_runner_state() -> dict:
     """Read runner state from the database."""
+    is_shared = _shared_db is not None and _shared_db.conn is not None
     conn = _get_db()
     if conn is None:
         return {}
@@ -220,7 +257,8 @@ def _get_runner_state() -> dict:
     except sqlite3.OperationalError:
         return {}
     finally:
-        conn.close()
+        if not is_shared:
+            conn.close()
 
 
 def _get_bus_activity() -> dict[str, list[dict]]:
@@ -233,14 +271,14 @@ def _get_bus_activity() -> dict[str, list[dict]]:
         channel = os.path.basename(filepath).rsplit(".", 1)[0]
         messages = []
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, "rb") as f:
                 # Read last N lines efficiently by seeking near end
                 f.seek(0, 2)  # end
                 size = f.tell()
                 # Read last 20KB (should contain plenty of messages)
                 read_size = min(size, 20480)
                 f.seek(max(0, size - read_size))
-                tail = f.read()
+                tail = f.read().decode("utf-8", errors="replace")
         except OSError:
             continue
 
@@ -477,16 +515,22 @@ def render_dashboard(
     show_findings: bool = True,
 ) -> str:
     """Render the complete dashboard as a string."""
+    global _shared_db
     sections: list[str] = []
-    sections.extend(render_header())
+    with _SharedDB() as db:
+        _shared_db = db
+        try:
+            sections.extend(render_header())
 
-    if show_agents:
-        sections.extend(render_agents())
-    if show_bus:
-        sections.extend(render_bus_activity())
-        sections.extend(render_team_completion())
-    if show_findings:
-        sections.extend(render_findings())
+            if show_agents:
+                sections.extend(render_agents())
+            if show_bus:
+                sections.extend(render_bus_activity())
+                sections.extend(render_team_completion())
+            if show_findings:
+                sections.extend(render_findings())
+        finally:
+            _shared_db = None
 
     sections.append("=" * _WIDTH)
     return "\n".join(sections)
