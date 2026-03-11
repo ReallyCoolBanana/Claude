@@ -468,18 +468,18 @@ class TestOperationsAfterClose(StressTestBase):
 
 
 class TestInvalidStatusValues(StressTestBase):
-    """Invalid status values -- the module doesn't validate, so they store."""
+    """Invalid status values are now rejected with ValueError."""
 
-    def test_nonsense_status_stored(self):
+    def test_nonsense_status_rejected(self):
         hp = self._make_hp("bad-status-team", "agent-bs")
-        # Module doesn't validate status; verify it doesn't crash
-        hp.update_status("TOTALLY_INVALID_STATUS", 50.0, "whatever")
-        conn = self._raw_conn()
-        row = conn.execute(
-            "SELECT status FROM team_status WHERE team = 'bad-status-team'"
-        ).fetchone()
-        conn.close()
-        self.assertEqual(row["status"], "TOTALLY_INVALID_STATUS")
+        with self.assertRaises(ValueError):
+            hp.update_status("TOTALLY_INVALID_STATUS", 50.0, "whatever")
+
+    def test_valid_statuses_accepted(self):
+        from help_protocol import VALID_STATUSES
+        hp = self._make_hp("valid-status-team", "agent-vs")
+        for status in VALID_STATUSES:
+            hp.update_status(status, 50.0, f"Testing {status}")
 
 
 class TestVeryLongStrings(StressTestBase):
@@ -596,8 +596,8 @@ class TestNullAndEmptyCapabilities(StressTestBase):
             "SELECT required_capabilities FROM work_items WHERE id = ?", (wid,)
         ).fetchone()
         conn.close()
-        # Empty list is falsy in Python, so add_work_item stores None
-        self.assertIsNone(row["required_capabilities"])
+        # Empty list is now correctly stored as JSON "[]"
+        self.assertEqual(row["required_capabilities"], "[]")
 
 
 class TestNegativeProgress(StressTestBase):

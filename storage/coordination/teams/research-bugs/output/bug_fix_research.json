@@ -1,0 +1,254 @@
+{
+  "team": "research-bugs",
+  "date": "2026-03-11",
+  "topics": [
+    {
+      "id": "RB-001",
+      "topic": "Zombie/Abandoned Task Recovery",
+      "findings": [
+        {
+          "finding": "Airflow uses a heartbeat-based zombie detection system. Tasks periodically send heartbeats to the scheduler. If no heartbeat is received within `scheduler_zombie_task_threshold` (default 300s), the task is marked failed. A separate `zombie_detection_interval` (default 10s) controls how often the scheduler scans for zombies.",
+          "source": "Apache Airflow documentation and GitHub issues #22350, #29455, #51969",
+          "relevance": "Direct pattern for our task recovery system",
+          "recommendation": "Implement a heartbeat column (last_heartbeat_at) in the task table. Add a periodic reaper that scans for tasks where state='claimed' AND last_heartbeat_at < now() - threshold. Transition those tasks back to 'pending' or 'failed'."
+        },
+        {
+          "finding": "Temporal uses layered timeouts: Schedule-To-Start (time in queue), Start-To-Close (max execution time), and Heartbeat Timeout (liveness check). Heartbeats carry progress payloads so retried activities can resume from the last checkpoint rather than restarting.",
+          "source": "Temporal documentation: Activity Execution, Detecting Activity Failures, Activity Timeouts blog",
+          "relevance": "Progress-carrying heartbeats allow resumption rather than restart",
+          "recommendation": "Store a progress payload (JSON) alongside heartbeats so recovered tasks can optionally resume. For our system, a simple 'claimed_at' timestamp with a configurable timeout is sufficient for v1."
+        },
+        {
+          "finding": "Celery's visibility_timeout mechanism re-queues messages if a worker doesn't acknowledge them within a timeout. If the timeout is shorter than the task duration, it causes duplicate execution. This is a cautionary tale about timeout tuning.",
+          "source": "Celery documentation and GitHub discussions #7276",
+          "relevance": "Warns against setting timeouts too aggressively",
+          "recommendation": "Use a two-tier approach: (1) a generous claimed_at timeout (e.g., 5 minutes) as a safety net, (2) an active heartbeat for long-running tasks. Default to the simple timeout for our use case since coordination tasks should be short-lived."
+        },
+        {
+          "finding": "Airflow discovered that not all zombies come from missed heartbeats -- some come from tasks that fail before the execute() method runs, leaving the DB state as 'running' with no process to heartbeat. This means zombie detection must be defensive and check for multiple failure modes.",
+          "source": "Apache Airflow GitHub issue #29455",
+          "relevance": "Our system should handle tasks that crash before doing any work",
+          "recommendation": "The reaper should check both heartbeat staleness AND claimed_at staleness. If a task was claimed but never heartbeated at all, and claimed_at exceeds a threshold, treat it as abandoned."
+        },
+        {
+          "finding": "For stdlib-only Python implementation: use time.time() for timestamps, store them in SQLite, and run a periodic cleanup via a simple function called at operation boundaries (e.g., when claiming a new task, first reap expired ones).",
+          "source": "Synthesis of Airflow/Temporal patterns adapted for SQLite",
+          "relevance": "Direct implementation guidance",
+          "recommendation": "Implement as: UPDATE tasks SET state='pending', claimed_by=NULL WHERE state='claimed' AND claimed_at < ? with threshold parameter. Call this reaper at the start of claim_task() and get_pending_tasks()."
+        }
+      ]
+    },
+    {
+      "id": "RB-002",
+      "topic": "DAG Cycle Detection",
+      "findings": [
+        {
+          "finding": "Two standard O(V+E) algorithms exist: Kahn's algorithm (BFS-based, uses in-degree tracking) and DFS with White-Grey-Black coloring. Both are equally efficient. Kahn's naturally produces a topological ordering and detects cycles when not all vertices are processed. DFS detects cycles when a back edge to a 'grey' (in-progress) node is found.",
+          "source": "GeeksforGeeks, Baeldung, Wikipedia on Topological Sorting",
+          "relevance": "Core algorithm choice for our DAG validation",
+          "recommendation": "Use Kahn's algorithm. It is iterative (no recursion depth issues), naturally produces topological order (useful for execution ordering), and cycle detection falls out automatically (remaining nodes with non-zero in-degree form the cycle)."
+        },
+        {
+          "finding": "Airflow originally used recursive DFS for cycle detection but hit Python recursion limits on large DAGs (PR #6175 converted to iterative DFS). They also use topological_sort() which implicitly detects cycles.",
+          "source": "Apache Airflow GitHub PR #6175, Airflow source code",
+          "relevance": "Confirms iterative approach is necessary for production use",
+          "recommendation": "Never use recursive DFS for cycle detection in Python -- recursion limit is 1000 by default. Use iterative Kahn's or iterative DFS with an explicit stack."
+        },
+        {
+          "finding": "Kahn's algorithm implementation: (1) compute in-degree for all nodes, (2) enqueue all nodes with in-degree 0, (3) dequeue node, add to result, decrement in-degree of neighbors, (4) if neighbor in-degree becomes 0, enqueue it, (5) if result length != total nodes, cycle exists.",
+          "source": "Multiple algorithm references, Kahn 1962",
+          "relevance": "Ready-to-implement pseudocode",
+          "recommendation": "Implement Kahn's using collections.deque for the queue and a dict for in-degrees. This uses only stdlib and is O(V+E). Add a validate_no_cycles() method that runs on dependency changes."
+        },
+        {
+          "finding": "For identifying WHICH nodes are in the cycle (not just detecting one), the nodes remaining with non-zero in-degree after Kahn's algorithm completes are exactly the nodes involved in cycles. To find specific cycle paths, use iterative DFS with parent tracking on the remaining subgraph.",
+          "source": "Algorithm design best practices",
+          "relevance": "Useful for error messages showing the cycle to users",
+          "recommendation": "After Kahn's detects a cycle, collect remaining nodes and report them in the error message. E.g., 'Cycle detected involving tasks: A -> B -> C -> A'."
+        }
+      ]
+    },
+    {
+      "id": "RB-003",
+      "topic": "SQLite Connection Lifecycle Management",
+      "findings": [
+        {
+          "finding": "Python's sqlite3 context manager (with conn:) does NOT close the connection -- it only handles transaction commit/rollback. This is the #1 gotcha and source of resource leaks. Many developers assume 'with sqlite3.connect(...)' closes the connection on exit.",
+          "source": "Python docs, blog.rtwilson.com, alexwlchan.net/til/2024/sqlite3-context-manager-doesnt-close-connections",
+          "relevance": "Critical -- our code may have this exact bug",
+          "recommendation": "Always use contextlib.closing() wrapping the connection, or implement a custom context manager that closes on exit. Pattern: with closing(sqlite3.connect(db)) as conn: with conn: cursor.execute(...)"
+        },
+        {
+          "finding": "The recommended pattern nests two context managers: contextlib.closing() for connection lifecycle AND 'with conn:' for transaction management. This gives you both automatic close and automatic commit/rollback.",
+          "source": "Python docs, zetcode.com SQLite tutorial",
+          "relevance": "Direct best practice for our codebase",
+          "recommendation": "Implement a _get_connection() context manager that yields a connection and always closes it: @contextmanager def _get_connection(self): conn = sqlite3.connect(self.db_path); try: with conn: yield conn; finally: conn.close()"
+        },
+        {
+          "finding": "To prevent use-after-close, track connection state with a boolean flag. Set _closed = True in close() and check it at the start of every operation. Raise a clear error like 'Cannot operate on closed connection'.",
+          "source": "Python sqlite3 best practices, DB-API 2.0 patterns",
+          "relevance": "Directly addresses our use-after-close bug",
+          "recommendation": "Add a self._closed flag. In every public method, check: if self._closed: raise RuntimeError('Connection pool is closed'). This is simple, stdlib-only, and prevents silent failures."
+        },
+        {
+          "finding": "For thread safety: SQLite connections should not be shared between threads. Either use check_same_thread=False with your own locking, or create a new connection per operation. Python 3.12+ has improved SQLite thread safety, but per-operation connections via a context manager are still the safest pattern.",
+          "source": "Python docs sqlite3 module, discuss.python.org",
+          "relevance": "Our coordination system may have multi-agent access patterns",
+          "recommendation": "Use short-lived connections (open, operate, close) rather than long-lived connection pools. This naturally prevents use-after-close and thread issues. The overhead is minimal for SQLite since it's file-based."
+        }
+      ]
+    },
+    {
+      "id": "RB-004",
+      "topic": "JSONL Corruption Recovery",
+      "findings": [
+        {
+          "finding": "JSONL's line-per-record format provides natural corruption isolation -- a corrupted line only affects that one record. Recovery strategy: read line by line, try json.loads() on each, skip/log lines that fail to parse. The last line is most likely to be corrupted (partial write on crash).",
+          "source": "JSONL format specification, multiple JSONL tooling projects",
+          "relevance": "Our message bus uses JSONL -- this is the core recovery pattern",
+          "recommendation": "Implement a safe_read_jsonl() that wraps each line in try/except json.JSONDecodeError. Log corrupted lines with their line number. For the message bus, corrupted lines should be skipped with a warning, not cause a crash."
+        },
+        {
+          "finding": "Redis AOF handles truncation with 'aof-load-truncated yes' -- it loads everything up to the point of corruption and discards the tail. PostgreSQL WAL uses per-record CRC32 checksums to detect corruption. The conservative approach (stop at first corruption) is safest for append-only logs.",
+          "source": "Redis persistence docs, PostgreSQL WAL documentation, UnisonDB WAL blog",
+          "relevance": "Informs our corruption recovery strategy",
+          "recommendation": "For JSONL: (1) attempt to parse each line, (2) if the LAST line fails, truncate it (likely partial write), (3) if a MIDDLE line fails, skip it and log a warning. This balances safety with data recovery."
+        },
+        {
+          "finding": "To prevent corruption: use write-then-fsync pattern. After appending to JSONL, call file.flush() then os.fsync(file.fileno()). This ensures data reaches disk before the operation is considered complete. For performance, batch multiple writes before fsync.",
+          "source": "Redis AOF fsync policies, PostgreSQL WAL reliability docs",
+          "relevance": "Prevention is better than recovery",
+          "recommendation": "Add os.fsync() after critical JSONL writes. For the message bus, fsync after each publish() call. The performance impact is acceptable for a coordination system (not high-throughput)."
+        },
+        {
+          "finding": "Atomic write pattern: write to a temp file, fsync, then os.rename() to the target. rename() is atomic on POSIX systems. This prevents partial writes to the main file. However, this only works for full-file rewrites, not appends.",
+          "source": "POSIX filesystem guarantees, WAL implementation patterns",
+          "relevance": "Useful for compaction/rewrite operations on JSONL files",
+          "recommendation": "Use atomic rename for compaction operations (write compacted data to temp file, rename to original). For normal appends, use append + fsync."
+        },
+        {
+          "finding": "Lock files can become stale if a process crashes (as seen in Claude Code's history.jsonl.lock issue). Use PID-based lock validation: write the PID to the lock file and check if that PID is still alive before honoring the lock.",
+          "source": "Claude Code GitHub issue #22166",
+          "relevance": "Our JSONL operations may use file locking",
+          "recommendation": "If using file locks, store PID in the lock file. On lock acquisition, check if the holding PID is alive (os.kill(pid, 0)). If not, break the stale lock."
+        }
+      ]
+    },
+    {
+      "id": "RB-005",
+      "topic": "Input Validation Patterns for Python (stdlib-only)",
+      "findings": [
+        {
+          "finding": "Never use assert for input validation in production code. Assert statements are stripped when Python runs with -O (optimized mode). Use explicit raise ValueError/TypeError instead.",
+          "source": "Python docs, discuss.python.org best practices thread",
+          "relevance": "Critical -- if our code uses assert for validation, it's silently disabled in optimized mode",
+          "recommendation": "Replace all assert-based validation with explicit if/raise patterns: if not isinstance(x, str): raise TypeError(f'Expected str, got {type(x).__name__}')"
+        },
+        {
+          "finding": "For constrained string values, use enum.Enum or enum.StrEnum (Python 3.11+). Enums provide: (1) a defined set of valid values, (2) isinstance checking, (3) iteration over valid values for error messages, (4) IDE autocomplete support.",
+          "source": "Python enum documentation, Python enum tips blog",
+          "relevance": "Our coordination system likely has status fields, priority levels, etc.",
+          "recommendation": "Define enums for all constrained fields: class TaskStatus(str, Enum): PENDING='pending'; CLAIMED='claimed'; DONE='done'. Validate with: if status not in TaskStatus.__members__.values(). For Python < 3.11, use (str, Enum) mixin instead of StrEnum."
+        },
+        {
+          "finding": "The validate-early pattern: check all inputs at the boundary (public method entry) before doing any work. This prevents partial state mutations from invalid inputs. Combine with 'fail fast' -- raise immediately on the first invalid input.",
+          "source": "Python best practices, defensive programming patterns",
+          "relevance": "Prevents bugs from propagating through the system",
+          "recommendation": "Add a _validate_* helper for each public method that checks all arguments upfront. Pattern: def add_task(self, name, priority): self._validate_task_args(name, priority); # ... actual logic"
+        },
+        {
+          "finding": "For dataclass-based validation, use __post_init__ to validate fields after construction. This is stdlib-only (dataclasses module) and provides a clean pattern: @dataclass class Task: name: str; priority: int; def __post_init__(self): if not self.name: raise ValueError('name required')",
+          "source": "Python dataclasses documentation",
+          "relevance": "Clean pattern for validating data objects",
+          "recommendation": "Use dataclasses with __post_init__ validation for any structured data in the coordination system. This is clean, stdlib-only, and self-documenting."
+        },
+        {
+          "finding": "For validating string arguments against a set of allowed values without enums, use a simple set check: VALID_STATUSES = {'pending', 'claimed', 'done'}; if status not in VALID_STATUSES: raise ValueError(f'Invalid status {status!r}, must be one of {VALID_STATUSES}'). This is the simplest stdlib pattern.",
+          "source": "Python community best practices",
+          "relevance": "Simplest possible validation for string constrained fields",
+          "recommendation": "For simple cases, a frozenset of valid values at module level is sufficient. For richer behavior (display names, ordering), upgrade to Enum."
+        }
+      ]
+    },
+    {
+      "id": "RB-006",
+      "topic": "Message Bus Compaction / Log Growth Management",
+      "findings": [
+        {
+          "finding": "Kafka uses log compaction to retain only the latest value for each key within a topic partition. The log cleaner runs in the background, removing obsolete records while preserving the most recent state. A hybrid compact+delete strategy combines compaction with time-based retention to prevent unbounded growth even for rarely-updated keys.",
+          "source": "Confluent Kafka documentation, Redpanda Kafka guide",
+          "relevance": "Model for our JSONL message bus compaction",
+          "recommendation": "Implement key-based compaction for the message bus: retain only the latest message per (topic, key) pair. For messages without keys (pure events), use time/size-based retention."
+        },
+        {
+          "finding": "Linux logrotate uses size + time-based rotation: when a log exceeds a size threshold OR a time interval passes, rotate the file. Old files are compressed and eventually deleted. The pattern: current.log -> current.log.1.gz -> current.log.2.gz -> (deleted after N rotations).",
+          "source": "Logrotate documentation, FiveNines guide",
+          "relevance": "Simple rotation pattern applicable to JSONL files",
+          "recommendation": "Implement size-based rotation for the message bus JSONL file. When the file exceeds a threshold (e.g., 1MB), archive it and start fresh. Keep N archived files. This is simpler than compaction and sufficient for a coordination system."
+        },
+        {
+          "finding": "Docker limits log growth with max-size and max-file parameters. This is the simplest model: cap individual file size and cap total number of files. No complex compaction logic needed.",
+          "source": "Docker documentation, OneUptime blog",
+          "relevance": "Simplest possible approach",
+          "recommendation": "For our JSONL message bus, implement: (1) check file size before each write, (2) if over threshold, rename to .1, .2, etc., (3) delete files beyond max_files count. This is ~20 lines of stdlib Python."
+        },
+        {
+          "finding": "For a coordination message bus, compaction by topic is most relevant: keep only recent N messages per topic, or messages newer than T seconds. This is different from Kafka-style key compaction because coordination messages are often ephemeral.",
+          "source": "Synthesis of Kafka/log patterns for coordination use case",
+          "relevance": "Tailored to our specific use case",
+          "recommendation": "Implement a compact() method that: (1) reads all JSONL lines, (2) filters by recency (keep last N per topic or last T seconds), (3) writes filtered lines to a temp file, (4) atomic-renames temp to original. Call compact() when file size exceeds threshold."
+        },
+        {
+          "finding": "Compaction must be atomic to prevent data loss. The safe pattern: write compacted data to a temp file in the same directory (ensures same filesystem), fsync, then os.rename() over the original. If the process crashes during compaction, the original file is intact.",
+          "source": "WAL implementation patterns, POSIX filesystem semantics",
+          "relevance": "Critical safety property for compaction",
+          "recommendation": "Always use write-to-temp + atomic-rename for compaction. Never truncate and rewrite the original file in place."
+        }
+      ]
+    }
+  ],
+  "top_recommendations": [
+    {
+      "rank": 1,
+      "recommendation": "Implement heartbeat-based zombie task recovery with a reaper function that runs at operation boundaries",
+      "justification": "This is the pattern used by Airflow, Temporal, and Celery. For SQLite, add a claimed_at timestamp column and a reaper query: UPDATE tasks SET state='pending' WHERE state='claimed' AND claimed_at < threshold. Call the reaper at the start of claim_task() -- zero external dependencies, ~15 lines of code.",
+      "effort": "low",
+      "impact": "high"
+    },
+    {
+      "rank": 2,
+      "recommendation": "Add Kahn's algorithm for DAG cycle detection, run on dependency changes",
+      "justification": "Kahn's is iterative (no recursion issues), O(V+E), and naturally produces topological order. Airflow switched from recursive DFS to iterative for this exact reason. Implementation uses only collections.deque and dict -- pure stdlib, ~25 lines.",
+      "effort": "low",
+      "impact": "high"
+    },
+    {
+      "rank": 3,
+      "recommendation": "Wrap SQLite connections with contextlib.closing() and add a _closed flag to prevent use-after-close",
+      "justification": "Python's sqlite3 context manager does NOT close connections (the #1 SQLite gotcha). Adding closing() prevents resource leaks. A _closed boolean flag with checks in public methods prevents use-after-close. Both are ~5-10 lines of change.",
+      "effort": "low",
+      "impact": "high"
+    },
+    {
+      "rank": 4,
+      "recommendation": "Implement safe JSONL reading with per-line try/except and last-line truncation recovery",
+      "justification": "JSONL's line-per-record format already isolates corruption. Add json.loads() per line with error handling, and truncate corrupted last lines (most common failure mode). This follows the Redis AOF 'load truncated' pattern. ~20 lines of code.",
+      "effort": "low",
+      "impact": "high"
+    },
+    {
+      "rank": 5,
+      "recommendation": "Replace all assert-based validation with explicit raise ValueError/TypeError using enum or set-based constraints",
+      "justification": "Asserts are stripped in optimized mode (-O flag). Use enums (or frozensets) for constrained values and isinstance + raise for type checks. Validate at public method boundaries (fail-fast pattern). Incremental -- can fix one method at a time.",
+      "effort": "low",
+      "impact": "medium"
+    },
+    {
+      "rank": 6,
+      "recommendation": "Add size-based JSONL file rotation with atomic compaction via temp-file + rename",
+      "justification": "Prevents unbounded message bus growth. When JSONL exceeds threshold, compact by keeping recent messages per topic, write to temp file, atomic rename. Follows Kafka compaction + logrotate patterns. ~40 lines of code but lower urgency than the others.",
+      "effort": "medium",
+      "impact": "medium"
+    }
+  ]
+}

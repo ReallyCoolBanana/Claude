@@ -487,5 +487,217 @@ class TestBusEvents(_TestBase):
         dc_b.close()
 
 
+# ===================================================================
+# Persistent read offsets (Bug Fix 1)
+# ===================================================================
+
+
+class TestPersistentReadOffsets(_TestBase):
+
+    def test_offsets_survive_instance_recreation(self):
+        """Read offsets persist across instance destruction/recreation."""
+        dc_a = self._make_dc("team-a", "agent-a")
+        dc_b = self._make_dc("team-b", "agent-b")
+
+        # Send 5 messages and read them
+        for i in range(5):
+            dc_a.send_direct("team-b", "info", {"n": i})
+        msgs = dc_b.read_direct("team-a")
+        self.assertEqual(len(msgs), 5)
+
+        # Destroy and recreate dc_b with same db/bus paths
+        dc_b.close()
+        dc_b2 = self._make_dc("team-b", "agent-b")
+
+        # Should NOT replay old messages
+        msgs2 = dc_b2.read_direct("team-a")
+        self.assertEqual(len(msgs2), 0)
+
+        # New messages should still be visible
+        dc_a.send_direct("team-b", "info", {"n": 99})
+        msgs3 = dc_b2.read_direct("team-a")
+        self.assertEqual(len(msgs3), 1)
+        self.assertEqual(msgs3[0]["body"]["n"], 99)
+
+        dc_a.close()
+        dc_b2.close()
+
+    def test_offsets_saved_per_channel(self):
+        """Offsets are tracked independently per channel."""
+        dc_a = self._make_dc("team-a", "agent-a")
+        dc_b = self._make_dc("team-b", "agent-b")
+        dc_c = self._make_dc("team-c", "agent-c")
+
+        dc_a.send_direct("team-b", "info", {"to": "b"})
+        dc_a.send_direct("team-c", "info", {"to": "c"})
+
+        # Read only from team-b
+        dc_b.read_direct("team-a")
+        dc_b.close()
+
+        # Recreate dc_b — should have no new messages on b's channel
+        dc_b2 = self._make_dc("team-b", "agent-b")
+        msgs = dc_b2.read_direct("team-a")
+        self.assertEqual(len(msgs), 0)
+
+        # dc_c never read, should still see its message
+        msgs_c = dc_c.read_direct("team-a")
+        self.assertEqual(len(msgs_c), 1)
+
+        dc_a.close()
+        dc_b2.close()
+        dc_c.close()
+
+
+# ===================================================================
+# Partial line handling (Bug Fix 2)
+# ===================================================================
+
+
+class TestPartialLineHandling(_TestBase):
+
+    def test_partial_trailing_line_not_lost(self):
+        """A partial (incomplete) trailing line should not advance the offset past it."""
+        from direct_channels import _bus_read, _safe_channel, _direct_channel_name
+
+        channel = _direct_channel_name("team-a", "team-b")
+        safe = _safe_channel(channel)
+        filepath = os.path.join(self.bus_dir, f"{safe}.jsonl")
+
+        # Write a complete line followed by a partial line (no trailing newline)
+        complete = json.dumps({"id": "1", "ts": 9999999999, "ttl": 99999, "body": {}}) + "\n"
+        partial = '{"id": "2", "ts": 9999999999, "ttl'  # incomplete JSON
+
+        os.makedirs(self.bus_dir, exist_ok=True)
+        with open(filepath, "w") as f:
+            f.write(complete + partial)
+
+        msgs, offset = _bus_read(self.bus_dir, channel, 0)
+        # Should return the complete message
+        self.assertEqual(len(msgs), 1)
+        self.assertEqual(msgs[0]["id"], "1")
+
+        # Offset should NOT have advanced past the partial line
+        # so if the partial line is later completed, we can re-read it
+        self.assertEqual(offset, len(complete.encode("utf-8")))
+
+    def test_complete_lines_fully_consumed(self):
+        """When all lines are complete, offset advances to the end."""
+        from direct_channels import _bus_read, _safe_channel, _direct_channel_name
+
+        channel = _direct_channel_name("team-a", "team-b")
+        safe = _safe_channel(channel)
+        filepath = os.path.join(self.bus_dir, f"{safe}.jsonl")
+
+        line1 = json.dumps({"id": "1", "ts": 9999999999, "ttl": 99999, "body": {}}) + "\n"
+        line2 = json.dumps({"id": "2", "ts": 9999999999, "ttl": 99999, "body": {}}) + "\n"
+        os.makedirs(self.bus_dir, exist_ok=True)
+        with open(filepath, "w") as f:
+            f.write(line1 + line2)
+
+        msgs, offset = _bus_read(self.bus_dir, channel, 0)
+        self.assertEqual(len(msgs), 2)
+        expected_offset = len((line1 + line2).encode("utf-8"))
+        self.assertEqual(offset, expected_offset)
+
+
+# ===================================================================
+# Bus write error handling (Bug Fix 4)
+# ===================================================================
+
+
+class TestBusWriteErrorHandling(_TestBase):
+
+    def test_bus_publish_returns_none_on_io_error(self):
+        """_bus_publish returns None instead of raising on I/O failure."""
+        from direct_channels import _bus_publish
+
+        # Use a path that will cause an error (directory that can't be created)
+        result = _bus_publish("/dev/null/impossible", "ch", "a", "t", "info", {})
+        self.assertIsNone(result)
+
+    def test_bus_publish_still_raises_on_oversized(self):
+        """ValueError for oversized messages should still propagate."""
+        from direct_channels import _bus_publish, MAX_MESSAGE_BYTES
+
+        huge_body = {"data": "X" * MAX_MESSAGE_BYTES}
+        with self.assertRaises(ValueError):
+            _bus_publish(self.bus_dir, "ch", "a", "t", "info", huge_body)
+
+
+# ===================================================================
+# Closed-state tracking (Bug Fix 5)
+# ===================================================================
+
+
+class TestClosedState(_TestBase):
+
+    def test_operations_after_close_raise(self):
+        """All public methods raise RuntimeError after close()."""
+        dc = self._make_dc()
+        dc.close()
+
+        with self.assertRaises(RuntimeError):
+            dc.create_direct_channel("team-b")
+        with self.assertRaises(RuntimeError):
+            dc.create_topic_channel("t", ["team-a"])
+        with self.assertRaises(RuntimeError):
+            dc.join_channel("x")
+        with self.assertRaises(RuntimeError):
+            dc.leave_channel("x")
+        with self.assertRaises(RuntimeError):
+            dc.list_active_channels()
+        with self.assertRaises(RuntimeError):
+            dc.archive_channel("x")
+        with self.assertRaises(RuntimeError):
+            dc.send_direct("team-b", "info", {})
+        with self.assertRaises(RuntimeError):
+            dc.read_direct("team-b")
+        with self.assertRaises(RuntimeError):
+            dc.set_presence("available")
+        with self.assertRaises(RuntimeError):
+            dc.get_presence()
+        with self.assertRaises(RuntimeError):
+            dc.get_available_teams()
+        with self.assertRaises(RuntimeError):
+            dc.update_progress("p", 0, 0, 0)
+        with self.assertRaises(RuntimeError):
+            dc.get_all_progress()
+        with self.assertRaises(RuntimeError):
+            dc.get_team_progress("x")
+        with self.assertRaises(RuntimeError):
+            dc.get_slowest_team()
+        with self.assertRaises(RuntimeError):
+            dc.get_teams_below_progress(50)
+
+    def test_double_close_is_safe(self):
+        """Calling close() twice should not raise."""
+        dc = self._make_dc()
+        dc.close()
+        dc.close()  # Should not raise
+
+
+# ===================================================================
+# set_presence lock coordination (Bug Fix 3)
+# ===================================================================
+
+
+class TestPresenceLockCoordination(_TestBase):
+
+    def test_set_presence_channels_consistent(self):
+        """Channels listed in presence match actual active channels at time of write."""
+        dc = self._make_dc()
+        dc.create_direct_channel("team-b")
+        dc.create_direct_channel("team-c")
+        dc.set_presence("available")
+
+        p = dc.get_presence("team-a")
+        # Should contain both channels
+        self.assertIn("direct-team-a-team-b", p["current_channels"])
+        self.assertIn("direct-team-a-team-c", p["current_channels"])
+        self.assertEqual(len(p["current_channels"]), 2)
+        dc.close()
+
+
 if __name__ == "__main__":
     unittest.main()

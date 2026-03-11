@@ -1,0 +1,420 @@
+{
+  "team": "think-tank-proposals",
+  "date": "2026-03-11",
+  "session": "TEAM-0025",
+  "analysis_context": {
+    "files_reviewed": [
+      "storage/coordination/teams/think-tank-hub/output/hub_spoke_analysis.json",
+      "storage/coordination/sops/sop_011_central_commander_launch.json",
+      "storage/coordination/sops/efficiency_guide.json",
+      "storage/coordination/help_protocol.py",
+      "storage/coordination/direct_channels.py",
+      "storage/coordination/work_stealing.py"
+    ],
+    "existing_status_mechanisms": [
+      "help_protocol.py: team_status table (team, status, progress_pct, current_task, work_items_total, work_items_done, last_updated)",
+      "direct_channels.py: presence table (team, status, current_channels, last_seen)",
+      "direct_channels.py: progress table (team, phase, progress_pct, items_total, items_done, estimated_completion_ts, current_bottleneck, last_updated)",
+      "JSONL bus: status-update events on global channel"
+    ]
+  },
+  "proposals_analyzed": [
+    {
+      "id": "PROP-001",
+      "title": "SQLite Status Table",
+      "proposed_schema": "agent_status(agent_id TEXT PRIMARY KEY, team TEXT, status TEXT, progress_pct REAL, current_task TEXT, blockers TEXT, findings_count INTEGER, output_files TEXT, last_updated REAL)",
+      "verdict": "approved-with-modifications",
+      "strengths": [
+        "Atomic INSERT OR REPLACE eliminates all read-modify-write races that plague the per-agent JSON file approach",
+        "Single SELECT gives the coordinator a complete dashboard — no glob, no parse loop, no partial-read risks",
+        "SQLite WAL mode is already the established concurrency pattern in this codebase (help_protocol, direct_channels, work_stealing all use it)",
+        "Agents already have sqlite3 in stdlib — zero new dependencies",
+        "Schema is simple and purpose-built: one row per agent, always current",
+        "The coordinator already manages SQLite connections for help_protocol and direct_channels — adding one more table to the same DB is cheaper than managing a directory of JSON files"
+      ],
+      "risks": [
+        {
+          "risk": "Redundancy with existing team_status table in help_protocol.py",
+          "severity": "medium",
+          "mitigation": "Do NOT create a separate table. Extend the existing team_status table with the additional columns (agent_id, blockers, findings_count, output_files). This avoids two status systems competing for truth."
+        },
+        {
+          "risk": "Redundancy with progress table in direct_channels.py",
+          "severity": "medium",
+          "mitigation": "The progress table tracks phase-level progress per team. The hub status table tracks agent-level progress. They serve different granularities. Keep both but document that hub_status is the coordinator's primary read target."
+        },
+        {
+          "risk": "SQLite busy contention when 8-10 agents write simultaneously",
+          "severity": "low",
+          "mitigation": "Already solved in this codebase. WAL mode + busy_timeout=30000ms + _retry_on_busy decorator handles this. The write is a single INSERT OR REPLACE — sub-millisecond lock hold time. Contention probability at 10 agents writing every 30s is negligible."
+        },
+        {
+          "risk": "Agent crash leaves stale row",
+          "severity": "low",
+          "mitigation": "Coordinator checks last_updated and flags agents with stale timestamps. Same as the per-agent JSON approach but without the extra filesystem management."
+        },
+        {
+          "risk": "Schema too flat — blockers and output_files as TEXT loses structure",
+          "severity": "low",
+          "mitigation": "Store blockers and output_files as JSON arrays in TEXT columns. SQLite has json_each() for queries if needed. Keep findings_count as INTEGER (summary stat) but add a key_findings TEXT column for the last 3-5 findings as a JSON array."
+        }
+      ],
+      "modifications": [
+        "Use the EXISTING coordination SQLite database (same db_path as help_protocol, direct_channels, work_stealing) instead of creating a new DB or separate JSON files",
+        "Add agent-level granularity: the current team_status tracks teams, but the hub needs to track individual agents within teams",
+        "Add coordinator_instructions table as a sibling table for bidirectional communication",
+        "Add acknowledged_instructions column so agents can confirm receipt",
+        "Add started_at and estimated_completion columns for timeline tracking",
+        "Add requests_to_coordinator as a JSON TEXT column for agents to post structured requests"
+      ],
+      "implementation": {
+        "schema": "CREATE TABLE IF NOT EXISTS hub_agent_status (\n    agent_id TEXT PRIMARY KEY,\n    team TEXT NOT NULL,\n    role TEXT DEFAULT 'worker',\n    status TEXT NOT NULL DEFAULT 'starting',\n    progress_pct REAL DEFAULT 0,\n    current_task TEXT,\n    subtasks_total INTEGER DEFAULT 0,\n    subtasks_done INTEGER DEFAULT 0,\n    blockers TEXT DEFAULT '[]',\n    key_findings TEXT DEFAULT '[]',\n    findings_count INTEGER DEFAULT 0,\n    requests TEXT DEFAULT '[]',\n    output_files TEXT DEFAULT '[]',\n    acknowledged_instructions TEXT DEFAULT '[]',\n    started_at REAL NOT NULL,\n    last_updated REAL NOT NULL,\n    estimated_completion REAL\n);\n\nCREATE TABLE IF NOT EXISTS hub_instructions (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    target_agent_id TEXT NOT NULL,\n    instruction_type TEXT NOT NULL,\n    message TEXT NOT NULL,\n    context TEXT DEFAULT '{}',\n    issued_at REAL NOT NULL,\n    acknowledged_at REAL,\n    superseded_by INTEGER REFERENCES hub_instructions(id)\n);\n\nCREATE INDEX IF NOT EXISTS idx_hub_agent_status_team ON hub_agent_status(team);\nCREATE INDEX IF NOT EXISTS idx_hub_agent_status_status ON hub_agent_status(status);\nCREATE INDEX IF NOT EXISTS idx_hub_instructions_target ON hub_instructions(target_agent_id, acknowledged_at);",
+        "valid_statuses": ["starting", "working", "blocked", "complete", "error", "idle", "waiting_for_instruction"],
+        "valid_instruction_types": ["proceed", "redirect", "pause", "abort", "info", "merge_with"],
+        "agent_write_code": "import json\nimport sqlite3\nimport time\n\ndef update_hub_status(db_path, agent_id, team, status, progress_pct, current_task,\n                     subtasks_total=0, subtasks_done=0, blockers=None,\n                     key_findings=None, findings_count=0, requests=None,\n                     output_files=None, estimated_completion=None):\n    \"\"\"Write agent status to the hub. Called every 30s and on state changes.\"\"\"\n    now = time.time()\n    conn = sqlite3.connect(db_path, timeout=30)\n    conn.execute('PRAGMA journal_mode=WAL')\n    conn.execute('PRAGMA busy_timeout=30000')\n    conn.execute(\n        '''INSERT INTO hub_agent_status\n           (agent_id, team, status, progress_pct, current_task,\n            subtasks_total, subtasks_done, blockers, key_findings,\n            findings_count, requests, output_files, started_at, last_updated,\n            estimated_completion)\n           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n           ON CONFLICT(agent_id) DO UPDATE SET\n            team=excluded.team, status=excluded.status,\n            progress_pct=excluded.progress_pct,\n            current_task=excluded.current_task,\n            subtasks_total=excluded.subtasks_total,\n            subtasks_done=excluded.subtasks_done,\n            blockers=excluded.blockers,\n            key_findings=excluded.key_findings,\n            findings_count=excluded.findings_count,\n            requests=excluded.requests,\n            output_files=excluded.output_files,\n            last_updated=excluded.last_updated,\n            estimated_completion=excluded.estimated_completion''',\n        (agent_id, team, status, progress_pct, current_task,\n         subtasks_total, subtasks_done,\n         json.dumps(blockers or []),\n         json.dumps(key_findings or []),\n         findings_count,\n         json.dumps(requests or []),\n         json.dumps(output_files or []),\n         now, now,\n         estimated_completion)\n    )\n    conn.commit()\n    conn.close()\n\n\ndef check_hub_instructions(db_path, agent_id):\n    \"\"\"Check for unacknowledged instructions from coordinator.\"\"\"\n    conn = sqlite3.connect(db_path, timeout=30)\n    conn.row_factory = sqlite3.Row\n    conn.execute('PRAGMA journal_mode=WAL')\n    conn.execute('PRAGMA busy_timeout=30000')\n    rows = conn.execute(\n        '''SELECT id, instruction_type, message, context, issued_at\n           FROM hub_instructions\n           WHERE target_agent_id = ? AND acknowledged_at IS NULL\n           AND superseded_by IS NULL\n           ORDER BY issued_at ASC''',\n        (agent_id,)\n    ).fetchall()\n    instructions = [dict(r) for r in rows]\n    conn.close()\n    return instructions\n\n\ndef acknowledge_instruction(db_path, instruction_id, agent_id):\n    \"\"\"Acknowledge receipt of an instruction.\"\"\"\n    now = time.time()\n    conn = sqlite3.connect(db_path, timeout=30)\n    conn.execute('PRAGMA journal_mode=WAL')\n    conn.execute('PRAGMA busy_timeout=30000')\n    conn.execute(\n        'UPDATE hub_instructions SET acknowledged_at = ? WHERE id = ? AND target_agent_id = ?',\n        (now, instruction_id, agent_id)\n    )\n    # Also record in agent status\n    conn.execute(\n        '''UPDATE hub_agent_status\n           SET acknowledged_instructions = json_insert(\n               acknowledged_instructions, '$[#]', ?)\n           WHERE agent_id = ?''',\n        (instruction_id, agent_id)\n    )\n    conn.commit()\n    conn.close()",
+        "coordinator_read_code": "import json\nimport sqlite3\nimport time\n\ndef read_hub_dashboard(db_path):\n    \"\"\"Read all agent statuses in one query. Returns list of dicts.\"\"\"\n    conn = sqlite3.connect(db_path, timeout=30)\n    conn.row_factory = sqlite3.Row\n    conn.execute('PRAGMA journal_mode=WAL')\n    rows = conn.execute(\n        '''SELECT * FROM hub_agent_status\n           ORDER BY\n             CASE status\n               WHEN 'blocked' THEN 0\n               WHEN 'error' THEN 1\n               WHEN 'waiting_for_instruction' THEN 2\n               WHEN 'working' THEN 3\n               WHEN 'starting' THEN 4\n               WHEN 'idle' THEN 5\n               WHEN 'complete' THEN 6\n             END,\n             progress_pct ASC'''\n    ).fetchall()\n    now = time.time()\n    agents = []\n    for r in rows:\n        d = dict(r)\n        d['blockers'] = json.loads(d['blockers'])\n        d['key_findings'] = json.loads(d['key_findings'])\n        d['requests'] = json.loads(d['requests'])\n        d['output_files'] = json.loads(d['output_files'])\n        d['age_seconds'] = now - d['last_updated']\n        d['possibly_dead'] = d['age_seconds'] > 120\n        agents.append(d)\n    conn.close()\n    return agents\n\n\ndef send_hub_instruction(db_path, target_agent_id, instruction_type, message, context=None):\n    \"\"\"Send an instruction to a specific agent.\"\"\"\n    now = time.time()\n    conn = sqlite3.connect(db_path, timeout=30)\n    conn.execute('PRAGMA journal_mode=WAL')\n    conn.execute('PRAGMA busy_timeout=30000')\n    # Supersede any previous unacknowledged instruction of the same type\n    cur = conn.execute(\n        '''SELECT id FROM hub_instructions\n           WHERE target_agent_id = ? AND instruction_type = ?\n           AND acknowledged_at IS NULL AND superseded_by IS NULL''',\n        (target_agent_id, instruction_type)\n    ).fetchone()\n    row_id = conn.execute(\n        '''INSERT INTO hub_instructions\n           (target_agent_id, instruction_type, message, context, issued_at)\n           VALUES (?, ?, ?, ?, ?)''',\n        (target_agent_id, instruction_type, message,\n         json.dumps(context or {}), now)\n    ).lastrowid\n    if cur:\n        conn.execute(\n            'UPDATE hub_instructions SET superseded_by = ? WHERE id = ?',\n            (row_id, cur[0])\n        )\n    conn.commit()\n    conn.close()\n    return row_id\n\n\ndef get_blocked_agents(db_path):\n    \"\"\"Get agents that are blocked or have pending requests.\"\"\"\n    conn = sqlite3.connect(db_path, timeout=30)\n    conn.row_factory = sqlite3.Row\n    conn.execute('PRAGMA journal_mode=WAL')\n    rows = conn.execute(\n        '''SELECT * FROM hub_agent_status\n           WHERE status IN ('blocked', 'error', 'waiting_for_instruction')\n           OR json_array_length(requests) > 0\n           ORDER BY last_updated ASC'''\n    ).fetchall()\n    conn.close()\n    return [dict(r) for r in rows]\n\n\ndef get_stale_agents(db_path, stale_seconds=120):\n    \"\"\"Get agents whose last update is older than stale_seconds.\"\"\"\n    cutoff = time.time() - stale_seconds\n    conn = sqlite3.connect(db_path, timeout=30)\n    conn.row_factory = sqlite3.Row\n    conn.execute('PRAGMA journal_mode=WAL')\n    rows = conn.execute(\n        '''SELECT * FROM hub_agent_status\n           WHERE last_updated < ? AND status NOT IN ('complete', 'error')\n           ORDER BY last_updated ASC''',\n        (cutoff,)\n    ).fetchall()\n    conn.close()\n    return [dict(r) for r in rows]\n\n\ndef format_dashboard(agents):\n    \"\"\"Format agent status list into a readable table string.\"\"\"\n    if not agents:\n        return 'No agents reporting.'\n    lines = []\n    lines.append(f\"{'AGENT':<25} {'TEAM':<20} {'STATUS':<12} {'PROG':>5} {'TASK':<40} {'AGE':>6}\")\n    lines.append('-' * 112)\n    for a in agents:\n        flag = '!!' if a.get('possibly_dead') else ('**' if a['status'] in ('blocked','error') else '  ')\n        task = (a.get('current_task') or '')[:38]\n        age = f\"{int(a.get('age_seconds', 0))}s\"\n        lines.append(\n            f\"{flag}{a['agent_id']:<23} {a['team']:<20} {a['status']:<12} {a['progress_pct']:>4.0f}% {task:<40} {age:>6}\"\n        )\n    return '\\n'.join(lines)",
+        "integration_points": [
+          "Uses the same SQLite DB file as help_protocol.py, direct_channels.py, and work_stealing.py",
+          "Schema is initialized alongside existing schemas in coordinator_hub.py module init",
+          "agent_id in hub_agent_status corresponds to agent_id in help_protocol's work_items.agent_id",
+          "team in hub_agent_status corresponds to team in help_protocol's team_status.team",
+          "Coordinator reads hub_agent_status as primary dashboard, falls back to help_protocol.team_status for teams not yet reporting to hub"
+        ]
+      }
+    },
+    {
+      "id": "PROP-002",
+      "title": "Hub-and-Spoke Replacing Fire-and-Forget (NOT replacing agent-to-agent tools)",
+      "verdict": "approved",
+      "strengths": [
+        "Correctly identifies the scope boundary: hub-spoke is for COORDINATOR VISIBILITY, not for replacing direct_channels or help_protocol peer communication",
+        "Addresses the root problem (coordinator flying blind) without disrupting working agent-to-agent patterns",
+        "Aligns perfectly with the layered architecture recommended in hub_spoke_analysis.json: Layer 1 (hub) for status, Layer 2 (direct_channels) for peer collab, Layer 3 (scratchpad) for data sharing",
+        "The existing tools (help_protocol, direct_channels, work_stealing) are battle-tested from TEAM-0022 through TEAM-0024 — no reason to disturb them",
+        "Makes the coordinator's role clear: it MONITORS via hub and STEERS via instructions. It does not relay data between agents."
+      ],
+      "risks": [
+        {
+          "risk": "Agents may use the hub instruction channel for data transfer instead of direct_channels/scratchpad",
+          "severity": "low",
+          "mitigation": "Document clearly: hub instructions are for DIRECTIVES (proceed, redirect, pause, abort, info, merge_with). Data sharing goes through scratchpad or direct_channels. Enforce a size limit on instruction message field (1024 chars)."
+        },
+        {
+          "risk": "Coordinator over-relies on hub and stops checking bus/help_protocol for urgent requests",
+          "severity": "medium",
+          "mitigation": "The coordinator monitoring loop should read hub_agent_status FIRST (primary dashboard) then check help_protocol.get_open_help_requests() for any that haven't been surfaced through hub status requests. Belt and suspenders."
+        },
+        {
+          "risk": "Confusion about which system to use when",
+          "severity": "medium",
+          "mitigation": "Add a clear routing table to the SOP: 'Status updates -> hub. Help requests -> help_protocol. Peer data sharing -> scratchpad/direct_channels. Work distribution -> work_stealing queue.'"
+        }
+      ],
+      "modifications": [],
+      "implementation": {
+        "routing_table": {
+          "agent_reports_status": "hub_agent_status table via update_hub_status()",
+          "agent_reports_blocker": "hub_agent_status.blockers field + hub_agent_status.status='blocked'",
+          "agent_requests_data_from_peer": "direct_channels.send_direct() or scratchpad.read()",
+          "agent_offers_help": "help_protocol.offer_help()",
+          "agent_requests_help": "help_protocol.request_help() AND sets hub_agent_status.status='blocked'",
+          "coordinator_monitors": "read_hub_dashboard() — single query, full picture",
+          "coordinator_steers": "send_hub_instruction() to specific agent",
+          "coordinator_reassigns_work": "help_protocol.auto_assign_idle_teams() triggered when hub shows idle agents + open help requests",
+          "agents_share_findings": "scratchpad.write() with 'global' namespace"
+        },
+        "coexistence_rules": [
+          "ALL agents MUST write to hub_agent_status every 30 seconds. This is non-negotiable.",
+          "Agents MAY use direct_channels, help_protocol, work_stealing, and scratchpad as needed for peer coordination.",
+          "The hub is READ by the coordinator. The existing tools are USED by agents.",
+          "hub_instructions is the ONLY channel for coordinator-to-agent directives. Do not use the bus for this.",
+          "If an agent posts a help request via help_protocol, it MUST also set status='blocked' in hub so the coordinator sees it."
+        ]
+      }
+    },
+    {
+      "id": "PROP-003",
+      "title": "Anti-Sequential Core Rule",
+      "proposed_rule": "Default to parallel. The burden of proof is on sequencing — you must justify WHY Task B can't start without Task A. Reading the same source code is not a dependency.",
+      "verdict": "approved",
+      "strengths": [
+        "Directly attacks the most expensive anti-pattern observed in practice (TEAM-0024 coordinator initially planned sequential waves before being corrected)",
+        "The rule is crisp and memorable — a single sentence that can be embedded in every coordinator prompt",
+        "The litmus test is binary and actionable: 'Can B read the same source A reads? If yes, no dependency.'",
+        "Consistent with SOP-011 which already codifies this as ASR-001 through ASR-010",
+        "The hub-spoke visibility (PROP-001) is the enabler: the coordinator can now confidently run parallel because it can SEE and STEER in real-time",
+        "Historical evidence is strong: TEAM-0022 (18 agents, 1 wave), TEAM-0023 (20 agents, 1 wave), TEAM-0024 (8 agents, 1 wave) — all successful with maximum parallelism"
+      ],
+      "risks": [
+        {
+          "risk": "Overzealous parallelism when true dependencies exist (e.g., Team B needs Team A's generated artifact)",
+          "severity": "medium",
+          "mitigation": "The rule already has the escape hatch: 'you must justify WHY'. True dependencies like generated artifacts, trained models, or fetched external data are legitimate justifications. The key is that READING EXISTING CODE is never a justification."
+        },
+        {
+          "risk": "File-write collisions when two agents edit the same file",
+          "severity": "medium",
+          "mitigation": "This is a task assignment problem, not a parallelism problem. The coordinator must ensure file-disjoint task assignments. The anti-sequential rule applies to LAUNCH timing, not to file access patterns. Add to the rule: 'Conflict prevention is task isolation (different files), not temporal separation (different waves).'"
+        },
+        {
+          "risk": "Rule is ignored if not embedded in the right places",
+          "severity": "high",
+          "mitigation": "Embed the rule in THREE places: (1) coordinator system prompt, (2) SOP-011 pre-launch checklist, (3) a machine-readable guard in the launch code that counts launch waves and warns if >1."
+        }
+      ],
+      "modifications": [
+        "Formalize the rule as a named constant that can be referenced: ANTI_SEQUENTIAL_RULE",
+        "Add a machine-checkable version: if the coordinator's launch plan has more than 1 wave, it must include a 'sequencing_justification' field per deferred team citing the specific artifact dependency",
+        "Pair the rule with the hub-spoke system: 'Default to parallel BECAUSE you have real-time visibility via the hub. If something goes wrong, you will see it and can intervene.'"
+      ],
+      "implementation": {
+        "rule_text": "Default to parallel. The burden of proof is on sequencing. You must justify WHY Task B cannot start without Task A. Reading the same source code is NOT a dependency. Conflict prevention is through task isolation (different files), not temporal separation (different waves). You have real-time visibility via the hub — if something goes wrong, you will see it and intervene.",
+        "embedding_locations": [
+          {
+            "location": "coordinator system prompt",
+            "how": "Include the rule verbatim in the ANTI-PATTERNS section of the coordinator's instructions"
+          },
+          {
+            "location": "SOP-011 pre-launch checklist",
+            "how": "Already partially there as ASR-001 through ASR-010. Consolidate into the single rule with the justification requirement."
+          },
+          {
+            "location": "coordinator_hub.py launch validation",
+            "how": "A validate_launch_plan() function that takes the list of teams and their launch_wave number. If any team has wave > 0, it requires a 'sequencing_justification' string. Logs a warning if justification is missing."
+          }
+        ],
+        "launch_plan_schema": {
+          "teams": [
+            {
+              "team_id": "think-tank-1",
+              "launch_wave": 0,
+              "sequencing_justification": null,
+              "depends_on_artifacts_from": []
+            },
+            {
+              "team_id": "coding-team-1",
+              "launch_wave": 0,
+              "sequencing_justification": null,
+              "depends_on_artifacts_from": []
+            }
+          ],
+          "validation_rule": "All teams should have launch_wave=0 unless depends_on_artifacts_from is non-empty AND the referenced artifact does not yet exist"
+        },
+        "validation_code": "def validate_launch_plan(teams):\n    \"\"\"Validate that sequencing is justified. Returns warnings list.\"\"\"\n    warnings = []\n    waves = set(t.get('launch_wave', 0) for t in teams)\n    if len(waves) > 1:\n        for t in teams:\n            if t.get('launch_wave', 0) > 0:\n                if not t.get('sequencing_justification'):\n                    warnings.append(\n                        f\"ANTI-SEQUENTIAL VIOLATION: {t['team_id']} is in wave \"\n                        f\"{t['launch_wave']} with no justification. \"\n                        f\"Default is wave 0 (parallel). Provide sequencing_justification \"\n                        f\"or move to wave 0.\"\n                    )\n                elif not t.get('depends_on_artifacts_from'):\n                    warnings.append(\n                        f\"WEAK JUSTIFICATION: {t['team_id']} has justification but \"\n                        f\"depends_on_artifacts_from is empty. If no artifact dependency \"\n                        f\"exists, move to wave 0.\"\n                    )\n    if max(w for w in waves) > 1:\n        warnings.append(\n            f\"THREE OR MORE WAVES detected ({len(waves)} waves). \"\n            f\"This indicates a decomposition failure. Re-analyze task dependencies.\"\n        )\n    return warnings"
+      }
+    },
+    {
+      "id": "PROP-004",
+      "title": "Single-Command Status Check",
+      "proposed_mechanism": "Each agent prompt includes instructions to write status to a designated path. The coordinator checks that path with one command instead of running 15 find commands.",
+      "verdict": "approved-with-modifications",
+      "strengths": [
+        "Directly addresses the O(N) monitoring overhead where N is the number of agents",
+        "Reduces coordinator cognitive load: one action, full picture",
+        "Aligns with the SQLite approach in PROP-001 which gives this for free — a single SELECT is one command",
+        "Eliminates the current approach of running multiple 'find' or 'ls' commands across scattered output directories"
+      ],
+      "risks": [
+        {
+          "risk": "If implemented as file-per-agent (the hub_spoke_analysis.json recommendation), the 'single command' is actually glob + N reads, which is still O(N)",
+          "severity": "medium",
+          "mitigation": "This is precisely why PROP-001 (SQLite) is superior to per-agent JSON files. A single SQL query IS a single command regardless of agent count. The per-agent JSON approach still requires globbing and parsing N files."
+        },
+        {
+          "risk": "Agents ignore the status-writing instruction in their prompt",
+          "severity": "medium",
+          "mitigation": "Make the status update a CODE SNIPPET in the prompt, not a verbal instruction. Give agents a 3-line function call they copy-paste. Better: provide a hub_status_snippet.py that agents import."
+        },
+        {
+          "risk": "Status path must be known at prompt-writing time",
+          "severity": "low",
+          "mitigation": "The DB path is a constant: storage/coordination/coordination.db. Include it as a literal in every agent prompt."
+        }
+      ],
+      "modifications": [
+        "Merge with PROP-001: the 'single command' IS the SQLite SELECT. No separate implementation needed.",
+        "Provide a BASH one-liner for coordinators who want to check status without Python: sqlite3 storage/coordination/coordination.db 'SELECT agent_id, status, progress_pct, current_task FROM hub_agent_status ORDER BY progress_pct'",
+        "Provide a Python one-liner that can be embedded in coordinator prompts: python3 -c \"import sqlite3,json; [print(f\\\"{r[0]:20} {r[2]:10} {r[3]:5.0f}% {r[4] or ''}\\\"[:80]) for r in sqlite3.connect('storage/coordination/coordination.db').execute('SELECT * FROM hub_agent_status ORDER BY progress_pct')]\"",
+        "For maximum simplicity, provide a hub_dashboard.py CLI script that the coordinator calls with one bash command"
+      ],
+      "implementation": {
+        "cli_script": "hub_dashboard.py",
+        "cli_usage": "python3 storage/coordination/hub_dashboard.py [--db PATH] [--format table|json] [--blocked-only] [--stale-seconds N]",
+        "agent_prompt_snippet": "# STATUS REPORTING — Include in every agent prompt:\n# At the start of your task and every 30 seconds during work, run:\npython3 -c \"\nimport sqlite3, time, json\nconn = sqlite3.connect('storage/coordination/coordination.db', timeout=30)\nconn.execute('PRAGMA journal_mode=WAL')\nconn.execute('PRAGMA busy_timeout=30000')\nconn.execute('''CREATE TABLE IF NOT EXISTS hub_agent_status (\n    agent_id TEXT PRIMARY KEY, team TEXT NOT NULL, role TEXT DEFAULT 'worker',\n    status TEXT NOT NULL DEFAULT 'starting', progress_pct REAL DEFAULT 0,\n    current_task TEXT, subtasks_total INTEGER DEFAULT 0, subtasks_done INTEGER DEFAULT 0,\n    blockers TEXT DEFAULT '[]', key_findings TEXT DEFAULT '[]', findings_count INTEGER DEFAULT 0,\n    requests TEXT DEFAULT '[]', output_files TEXT DEFAULT '[]',\n    acknowledged_instructions TEXT DEFAULT '[]',\n    started_at REAL NOT NULL, last_updated REAL NOT NULL, estimated_completion REAL)''')\nconn.execute('''INSERT INTO hub_agent_status\n    (agent_id, team, status, progress_pct, current_task, started_at, last_updated)\n    VALUES (?, ?, ?, ?, ?, ?, ?)\n    ON CONFLICT(agent_id) DO UPDATE SET\n    status=excluded.status, progress_pct=excluded.progress_pct,\n    current_task=excluded.current_task, last_updated=excluded.last_updated''',\n    ('AGENT_ID', 'TEAM_NAME', 'STATUS', PROGRESS, 'TASK_DESCRIPTION', time.time(), time.time()))\nconn.commit(); conn.close()\n\"",
+        "coordinator_check_command": "python3 storage/coordination/hub_dashboard.py",
+        "integration_with_prop_001": "PROP-004 is fully subsumed by PROP-001. The SQLite table IS the single status path. The dashboard script IS the single command. No separate implementation needed."
+      }
+    }
+  ],
+  "cross_proposal_analysis": {
+    "synergies": [
+      "PROP-001 (SQLite) + PROP-004 (single command) are two facets of the same solution. SQLite gives atomicity; the dashboard query gives single-command access.",
+      "PROP-002 (scope boundary) + PROP-001 (SQLite) coexist cleanly because the hub tables live in the same DB as help_protocol/direct_channels. One DB, multiple coordination layers.",
+      "PROP-003 (anti-sequential) + PROP-001 (hub visibility) are mutually reinforcing: the hub gives the coordinator confidence to run parallel, and parallel execution is the whole point of the anti-sequential rule."
+    ],
+    "conflicts": [
+      "PROP-001 (SQLite) conflicts with the hub_spoke_analysis.json recommendation of per-agent JSON files. Resolution: SQLite wins. The analysis itself noted SQLite as 'viable' and only rejected it as 'overkill'. But the analysis underestimated the value of atomic writes and single-query dashboard. With the existing codebase already using SQLite for 3 other coordination modules, adding one more table is less overhead than managing a directory of JSON files.",
+      "PROP-004 originally assumed file-based status. With PROP-001 providing SQLite, PROP-004 simplifies to 'write a dashboard CLI script'."
+    ],
+    "resolution": "The hub_spoke_analysis.json's per-agent JSON file approach is architecturally clean but pragmatically inferior to SQLite in this specific codebase where SQLite is already the established pattern. The JSON approach requires: (1) directory management, (2) glob + parse loop, (3) temp-file-then-rename for atomicity, (4) no query capability. SQLite requires: (1) one INSERT OR REPLACE, (2) one SELECT, (3) built-in atomicity, (4) full query capability for filtering/sorting. The coding team should implement SQLite."
+  },
+  "unified_implementation_spec": {
+    "new_module": "storage/coordination/coordinator_hub.py",
+    "db_path": "storage/coordination/coordination.db",
+    "schema": "CREATE TABLE IF NOT EXISTS hub_agent_status (\n    agent_id TEXT PRIMARY KEY,\n    team TEXT NOT NULL,\n    role TEXT DEFAULT 'worker',\n    status TEXT NOT NULL DEFAULT 'starting',\n    progress_pct REAL DEFAULT 0,\n    current_task TEXT,\n    subtasks_total INTEGER DEFAULT 0,\n    subtasks_done INTEGER DEFAULT 0,\n    blockers TEXT DEFAULT '[]',\n    key_findings TEXT DEFAULT '[]',\n    findings_count INTEGER DEFAULT 0,\n    requests TEXT DEFAULT '[]',\n    output_files TEXT DEFAULT '[]',\n    acknowledged_instructions TEXT DEFAULT '[]',\n    started_at REAL NOT NULL,\n    last_updated REAL NOT NULL,\n    estimated_completion REAL\n);\n\nCREATE TABLE IF NOT EXISTS hub_instructions (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    target_agent_id TEXT NOT NULL,\n    instruction_type TEXT NOT NULL CHECK(instruction_type IN ('proceed','redirect','pause','abort','info','merge_with')),\n    message TEXT NOT NULL,\n    context TEXT DEFAULT '{}',\n    issued_at REAL NOT NULL,\n    acknowledged_at REAL,\n    superseded_by INTEGER REFERENCES hub_instructions(id)\n);\n\nCREATE INDEX IF NOT EXISTS idx_hub_agent_status_team ON hub_agent_status(team);\nCREATE INDEX IF NOT EXISTS idx_hub_agent_status_status ON hub_agent_status(status);\nCREATE INDEX IF NOT EXISTS idx_hub_instructions_target ON hub_instructions(target_agent_id, acknowledged_at);",
+    "classes": [
+      {
+        "name": "HubAgent",
+        "purpose": "Agent-side interface. Each agent creates one instance and uses it to post status and check instructions.",
+        "constructor_args": ["db_path: str", "agent_id: str", "team: str", "role: str = 'worker'"],
+        "methods": [
+          {
+            "name": "__init__",
+            "description": "Open SQLite connection with WAL mode, create tables if not exist, record started_at timestamp"
+          },
+          {
+            "name": "update_status",
+            "args": ["status: str", "progress_pct: float", "current_task: str", "subtasks_total: int = 0", "subtasks_done: int = 0", "blockers: list[str] = None", "key_findings: list[str] = None", "findings_count: int = 0", "requests: list[dict] = None", "output_files: list[str] = None", "estimated_completion: float = None"],
+            "description": "INSERT OR REPLACE into hub_agent_status. Validates status against enum. JSON-encodes list fields. Uses _retry_on_busy decorator."
+          },
+          {
+            "name": "check_instructions",
+            "args": [],
+            "returns": "list[dict]",
+            "description": "SELECT from hub_instructions WHERE target_agent_id = self.agent_id AND acknowledged_at IS NULL AND superseded_by IS NULL. Returns list of instruction dicts."
+          },
+          {
+            "name": "acknowledge",
+            "args": ["instruction_id: int"],
+            "description": "UPDATE hub_instructions SET acknowledged_at = now WHERE id = instruction_id. Also appends to acknowledged_instructions JSON array in hub_agent_status."
+          },
+          {
+            "name": "close",
+            "description": "Close the SQLite connection."
+          }
+        ]
+      },
+      {
+        "name": "HubCoordinator",
+        "purpose": "Coordinator-side interface. The coordinator creates one instance and uses it for monitoring and steering.",
+        "constructor_args": ["db_path: str"],
+        "methods": [
+          {
+            "name": "__init__",
+            "description": "Open SQLite connection with WAL mode, create tables if not exist"
+          },
+          {
+            "name": "dashboard",
+            "args": [],
+            "returns": "list[dict]",
+            "description": "SELECT * FROM hub_agent_status ORDER BY status priority (blocked first, complete last), then progress_pct ASC. Decorates each row with age_seconds and possibly_dead flag (>120s stale)."
+          },
+          {
+            "name": "get_team_summary",
+            "args": [],
+            "returns": "dict[str, dict]",
+            "description": "Aggregate agent statuses by team. Returns {team: {agents: N, avg_progress: float, blocked_count: int, complete_count: int, min_progress: float}}."
+          },
+          {
+            "name": "send_instruction",
+            "args": ["target_agent_id: str", "instruction_type: str", "message: str", "context: dict = None"],
+            "returns": "int (instruction_id)",
+            "description": "INSERT into hub_instructions. If a previous unacknowledged instruction of the same type exists, set its superseded_by to the new row ID."
+          },
+          {
+            "name": "broadcast_instruction",
+            "args": ["team: str", "instruction_type: str", "message: str", "context: dict = None"],
+            "returns": "list[int]",
+            "description": "Send the same instruction to all agents in a team. Queries hub_agent_status for agents with matching team, then calls send_instruction for each."
+          },
+          {
+            "name": "get_blocked_agents",
+            "args": [],
+            "returns": "list[dict]",
+            "description": "SELECT agents with status in (blocked, error, waiting_for_instruction) or json_array_length(requests) > 0."
+          },
+          {
+            "name": "get_stale_agents",
+            "args": ["stale_seconds: float = 120"],
+            "returns": "list[dict]",
+            "description": "SELECT agents with last_updated < now - stale_seconds AND status NOT IN (complete, error)."
+          },
+          {
+            "name": "get_unacknowledged_instructions",
+            "args": [],
+            "returns": "list[dict]",
+            "description": "SELECT from hub_instructions WHERE acknowledged_at IS NULL AND superseded_by IS NULL. Useful for detecting agents that aren't reading instructions."
+          },
+          {
+            "name": "format_dashboard",
+            "args": ["agents: list[dict] = None"],
+            "returns": "str",
+            "description": "Format agent list as a human-readable table with columns: agent_id, team, status, progress, task, age. Highlight blocked/error/stale rows."
+          },
+          {
+            "name": "close",
+            "description": "Close the SQLite connection."
+          }
+        ]
+      }
+    ],
+    "standalone_functions": [
+      {
+        "name": "update_hub_status",
+        "purpose": "Standalone function for agents that can't import the class (e.g., bash-embedded Python one-liners). Opens connection, writes, closes. Stateless.",
+        "args": ["db_path", "agent_id", "team", "status", "progress_pct", "current_task", "...optional fields"]
+      },
+      {
+        "name": "check_hub_instructions",
+        "purpose": "Standalone function for agents to check instructions without maintaining a persistent connection.",
+        "args": ["db_path", "agent_id"]
+      },
+      {
+        "name": "validate_launch_plan",
+        "purpose": "Validates a coordinator's launch plan against the anti-sequential rule. Returns list of warnings.",
+        "args": ["teams: list[dict]"],
+        "rule": "All teams should have launch_wave=0 unless depends_on_artifacts_from references a non-existent artifact"
+      }
+    ],
+    "cli_tool": {
+      "file": "storage/coordination/hub_dashboard.py",
+      "usage": "python3 hub_dashboard.py [--db PATH] [--format table|json] [--blocked-only] [--stale N] [--team TEAM]",
+      "description": "CLI tool for coordinator to check agent status. Default output is a formatted table. --format json for machine-readable output.",
+      "implementation_note": "Uses argparse. Imports HubCoordinator. Calls dashboard() and format_dashboard(). Exits with code 1 if any agent is blocked or stale (useful for scripted monitoring)."
+    },
+    "agent_integration": {
+      "prompt_template_addition": "\n\n## STATUS REPORTING (MANDATORY)\nYou MUST report your status to the coordination hub. Use this code:\n\n```python\nimport sqlite3, time, json\ndef hub_status(agent_id, team, status, pct, task, **kw):\n    c = sqlite3.connect('storage/coordination/coordination.db', timeout=30)\n    c.execute('PRAGMA journal_mode=WAL'); c.execute('PRAGMA busy_timeout=30000')\n    c.execute('''INSERT INTO hub_agent_status (agent_id,team,status,progress_pct,current_task,started_at,last_updated)\n        VALUES(?,?,?,?,?,?,?) ON CONFLICT(agent_id) DO UPDATE SET\n        status=excluded.status,progress_pct=excluded.progress_pct,\n        current_task=excluded.current_task,last_updated=excluded.last_updated''',\n        (agent_id,team,status,pct,task,time.time(),time.time()))\n    c.commit(); c.close()\n```\n\nCall `hub_status('YOUR_AGENT_ID', 'YOUR_TEAM', 'working', PROGRESS_PCT, 'description of current task')` at:\n- Task start (status='working', pct=0)\n- After each subtask completion (update pct)\n- When blocked (status='blocked')\n- When complete (status='complete', pct=100)\n- At minimum every 30 seconds\n",
+      "frequency": "Every 30 seconds minimum. After every significant state change (task start, subtask complete, blocker, completion).",
+      "schema_bootstrap": "The HubAgent.__init__ and the standalone update_hub_status function both CREATE TABLE IF NOT EXISTS, so the first agent to write bootstraps the schema. No pre-setup needed."
+    },
+    "coordinator_integration": {
+      "monitoring_loop": "The coordinator's monitoring cycle becomes:\n1. agents = hub.dashboard()  # single query, full picture\n2. blocked = [a for a in agents if a['status'] in ('blocked','error') or a['possibly_dead']]\n3. If blocked: send_instruction() to redirect or provide info\n4. stale = [a for a in agents if a['possibly_dead']]\n5. If stale: log warning, consider relaunching\n6. Check help_protocol.get_open_help_requests() for requests not surfaced via hub\n7. If idle agents exist and help requests are open: help_protocol.auto_assign_idle_teams()\n8. Print format_dashboard(agents) for human visibility",
+      "polling_interval": "10-15 seconds between dashboard checks. The coordinator reads the dashboard as part of its natural conversation loop (e.g., between checking on completed agents).",
+      "integration_with_sop_011": "SOP-011's monitoring_protocol section should be updated to reference hub_dashboard as the primary monitoring tool instead of multiple find commands and bus reads."
+    },
+    "edge_cases": {
+      "db_not_created_yet": "Both HubAgent and HubCoordinator run CREATE TABLE IF NOT EXISTS on init. First write bootstraps everything. Coordinator calling dashboard() on empty table returns empty list — no error.",
+      "agent_crashes_mid_write": "SQLite WAL mode ensures the write either completes or doesn't. Partial writes are not visible. The agent's last valid status remains in the table.",
+      "two_agents_same_id": "agent_id is PRIMARY KEY. Second agent's INSERT OR REPLACE overwrites the first. This is a configuration error — agent IDs must be unique. The coordinator should detect duplicates by checking for suspiciously rapid last_updated changes.",
+      "coordinator_crashes": "Agent status rows persist in SQLite. Next coordinator session reads them. Instructions already sent persist. Agents may have acknowledged instructions the coordinator doesn't know about — but acknowledged_at timestamps are in the DB for recovery.",
+      "db_locked_for_extended_period": "busy_timeout=30000ms (30 seconds) handles normal contention. _retry_on_busy with exponential backoff handles extreme cases. If the DB is locked for >30s, something is fundamentally wrong (disk failure, hung process) — the retry will surface the error.",
+      "very_large_number_of_agents": "The hub is designed for 3-20 agents. At 100+ agents, the single SQLite DB may become a bottleneck on writes. For this system's use case (6-10 teams, 8-20 agents), SQLite handles it trivially.",
+      "instruction_not_read": "Coordinator can query get_unacknowledged_instructions() to detect agents ignoring instructions. If an instruction is unacknowledged for >60s and the agent's last_updated is recent, the agent is not checking. Coordinator can re-send with 'abort' type as escalation.",
+      "superseded_instructions": "If the coordinator sends 'redirect' then quickly sends another 'redirect' before the first is acknowledged, the first is marked superseded_by the second. Agent only sees the latest. No instruction queue buildup."
+    },
+    "migration_from_current_system": {
+      "step_1": "Create coordinator_hub.py with HubAgent and HubCoordinator classes",
+      "step_2": "Create hub_dashboard.py CLI tool",
+      "step_3": "Update agent prompt templates to include the status reporting snippet",
+      "step_4": "Update SOP-011 monitoring section to reference hub_dashboard",
+      "step_5": "Keep help_protocol, direct_channels, work_stealing unchanged — they coexist",
+      "step_6": "The hub does NOT replace any existing module. It adds a new coordination layer.",
+      "estimated_effort": "200-300 lines of Python for coordinator_hub.py, 50-80 lines for hub_dashboard.py. One coding team, 15-20 minutes."
+    },
+    "anti_sequential_integration": {
+      "rule_constant": "ANTI_SEQUENTIAL_RULE = 'Default to parallel. The burden of proof is on sequencing. You must justify WHY Task B cannot start without Task A. Reading the same source code is NOT a dependency. Conflict prevention is through task isolation (different files), not temporal separation (different waves). You have real-time visibility via the hub — if something goes wrong, you will see it and intervene.'",
+      "validation_function": "validate_launch_plan() in coordinator_hub.py",
+      "enforcement": "Coordinator calls validate_launch_plan() before launching. Warnings are printed. Launch is NOT blocked (coordinator has final authority) but warnings create an audit trail."
+    }
+  }
+}

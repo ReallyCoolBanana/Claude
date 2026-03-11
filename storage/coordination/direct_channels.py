@@ -63,6 +63,13 @@ CREATE TABLE IF NOT EXISTS progress (
     current_bottleneck TEXT,
     last_updated REAL NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS read_offsets (
+    team TEXT NOT NULL,
+    channel TEXT NOT NULL,
+    offset INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (team, channel)
+);
 """
 
 VALID_PRESENCE = frozenset({"available", "busy", "helping", "away"})
@@ -108,9 +115,12 @@ def _safe_channel(name: str) -> str:
 
 
 def _bus_publish(bus_dir: str, channel: str, agent_id: str, team: str,
-                 msg_type: str, body: dict, ttl: int = 3600) -> str:
-    """Append a message to a JSONL bus channel file.  Returns the message id."""
-    os.makedirs(bus_dir, exist_ok=True)
+                 msg_type: str, body: dict, ttl: int = 3600) -> Optional[str]:
+    """Append a message to a JSONL bus channel file.  Returns the message id.
+
+    This is fire-and-forget: file I/O errors are logged but do not propagate.
+    Returns None if the write fails.  ValueError for oversized messages still raises.
+    """
     msg = {
         "id": str(uuid.uuid4()),
         "type": msg_type,
@@ -128,16 +138,26 @@ def _bus_publish(bus_dir: str, channel: str, agent_id: str, team: str,
         )
     safe = _safe_channel(channel)
     filepath = os.path.join(bus_dir, f"{safe}.jsonl")
-    fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
     try:
-        os.write(fd, raw)
-    finally:
-        os.close(fd)
+        os.makedirs(bus_dir, exist_ok=True)
+        fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+        try:
+            os.write(fd, raw)
+        finally:
+            os.close(fd)
+    except OSError as e:
+        logger.error("Failed to publish message to %s: %s", filepath, e)
+        return None
     return msg["id"]
 
 
 def _bus_read(bus_dir: str, channel: str, since_offset: int = 0):
-    """Read messages from a JSONL bus channel file.  Returns (msgs, new_offset)."""
+    """Read messages from a JSONL bus channel file.  Returns (msgs, new_offset).
+
+    Only advances the offset past complete lines that parse as valid JSON.
+    If the file ends with a partial (incomplete) line, the offset is left
+    before that line so it can be re-read once the write completes.
+    """
     safe = _safe_channel(channel)
     filepath = os.path.join(bus_dir, f"{safe}.jsonl")
     if not os.path.exists(filepath):
@@ -145,18 +165,37 @@ def _bus_read(bus_dir: str, channel: str, since_offset: int = 0):
     with open(filepath, "r", encoding="utf-8") as f:
         f.seek(since_offset)
         data = f.read()
-    new_offset = since_offset + len(data.encode("utf-8"))
+    if not data:
+        return [], since_offset
     msgs = []
     now = time.time()
-    for line in data.strip().split("\n"):
+    consumed_bytes = 0
+    lines = data.split("\n")
+    for i, line in enumerate(lines):
         if not line.strip():
+            # Account for the newline separator (empty lines between records)
+            consumed_bytes += len(line.encode("utf-8"))
+            if i < len(lines) - 1:
+                consumed_bytes += 1  # the \n separator
             continue
         try:
             m = json.loads(line)
-            if m.get("ts", 0) + m.get("ttl", 300) > now:
-                msgs.append(m)
         except json.JSONDecodeError:
+            # If this is the last chunk and doesn't end with \n, it's a partial
+            # line — don't advance past it.
+            if i == len(lines) - 1 and not data.endswith("\n"):
+                break
+            # Otherwise it's a corrupt complete line; skip over it.
+            consumed_bytes += len(line.encode("utf-8"))
+            if i < len(lines) - 1:
+                consumed_bytes += 1
             continue
+        if m.get("ts", 0) + m.get("ttl", 300) > now:
+            msgs.append(m)
+        consumed_bytes += len(line.encode("utf-8"))
+        if i < len(lines) - 1:
+            consumed_bytes += 1  # the \n separator
+    new_offset = since_offset + consumed_bytes
     return msgs, new_offset
 
 
@@ -195,13 +234,17 @@ class DirectChannels:
         self._conn.executescript(_SCHEMA)
         self._conn.commit()
 
-        # Track read offsets per channel for bus polling
+        # Track read offsets per channel for bus polling — loaded from DB
         self._read_offsets: dict[str, int] = {}
+        self._closed = False
+        self._load_read_offsets()
 
     def close(self) -> None:
         """Close the database connection."""
         with self._lock:
-            self._conn.close()
+            if not self._closed:
+                self._closed = True
+                self._conn.close()
 
     # ------------------------------------------------------------------
     # Channel management
@@ -213,6 +256,7 @@ class DirectChannels:
 
         Returns the channel name.
         """
+        self._check_closed()
         channel_name = _direct_channel_name(self.team, target_team)
         participants = json.dumps(sorted([self.team, target_team]))
         now = time.time()
@@ -245,6 +289,7 @@ class DirectChannels:
 
         Returns the channel name.
         """
+        self._check_closed()
         channel_name = f"topic-{topic}"
         # Ensure creator's team is in participants
         all_participants = sorted(set(participants) | {self.team})
@@ -276,6 +321,7 @@ class DirectChannels:
     @_retry_on_busy
     def join_channel(self, channel_name: str) -> None:
         """Add this team to an existing channel's participant list."""
+        self._check_closed()
         with self._lock:
             row = self._conn.execute(
                 "SELECT participants FROM channels WHERE channel_name = ? AND status = 'active'",
@@ -302,6 +348,7 @@ class DirectChannels:
     @_retry_on_busy
     def leave_channel(self, channel_name: str) -> None:
         """Remove this team from a channel's participant list."""
+        self._check_closed()
         with self._lock:
             row = self._conn.execute(
                 "SELECT participants FROM channels WHERE channel_name = ?",
@@ -322,6 +369,7 @@ class DirectChannels:
     @_retry_on_busy
     def list_active_channels(self) -> list[dict]:
         """Return all active channels this team participates in."""
+        self._check_closed()
         with self._lock:
             rows = self._conn.execute(
                 "SELECT * FROM channels WHERE status = 'active'"
@@ -339,6 +387,7 @@ class DirectChannels:
     @_retry_on_busy
     def archive_channel(self, channel_name: str) -> None:
         """Mark a channel as archived."""
+        self._check_closed()
         with self._lock:
             self._conn.execute(
                 "UPDATE channels SET status = 'archived', last_activity = ? WHERE channel_name = ?",
@@ -356,6 +405,7 @@ class DirectChannels:
         Creates the direct channel if it does not yet exist.
         Returns the message id.
         """
+        self._check_closed()
         channel_name = _direct_channel_name(self.team, target_team)
 
         # Ensure channel exists in the registry
@@ -375,12 +425,14 @@ class DirectChannels:
     def read_direct(self, from_team: str) -> list[dict]:
         """Read new messages from the direct channel with *from_team*.
 
-        Returns messages since the last read (tracked internally).
+        Returns messages since the last read (tracked internally and persisted).
         """
+        self._check_closed()
         channel_name = _direct_channel_name(self.team, from_team)
         offset = self._read_offsets.get(channel_name, 0)
         msgs, new_offset = _bus_read(self.bus_dir, channel_name, offset)
         self._read_offsets[channel_name] = new_offset
+        self._save_read_offset(channel_name, new_offset)
         return msgs
 
     # ------------------------------------------------------------------
@@ -393,15 +445,25 @@ class DirectChannels:
 
         Valid statuses: available, busy, helping, away.
         """
+        self._check_closed()
         if status not in VALID_PRESENCE:
             raise ValueError(f"Invalid presence status {status!r}; must be one of {VALID_PRESENCE}")
 
         now = time.time()
-        # Gather current channels
-        channels = [ch["channel_name"] for ch in self.list_active_channels()]
-        channels_json = json.dumps(channels)
 
         with self._lock:
+            # Gather current channels inside the same lock acquisition to avoid
+            # a TOCTOU gap where channels could change between queries.
+            rows = self._conn.execute(
+                "SELECT * FROM channels WHERE status = 'active'"
+            ).fetchall()
+            channels = []
+            for row in rows:
+                participants = json.loads(dict(row)["participants"])
+                if self.team in participants:
+                    channels.append(dict(row)["channel_name"])
+            channels_json = json.dumps(channels)
+
             self._conn.execute(
                 """
                 INSERT INTO presence (team, status, current_channels, last_seen)
@@ -426,6 +488,7 @@ class DirectChannels:
 
         If *team* is given, returns a single dict.  Otherwise returns a list.
         """
+        self._check_closed()
         with self._lock:
             if team is not None:
                 row = self._conn.execute(
@@ -448,6 +511,7 @@ class DirectChannels:
     @_retry_on_busy
     def get_available_teams(self) -> list[dict]:
         """Return all teams with 'available' presence status."""
+        self._check_closed()
         with self._lock:
             rows = self._conn.execute(
                 "SELECT * FROM presence WHERE status = 'available'"
@@ -469,6 +533,7 @@ class DirectChannels:
                         est_completion_ts: float = None,
                         bottleneck: str = None) -> None:
         """Update this team's progress and broadcast it."""
+        self._check_closed()
         now = time.time()
         with self._lock:
             self._conn.execute(
@@ -510,6 +575,7 @@ class DirectChannels:
     @_retry_on_busy
     def get_all_progress(self) -> list[dict]:
         """Return progress records for all teams."""
+        self._check_closed()
         with self._lock:
             rows = self._conn.execute(
                 "SELECT * FROM progress ORDER BY progress_pct ASC"
@@ -519,6 +585,7 @@ class DirectChannels:
     @_retry_on_busy
     def get_team_progress(self, team: str) -> dict:
         """Return progress for a specific team."""
+        self._check_closed()
         with self._lock:
             row = self._conn.execute(
                 "SELECT * FROM progress WHERE team = ?", (team,),
@@ -534,6 +601,7 @@ class DirectChannels:
 
         Useful for identifying the overall bottleneck.
         """
+        self._check_closed()
         with self._lock:
             row = self._conn.execute(
                 "SELECT * FROM progress ORDER BY progress_pct ASC LIMIT 1"
@@ -545,6 +613,7 @@ class DirectChannels:
     @_retry_on_busy
     def get_teams_below_progress(self, threshold_pct: float) -> list[dict]:
         """Return all teams with progress below the given threshold."""
+        self._check_closed()
         with self._lock:
             rows = self._conn.execute(
                 "SELECT * FROM progress WHERE progress_pct < ? ORDER BY progress_pct ASC",
@@ -555,6 +624,35 @@ class DirectChannels:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    def _check_closed(self) -> None:
+        """Raise RuntimeError if this instance has been closed."""
+        if self._closed:
+            raise RuntimeError("DirectChannels instance is closed")
+
+    def _load_read_offsets(self) -> None:
+        """Load persisted read offsets from the database."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT channel, offset FROM read_offsets WHERE team = ?",
+                (self.team,),
+            ).fetchall()
+        for row in rows:
+            self._read_offsets[row["channel"]] = row["offset"]
+
+    @_retry_on_busy
+    def _save_read_offset(self, channel: str, offset: int) -> None:
+        """Persist a read offset to the database."""
+        with self._lock:
+            self._conn.execute(
+                """
+                INSERT INTO read_offsets (team, channel, offset)
+                VALUES (?, ?, ?)
+                ON CONFLICT(team, channel) DO UPDATE SET offset=excluded.offset
+                """,
+                (self.team, channel, offset),
+            )
+            self._conn.commit()
 
     @_retry_on_busy
     def _ensure_direct_channel(self, target_team: str) -> str:

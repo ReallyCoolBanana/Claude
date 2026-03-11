@@ -19,6 +19,9 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+# Valid team statuses
+VALID_STATUSES = {"idle", "working", "needs_help", "helping", "complete"}
+
 # ---------------------------------------------------------------------------
 # Schema — new tables added alongside existing Proto A state tables
 # ---------------------------------------------------------------------------
@@ -77,6 +80,24 @@ _MAX_RETRIES = 5
 _RETRY_BACKOFF = 0.1
 
 
+def _is_busy_or_locked(exc: sqlite3.OperationalError) -> bool:
+    """Check if a sqlite3.OperationalError is SQLITE_BUSY or SQLITE_LOCKED.
+
+    Uses the sqlite_errorcode attribute (Python 3.11+) when available,
+    falling back to string matching for older Python versions.
+    SQLITE_BUSY = 5, SQLITE_LOCKED = 6.
+    """
+    # Python 3.11+ exposes the SQLite error code directly
+    code = getattr(exc, "sqlite_errorcode", None)
+    if code is not None:
+        # Also match extended error codes (e.g. SQLITE_BUSY_SNAPSHOT = 517)
+        base_code = code & 0xFF
+        return base_code in (5, 6)  # SQLITE_BUSY=5, SQLITE_LOCKED=6
+    # Fallback for older Python versions
+    msg = str(exc).lower()
+    return "locked" in msg or "busy" in msg
+
+
 def _retry_on_busy(func):
     """Decorator: retry a method on sqlite3.OperationalError (SQLITE_BUSY)."""
     def wrapper(*args, **kwargs):
@@ -86,7 +107,7 @@ def _retry_on_busy(func):
             try:
                 return func(*args, **kwargs)
             except sqlite3.OperationalError as e:
-                if "locked" in str(e).lower() or "busy" in str(e).lower():
+                if _is_busy_or_locked(e):
                     last_err = e
                     logger.debug(
                         "SQLITE_BUSY on %s (attempt %d/%d), retrying in %.2fs",
@@ -125,45 +146,67 @@ class HelpProtocol:
             db_path, timeout=30, check_same_thread=False,
         )
         self._conn.row_factory = sqlite3.Row
+        self._closed = False
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute("PRAGMA busy_timeout=30000")
         self._conn.executescript(_HELP_SCHEMA)
         self._conn.commit()
 
+    def _check_closed(self) -> None:
+        """Raise RuntimeError if the instance is closed."""
+        if self._closed:
+            raise RuntimeError("HelpProtocol instance is closed")
+
     def close(self) -> None:
         """Close the database connection."""
         with self._lock:
+            self._closed = True
             self._conn.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
 
     # ------------------------------------------------------------------
     # Bus message helpers
     # ------------------------------------------------------------------
 
     def _publish_bus(self, channel: str, msg_type: str, body: dict) -> Optional[str]:
-        """Publish a message to the JSONL bus. Returns message ID or None."""
-        import os
-        import uuid as _uuid
+        """Publish a message to the JSONL bus. Returns message ID or None.
 
-        msg = {
-            "id": str(_uuid.uuid4()),
-            "type": msg_type,
-            "channel": channel,
-            "team": self.team,
-            "agent_id": self.agent_id,
-            "ts": time.time(),
-            "ttl": 3600,
-            "body": body,
-        }
-        raw = json.dumps(msg, separators=(",", ":")).encode("utf-8") + b"\n"
-        safe_ch = channel.replace("/", "_").replace("..", "_")
-        filepath = os.path.join(self.bus_dir, f"{safe_ch}.jsonl")
-        os.makedirs(self.bus_dir, exist_ok=True)
-        fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+        Bus write failures are logged but never propagated, so that DB
+        operations already committed are not lost.
+        """
         try:
-            os.write(fd, raw)
-        finally:
-            os.close(fd)
-        return msg["id"]
+            import os
+            import uuid as _uuid
+
+            msg = {
+                "id": str(_uuid.uuid4()),
+                "type": msg_type,
+                "channel": channel,
+                "team": self.team,
+                "agent_id": self.agent_id,
+                "ts": time.time(),
+                "ttl": 3600,
+                "body": body,
+            }
+            raw = json.dumps(msg, separators=(",", ":")).encode("utf-8") + b"\n"
+            safe_ch = channel.replace("/", "_").replace("..", "_")
+            filepath = os.path.join(self.bus_dir, f"{safe_ch}.jsonl")
+            os.makedirs(self.bus_dir, exist_ok=True)
+            fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+            try:
+                os.write(fd, raw)
+            finally:
+                os.close(fd)
+            return msg["id"]
+        except Exception as e:
+            logger.error("Bus write failed on channel %s: %s", channel, e)
+            return None
 
     # ------------------------------------------------------------------
     # Team status management
@@ -178,6 +221,7 @@ class HelpProtocol:
         capabilities:
             List of capability strings (e.g. ["coding", "research", "testing"]).
         """
+        self._check_closed()
         with self._lock:
             for cap in capabilities:
                 self._conn.execute(
@@ -212,6 +256,11 @@ class HelpProtocol:
         est_completion:
             Estimated completion timestamp (epoch seconds).
         """
+        self._check_closed()
+        if status not in VALID_STATUSES:
+            raise ValueError(
+                f"Invalid status {status!r}. Must be one of: {', '.join(sorted(VALID_STATUSES))}"
+            )
         now = time.time()
         with self._lock:
             # Count work items for this team
@@ -269,8 +318,9 @@ class HelpProtocol:
         required_caps: Optional[list[str]] = None,
     ) -> int:
         """Add a work item for this team. Returns the work item ID."""
+        self._check_closed()
         now = time.time()
-        caps_json = json.dumps(required_caps) if required_caps else None
+        caps_json = json.dumps(required_caps) if required_caps is not None else None
         with self._lock:
             cur = self._conn.execute(
                 """
@@ -288,6 +338,7 @@ class HelpProtocol:
     @_retry_on_busy
     def mark_work_available(self, work_item_id: int) -> None:
         """Mark a work item as available for help from other teams."""
+        self._check_closed()
         now = time.time()
         with self._lock:
             self._conn.execute(
@@ -303,6 +354,7 @@ class HelpProtocol:
     @_retry_on_busy
     def complete_work_item(self, work_item_id: int) -> None:
         """Mark a work item as completed."""
+        self._check_closed()
         now = time.time()
         with self._lock:
             self._conn.execute(
@@ -326,6 +378,7 @@ class HelpProtocol:
         Also marks the work item as available_for_help and publishes a
         help-request message on the bus.
         """
+        self._check_closed()
         now = time.time()
         with self._lock:
             # Get work item details for capabilities
@@ -368,6 +421,7 @@ class HelpProtocol:
     @_retry_on_busy
     def get_open_help_requests(self) -> list[dict]:
         """Return all open help requests."""
+        self._check_closed()
         with self._lock:
             rows = self._conn.execute(
                 """
@@ -395,6 +449,7 @@ class HelpProtocol:
         Uses BEGIN IMMEDIATE to prevent race conditions when multiple
         idle teams try to accept the same request.
         """
+        self._check_closed()
         conn = self._conn
         with self._lock:
             try:
@@ -459,13 +514,24 @@ class HelpProtocol:
 
     @_retry_on_busy
     def fulfill_help(self, request_id: int) -> None:
-        """Mark a help request as fulfilled and its work item as completed."""
+        """Mark a help request as fulfilled and its work item as completed.
+
+        Raises ValueError if this team is not the accepted helper.
+        """
+        self._check_closed()
         now = time.time()
         with self._lock:
             row = self._conn.execute(
-                "SELECT work_item_id FROM help_requests WHERE id = ?",
+                "SELECT work_item_id, accepted_by_team FROM help_requests WHERE id = ?",
                 (request_id,),
             ).fetchone()
+
+            if row is not None and row["accepted_by_team"] is not None:
+                if row["accepted_by_team"] != self.team:
+                    raise ValueError(
+                        f"Team {self.team!r} is not the accepted helper for request {request_id}. "
+                        f"Accepted by {row['accepted_by_team']!r}."
+                    )
 
             self._conn.execute(
                 "UPDATE help_requests SET status = 'fulfilled', resolved_at = ? WHERE id = ?",
@@ -487,6 +553,7 @@ class HelpProtocol:
     @_retry_on_busy
     def get_idle_teams(self) -> list[dict]:
         """Return teams whose status is 'idle' or 'complete'."""
+        self._check_closed()
         with self._lock:
             rows = self._conn.execute(
                 """
@@ -509,6 +576,7 @@ class HelpProtocol:
     @_retry_on_busy
     def get_busy_teams(self) -> list[dict]:
         """Return teams whose status is 'working' or 'helping'."""
+        self._check_closed()
         with self._lock:
             rows = self._conn.execute(
                 """
@@ -522,6 +590,7 @@ class HelpProtocol:
     @_retry_on_busy
     def get_teams_needing_help(self) -> list[dict]:
         """Return teams whose status is 'needs_help' or have open help requests."""
+        self._check_closed()
         with self._lock:
             rows = self._conn.execute(
                 """
@@ -531,6 +600,42 @@ class HelpProtocol:
                 WHERE ts.status = 'needs_help' OR hr.id IS NOT NULL
                 ORDER BY ts.progress_pct ASC
                 """,
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    # ------------------------------------------------------------------
+    # Zombie / timeout detection
+    # ------------------------------------------------------------------
+
+    @_retry_on_busy
+    def get_zombie_work_items(self, timeout_seconds: float = 3600) -> list[dict]:
+        """Return work items stuck in 'in_progress' longer than *timeout_seconds*."""
+        self._check_closed()
+        cutoff = time.time() - timeout_seconds
+        with self._lock:
+            rows = self._conn.execute(
+                """
+                SELECT * FROM work_items
+                WHERE status = 'in_progress' AND updated_at < ?
+                ORDER BY updated_at ASC
+                """,
+                (cutoff,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    @_retry_on_busy
+    def get_expired_help_requests(self, timeout_seconds: float = 1800) -> list[dict]:
+        """Return help requests accepted but not fulfilled within *timeout_seconds*."""
+        self._check_closed()
+        cutoff = time.time() - timeout_seconds
+        with self._lock:
+            rows = self._conn.execute(
+                """
+                SELECT * FROM help_requests
+                WHERE status = 'accepted' AND resolved_at IS NULL AND created_at < ?
+                ORDER BY created_at ASC
+                """,
+                (cutoff,),
             ).fetchall()
         return [dict(r) for r in rows]
 
@@ -551,6 +656,7 @@ class HelpProtocol:
         -------
         List of team dicts with matching capabilities, sorted by match quality.
         """
+        self._check_closed()
         with self._lock:
             # Get request's required capabilities
             row = self._conn.execute(
@@ -594,6 +700,7 @@ class HelpProtocol:
         -------
         List of assignment dicts: {"request_id", "team", "work_item_id"}.
         """
+        self._check_closed()
         open_requests = self.get_open_help_requests()
         if not open_requests:
             return []

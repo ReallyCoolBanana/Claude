@@ -1,0 +1,442 @@
+{
+  "id": "SOP-011",
+  "version": "1.0",
+  "title": "Central Commander Launch Protocol",
+  "created": "2026-03-11",
+  "team": "sop-team-1",
+  "purpose": "Ensure the coordinator always maximizes parallelism when launching agent teams. Eliminates the sequential-wave anti-pattern where think tanks run first and coding teams wait for their output.",
+  "core_principle": "ALL teams launch simultaneously in a single message unless a hard data dependency proves otherwise. The burden of proof is on sequencing, not on parallelism.",
+  "sections": {
+    "task_decomposition": {
+      "title": "Task Decomposition — Breaking Requests into Parallel Work Units",
+      "overview": "Every user request must be decomposed into the smallest independent work units possible. The coordinator then maps each unit to a team. The default is parallel; sequential is the exception that must be justified.",
+      "step_1_identify_work_units": {
+        "description": "List every distinct deliverable or outcome the user wants. Each deliverable is a candidate work unit.",
+        "examples": [
+          "User says 'stress test the system, write SOPs, and research best practices' → 3 work units: stress-testing, SOP-writing, research",
+          "User says 'build a new feature with tests' → 2 work units: implementation, test-writing (these CAN run in parallel if test authors read the same source code the implementers read)",
+          "User says 'analyze data and build a dashboard for it' → 2 work units: analysis, dashboard-building (parallel: dashboard team reads raw data directly)"
+        ]
+      },
+      "step_2_dependency_test": {
+        "description": "For each pair of work units, apply the Hard Dependency Test. A hard dependency exists ONLY when Task B literally cannot begin without Task A's computed output — not when it would be 'nice to have' Task A's output first.",
+        "hard_dependency_test": {
+          "question": "Does Task B require a specific computed artifact that only Task A can produce, AND that artifact does not exist yet anywhere in the codebase or environment?",
+          "if_yes": "Sequence B after A. Use pipeline chaining (SOP-003) to auto-trigger B when A completes.",
+          "if_no": "Run A and B in parallel.",
+          "critical_clarification": "If Task B could benefit from Task A's output but can also proceed by reading the same source material Task A reads, then there is NO hard dependency. Launch both."
+        },
+        "examples_of_false_dependencies": [
+          {
+            "claim": "Coding teams need think tank analysis before they can write code",
+            "reality": "Coding teams can read the source code themselves. Think tank output is a nice-to-have, not a prerequisite. Launch both simultaneously.",
+            "evidence": "TEAM-0024 ran 3 coding teams and 2 think tanks simultaneously. All 96 stress tests passed. Coding teams analyzed the code independently."
+          },
+          {
+            "claim": "Research teams need internal analysis before gathering external data",
+            "reality": "Research teams gather data from external sources. They do not need internal analysis results to search the web or read documentation.",
+            "evidence": "TEAM-0024 ran research and think tanks simultaneously with no issues."
+          },
+          {
+            "claim": "Test-writing teams need the implementation to be finished first",
+            "reality": "Test-writing teams can read the existing code, understand the interfaces, and write tests against the current implementation. If the implementation team is modifying code, test writers still benefit from starting early — they can write test scaffolding, edge case tests for existing code, and integration test structures.",
+            "evidence": "TEAM-0024 coding teams wrote 96 stress tests by reading existing modules directly."
+          },
+          {
+            "claim": "SOP writers need to observe the operation before writing SOPs",
+            "reality": "SOP writers can read existing code, documentation, and prior team logs to write SOPs. They don't need to watch a live operation.",
+            "evidence": "TEAM-0024's think-tank-sops team wrote 10 SOPs simultaneously with all other teams."
+          }
+        ],
+        "examples_of_true_dependencies": [
+          {
+            "scenario": "Team A generates a trained model file, Team B needs to evaluate that model",
+            "why_true": "The model file does not exist yet. Team B cannot evaluate what doesn't exist."
+          },
+          {
+            "scenario": "Team A collects live API data, Team B needs to analyze that specific data",
+            "why_true": "The data does not exist in the repo. Team B cannot analyze data that hasn't been fetched. However, if the data already exists from a prior session, B can start immediately."
+          },
+          {
+            "scenario": "Team A creates a new database schema, Team B writes migration scripts for it",
+            "why_true": "The schema definition does not exist yet. Team B cannot write migrations for an undefined schema."
+          }
+        ]
+      },
+      "step_3_merge_or_split": {
+        "description": "After dependency analysis, decide whether to merge small related units into one team or split large units across multiple teams.",
+        "merge_when": "Two units are small enough for one team and share the same codebase area. Example: writing a small utility function and its tests.",
+        "split_when": "One unit is large enough to benefit from multiple teams. Example: stress-testing 3 modules → 3 coding teams, one per module."
+      }
+    },
+    "team_composition": {
+      "title": "Team Composition — Roles, Sizing, and Structure",
+      "team_types": {
+        "think_tank": {
+          "purpose": "Deep analysis, design, architecture review, failure mode identification. Produces structured analysis documents.",
+          "when_to_use": [
+            "Designing new features or systems before implementation",
+            "Analyzing existing code for failure modes, edge cases, or improvement opportunities",
+            "Creating specifications, protocols, or standards",
+            "Evaluating tradeoffs between approaches"
+          ],
+          "typical_size": "2-4 agents (1 lead + 1-3 analysts)",
+          "output_format": "JSON analysis document in teams/<team>/output/",
+          "key_rule": "Think tanks NEVER block coding teams. They run in parallel. Coding teams read source code directly."
+        },
+        "coding_team": {
+          "purpose": "Write, modify, test, or debug code. Produces working code with tests.",
+          "when_to_use": [
+            "Implementing new features",
+            "Writing tests (unit, integration, stress)",
+            "Fixing bugs",
+            "Refactoring existing code",
+            "Building scripts or tooling"
+          ],
+          "typical_size": "1-3 agents (1 lead + 0-2 developers)",
+          "output_format": "Code files committed or written to appropriate directories",
+          "key_rule": "Coding teams read source code themselves. They do NOT wait for think tank analysis."
+        },
+        "research_team": {
+          "purpose": "Gather external information — web searches, API documentation, best practices, competitor analysis.",
+          "when_to_use": [
+            "The task requires information not in the codebase",
+            "Best practices or patterns from the broader ecosystem are needed",
+            "External API documentation must be reviewed",
+            "Competitive or market analysis is required"
+          ],
+          "typical_size": "2-4 agents (1 lead + 1-3 researchers)",
+          "output_format": "JSON research findings in teams/<team>/output/",
+          "key_rule": "Research teams gather EXTERNAL data. They never depend on internal analysis teams."
+        },
+        "sop_team": {
+          "purpose": "Write standard operating procedures, documentation, guides, and templates.",
+          "when_to_use": [
+            "New tools or processes need documentation",
+            "Operational procedures need to be formalized",
+            "Onboarding materials are needed for future teams"
+          ],
+          "typical_size": "1-2 agents",
+          "output_format": "JSON or Markdown documents in appropriate directories",
+          "key_rule": "SOP teams read existing code and logs. They do NOT need to observe live operations."
+        }
+      },
+      "sizing_rules": {
+        "rule_1": "One team per independent code module or area. Example: 3 modules to stress test → 3 coding teams.",
+        "rule_2": "Think tanks scale with analysis scope. 1 think tank for a focused question, 2-3 for broad system analysis.",
+        "rule_3": "Research teams scale with topic count. 1 team can cover 3-5 related topics. Split into multiple teams for unrelated domains.",
+        "rule_4": "Never exceed 8-10 teams total. Coordination overhead increases non-linearly. TEAM-0022 used 6 teams (18 agents), TEAM-0023 used 7 teams (20 agents), TEAM-0024 used 7 teams (8 agents). 6-8 is the sweet spot.",
+        "rule_5": "Prefer more smaller teams over fewer larger teams. 4 teams of 2 agents is better than 2 teams of 4 agents for parallelism, as long as each team has enough people for its task."
+      },
+      "standby_teams": {
+        "when_to_include": "Include 1 standby team when the total task is large and some teams may finish significantly earlier than others.",
+        "purpose": "Available for redeployment via help protocol when primary teams complete early or when blockers create new work.",
+        "typical_composition": "1 lead + 1 developer with broad capabilities",
+        "activation": "Coordinator assigns via help protocol when a primary team finishes or a new need emerges."
+      }
+    },
+    "launch_protocol": {
+      "title": "Launch Protocol — The Exact Steps to Follow",
+      "pre_launch": {
+        "step_1_read_context": {
+          "action": "Read the last 2-3 team session logs and relevant KB entries",
+          "purpose": "Understand what has been done, what tools exist, and what lessons were learned",
+          "time_budget": "Do this BEFORE the user gives the task if possible, or immediately after"
+        },
+        "step_2_decompose": {
+          "action": "Apply the Task Decomposition process (section above) to break the user request into parallel work units",
+          "output": "A list of work units with dependency annotations"
+        },
+        "step_3_assign_teams": {
+          "action": "Map work units to teams using the Team Composition rules",
+          "output": "A team roster: team name, type, size, assigned work units"
+        },
+        "step_4_prepare_directories": {
+          "action": "Create output directories for all teams: storage/coordination/teams/<team-name>/output/",
+          "method": "Single mkdir -p command covering all team directories",
+          "critical": "Do this BEFORE launching agents so they have somewhere to write"
+        },
+        "step_5_prepare_shared_files": {
+          "action": "If teams need shared context (e.g., a coordination plan, shared constants), write it to a known location BEFORE launch",
+          "location": "storage/coordination/teams/shared/ or the scratchpad",
+          "examples": [
+            "A shared task assignment file listing which team does what",
+            "A shared constants file with common paths or configurations",
+            "Links to prior team outputs that are relevant"
+          ]
+        },
+        "step_6_write_agent_prompts": {
+          "action": "Write a complete, self-contained prompt for each agent team",
+          "prompt_must_include": [
+            "The team's specific objective — what deliverable they must produce",
+            "All file paths they need to read (source code, prior outputs, configurations)",
+            "The output file path where they must write their results",
+            "Any constraints or formatting requirements for their output",
+            "The team ID and agent naming convention for bus communication",
+            "Instructions to read source code directly rather than waiting for other teams"
+          ],
+          "prompt_must_not_include": [
+            "Instructions to wait for another team's output (unless a proven hard dependency exists)",
+            "Vague objectives like 'help out' or 'do what you can'",
+            "References to files that don't exist yet (unless the team is creating them)"
+          ],
+          "prompt_template": "You are [TEAM_NAME] for [OPERATION_ID]. Your job is to [SPECIFIC_OBJECTIVE].\n\n**CONTEXT:**\nRead these files to understand [what they need]:\n- [file path 1]\n- [file path 2]\n\n**YOUR TASK:**\n[Detailed, specific description of what to produce]\n\n**OUTPUT:**\nWrite to: [exact output file path]\n\n**CONSTRAINTS:**\n- [Any formatting, size, or content constraints]\n- [Time budget if relevant]"
+        }
+      },
+      "launch": {
+        "critical_rule": "ALL agent teams MUST be launched in a SINGLE message containing multiple tool calls. Never launch teams in separate messages. Never launch in waves.",
+        "method": "Use the Claude agent SDK to invoke all agents as parallel tool calls in one response. Each tool call starts one agent with its complete prompt.",
+        "example_structure": "One message containing N parallel agent invocations, where N is the number of teams. The coordinator's response looks like: [agent_call_1, agent_call_2, ..., agent_call_N] all in the same message.",
+        "what_happens_if_you_wave": "If you launch think tanks first and then coding teams later, you waste the entire think tank runtime. In TEAM-0024, 7 teams ran simultaneously. If the coordinator had sequenced think tanks → coding teams, the session would have taken 2x longer for zero benefit.",
+        "verification": "After sending the launch message, verify that all agents are running by checking the agent status or monitoring their initial bus registrations."
+      }
+    },
+    "anti_sequential_rules": {
+      "title": "Anti-Sequential Rules — Explicit Guards Against Wave Patterns",
+      "rules": [
+        {
+          "id": "ASR-001",
+          "rule": "NEVER assume Team B needs Team A's output unless you can prove a hard data dependency exists.",
+          "test": "Ask: 'Can Team B read the same source material that Team A reads?' If yes, there is no dependency.",
+          "violation_example": "Launching think tanks first, then waiting for their output before launching coding teams.",
+          "correct_behavior": "Launch think tanks and coding teams simultaneously. Both can read source code."
+        },
+        {
+          "id": "ASR-002",
+          "rule": "Coding teams read source code themselves. They NEVER need think tank output to start writing code or tests.",
+          "rationale": "Think tanks produce analysis. Coding teams need the actual source code, which already exists. Both can analyze the code independently.",
+          "evidence": "TEAM-0024: 3 coding teams wrote 96 passing stress tests while 2 think tanks ran in parallel. The coding teams never referenced think tank output."
+        },
+        {
+          "id": "ASR-003",
+          "rule": "Research teams gather external data. They NEVER need internal analysis before they can start searching.",
+          "rationale": "Research teams search the web, read documentation, and collect external information. This requires no internal code analysis.",
+          "evidence": "TEAM-0024: Research team collected findings on 5 external topics while think tanks analyzed internal code simultaneously."
+        },
+        {
+          "id": "ASR-004",
+          "rule": "SOP teams read existing artifacts. They do NOT need to watch a live operation before writing procedures.",
+          "rationale": "SOPs are written from existing code, documentation, and prior session logs. All of these exist before the operation starts."
+        },
+        {
+          "id": "ASR-005",
+          "rule": "If in doubt, launch in parallel. The worst case of unnecessary parallelism (a team reads stale data) is far better than the worst case of unnecessary sequencing (wasting an entire team's runtime waiting).",
+          "rationale": "A team that starts early and needs to adjust is still ahead of a team that waited. The parallel team has already set up its environment, read context files, and begun preliminary work."
+        },
+        {
+          "id": "ASR-006",
+          "rule": "The coordinator MUST launch all teams in a single message. If you find yourself writing 'first, let me launch the think tanks' followed by 'now let me launch the coding teams,' you are violating this protocol.",
+          "rationale": "Sequential launches are the root cause of the wave anti-pattern. A single launch message makes parallelism the default.",
+          "self_check": "Before sending your launch message, count the number of agent invocations. It must equal the total number of teams. If it's less, you are sequencing."
+        },
+        {
+          "id": "ASR-007",
+          "rule": "Do not create artificial dependencies by routing information through think tanks. If a coding team needs to understand Module X, tell it to read Module X — do not tell it to wait for Think Tank A's analysis of Module X.",
+          "rationale": "Routing through think tanks adds latency and creates false dependencies. Every team should go to the primary source."
+        },
+        {
+          "id": "ASR-008",
+          "rule": "If a true dependency exists for PART of a team's work, launch the team anyway with instructions to do the independent parts first, then pick up the dependent part when the upstream team finishes.",
+          "rationale": "Partial dependencies do not justify full sequencing. The team can do preliminary work while waiting for the dependent input.",
+          "example": "Team B needs Team A's API schema for one function but can write 80% of the code without it. Launch Team B immediately with instructions to write everything except the API integration, then integrate when Team A publishes the schema."
+        },
+        {
+          "id": "ASR-009",
+          "rule": "NEVER use the phrase 'once the think tanks are done' or 'after we get the analysis' when planning team launches. These phrases are a signal that you are about to create a false dependency.",
+          "self_check": "Search your planned coordinator message for temporal sequencing language: 'first,' 'then,' 'after,' 'once,' 'when X is done.' Each instance must be justified by a hard dependency or eliminated."
+        },
+        {
+          "id": "ASR-010",
+          "rule": "The number of launch waves should almost always be ONE. Two waves are acceptable only when the second wave's work literally cannot begin without the first wave's computed artifacts. Three or more waves indicate a decomposition failure — re-analyze.",
+          "benchmarks": {
+            "TEAM-0022": "6 teams, 1 wave, 18 agents",
+            "TEAM-0023": "7 teams, 1 wave, 20 agents",
+            "TEAM-0024": "7 teams, 1 wave, 8 agents"
+          }
+        }
+      ]
+    },
+    "monitoring_protocol": {
+      "title": "Monitoring Protocol — Tracking Progress and Handling Issues",
+      "monitoring_loop": {
+        "frequency": "Check agent status every time the SDK allows (typically after each agent completion notification or on a polling cycle).",
+        "what_to_check": [
+          "Which agents have completed (check tool call results)",
+          "Which agents are still running (pending tool calls)",
+          "Output file existence and size (ls -la on team output directories)",
+          "Bus messages for blockers or help requests (python bus_cli.py read_msgs global --since <last_offset>)",
+          "Error output from any agent (check stderr or error responses)"
+        ]
+      },
+      "handling_completions": {
+        "when_team_finishes_early": {
+          "action": "Check if any other team has posted a help request. If so, consider launching a follow-up agent to assist. If not, note the completion and continue monitoring.",
+          "do_not": "Do NOT interrupt other running teams to tell them about the completed team's output. They will discover it when they finish, or they can check the scratchpad/output files if they need it."
+        },
+        "when_all_teams_finish": {
+          "action": "Collect all output files. Verify deliverables match the original task decomposition. Summarize results to the user.",
+          "verification_checklist": [
+            "Each team produced its expected output file",
+            "Output files are non-empty and well-formed",
+            "If tests were written, they pass",
+            "If code was written, it runs without errors",
+            "No team reported unresolved blockers"
+          ]
+        }
+      },
+      "handling_stragglers": {
+        "definition": "A straggler is a team that is still running after 80% of other teams have completed.",
+        "response_options": [
+          {
+            "option": "Wait",
+            "when": "The straggler is making progress (producing output, updating status) and its task is inherently larger than others.",
+            "action": "Continue monitoring. Do not intervene."
+          },
+          {
+            "option": "Check in",
+            "when": "The straggler has been running significantly longer than expected with no visible output.",
+            "action": "Check the agent's output or bus messages for signs of being stuck. If the agent is in an error loop, consider terminating and relaunching with adjusted instructions."
+          },
+          {
+            "option": "Reinforce",
+            "when": "The straggler's task is parallelizable and completed teams are available.",
+            "action": "Launch a new agent to help with a subset of the straggler's remaining work. Use the work stealing queue if applicable."
+          }
+        ]
+      },
+      "handling_failures": {
+        "agent_crashes": "Relaunch the agent with the same prompt. Check if partial output was saved. If the same agent crashes twice, adjust the prompt or split the task.",
+        "agent_produces_wrong_output": "Do NOT relaunch immediately. First understand why the output is wrong. Common causes: ambiguous prompt (fix the prompt), missing context (add file paths), misunderstood objective (clarify the task).",
+        "agent_blocked_by_dependency": "This should be rare if the anti-sequential rules were followed. If it happens, check if the upstream team has completed. If so, point the blocked team to the output. If not, have the blocked team work on non-dependent tasks first."
+      },
+      "post_operation": {
+        "step_1": "Verify all expected deliverables exist and are complete",
+        "step_2": "Run any test suites that were written or modified",
+        "step_3": "Collect key metrics: teams launched, agents used, files created, tests passing",
+        "step_4": "Create or update knowledge base entries for significant findings",
+        "step_5": "Write the team session log documenting the operation",
+        "step_6": "Update relevant index.json files"
+      }
+    }
+  },
+  "checklists": {
+    "pre_launch": [
+      "Read last 2-3 team session logs for context",
+      "Decompose user request into independent work units",
+      "Apply Hard Dependency Test to every pair of work units",
+      "Map work units to teams (type, size, assignment)",
+      "Verify total team count is 10 or fewer",
+      "Create output directories for all teams (mkdir -p)",
+      "Prepare any shared context files",
+      "Write complete, self-contained prompt for each team",
+      "Verify each prompt includes: objective, file paths to read, output path, constraints",
+      "Verify NO prompt tells a team to wait for another team (unless hard dependency proven)",
+      "Count agent invocations — must equal total team count (all in one message)",
+      "Search your launch plan for sequential language ('first,' 'then,' 'after,' 'once') and justify or eliminate each instance"
+    ],
+    "during_operation": [
+      "Monitor agent completion notifications",
+      "Check output directories for deliverables as teams finish",
+      "Scan bus for blocker messages or help requests",
+      "Identify stragglers (teams running after 80% complete)",
+      "For stragglers: decide wait/check-in/reinforce",
+      "For completed teams: check if they can help remaining teams",
+      "Do NOT interrupt running teams unnecessarily"
+    ],
+    "post_operation": [
+      "Verify all expected output files exist and are non-empty",
+      "Run test suites if applicable (pytest, etc.)",
+      "Collect operation metrics (teams, agents, files, tests)",
+      "Summarize results to user with key findings",
+      "Create knowledge base entry if significant knowledge was generated",
+      "Write team session log",
+      "Update index.json files"
+    ]
+  },
+  "decision_trees": {
+    "parallel_vs_sequential": {
+      "title": "Decision Tree: Should These Two Tasks Run in Parallel or Sequentially?",
+      "start": "Does Task B require a specific artifact that only Task A can produce?",
+      "branches": {
+        "does_b_need_artifact_from_a": {
+          "no": {
+            "decision": "PARALLEL",
+            "reasoning": "No dependency exists. Both tasks can proceed independently."
+          },
+          "yes": {
+            "next_question": "Does this artifact already exist in the codebase or environment?",
+            "already_exists": {
+              "yes": {
+                "decision": "PARALLEL",
+                "reasoning": "The artifact exists. Task B can use the existing version. Task A may update it, but B can start now."
+              },
+              "no": {
+                "next_question": "Can Task B do useful preliminary work while waiting for the artifact?",
+                "can_do_preliminary_work": {
+                  "yes": {
+                    "decision": "PARALLEL with instructions",
+                    "reasoning": "Launch Task B immediately. Tell it to do preliminary work first, then integrate the artifact when Task A finishes. Use pipeline chaining to notify B when A completes."
+                  },
+                  "no": {
+                    "decision": "SEQUENTIAL",
+                    "reasoning": "True hard dependency. Use pipeline chaining (SOP-003) to auto-trigger Task B when Task A completes. This should be rare."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "team_sizing": {
+      "title": "Decision Tree: How Many Teams and What Size?",
+      "start": "How many independent work units are there?",
+      "branches": {
+        "1_work_unit": {
+          "action": "1 team, sized to the task complexity",
+          "sizing": "Simple task: 1 agent. Moderate task: 2 agents (lead + dev). Complex task: 3 agents (lead + 2 devs)."
+        },
+        "2_to_4_work_units": {
+          "action": "1 team per work unit. Add think tank if design analysis is needed. Add research team if external data is needed.",
+          "example": "3 modules to test → 3 coding teams. If architectural analysis is also wanted, add 1 think tank. Total: 4 teams."
+        },
+        "5_to_8_work_units": {
+          "action": "1 team per work unit where possible. Merge very small units into one team. Consider a standby team.",
+          "example": "6 work units → 6 primary teams + 1 standby. Keep each team to 1-2 agents to stay under the coordination overhead threshold."
+        },
+        "9_plus_work_units": {
+          "action": "Group related work units to stay at 8-10 teams maximum. Use work stealing queue for granular distribution within groups.",
+          "example": "15 files to process → 4 coding teams, each assigned ~4 files. Remaining files go into work stealing queue for whichever team finishes first."
+        }
+      },
+      "think_tank_sizing": {
+        "narrow_question": "1 think tank, 2 agents — sufficient for focused analysis",
+        "broad_system_review": "2 think tanks, 2-3 agents each — split by subsystem or concern area",
+        "max": "3 think tanks — more than this produces redundant analysis"
+      },
+      "research_team_sizing": {
+        "1_to_3_topics": "1 research team, 2-3 agents",
+        "4_to_6_topics": "1-2 research teams, 2-4 agents each",
+        "7_plus_topics": "2-3 research teams, split by domain"
+      }
+    }
+  },
+  "quick_reference": {
+    "one_sentence_summary": "Decompose into independent units, assign one team per unit, launch ALL teams in ONE message, monitor for stragglers, never sequence without a proven hard dependency.",
+    "the_three_nevers": [
+      "NEVER launch teams in waves unless a hard data dependency is proven",
+      "NEVER tell a coding team to wait for a think tank",
+      "NEVER assume a team needs another team's output — verify with the Hard Dependency Test"
+    ],
+    "the_three_always": [
+      "ALWAYS launch all teams in a single message with parallel tool calls",
+      "ALWAYS give each team direct file paths to source material (not pointers to other teams' future output)",
+      "ALWAYS apply the pre-launch checklist before sending the launch message"
+    ],
+    "historical_benchmarks": {
+      "TEAM-0022": "6 teams, 18 agents, 1 wave — first production deployment, all successful",
+      "TEAM-0023": "7 teams, 20 agents, 1 wave — built 3 new coordination modules, 80/80 tests",
+      "TEAM-0024": "7 teams, 8 agents, 1 wave — 96 stress tests, 10 SOPs, user had to correct initial sequential plan"
+    }
+  }
+}

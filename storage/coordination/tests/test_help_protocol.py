@@ -413,5 +413,246 @@ class TestBusMessages(HelpProtocolTestBase):
         self.assertTrue(found, "Expected status-update bus message")
 
 
+class TestBusWriteFailureDoesNotCrash(HelpProtocolTestBase):
+    """Bug 1: _publish_bus() failures must not propagate to callers."""
+
+    def test_bus_write_failure_does_not_crash_update_status(self):
+        """If bus_dir is unwritable, update_status should still succeed (DB write)."""
+        import stat
+        bad_bus = os.path.join(self._tmpdir, "bad_bus")
+        os.makedirs(bad_bus, exist_ok=True)
+        # Make the directory read-only so bus writes fail
+        os.chmod(bad_bus, stat.S_IRUSR | stat.S_IXUSR)
+        try:
+            hp = self._make_hp.__func__(self, "team-bustest", "agent-bt")
+            # Override bus_dir to the unwritable directory
+            hp = HelpProtocol(self.db_path, bad_bus, "team-bustest", "agent-bt")
+            # This should NOT raise, even though the bus write will fail
+            hp.update_status("working", 50.0, "Testing bus failure")
+
+            # Verify the DB write succeeded
+            import sqlite3
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+            row = conn.execute(
+                "SELECT status FROM team_status WHERE team = 'team-bustest'"
+            ).fetchone()
+            conn.close()
+            self.assertEqual(row["status"], "working")
+            hp.close()
+        finally:
+            os.chmod(bad_bus, stat.S_IRWXU)
+
+    def test_bus_write_failure_does_not_crash_request_help(self):
+        """request_help should succeed in DB even if bus write fails."""
+        import stat
+        bad_bus = os.path.join(self._tmpdir, "bad_bus2")
+        os.makedirs(bad_bus, exist_ok=True)
+        # First create work item with working bus
+        hp = self._make_hp("team-bustest2", "agent-bt2")
+        wid = hp.add_work_item("Bus fail task")
+        hp.close()
+
+        os.chmod(bad_bus, stat.S_IRUSR | stat.S_IXUSR)
+        try:
+            hp2 = HelpProtocol(self.db_path, bad_bus, "team-bustest2", "agent-bt2")
+            rid = hp2.request_help(wid, "Help with bus failure")
+            self.assertIsInstance(rid, int)
+            hp2.close()
+        finally:
+            os.chmod(bad_bus, stat.S_IRWXU)
+
+
+class TestStatusValidation(HelpProtocolTestBase):
+    """Bug 2: update_status() must validate status values."""
+
+    def test_valid_statuses_accepted(self):
+        hp = self._make_hp("team-valid", "agent-v")
+        for status in ["idle", "working", "needs_help", "helping", "complete"]:
+            hp.update_status(status, 50.0, f"Testing {status}")
+        hp.close()
+
+    def test_invalid_status_raises_valueerror(self):
+        hp = self._make_hp("team-invalid", "agent-i")
+        with self.assertRaises(ValueError) as ctx:
+            hp.update_status("banana", 50.0, "Invalid")
+        self.assertIn("banana", str(ctx.exception))
+        hp.close()
+
+    def test_empty_status_raises_valueerror(self):
+        hp = self._make_hp("team-empty", "agent-e")
+        with self.assertRaises(ValueError):
+            hp.update_status("", 50.0, "Empty status")
+        hp.close()
+
+
+class TestClosedStateTracking(HelpProtocolTestBase):
+    """Bug 3: Closed instances must raise RuntimeError on all public methods."""
+
+    def test_closed_error_message(self):
+        hp = self._make_hp("team-closed", "agent-c")
+        hp.close()
+        with self.assertRaises(RuntimeError) as ctx:
+            hp.add_work_item("Should fail")
+        self.assertEqual(str(ctx.exception), "HelpProtocol instance is closed")
+
+    def test_all_public_methods_raise_after_close(self):
+        hp = self._make_hp("team-closed2", "agent-c2")
+        hp.close()
+
+        with self.assertRaises(RuntimeError):
+            hp.register_capabilities(["coding"])
+        with self.assertRaises(RuntimeError):
+            hp.update_status("idle", 0.0, "nope")
+        with self.assertRaises(RuntimeError):
+            hp.add_work_item("nope")
+        with self.assertRaises(RuntimeError):
+            hp.mark_work_available(1)
+        with self.assertRaises(RuntimeError):
+            hp.complete_work_item(1)
+        with self.assertRaises(RuntimeError):
+            hp.request_help(1, "nope")
+        with self.assertRaises(RuntimeError):
+            hp.get_open_help_requests()
+        with self.assertRaises(RuntimeError):
+            hp.offer_help(1)
+        with self.assertRaises(RuntimeError):
+            hp.fulfill_help(1)
+        with self.assertRaises(RuntimeError):
+            hp.get_idle_teams()
+        with self.assertRaises(RuntimeError):
+            hp.get_busy_teams()
+        with self.assertRaises(RuntimeError):
+            hp.get_teams_needing_help()
+        with self.assertRaises(RuntimeError):
+            hp.find_compatible_helpers(1)
+        with self.assertRaises(RuntimeError):
+            hp.auto_assign_idle_teams()
+
+
+class TestEmptyListRequiredCaps(HelpProtocolTestBase):
+    """Bug 4: Empty list [] should be stored as '[]', not None."""
+
+    def test_empty_list_stored_as_json(self):
+        hp = self._make_hp("team-caps", "agent-caps")
+        wid = hp.add_work_item("Empty caps item", required_caps=[])
+
+        import sqlite3
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT required_capabilities FROM work_items WHERE id = ?", (wid,)
+        ).fetchone()
+        conn.close()
+        hp.close()
+
+        # Empty list should be stored as JSON "[]", not None
+        self.assertEqual(row["required_capabilities"], "[]")
+
+    def test_none_caps_stored_as_null(self):
+        hp = self._make_hp("team-caps2", "agent-caps2")
+        wid = hp.add_work_item("None caps item", required_caps=None)
+
+        import sqlite3
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT required_capabilities FROM work_items WHERE id = ?", (wid,)
+        ).fetchone()
+        conn.close()
+        hp.close()
+
+        self.assertIsNone(row["required_capabilities"])
+
+
+class TestFulfillHelpAuthorization(HelpProtocolTestBase):
+    """Bug 5: Only the accepted team should be able to fulfill a help request."""
+
+    def test_wrong_team_cannot_fulfill(self):
+        hp_a = self._make_hp("team-a", "lead-a")
+        wid = hp_a.add_work_item("Auth task")
+        rid = hp_a.request_help(wid, "Auth test")
+
+        hp_b = self._make_hp("team-b", "lead-b")
+        hp_b.offer_help(rid)
+
+        # Team C (not the accepted helper) should NOT be able to fulfill
+        hp_c = self._make_hp("team-c", "lead-c")
+        with self.assertRaises(ValueError) as ctx:
+            hp_c.fulfill_help(rid)
+        self.assertIn("team-c", str(ctx.exception))
+        self.assertIn("team-b", str(ctx.exception))
+
+        hp_a.close()
+        hp_b.close()
+        hp_c.close()
+
+    def test_accepted_team_can_fulfill(self):
+        hp_a = self._make_hp("team-a", "lead-a")
+        wid = hp_a.add_work_item("Auth task 2")
+        rid = hp_a.request_help(wid, "Auth test 2")
+
+        hp_b = self._make_hp("team-b", "lead-b")
+        hp_b.offer_help(rid)
+
+        # Team B (the accepted helper) should be able to fulfill
+        hp_b.fulfill_help(rid)
+
+        import sqlite3
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT status FROM help_requests WHERE id = ?", (rid,)
+        ).fetchone()
+        conn.close()
+        self.assertEqual(row["status"], "fulfilled")
+
+        hp_a.close()
+        hp_b.close()
+
+
+class TestRetryOnBusyErrorCodes(HelpProtocolTestBase):
+    """Bug 6: _retry_on_busy should use error codes, not string matching."""
+
+    def test_is_busy_or_locked_with_error_code(self):
+        """Verify _is_busy_or_locked detects busy/locked via error codes."""
+        import sqlite3
+        from help_protocol import _is_busy_or_locked
+
+        # Create an OperationalError with sqlite_errorcode attribute
+        busy_err = sqlite3.OperationalError("database is busy")
+        busy_err.sqlite_errorcode = 5  # SQLITE_BUSY
+        self.assertTrue(_is_busy_or_locked(busy_err))
+
+        locked_err = sqlite3.OperationalError("database table is locked")
+        locked_err.sqlite_errorcode = 6  # SQLITE_LOCKED
+        self.assertTrue(_is_busy_or_locked(locked_err))
+
+        # Extended error code (e.g., SQLITE_BUSY_SNAPSHOT = 517)
+        extended_err = sqlite3.OperationalError("busy snapshot")
+        extended_err.sqlite_errorcode = 517  # 517 & 0xFF = 5
+        self.assertTrue(_is_busy_or_locked(extended_err))
+
+        # Non-busy error should not match
+        other_err = sqlite3.OperationalError("disk I/O error")
+        other_err.sqlite_errorcode = 10  # SQLITE_IOERR
+        self.assertFalse(_is_busy_or_locked(other_err))
+
+    def test_is_busy_or_locked_fallback_string_matching(self):
+        """Fallback to string matching when sqlite_errorcode is not available."""
+        import sqlite3
+        from help_protocol import _is_busy_or_locked
+
+        # No sqlite_errorcode attribute (older Python)
+        busy_err = sqlite3.OperationalError("database is busy")
+        self.assertTrue(_is_busy_or_locked(busy_err))
+
+        locked_err = sqlite3.OperationalError("database table is locked")
+        self.assertTrue(_is_busy_or_locked(locked_err))
+
+        other_err = sqlite3.OperationalError("disk I/O error")
+        self.assertFalse(_is_busy_or_locked(other_err))
+
+
 if __name__ == "__main__":
     unittest.main()

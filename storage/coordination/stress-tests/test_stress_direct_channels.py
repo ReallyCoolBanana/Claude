@@ -360,9 +360,10 @@ class TestMessageBoundaries(_StressBase):
         padded_raw = json.dumps(test_msg, separators=(",", ":")).encode("utf-8") + b"\n"
 
         # Adjust if we overshot (the extra chars in body add to the key too)
+        # Add extra 2-byte margin because the actual UUID in send_direct may differ in length
         diff = len(padded_raw) - MAX_MESSAGE_BYTES
-        if diff > 0:
-            padded_body = {"data": "A" * (pad_needed - diff)}
+        if diff >= 0:
+            padded_body = {"data": "A" * (pad_needed - diff - 2)}
 
         # This should not raise - it's at or just under the limit
         msg_id = dc.send_direct("team-b", "info", padded_body)

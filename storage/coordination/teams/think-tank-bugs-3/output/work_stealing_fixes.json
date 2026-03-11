@@ -1,0 +1,230 @@
+{
+  "module": "work_stealing.py",
+  "team": "think-tank-bugs-3",
+  "date": "2026-03-11",
+  "fixes": [
+    {
+      "id": "FIX-001",
+      "title": "No circular dependency detection in PipelineManager.create_pipeline",
+      "severity": "critical",
+      "category": "correctness",
+      "description": "create_pipeline accepts DAGs with cycles (e.g., A depends_on B, B depends_on A), causing stages to remain in 'waiting' forever with no error. Standard topological sort via Kahn's algorithm detects cycles at creation time.",
+      "location": "PipelineManager.create_pipeline, line 358-400",
+      "current_behavior": "Accepts any dependency graph, including cycles. Cyclic stages stay 'waiting' forever.",
+      "fixed_behavior": "Raises ValueError with descriptive message listing the cycle participants if the dependency graph contains cycles. Also validates that depends_on references only name stages defined in the pipeline.",
+      "code_change": {
+        "file": "work_stealing.py",
+        "action": "replace",
+        "old": "    @_retry_on_busy\n    def create_pipeline(self, name: str, stages: list[dict]) -> int:\n        \"\"\"Create a pipeline with the given stages.\n\n        Parameters\n        ----------\n        name:\n            Unique pipeline name.\n        stages:\n            List of dicts, each with ``name`` (str), optional ``team`` (str),\n            optional ``depends_on`` (list[str]).\n\n        Returns\n        -------\n        int\n            The pipeline id.\n        \"\"\"\n        now = time.time()\n        with self._lock:\n            cur = self._conn.execute(\n                \"INSERT INTO pipelines (name, stages, status, created_at) VALUES (?, ?, 'active', ?)\",\n                (name, json.dumps(stages), now),\n            )\n            pipeline_id = cur.lastrowid\n\n            for stage in stages:\n                deps = json.dumps(stage.get(\"depends_on\", []))\n                # If a stage has no dependencies, it starts as 'ready'\n                initial_status = \"ready\" if not stage.get(\"depends_on\") else \"waiting\"\n                self._conn.execute(\n                    \"\"\"INSERT INTO pipeline_stages\n                       (pipeline_id, stage_name, assigned_team, depends_on, status)\n                       VALUES (?, ?, ?, ?, ?)\"\"\",\n                    (pipeline_id, stage[\"name\"], stage.get(\"team\"), deps, initial_status),\n                )\n            self._conn.commit()",
+        "new": "    @staticmethod\n    def _validate_dag(stages: list[dict]) -> None:\n        \"\"\"Validate that stages form a valid DAG: no duplicates, no missing refs, no cycles.\"\"\"\n        names = [s[\"name\"] for s in stages]\n        name_set = set(names)\n        # Check for duplicate stage names\n        if len(names) != len(name_set):\n            dupes = [n for n in names if names.count(n) > 1]\n            raise ValueError(f\"Duplicate stage names in pipeline: {sorted(set(dupes))}\")\n        # Check that all depends_on references exist\n        for s in stages:\n            for dep in s.get(\"depends_on\", []):\n                if dep not in name_set:\n                    raise ValueError(\n                        f\"Stage '{s['name']}' depends on unknown stage '{dep}'\"\n                    )\n        # Kahn's algorithm for cycle detection\n        in_degree: dict[str, int] = {n: 0 for n in names}\n        adj: dict[str, list[str]] = {n: [] for n in names}\n        for s in stages:\n            for dep in s.get(\"depends_on\", []):\n                adj[dep].append(s[\"name\"])\n                in_degree[s[\"name\"]] += 1\n        queue = [n for n in names if in_degree[n] == 0]\n        visited = 0\n        while queue:\n            node = queue.pop(0)\n            visited += 1\n            for child in adj[node]:\n                in_degree[child] -= 1\n                if in_degree[child] == 0:\n                    queue.append(child)\n        if visited != len(names):\n            cycle_members = [n for n in names if in_degree[n] > 0]\n            raise ValueError(\n                f\"Circular dependency detected in pipeline stages: {cycle_members}\"\n            )\n\n    @_retry_on_busy\n    def create_pipeline(self, name: str, stages: list[dict]) -> int:\n        \"\"\"Create a pipeline with the given stages.\n\n        Parameters\n        ----------\n        name:\n            Unique pipeline name.\n        stages:\n            List of dicts, each with ``name`` (str), optional ``team`` (str),\n            optional ``depends_on`` (list[str]).\n\n        Returns\n        -------\n        int\n            The pipeline id.\n\n        Raises\n        ------\n        ValueError\n            If stage names are not unique, dependencies reference unknown\n            stages, or the dependency graph contains cycles.\n        \"\"\"\n        self._validate_dag(stages)\n        now = time.time()\n        with self._lock:\n            cur = self._conn.execute(\n                \"INSERT INTO pipelines (name, stages, status, created_at) VALUES (?, ?, 'active', ?)\",\n                (name, json.dumps(stages), now),\n            )\n            pipeline_id = cur.lastrowid\n\n            for stage in stages:\n                deps = json.dumps(stage.get(\"depends_on\", []))\n                # If a stage has no dependencies, it starts as 'ready'\n                initial_status = \"ready\" if not stage.get(\"depends_on\") else \"waiting\"\n                self._conn.execute(\n                    \"\"\"INSERT INTO pipeline_stages\n                       (pipeline_id, stage_name, assigned_team, depends_on, status)\n                       VALUES (?, ?, ?, ?, ?)\"\"\",\n                    (pipeline_id, stage[\"name\"], stage.get(\"team\"), deps, initial_status),\n                )\n            self._conn.commit()"
+      }
+    },
+    {
+      "id": "FIX-002",
+      "title": "No automatic scratchpad TTL cleanup",
+      "severity": "high",
+      "category": "resource-leak",
+      "description": "cleanup_expired() must be called manually. Expired entries accumulate in the scratchpad table, growing the database file indefinitely. Fix adds auto-cleanup every 100 writes.",
+      "location": "Scratchpad class, __init__ and write methods",
+      "current_behavior": "Expired rows persist on disk forever unless cleanup_expired() is explicitly called.",
+      "fixed_behavior": "Every 100th write() call automatically triggers cleanup_expired(). Counter is per-instance, thread-safe.",
+      "code_change": {
+        "file": "work_stealing.py",
+        "action": "replace",
+        "old": "    def __init__(self, db_path: str, team: str, agent_id: str) -> None:\n        self.db_path = db_path\n        self.team = team\n        self.agent_id = agent_id\n        self._lock = threading.Lock()\n        self._conn = _open_db(db_path)",
+        "new": "    _AUTO_CLEANUP_INTERVAL = 100  # run cleanup every N writes\n\n    def __init__(self, db_path: str, team: str, agent_id: str) -> None:\n        self.db_path = db_path\n        self.team = team\n        self.agent_id = agent_id\n        self._lock = threading.Lock()\n        self._conn = _open_db(db_path)\n        self._write_count = 0"
+      },
+      "code_change_2": {
+        "file": "work_stealing.py",
+        "action": "replace",
+        "old": "    @_retry_on_busy\n    def write(self, key: str, value: Any, namespace: Optional[str] = None, ttl: int = 3600) -> None:\n        \"\"\"Write a key-value pair. Overwrites if key+namespace already exists.\"\"\"\n        ns = namespace or self.team\n        now = time.time()\n        expires_at = now + ttl\n        with self._lock:\n            self._conn.execute(\n                \"\"\"INSERT INTO scratchpad (key, namespace, value, written_by, ttl_seconds, created_at, expires_at)\n                   VALUES (?, ?, ?, ?, ?, ?, ?)\n                   ON CONFLICT(key, namespace) DO UPDATE SET\n                       value=excluded.value, written_by=excluded.written_by,\n                       ttl_seconds=excluded.ttl_seconds, created_at=excluded.created_at,\n                       expires_at=excluded.expires_at\"\"\",\n                (key, ns, json.dumps(value), self.agent_id, ttl, now, expires_at),\n            )\n            self._conn.commit()",
+        "new": "    @_retry_on_busy\n    def write(self, key: str, value: Any, namespace: Optional[str] = None, ttl: int = 3600) -> None:\n        \"\"\"Write a key-value pair. Overwrites if key+namespace already exists.\n\n        Automatically runs cleanup_expired() every _AUTO_CLEANUP_INTERVAL writes.\n        \"\"\"\n        ns = namespace or self.team\n        now = time.time()\n        expires_at = now + ttl\n        with self._lock:\n            self._conn.execute(\n                \"\"\"INSERT INTO scratchpad (key, namespace, value, written_by, ttl_seconds, created_at, expires_at)\n                   VALUES (?, ?, ?, ?, ?, ?, ?)\n                   ON CONFLICT(key, namespace) DO UPDATE SET\n                       value=excluded.value, written_by=excluded.written_by,\n                       ttl_seconds=excluded.ttl_seconds, created_at=excluded.created_at,\n                       expires_at=excluded.expires_at\"\"\",\n                (key, ns, json.dumps(value), self.agent_id, ttl, now, expires_at),\n            )\n            self._conn.commit()\n            self._write_count += 1\n        if self._write_count % self._AUTO_CLEANUP_INTERVAL == 0:\n            try:\n                self.cleanup_expired()\n            except Exception:\n                logger.debug(\"Auto-cleanup failed (non-fatal)\", exc_info=True)"
+      }
+    },
+    {
+      "id": "FIX-003",
+      "title": "Abandoned work items stay 'claimed' forever",
+      "severity": "critical",
+      "category": "reliability",
+      "description": "If a team steals work and crashes, the item stays 'claimed' forever. No other team can steal it. Fix adds a recover_abandoned() method and integrates it into steal_work().",
+      "location": "WorkStealing class, new method + steal_work modification",
+      "current_behavior": "claimed_at timestamp is recorded but never used for timeout. Items remain 'claimed' indefinitely.",
+      "fixed_behavior": "New recover_abandoned(timeout_seconds) method re-queues items claimed longer than the timeout. steal_work() calls it automatically before attempting to claim.",
+      "code_change": {
+        "file": "work_stealing.py",
+        "action": "insert_after_method_steal_work",
+        "description": "Add recover_abandoned method after steal_work, and modify steal_work to call it. The new method should be inserted after the steal_work method and before complete_work.",
+        "old": "    @_retry_on_busy\n    def complete_work(self, work_id: int, result: dict) -> None:",
+        "new": "    @_retry_on_busy\n    def recover_abandoned(self, timeout_seconds: float = 1800.0) -> int:\n        \"\"\"Re-queue work items that have been claimed longer than timeout_seconds.\n\n        Returns the number of items recovered.\n        \"\"\"\n        cutoff = time.time() - timeout_seconds\n        with self._lock:\n            cur = self._conn.execute(\n                \"\"\"UPDATE work_queue\n                   SET status = 'queued', claimed_by = NULL, claimed_at = NULL\n                   WHERE status = 'claimed' AND claimed_at IS NOT NULL AND claimed_at < ?\"\"\",\n                (cutoff,),\n            )\n            count = cur.rowcount\n            self._conn.commit()\n        if count > 0:\n            logger.info(\"Recovered %d abandoned work items (timeout=%.0fs)\", count, timeout_seconds)\n        return count\n\n    @_retry_on_busy\n    def complete_work(self, work_id: int, result: dict) -> None:"
+      }
+    },
+    {
+      "id": "FIX-004",
+      "title": "complete_work doesn't verify claimer",
+      "severity": "high",
+      "category": "authorization",
+      "description": "Any team can mark any work item complete, not just the team that claimed it. This allows accidental or malicious completion with bogus results.",
+      "location": "WorkStealing.complete_work, line 267-280",
+      "current_behavior": "UPDATE runs unconditionally on any work_id regardless of who claimed it.",
+      "fixed_behavior": "Checks claimed_by matches self.team before completing. Raises PermissionError on mismatch. Optional force parameter for admin overrides.",
+      "code_change": {
+        "file": "work_stealing.py",
+        "action": "replace",
+        "old": "    @_retry_on_busy\n    def complete_work(self, work_id: int, result: dict) -> None:\n        \"\"\"Mark a work item as completed with a JSON result.\"\"\"\n        now = time.time()\n        with self._lock:\n            self._conn.execute(\n                \"UPDATE work_queue SET status = 'completed', result = ?, completed_at = ? WHERE id = ?\",\n                (json.dumps(result), now, work_id),\n            )\n            self._conn.commit()\n\n        _bus_notify(self.bus_dir, \"global\", self.agent_id, self.team, {\n            \"event\": \"work-completed\",\n            \"work_id\": work_id,\n        })",
+        "new": "    @_retry_on_busy\n    def complete_work(self, work_id: int, result: dict, force: bool = False) -> None:\n        \"\"\"Mark a work item as completed with a JSON result.\n\n        Parameters\n        ----------\n        work_id:\n            The work item id to complete.\n        result:\n            JSON-serializable result data.\n        force:\n            If True, skip claimer verification (admin override).\n\n        Raises\n        ------\n        PermissionError\n            If the calling team did not claim this work item (and force is False).\n        \"\"\"\n        now = time.time()\n        with self._lock:\n            if not force:\n                row = self._conn.execute(\n                    \"SELECT claimed_by FROM work_queue WHERE id = ?\",\n                    (work_id,),\n                ).fetchone()\n                if row is None:\n                    raise ValueError(f\"Work item {work_id} not found\")\n                if row[\"claimed_by\"] != self.team:\n                    raise PermissionError(\n                        f\"Work item {work_id} is claimed by '{row['claimed_by']}', \"\n                        f\"not by '{self.team}'\"\n                    )\n            self._conn.execute(\n                \"UPDATE work_queue SET status = 'completed', result = ?, completed_at = ? WHERE id = ?\",\n                (json.dumps(result), now, work_id),\n            )\n            self._conn.commit()\n\n        _bus_notify(self.bus_dir, \"global\", self.agent_id, self.team, {\n            \"event\": \"work-completed\",\n            \"work_id\": work_id,\n        })"
+      }
+    },
+    {
+      "id": "FIX-005",
+      "title": "No stage failure status in PipelineManager",
+      "severity": "high",
+      "category": "missing-feature",
+      "description": "Pipeline stages can only be waiting/ready/in_progress/completed. No 'failed' state exists. Code explicitly notes: 'any_failed = False  # no failure state for stages currently'. Fix adds fail_stage() method and updates get_pipeline_status to detect failures.",
+      "location": "PipelineManager class, new method + get_pipeline_status update",
+      "current_behavior": "No way to mark a stage as failed. Failed stages remain in_progress forever, blocking downstream.",
+      "fixed_behavior": "New fail_stage() method sets status='failed' with error data. get_pipeline_status reports pipeline as 'failed' when any stage has failed. Dependent stages can optionally be marked 'blocked'.",
+      "code_change": {
+        "file": "work_stealing.py",
+        "action": "insert_after_complete_stage",
+        "description": "Add fail_stage method after complete_stage method.",
+        "old": "    @_retry_on_busy\n    def get_ready_stages(self, pipeline_id: int) -> list[dict]:",
+        "new": "    @_retry_on_busy\n    def fail_stage(self, pipeline_id: int, stage_name: str, error: str) -> None:\n        \"\"\"Mark a stage as failed with an error message.\n\n        Failed stages block all downstream dependents.\n        \"\"\"\n        now = time.time()\n        with self._lock:\n            self._conn.execute(\n                \"\"\"UPDATE pipeline_stages\n                   SET status = 'failed', output_data = ?, completed_at = ?\n                   WHERE pipeline_id = ? AND stage_name = ? AND status = 'in_progress'\"\"\",\n                (json.dumps({\"error\": error}), now, pipeline_id, stage_name),\n            )\n            self._conn.commit()\n\n        _bus_notify(self.bus_dir, \"global\", self.agent_id, self.team, {\n            \"event\": \"pipeline-stage-failed\",\n            \"pipeline_id\": pipeline_id,\n            \"stage_name\": stage_name,\n            \"error\": error,\n        })\n\n    @_retry_on_busy\n    def get_ready_stages(self, pipeline_id: int) -> list[dict]:"
+      },
+      "code_change_2": {
+        "file": "work_stealing.py",
+        "action": "replace",
+        "description": "Update get_pipeline_status to detect failed stages and report pipeline as 'failed'.",
+        "old": "        stages = [dict(s) for s in stage_rows]\n        all_completed = all(s[\"status\"] == \"completed\" for s in stages)\n        any_failed = False  # no failure state for stages currently\n\n        return {\n            \"id\": pipeline_row[\"id\"],\n            \"name\": pipeline_row[\"name\"],\n            \"status\": \"completed\" if all_completed else pipeline_row[\"status\"],\n            \"created_at\": pipeline_row[\"created_at\"],\n            \"stages\": stages,\n        }",
+        "new": "        stages = [dict(s) for s in stage_rows]\n        all_completed = all(s[\"status\"] == \"completed\" for s in stages)\n        any_failed = any(s[\"status\"] == \"failed\" for s in stages)\n\n        if all_completed:\n            derived_status = \"completed\"\n        elif any_failed:\n            derived_status = \"failed\"\n        else:\n            derived_status = pipeline_row[\"status\"]\n\n        return {\n            \"id\": pipeline_row[\"id\"],\n            \"name\": pipeline_row[\"name\"],\n            \"status\": derived_status,\n            \"created_at\": pipeline_row[\"created_at\"],\n            \"stages\": stages,\n        }"
+      }
+    },
+    {
+      "id": "FIX-006",
+      "title": "Duplicate stage names accepted in create_pipeline",
+      "severity": "high",
+      "category": "validation",
+      "description": "create_pipeline does not check for unique stage names within a pipeline. Duplicate names cause depends_on references to be ambiguous and SQL queries to match multiple rows.",
+      "location": "PipelineManager.create_pipeline",
+      "current_behavior": "Accepts duplicate stage names silently. Queries return unpredictable results.",
+      "fixed_behavior": "Covered by FIX-001's _validate_dag which checks for duplicate names, unknown dependency references, and cycles all in one validation pass.",
+      "code_change": {
+        "file": "work_stealing.py",
+        "action": "covered_by",
+        "covered_by": "FIX-001",
+        "note": "_validate_dag raises ValueError for duplicate stage names: 'Duplicate stage names in pipeline: [...]'"
+      }
+    },
+    {
+      "id": "FIX-007",
+      "title": "Bus notification failures crash callers",
+      "severity": "high",
+      "category": "error-handling",
+      "description": "_bus_notify can throw on disk full, permission errors, or missing directory. The DB transaction has already committed, so the state change is persisted but the caller crashes. Fix wraps _bus_notify calls in try/except.",
+      "location": "_bus_notify function, line 130-152",
+      "current_behavior": "Exceptions from os.open/os.write propagate to caller, crashing the operation even though the DB write succeeded.",
+      "fixed_behavior": "_bus_notify catches all exceptions internally, logs a warning, and never propagates. DB state is the source of truth; bus notifications are best-effort.",
+      "code_change": {
+        "file": "work_stealing.py",
+        "action": "replace",
+        "old": "def _bus_notify(bus_dir: str, channel: str, agent_id: str, team: str, body: dict) -> None:\n    \"\"\"Fire-and-forget bus notification (JSONL atomic append).\"\"\"\n    if bus_dir is None:\n        return\n    os.makedirs(bus_dir, exist_ok=True)\n    msg = {\n        \"id\": str(uuid.uuid4()),\n        \"type\": \"info\",\n        \"channel\": channel,\n        \"team\": team,\n        \"agent_id\": agent_id,\n        \"ts\": time.time(),\n        \"ttl\": 3600,\n        \"body\": body,\n    }\n    raw = json.dumps(msg, separators=(\",\", \":\")).encode(\"utf-8\") + b\"\\n\"\n    safe_ch = channel.replace(\"/\", \"_\").replace(\"..\", \"_\")\n    filepath = os.path.join(bus_dir, f\"{safe_ch}.jsonl\")\n    fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)\n    try:\n        os.write(fd, raw)\n    finally:\n        os.close(fd)",
+        "new": "def _bus_notify(bus_dir: str, channel: str, agent_id: str, team: str, body: dict) -> None:\n    \"\"\"Fire-and-forget bus notification (JSONL atomic append).\n\n    Never raises -- logs warnings on failure. DB state is source of truth.\n    \"\"\"\n    if bus_dir is None:\n        return\n    try:\n        os.makedirs(bus_dir, exist_ok=True)\n        msg = {\n            \"id\": str(uuid.uuid4()),\n            \"type\": \"info\",\n            \"channel\": channel,\n            \"team\": team,\n            \"agent_id\": agent_id,\n            \"ts\": time.time(),\n            \"ttl\": 3600,\n            \"body\": body,\n        }\n        raw = json.dumps(msg, separators=(\",\", \":\")).encode(\"utf-8\") + b\"\\n\"\n        safe_ch = channel.replace(\"/\", \"_\").replace(\"..\", \"_\")\n        filepath = os.path.join(bus_dir, f\"{safe_ch}.jsonl\")\n        fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)\n        try:\n            os.write(fd, raw)\n        finally:\n            os.close(fd)\n    except Exception:\n        logger.warning(\n            \"Bus notification failed (non-fatal): channel=%s body=%s\",\n            channel, body, exc_info=True,\n        )"
+      }
+    },
+    {
+      "id": "FIX-008",
+      "title": "No double-start guard on pipeline stages",
+      "severity": "high",
+      "category": "state-machine",
+      "description": "start_stage can be called on an already in_progress or completed stage, resetting started_at and reverting the status. Fix adds a WHERE status = 'ready' guard.",
+      "location": "PipelineManager.start_stage, line 429-443",
+      "current_behavior": "UPDATE runs unconditionally. A completed stage can be reverted to in_progress.",
+      "fixed_behavior": "Only transitions from 'ready' to 'in_progress'. Raises ValueError if stage is not in 'ready' state.",
+      "code_change": {
+        "file": "work_stealing.py",
+        "action": "replace",
+        "old": "    @_retry_on_busy\n    def start_stage(self, pipeline_id: int, stage_name: str) -> None:\n        \"\"\"Mark a stage as in_progress.\"\"\"\n        now = time.time()\n        with self._lock:\n            self._conn.execute(\n                \"UPDATE pipeline_stages SET status = 'in_progress', started_at = ? WHERE pipeline_id = ? AND stage_name = ?\",\n                (now, pipeline_id, stage_name),\n            )\n            self._conn.commit()\n\n        _bus_notify(self.bus_dir, \"global\", self.agent_id, self.team, {\n            \"event\": \"pipeline-stage-started\",\n            \"pipeline_id\": pipeline_id,\n            \"stage_name\": stage_name,\n        })",
+        "new": "    @_retry_on_busy\n    def start_stage(self, pipeline_id: int, stage_name: str) -> None:\n        \"\"\"Mark a stage as in_progress.\n\n        Raises\n        ------\n        ValueError\n            If the stage is not in 'ready' status (e.g., already in_progress\n            or completed).\n        \"\"\"\n        now = time.time()\n        with self._lock:\n            cur = self._conn.execute(\n                \"\"\"UPDATE pipeline_stages SET status = 'in_progress', started_at = ?\n                   WHERE pipeline_id = ? AND stage_name = ? AND status = 'ready'\"\"\",\n                (now, pipeline_id, stage_name),\n            )\n            if cur.rowcount == 0:\n                row = self._conn.execute(\n                    \"SELECT status FROM pipeline_stages WHERE pipeline_id = ? AND stage_name = ?\",\n                    (pipeline_id, stage_name),\n                ).fetchone()\n                current = row[\"status\"] if row else \"not found\"\n                self._conn.commit()\n                raise ValueError(\n                    f\"Cannot start stage '{stage_name}': current status is '{current}' (must be 'ready')\"\n                )\n            self._conn.commit()\n\n        _bus_notify(self.bus_dir, \"global\", self.agent_id, self.team, {\n            \"event\": \"pipeline-stage-started\",\n            \"pipeline_id\": pipeline_id,\n            \"stage_name\": stage_name,\n        })"
+      }
+    },
+    {
+      "id": "FIX-009",
+      "title": "TOCTOU race in get_ready_stages",
+      "severity": "medium",
+      "category": "concurrency",
+      "description": "get_ready_stages reads all stages under lock, computes readiness without lock, then updates under lock. Between read and update, another thread could start_stage, and the update would overwrite that transition back to 'ready'. Fix uses conditional UPDATE with WHERE status = 'waiting'.",
+      "location": "PipelineManager.get_ready_stages, line 465-493",
+      "current_behavior": "Two separate lock acquisitions with computation in between. UPDATE doesn't check current status.",
+      "fixed_behavior": "Single lock acquisition for the entire read-compute-update cycle. UPDATE uses WHERE status = 'waiting' to avoid overwriting concurrent transitions.",
+      "code_change": {
+        "file": "work_stealing.py",
+        "action": "replace",
+        "old": "    @_retry_on_busy\n    def get_ready_stages(self, pipeline_id: int) -> list[dict]:\n        \"\"\"Return stages whose dependencies are all met (status = 'ready' or newly ready).\"\"\"\n        with self._lock:\n            # First get all stages for this pipeline\n            all_stages = self._conn.execute(\n                \"SELECT * FROM pipeline_stages WHERE pipeline_id = ?\",\n                (pipeline_id,),\n            ).fetchall()\n\n        completed = {s[\"stage_name\"] for s in all_stages if s[\"status\"] == \"completed\"}\n        ready = []\n        for stage in all_stages:\n            if stage[\"status\"] in (\"completed\", \"in_progress\"):\n                continue\n            deps = json.loads(stage[\"depends_on\"])\n            if all(d in completed for d in deps):\n                ready.append(dict(stage))\n\n        # Update any 'waiting' stages to 'ready' if their deps are met\n        with self._lock:\n            for r in ready:\n                if r[\"status\"] == \"waiting\":\n                    self._conn.execute(\n                        \"UPDATE pipeline_stages SET status = 'ready' WHERE id = ?\",\n                        (r[\"id\"],),\n                    )\n            self._conn.commit()\n\n        return ready",
+        "new": "    @_retry_on_busy\n    def get_ready_stages(self, pipeline_id: int) -> list[dict]:\n        \"\"\"Return stages whose dependencies are all met (status = 'ready' or newly ready).\"\"\"\n        with self._lock:\n            all_stages = self._conn.execute(\n                \"SELECT * FROM pipeline_stages WHERE pipeline_id = ?\",\n                (pipeline_id,),\n            ).fetchall()\n\n            completed = {s[\"stage_name\"] for s in all_stages if s[\"status\"] == \"completed\"}\n            ready = []\n            for stage in all_stages:\n                if stage[\"status\"] in (\"completed\", \"in_progress\", \"failed\"):\n                    continue\n                deps = json.loads(stage[\"depends_on\"])\n                if all(d in completed for d in deps):\n                    ready.append(dict(stage))\n\n            # Update 'waiting' -> 'ready', guarded by WHERE status = 'waiting'\n            for r in ready:\n                if r[\"status\"] == \"waiting\":\n                    self._conn.execute(\n                        \"UPDATE pipeline_stages SET status = 'ready' WHERE id = ? AND status = 'waiting'\",\n                        (r[\"id\"],),\n                    )\n            self._conn.commit()\n\n        return ready"
+      }
+    },
+    {
+      "id": "FIX-010",
+      "title": "No database indexes on work_queue and pipeline_stages",
+      "severity": "high",
+      "category": "performance",
+      "description": "All queries use full table scans. steal_work scans all work_queue rows filtering by status. get_ready_stages/trigger_downstream scan all pipeline_stages. At scale (10K+ rows), this causes significant latency.",
+      "location": "_SCHEMA constant, line 65-111",
+      "current_behavior": "No secondary indexes. Every query is a full table scan.",
+      "fixed_behavior": "Adds indexes for the three most common query patterns: work_queue(status, priority, created_at) for steal_work, pipeline_stages(pipeline_id, status) for stage queries, and scratchpad(namespace, expires_at) for read/list operations.",
+      "code_change": {
+        "file": "work_stealing.py",
+        "action": "replace",
+        "old": "CREATE TABLE IF NOT EXISTS scratchpad (\n    key TEXT NOT NULL,\n    namespace TEXT NOT NULL,\n    value TEXT NOT NULL,\n    written_by TEXT NOT NULL,\n    ttl_seconds INTEGER DEFAULT 3600,\n    created_at REAL NOT NULL,\n    expires_at REAL NOT NULL,\n    PRIMARY KEY (key, namespace)\n);\n\"\"\"",
+        "new": "CREATE TABLE IF NOT EXISTS scratchpad (\n    key TEXT NOT NULL,\n    namespace TEXT NOT NULL,\n    value TEXT NOT NULL,\n    written_by TEXT NOT NULL,\n    ttl_seconds INTEGER DEFAULT 3600,\n    created_at REAL NOT NULL,\n    expires_at REAL NOT NULL,\n    PRIMARY KEY (key, namespace)\n);\n\nCREATE INDEX IF NOT EXISTS idx_wq_status_priority_created\n    ON work_queue(status, priority, created_at);\n\nCREATE INDEX IF NOT EXISTS idx_ps_pipeline_status\n    ON pipeline_stages(pipeline_id, status);\n\nCREATE INDEX IF NOT EXISTS idx_sp_namespace_expires\n    ON scratchpad(namespace, expires_at);\n\"\"\""
+      }
+    }
+  ],
+  "chokepoints": [
+    {
+      "id": "CP-001",
+      "title": "steal_work BEGIN IMMEDIATE serialization bottleneck",
+      "severity": "high",
+      "location": "WorkStealing.steal_work, line 222-264",
+      "description": "Every steal_work call acquires a Python-level threading lock AND an SQLite write lock via BEGIN IMMEDIATE. Under thundering-herd conditions (20+ teams), all steals serialize through a single write lock. The Python _retry_on_busy backoff has no jitter, so retries synchronize and collide again.",
+      "impact": "At 20 concurrent stealers, the worst-case wait is 3.1s (0.1+0.2+0.4+0.8+1.6). With synchronized retries, some threads may exhaust all 5 retries and fail with SQLITE_BUSY.",
+      "recommended_fix": "Add random jitter to _retry_on_busy backoff: delay = delay * 2 + random.uniform(0, delay * 0.5). Increase _MAX_RETRIES to 8. The PRAGMA busy_timeout=30000 already provides SQLite-level waiting, so the Python retry is double-waiting. Consider removing the Python sleep and relying on busy_timeout alone.",
+      "code_sketch": "import random\n\ndef _retry_on_busy(func):\n    def wrapper(*args, **kwargs):\n        delay = _RETRY_BACKOFF\n        last_err = None\n        for attempt in range(_MAX_RETRIES):\n            try:\n                return func(*args, **kwargs)\n            except sqlite3.OperationalError as e:\n                if 'locked' in str(e).lower() or 'busy' in str(e).lower():\n                    last_err = e\n                    jittered = delay + random.uniform(0, delay * 0.5)\n                    time.sleep(jittered)\n                    delay *= 2\n                else:\n                    raise\n        raise last_err\n    return wrapper"
+    },
+    {
+      "id": "CP-002",
+      "title": "trigger_downstream and get_ready_stages use separate lock acquisitions",
+      "severity": "medium",
+      "location": "PipelineManager.trigger_downstream (line 524-563), PipelineManager.get_ready_stages (line 465-493)",
+      "description": "Both methods read all stages under lock, release lock, compute, then re-acquire lock to update. This two-phase pattern creates TOCTOU windows. Under concurrent stage completions (e.g., fan-in with 10 sources completing simultaneously), the read-compute-update cycle can produce stale decisions. Additionally, trigger_downstream sends bus notifications in a loop outside the lock, which can be slow for wide fan-out (50+ downstream stages).",
+      "impact": "In the concurrent_stage_completions stress test, the sink may be triggered by multiple threads or zero threads depending on timing. The test currently asserts exactly 1 trigger, which can fail under high concurrency.",
+      "recommended_fix": "FIX-009 addresses get_ready_stages by moving to a single lock. trigger_downstream should use the same pattern: single lock for read+compute+update, with WHERE status = 'waiting' guard on the UPDATE."
+    },
+    {
+      "id": "CP-003",
+      "title": "check_stage_ready acquires lock twice for dependent stages",
+      "severity": "low",
+      "location": "PipelineManager.check_stage_ready, line 402-426",
+      "description": "First lock acquisition reads the depends_on list. Lock is released. Second lock acquisition iterates over deps checking each one with a separate SQL query. For a stage with N dependencies, this issues N+1 queries with 2 lock acquisitions. An atomic single-query approach would be faster and race-free.",
+      "impact": "Minor performance drag. N+1 query pattern. At 10 deps, that's 11 queries + 2 lock cycles instead of 1 query + 1 lock cycle.",
+      "recommended_fix": "Use a single lock acquisition with a single query: SELECT COUNT(*) FROM pipeline_stages WHERE pipeline_id = ? AND stage_name IN (...) AND status = 'completed', then compare count to len(deps)."
+    },
+    {
+      "id": "CP-004",
+      "title": "No connection pooling -- each instance opens a new SQLite connection",
+      "severity": "medium",
+      "location": "WorkStealing.__init__, PipelineManager.__init__, Scratchpad.__init__",
+      "description": "Every WorkStealing/PipelineManager/Scratchpad instance opens its own sqlite3.Connection via _open_db. In the stress tests, 20+ instances are created (one per thread/team). Each connection runs PRAGMA journal_mode=WAL and executescript(_SCHEMA). While SQLite WAL supports concurrent readers, write serialization across many connections increases lock contention.",
+      "impact": "In thundering-herd tests, 20 connections all compete for the write lock. Connection setup cost (PRAGMA + schema check) adds latency. No reuse across instances sharing the same db_path.",
+      "recommended_fix": "Consider a shared connection pool keyed by db_path. Alternatively, document that WorkStealing/PipelineManager/Scratchpad instances should be shared across threads within the same process (they already use threading.Lock internally)."
+    },
+    {
+      "id": "CP-005",
+      "title": "Scratchpad cleanup_expired does a full table DELETE without LIMIT",
+      "severity": "medium",
+      "location": "Scratchpad.cleanup_expired, line 654-664",
+      "description": "DELETE FROM scratchpad WHERE expires_at <= ? runs as a single transaction. With 100K+ expired entries, this holds the write lock for the entire deletion, blocking all other writers. The transaction journal grows large.",
+      "impact": "At 100K expired rows, cleanup can take seconds, blocking all concurrent writes. Database file bloats until VACUUM is run.",
+      "recommended_fix": "Add batched deletion: DELETE ... LIMIT 1000 in a loop, committing after each batch. This releases the write lock between batches, allowing other writers to proceed. Add an optional batch_size parameter to cleanup_expired()."
+    }
+  ]
+}

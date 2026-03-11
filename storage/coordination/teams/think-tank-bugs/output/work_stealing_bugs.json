@@ -1,0 +1,163 @@
+{
+  "module": "work_stealing.py",
+  "team": "think-tank-bugs-3",
+  "date": "2026-03-11",
+  "bugs": [
+    {
+      "id": "BUG-WS-001",
+      "severity": "critical",
+      "type": "design-flaw",
+      "title": "No circular dependency detection in PipelineManager causes infinite wait",
+      "location": "work_stealing.py:358-400",
+      "description": "create_pipeline() inserts stages with arbitrary depends_on lists without validating the dependency graph is a DAG. If stages form a cycle (A->B->C->A), all cycled stages remain in 'waiting' forever because none of their dependencies can ever complete. The pipeline is permanently stalled with no error or warning.",
+      "reproduction": "pm.create_pipeline('cycle', [{'name': 'A', 'depends_on': ['B']}, {'name': 'B', 'depends_on': ['C']}, {'name': 'C', 'depends_on': ['A']}]). All stages stay 'waiting'. get_ready_stages() returns empty list forever.",
+      "impact": "Silent permanent pipeline stall. No way to detect or recover. The pipeline appears 'active' but can never complete.",
+      "fix": "Add cycle detection via topological sort before inserting stages. Add at the start of create_pipeline, after the docstring:\n\n    def create_pipeline(self, name: str, stages: list[dict]) -> int:\n        # ... docstring ...\n        # Validate DAG: detect cycles via topological sort\n        stage_names = {s[\"name\"] for s in stages}\n        adj: dict[str, list[str]] = {s[\"name\"]: s.get(\"depends_on\", []) for s in stages}\n        # Also validate deps reference existing stages\n        for sname, deps in adj.items():\n            for d in deps:\n                if d not in stage_names:\n                    raise ValueError(f\"Stage '{sname}' depends on unknown stage '{d}'\")\n        visited: set[str] = set()\n        in_stack: set[str] = set()\n        def _dfs(node: str) -> None:\n            if node in in_stack:\n                raise ValueError(f\"Circular dependency detected involving stage '{node}'\")\n            if node in visited:\n                return\n            in_stack.add(node)\n            for dep in adj[node]:\n                _dfs(dep)\n            in_stack.discard(node)\n            visited.add(node)\n        for s in stage_names:\n            _dfs(s)\n        # ... rest of method ...",
+      "test_needed": "Test that create_pipeline raises ValueError when given stages with a cycle (A->B->C->A). Test that valid DAGs still work. Test self-dependency (A depends on A)."
+    },
+    {
+      "id": "BUG-WS-002",
+      "severity": "high",
+      "type": "missing-validation",
+      "title": "complete_work does not verify the claimer matches the caller",
+      "location": "work_stealing.py:266-280",
+      "description": "complete_work(work_id, result) updates the work item unconditionally with UPDATE ... WHERE id = ?. It does not check that self.team matches claimed_by. Any team can mark any other team's claimed work as completed with arbitrary result data, corrupting the coordination protocol.",
+      "reproduction": "ws_a.enqueue_work('task'); ws_a.steal_work()  # claimed by team-a. ws_b = WorkStealing(..., team='team-b', ...); ws_b.complete_work(1, {'fake': 'result'})  # succeeds, should not.",
+      "impact": "Work items completed with incorrect results. Silent data corruption. No audit trail integrity.",
+      "fix": "Add a claimer verification check inside complete_work:\n\n    @_retry_on_busy\n    def complete_work(self, work_id: int, result: dict) -> None:\n        \"\"\"Mark a work item as completed with a JSON result.\"\"\"\n        now = time.time()\n        with self._lock:\n            row = self._conn.execute(\n                \"SELECT claimed_by, status FROM work_queue WHERE id = ?\",\n                (work_id,),\n            ).fetchone()\n            if row is None:\n                raise ValueError(f\"Work item {work_id} not found\")\n            if row[\"status\"] != \"claimed\":\n                raise ValueError(f\"Work item {work_id} is not claimed (status={row['status']})\")\n            if row[\"claimed_by\"] != self.team:\n                raise PermissionError(\n                    f\"Work item {work_id} is claimed by '{row['claimed_by']}', not '{self.team}'\"\n                )\n            self._conn.execute(\n                \"UPDATE work_queue SET status = 'completed', result = ?, completed_at = ? WHERE id = ?\",\n                (json.dumps(result), now, work_id),\n            )\n            self._conn.commit()\n\n        _bus_notify(self.bus_dir, \"global\", self.agent_id, self.team, {\n            \"event\": \"work-completed\",\n            \"work_id\": work_id,\n        })",
+      "test_needed": "Test that team-b cannot complete_work on an item claimed by team-a (raises PermissionError). Test that completing unclaimed or nonexistent items raises ValueError."
+    },
+    {
+      "id": "BUG-WS-003",
+      "severity": "critical",
+      "type": "bug",
+      "title": "Abandoned claimed work items never return to queue (zombie work)",
+      "location": "work_stealing.py:212-264",
+      "description": "When a team calls steal_work() claiming an item, then crashes without calling complete_work() or fail_work(), the item remains in 'claimed' status forever. No timeout mechanism exists despite claimed_at being recorded. The item is invisible to steal_work() (which filters status='queued') and can never be processed by another team.",
+      "reproduction": "ws.enqueue_work('task'); ws.steal_work()  # claimed_at recorded. # Team crashes / never calls complete or fail. # Item stuck as 'claimed' forever. ws2.steal_work()  # returns None even though work exists.",
+      "impact": "Work items permanently lost to the system. Silent data loss in coordination. Over time, abandoned items accumulate and work never gets done.",
+      "fix": "Add a recover_abandoned method to WorkStealing and optionally call it from steal_work:\n\n    @_retry_on_busy\n    def recover_abandoned(self, timeout_seconds: float = 1800) -> int:\n        \"\"\"Re-queue work items claimed longer than timeout_seconds ago.\n\n        Returns the number of items recovered.\n        \"\"\"\n        cutoff = time.time() - timeout_seconds\n        with self._lock:\n            cur = self._conn.execute(\n                \"\"\"UPDATE work_queue\n                   SET status = 'queued', claimed_by = NULL, claimed_at = NULL\n                   WHERE status = 'claimed' AND claimed_at < ?\"\"\",\n                (cutoff,),\n            )\n            count = cur.rowcount\n            self._conn.commit()\n        if count > 0:\n            logger.info(\"Recovered %d abandoned work items (timeout=%ds)\", count, timeout_seconds)\n        return count",
+      "test_needed": "Test that a claimed item older than the timeout gets re-queued by recover_abandoned. Test that recently claimed items are not recovered. Test that recovered items can be stolen again."
+    },
+    {
+      "id": "BUG-WS-004",
+      "severity": "high",
+      "type": "design-flaw",
+      "title": "No stage failure/retry handling in pipelines",
+      "location": "work_stealing.py:496-521",
+      "description": "Pipeline stages have no 'failed' status. The code explicitly acknowledges this: 'any_failed = False  # no failure state for stages currently' (line 513). If a stage encounters an error, there is no way to mark it failed, no retry mechanism, and downstream stages are blocked forever. The only options are to leave it in_progress (zombie) or mark it completed with error data (corrupts the data model).",
+      "reproduction": "Create a pipeline A->B->C. Start stage A. Stage A encounters an error. No fail_stage() method exists. Stage A stays in_progress. B and C never become ready.",
+      "impact": "Any stage failure permanently stalls the pipeline. Teams must hack around this by completing with error data, destroying result integrity.",
+      "fix": "Add fail_stage method and update get_pipeline_status to detect failures:\n\n    @_retry_on_busy\n    def fail_stage(self, pipeline_id: int, stage_name: str, error: str, retry: bool = False) -> None:\n        \"\"\"Mark a stage as failed. If retry=True, reset to 'ready' instead.\"\"\"\n        now = time.time()\n        with self._lock:\n            if retry:\n                self._conn.execute(\n                    \"\"\"UPDATE pipeline_stages\n                       SET status = 'ready', started_at = NULL\n                       WHERE pipeline_id = ? AND stage_name = ?\"\"\",\n                    (pipeline_id, stage_name),\n                )\n            else:\n                self._conn.execute(\n                    \"\"\"UPDATE pipeline_stages\n                       SET status = 'failed', output_data = ?, completed_at = ?\n                       WHERE pipeline_id = ? AND stage_name = ?\"\"\",\n                    (json.dumps({\"error\": error}), now, pipeline_id, stage_name),\n                )\n            self._conn.commit()\n\n        _bus_notify(self.bus_dir, \"global\", self.agent_id, self.team, {\n            \"event\": \"pipeline-stage-failed\" if not retry else \"pipeline-stage-retrying\",\n            \"pipeline_id\": pipeline_id,\n            \"stage_name\": stage_name,\n            \"error\": error,\n        })\n\nAlso update get_pipeline_status (line 512-513):\n        any_failed = any(s[\"status\"] == \"failed\" for s in stages)\n        status_val = \"completed\" if all_completed else (\"failed\" if any_failed else pipeline_row[\"status\"])",
+      "test_needed": "Test fail_stage marks stage as 'failed'. Test retry=True resets to 'ready'. Test pipeline status shows 'failed' when any stage fails. Test downstream stages remain 'waiting' when upstream fails."
+    },
+    {
+      "id": "BUG-WS-005",
+      "severity": "high",
+      "type": "missing-validation",
+      "title": "Duplicate stage names accepted silently in create_pipeline",
+      "location": "work_stealing.py:358-400",
+      "description": "create_pipeline does not validate stage name uniqueness within a pipeline. If two stages share the same name, SQL queries using WHERE pipeline_id = ? AND stage_name = ? (used in start_stage, complete_stage, check_stage_ready) match both rows, causing UPDATE to modify both. depends_on references become ambiguous. trigger_downstream may double-trigger.",
+      "reproduction": "pm.create_pipeline('dup', [{'name': 'step', 'team': 'a'}, {'name': 'step', 'team': 'b', 'depends_on': ['step']}]). Two rows inserted with stage_name='step'. start_stage(pid, 'step') updates both rows.",
+      "impact": "Undefined behavior: both duplicate stages get started/completed simultaneously. Dependency resolution breaks. Pipeline state becomes inconsistent.",
+      "fix": "Add validation at the start of create_pipeline, before the database insert:\n\n        now = time.time()\n        # Validate stage name uniqueness\n        stage_names = [s[\"name\"] for s in stages]\n        if len(stage_names) != len(set(stage_names)):\n            dupes = [n for n in stage_names if stage_names.count(n) > 1]\n            raise ValueError(f\"Duplicate stage names: {set(dupes)}\")\n        with self._lock:",
+      "test_needed": "Test that create_pipeline raises ValueError when two stages share the same name."
+    },
+    {
+      "id": "BUG-WS-006",
+      "severity": "high",
+      "type": "missing-validation",
+      "title": "No double-start guard for pipeline stages",
+      "location": "work_stealing.py:428-443",
+      "description": "start_stage() does UPDATE SET status='in_progress' without checking the current status. A stage that is already 'in_progress' can be started again (resetting started_at). Worse, a 'completed' stage can be reverted to 'in_progress', causing pipeline regression. The UPDATE has no WHERE status='ready' guard.",
+      "reproduction": "pm.start_stage(pid, 'step1'); pm.complete_stage(pid, 'step1', {}). pm.start_stage(pid, 'step1')  # re-starts a completed stage!",
+      "impact": "Completed stages can be reverted, breaking pipeline progress. started_at timestamps become unreliable. Downstream stages that already triggered may produce duplicate work.",
+      "fix": "Add a status guard to start_stage:\n\n    @_retry_on_busy\n    def start_stage(self, pipeline_id: int, stage_name: str) -> None:\n        \"\"\"Mark a stage as in_progress. Only allowed if status is 'ready'.\"\"\"\n        now = time.time()\n        with self._lock:\n            cur = self._conn.execute(\n                \"\"\"UPDATE pipeline_stages SET status = 'in_progress', started_at = ?\n                   WHERE pipeline_id = ? AND stage_name = ? AND status = 'ready'\"\"\",\n                (now, pipeline_id, stage_name),\n            )\n            if cur.rowcount == 0:\n                row = self._conn.execute(\n                    \"SELECT status FROM pipeline_stages WHERE pipeline_id = ? AND stage_name = ?\",\n                    (pipeline_id, stage_name),\n                ).fetchone()\n                status = row[\"status\"] if row else \"not found\"\n                self._conn.commit()\n                raise ValueError(\n                    f\"Cannot start stage '{stage_name}': current status is '{status}' (must be 'ready')\"\n                )\n            self._conn.commit()\n\n        _bus_notify(self.bus_dir, \"global\", self.agent_id, self.team, {\n            \"event\": \"pipeline-stage-started\",\n            \"pipeline_id\": pipeline_id,\n            \"stage_name\": stage_name,\n        })",
+      "test_needed": "Test that starting a 'completed' stage raises ValueError. Test that starting an 'in_progress' stage raises ValueError. Test that starting a 'waiting' stage raises ValueError. Test normal 'ready' -> 'in_progress' still works."
+    },
+    {
+      "id": "BUG-WS-007",
+      "severity": "high",
+      "type": "bug",
+      "title": "Bus notification failures crash callers",
+      "location": "work_stealing.py:130-152",
+      "description": "_bus_notify uses os.open/os.write for atomic JSONL append but has no exception handling around the file I/O. If the bus directory is deleted, disk is full, or permissions change, os.open or os.write raises OSError. This exception propagates up through enqueue_work, steal_work, complete_work, etc., crashing the caller AFTER the SQLite transaction has already committed. The state change is persisted but the caller sees an error.",
+      "reproduction": "ws = WorkStealing(db_path, '/nonexistent/path/that/gets/deleted', 'team', 'agent'). os.rmdir(bus_dir) after initialization. ws.enqueue_work('task')  # SQLite insert succeeds, then _bus_notify crashes with OSError.",
+      "impact": "Caller gets an exception even though the database operation succeeded. State and notifications diverge. In retry scenarios, the caller may retry the database operation causing duplicates.",
+      "fix": "Wrap the file I/O in _bus_notify with try/except:\n\ndef _bus_notify(bus_dir: str, channel: str, agent_id: str, team: str, body: dict) -> None:\n    \"\"\"Fire-and-forget bus notification (JSONL atomic append).\"\"\"\n    if bus_dir is None:\n        return\n    try:\n        os.makedirs(bus_dir, exist_ok=True)\n        msg = {\n            \"id\": str(uuid.uuid4()),\n            \"type\": \"info\",\n            \"channel\": channel,\n            \"team\": team,\n            \"agent_id\": agent_id,\n            \"ts\": time.time(),\n            \"ttl\": 3600,\n            \"body\": body,\n        }\n        raw = json.dumps(msg, separators=(\",\", \":\")).encode(\"utf-8\") + b\"\\n\"\n        safe_ch = channel.replace(\"/\", \"_\").replace(\"..\", \"_\")\n        filepath = os.path.join(bus_dir, f\"{safe_ch}.jsonl\")\n        fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)\n        try:\n            os.write(fd, raw)\n        finally:\n            os.close(fd)\n    except OSError as e:\n        logger.warning(\"Bus notification failed (channel=%s): %s\", channel, e)",
+      "test_needed": "Test that enqueue_work succeeds even when bus_dir is invalid/deleted. Test that a warning is logged but no exception propagates."
+    },
+    {
+      "id": "BUG-WS-008",
+      "severity": "medium",
+      "type": "design-flaw",
+      "title": "Scratchpad cleanup_expired has no automatic scheduling",
+      "location": "work_stealing.py:653-664",
+      "description": "cleanup_expired() only runs when explicitly called. No part of the system triggers it automatically. Expired entries accumulate on disk indefinitely. The read/read_all methods filter by expires_at so expired entries are invisible but still consume storage. Over extended operation, the scratchpad table grows without bound.",
+      "reproduction": "Write 100,000 entries with TTL=1. Wait 2 seconds. All entries expired but still on disk. Database file stays large. Only manual cleanup_expired() reclaims space.",
+      "impact": "Unbounded database growth. Degraded query performance as table grows. Eventual disk exhaustion in long-running systems.",
+      "fix": "Add a write counter and auto-cleanup trigger to the Scratchpad class:\n\n    def __init__(self, db_path: str, team: str, agent_id: str, auto_cleanup_interval: int = 100) -> None:\n        self.db_path = db_path\n        self.team = team\n        self.agent_id = agent_id\n        self._lock = threading.Lock()\n        self._conn = _open_db(db_path)\n        self._write_count = 0\n        self._auto_cleanup_interval = auto_cleanup_interval\n\n    @_retry_on_busy\n    def write(self, key: str, value: Any, namespace: Optional[str] = None, ttl: int = 3600) -> None:\n        \"\"\"Write a key-value pair. Overwrites if key+namespace already exists.\"\"\"\n        ns = namespace or self.team\n        now = time.time()\n        expires_at = now + ttl\n        with self._lock:\n            self._conn.execute(\n                \"\"\"INSERT INTO scratchpad (key, namespace, value, written_by, ttl_seconds, created_at, expires_at)\n                   VALUES (?, ?, ?, ?, ?, ?, ?)\n                   ON CONFLICT(key, namespace) DO UPDATE SET\n                       value=excluded.value, written_by=excluded.written_by,\n                       ttl_seconds=excluded.ttl_seconds, created_at=excluded.created_at,\n                       expires_at=excluded.expires_at\"\"\",\n                (key, ns, json.dumps(value), self.agent_id, ttl, now, expires_at),\n            )\n            self._conn.commit()\n            self._write_count += 1\n            if self._write_count >= self._auto_cleanup_interval:\n                self._write_count = 0\n                self._conn.execute(\"DELETE FROM scratchpad WHERE expires_at <= ?\", (now,))\n                self._conn.commit()",
+      "test_needed": "Test that after auto_cleanup_interval writes, expired entries are automatically deleted. Test that non-expired entries are not affected."
+    },
+    {
+      "id": "BUG-WS-009",
+      "severity": "medium",
+      "type": "bug",
+      "title": "TOCTOU race in get_ready_stages: check and update not atomic",
+      "location": "work_stealing.py:464-493",
+      "description": "get_ready_stages() reads all stages under the lock (line 468-472), releases the lock, computes which are ready (line 474-481), then re-acquires the lock to update statuses (line 484-491). Between the read and the update, another thread can call start_stage() changing a stage from 'waiting' to 'in_progress'. The update then overwrites it back to 'ready' because it uses UPDATE SET status='ready' WHERE id=? without checking current status.",
+      "reproduction": "Thread 1: get_ready_stages() reads stages, finds stage X is 'waiting' with deps met. Thread 2: start_stage(pid, 'X') sets X to 'in_progress'. Thread 1: updates X to 'ready', reverting the start.",
+      "impact": "A stage that was started gets reverted to 'ready'. Team that started it thinks it's running; the database says it's ready. Another team may also start it, causing duplicate execution.",
+      "fix": "Add a status guard to the UPDATE in get_ready_stages:\n\n        # Update any 'waiting' stages to 'ready' if their deps are met\n        with self._lock:\n            for r in ready:\n                if r[\"status\"] == \"waiting\":\n                    self._conn.execute(\n                        \"UPDATE pipeline_stages SET status = 'ready' WHERE id = ? AND status = 'waiting'\",\n                        (r[\"id\"],),\n                    )\n            self._conn.commit()",
+      "test_needed": "Test concurrent get_ready_stages and start_stage: start_stage should not be reverted. Verify with a barrier-synchronized test where one thread calls get_ready_stages while another calls start_stage on the same pipeline."
+    },
+    {
+      "id": "BUG-WS-010",
+      "severity": "high",
+      "type": "chokepoint",
+      "title": "No database indexes on frequently queried columns",
+      "location": "work_stealing.py:65-111",
+      "description": "The schema has no secondary indexes. steal_work() does a full table scan with WHERE status='queued' ORDER BY priority ASC, created_at ASC. get_ready_stages() and trigger_downstream() scan pipeline_stages by pipeline_id. Scratchpad reads scan by namespace + expires_at. At scale (10K+ rows), these become significant performance bottlenecks.",
+      "reproduction": "Insert 100,000 work items. Call steal_work() repeatedly. Each call scans the entire table to find status='queued' items. Similarly, create 1,000 pipelines with 100 stages each, then query get_ready_stages on the latest pipeline.",
+      "impact": "Linear query degradation with table size. steal_work() latency increases from <1ms to 100ms+ at 100K rows. Pipeline queries suffer similarly.",
+      "fix": "Add indexes to the schema string after the table definitions:\n\n_SCHEMA = \"\"\"...\n\nCREATE INDEX IF NOT EXISTS idx_wq_status_priority ON work_queue(status, priority, created_at);\nCREATE INDEX IF NOT EXISTS idx_ps_pipeline_id ON pipeline_stages(pipeline_id, status);\nCREATE INDEX IF NOT EXISTS idx_sp_namespace_expires ON scratchpad(namespace, expires_at);\nCREATE INDEX IF NOT EXISTS idx_sp_expires ON scratchpad(expires_at);\n\"\"\"",
+      "test_needed": "Performance test: insert 10K work items, measure steal_work latency with and without indexes. Should be <10ms with indexes. Similarly test pipeline queries with 100K stage rows."
+    },
+    {
+      "id": "BUG-WS-011",
+      "severity": "medium",
+      "type": "bug",
+      "title": "TOCTOU race in trigger_downstream: read and update not atomic",
+      "location": "work_stealing.py:523-563",
+      "description": "trigger_downstream() has the same pattern as get_ready_stages: reads all stages under lock (line 529-533), releases lock, computes newly ready stages (line 535-543), re-acquires lock to update (line 546-552). Between the read and update, concurrent trigger_downstream calls from other threads completing different stages can cause the same stage to be marked 'ready' twice, or a status to be overwritten. The stress test test_concurrent_stage_completions (line 487) expects sink to appear exactly once, but the TOCTOU window means it could appear 0 or 2 times.",
+      "reproduction": "Fan-in pipeline: 5 sources -> 1 sink. Complete all 5 sources concurrently. Each calls trigger_downstream. Two threads read all stages while source-4 and source-5 are both completing. Both compute sink as newly ready. Both update sink to 'ready'. Sink appears in both return values.",
+      "impact": "Downstream stage triggered multiple times causing duplicate work. The existing stress test (test_concurrent_stage_completions) actually tests for this and may flake.",
+      "fix": "Use an atomic conditional UPDATE to prevent double-trigger:\n\n        # Update status to ready (only if still 'waiting' to prevent double-trigger)\n        with self._lock:\n            actually_ready: list[str] = []\n            for name in newly_ready:\n                cur = self._conn.execute(\n                    \"UPDATE pipeline_stages SET status = 'ready' WHERE pipeline_id = ? AND stage_name = ? AND status = 'waiting'\",\n                    (pipeline_id, name),\n                )\n                if cur.rowcount > 0:\n                    actually_ready.append(name)\n            self._conn.commit()\n\n        # Bus notification for each actually-ready stage\n        for name in actually_ready:\n            _bus_notify(self.bus_dir, \"global\", self.agent_id, self.team, {\n                \"event\": \"pipeline-stage-ready\",\n                \"pipeline_id\": pipeline_id,\n                \"stage_name\": name,\n                \"triggered_by\": completed_stage,\n            })\n\n        return actually_ready",
+      "test_needed": "Stress test: 10 sources -> 1 sink, complete all 10 concurrently, verify sink appears exactly once across all trigger_downstream return values. Run 100 iterations to catch races."
+    },
+    {
+      "id": "BUG-WS-012",
+      "severity": "medium",
+      "type": "missing-validation",
+      "title": "fail_work does not verify the claimer matches the caller",
+      "location": "work_stealing.py:282-291",
+      "description": "Same issue as complete_work (BUG-WS-002): fail_work() updates the work item unconditionally. Any team can fail any other team's claimed work without authorization. Additionally, fail_work can be called on items in any status (queued, completed, etc.), not just claimed items.",
+      "reproduction": "ws_a.steal_work()  # team-a claims item. ws_b.fail_work(1, 'sabotage')  # team-b fails team-a's work. Also: ws.fail_work(999, 'reason')  # fails a nonexistent item (silent no-op).",
+      "impact": "Work items failed by unauthorized teams. No audit integrity. Silent no-ops when called with invalid IDs hide bugs.",
+      "fix": "Add claimer verification to fail_work, same pattern as BUG-WS-002:\n\n    @_retry_on_busy\n    def fail_work(self, work_id: int, reason: str) -> None:\n        \"\"\"Mark a work item as failed.\"\"\"\n        now = time.time()\n        with self._lock:\n            row = self._conn.execute(\n                \"SELECT claimed_by, status FROM work_queue WHERE id = ?\",\n                (work_id,),\n            ).fetchone()\n            if row is None:\n                raise ValueError(f\"Work item {work_id} not found\")\n            if row[\"status\"] != \"claimed\":\n                raise ValueError(f\"Work item {work_id} is not claimed (status={row['status']})\")\n            if row[\"claimed_by\"] != self.team:\n                raise PermissionError(\n                    f\"Work item {work_id} is claimed by '{row['claimed_by']}', not '{self.team}'\"\n                )\n            self._conn.execute(\n                \"UPDATE work_queue SET status = 'failed', result = ?, completed_at = ? WHERE id = ?\",\n                (json.dumps({\"error\": reason}), now, work_id),\n            )\n            self._conn.commit()",
+      "test_needed": "Test that team-b cannot fail_work on team-a's claimed item. Test that failing an unclaimed item raises ValueError."
+    },
+    {
+      "id": "BUG-WS-013",
+      "severity": "low",
+      "type": "bug",
+      "title": "check_stage_ready acquires lock twice in non-atomic pattern",
+      "location": "work_stealing.py:402-426",
+      "description": "check_stage_ready() acquires self._lock to read depends_on (line 405-409), releases it, then re-acquires it to check each dependency's status (line 418-425). Between these two lock acquisitions, another thread could complete or reset stages, making the result stale. Additionally, the second locked section queries dependencies one at a time in a loop, holding the lock for N queries where N is the number of dependencies.",
+      "reproduction": "Thread 1 calls check_stage_ready for stage C (depends on A, B). It reads deps=[A,B], releases lock. Thread 2 completes A. Thread 1 re-acquires lock, sees A completed, B completed -> returns True. But if Thread 2 had reset B between the two lock acquisitions, Thread 1 would return incorrect True.",
+      "impact": "Minor: check_stage_ready could return a stale result. Low impact since callers should use get_ready_stages or trigger_downstream for actual state changes.",
+      "fix": "Use a single lock acquisition and batch query:\n\n    @_retry_on_busy\n    def check_stage_ready(self, pipeline_id: int, stage_name: str) -> bool:\n        \"\"\"Check whether all dependencies for a stage are completed.\"\"\"\n        with self._lock:\n            row = self._conn.execute(\n                \"SELECT depends_on FROM pipeline_stages WHERE pipeline_id = ? AND stage_name = ?\",\n                (pipeline_id, stage_name),\n            ).fetchone()\n            if row is None:\n                return False\n            deps = json.loads(row[\"depends_on\"])\n            if not deps:\n                return True\n            placeholders = \",\".join(\"?\" for _ in deps)\n            count_row = self._conn.execute(\n                f\"SELECT COUNT(*) FROM pipeline_stages WHERE pipeline_id = ? AND stage_name IN ({placeholders}) AND status = 'completed'\",\n                (pipeline_id, *deps),\n            ).fetchone()\n            return count_row[0] == len(deps)",
+      "test_needed": "Existing tests for check_stage_ready should still pass. Add a concurrent test: one thread completes a stage while another calls check_stage_ready."
+    }
+  ]
+}

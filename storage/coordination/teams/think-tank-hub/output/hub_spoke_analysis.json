@@ -1,0 +1,576 @@
+{
+  "team": "think-tank-hub",
+  "date": "2026-03-11",
+  "session": "TEAM-0025",
+  "proposal_analysis": {
+    "architecture": {
+      "summary": "A single shared status file acts as the sole communication nexus between the coordinator and all agents. The coordinator is the hub; agents are spokes. Agents write status updates to the file. The coordinator reads all statuses and writes instructions back. Agents never read each other's entries — all inter-agent routing goes through the coordinator.",
+      "topology": "star/hub-and-spoke",
+      "communication_flow": {
+        "agent_to_coordinator": "Agent writes a status record to the shared file. Coordinator reads it on next poll.",
+        "coordinator_to_agent": "Coordinator writes an instruction record addressed to a specific agent_id. Agent reads it on next poll.",
+        "agent_to_agent": "Not permitted directly. Agent A posts a request in its status. Coordinator reads it, decides routing, writes instruction to Agent B."
+      },
+      "key_principle": "The shared file is NOT a message bus. It is a STATUS BOARD. Each agent has exactly one current record (upserted, not appended). The coordinator sees a snapshot of all agents at any moment by reading the file once.",
+      "why_not_bus": "The existing JSONL bus is append-only and grows unbounded. It requires offset tracking, TTL filtering, and channel management. A status board is fundamentally different: it is a fixed-size, always-current view. You read it once and know everything. No scanning, no offsets, no expired messages."
+    },
+    "data_schema": {
+      "file_format_recommendation": "JSON (single file, atomic read/write via temp-file-then-rename pattern)",
+      "alternatives_considered": {
+        "JSONL": {
+          "pros": "Append-only is safe for concurrent writers. Familiar from existing bus.",
+          "cons": "Requires scanning entire file to find latest entry per agent. Grows unbounded. Requires compaction. Defeats the purpose of a 'current snapshot' board.",
+          "verdict": "Rejected. JSONL is for event logs, not status boards."
+        },
+        "SQLite": {
+          "pros": "Atomic transactions. WAL mode handles concurrency well. Already used by help_protocol and direct_channels.",
+          "cons": "Heavyweight for what is essentially a key-value lookup. Requires all agents to have sqlite3 module (they do, it is stdlib). Connection management overhead. The coordinator already has many SQLite connections open to the coordination DB.",
+          "verdict": "Viable but overkill. The coordination DB already has team_status and progress tables. Adding another SQLite table would be redundant with help_protocol.team_status."
+        },
+        "JSON_single_file": {
+          "pros": "Atomic via write-to-temp-then-rename (POSIX guarantees). Single read gives complete snapshot. Human-readable. No scanning or offset tracking. Fixed size proportional to number of agents, not number of updates.",
+          "cons": "Last-writer-wins if two agents write at the exact same millisecond. Requires read-modify-write cycle (read file, update own entry, write file back). Not as concurrent-safe as SQLite.",
+          "verdict": "RECOMMENDED with the concurrency mitigation described below."
+        }
+      },
+      "recommended_schema": {
+        "file_path": "storage/coordination/agent_status.json",
+        "structure": {
+          "_meta": {
+            "version": 1,
+            "last_updated": "2026-03-11T14:30:00Z",
+            "coordinator_id": "coordinator-main"
+          },
+          "agents": {
+            "<agent_id>": {
+              "agent_id": "think-tank-1",
+              "team": "think-tank-hub",
+              "role": "analysis",
+              "status": "working|blocked|complete|error|idle|waiting_for_instruction",
+              "progress_pct": 65,
+              "current_task": "Analyzing hub-and-spoke architecture",
+              "subtasks": {
+                "total": 5,
+                "completed": 3,
+                "current": "Writing concurrency model section"
+              },
+              "blockers": [],
+              "findings_summary": "Identified 3 key advantages over current system",
+              "requests_to_coordinator": [
+                {
+                  "id": "req-001",
+                  "type": "need_info|need_resource|need_decision|report_issue",
+                  "description": "Need access to multi_team_runner.py source",
+                  "priority": "high",
+                  "status": "pending|acknowledged|resolved"
+                }
+              ],
+              "output_files": ["storage/coordination/teams/think-tank-hub/output/hub_spoke_analysis.json"],
+              "started_at": "2026-03-11T14:00:00Z",
+              "last_updated": "2026-03-11T14:30:00Z",
+              "estimated_completion": "2026-03-11T14:45:00Z"
+            }
+          },
+          "coordinator_instructions": {
+            "<agent_id>": {
+              "instruction_id": "instr-001",
+              "type": "proceed|redirect|pause|abort|info|merge_with",
+              "message": "Prioritize the concurrency safety section. Other think tank found race condition in current bus.",
+              "issued_at": "2026-03-11T14:25:00Z",
+              "acknowledged": false
+            }
+          }
+        }
+      }
+    },
+    "concurrency_model": {
+      "problem": "Multiple agents writing to the same JSON file simultaneously could corrupt it or cause lost updates (last-writer-wins).",
+      "solution_primary": {
+        "name": "Per-agent status files with coordinator aggregation",
+        "description": "Instead of one shared file, each agent writes its own status file: agent_status_{agent_id}.json. The coordinator reads all files to build the aggregate view. This eliminates ALL write contention between agents.",
+        "agent_write_path": "storage/coordination/hub/agents/{agent_id}.json",
+        "coordinator_read_pattern": "glob storage/coordination/hub/agents/*.json, read each, assemble into unified view",
+        "coordinator_write_path": "storage/coordination/hub/instructions/{agent_id}.json",
+        "agent_read_pattern": "read storage/coordination/hub/instructions/{own_agent_id}.json if exists",
+        "advantages": [
+          "Zero write contention between agents — each writes only its own file",
+          "Zero write contention between agents and coordinator — they write to different directories",
+          "Atomic via temp-file-then-rename on each individual file",
+          "If one agent's file is corrupted, others are unaffected",
+          "Coordinator can read all files in parallel",
+          "No locking, no retries, no SQLite busy handling needed"
+        ],
+        "directory_structure": {
+          "storage/coordination/hub/": {
+            "agents/": "One JSON file per agent (agent writes, coordinator reads)",
+            "instructions/": "One JSON file per agent (coordinator writes, agent reads)",
+            "snapshot.json": "Optional: coordinator writes a merged snapshot after each poll cycle"
+          }
+        }
+      },
+      "solution_fallback": {
+        "name": "Single file with flock advisory locking",
+        "description": "If a single file is preferred, use fcntl.flock() for advisory locking. Each writer acquires an exclusive lock, reads the file, updates its own entry, writes it back, releases the lock.",
+        "risk": "Advisory locks are not enforced if any process skips locking. Also, flock behavior varies across NFS/networked filesystems.",
+        "verdict": "Use per-agent files instead. Simpler and more robust."
+      },
+      "update_frequency": {
+        "agents": "Write status after each significant state change (task started, task completed, blocker encountered, progress milestone). Minimum: every 30 seconds. Maximum: every 5 seconds (to avoid excessive I/O).",
+        "coordinator": "Poll agent files every 10-15 seconds. This is fast enough for human oversight and slow enough to avoid I/O thrashing. The coordinator should also poll immediately after dispatching new instructions.",
+        "rationale": "The coordinator is a Claude session using bash commands. It cannot run a persistent daemon. It polls by executing a read command in its conversation loop. 10-15 seconds matches the natural cadence of a coordinator reviewing multi-agent status."
+      }
+    },
+    "coordinator_interface": {
+      "reading_agent_status": {
+        "method": "Read all files in storage/coordination/hub/agents/. Parse each as JSON. Build a dashboard view sorted by progress_pct (ascending, so lagging agents appear first).",
+        "implementation_sketch": "A simple bash script or Python one-liner that globs the directory and prints a formatted table.",
+        "dashboard_format": {
+          "columns": ["agent_id", "status", "progress", "current_task", "blockers", "requests"],
+          "sort": "progress_pct ASC (lagging agents first for attention)",
+          "highlight": "status=blocked or status=error rows highlighted"
+        }
+      },
+      "sending_instructions": {
+        "method": "Coordinator writes a JSON file to storage/coordination/hub/instructions/{agent_id}.json. The agent checks for this file periodically and reads it.",
+        "instruction_types": [
+          {"type": "proceed", "use": "Acknowledge agent's current direction, no changes needed"},
+          {"type": "redirect", "use": "Change the agent's focus to a different task or priority"},
+          {"type": "pause", "use": "Tell agent to stop and wait for further instructions"},
+          {"type": "abort", "use": "Kill the agent's current task entirely"},
+          {"type": "info", "use": "Pass information from another agent or external source"},
+          {"type": "merge_with", "use": "Tell agent to coordinate with another named agent (enables indirect agent-to-agent)"}
+        ],
+        "acknowledgment": "Agent sets 'acknowledged: true' in its next status update and includes the instruction_id. This creates a closed loop."
+      }
+    },
+    "advantages": [
+      {
+        "id": "ADV-001",
+        "title": "Real-time visibility into agent progress",
+        "description": "The coordinator can see what every agent is doing at any moment by reading the status directory. No waiting for completion. No guessing. This is the single biggest improvement over fire-and-forget.",
+        "magnitude": "Critical"
+      },
+      {
+        "id": "ADV-002",
+        "title": "Early blocker detection",
+        "description": "Agents report blockers immediately. The coordinator sees them on the next poll (10-15s) and can intervene — reassign work, provide missing info, or redirect the agent. Currently, blockers are invisible until the agent completes (or fails).",
+        "magnitude": "Critical"
+      },
+      {
+        "id": "ADV-003",
+        "title": "Dynamic task reallocation",
+        "description": "If the coordinator sees Agent A at 90% and Agent B at 20%, it can instruct Agent A (once complete) to help with Agent B's workload, or redirect a less-loaded agent. Currently impossible because the coordinator has no progress data.",
+        "magnitude": "High"
+      },
+      {
+        "id": "ADV-004",
+        "title": "Eliminates the wave pattern",
+        "description": "With visibility, the coordinator no longer needs sequential waves as a safety measure. It can launch all agents simultaneously and monitor progress. If something goes wrong, it sees it and intervenes. Without visibility, sequential waves are the only safe option because the coordinator cannot course-correct during execution.",
+        "magnitude": "Critical"
+      },
+      {
+        "id": "ADV-005",
+        "title": "Simplicity",
+        "description": "Per-agent JSON files with temp-file-then-rename. No SQLite, no JSONL offsets, no bus channels, no TTL management, no connection pooling. Agents write one file. Coordinator reads a directory. That is the entire protocol.",
+        "magnitude": "High"
+      },
+      {
+        "id": "ADV-006",
+        "title": "Human-debuggable",
+        "description": "Any human (or the coordinator itself) can `cat` any agent's status file and immediately understand what is happening. No database queries, no log parsing, no offset tracking.",
+        "magnitude": "Medium"
+      },
+      {
+        "id": "ADV-007",
+        "title": "Graceful degradation",
+        "description": "If an agent crashes, its last status file remains on disk. The coordinator sees 'last_updated' is stale and knows the agent is dead. With fire-and-forget, a crashed agent is simply silent — indistinguishable from a slow agent.",
+        "magnitude": "High"
+      }
+    ],
+    "disadvantages": [
+      {
+        "id": "DIS-001",
+        "title": "No direct agent-to-agent communication",
+        "description": "Agents cannot share findings directly. Everything routes through the coordinator, which becomes a communication bottleneck for inter-agent data sharing. The coordinator must manually relay information.",
+        "severity": "Medium",
+        "mitigation": "For data sharing, agents can use the existing Scratchpad (work_stealing.py) or write to shared output directories. The hub-spoke model handles STATUS and INSTRUCTIONS only. Data flows through side channels."
+      },
+      {
+        "id": "DIS-002",
+        "title": "Coordinator becomes a single point of failure",
+        "description": "If the coordinator stops polling, agents continue working but receive no instructions and have no feedback. Blockers go unresolved.",
+        "severity": "Low",
+        "mitigation": "The coordinator is the main Claude session — it is always running. If it crashes, the entire session is over anyway. This is not a distributed systems problem; it is a single-session orchestration problem."
+      },
+      {
+        "id": "DIS-003",
+        "title": "Polling latency",
+        "description": "The coordinator polls every 10-15 seconds. An agent that hits a blocker waits up to 15 seconds before the coordinator sees it. For time-critical coordination, this introduces delay.",
+        "severity": "Low",
+        "mitigation": "15 seconds is acceptable for the current use case. Agents are long-running tasks (minutes). A 15-second delay on a 5-minute task is 5% overhead. For truly urgent cases, the agent can also write a blocker file to a special 'urgent' directory that the coordinator checks more frequently."
+      },
+      {
+        "id": "DIS-004",
+        "title": "File system as communication medium",
+        "description": "Relies on POSIX filesystem semantics for atomicity. Could be fragile on non-POSIX systems or network filesystems.",
+        "severity": "Low",
+        "mitigation": "This system runs on Linux with local disk. POSIX rename is atomic. This is not a concern for the actual deployment environment."
+      },
+      {
+        "id": "DIS-005",
+        "title": "Agent compliance required",
+        "description": "Agents must be instructed to write status updates as part of their workflow. If an agent ignores the status protocol, the coordinator has no visibility into it.",
+        "severity": "Medium",
+        "mitigation": "Include status update instructions in every agent's system prompt. Provide a simple helper script or code snippet that agents include in their workflow. Make it a single bash command."
+      }
+    ],
+    "vs_current_system": {
+      "vs_help_protocol": {
+        "overlap": "help_protocol.py has team_status table with status, progress_pct, current_task, work_items_total, work_items_done, last_updated. This is essentially the same data the hub-spoke status file would contain.",
+        "difference": "help_protocol is a Python library requiring SQLite connection setup, imports, and method calls. The hub-spoke model is a file write — one bash command. help_protocol also includes work item tracking, help request/offer flow, and auto-assignment, which are out of scope for the status file.",
+        "relationship": "The hub-spoke status file REPLACES the team_status table for the coordinator's monitoring use case. help_protocol's advanced features (work items, help requests, auto-assignment) remain valuable for self-service coordination."
+      },
+      "vs_direct_channels": {
+        "overlap": "direct_channels.py has presence tracking (available/busy/helping/away) and progress broadcasting, which overlap with the hub-spoke status data.",
+        "difference": "direct_channels enables peer-to-peer messaging between agents. The hub-spoke model explicitly forbids this. direct_channels also manages named channels, which have no equivalent in hub-spoke.",
+        "relationship": "They serve different purposes. Hub-spoke is for coordinator visibility. Direct channels are for agent collaboration. Both can coexist. An agent can post status to the hub AND use direct channels for peer communication."
+      },
+      "vs_bus_jsonl": {
+        "overlap": "The bus carries status-update events that serve the same purpose as hub-spoke status writes.",
+        "difference": "The bus is append-only, requires offset tracking, has TTL expiration, and mixes status with all other message types. The hub-spoke status file is a clean, current-only snapshot. Reading the bus to get agent status requires scanning potentially thousands of messages. Reading the hub gives you the answer in one glob + read.",
+        "relationship": "Hub-spoke status files should REPLACE bus-based status broadcasting for the coordinator's monitoring loop. The bus remains valuable for event notifications (phase signals, help requests, etc.)."
+      },
+      "vs_fire_and_forget": {
+        "current_fire_and_forget_model": "Coordinator launches agent via 'Bash tool with run_in_background'. Gets a TaskOutput handle. Cannot read partial output until the task completes. Has zero visibility during execution.",
+        "hub_spoke_improvement": "Agent writes status file every 30 seconds. Coordinator polls every 10-15 seconds. At any moment, coordinator knows: what the agent is doing, how far along it is, whether it is blocked, and what it needs. This is the difference between flying blind and having a full dashboard."
+      }
+    }
+  },
+  "anti_sequential_analysis": {
+    "why_sequential_happens": [
+      {
+        "id": "SEQ-001",
+        "reason": "Risk aversion without visibility",
+        "explanation": "When the coordinator cannot see what agents are doing, launching them all at once feels risky. What if two agents collide on the same file? What if a coding agent starts before the think tank has produced its design? Sequential waves are a hedge against unseen conflicts. The coordinator waits for Phase 1 to complete before starting Phase 2 because it has no mechanism to monitor Phase 1's progress."
+      },
+      {
+        "id": "SEQ-002",
+        "reason": "Causal dependency assumption",
+        "explanation": "The coordinator assumes that coding teams NEED think tank output before they can start. This is sometimes true (coding a design requires the design) but often false (coding teams can start on boilerplate, infrastructure, or independently-derivable work while think tanks analyze). The coordinator conflates 'benefits from' with 'requires'."
+      },
+      {
+        "id": "SEQ-003",
+        "reason": "Simpler mental model",
+        "explanation": "Sequential execution is easier to reason about. The coordinator knows exactly what state the system is in at each moment: 'Think tanks are running. Now think tanks are done. Now coding teams are running.' Parallel execution requires tracking N simultaneous states, which is cognitively expensive without tooling support."
+      },
+      {
+        "id": "SEQ-004",
+        "reason": "Past experience with merge conflicts",
+        "explanation": "If two agents edit the same file simultaneously, one overwrites the other. Sequential waves avoid this by ensuring only one phase touches the codebase at a time. This is valid for file-write conflicts but is an overly broad application of the principle — most agents work on different files."
+      },
+      {
+        "id": "SEQ-005",
+        "reason": "Completion dependency illusion",
+        "explanation": "The coordinator waits for ALL think tanks to finish before launching ANY coding teams. But Think Tank A's output may be ready in 2 minutes while Think Tank B takes 10 minutes. Coding Team 1 (which depends only on Think Tank A) could start at minute 2 but instead waits until minute 10. The wave pattern treats the slowest member as the blocker for the entire next phase."
+      },
+      {
+        "id": "SEQ-006",
+        "reason": "No partial result consumption",
+        "explanation": "Think tanks write their output as a single JSON file at the end. There is no mechanism for a coding team to read a think tank's work-in-progress. Even if the think tank has completed 80% of the design, the coding team cannot start on the 80% that is ready. The all-or-nothing output model forces all-or-nothing sequencing."
+      }
+    ],
+    "mental_model_shift": {
+      "from": "Pipeline: Phase 1 (all think tanks) -> wait -> Phase 2 (all coding teams) -> wait -> Phase 3 (integration)",
+      "to": "Swarm: All agents launch simultaneously. Each agent has independent work it CAN do without dependencies. As think tanks produce findings, coding teams adapt. The coordinator monitors and adjusts in real-time.",
+      "key_insights": [
+        {
+          "insight": "Most work has no true dependencies",
+          "elaboration": "A coding team tasked with writing stress tests does not need a think tank's design. It needs to read the source code (already available) and identify edge cases (its own analysis). The think tank may find ADDITIONAL edge cases, but the coding team can start independently."
+        },
+        {
+          "insight": "Partial results are valuable",
+          "elaboration": "A think tank that has analyzed 3 of 5 components has produced 60% of the value. A coding team can start on those 3 components immediately. Waiting for 100% is wasteful when 60% is actionable."
+        },
+        {
+          "insight": "The coordinator's job shifts from sequencing to monitoring",
+          "elaboration": "Instead of deciding WHEN to launch each phase, the coordinator launches everything and decides WHAT TO DO when issues arise. This is reactive monitoring vs. proactive scheduling. The coordinator becomes an air traffic controller, not a train dispatcher."
+        },
+        {
+          "insight": "Conflict prevention through task isolation, not temporal separation",
+          "elaboration": "Instead of preventing conflicts by running teams at different times, prevent them by ensuring teams work on different files. Task assignment (what) replaces scheduling (when) as the conflict-avoidance mechanism."
+        }
+      ]
+    },
+    "when_sequential_is_correct": [
+      {
+        "scenario": "True causal dependency",
+        "example": "Coding Team C must implement the API that Think Tank T designed. Without T's output (endpoint specs, data schemas), C literally cannot write correct code.",
+        "note": "But even here, C can start on non-dependent work: project scaffolding, test infrastructure, boilerplate, reading existing code."
+      },
+      {
+        "scenario": "Same file modification",
+        "example": "Two agents need to edit the same Python file. Running them simultaneously guarantees one agent's changes overwrite the other's.",
+        "note": "The solution is not sequential waves — it is task assignment that avoids same-file overlap."
+      },
+      {
+        "scenario": "Resource constraints",
+        "example": "Running 10 background agents simultaneously exceeds available compute, memory, or API rate limits.",
+        "note": "This is a practical constraint, not an architectural one. Limit parallelism to available resources."
+      },
+      {
+        "scenario": "Validation before execution",
+        "example": "A research team must validate that an API is actually available before coding teams build integrations against it.",
+        "note": "Only the specific dependent work needs to wait. Unrelated coding tasks can proceed."
+      }
+    ],
+    "when_parallel_is_correct": [
+      {
+        "scenario": "Independent analysis tasks",
+        "example": "Think Tank A analyzes module X. Think Tank B analyzes module Y. No dependency. Launch simultaneously.",
+        "time_saved": "Execution time = max(A, B) instead of A + B"
+      },
+      {
+        "scenario": "Analysis and coding of different components",
+        "example": "Think tank analyzes the communication system. Coding team writes tests for the storage system. Zero dependency.",
+        "time_saved": "Overlapping execution eliminates idle wait time entirely"
+      },
+      {
+        "scenario": "Research and implementation",
+        "example": "Research team investigates best practices. Coding team implements based on existing known patterns. Research findings enhance but do not gate the implementation.",
+        "time_saved": "Research findings arrive as improvements to already-in-progress work instead of blocking it"
+      },
+      {
+        "scenario": "Coding teams with file-disjoint tasks",
+        "example": "Coding Team 1 creates storage/coordination/hub/. Coding Team 2 updates storage/coordination/sops/. Different directories, zero conflict risk.",
+        "time_saved": "Full parallel execution"
+      },
+      {
+        "scenario": "Any task where 'starts after' can be replaced with 'adapts when'",
+        "example": "Instead of 'Coding starts after think tank finishes', use 'Coding starts now and adapts when think tank findings arrive'. The coding team has enough context to begin. Think tank findings may cause adjustments but not a complete restart.",
+        "time_saved": "The coding team's initial N minutes of work overlap with the think tank's execution"
+      }
+    ],
+    "prevention_strategies": [
+      {
+        "id": "PREV-001",
+        "strategy": "Mandatory parallelism check in SOP",
+        "description": "Before launching teams, the coordinator must explicitly answer: 'For each team, what is the minimum dependency that MUST be satisfied before it can start?' If the answer is 'nothing' or 'only its own reading of existing code', launch it immediately. Do NOT wait for other teams.",
+        "implementation": "Add a pre-launch checklist to the coordinator SOP. For each planned team, list: (1) true hard dependencies, (2) soft dependencies (nice-to-have but not blocking), (3) independent work it can start immediately."
+      },
+      {
+        "id": "PREV-002",
+        "strategy": "Incremental output from think tanks",
+        "description": "Think tanks should write partial findings as they go, not as a single output at the end. Use the Scratchpad or intermediate files. This unblocks coding teams that depend on specific sections of the analysis.",
+        "implementation": "Think tank SOP: After completing each section, write it to scratchpad with key 'think-tank-{id}/section-{n}'. Coding teams poll for available sections."
+      },
+      {
+        "id": "PREV-003",
+        "strategy": "Hub-spoke visibility enables confidence in parallelism",
+        "description": "The coordinator's fear of parallel execution comes from lack of visibility. With the hub-spoke status board, the coordinator can see all agents' progress and intervene if conflicts arise. This makes parallelism safe because the coordinator can detect and resolve issues in near-real-time.",
+        "implementation": "The hub-spoke status system itself IS the prevention strategy. Visibility enables confidence enables parallelism."
+      },
+      {
+        "id": "PREV-004",
+        "strategy": "Default-parallel SOP with sequential exceptions",
+        "description": "Invert the default. Instead of 'everything sequential unless proven parallelizable', use 'everything parallel unless proven dependent'. The coordinator must justify sequencing, not parallelism.",
+        "implementation": "SOP rule: All teams launch simultaneously unless the coordinator documents a specific hard dependency that prevents it. Soft dependencies are not justification for sequencing."
+      },
+      {
+        "id": "PREV-005",
+        "strategy": "Stagger launch, don't wave",
+        "description": "If the coordinator is nervous about full parallelism, stagger launches by 30-60 seconds instead of using waves. This gives the coordinator a chance to verify each agent started correctly without waiting for any to finish.",
+        "implementation": "Launch think tanks at T+0. Launch coding teams at T+30s. Launch research at T+60s. All are running by T+60s. This is NOT a wave — no team waits for another to complete."
+      },
+      {
+        "id": "PREV-006",
+        "strategy": "Explicit anti-wave instruction in coordinator prompt",
+        "description": "The coordinator's system prompt or SOP should explicitly state: 'Do NOT use sequential waves. Launch all teams simultaneously. Use the status board to monitor progress. Intervene only when issues are detected.' This counteracts the natural tendency toward sequential safety.",
+        "implementation": "Add to coordinator SOP: 'ANTI-PATTERN: Waiting for think tanks to finish before launching coding teams. CORRECT PATTERN: Launch all teams simultaneously. Coding teams start with independent work and adapt when think tank findings become available.'"
+      }
+    ]
+  },
+  "design_comparison": {
+    "hub_spoke": {
+      "description": "Agents communicate only with the coordinator via a shared status board. No direct agent-to-agent communication. Coordinator routes all information.",
+      "strengths": [
+        "Maximum coordinator visibility and control",
+        "Simple agent implementation (write one file, read one file)",
+        "No inter-agent concurrency issues",
+        "Easy to reason about information flow",
+        "Coordinator can prioritize and filter information before routing",
+        "Dead agent detection via stale timestamps"
+      ],
+      "weaknesses": [
+        "Coordinator becomes communication bottleneck for agent-to-agent data sharing",
+        "Higher latency for inter-agent coordination (agent->coordinator->agent)",
+        "Coordinator must manually relay findings between related agents",
+        "Does not scale well if agents need high-frequency peer communication"
+      ],
+      "ideal_for": [
+        "Coordinator monitoring and control (the primary use case)",
+        "Heterogeneous agents with diverse tasks",
+        "Scenarios where the coordinator needs to make routing decisions",
+        "Sessions with 3-10 agents where the coordinator can comfortably monitor all"
+      ]
+    },
+    "full_mesh": {
+      "description": "Every agent can communicate directly with every other agent via direct_channels. Presence tracking enables discovery of available agents.",
+      "strengths": [
+        "Lowest latency for agent-to-agent communication",
+        "No central bottleneck",
+        "Agents can self-organize without coordinator intervention",
+        "Scales well for peer collaboration (pair debugging, data sharing)"
+      ],
+      "weaknesses": [
+        "O(n^2) potential channels for n agents — coordination explosion",
+        "Coordinator has no inherent visibility into peer conversations",
+        "Agents need to discover and manage channels themselves",
+        "Complex implementation (channel creation, join/leave, offset tracking)",
+        "Harder to debug — information flows are non-obvious",
+        "Requires agents to implement polling logic for multiple channels"
+      ],
+      "ideal_for": [
+        "Tight collaboration between specific agent pairs",
+        "Agents that need to share large intermediate datasets",
+        "Scenarios where the coordinator should NOT be in the loop (autonomous teams)"
+      ]
+    },
+    "fire_and_forget": {
+      "description": "Coordinator launches agents via background processes. No communication during execution. Coordinator reads output when the agent completes.",
+      "strengths": [
+        "Simplest possible implementation — zero coordination code needed",
+        "No overhead during execution (no status writes, no polling)",
+        "Works with any agent regardless of protocol support",
+        "Maximum agent autonomy"
+      ],
+      "weaknesses": [
+        "Zero visibility during execution (the core problem we are solving)",
+        "No blocker detection — agent could be stuck for 10 minutes and coordinator does not know",
+        "No dynamic reallocation — cannot redirect agents mid-task",
+        "No progress tracking — cannot estimate remaining time",
+        "Encourages sequential waves (because parallel is too risky without visibility)",
+        "Dead agent is indistinguishable from slow agent"
+      ],
+      "ideal_for": [
+        "Very short tasks (under 2 minutes) where monitoring overhead exceeds benefit",
+        "Fully independent agents with no coordination needs",
+        "Prototype/testing scenarios where simplicity outweighs visibility"
+      ]
+    },
+    "recommendation": "LAYERED APPROACH — Use hub-spoke as the PRIMARY coordination layer for all agent sessions. It provides the critical visibility that enables parallel execution. Layer direct_channels ON TOP for specific agent pairs that need tight collaboration. Retain fire-and-forget as a lightweight option for trivial sub-tasks. Do NOT treat these as mutually exclusive; they operate at different levels. The hub-spoke status board answers 'what is everyone doing?' The direct channels answer 'how do these two agents collaborate?' Fire-and-forget is for 'just do this quick thing.' The coordinator's monitoring loop reads the hub. Agents that need to collaborate use channels. Short tasks skip the protocol entirely.",
+    "coexistence_model": {
+      "layer_1_hub_spoke": {
+        "purpose": "Coordinator visibility and control",
+        "always_on": true,
+        "all_agents_participate": true,
+        "data": "Status, progress, blockers, requests"
+      },
+      "layer_2_direct_channels": {
+        "purpose": "Agent-to-agent data sharing and collaboration",
+        "on_demand": true,
+        "only_participating_agents": true,
+        "data": "Intermediate results, design discussions, code reviews"
+      },
+      "layer_3_scratchpad": {
+        "purpose": "Shared data store for intermediate results",
+        "on_demand": true,
+        "data": "Large datasets, computation results, shared state"
+      },
+      "layer_4_fire_and_forget": {
+        "purpose": "Trivial sub-tasks",
+        "when": "Task under 2 minutes with no coordination needs",
+        "data": "Final output only"
+      }
+    }
+  },
+  "implementation_blueprint": {
+    "file_format": "Per-agent JSON files in a hub directory. NOT a single shared file.",
+    "directory_layout": {
+      "storage/coordination/hub/agents/": "One {agent_id}.json per agent",
+      "storage/coordination/hub/instructions/": "One {agent_id}.json per agent (from coordinator)",
+      "storage/coordination/hub/snapshot.json": "Optional merged snapshot written by coordinator after each poll"
+    },
+    "agent_status_schema": {
+      "agent_id": "string (required)",
+      "team": "string (required)",
+      "status": "enum: working, blocked, complete, error, idle, waiting_for_instruction (required)",
+      "progress_pct": "number 0-100 (required)",
+      "current_task": "string (required)",
+      "subtasks_total": "number (optional)",
+      "subtasks_done": "number (optional)",
+      "blockers": "array of strings (optional, empty if none)",
+      "key_findings": "array of strings (optional, last 3-5 findings for coordinator awareness)",
+      "requests": "array of {id, type, description, priority} (optional)",
+      "output_files": "array of file paths (optional)",
+      "started_at": "ISO 8601 timestamp (required)",
+      "last_updated": "ISO 8601 timestamp (required)",
+      "estimated_completion": "ISO 8601 timestamp (optional)"
+    },
+    "coordinator_instruction_schema": {
+      "instruction_id": "string (required, UUID)",
+      "type": "enum: proceed, redirect, pause, abort, info, merge_with (required)",
+      "message": "string (required)",
+      "issued_at": "ISO 8601 timestamp (required)",
+      "context": "object (optional, additional data for the instruction)",
+      "acknowledged": "boolean (set by agent, default false)"
+    },
+    "polling_strategy": {
+      "coordinator_poll_interval": "10-15 seconds",
+      "coordinator_poll_method": "Read all files in hub/agents/, parse JSON, build dashboard, check for blockers/requests, write instructions as needed",
+      "agent_update_interval": "Every 30 seconds minimum, plus after every significant state change",
+      "agent_instruction_check": "Agent reads hub/instructions/{own_id}.json at start of each major task step",
+      "stale_detection": "If agent's last_updated is more than 120 seconds old, coordinator marks it as potentially dead and logs a warning"
+    },
+    "instruction_delivery": {
+      "method": "Coordinator writes JSON file to hub/instructions/{agent_id}.json",
+      "atomicity": "Write to temp file, then os.rename() to target path",
+      "acknowledgment": "Agent includes 'acknowledged_instructions: [instruction_id, ...]' in its next status update",
+      "conflict": "Only one coordinator writes instructions. No contention possible."
+    },
+    "error_handling": {
+      "corrupt_status_file": "Coordinator catches JSON parse errors, logs warning, skips that agent in the dashboard. Agent's next write will fix it.",
+      "missing_status_file": "Agent has not started or has crashed before first write. Coordinator treats as 'unknown' status.",
+      "stale_status": "last_updated older than 120s triggers 'possibly dead' warning. Coordinator may launch a replacement agent.",
+      "coordinator_crash": "Agent status files persist on disk. Next coordinator session can read them to understand what happened. Instructions directory shows what was last sent.",
+      "disk_full": "Agent status writes fail. Agent should catch the error and include it in stderr. Coordinator will see stale timestamp.",
+      "race_on_instruction": "Coordinator overwrites previous instruction before agent reads it. Mitigated by: (a) coordinator waits for acknowledgment before sending new instructions, (b) instructions include IDs so agent can detect missed instructions."
+    },
+    "implementation_priority": {
+      "phase_1_mvp": {
+        "description": "Minimum viable hub-spoke with status visibility",
+        "deliverables": [
+          "hub_status.py — Agent class with update_status() that writes per-agent JSON file",
+          "hub_status.py — Coordinator class with read_all_agents() that globs and parses",
+          "hub_status.py — Coordinator class with send_instruction() that writes per-agent instruction file",
+          "hub_dashboard.py — CLI script that prints formatted agent status table",
+          "Integration into agent system prompts: 'Write status to hub every 30 seconds'"
+        ],
+        "estimated_lines": "200-300 Python",
+        "estimated_effort": "One coding team, 15-20 minutes"
+      },
+      "phase_2_integration": {
+        "description": "Integrate hub-spoke into coordinator monitoring loop",
+        "deliverables": [
+          "Update multi_team_runner.py to read hub status in its monitoring cycle",
+          "Add stale-agent detection with configurable timeout",
+          "Add blocker-alert highlighting in dashboard output",
+          "Write SOP for coordinator usage of hub dashboard"
+        ]
+      },
+      "phase_3_enhancement": {
+        "description": "Add advanced features after MVP is validated",
+        "deliverables": [
+          "Instruction acknowledgment tracking with missed-instruction detection",
+          "Historical status snapshots (coordinator writes snapshot.json each poll cycle, rotates last N)",
+          "Integration with help_protocol for automatic idle-agent reassignment based on hub status",
+          "Metrics: time-to-first-status, average-update-interval, blocker-resolution-time"
+        ]
+      }
+    },
+    "code_sketch": {
+      "description": "Minimal implementation showing the core pattern",
+      "agent_side": "import json, os, time, tempfile\n\ndef update_hub_status(hub_dir, agent_id, status_data):\n    \"\"\"Write agent status to hub. Called by every agent every 30s.\"\"\"\n    status_data['agent_id'] = agent_id\n    status_data['last_updated'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())\n    agents_dir = os.path.join(hub_dir, 'agents')\n    os.makedirs(agents_dir, exist_ok=True)\n    target = os.path.join(agents_dir, f'{agent_id}.json')\n    fd, tmp = tempfile.mkstemp(dir=agents_dir, suffix='.tmp')\n    try:\n        os.write(fd, json.dumps(status_data, indent=2).encode())\n        os.close(fd)\n        os.rename(tmp, target)\n    except:\n        os.close(fd)\n        os.unlink(tmp)\n        raise\n\ndef check_instructions(hub_dir, agent_id):\n    \"\"\"Read coordinator instructions for this agent.\"\"\"\n    path = os.path.join(hub_dir, 'instructions', f'{agent_id}.json')\n    if not os.path.exists(path):\n        return None\n    with open(path) as f:\n        return json.load(f)",
+      "coordinator_side": "import glob, json, os\n\ndef read_all_agent_status(hub_dir):\n    \"\"\"Read all agent status files. Returns dict of agent_id -> status.\"\"\"\n    agents_dir = os.path.join(hub_dir, 'agents')\n    result = {}\n    for path in glob.glob(os.path.join(agents_dir, '*.json')):\n        try:\n            with open(path) as f:\n                data = json.load(f)\n            result[data['agent_id']] = data\n        except (json.JSONDecodeError, KeyError):\n            continue\n    return result\n\ndef send_instruction(hub_dir, agent_id, instruction):\n    \"\"\"Send instruction to a specific agent.\"\"\"\n    instr_dir = os.path.join(hub_dir, 'instructions')\n    os.makedirs(instr_dir, exist_ok=True)\n    target = os.path.join(instr_dir, f'{agent_id}.json')\n    fd, tmp = tempfile.mkstemp(dir=instr_dir, suffix='.tmp')\n    try:\n        os.write(fd, json.dumps(instruction, indent=2).encode())\n        os.close(fd)\n        os.rename(tmp, target)\n    except:\n        os.close(fd)\n        os.unlink(tmp)\n        raise"
+    }
+  }
+}

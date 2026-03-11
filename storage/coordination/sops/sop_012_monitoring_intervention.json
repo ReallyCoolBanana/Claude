@@ -1,0 +1,580 @@
+{
+  "id": "SOP-012",
+  "version": "1.0",
+  "created": "2026-03-11",
+  "team": "TEAM-0025-sop-2",
+  "title": "Real-Time Monitoring and Intervention Protocol",
+  "purpose": "Provides the coordinator with structured procedures for monitoring simultaneous agent teams, detecting problems early, intervening when necessary, and handling completion. Replaces ad-hoc filesystem polling with a disciplined status-file-based approach.",
+  "builds_on": ["SOP-001", "SOP-010", "EFF-005", "EFF-001"],
+  "problem_statement": "The coordinator launches agents and has no visibility until they complete. Resorting to polling filesystem changes with find commands is noisy, inefficient, and provides no structured insight into agent health, progress, or blockers.",
+
+  "section_1_status_file_design": {
+    "title": "Status File Design",
+    "description": "A shared JSONL file where each agent appends a status line on every significant state change. The coordinator reads this file to get a dashboard view of all agents.",
+    "file_path": "storage/coordination/agent_status.jsonl",
+    "format": "JSONL (one JSON object per line, append-only)",
+    "rationale": "JSONL is chosen over a single JSON file because multiple agents can safely append concurrently (POSIX atomic writes under 4096 bytes). No file locking required. The coordinator reads the whole file and uses only the latest entry per agent_id.",
+
+    "schema": {
+      "agent_id": {
+        "type": "string",
+        "required": true,
+        "description": "Unique identifier for this agent instance (e.g., 'think-tank-1', 'coding-stress-2')"
+      },
+      "team": {
+        "type": "string",
+        "required": true,
+        "description": "Team identifier this agent belongs to (e.g., 'TEAM-0025')"
+      },
+      "status": {
+        "type": "string",
+        "required": true,
+        "enum": ["starting", "working", "blocked", "waiting", "complete", "error", "killed"],
+        "description": "Current operational status of the agent"
+      },
+      "progress_pct": {
+        "type": "number",
+        "required": true,
+        "description": "Estimated completion percentage (0-100). Agents should update this after each significant step."
+      },
+      "current_task": {
+        "type": "string",
+        "required": true,
+        "description": "Human-readable description of what the agent is currently doing"
+      },
+      "last_update_ts": {
+        "type": "number",
+        "required": true,
+        "description": "Unix epoch timestamp of this status update"
+      },
+      "started_ts": {
+        "type": "number",
+        "required": true,
+        "description": "Unix epoch timestamp when this agent was launched"
+      },
+      "blockers": {
+        "type": "array",
+        "required": false,
+        "description": "List of strings describing what is blocking progress. Empty array if not blocked."
+      },
+      "findings_count": {
+        "type": "integer",
+        "required": false,
+        "description": "Number of findings/results produced so far"
+      },
+      "output_files": {
+        "type": "array",
+        "required": false,
+        "description": "List of file paths this agent has written to"
+      },
+      "needs_input_from": {
+        "type": "array",
+        "required": false,
+        "description": "List of agent_ids whose output this agent is waiting for"
+      },
+      "error_message": {
+        "type": "string",
+        "required": false,
+        "description": "Error description if status is 'error'"
+      }
+    },
+
+    "example_entry": {
+      "agent_id": "coding-team-1",
+      "team": "TEAM-0025",
+      "status": "working",
+      "progress_pct": 45,
+      "current_task": "Implementing stress tests for help_protocol",
+      "last_update_ts": 1741700000,
+      "started_ts": 1741698000,
+      "blockers": [],
+      "findings_count": 12,
+      "output_files": ["storage/coordination/stress-tests/test_stress_help_protocol.py"],
+      "needs_input_from": [],
+      "error_message": null
+    },
+
+    "agent_responsibilities": [
+      {
+        "step": 1,
+        "action": "Write initial status on startup",
+        "details": "Immediately after launch, append a status line with status='starting', progress_pct=0, and current_task describing the assigned objective.",
+        "when": "First action after receiving instructions"
+      },
+      {
+        "step": 2,
+        "action": "Update after each significant milestone",
+        "details": "Append a new status line whenever: (a) progress_pct changes by 10 or more, (b) current_task changes, (c) a blocker is encountered or resolved, (d) an output file is created. Do NOT update on every trivial action -- aim for 5-15 updates per session.",
+        "when": "After milestones, not continuously"
+      },
+      {
+        "step": 3,
+        "action": "Report blockers immediately",
+        "details": "If blocked, set status='blocked' and populate the blockers array with specific descriptions. Also set needs_input_from if waiting on another agent.",
+        "when": "As soon as a blocker is identified"
+      },
+      {
+        "step": 4,
+        "action": "Write final status on completion",
+        "details": "Set status='complete', progress_pct=100, and list all output_files. Include final findings_count.",
+        "when": "Last action before finishing"
+      }
+    ],
+
+    "write_command": "echo '{\"agent_id\":\"AGENT_ID\",\"team\":\"TEAM_ID\",\"status\":\"working\",\"progress_pct\":50,\"current_task\":\"Description\",\"last_update_ts\":'$(date +%s)',\"started_ts\":START_TS,\"blockers\":[],\"findings_count\":5,\"output_files\":[],\"needs_input_from\":[],\"error_message\":null}' >> storage/coordination/agent_status.jsonl",
+
+    "coordinator_read_command": {
+      "description": "Parse the JSONL file and show the latest status per agent, formatted as a dashboard",
+      "command": "python3 -c \"\nimport json, sys, time\nentries = {}\nfor line in open('storage/coordination/agent_status.jsonl'):\n    line = line.strip()\n    if not line: continue\n    try:\n        e = json.loads(line)\n        entries[e['agent_id']] = e\n    except: pass\nnow = time.time()\nprint(f'{\\\"Agent\\\":<25} {\\\"Status\\\":<12} {\\\"Progress\\\":<10} {\\\"Task\\\":<40} {\\\"Age (s)\\\":<10} {\\\"Blockers\\\"}')\nprint('-' * 120)\nfor aid, e in sorted(entries.items()):\n    age = int(now - e.get('last_update_ts', now))\n    blockers = ', '.join(e.get('blockers', [])) or '-'\n    print(f'{aid:<25} {e[\\\"status\\\"]:<12} {e[\\\"progress_pct\\\"]:>6.0f}%    {e.get(\\\"current_task\\\",\\\"\\\")[:40]:<40} {age:<10} {blockers}')\n\""
+    }
+  },
+
+  "section_2_polling_strategy": {
+    "title": "Polling Strategy",
+    "description": "When and how the coordinator should check on agents. Balances situational awareness against wasted coordinator time.",
+
+    "principles": [
+      "Do not poll continuously -- the coordinator has its own work to do (aggregating results, planning next steps).",
+      "Do not ignore agents until done -- you lose the ability to intervene early when intervention is cheap.",
+      "Poll at natural transition points, not on fixed intervals.",
+      "One efficient read of the status file gives a complete picture -- no need for per-agent checks."
+    ],
+
+    "polling_schedule": [
+      {
+        "checkpoint": "CP-1: Post-Launch",
+        "when": "30-60 seconds after launching all agents",
+        "purpose": "Verify all agents started successfully. Catch immediate failures (bad instructions, missing files, import errors).",
+        "action": "Read status file. Every agent should show status='starting' or status='working'. If any agent has no entry, it failed to start.",
+        "decision_tree": {
+          "all_agents_started": "Proceed to CP-2.",
+          "some_agents_missing": "Check if the missing agent's process is still running. If not, relaunch with corrected instructions. If yes, wait 30 more seconds.",
+          "agent_shows_error": "Read error_message. Fix the issue and relaunch the agent."
+        }
+      },
+      {
+        "checkpoint": "CP-2: Early Progress",
+        "when": "5-10 minutes after launch, or after the coordinator finishes its own setup tasks",
+        "purpose": "Confirm agents are making progress and not stuck in startup loops. Identify obvious misunderstandings of instructions.",
+        "action": "Read status file. Check that progress_pct > 0 for all agents. Check current_task to verify agents are working on the right things.",
+        "decision_tree": {
+          "all_progressing": "Proceed to CP-3. Set a mental timer for the next check.",
+          "agent_at_0_pct": "Agent may be stuck reading context or misunderstanding instructions. Check its current_task. Consider sending a clarification via direct channel.",
+          "agent_on_wrong_task": "Intervene immediately (see Section 4). The cost of course correction grows over time."
+        }
+      },
+      {
+        "checkpoint": "CP-3: Mid-Session",
+        "when": "When approximately 30-50% of expected session time has elapsed, OR when you finish other coordinator work",
+        "purpose": "Detect bottlenecks and blockers before they become session-ending problems. Identify opportunities for cross-team assistance.",
+        "action": "Read status file. Compare progress across agents. Look for blocked agents and agents that are significantly behind.",
+        "decision_tree": {
+          "all_on_track": "Proceed to CP-4.",
+          "one_agent_behind": "Check if it has blockers. If blocked, intervene (Section 4). If just slow, consider whether another agent could help.",
+          "agent_blocked_on_another": "Check if the blocking agent can prioritize the needed output. Create a direct channel between them if needed.",
+          "wide_progress_spread": "Some agents may be on harder tasks. Acceptable if all are making progress. Concerning if some are stalled."
+        }
+      },
+      {
+        "checkpoint": "CP-4: Completion Wave",
+        "when": "First agent reports status='complete'",
+        "purpose": "Handle early finishers. Redistribute work if possible.",
+        "action": "Read status file. Identify completed agents and still-working agents. Decide whether to reassign the completed agent.",
+        "decision_tree": {
+          "other_agents_on_track": "Let completed agent stand by. Verify its output before integrating.",
+          "other_agents_struggling": "Reassign completed agent to help (see Section 5).",
+          "completed_output_needed_by_others": "Notify dependent agents via direct channel or scratchpad that the output is available."
+        }
+      },
+      {
+        "checkpoint": "CP-5: Final Gathering",
+        "when": "All agents report status='complete' or status='error'",
+        "purpose": "Aggregate results, verify completeness, handle any errors.",
+        "action": "Full status file read. Check all output_files exist. Run verification checklist (Section 5).",
+        "decision_tree": {
+          "all_complete_successfully": "Proceed to result aggregation.",
+          "some_errors": "Assess severity. Relaunch failed agents if their output is critical. Skip if output is nice-to-have.",
+          "incomplete_output": "Check findings_count and output_files. If an agent reported complete but produced nothing, investigate."
+        }
+      }
+    ],
+
+    "efficient_single_check": {
+      "description": "How to do one check that shows everything relevant in a single command",
+      "commands": [
+        {
+          "name": "Dashboard view (recommended)",
+          "command": "python3 -c \"import json,time;entries={};[entries.update({json.loads(l)['agent_id']:json.loads(l)}) for l in open('storage/coordination/agent_status.jsonl') if l.strip()];now=time.time();[print(f\\\"{a:<22} {e['status']:<10} {e['progress_pct']:>5.0f}%  age:{int(now-e.get('last_update_ts',now)):>4}s  {e.get('current_task','')[:50]}\\\") for a,e in sorted(entries.items())]\"",
+          "output_example": "coding-team-1          working       45%  age:  32s  Implementing stress tests for help_protocol\ncoding-team-2          working       60%  age:  15s  Writing direct_channels tests\nthink-tank-1           complete     100%  age: 120s  Analysis complete\nthink-tank-2           blocked        30%  age:  85s  Waiting for coding-team-1 output"
+        },
+        {
+          "name": "Blockers only (quick triage)",
+          "command": "python3 -c \"import json;[print(f\\\"{json.loads(l)['agent_id']}: {json.loads(l).get('blockers',[])}\\\") for l in open('storage/coordination/agent_status.jsonl') if l.strip() and json.loads(l).get('status')=='blocked']\""
+        },
+        {
+          "name": "Completion summary",
+          "command": "python3 -c \"import json;entries={};[entries.update({json.loads(l)['agent_id']:json.loads(l)}) for l in open('storage/coordination/agent_status.jsonl') if l.strip()];done=sum(1 for e in entries.values() if e['status']=='complete');total=len(entries);print(f'{done}/{total} agents complete ({100*done//max(total,1)}%)')\""
+        }
+      ]
+    },
+
+    "integration_with_existing_tools": {
+      "description": "The status file approach works alongside existing Proto A coordination tools, not instead of them.",
+      "help_protocol": "Agents should still use HelpProtocol for formal help requests. The status file is for coordinator visibility, not agent-to-agent coordination.",
+      "direct_channels": "Use direct channels for intervention messages. The status file is read-only from the coordinator's perspective.",
+      "progress_table": "The DirectChannels progress table (Section in direct_channels.py) provides similar data via SQLite. The status file is a lightweight alternative that does not require SQLite access from the coordinator's shell.",
+      "when_to_use_which": "Use the status file for quick coordinator checks. Use the SQLite progress table when you need queries (e.g., get_slowest_team, get_teams_below_progress). Use HelpProtocol when you need to assign work."
+    }
+  },
+
+  "section_3_intervention_triggers": {
+    "title": "Intervention Triggers",
+    "description": "Conditions that should cause the coordinator to stop monitoring and take action. Ordered by urgency.",
+
+    "triggers": [
+      {
+        "id": "TRIG-01",
+        "name": "Agent reports blocker",
+        "severity": "high",
+        "detection": "Status file shows status='blocked' with non-empty blockers array",
+        "time_sensitivity": "Intervene within 2 minutes. A blocked agent is wasting its entire runtime.",
+        "typical_causes": [
+          "Missing file or data that another agent should have produced",
+          "Ambiguous or contradictory instructions",
+          "Dependency on an external resource that is unavailable",
+          "File write conflict with another agent"
+        ],
+        "response": "See INTERVENTION-01 through INTERVENTION-03 in Section 4"
+      },
+      {
+        "id": "TRIG-02",
+        "name": "Agent status stale (no update for extended period)",
+        "severity": "high",
+        "detection": "last_update_ts is more than 5 minutes old while status is not 'complete' or 'error'",
+        "time_sensitivity": "Check within 3 minutes of detection. Agent may have crashed silently.",
+        "interpretation": {
+          "stale_but_working": "Agent may be doing a long operation (large file read, complex analysis). Check if its process is still running.",
+          "stale_and_no_process": "Agent crashed without writing a final status. Treat as error.",
+          "stale_and_low_progress": "Agent is likely stuck. Needs intervention."
+        },
+        "response": "See INTERVENTION-04 in Section 4"
+      },
+      {
+        "id": "TRIG-03",
+        "name": "Agent running much longer than expected",
+        "severity": "medium",
+        "detection": "current_time - started_ts exceeds 2x the expected duration for this type of task, AND progress_pct < 80",
+        "time_sensitivity": "Check at next polling checkpoint. Not immediately urgent unless combined with stale status.",
+        "typical_causes": [
+          "Task was more complex than estimated",
+          "Agent is being overly thorough (gold-plating)",
+          "Agent is going down a wrong path",
+          "Agent encountered rate limiting or slow I/O"
+        ],
+        "response": "See INTERVENTION-03 in Section 4"
+      },
+      {
+        "id": "TRIG-04",
+        "name": "Cross-agent opportunity detected",
+        "severity": "medium",
+        "detection": "One agent has produced output (in output_files or findings) that another blocked agent needs (listed in needs_input_from or blockers).",
+        "time_sensitivity": "Act at next checkpoint. Creates efficiency gain but is not a crisis.",
+        "response": "See INTERVENTION-05 in Section 4"
+      },
+      {
+        "id": "TRIG-05",
+        "name": "Duplicate work detected",
+        "severity": "medium",
+        "detection": "Two agents have the same or very similar current_task descriptions, or their output_files overlap.",
+        "time_sensitivity": "Act promptly to prevent wasted effort. One agent should be redirected.",
+        "response": "See INTERVENTION-03 in Section 4"
+      },
+      {
+        "id": "TRIG-06",
+        "name": "Agent reports error",
+        "severity": "high",
+        "detection": "Status file shows status='error' with non-null error_message",
+        "time_sensitivity": "Assess within 1 minute. Determine if the error is recoverable.",
+        "response": "See INTERVENTION-04 in Section 4"
+      },
+      {
+        "id": "TRIG-07",
+        "name": "Resource conflict",
+        "severity": "high",
+        "detection": "Multiple agents report blockers mentioning the same file path or resource. Or SQLITE_BUSY errors appear in error_message.",
+        "time_sensitivity": "Immediate. Resource conflicts can cascade and block multiple agents.",
+        "typical_causes": [
+          "Two agents trying to write the same file",
+          "SQLite lock contention from too many concurrent writers",
+          "Shared output directory without namespacing"
+        ],
+        "response": "See INTERVENTION-06 in Section 4"
+      }
+    ],
+
+    "trigger_evaluation_order": "When multiple triggers fire simultaneously, evaluate in this order: TRIG-07 (resource conflict) > TRIG-06 (error) > TRIG-01 (blocker) > TRIG-02 (stale) > TRIG-05 (duplicate) > TRIG-04 (cross-agent opportunity) > TRIG-03 (overtime)."
+  },
+
+  "section_4_intervention_actions": {
+    "title": "Intervention Actions",
+    "description": "Concrete actions the coordinator can take when a trigger fires. Each intervention includes when to use it, how to execute it, and what to verify afterward.",
+
+    "interventions": [
+      {
+        "id": "INTERVENTION-01",
+        "name": "Send clarifying instructions via direct channel",
+        "when": "Agent is blocked due to ambiguous instructions or missing context. Agent is still running and responsive.",
+        "how": [
+          "Create a direct channel to the blocked agent's team using DirectChannels",
+          "Send a message with msg_type='info' containing the clarification",
+          "Alternatively, write a file to a known location the agent can read",
+          "Update the agent's instructions in the scratchpad under a key the agent polls"
+        ],
+        "example": "dc.create_direct_channel('coding-team-1')\ndc.send_direct('coding-team-1', 'info', {\n    'event': 'coordinator-clarification',\n    'message': 'For the stress tests, use the existing test fixtures in tests/conftest.py. Do not create new database instances.',\n    'priority': 'high'\n})",
+        "verify": "At next checkpoint, confirm the blocked agent's status has changed from 'blocked' to 'working' and progress has advanced.",
+        "limitations": "Only works if the agent is actively polling its direct channel or checking the scratchpad. Many agents do not poll. In that case, use INTERVENTION-04 (kill and relaunch)."
+      },
+      {
+        "id": "INTERVENTION-02",
+        "name": "Launch a helper agent",
+        "when": "An agent is struggling with a task that can be decomposed, or needs specific expertise the current agent lacks.",
+        "how": [
+          "Identify the specific subtask the helper should work on",
+          "Launch a new agent with focused instructions that include: (a) what to do, (b) where to write output, (c) how to signal completion (write to status file)",
+          "Inform the struggling agent (via direct channel or scratchpad) that help is on the way and what the helper will produce",
+          "Ensure the helper's output path does not conflict with the original agent"
+        ],
+        "example_instructions_for_helper": "You are a helper agent for coding-team-1. Your task: Write stress tests for the work_stealing.py module, specifically the PipelineManager class. Write output to storage/coordination/stress-tests/test_stress_pipeline.py. When done, append your status to storage/coordination/agent_status.jsonl with status='complete'.",
+        "verify": "Helper appears in status file. Original agent's blockers list shrinks or clears.",
+        "limitations": "Adds another agent to monitor. Only helps if the task is decomposable. The helper needs enough context to be effective without extensive ramp-up."
+      },
+      {
+        "id": "INTERVENTION-03",
+        "name": "Redirect an agent's focus",
+        "when": "Agent is working on the wrong task, duplicating another agent's work, or gold-plating when time is limited.",
+        "how": [
+          "Write a redirection file that the agent can discover. Convention: storage/coordination/redirects/{agent_id}.json",
+          "Content: {\"redirect\": true, \"new_task\": \"...\", \"reason\": \"...\", \"priority\": \"high\", \"timestamp\": ...}",
+          "Also post to the agent's direct channel for redundancy",
+          "If the agent is not checking for redirects, use INTERVENTION-04"
+        ],
+        "redirect_file_schema": {
+          "redirect": true,
+          "new_task": "Description of what the agent should do instead",
+          "stop_current": true,
+          "reason": "Why the current task should be stopped",
+          "new_output_path": "Where to write output for the new task",
+          "priority": "high",
+          "timestamp": 1741700000
+        },
+        "verify": "Agent's current_task in status file changes to match the new_task within 2-3 minutes.",
+        "limitations": "Requires the agent to be checking for redirect files. Most effective when agents are built with redirect-awareness. Otherwise use INTERVENTION-04."
+      },
+      {
+        "id": "INTERVENTION-04",
+        "name": "Kill and relaunch with better context",
+        "when": "Agent has crashed (stale status + no process), is completely off-track, or is unresponsive to softer interventions.",
+        "how": [
+          "Verify the agent's process is no longer running or is stuck",
+          "Preserve any partial output the agent has produced (check output_files in status)",
+          "Review what went wrong by examining the agent's status history in the JSONL file",
+          "Craft improved instructions that address the failure cause",
+          "Include in the new instructions: (a) reference to partial work to build on, (b) explicit constraints that prevent the original failure, (c) updated context from other agents' progress",
+          "Launch the replacement agent with a new agent_id (e.g., 'coding-team-1-v2') so status history is preserved",
+          "Write a status entry for the old agent_id with status='killed'"
+        ],
+        "instruction_improvements": [
+          "If agent went off-track: Add explicit scope boundaries ('Do X. Do NOT do Y.')",
+          "If agent hit import errors: Include exact file paths and working directory",
+          "If agent was too slow: Reduce scope or set explicit time expectations",
+          "If agent duplicated work: Reference the other agent's output and say 'This is already done, focus on...'"
+        ],
+        "verify": "New agent appears in status file with status='starting'. Old agent shows status='killed'. New agent makes progress past where old agent got stuck.",
+        "limitations": "Most disruptive intervention. Loses any in-memory state the original agent had. The replacement agent starts cold and needs time to ramp up."
+      },
+      {
+        "id": "INTERVENTION-05",
+        "name": "Post data for cross-agent consumption",
+        "when": "One agent has produced output that another agent needs but does not know about.",
+        "how": [
+          "Read the producing agent's output_files from the status file",
+          "Write a pointer to the scratchpad so the consuming agent can find it",
+          "Send a direct channel message to the consuming agent with the file path or scratchpad key",
+          "If the consuming agent is blocked on this data, its blockers should clear automatically"
+        ],
+        "example": "# Write pointer to scratchpad\nsp.write('think-tank-1-results', {\n    'file_path': 'storage/coordination/teams/think-tank-1/output/analysis.json',\n    'summary': 'Stress analysis complete. 11 failure modes identified.',\n    'produced_by': 'think-tank-1',\n    'available_since': time.time()\n}, namespace='global', ttl=7200)\n\n# Notify the waiting agent\ndc.send_direct('coding-team-2', 'info', {\n    'event': 'data-available',\n    'scratchpad_key': 'think-tank-1-results',\n    'description': 'Think tank analysis is ready for your stress test implementation'\n})",
+        "verify": "Consuming agent's status changes from 'blocked' to 'working'. Its needs_input_from no longer lists the producing agent.",
+        "limitations": "Requires knowledge of which agents need what. The status file's needs_input_from field helps but is not always populated."
+      },
+      {
+        "id": "INTERVENTION-06",
+        "name": "Resolve resource conflict",
+        "when": "Multiple agents are contending for the same resource (file, database, directory).",
+        "how": [
+          "Identify the conflicting resource from blocker descriptions",
+          "Determine which agent has priority (based on task criticality or progress)",
+          "Redirect the lower-priority agent to use a different resource path (INTERVENTION-03)",
+          "If the conflict is SQLite, check that WAL mode and busy_timeout are properly configured",
+          "If the conflict is a shared file, namespace the file by agent_id (e.g., output_{agent_id}.json)"
+        ],
+        "prevention": "In initial instructions to agents, assign non-overlapping output paths. Use the convention: storage/coordination/teams/{team_name}/output/ for each team's outputs.",
+        "verify": "Both agents' blockers clear. No SQLITE_BUSY or file lock errors in subsequent status updates.",
+        "limitations": "Some conflicts (like stdout contention in shared terminals) cannot be resolved without architectural changes."
+      }
+    ],
+
+    "intervention_decision_flowchart": {
+      "description": "Quick reference for choosing the right intervention",
+      "rules": [
+        "IF agent is blocked AND you can clarify in one message -> INTERVENTION-01",
+        "IF agent is blocked AND task is decomposable AND you have capacity for another agent -> INTERVENTION-02",
+        "IF agent is on wrong task OR duplicating work -> INTERVENTION-03",
+        "IF agent is crashed OR unresponsive OR fundamentally off-track -> INTERVENTION-04",
+        "IF agent A has data that agent B needs -> INTERVENTION-05",
+        "IF multiple agents contending for same resource -> INTERVENTION-06",
+        "IF unsure -> Start with INTERVENTION-01 (lowest disruption). Escalate to INTERVENTION-04 if no improvement after one checkpoint."
+      ]
+    }
+  },
+
+  "section_5_completion_handling": {
+    "title": "Completion Handling",
+    "description": "Procedures for handling agent completions, from the first finisher through final aggregation.",
+
+    "early_finisher_protocol": {
+      "description": "What to do when an agent completes while others are still working",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Verify output quality",
+          "details": "Before reassigning an early finisher, verify its output is correct and complete. Check: (a) output_files listed in status actually exist, (b) findings_count is reasonable for the task, (c) quick spot-check of output content."
+        },
+        {
+          "step": 2,
+          "action": "Check if output unblocks others",
+          "details": "Scan the status file for agents with needs_input_from pointing to the completed agent. If found, execute INTERVENTION-05 to deliver the output."
+        },
+        {
+          "step": 3,
+          "action": "Decide: reassign or standby",
+          "decision_tree": {
+            "another_agent_is_blocked": "Reassign early finisher to help (use INTERVENTION-02 pattern, but redirect the existing agent instead of launching new one).",
+            "another_agent_is_behind_schedule": "Reassign to parallelize the behind agent's remaining work. Only works if the remaining work is decomposable.",
+            "all_agents_on_track": "Put on standby. The early finisher can work on nice-to-have tasks (documentation, additional tests, code cleanup) or simply wait.",
+            "session_time_is_limited": "Assign the highest-value remaining work immediately. Do not let the agent sit idle."
+          }
+        },
+        {
+          "step": 4,
+          "action": "Reassignment via help protocol",
+          "details": "Use auto_assign_idle_teams() or manually create a help request and have the early finisher offer_help(). Include context from the completed task so the finisher brings relevant knowledge.",
+          "example": "# Create a help request for the struggling team\nwork_id = hp.add_work_item('Help with remaining stress tests', description='coding-team-2 needs help with direct_channels stress tests. Tests 15-28 still need implementation.', priority='high', required_caps=['coding', 'testing'])\nrequest_id = hp.request_help(work_id, 'Need help completing stress test suite')\n\n# The idle team offers help\nidle_hp.offer_help(request_id)"
+        }
+      ]
+    },
+
+    "result_aggregation": {
+      "description": "How to combine outputs from all agents into a coherent result",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Collect all output file paths",
+          "details": "Read the status file and extract all output_files arrays. Verify each file exists on disk.",
+          "command": "python3 -c \"import json;entries={};[entries.update({json.loads(l)['agent_id']:json.loads(l)}) for l in open('storage/coordination/agent_status.jsonl') if l.strip()];[print(f'{a}: {e.get(\\\"output_files\\\",[])}') for a,e in sorted(entries.items())]\""
+        },
+        {
+          "step": 2,
+          "action": "Check for conflicts in output",
+          "details": "Look for: (a) files written by multiple agents (take the latest or merge), (b) contradictory findings between agents, (c) overlapping content that needs deduplication."
+        },
+        {
+          "step": 3,
+          "action": "Merge results",
+          "details": "Strategy depends on output type. For test files: concatenate or import. For analysis JSON: merge findings arrays with deduplication. For knowledge base entries: review for consistency before combining."
+        },
+        {
+          "step": 4,
+          "action": "Run verification",
+          "details": "If outputs include code: run tests. If outputs include analysis: spot-check 2-3 findings for accuracy. If outputs include data: validate schema and completeness."
+        }
+      ]
+    },
+
+    "incompleteness_detection": {
+      "description": "How to detect if an agent produced incomplete or incorrect output",
+      "checks": [
+        {
+          "check": "Empty output",
+          "detection": "status='complete' but output_files is empty or findings_count is 0",
+          "action": "The agent likely misunderstood its task or failed silently. Review its status history for clues. Relaunch with clearer instructions if the output is needed."
+        },
+        {
+          "check": "Partial output",
+          "detection": "output_files exist but are much smaller than expected, or findings_count is significantly lower than comparable agents",
+          "action": "Check if the agent skipped parts of the task. If time permits, launch a follow-up agent for the missing parts."
+        },
+        {
+          "check": "Incorrect output",
+          "detection": "Output files have wrong format, reference nonexistent paths, contain placeholder text, or fail validation",
+          "action": "Most costly to detect. Requires content review. Prioritize spot-checking outputs from agents that reported blockers or errors during execution."
+        },
+        {
+          "check": "Stale output",
+          "detection": "Output file modification time is much earlier than the agent's completion time, suggesting the agent stopped producing output before it reported complete",
+          "action": "Compare file timestamps with the agent's status history. The agent may have crashed and auto-reported complete via a finally block."
+        }
+      ]
+    },
+
+    "final_verification_checklist": {
+      "description": "Run through this checklist before declaring the session complete",
+      "items": [
+        {
+          "item": 1,
+          "check": "All agents show status='complete' or accounted-for status='error'/'killed'",
+          "command": "python3 -c \"import json;entries={};[entries.update({json.loads(l)['agent_id']:json.loads(l)}) for l in open('storage/coordination/agent_status.jsonl') if l.strip()];incomplete=[a for a,e in entries.items() if e['status'] not in ('complete','error','killed')];print('PASS' if not incomplete else f'FAIL: {incomplete}')\""
+        },
+        {
+          "item": 2,
+          "check": "All expected output files exist on disk",
+          "command": "python3 -c \"import json,os;entries={};[entries.update({json.loads(l)['agent_id']:json.loads(l)}) for l in open('storage/coordination/agent_status.jsonl') if l.strip()];missing=[(a,f) for a,e in entries.items() for f in e.get('output_files',[]) if not os.path.exists(f)];print('PASS' if not missing else f'FAIL: {missing}')\""
+        },
+        {
+          "item": 3,
+          "check": "No unresolved blockers remain",
+          "command": "python3 -c \"import json;entries={};[entries.update({json.loads(l)['agent_id']:json.loads(l)}) for l in open('storage/coordination/agent_status.jsonl') if l.strip()];blocked=[a for a,e in entries.items() if e.get('blockers')];print('PASS' if not blocked else f'FAIL: {blocked}')\""
+        },
+        {
+          "item": 4,
+          "check": "Tests pass (if applicable)",
+          "command": "python -m pytest <test_directory> -v --tb=short"
+        },
+        {
+          "item": 5,
+          "check": "Knowledge base entries and session log created",
+          "description": "Verify that the team session log has been written and any significant findings have been captured in knowledge base entries."
+        },
+        {
+          "item": 6,
+          "check": "Index files updated",
+          "description": "Check that knowledge-base/index.json, teams/sessions index, and any other relevant indexes have been updated."
+        }
+      ]
+    }
+  },
+
+  "appendix_a_agent_status_template": {
+    "title": "Agent Status Write Template",
+    "description": "Copy-paste template for agent instructions. Include this in every agent's launch instructions so they know how to report status.",
+    "instruction_block": "STATUS REPORTING: Throughout your work, report your status by appending a JSON line to storage/coordination/agent_status.jsonl. Do this (1) immediately on startup, (2) after each significant milestone, (3) when blocked, and (4) on completion. Format: {\"agent_id\":\"YOUR_ID\",\"team\":\"TEAM_ID\",\"status\":\"working|blocked|complete|error\",\"progress_pct\":0-100,\"current_task\":\"what you are doing\",\"last_update_ts\":UNIX_TIMESTAMP,\"started_ts\":LAUNCH_TIMESTAMP,\"blockers\":[],\"findings_count\":0,\"output_files\":[],\"needs_input_from\":[],\"error_message\":null}. Use: echo 'JSON_LINE' >> storage/coordination/agent_status.jsonl"
+  },
+
+  "appendix_b_quick_reference": {
+    "title": "Quick Reference Card",
+    "monitor": "python3 -c \"import json,time;e={};[e.update({json.loads(l)['agent_id']:json.loads(l)}) for l in open('storage/coordination/agent_status.jsonl') if l.strip()];now=time.time();[print(f'{a:<22} {v[\\\"status\\\"]:<10} {v[\\\"progress_pct\\\"]:>5.0f}%  {int(now-v.get(\\\"last_update_ts\\\",now)):>4}s ago  {v.get(\\\"current_task\\\",\\\"\\\")[:45]}') for a,v in sorted(e.items())]\"",
+    "check_blockers": "grep '\"blocked\"' storage/coordination/agent_status.jsonl | tail -5",
+    "count_complete": "grep '\"complete\"' storage/coordination/agent_status.jsonl | python3 -c \"import json,sys;ids={json.loads(l)['agent_id'] for l in sys.stdin if l.strip()};print(f'{len(ids)} agents complete')\"",
+    "polling_rhythm": "CP-1 (30-60s post-launch) -> CP-2 (5-10min) -> CP-3 (30-50% elapsed) -> CP-4 (first completion) -> CP-5 (all done)",
+    "intervention_escalation": "Clarify (INTERVENTION-01) -> Redirect (INTERVENTION-03) -> Helper (INTERVENTION-02) -> Kill+Relaunch (INTERVENTION-04)"
+  }
+}

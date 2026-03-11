@@ -371,5 +371,273 @@ class TestScratchpad(unittest.TestCase):
         self.assertIsNone(self.sp.read("null_val"))  # JSON null -> None, same as missing
 
 
+class TestCycleDetection(unittest.TestCase):
+    """Tests for pipeline cycle detection (Bug #1)."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.db_path = os.path.join(self.tmpdir, "test.db")
+        self.bus_dir = os.path.join(self.tmpdir, "bus")
+        self.pm = PipelineManager(self.db_path, self.bus_dir, "team-a", "agent-1")
+
+    def tearDown(self):
+        self.pm.close()
+
+    def test_simple_cycle_rejected(self):
+        with self.assertRaises(ValueError) as ctx:
+            self.pm.create_pipeline("cycle-ab", [
+                {"name": "A", "depends_on": ["B"]},
+                {"name": "B", "depends_on": ["A"]},
+            ])
+        self.assertIn("cycle", str(ctx.exception).lower())
+
+    def test_three_node_cycle_rejected(self):
+        with self.assertRaises(ValueError) as ctx:
+            self.pm.create_pipeline("cycle-abc", [
+                {"name": "A", "depends_on": ["C"]},
+                {"name": "B", "depends_on": ["A"]},
+                {"name": "C", "depends_on": ["B"]},
+            ])
+        self.assertIn("cycle", str(ctx.exception).lower())
+
+    def test_self_cycle_rejected(self):
+        with self.assertRaises(ValueError) as ctx:
+            self.pm.create_pipeline("self-cycle", [
+                {"name": "A", "depends_on": ["A"]},
+            ])
+        self.assertIn("cycle", str(ctx.exception).lower())
+
+    def test_valid_dag_accepted(self):
+        pid = self.pm.create_pipeline("valid-dag", [
+            {"name": "A"},
+            {"name": "B", "depends_on": ["A"]},
+            {"name": "C", "depends_on": ["A"]},
+            {"name": "D", "depends_on": ["B", "C"]},
+        ])
+        self.assertIsInstance(pid, int)
+
+    def test_detect_cycles_static_method(self):
+        self.assertTrue(PipelineManager._detect_cycles([
+            {"name": "A", "depends_on": ["B"]},
+            {"name": "B", "depends_on": ["A"]},
+        ]))
+        self.assertFalse(PipelineManager._detect_cycles([
+            {"name": "A"},
+            {"name": "B", "depends_on": ["A"]},
+        ]))
+
+
+class TestBusNotifyFailure(unittest.TestCase):
+    """Tests for bus notification failure handling (Bug #2)."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.db_path = os.path.join(self.tmpdir, "test.db")
+        # Use a path that will cause notification failure
+        self.bad_bus_dir = "/dev/null/impossible/bus"
+        self.ws = WorkStealing(self.db_path, self.bad_bus_dir, "team-a", "agent-1")
+
+    def tearDown(self):
+        self.ws.close()
+
+    def test_enqueue_succeeds_despite_bus_failure(self):
+        """DB write should succeed even if bus notification fails."""
+        wid = self.ws.enqueue_work("task-1", "desc")
+        self.assertIsInstance(wid, int)
+        self.assertGreater(wid, 0)
+
+    def test_steal_succeeds_despite_bus_failure(self):
+        wid = self.ws.enqueue_work("task-1", "desc")
+        stolen = self.ws.steal_work()
+        self.assertIsNotNone(stolen)
+        self.assertEqual(stolen["id"], wid)
+
+
+class TestCompleteWorkClaimer(unittest.TestCase):
+    """Tests for complete_work claimer verification (Bug #3)."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.db_path = os.path.join(self.tmpdir, "test.db")
+        self.bus_dir = os.path.join(self.tmpdir, "bus")
+        self.ws_a = WorkStealing(self.db_path, self.bus_dir, "team-a", "agent-1")
+        self.ws_b = WorkStealing(self.db_path, self.bus_dir, "team-b", "agent-2")
+
+    def tearDown(self):
+        self.ws_a.close()
+        self.ws_b.close()
+
+    def test_claimer_can_complete(self):
+        wid = self.ws_a.enqueue_work("task", "desc")
+        self.ws_a.steal_work()
+        # team-a claimed it, team-a can complete it
+        self.ws_a.complete_work(wid, {"done": True})
+
+    def test_owner_can_complete(self):
+        wid = self.ws_a.enqueue_work("task", "desc")
+        self.ws_b.steal_work()  # team-b steals it
+        # team-a is the owner, so it can also complete
+        self.ws_a.complete_work(wid, {"done": True})
+
+    def test_unauthorized_team_cannot_complete(self):
+        wid = self.ws_a.enqueue_work("task", "desc")
+        self.ws_a.steal_work()  # team-a claims it
+        ws_c = WorkStealing(self.db_path, self.bus_dir, "team-c", "agent-3")
+        with self.assertRaises(ValueError) as ctx:
+            ws_c.complete_work(wid, {"done": True})
+        self.assertIn("not authorized", str(ctx.exception))
+        ws_c.close()
+
+    def test_complete_nonexistent_item_raises(self):
+        with self.assertRaises(ValueError) as ctx:
+            self.ws_a.complete_work(99999, {"done": True})
+        self.assertIn("not found", str(ctx.exception))
+
+
+class TestFailStage(unittest.TestCase):
+    """Tests for fail_stage method (Bug #4)."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.db_path = os.path.join(self.tmpdir, "test.db")
+        self.bus_dir = os.path.join(self.tmpdir, "bus")
+        self.pm = PipelineManager(self.db_path, self.bus_dir, "team-a", "agent-1")
+
+    def tearDown(self):
+        self.pm.close()
+
+    def test_fail_stage_sets_status(self):
+        pid = self.pm.create_pipeline("fail-test", [
+            {"name": "step1"},
+            {"name": "step2", "depends_on": ["step1"]},
+        ])
+        self.pm.start_stage(pid, "step1")
+        self.pm.fail_stage(pid, "step1", "something went wrong")
+
+        status = self.pm.get_pipeline_status(pid)
+        s1 = [s for s in status["stages"] if s["stage_name"] == "step1"][0]
+        self.assertEqual(s1["status"], "failed")
+        self.assertEqual(s1["error_message"], "something went wrong")
+        self.assertIsNotNone(s1["completed_at"])
+
+    def test_pipeline_status_reflects_failure(self):
+        pid = self.pm.create_pipeline("fail-pipe", [
+            {"name": "step1"},
+        ])
+        self.pm.start_stage(pid, "step1")
+        self.pm.fail_stage(pid, "step1", "kaboom")
+
+        status = self.pm.get_pipeline_status(pid)
+        self.assertEqual(status["status"], "failed")
+
+
+class TestDuplicateStageNames(unittest.TestCase):
+    """Tests for duplicate stage name detection (Bug #5)."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.db_path = os.path.join(self.tmpdir, "test.db")
+        self.bus_dir = os.path.join(self.tmpdir, "bus")
+        self.pm = PipelineManager(self.db_path, self.bus_dir, "team-a", "agent-1")
+
+    def tearDown(self):
+        self.pm.close()
+
+    def test_duplicate_names_rejected(self):
+        with self.assertRaises(ValueError) as ctx:
+            self.pm.create_pipeline("dup-test", [
+                {"name": "step1"},
+                {"name": "step1"},
+            ])
+        self.assertIn("Duplicate", str(ctx.exception))
+
+    def test_unique_names_accepted(self):
+        pid = self.pm.create_pipeline("unique-test", [
+            {"name": "step1"},
+            {"name": "step2"},
+        ])
+        self.assertIsInstance(pid, int)
+
+
+class TestDoubleStartGuard(unittest.TestCase):
+    """Tests for start_stage double-start prevention (Bug #6)."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.db_path = os.path.join(self.tmpdir, "test.db")
+        self.bus_dir = os.path.join(self.tmpdir, "bus")
+        self.pm = PipelineManager(self.db_path, self.bus_dir, "team-a", "agent-1")
+
+    def tearDown(self):
+        self.pm.close()
+
+    def test_cannot_start_in_progress_stage(self):
+        pid = self.pm.create_pipeline("guard-test", [{"name": "s1"}])
+        self.pm.start_stage(pid, "s1")
+        with self.assertRaises(ValueError) as ctx:
+            self.pm.start_stage(pid, "s1")
+        self.assertIn("in_progress", str(ctx.exception))
+
+    def test_cannot_start_completed_stage(self):
+        pid = self.pm.create_pipeline("guard-test2", [{"name": "s1"}])
+        self.pm.start_stage(pid, "s1")
+        self.pm.complete_stage(pid, "s1", {})
+        with self.assertRaises(ValueError) as ctx:
+            self.pm.start_stage(pid, "s1")
+        self.assertIn("completed", str(ctx.exception))
+
+    def test_cannot_start_waiting_stage(self):
+        pid = self.pm.create_pipeline("guard-test3", [
+            {"name": "s1"},
+            {"name": "s2", "depends_on": ["s1"]},
+        ])
+        with self.assertRaises(ValueError) as ctx:
+            self.pm.start_stage(pid, "s2")
+        self.assertIn("waiting", str(ctx.exception))
+
+    def test_start_ready_stage_succeeds(self):
+        pid = self.pm.create_pipeline("guard-ok", [{"name": "s1"}])
+        self.pm.start_stage(pid, "s1")  # should not raise
+        status = self.pm.get_pipeline_status(pid)
+        s1 = status["stages"][0]
+        self.assertEqual(s1["status"], "in_progress")
+
+    def test_start_nonexistent_stage_raises(self):
+        pid = self.pm.create_pipeline("guard-missing", [{"name": "s1"}])
+        with self.assertRaises(ValueError) as ctx:
+            self.pm.start_stage(pid, "nonexistent")
+        self.assertIn("not found", str(ctx.exception))
+
+
+class TestClosedStateTracking(unittest.TestCase):
+    """Tests for _closed flag on all classes (Bug #8)."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.db_path = os.path.join(self.tmpdir, "test.db")
+        self.bus_dir = os.path.join(self.tmpdir, "bus")
+
+    def test_work_stealing_double_close(self):
+        ws = WorkStealing(self.db_path, self.bus_dir, "team-a", "agent-1")
+        self.assertFalse(ws._closed)
+        ws.close()
+        self.assertTrue(ws._closed)
+        ws.close()  # should not raise
+
+    def test_pipeline_manager_double_close(self):
+        pm = PipelineManager(self.db_path, self.bus_dir, "team-a", "agent-1")
+        self.assertFalse(pm._closed)
+        pm.close()
+        self.assertTrue(pm._closed)
+        pm.close()  # should not raise
+
+    def test_scratchpad_double_close(self):
+        sp = Scratchpad(self.db_path, "team-a", "agent-1")
+        self.assertFalse(sp._closed)
+        sp.close()
+        self.assertTrue(sp._closed)
+        sp.close()  # should not raise
+
+
 if __name__ == "__main__":
     unittest.main()

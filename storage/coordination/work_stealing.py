@@ -23,6 +23,7 @@ import sqlite3
 import threading
 import time
 import uuid
+from collections import deque
 from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
@@ -94,6 +95,7 @@ CREATE TABLE IF NOT EXISTS pipeline_stages (
     status TEXT DEFAULT 'waiting',
     input_data TEXT,
     output_data TEXT,
+    error_message TEXT,
     started_at REAL,
     completed_at REAL
 );
@@ -108,6 +110,15 @@ CREATE TABLE IF NOT EXISTS scratchpad (
     expires_at REAL NOT NULL,
     PRIMARY KEY (key, namespace)
 );
+
+CREATE INDEX IF NOT EXISTS idx_work_queue_status_priority
+    ON work_queue (status, priority, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_pipeline_stages_pipeline_status
+    ON pipeline_stages (pipeline_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_scratchpad_namespace_expires
+    ON scratchpad (namespace, expires_at);
 """
 
 
@@ -128,28 +139,38 @@ def _open_db(db_path: str, busy_timeout_ms: int = 30000) -> sqlite3.Connection:
 # ---------------------------------------------------------------------------
 
 def _bus_notify(bus_dir: str, channel: str, agent_id: str, team: str, body: dict) -> None:
-    """Fire-and-forget bus notification (JSONL atomic append)."""
+    """Fire-and-forget bus notification (JSONL atomic append).
+
+    Best-effort: failures are logged but never propagated to callers.
+    The DB write has already succeeded by the time this is called.
+    """
     if bus_dir is None:
         return
-    os.makedirs(bus_dir, exist_ok=True)
-    msg = {
-        "id": str(uuid.uuid4()),
-        "type": "info",
-        "channel": channel,
-        "team": team,
-        "agent_id": agent_id,
-        "ts": time.time(),
-        "ttl": 3600,
-        "body": body,
-    }
-    raw = json.dumps(msg, separators=(",", ":")).encode("utf-8") + b"\n"
-    safe_ch = channel.replace("/", "_").replace("..", "_")
-    filepath = os.path.join(bus_dir, f"{safe_ch}.jsonl")
-    fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
     try:
-        os.write(fd, raw)
-    finally:
-        os.close(fd)
+        os.makedirs(bus_dir, exist_ok=True)
+        msg = {
+            "id": str(uuid.uuid4()),
+            "type": "info",
+            "channel": channel,
+            "team": team,
+            "agent_id": agent_id,
+            "ts": time.time(),
+            "ttl": 3600,
+            "body": body,
+        }
+        raw = json.dumps(msg, separators=(",", ":")).encode("utf-8") + b"\n"
+        safe_ch = channel.replace("/", "_").replace("..", "_")
+        filepath = os.path.join(bus_dir, f"{safe_ch}.jsonl")
+        fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+        try:
+            os.write(fd, raw)
+        finally:
+            os.close(fd)
+    except Exception:
+        logger.warning(
+            "Bus notification failed (channel=%s, body=%s)",
+            channel, body, exc_info=True,
+        )
 
 
 # ===================================================================
@@ -183,9 +204,13 @@ class WorkStealing:
         self.agent_id = agent_id
         self._lock = threading.Lock()
         self._conn = _open_db(db_path)
+        self._closed = False
 
     def close(self) -> None:
         with self._lock:
+            if self._closed:
+                return
+            self._closed = True
             self._conn.close()
 
     @_retry_on_busy
@@ -265,9 +290,24 @@ class WorkStealing:
 
     @_retry_on_busy
     def complete_work(self, work_id: int, result: dict) -> None:
-        """Mark a work item as completed with a JSON result."""
+        """Mark a work item as completed with a JSON result.
+
+        Only the team that claimed the item (or the owner team) may complete it.
+        Raises ValueError if the calling team is not authorized.
+        """
         now = time.time()
         with self._lock:
+            row = self._conn.execute(
+                "SELECT claimed_by, owner_team FROM work_queue WHERE id = ?",
+                (work_id,),
+            ).fetchone()
+            if row is None:
+                raise ValueError(f"Work item {work_id} not found")
+            if row["claimed_by"] != self.team and row["owner_team"] != self.team:
+                raise ValueError(
+                    f"Team '{self.team}' is not authorized to complete work item {work_id} "
+                    f"(claimed by '{row['claimed_by']}', owned by '{row['owner_team']}')"
+                )
             self._conn.execute(
                 "UPDATE work_queue SET status = 'completed', result = ?, completed_at = ? WHERE id = ?",
                 (json.dumps(result), now, work_id),
@@ -349,10 +389,45 @@ class PipelineManager:
         self.agent_id = agent_id
         self._lock = threading.Lock()
         self._conn = _open_db(db_path)
+        self._closed = False
 
     def close(self) -> None:
         with self._lock:
+            if self._closed:
+                return
+            self._closed = True
             self._conn.close()
+
+    @staticmethod
+    def _detect_cycles(stages: list[dict]) -> bool:
+        """Detect cycles in the stage dependency graph using Kahn's algorithm.
+
+        Returns True if a cycle exists, False otherwise.
+        """
+        # Build adjacency list and in-degree map
+        stage_names = {s["name"] for s in stages}
+        in_degree: dict[str, int] = {s["name"]: 0 for s in stages}
+        adjacency: dict[str, list[str]] = {s["name"]: [] for s in stages}
+
+        for s in stages:
+            for dep in s.get("depends_on", []):
+                if dep in stage_names:
+                    adjacency[dep].append(s["name"])
+                    in_degree[s["name"]] += 1
+
+        # Kahn's algorithm
+        queue = deque(name for name, deg in in_degree.items() if deg == 0)
+        visited_count = 0
+
+        while queue:
+            node = queue.popleft()
+            visited_count += 1
+            for neighbor in adjacency[node]:
+                in_degree[neighbor] -= 1
+                if in_degree[neighbor] == 0:
+                    queue.append(neighbor)
+
+        return visited_count != len(stage_names)
 
     @_retry_on_busy
     def create_pipeline(self, name: str, stages: list[dict]) -> int:
@@ -370,7 +445,28 @@ class PipelineManager:
         -------
         int
             The pipeline id.
+
+        Raises
+        ------
+        ValueError
+            If duplicate stage names are found or if the dependency graph
+            contains cycles.
         """
+        # Check for duplicate stage names
+        stage_names = [s["name"] for s in stages]
+        if len(stage_names) != len(set(stage_names)):
+            seen = set()
+            dupes = []
+            for n in stage_names:
+                if n in seen:
+                    dupes.append(n)
+                seen.add(n)
+            raise ValueError(f"Duplicate stage names: {dupes}")
+
+        # Check for cycles
+        if self._detect_cycles(stages):
+            raise ValueError("Pipeline dependency graph contains a cycle")
+
         now = time.time()
         with self._lock:
             cur = self._conn.execute(
@@ -427,9 +523,23 @@ class PipelineManager:
 
     @_retry_on_busy
     def start_stage(self, pipeline_id: int, stage_name: str) -> None:
-        """Mark a stage as in_progress."""
+        """Mark a stage as in_progress.
+
+        Only stages with status 'ready' can be started. Raises ValueError
+        if the stage is already in_progress, completed, or failed.
+        """
         now = time.time()
         with self._lock:
+            row = self._conn.execute(
+                "SELECT status FROM pipeline_stages WHERE pipeline_id = ? AND stage_name = ?",
+                (pipeline_id, stage_name),
+            ).fetchone()
+            if row is None:
+                raise ValueError(f"Stage '{stage_name}' not found in pipeline {pipeline_id}")
+            if row["status"] != "ready":
+                raise ValueError(
+                    f"Stage '{stage_name}' cannot be started: current status is '{row['status']}' (must be 'ready')"
+                )
             self._conn.execute(
                 "UPDATE pipeline_stages SET status = 'in_progress', started_at = ? WHERE pipeline_id = ? AND stage_name = ?",
                 (now, pipeline_id, stage_name),
@@ -459,6 +569,26 @@ class PipelineManager:
             "event": "pipeline-stage-completed",
             "pipeline_id": pipeline_id,
             "stage_name": stage_name,
+        })
+
+    @_retry_on_busy
+    def fail_stage(self, pipeline_id: int, stage_name: str, error: str) -> None:
+        """Mark a stage as failed with an error message."""
+        now = time.time()
+        with self._lock:
+            self._conn.execute(
+                """UPDATE pipeline_stages
+                   SET status = 'failed', error_message = ?, completed_at = ?
+                   WHERE pipeline_id = ? AND stage_name = ?""",
+                (error, now, pipeline_id, stage_name),
+            )
+            self._conn.commit()
+
+        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+            "event": "pipeline-stage-failed",
+            "pipeline_id": pipeline_id,
+            "stage_name": stage_name,
+            "error": error,
         })
 
     @_retry_on_busy
@@ -510,12 +640,19 @@ class PipelineManager:
 
         stages = [dict(s) for s in stage_rows]
         all_completed = all(s["status"] == "completed" for s in stages)
-        any_failed = False  # no failure state for stages currently
+        any_failed = any(s["status"] == "failed" for s in stages)
+
+        if all_completed:
+            effective_status = "completed"
+        elif any_failed:
+            effective_status = "failed"
+        else:
+            effective_status = pipeline_row["status"]
 
         return {
             "id": pipeline_row["id"],
             "name": pipeline_row["name"],
-            "status": "completed" if all_completed else pipeline_row["status"],
+            "status": effective_status,
             "created_at": pipeline_row["created_at"],
             "stages": stages,
         }
@@ -590,9 +727,13 @@ class Scratchpad:
         self.agent_id = agent_id
         self._lock = threading.Lock()
         self._conn = _open_db(db_path)
+        self._closed = False
 
     def close(self) -> None:
         with self._lock:
+            if self._closed:
+                return
+            self._closed = True
             self._conn.close()
 
     @_retry_on_busy
