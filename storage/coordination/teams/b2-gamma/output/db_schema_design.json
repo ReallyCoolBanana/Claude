@@ -1,0 +1,417 @@
+{
+  "metadata": {
+    "team": "B2-Gamma",
+    "task": "SQLite Database Schema Design for Token-Efficient I/O",
+    "date": "2026-03-11",
+    "inputs_consumed": [
+      "b2-alpha/output/token_cost_baseline.json",
+      "b2-beta/output/solution_research.json",
+      "think-tank-gamma/output/op_ideas.json",
+      "knowledge-base/index.json",
+      "KB-0001.md (sample KB entry with YAML frontmatter)",
+      "storage/coordination/sops/index.json (SOP index structure)",
+      "storage/sources/index.json (sources index structure)",
+      "storage/scripts/index.json (scripts index structure)",
+      "storage/api-tools/index.json (tools index structure)",
+      "teams/sessions/index.json (team sessions index structure)",
+      "storage/mcp-server/server.py (confirmed exists)"
+    ],
+    "design_principles": [
+      "Source files remain canonical truth; DB is a generated query layer",
+      "Single SQLite DB replaces all 9+ index.json files",
+      "FTS5 for sub-millisecond full-text search",
+      "Projection queries return only requested fields",
+      "Graph relationships via recursive CTE",
+      "Auto-increment IDs for new entry creation",
+      "Views replicate current index formats for backward compatibility",
+      "CHECK constraints enforce naming conventions at DB level",
+      "WAL mode for concurrent multi-agent read access"
+    ]
+  },
+
+  "tables": [
+    {
+      "name": "entries",
+      "description": "Unified table for all resource types: KB entries, SOPs, sources, scripts, team logs, API tools",
+      "columns": [
+        {"name": "id", "type": "TEXT", "constraints": "PRIMARY KEY"},
+        {"name": "numeric_id", "type": "INTEGER", "constraints": "NOT NULL"},
+        {"name": "resource_type", "type": "TEXT", "constraints": "NOT NULL CHECK(resource_type IN ('KB','SOP','SRC','SCR','TEAM','TOOL'))"},
+        {"name": "title", "type": "TEXT", "constraints": "NOT NULL"},
+        {"name": "summary", "type": "TEXT", "constraints": "CHECK(length(summary) <= 200)"},
+        {"name": "category", "type": "TEXT", "constraints": "DEFAULT NULL"},
+        {"name": "status", "type": "TEXT", "constraints": "DEFAULT 'active'"},
+        {"name": "confidence", "type": "TEXT", "constraints": "DEFAULT NULL CHECK(confidence IS NULL OR confidence IN ('low','medium','high','very-high'))"},
+        {"name": "file_path", "type": "TEXT", "constraints": "NOT NULL UNIQUE"},
+        {"name": "content_hash", "type": "TEXT", "constraints": "DEFAULT NULL"},
+        {"name": "created_date", "type": "TEXT", "constraints": "DEFAULT (date('now'))"},
+        {"name": "updated_date", "type": "TEXT", "constraints": "DEFAULT (date('now'))"},
+        {"name": "team", "type": "TEXT", "constraints": "DEFAULT NULL"},
+        {"name": "char_count", "type": "INTEGER", "constraints": "DEFAULT 0"},
+        {"name": "token_estimate", "type": "INTEGER", "constraints": "GENERATED ALWAYS AS (char_count / 4) STORED"},
+        {"name": "version", "type": "TEXT", "constraints": "DEFAULT '1.0'"},
+        {"name": "description", "type": "TEXT", "constraints": "DEFAULT NULL"},
+        {"name": "extra_json", "type": "TEXT", "constraints": "DEFAULT NULL"}
+      ],
+      "indexes": [
+        {"name": "idx_entries_resource_type", "columns": ["resource_type"]},
+        {"name": "idx_entries_category", "columns": ["category"]},
+        {"name": "idx_entries_status", "columns": ["status"]},
+        {"name": "idx_entries_team", "columns": ["team"]},
+        {"name": "idx_entries_created_date", "columns": ["created_date"]},
+        {"name": "idx_entries_type_category", "columns": ["resource_type", "category"]},
+        {"name": "idx_entries_type_date", "columns": ["resource_type", "created_date DESC"]},
+        {"name": "idx_entries_type_numeric", "columns": ["resource_type", "numeric_id"], "unique": true}
+      ],
+      "notes": "The 'id' column stores the human-readable ID (e.g., 'KB-0001'). 'numeric_id' stores the integer portion for auto-increment. 'extra_json' stores type-specific fields as JSON (e.g., for TOOL: modules, entry_point, requires; for SRC: url, data_types, access_type; for SCR: language, dependencies, filename)."
+    },
+    {
+      "name": "tags",
+      "description": "Many-to-many tag associations. Replaces the tag_index sections in all index.json files.",
+      "columns": [
+        {"name": "entry_id", "type": "TEXT", "constraints": "NOT NULL REFERENCES entries(id) ON DELETE CASCADE"},
+        {"name": "tag", "type": "TEXT", "constraints": "NOT NULL CHECK(length(tag) > 0)"}
+      ],
+      "indexes": [
+        {"name": "idx_tags_entry_id", "columns": ["entry_id"]},
+        {"name": "idx_tags_tag", "columns": ["tag"]},
+        {"name": "idx_tags_unique", "columns": ["entry_id", "tag"], "unique": true}
+      ],
+      "notes": "Enables queries like: SELECT entry_id FROM tags WHERE tag = 'database'. The unique composite index prevents duplicate tag assignments."
+    },
+    {
+      "name": "relationships",
+      "description": "Graph edges between entries. Captures builds_on chains, supersedes links, and cross-references.",
+      "columns": [
+        {"name": "source_id", "type": "TEXT", "constraints": "NOT NULL REFERENCES entries(id) ON DELETE CASCADE"},
+        {"name": "target_id", "type": "TEXT", "constraints": "NOT NULL REFERENCES entries(id) ON DELETE CASCADE"},
+        {"name": "rel_type", "type": "TEXT", "constraints": "NOT NULL CHECK(rel_type IN ('builds_on','supersedes','references','related'))"},
+        {"name": "metadata", "type": "TEXT", "constraints": "DEFAULT NULL"}
+      ],
+      "indexes": [
+        {"name": "idx_rel_source", "columns": ["source_id"]},
+        {"name": "idx_rel_target", "columns": ["target_id"]},
+        {"name": "idx_rel_type", "columns": ["rel_type"]},
+        {"name": "idx_rel_unique", "columns": ["source_id", "target_id", "rel_type"], "unique": true}
+      ],
+      "notes": "Enables recursive CTE queries for ancestry chains. Example: WITH RECURSIVE chain AS (SELECT target_id FROM relationships WHERE source_id = 'KB-0031' AND rel_type = 'builds_on' UNION ALL SELECT r.target_id FROM relationships r JOIN chain c ON r.source_id = c.target_id WHERE r.rel_type = 'builds_on') SELECT * FROM chain;"
+    },
+    {
+      "name": "id_sequences",
+      "description": "Tracks the next available numeric ID for each resource type. Replaces manual max-ID scanning of index.json.",
+      "columns": [
+        {"name": "resource_type", "type": "TEXT", "constraints": "PRIMARY KEY CHECK(resource_type IN ('KB','SOP','SRC','SCR','TEAM','TOOL'))"},
+        {"name": "next_id", "type": "INTEGER", "constraints": "NOT NULL DEFAULT 1"}
+      ],
+      "indexes": [],
+      "notes": "Atomic ID assignment: UPDATE id_sequences SET next_id = next_id + 1 WHERE resource_type = 'KB' RETURNING next_id - 1. Eliminates race conditions in multi-agent entry creation."
+    },
+    {
+      "name": "changes",
+      "description": "Incremental change log for session-aware differential reads. Records what changed and when.",
+      "columns": [
+        {"name": "id", "type": "INTEGER", "constraints": "PRIMARY KEY AUTOINCREMENT"},
+        {"name": "timestamp", "type": "TEXT", "constraints": "NOT NULL DEFAULT (datetime('now'))"},
+        {"name": "entry_id", "type": "TEXT", "constraints": "NOT NULL"},
+        {"name": "change_type", "type": "TEXT", "constraints": "NOT NULL CHECK(change_type IN ('insert','update','delete'))"},
+        {"name": "changed_fields", "type": "TEXT", "constraints": "DEFAULT NULL"},
+        {"name": "summary", "type": "TEXT", "constraints": "DEFAULT NULL"}
+      ],
+      "indexes": [
+        {"name": "idx_changes_timestamp", "columns": ["timestamp"]},
+        {"name": "idx_changes_entry_id", "columns": ["entry_id"]}
+      ],
+      "notes": "Agents can query: SELECT * FROM changes WHERE timestamp > '2026-03-11T10:00:00' to see what changed since their last session. Populated by triggers on entries table."
+    }
+  ],
+
+  "fts5": {
+    "table_name": "entries_fts",
+    "source_table": "entries",
+    "indexed_columns": ["title", "summary", "description"],
+    "tokenizer": "unicode61 remove_diacritics 2",
+    "content_mode": "external_content",
+    "content_table": "entries",
+    "content_rowid": "rowid",
+    "create_sql": "CREATE VIRTUAL TABLE IF NOT EXISTS entries_fts USING fts5(title, summary, description, content=entries, content_rowid=rowid, tokenize='unicode61 remove_diacritics 2');",
+    "sync_triggers": {
+      "after_insert": "CREATE TRIGGER entries_fts_ai AFTER INSERT ON entries BEGIN INSERT INTO entries_fts(rowid, title, summary, description) VALUES (new.rowid, new.title, new.summary, new.description); END;",
+      "after_update": "CREATE TRIGGER entries_fts_au AFTER UPDATE ON entries BEGIN INSERT INTO entries_fts(entries_fts, rowid, title, summary, description) VALUES ('delete', old.rowid, old.title, old.summary, old.description); INSERT INTO entries_fts(rowid, title, summary, description) VALUES (new.rowid, new.title, new.summary, new.description); END;",
+      "after_delete": "CREATE TRIGGER entries_fts_ad AFTER DELETE ON entries BEGIN INSERT INTO entries_fts(entries_fts, rowid, title, summary, description) VALUES ('delete', old.rowid, old.title, old.summary, old.description); END;"
+    },
+    "query_examples": [
+      {
+        "description": "Search for entries about databases, ranked by relevance",
+        "sql": "SELECT e.id, e.title, e.resource_type, rank FROM entries_fts f JOIN entries e ON f.rowid = e.rowid WHERE entries_fts MATCH 'database' ORDER BY rank LIMIT 10;",
+        "estimated_tokens": 50
+      },
+      {
+        "description": "Phrase search with column weighting (title 10x, summary 5x, description 1x)",
+        "sql": "SELECT e.id, e.title, bm25(entries_fts, 10.0, 5.0, 1.0) AS score FROM entries_fts f JOIN entries e ON f.rowid = e.rowid WHERE entries_fts MATCH 'multi-agent coordination' ORDER BY score LIMIT 5;",
+        "estimated_tokens": 30
+      },
+      {
+        "description": "Search within a specific column",
+        "sql": "SELECT e.id, e.title FROM entries_fts f JOIN entries e ON f.rowid = e.rowid WHERE entries_fts MATCH 'title:optimization' ORDER BY rank;",
+        "estimated_tokens": 20
+      }
+    ],
+    "notes": "External-content mode avoids data duplication — the FTS index references the entries table. The unicode61 tokenizer handles international characters and strips diacritics for robust matching. BM25 ranking is built-in. Highlight() and snippet() functions available for context-aware result presentation."
+  },
+
+  "views": [
+    {
+      "name": "v_kb_index",
+      "purpose": "Replicates knowledge-base/index.json structure. Returns all KB entries with their tags and builds_on relationships.",
+      "sql": "CREATE VIEW v_kb_index AS SELECT e.id, e.title, e.created_date AS date, e.team, e.category, e.status, e.confidence, (SELECT json_group_array(t.tag) FROM tags t WHERE t.entry_id = e.id) AS tags, (SELECT json_group_array(r.target_id) FROM relationships r WHERE r.source_id = e.id AND r.rel_type = 'builds_on') AS builds_on FROM entries e WHERE e.resource_type = 'KB' ORDER BY e.numeric_id;"
+    },
+    {
+      "name": "v_sop_index",
+      "purpose": "Replicates storage/coordination/sops/index.json structure.",
+      "sql": "CREATE VIEW v_sop_index AS SELECT e.id, e.title, e.file_path AS filename, e.version, e.status, e.description, (SELECT json_group_array(r.target_id) FROM relationships r WHERE r.source_id = e.id AND r.rel_type = 'supersedes') AS supersedes FROM entries e WHERE e.resource_type = 'SOP' ORDER BY e.numeric_id;"
+    },
+    {
+      "name": "v_scripts_index",
+      "purpose": "Replicates storage/scripts/index.json structure.",
+      "sql": "CREATE VIEW v_scripts_index AS SELECT e.id, e.title AS name, json_extract(e.extra_json, '$.filename') AS filename, json_extract(e.extra_json, '$.language') AS language, e.category, e.description, e.created_date AS added, e.team AS added_by_team, (SELECT json_group_array(t.tag) FROM tags t WHERE t.entry_id = e.id) AS tags FROM entries e WHERE e.resource_type = 'SCR' ORDER BY e.numeric_id;"
+    },
+    {
+      "name": "v_sources_index",
+      "purpose": "Replicates storage/sources/index.json structure.",
+      "sql": "CREATE VIEW v_sources_index AS SELECT e.id, e.title AS name, json_extract(e.extra_json, '$.url') AS url, json_extract(e.extra_json, '$.data_types') AS data_types, json_extract(e.extra_json, '$.access_type') AS access_type, (SELECT json_group_array(t.tag) FROM tags t WHERE t.entry_id = e.id) AS tags FROM entries e WHERE e.resource_type = 'SRC' ORDER BY e.numeric_id;"
+    },
+    {
+      "name": "v_tools_index",
+      "purpose": "Replicates storage/api-tools/index.json structure.",
+      "sql": "CREATE VIEW v_tools_index AS SELECT e.id, e.title AS name, e.description, json_extract(e.extra_json, '$.path') AS path, e.category, json_extract(e.extra_json, '$.auth_type') AS auth_type, e.created_date AS date_added, e.team, json_extract(e.extra_json, '$.modules') AS modules, json_extract(e.extra_json, '$.entry_point') AS entry_point, json_extract(e.extra_json, '$.requires') AS requires, (SELECT json_group_array(t.tag) FROM tags t WHERE t.entry_id = e.id) AS tags FROM entries e WHERE e.resource_type = 'TOOL' ORDER BY e.numeric_id;"
+    },
+    {
+      "name": "v_teams_index",
+      "purpose": "Replicates teams/sessions/index.json structure.",
+      "sql": "CREATE VIEW v_teams_index AS SELECT e.id AS team_id, json_extract(e.extra_json, '$.filename') AS filename, e.created_date AS date, e.description AS objective, (SELECT json_group_array(r.target_id) FROM relationships r WHERE r.source_id = e.id AND r.rel_type = 'builds_on') AS builds_on_knowledge, json_extract(e.extra_json, '$.members') AS members FROM entries e WHERE e.resource_type = 'TEAM' ORDER BY e.numeric_id;"
+    },
+    {
+      "name": "v_compact",
+      "purpose": "Level 1 compact view: minimal fields for orientation. ~15 tokens per entry, ~500 tokens for all 31 KB entries.",
+      "sql": "CREATE VIEW v_compact AS SELECT e.id, e.title, e.resource_type, e.category, e.created_date AS date FROM entries e ORDER BY e.resource_type, e.numeric_id;"
+    },
+    {
+      "name": "v_summary",
+      "purpose": "Level 0 summary view: aggregate counts by type for instant orientation. ~50 tokens total.",
+      "sql": "CREATE VIEW v_summary AS SELECT resource_type, COUNT(*) AS entry_count, MAX(updated_date) AS last_updated, GROUP_CONCAT(DISTINCT category) AS categories FROM entries GROUP BY resource_type ORDER BY resource_type;"
+    },
+    {
+      "name": "v_recent",
+      "purpose": "Last 10 entries across all types, with summaries. For quick session onboarding.",
+      "sql": "CREATE VIEW v_recent AS SELECT e.id, e.title, e.resource_type, e.summary, e.created_date AS date FROM entries e ORDER BY e.created_date DESC, e.numeric_id DESC LIMIT 10;"
+    },
+    {
+      "name": "v_tag_cloud",
+      "purpose": "Tag frequency counts for topic overview. ~100 tokens total.",
+      "sql": "CREATE VIEW v_tag_cloud AS SELECT tag, COUNT(*) AS usage_count FROM tags GROUP BY tag ORDER BY usage_count DESC;"
+    },
+    {
+      "name": "v_category_counts",
+      "purpose": "Entry counts per category per resource type. ~30 tokens.",
+      "sql": "CREATE VIEW v_category_counts AS SELECT resource_type, category, COUNT(*) AS count FROM entries GROUP BY resource_type, category ORDER BY resource_type, count DESC;"
+    },
+    {
+      "name": "v_ancestry",
+      "purpose": "Flattened builds_on graph showing direct parent-child links for quick relationship discovery.",
+      "sql": "CREATE VIEW v_ancestry AS SELECT r.source_id AS child_id, e1.title AS child_title, r.target_id AS parent_id, e2.title AS parent_title FROM relationships r JOIN entries e1 ON r.source_id = e1.id JOIN entries e2 ON r.target_id = e2.id WHERE r.rel_type = 'builds_on' ORDER BY r.source_id;"
+    }
+  ],
+
+  "triggers": [
+    {
+      "name": "trg_entries_token_estimate_insert",
+      "event": "AFTER INSERT ON entries",
+      "sql": "-- token_estimate is a GENERATED column: see entries table definition. No trigger needed.",
+      "purpose": "Token estimate is computed as a GENERATED ALWAYS AS (char_count / 4) STORED column on the entries table. This avoids trigger cascade issues entirely."
+    },
+    {
+      "name": "trg_entries_updated_date",
+      "event": "Application-layer managed",
+      "sql": "-- updated_date is set by the application (import script / MCP server) on each write to avoid trigger cascades.",
+      "purpose": "updated_date is managed by the application layer. The import script sets it from file modification time; the MCP server sets it to date('now') on writes."
+    },
+    {
+      "name": "trg_changes_insert",
+      "event": "AFTER INSERT ON entries",
+      "sql": "CREATE TRIGGER trg_changes_insert AFTER INSERT ON entries BEGIN INSERT INTO changes(entry_id, change_type, summary) VALUES (new.id, 'insert', 'New ' || new.resource_type || ': ' || new.title); END;",
+      "purpose": "Log entry creation to changes table"
+    },
+    {
+      "name": "trg_changes_update",
+      "event": "AFTER UPDATE ON entries",
+      "sql": "CREATE TRIGGER trg_changes_update AFTER UPDATE ON entries BEGIN INSERT INTO changes(entry_id, change_type, summary) VALUES (new.id, 'update', 'Updated ' || new.resource_type || ': ' || new.title); END;",
+      "purpose": "Log entry updates to changes table"
+    },
+    {
+      "name": "trg_changes_delete",
+      "event": "AFTER DELETE ON entries",
+      "sql": "CREATE TRIGGER trg_changes_delete AFTER DELETE ON entries BEGIN INSERT INTO changes(entry_id, change_type, summary) VALUES (old.id, 'delete', 'Deleted ' || old.resource_type || ': ' || old.title); END;",
+      "purpose": "Log entry deletions to changes table"
+    }
+  ],
+
+  "check_constraints": [
+    {
+      "table": "entries",
+      "column": "id",
+      "constraint": "Enforced via application-level validation at insert time: KB-XXXX, SOP-XXX, SRC-XXXX, SCR-XXXX, TEAM-XXXX, TOOL-XXXX",
+      "rationale": "SQLite CHECK constraints do not support REGEXP natively. Naming validation is enforced by the import script and MCP server, not at the SQL level. The id_sequences table ensures numeric portions are sequential."
+    },
+    {
+      "table": "entries",
+      "column": "resource_type",
+      "constraint": "CHECK(resource_type IN ('KB','SOP','SRC','SCR','TEAM','TOOL'))",
+      "rationale": "Restricts resource types to the 6 known types. Adding a new type requires a schema migration."
+    },
+    {
+      "table": "entries",
+      "column": "summary",
+      "constraint": "CHECK(length(summary) <= 200)",
+      "rationale": "Enforces the 200-character max for pre-computed summaries. Keeps Level 1 queries token-efficient."
+    },
+    {
+      "table": "entries",
+      "column": "confidence",
+      "constraint": "CHECK(confidence IS NULL OR confidence IN ('low','medium','high','very-high'))",
+      "rationale": "Controlled vocabulary for confidence levels. NULL allowed for resource types that don't use confidence."
+    },
+    {
+      "table": "relationships",
+      "column": "rel_type",
+      "constraint": "CHECK(rel_type IN ('builds_on','supersedes','references','related'))",
+      "rationale": "Controlled vocabulary for relationship types. Covers all current patterns: builds_on (KB entries), supersedes (SOP versions), references (cross-type links), related (inferred connections)."
+    },
+    {
+      "table": "changes",
+      "column": "change_type",
+      "constraint": "CHECK(change_type IN ('insert','update','delete'))",
+      "rationale": "Standard change tracking vocabulary."
+    }
+  ],
+
+  "migration_sql": "-- ============================================\n-- Registry Database Schema v1.0\n-- Generated by B2-Gamma for token-efficient I/O\n-- Date: 2026-03-11\n-- ============================================\n\nPRAGMA journal_mode = WAL;\nPRAGMA foreign_keys = ON;\nPRAGMA busy_timeout = 5000;\n\n-- ============================================\n-- Core Tables\n-- ============================================\n\nCREATE TABLE IF NOT EXISTS entries (\n    id TEXT PRIMARY KEY,\n    numeric_id INTEGER NOT NULL,\n    resource_type TEXT NOT NULL CHECK(resource_type IN ('KB','SOP','SRC','SCR','TEAM','TOOL')),\n    title TEXT NOT NULL,\n    summary TEXT CHECK(length(summary) <= 200),\n    category TEXT DEFAULT NULL,\n    status TEXT DEFAULT 'active',\n    confidence TEXT DEFAULT NULL CHECK(confidence IS NULL OR confidence IN ('low','medium','high','very-high')),\n    file_path TEXT NOT NULL UNIQUE,\n    content_hash TEXT DEFAULT NULL,\n    created_date TEXT DEFAULT (date('now')),\n    updated_date TEXT DEFAULT (date('now')),\n    team TEXT DEFAULT NULL,\n    char_count INTEGER DEFAULT 0,\n    token_estimate INTEGER GENERATED ALWAYS AS (char_count / 4) STORED,\n    version TEXT DEFAULT '1.0',\n    description TEXT DEFAULT NULL,\n    extra_json TEXT DEFAULT NULL\n);\n\nCREATE TABLE IF NOT EXISTS tags (\n    entry_id TEXT NOT NULL REFERENCES entries(id) ON DELETE CASCADE,\n    tag TEXT NOT NULL CHECK(length(tag) > 0),\n    UNIQUE(entry_id, tag)\n);\n\nCREATE TABLE IF NOT EXISTS relationships (\n    source_id TEXT NOT NULL REFERENCES entries(id) ON DELETE CASCADE,\n    target_id TEXT NOT NULL REFERENCES entries(id) ON DELETE CASCADE,\n    rel_type TEXT NOT NULL CHECK(rel_type IN ('builds_on','supersedes','references','related')),\n    metadata TEXT DEFAULT NULL,\n    UNIQUE(source_id, target_id, rel_type)\n);\n\nCREATE TABLE IF NOT EXISTS id_sequences (\n    resource_type TEXT PRIMARY KEY CHECK(resource_type IN ('KB','SOP','SRC','SCR','TEAM','TOOL')),\n    next_id INTEGER NOT NULL DEFAULT 1\n);\n\nCREATE TABLE IF NOT EXISTS changes (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    timestamp TEXT NOT NULL DEFAULT (datetime('now')),\n    entry_id TEXT NOT NULL,\n    change_type TEXT NOT NULL CHECK(change_type IN ('insert','update','delete')),\n    changed_fields TEXT DEFAULT NULL,\n    summary TEXT DEFAULT NULL\n);\n\n-- ============================================\n-- Indexes\n-- ============================================\n\nCREATE INDEX IF NOT EXISTS idx_entries_resource_type ON entries(resource_type);\nCREATE INDEX IF NOT EXISTS idx_entries_category ON entries(category);\nCREATE INDEX IF NOT EXISTS idx_entries_status ON entries(status);\nCREATE INDEX IF NOT EXISTS idx_entries_team ON entries(team);\nCREATE INDEX IF NOT EXISTS idx_entries_created_date ON entries(created_date);\nCREATE INDEX IF NOT EXISTS idx_entries_type_category ON entries(resource_type, category);\nCREATE INDEX IF NOT EXISTS idx_entries_type_date ON entries(resource_type, created_date DESC);\nCREATE UNIQUE INDEX IF NOT EXISTS idx_entries_type_numeric ON entries(resource_type, numeric_id);\n\nCREATE INDEX IF NOT EXISTS idx_tags_entry_id ON tags(entry_id);\nCREATE INDEX IF NOT EXISTS idx_tags_tag ON tags(tag);\n\nCREATE INDEX IF NOT EXISTS idx_rel_source ON relationships(source_id);\nCREATE INDEX IF NOT EXISTS idx_rel_target ON relationships(target_id);\nCREATE INDEX IF NOT EXISTS idx_rel_type ON relationships(rel_type);\n\nCREATE INDEX IF NOT EXISTS idx_changes_timestamp ON changes(timestamp);\nCREATE INDEX IF NOT EXISTS idx_changes_entry_id ON changes(entry_id);\n\n-- ============================================\n-- FTS5 Full-Text Search\n-- ============================================\n\nCREATE VIRTUAL TABLE IF NOT EXISTS entries_fts USING fts5(\n    title,\n    summary,\n    description,\n    content=entries,\n    content_rowid=rowid,\n    tokenize='unicode61 remove_diacritics 2'\n);\n\n-- FTS5 sync triggers (external-content mode)\nCREATE TRIGGER IF NOT EXISTS entries_fts_ai AFTER INSERT ON entries BEGIN\n    INSERT INTO entries_fts(rowid, title, summary, description)\n    VALUES (new.rowid, new.title, new.summary, new.description);\nEND;\n\nCREATE TRIGGER IF NOT EXISTS entries_fts_au AFTER UPDATE ON entries BEGIN\n    INSERT INTO entries_fts(entries_fts, rowid, title, summary, description)\n    VALUES ('delete', old.rowid, old.title, old.summary, old.description);\n    INSERT INTO entries_fts(rowid, title, summary, description)\n    VALUES (new.rowid, new.title, new.summary, new.description);\nEND;\n\nCREATE TRIGGER IF NOT EXISTS entries_fts_ad AFTER DELETE ON entries BEGIN\n    INSERT INTO entries_fts(entries_fts, rowid, title, summary, description)\n    VALUES ('delete', old.rowid, old.title, old.summary, old.description);\nEND;\n\n-- ============================================\n-- Application Triggers\n-- ============================================\n\n-- token_estimate is a GENERATED ALWAYS AS (char_count / 4) STORED column.\n-- No trigger needed for token estimation.\n\n-- updated_date is managed by the application layer to avoid trigger cascades.\n-- The import script and MCP server set updated_date explicitly on each write.\n\nCREATE TRIGGER IF NOT EXISTS trg_changes_insert AFTER INSERT ON entries\nBEGIN\n    INSERT INTO changes(entry_id, change_type, summary)\n    VALUES (new.id, 'insert', 'New ' || new.resource_type || ': ' || new.title);\nEND;\n\nCREATE TRIGGER IF NOT EXISTS trg_changes_update AFTER UPDATE ON entries\nBEGIN\n    INSERT INTO changes(entry_id, change_type, summary)\n    VALUES (new.id, 'update', 'Updated ' || new.resource_type || ': ' || new.title);\nEND;\n\nCREATE TRIGGER IF NOT EXISTS trg_changes_delete AFTER DELETE ON entries\nBEGIN\n    INSERT INTO changes(entry_id, change_type, summary)\n    VALUES (old.id, 'delete', 'Deleted ' || old.resource_type || ': ' || old.title);\nEND;\n\n-- ============================================\n-- Views\n-- ============================================\n\n-- Level 0: Aggregate summary (~50 tokens)\nCREATE VIEW IF NOT EXISTS v_summary AS\nSELECT resource_type,\n       COUNT(*) AS entry_count,\n       MAX(updated_date) AS last_updated,\n       GROUP_CONCAT(DISTINCT category) AS categories\nFROM entries\nGROUP BY resource_type\nORDER BY resource_type;\n\n-- Level 1: Compact index (~15 tokens per entry)\nCREATE VIEW IF NOT EXISTS v_compact AS\nSELECT e.id, e.title, e.resource_type, e.category, e.created_date AS date\nFROM entries e\nORDER BY e.resource_type, e.numeric_id;\n\n-- Recent entries for session onboarding\nCREATE VIEW IF NOT EXISTS v_recent AS\nSELECT e.id, e.title, e.resource_type, e.summary, e.created_date AS date\nFROM entries e\nORDER BY e.created_date DESC, e.numeric_id DESC\nLIMIT 10;\n\n-- Tag frequency cloud\nCREATE VIEW IF NOT EXISTS v_tag_cloud AS\nSELECT tag, COUNT(*) AS usage_count\nFROM tags\nGROUP BY tag\nORDER BY usage_count DESC;\n\n-- Category counts by resource type\nCREATE VIEW IF NOT EXISTS v_category_counts AS\nSELECT resource_type, category, COUNT(*) AS count\nFROM entries\nGROUP BY resource_type, category\nORDER BY resource_type, count DESC;\n\n-- Knowledge Base index (replicates knowledge-base/index.json)\nCREATE VIEW IF NOT EXISTS v_kb_index AS\nSELECT e.id, e.title, e.created_date AS date, e.team, e.category, e.status, e.confidence,\n       (SELECT json_group_array(t.tag) FROM tags t WHERE t.entry_id = e.id) AS tags,\n       (SELECT json_group_array(r.target_id) FROM relationships r WHERE r.source_id = e.id AND r.rel_type = 'builds_on') AS builds_on\nFROM entries e\nWHERE e.resource_type = 'KB'\nORDER BY e.numeric_id;\n\n-- SOP index (replicates sops/index.json)\nCREATE VIEW IF NOT EXISTS v_sop_index AS\nSELECT e.id, e.title, e.file_path AS filename, e.version, e.status, e.description,\n       (SELECT json_group_array(r.target_id) FROM relationships r WHERE r.source_id = e.id AND r.rel_type = 'supersedes') AS supersedes\nFROM entries e\nWHERE e.resource_type = 'SOP'\nORDER BY e.numeric_id;\n\n-- Scripts index (replicates scripts/index.json)\nCREATE VIEW IF NOT EXISTS v_scripts_index AS\nSELECT e.id, e.title AS name,\n       json_extract(e.extra_json, '$.filename') AS filename,\n       json_extract(e.extra_json, '$.language') AS language,\n       e.category, e.description,\n       e.created_date AS added, e.team AS added_by_team,\n       (SELECT json_group_array(t.tag) FROM tags t WHERE t.entry_id = e.id) AS tags\nFROM entries e\nWHERE e.resource_type = 'SCR'\nORDER BY e.numeric_id;\n\n-- Sources index (replicates sources/index.json)\nCREATE VIEW IF NOT EXISTS v_sources_index AS\nSELECT e.id, e.title AS name,\n       json_extract(e.extra_json, '$.url') AS url,\n       json_extract(e.extra_json, '$.data_types') AS data_types,\n       json_extract(e.extra_json, '$.access_type') AS access_type,\n       (SELECT json_group_array(t.tag) FROM tags t WHERE t.entry_id = e.id) AS tags\nFROM entries e\nWHERE e.resource_type = 'SRC'\nORDER BY e.numeric_id;\n\n-- Tools index (replicates api-tools/index.json)\nCREATE VIEW IF NOT EXISTS v_tools_index AS\nSELECT e.id, e.title AS name, e.description,\n       json_extract(e.extra_json, '$.path') AS path,\n       e.category,\n       json_extract(e.extra_json, '$.auth_type') AS auth_type,\n       e.created_date AS date_added, e.team,\n       json_extract(e.extra_json, '$.modules') AS modules,\n       json_extract(e.extra_json, '$.entry_point') AS entry_point,\n       json_extract(e.extra_json, '$.requires') AS requires,\n       (SELECT json_group_array(t.tag) FROM tags t WHERE t.entry_id = e.id) AS tags\nFROM entries e\nWHERE e.resource_type = 'TOOL'\nORDER BY e.numeric_id;\n\n-- Teams index (replicates teams/sessions/index.json)\nCREATE VIEW IF NOT EXISTS v_teams_index AS\nSELECT e.id AS team_id,\n       json_extract(e.extra_json, '$.filename') AS filename,\n       e.created_date AS date,\n       e.description AS objective,\n       (SELECT json_group_array(r.target_id) FROM relationships r WHERE r.source_id = e.id AND r.rel_type = 'builds_on') AS builds_on_knowledge,\n       json_extract(e.extra_json, '$.members') AS members\nFROM entries e\nWHERE e.resource_type = 'TEAM'\nORDER BY e.numeric_id;\n\n-- Ancestry graph view\nCREATE VIEW IF NOT EXISTS v_ancestry AS\nSELECT r.source_id AS child_id, e1.title AS child_title,\n       r.target_id AS parent_id, e2.title AS parent_title\nFROM relationships r\nJOIN entries e1 ON r.source_id = e1.id\nJOIN entries e2 ON r.target_id = e2.id\nWHERE r.rel_type = 'builds_on'\nORDER BY r.source_id;\n\n-- ============================================\n-- Seed ID Sequences\n-- ============================================\n\nINSERT OR IGNORE INTO id_sequences(resource_type, next_id) VALUES ('KB', 32);\nINSERT OR IGNORE INTO id_sequences(resource_type, next_id) VALUES ('SOP', 26);\nINSERT OR IGNORE INTO id_sequences(resource_type, next_id) VALUES ('SRC', 42);\nINSERT OR IGNORE INTO id_sequences(resource_type, next_id) VALUES ('SCR', 30);\nINSERT OR IGNORE INTO id_sequences(resource_type, next_id) VALUES ('TEAM', 30);\nINSERT OR IGNORE INTO id_sequences(resource_type, next_id) VALUES ('TOOL', 4);\n",
+
+  "import_pseudocode": "# Import Process: Populate registry.db from existing source files\n# Run once at setup, then on-demand via pre-commit hook or generate_index.py\n\nimport sqlite3, hashlib, json, yaml, os, glob\n\n# Step 1: Create database and apply schema\ndb = sqlite3.connect('storage/registry.db')\ndb.executescript(MIGRATION_SQL)  # The migration_sql string above\n\n# Step 2: Import KB entries (knowledge-base/entries/KB-*.md)\nfor filepath in sorted(glob.glob('knowledge-base/entries/KB-*.md')):\n    content = read_file(filepath)\n    frontmatter = parse_yaml_frontmatter(content)  # Extract YAML between --- delimiters\n    body = extract_body(content)  # Everything after second ---\n    \n    entry_id = frontmatter['id']  # e.g., 'KB-0001'\n    numeric_id = int(entry_id.split('-')[1])  # e.g., 1\n    char_count = len(content)\n    content_hash = hashlib.sha256(content.encode()).hexdigest()\n    summary = generate_summary(body, max_chars=200)  # First sentence or ## Result first line\n    \n    db.execute('''INSERT INTO entries (id, numeric_id, resource_type, title, summary, category,\n        status, confidence, file_path, content_hash, created_date, team, char_count, description)\n        VALUES (?, ?, 'KB', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',\n        (entry_id, numeric_id, frontmatter['title'], summary,\n         frontmatter.get('category'), frontmatter.get('status', 'active'),\n         frontmatter.get('confidence'), filepath, content_hash,\n         frontmatter.get('date'), frontmatter.get('team'), char_count,\n         extract_first_paragraph(body)))\n    \n    # Insert tags\n    for tag in frontmatter.get('tags', []):\n        db.execute('INSERT OR IGNORE INTO tags (entry_id, tag) VALUES (?, ?)', (entry_id, tag))\n    \n    # Insert builds_on relationships\n    for target in frontmatter.get('builds_on', []):\n        db.execute('INSERT OR IGNORE INTO relationships (source_id, target_id, rel_type) VALUES (?, ?, ?)',\n                   (entry_id, target, 'builds_on'))\n\n# Step 3: Import SOPs (storage/coordination/sops/sop_*.json)\nfor filepath in sorted(glob.glob('storage/coordination/sops/sop_*.json')):\n    data = json.load(open(filepath))\n    sop_id = extract_sop_id(filepath)  # e.g., 'SOP-011'\n    numeric_id = int(sop_id.split('-')[1])\n    \n    db.execute('''INSERT INTO entries (id, numeric_id, resource_type, title, summary,\n        status, file_path, content_hash, created_date, version, description)\n        VALUES (?, ?, 'SOP', ?, ?, ?, ?, ?, ?, ?, ?)''',\n        (sop_id, numeric_id, data.get('title', ''), truncate(data.get('description', ''), 200),\n         data.get('status', 'active'), filepath,\n         hashlib.sha256(json.dumps(data).encode()).hexdigest(),\n         data.get('date', ''), data.get('version', '1.0'), data.get('description', '')))\n    # Handle supersedes relationships\n    if data.get('superseded_by'):\n        # Mark relationship when the superseding SOP is also imported\n        pass\n\n# Step 4: Import Sources (storage/sources/SRC-*.json)\nfor filepath in sorted(glob.glob('storage/sources/SRC-*.json')):\n    data = json.load(open(filepath))\n    src_id = data['id']  # e.g., 'SRC-0001'\n    numeric_id = int(src_id.split('-')[1])\n    extra = json.dumps({'url': data.get('url'), 'data_types': data.get('data_types', []),\n                        'access_type': data.get('access_type', 'unknown')})\n    \n    db.execute('''INSERT INTO entries (id, numeric_id, resource_type, title, summary,\n        file_path, content_hash, extra_json, description)\n        VALUES (?, ?, 'SRC', ?, ?, ?, ?, ?, ?)''',\n        (src_id, numeric_id, data['name'], truncate(data.get('description', ''), 200),\n         filepath, hashlib.sha256(json.dumps(data).encode()).hexdigest(), extra,\n         data.get('description', '')))\n    \n    for tag in data.get('tags', []) + data.get('data_types', []):\n        db.execute('INSERT OR IGNORE INTO tags (entry_id, tag) VALUES (?, ?)', (src_id, tag))\n\n# Step 5: Import Scripts (from storage/scripts/index.json)\nscripts_index = json.load(open('storage/scripts/index.json'))\nfor script in scripts_index.get('scripts', []):\n    scr_id = script['id']\n    numeric_id = int(scr_id.split('-')[1])\n    extra = json.dumps({'filename': script.get('filename'), 'language': script.get('language'),\n                        'dependencies': script.get('dependencies', [])})\n    \n    db.execute('''INSERT INTO entries (id, numeric_id, resource_type, title, summary,\n        category, file_path, created_date, team, extra_json, description)\n        VALUES (?, ?, 'SCR', ?, ?, ?, ?, ?, ?, ?, ?)''',\n        (scr_id, numeric_id, script['name'], truncate(script.get('description', ''), 200),\n         script.get('category'), 'storage/scripts/' + script.get('filename', ''),\n         script.get('added'), script.get('added_by_team'), extra,\n         script.get('description', '')))\n    \n    for tag in script.get('tags', []):\n        db.execute('INSERT OR IGNORE INTO tags (entry_id, tag) VALUES (?, ?)', (scr_id, tag))\n\n# Step 6: Import API Tools (from storage/api-tools/index.json)\ntools_index = json.load(open('storage/api-tools/index.json'))\nfor tool in tools_index.get('tools', []):\n    tool_id = tool['id']\n    numeric_id = int(tool_id.split('-')[1])\n    extra = json.dumps({'path': tool.get('path'), 'auth_type': tool.get('auth_type'),\n                        'modules': tool.get('modules', []), 'entry_point': tool.get('entry_point'),\n                        'requires': tool.get('requires', [])})\n    \n    db.execute('''INSERT INTO entries (id, numeric_id, resource_type, title, summary,\n        category, file_path, created_date, team, extra_json, description)\n        VALUES (?, ?, 'TOOL', ?, ?, ?, ?, ?, ?, ?, ?)''',\n        (tool_id, numeric_id, tool['name'], truncate(tool.get('description', ''), 200),\n         tool.get('category'), 'storage/api-tools/' + tool.get('path', ''),\n         tool.get('date_added'), tool.get('team'), extra,\n         tool.get('description', '')))\n    \n    for tag in tool.get('tags', []):\n        db.execute('INSERT OR IGNORE INTO tags (entry_id, tag) VALUES (?, ?)', (tool_id, tag))\n\n# Step 7: Import Team Session Logs (teams/sessions/TEAM-*.md)\nteams_index = json.load(open('teams/sessions/index.json'))\nfor session in teams_index.get('sessions', []):\n    team_id = session['team_id']\n    numeric_id = int(team_id.split('-')[1])\n    extra = json.dumps({'filename': session.get('filename'), 'members': session.get('members', [])})\n    \n    db.execute('''INSERT INTO entries (id, numeric_id, resource_type, title, summary,\n        file_path, created_date, team, extra_json, description)\n        VALUES (?, ?, 'TEAM', ?, ?, ?, ?, ?, ?, ?)''',\n        (team_id, numeric_id, session.get('objective', team_id),\n         truncate(session.get('objective', ''), 200),\n         'teams/sessions/' + session.get('filename', ''),\n         session.get('date'), team_id, extra,\n         session.get('objective', '')))\n    \n    for kb_ref in session.get('builds_on_knowledge', []):\n        db.execute('INSERT OR IGNORE INTO relationships (source_id, target_id, rel_type) VALUES (?, ?, ?)',\n                   (team_id, kb_ref, 'builds_on'))\n\n# Step 8: Update ID sequences to reflect current max IDs\nfor rtype in ['KB', 'SOP', 'SRC', 'SCR', 'TEAM', 'TOOL']:\n    result = db.execute('SELECT MAX(numeric_id) FROM entries WHERE resource_type = ?', (rtype,)).fetchone()\n    max_id = result[0] if result[0] else 0\n    db.execute('UPDATE id_sequences SET next_id = ? WHERE resource_type = ?', (max_id + 1, rtype))\n\n# Step 9: Rebuild FTS index (in case of bulk import without triggers)\ndb.execute(\"INSERT INTO entries_fts(entries_fts) VALUES ('rebuild');\")\n\ndb.commit()\ndb.close()\n\n# Step 10: Generate static files for zero-dependency access\n# SUMMARY.json (Level 0, ~50 tokens)\nsummary_data = db.execute('SELECT * FROM v_summary').fetchall()\nwrite_json('SUMMARY.json', format_summary(summary_data))\n\n# INDEX_COMPACT.json (Level 1, ~500 tokens)\ncompact_data = db.execute('SELECT * FROM v_compact').fetchall()\nwrite_json('INDEX_COMPACT.json', format_compact(compact_data))\n",
+
+  "summary": {
+    "table_count": 5,
+    "view_count": 12,
+    "trigger_count": 6,
+    "index_count": 14,
+    "fts_table_count": 1,
+    "estimated_db_size_kb": 350,
+    "estimated_db_size_notes": "Based on ~200 entries averaging 300 bytes metadata each, plus FTS index overhead (~2x content size for title+summary+description), plus indexes. Well under 1 MB for current scale. Scales linearly to 10,000+ entries within 50 MB.",
+    "token_savings": {
+      "orientation_query": {
+        "before_tokens": 6093,
+        "after_tokens": 50,
+        "reduction_percent": 99.2,
+        "query": "SELECT * FROM v_summary"
+      },
+      "discovery_query": {
+        "before_tokens": 6093,
+        "after_tokens": 300,
+        "reduction_percent": 95.1,
+        "query": "SELECT id, title, category, date FROM v_compact WHERE resource_type = 'KB'"
+      },
+      "search_query": {
+        "before_tokens": 6093,
+        "after_tokens": 50,
+        "reduction_percent": 99.2,
+        "query": "SELECT e.id, e.title FROM entries_fts f JOIN entries e ON f.rowid = e.rowid WHERE entries_fts MATCH 'database' ORDER BY rank LIMIT 5"
+      },
+      "tag_lookup": {
+        "before_tokens": 6093,
+        "after_tokens": 30,
+        "reduction_percent": 99.5,
+        "query": "SELECT entry_id FROM tags WHERE tag = 'sqlite'"
+      },
+      "ancestry_chain": {
+        "before_tokens": 12000,
+        "after_tokens": 100,
+        "reduction_percent": 99.2,
+        "query": "WITH RECURSIVE chain AS (SELECT target_id FROM relationships WHERE source_id = 'KB-0031' AND rel_type = 'builds_on' UNION ALL SELECT r.target_id FROM relationships r JOIN chain c ON r.source_id = c.target_id WHERE r.rel_type = 'builds_on') SELECT e.id, e.title FROM chain JOIN entries e ON chain.target_id = e.id"
+      },
+      "new_entry_write": {
+        "before_tokens": 14561,
+        "after_tokens": 200,
+        "reduction_percent": 98.6,
+        "query": "UPDATE id_sequences SET next_id = next_id + 1 WHERE resource_type = 'KB' RETURNING next_id - 1; INSERT INTO entries (...) VALUES (...);"
+      },
+      "what_changed": {
+        "before_tokens": 6093,
+        "after_tokens": 80,
+        "reduction_percent": 98.7,
+        "query": "SELECT entry_id, change_type, summary FROM changes WHERE timestamp > '2026-03-11T10:00:00'"
+      }
+    },
+    "query_examples": [
+      {
+        "name": "Level 0: System overview",
+        "sql": "SELECT * FROM v_summary;",
+        "estimated_tokens": 50,
+        "replaces": "Reading all 9 index.json files (28,858 tokens)"
+      },
+      {
+        "name": "Level 1: All KB entries compact",
+        "sql": "SELECT id, title, category, date FROM v_compact WHERE resource_type = 'KB';",
+        "estimated_tokens": 300,
+        "replaces": "Reading knowledge-base/index.json (6,093 tokens)"
+      },
+      {
+        "name": "Full-text search with ranking",
+        "sql": "SELECT e.id, e.title, e.summary, bm25(entries_fts, 10.0, 5.0, 1.0) AS score FROM entries_fts f JOIN entries e ON f.rowid = e.rowid WHERE entries_fts MATCH 'coordination system' ORDER BY score LIMIT 5;",
+        "estimated_tokens": 60,
+        "replaces": "Reading index.json + grep through files (6,093+ tokens)"
+      },
+      {
+        "name": "Projection query: specific fields",
+        "sql": "SELECT id, title, summary FROM entries WHERE category = 'methodology' AND resource_type = 'KB';",
+        "estimated_tokens": 150,
+        "replaces": "Reading full index.json + filtering (6,093 tokens)"
+      },
+      {
+        "name": "Tag-based discovery",
+        "sql": "SELECT e.id, e.title, e.resource_type FROM tags t JOIN entries e ON t.entry_id = e.id WHERE t.tag = 'multi-agent' ORDER BY e.created_date DESC;",
+        "estimated_tokens": 70,
+        "replaces": "Reading index.json tag_index section (6,093 tokens)"
+      },
+      {
+        "name": "Recursive ancestry chain",
+        "sql": "WITH RECURSIVE chain AS (SELECT target_id, 1 AS depth FROM relationships WHERE source_id = 'KB-0031' AND rel_type = 'builds_on' UNION ALL SELECT r.target_id, c.depth + 1 FROM relationships r JOIN chain c ON r.source_id = c.target_id WHERE r.rel_type = 'builds_on' AND c.depth < 10) SELECT e.id, e.title, chain.depth FROM chain JOIN entries e ON chain.target_id = e.id ORDER BY chain.depth;",
+        "estimated_tokens": 80,
+        "replaces": "Reading multiple KB entries to trace builds_on (12,000+ tokens)"
+      },
+      {
+        "name": "Next available ID",
+        "sql": "UPDATE id_sequences SET next_id = next_id + 1 WHERE resource_type = 'KB' RETURNING next_id - 1;",
+        "estimated_tokens": 5,
+        "replaces": "Reading index.json to find max ID (6,093 tokens)"
+      },
+      {
+        "name": "Changes since timestamp",
+        "sql": "SELECT entry_id, change_type, summary FROM changes WHERE timestamp > '2026-03-11T10:00:00' ORDER BY timestamp;",
+        "estimated_tokens": 80,
+        "replaces": "Re-reading all index.json files to detect changes (28,858 tokens)"
+      },
+      {
+        "name": "Cross-type search with pagination",
+        "sql": "SELECT id, title, resource_type, summary FROM entries WHERE category = 'integration' ORDER BY created_date DESC LIMIT 5 OFFSET 0;",
+        "estimated_tokens": 50,
+        "replaces": "Reading multiple index.json files (12,000+ tokens)"
+      },
+      {
+        "name": "Related entries by shared tags",
+        "sql": "SELECT e2.id, e2.title, COUNT(*) AS shared_tags FROM tags t1 JOIN tags t2 ON t1.tag = t2.tag AND t1.entry_id != t2.entry_id JOIN entries e2 ON t2.entry_id = e2.id WHERE t1.entry_id = 'KB-0016' GROUP BY e2.id ORDER BY shared_tags DESC LIMIT 5;",
+        "estimated_tokens": 40,
+        "replaces": "Manual cross-referencing across index files (20,000+ tokens)"
+      }
+    ],
+    "overall_estimated_savings": "85-99% token reduction for index-related operations. At 10 queries per session, estimated 31,000+ tokens saved per session. Current index reading costs ~28,858 tokens; equivalent DB queries cost ~500-1,000 tokens total."
+  }
+}
