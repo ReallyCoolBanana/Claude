@@ -1,267 +1,1417 @@
 {
   "version": "1.0",
   "last_updated": "2026-03-11",
+  "source_count": 41,
   "sources": [
     {
       "id": "SRC-0001",
-      "name": "Alpha Vantage",
-      "url": "https://www.alphavantage.co/query",
-      "data_types": ["financial"],
+      "name": "OpenAlex API",
+      "url": "https://api.openalex.org/",
+      "data_types": [
+        "academic-papers",
+        "authors",
+        "institutions",
+        "journals",
+        "citations",
+        "funding",
+        "concepts"
+      ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0002",
-      "name": "Yahoo Finance",
-      "url": "https://query1.finance.yahoo.com/v8/finance",
-      "data_types": ["financial"],
+      "name": "Semantic Scholar Academic Graph API",
+      "url": "https://api.semanticscholar.org/graph/v1/",
+      "data_types": [
+        "academic-papers",
+        "authors",
+        "citations",
+        "references",
+        "paper-embeddings",
+        "recommendations"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0003",
-      "name": "FRED",
-      "url": "https://api.stlouisfed.org/fred",
-      "data_types": ["financial", "government"],
-      "access_type": "api-key-required"
+      "name": "arXiv API",
+      "url": "http://export.arxiv.org/api/query",
+      "data_types": [
+        "preprints",
+        "academic-papers",
+        "paper-metadata",
+        "abstracts",
+        "full-text-pdf-links"
+      ],
+      "access_type": "free"
     },
     {
       "id": "SRC-0004",
-      "name": "CoinGecko",
-      "url": "https://api.coingecko.com/api/v3",
-      "data_types": ["financial"],
-      "access_type": "freemium"
+      "name": "Crossref REST API",
+      "url": "https://api.crossref.org/",
+      "data_types": [
+        "doi-metadata",
+        "journal-articles",
+        "books",
+        "citations",
+        "funding-data",
+        "license-info",
+        "orcid-ids",
+        "abstracts"
+      ],
+      "access_type": "free"
     },
     {
       "id": "SRC-0005",
-      "name": "Twelve Data",
-      "url": "https://api.twelvedata.com",
-      "data_types": ["financial"],
-      "access_type": "freemium"
+      "name": "Wikidata SPARQL Query Service",
+      "url": "https://query.wikidata.org/sparql",
+      "data_types": [
+        "knowledge-graph",
+        "entities",
+        "properties",
+        "relationships",
+        "scholarly-articles",
+        "geographic-data",
+        "scientific-data",
+        "multilingual-labels"
+      ],
+      "access_type": "free"
     },
     {
       "id": "SRC-0006",
-      "name": "Exchange Rates",
-      "url": "https://api.exchangerate.host",
-      "data_types": ["financial"],
+      "name": "Wikipedia / MediaWiki REST API",
+      "url": "https://en.wikipedia.org/api/rest_v1/",
+      "data_types": [
+        "encyclopedia-articles",
+        "article-summaries",
+        "article-html",
+        "page-metadata",
+        "revision-history",
+        "media-files",
+        "search-results"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0007",
-      "name": "Finnhub",
-      "url": "https://finnhub.io/api/v1",
-      "data_types": ["financial"],
-      "access_type": "freemium"
-    },
-    {
-      "id": "SRC-0008",
-      "name": "NewsAPI",
-      "url": "https://newsapi.org/v2",
-      "data_types": ["news"],
-      "access_type": "freemium"
-    },
-    {
-      "id": "SRC-0009",
-      "name": "GNews",
-      "url": "https://gnews.io/api/v4",
-      "data_types": ["news"],
-      "access_type": "freemium"
-    },
-    {
-      "id": "SRC-0010",
-      "name": "The Guardian",
-      "url": "https://content.guardianapis.com",
-      "data_types": ["news"],
+      "name": "CORE API",
+      "url": "https://api.core.ac.uk",
+      "data_types": [
+        "academic-papers",
+        "full-text-articles",
+        "paper-metadata",
+        "open-access-content",
+        "institutional-repository-data"
+      ],
       "access_type": "api-key-required"
     },
     {
-      "id": "SRC-0011",
-      "name": "Hacker News",
-      "url": "https://hacker-news.firebaseio.com/v0",
-      "data_types": ["news", "general"],
+      "id": "SRC-0008",
+      "name": "DBpedia SPARQL Endpoint",
+      "url": "https://dbpedia.org/sparql",
+      "data_types": [
+        "knowledge-graph",
+        "structured-wikipedia-data",
+        "entities",
+        "ontology",
+        "relationships",
+        "geographic-data",
+        "biographical-data"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0012",
-      "name": "OpenAlex",
-      "url": "https://api.openalex.org",
-      "data_types": ["scientific"],
-      "access_type": "free"
+      "name": "NewsAPI.org",
+      "url": "https://newsapi.org/v2",
+      "data_types": [
+        "news-headlines",
+        "news-articles",
+        "news-sources",
+        "search"
+      ],
+      "access_type": "freemium"
     },
     {
       "id": "SRC-0013",
-      "name": "Semantic Scholar",
-      "url": "https://api.semanticscholar.org/graph/v1",
-      "data_types": ["scientific"],
+      "name": "The Guardian Open Platform API",
+      "url": "https://content.guardianapis.com",
+      "data_types": [
+        "news-articles",
+        "full-text-content",
+        "tags",
+        "sections",
+        "contributors",
+        "editorial-metadata"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0014",
-      "name": "Wikidata",
-      "url": "https://www.wikidata.org/w/api.php",
-      "data_types": ["scientific", "general"],
-      "access_type": "free"
+      "name": "GNews API",
+      "url": "https://gnews.io/api/v4",
+      "data_types": [
+        "news-headlines",
+        "news-articles",
+        "search",
+        "top-stories"
+      ],
+      "access_type": "freemium"
     },
     {
       "id": "SRC-0015",
-      "name": "CORE",
-      "url": "https://api.core.ac.uk/v3",
-      "data_types": ["scientific"],
-      "access_type": "api-key-required"
+      "name": "GDELT Project API",
+      "url": "https://api.gdeltproject.org/api/v2",
+      "data_types": [
+        "news-articles",
+        "global-events",
+        "sentiment-analysis",
+        "geospatial-data",
+        "tv-news",
+        "themes",
+        "entity-extraction",
+        "timelines"
+      ],
+      "access_type": "free"
     },
     {
       "id": "SRC-0016",
-      "name": "CrossRef",
-      "url": "https://api.crossref.org",
-      "data_types": ["scientific"],
-      "access_type": "free"
+      "name": "Mediastack",
+      "url": "https://api.mediastack.com/v1",
+      "data_types": [
+        "news-articles",
+        "live-headlines",
+        "historical-news",
+        "categories",
+        "sources",
+        "languages"
+      ],
+      "access_type": "freemium"
     },
     {
       "id": "SRC-0017",
-      "name": "DBpedia",
-      "url": "https://dbpedia.org/sparql",
-      "data_types": ["scientific", "general"],
-      "access_type": "free"
+      "name": "rss2json",
+      "url": "https://api.rss2json.com/v1/api.json",
+      "data_types": [
+        "rss-feeds",
+        "atom-feeds",
+        "feed-metadata",
+        "feed-items"
+      ],
+      "access_type": "freemium"
     },
     {
       "id": "SRC-0018",
-      "name": "Papers With Code",
-      "url": "https://paperswithcode.com/api/v1",
-      "data_types": ["scientific"],
-      "access_type": "free"
+      "name": "FRED API (Federal Reserve Economic Data)",
+      "url": "https://api.stlouisfed.org/fred/",
+      "data_types": [
+        "economic-indicators",
+        "interest-rates",
+        "employment",
+        "inflation",
+        "GDP",
+        "monetary-policy",
+        "financial",
+        "time-series"
+      ],
+      "access_type": "api-key-required"
     },
     {
       "id": "SRC-0019",
-      "name": "US Census Bureau",
+      "name": "US Census Bureau Data API",
       "url": "https://api.census.gov/data",
-      "data_types": ["government"],
+      "data_types": [
+        "demographics",
+        "population",
+        "housing",
+        "economic",
+        "business",
+        "income",
+        "poverty",
+        "education",
+        "government"
+      ],
       "access_type": "api-key-required"
     },
     {
       "id": "SRC-0020",
-      "name": "Data.gov CKAN",
-      "url": "https://catalog.data.gov/api/3",
-      "data_types": ["government"],
+      "name": "Bureau of Labor Statistics (BLS) Public Data API",
+      "url": "https://api.bls.gov/publicAPI/v2/timeseries/data/",
+      "data_types": [
+        "employment",
+        "unemployment",
+        "inflation",
+        "CPI",
+        "wages",
+        "productivity",
+        "occupational-data",
+        "labor-statistics"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0021",
-      "name": "Open-Meteo",
-      "url": "https://api.open-meteo.com/v1",
-      "data_types": ["geospatial"],
+      "name": "National Weather Service (NWS) API",
+      "url": "https://api.weather.gov",
+      "data_types": [
+        "weather-forecasts",
+        "weather-alerts",
+        "weather-observations",
+        "climate",
+        "geospatial"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0022",
-      "name": "OpenWeatherMap",
-      "url": "https://api.openweathermap.org/data/2.5",
-      "data_types": ["geospatial"],
-      "access_type": "freemium"
+      "name": "Open-Meteo Weather API",
+      "url": "https://api.open-meteo.com/v1/forecast",
+      "data_types": [
+        "weather-forecasts",
+        "historical-weather",
+        "air-quality",
+        "marine-weather",
+        "climate",
+        "elevation",
+        "geocoding"
+      ],
+      "access_type": "free"
     },
     {
       "id": "SRC-0023",
-      "name": "BLS",
-      "url": "https://api.bls.gov/publicAPI/v2",
-      "data_types": ["government"],
+      "name": "World Bank Indicators API",
+      "url": "https://api.worldbank.org/v2/",
+      "data_types": [
+        "economic-indicators",
+        "development",
+        "demographics",
+        "health",
+        "education",
+        "trade",
+        "climate",
+        "poverty",
+        "international"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0024",
-      "name": "World Bank",
-      "url": "https://api.worldbank.org/v2",
-      "data_types": ["government"],
+      "name": "US Treasury Fiscal Data API",
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/",
+      "data_types": [
+        "federal-debt",
+        "federal-revenue",
+        "federal-spending",
+        "treasury-securities",
+        "interest-rates",
+        "currency-exchange-rates",
+        "savings-bonds",
+        "financial",
+        "government"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0025",
       "name": "GitHub REST API",
-      "url": "https://api.github.com",
-      "data_types": ["general"],
+      "url": "https://api.github.com/",
+      "data_types": [
+        "repositories",
+        "code-search",
+        "commits",
+        "issues",
+        "pull-requests",
+        "users",
+        "organizations",
+        "gists",
+        "releases",
+        "topics",
+        "licenses"
+      ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0026",
-      "name": "PyPI",
-      "url": "https://pypi.org/pypi",
-      "data_types": ["general"],
+      "name": "npm Registry API",
+      "url": "https://registry.npmjs.org/",
+      "data_types": [
+        "package-metadata",
+        "package-versions",
+        "download-counts",
+        "package-search",
+        "dependency-trees"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0027",
-      "name": "npm Registry",
-      "url": "https://registry.npmjs.org",
-      "data_types": ["general"],
+      "name": "PyPI JSON API",
+      "url": "https://pypi.org/pypi/",
+      "data_types": [
+        "package-metadata",
+        "package-versions",
+        "download-urls",
+        "vulnerability-data",
+        "release-history"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0028",
-      "name": "Reddit",
-      "url": "https://www.reddit.com",
-      "data_types": ["social-media"],
+      "name": "ip-api.com Geolocation API",
+      "url": "http://ip-api.com/json/",
+      "data_types": [
+        "ip-geolocation",
+        "country",
+        "city",
+        "timezone",
+        "isp-data",
+        "as-number"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0029",
-      "name": "Stack Exchange",
-      "url": "https://api.stackexchange.com/2.3",
-      "data_types": ["general"],
+      "name": "Hacker News Algolia Search API",
+      "url": "https://hn.algolia.com/api/v1/",
+      "data_types": [
+        "stories",
+        "comments",
+        "polls",
+        "users",
+        "ask-hn",
+        "show-hn",
+        "jobs"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0030",
-      "name": "Nominatim",
-      "url": "https://nominatim.openstreetmap.org",
-      "data_types": ["geospatial"],
+      "name": "Hacker News Official API (Firebase)",
+      "url": "https://hacker-news.firebaseio.com/v0/",
+      "data_types": [
+        "stories",
+        "comments",
+        "polls",
+        "users",
+        "top-stories",
+        "new-stories",
+        "best-stories",
+        "ask-hn",
+        "show-hn",
+        "jobs"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0031",
-      "name": "Hugging Face Hub",
-      "url": "https://huggingface.co/api",
-      "data_types": ["scientific", "general"],
-      "access_type": "free"
+      "name": "Stack Exchange API",
+      "url": "https://api.stackexchange.com/2.3/",
+      "data_types": [
+        "questions",
+        "answers",
+        "comments",
+        "users",
+        "tags",
+        "badges",
+        "search",
+        "reputation"
+      ],
+      "access_type": "freemium"
     },
     {
       "id": "SRC-0032",
-      "name": "Free Dictionary",
-      "url": "https://api.dictionaryapi.dev/api/v2/entries",
-      "data_types": ["general"],
+      "name": "Free Dictionary API",
+      "url": "https://api.dictionaryapi.dev/api/v2/entries/en/",
+      "data_types": [
+        "word-definitions",
+        "phonetics",
+        "audio-pronunciations",
+        "parts-of-speech",
+        "usage-examples",
+        "synonyms",
+        "antonyms"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0033",
-      "name": "Datamuse",
+      "name": "Datamuse API",
       "url": "https://api.datamuse.com",
-      "data_types": ["general"],
+      "data_types": [
+        "word-relationships",
+        "semantic-similarity",
+        "rhymes",
+        "sound-alike",
+        "spelling-suggestions",
+        "word-frequency",
+        "syllable-counts",
+        "definitions",
+        "word-context"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0034",
-      "name": "ConceptNet",
-      "url": "https://api.conceptnet.io",
-      "data_types": ["scientific"],
+      "name": "ConceptNet API",
+      "url": "http://api.conceptnet.io",
+      "data_types": [
+        "commonsense-knowledge",
+        "semantic-relationships",
+        "word-embeddings",
+        "multilingual-concepts",
+        "knowledge-graph-edges",
+        "word-associations",
+        "concept-relatedness"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0035",
       "name": "Hugging Face Inference Providers API",
       "url": "https://router.huggingface.co/v1",
-      "data_types": ["ai-ml"],
+      "data_types": [
+        "text-generation",
+        "text-embeddings",
+        "image-generation",
+        "image-classification",
+        "object-detection",
+        "speech-to-text",
+        "text-to-speech",
+        "summarization",
+        "translation",
+        "named-entity-recognition",
+        "sentiment-analysis",
+        "question-answering",
+        "video-generation"
+      ],
       "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0036",
+      "name": "Google Gemini Embeddings API",
+      "url": "https://generativelanguage.googleapis.com/v1beta/models/",
+      "data_types": [
+        "text-embeddings",
+        "multimodal-embeddings",
+        "semantic-vectors",
+        "document-embeddings"
+      ],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0037",
+      "name": "Roboflow Inference API",
+      "url": "https://detect.roboflow.com",
+      "data_types": [
+        "object-detection",
+        "image-classification",
+        "instance-segmentation",
+        "keypoint-detection",
+        "image-embeddings",
+        "computer-vision-datasets"
+      ],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0038",
+      "name": "Alpha Vantage",
+      "url": "https://www.alphavantage.co/query",
+      "data_types": [
+        "stock-prices-realtime",
+        "stock-prices-historical",
+        "forex-rates",
+        "cryptocurrency-prices",
+        "technical-indicators",
+        "commodity-prices",
+        "economic-indicators"
+      ],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0039",
+      "name": "FRED API (Federal Reserve Economic Data)",
+      "url": "https://api.stlouisfed.org/fred",
+      "data_types": [
+        "economic-indicators",
+        "gdp",
+        "inflation-cpi",
+        "unemployment-rate",
+        "interest-rates",
+        "money-supply",
+        "consumer-sentiment",
+        "housing-data",
+        "trade-balance",
+        "industrial-production"
+      ],
+      "access_type": "api-key-required"
+    },
+    {
+      "id": "SRC-0040",
+      "name": "Finnhub",
+      "url": "https://finnhub.io/api/v1",
+      "data_types": [
+        "stock-prices-realtime",
+        "stock-prices-historical",
+        "company-fundamentals",
+        "financial-statements",
+        "earnings-estimates",
+        "forex-rates",
+        "cryptocurrency-prices",
+        "economic-calendar",
+        "news-sentiment",
+        "insider-transactions",
+        "sec-filings"
+      ],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0041",
+      "name": "CoinGecko API",
+      "url": "https://api.coingecko.com/api/v3",
+      "data_types": [
+        "cryptocurrency-prices-realtime",
+        "cryptocurrency-prices-historical",
+        "market-cap",
+        "trading-volume",
+        "exchange-data",
+        "defi-data",
+        "nft-data",
+        "trending-coins",
+        "categories"
+      ],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0042",
+      "name": "ExchangeRate-API (Open Access)",
+      "url": "https://open.er-api.com/v6/latest",
+      "data_types": [
+        "forex-exchange-rates",
+        "currency-conversion"
+      ],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0043",
+      "name": "fawazahmed0/exchange-api (Open Source Currency API)",
+      "url": "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1",
+      "data_types": [
+        "forex-exchange-rates",
+        "cryptocurrency-rates",
+        "precious-metals-rates",
+        "historical-exchange-rates"
+      ],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0044",
+      "name": "CoinPaprika API",
+      "url": "https://api.coinpaprika.com/v1",
+      "data_types": [
+        "cryptocurrency-prices-realtime",
+        "cryptocurrency-prices-historical",
+        "market-cap",
+        "trading-volume",
+        "exchange-data",
+        "ohlcv-candles",
+        "coin-events",
+        "global-market-data"
+      ],
+      "access_type": "free"
     }
   ],
   "by_data_type": {
-    "financial": ["SRC-0001", "SRC-0002", "SRC-0003", "SRC-0004", "SRC-0005", "SRC-0006", "SRC-0007"],
-    "news": ["SRC-0008", "SRC-0009", "SRC-0010", "SRC-0011"],
-    "social-media": ["SRC-0028"],
-    "government": ["SRC-0003", "SRC-0019", "SRC-0020", "SRC-0023", "SRC-0024"],
-    "scientific": ["SRC-0012", "SRC-0013", "SRC-0014", "SRC-0015", "SRC-0016", "SRC-0017", "SRC-0018", "SRC-0031", "SRC-0034"],
-    "ai-ml": ["SRC-0035"],
-    "geospatial": ["SRC-0021", "SRC-0022", "SRC-0030"],
-    "general": ["SRC-0011", "SRC-0014", "SRC-0017", "SRC-0025", "SRC-0026", "SRC-0027", "SRC-0029", "SRC-0031", "SRC-0032", "SRC-0033"]
+    "CPI": [
+      "SRC-0020"
+    ],
+    "GDP": [
+      "SRC-0018"
+    ],
+    "abstracts": [
+      "SRC-0003",
+      "SRC-0004"
+    ],
+    "academic-papers": [
+      "SRC-0001",
+      "SRC-0002",
+      "SRC-0003",
+      "SRC-0007"
+    ],
+    "air-quality": [
+      "SRC-0022"
+    ],
+    "answers": [
+      "SRC-0031"
+    ],
+    "antonyms": [
+      "SRC-0032"
+    ],
+    "article-html": [
+      "SRC-0006"
+    ],
+    "article-summaries": [
+      "SRC-0006"
+    ],
+    "as-number": [
+      "SRC-0028"
+    ],
+    "ask-hn": [
+      "SRC-0029",
+      "SRC-0030"
+    ],
+    "atom-feeds": [
+      "SRC-0017"
+    ],
+    "audio-pronunciations": [
+      "SRC-0032"
+    ],
+    "authors": [
+      "SRC-0001",
+      "SRC-0002"
+    ],
+    "badges": [
+      "SRC-0031"
+    ],
+    "best-stories": [
+      "SRC-0030"
+    ],
+    "biographical-data": [
+      "SRC-0008"
+    ],
+    "books": [
+      "SRC-0004"
+    ],
+    "business": [
+      "SRC-0019"
+    ],
+    "categories": [
+      "SRC-0016",
+      "SRC-0041"
+    ],
+    "citations": [
+      "SRC-0001",
+      "SRC-0002",
+      "SRC-0004"
+    ],
+    "city": [
+      "SRC-0028"
+    ],
+    "climate": [
+      "SRC-0021",
+      "SRC-0022",
+      "SRC-0023"
+    ],
+    "code-search": [
+      "SRC-0025"
+    ],
+    "coin-events": [
+      "SRC-0044"
+    ],
+    "comments": [
+      "SRC-0029",
+      "SRC-0030",
+      "SRC-0031"
+    ],
+    "commits": [
+      "SRC-0025"
+    ],
+    "commodity-prices": [
+      "SRC-0038"
+    ],
+    "commonsense-knowledge": [
+      "SRC-0034"
+    ],
+    "company-fundamentals": [
+      "SRC-0040"
+    ],
+    "computer-vision-datasets": [
+      "SRC-0037"
+    ],
+    "concept-relatedness": [
+      "SRC-0034"
+    ],
+    "concepts": [
+      "SRC-0001"
+    ],
+    "consumer-sentiment": [
+      "SRC-0039"
+    ],
+    "contributors": [
+      "SRC-0013"
+    ],
+    "country": [
+      "SRC-0028"
+    ],
+    "cryptocurrency-prices": [
+      "SRC-0038",
+      "SRC-0040"
+    ],
+    "cryptocurrency-prices-historical": [
+      "SRC-0041",
+      "SRC-0044"
+    ],
+    "cryptocurrency-prices-realtime": [
+      "SRC-0041",
+      "SRC-0044"
+    ],
+    "cryptocurrency-rates": [
+      "SRC-0043"
+    ],
+    "currency-conversion": [
+      "SRC-0042"
+    ],
+    "currency-exchange-rates": [
+      "SRC-0024"
+    ],
+    "defi-data": [
+      "SRC-0041"
+    ],
+    "definitions": [
+      "SRC-0033"
+    ],
+    "demographics": [
+      "SRC-0019",
+      "SRC-0023"
+    ],
+    "dependency-trees": [
+      "SRC-0026"
+    ],
+    "development": [
+      "SRC-0023"
+    ],
+    "document-embeddings": [
+      "SRC-0036"
+    ],
+    "doi-metadata": [
+      "SRC-0004"
+    ],
+    "download-counts": [
+      "SRC-0026"
+    ],
+    "download-urls": [
+      "SRC-0027"
+    ],
+    "earnings-estimates": [
+      "SRC-0040"
+    ],
+    "economic": [
+      "SRC-0019"
+    ],
+    "economic-calendar": [
+      "SRC-0040"
+    ],
+    "economic-indicators": [
+      "SRC-0018",
+      "SRC-0023",
+      "SRC-0038",
+      "SRC-0039"
+    ],
+    "editorial-metadata": [
+      "SRC-0013"
+    ],
+    "education": [
+      "SRC-0019",
+      "SRC-0023"
+    ],
+    "elevation": [
+      "SRC-0022"
+    ],
+    "employment": [
+      "SRC-0018",
+      "SRC-0020"
+    ],
+    "encyclopedia-articles": [
+      "SRC-0006"
+    ],
+    "entities": [
+      "SRC-0005",
+      "SRC-0008"
+    ],
+    "entity-extraction": [
+      "SRC-0015"
+    ],
+    "exchange-data": [
+      "SRC-0041",
+      "SRC-0044"
+    ],
+    "federal-debt": [
+      "SRC-0024"
+    ],
+    "federal-revenue": [
+      "SRC-0024"
+    ],
+    "federal-spending": [
+      "SRC-0024"
+    ],
+    "feed-items": [
+      "SRC-0017"
+    ],
+    "feed-metadata": [
+      "SRC-0017"
+    ],
+    "financial": [
+      "SRC-0018",
+      "SRC-0024"
+    ],
+    "financial-statements": [
+      "SRC-0040"
+    ],
+    "forex-exchange-rates": [
+      "SRC-0042",
+      "SRC-0043"
+    ],
+    "forex-rates": [
+      "SRC-0038",
+      "SRC-0040"
+    ],
+    "full-text-articles": [
+      "SRC-0007"
+    ],
+    "full-text-content": [
+      "SRC-0013"
+    ],
+    "full-text-pdf-links": [
+      "SRC-0003"
+    ],
+    "funding": [
+      "SRC-0001"
+    ],
+    "funding-data": [
+      "SRC-0004"
+    ],
+    "gdp": [
+      "SRC-0039"
+    ],
+    "geocoding": [
+      "SRC-0022"
+    ],
+    "geographic-data": [
+      "SRC-0005",
+      "SRC-0008"
+    ],
+    "geospatial": [
+      "SRC-0021"
+    ],
+    "geospatial-data": [
+      "SRC-0015"
+    ],
+    "gists": [
+      "SRC-0025"
+    ],
+    "global-events": [
+      "SRC-0015"
+    ],
+    "global-market-data": [
+      "SRC-0044"
+    ],
+    "government": [
+      "SRC-0019",
+      "SRC-0024"
+    ],
+    "health": [
+      "SRC-0023"
+    ],
+    "historical-exchange-rates": [
+      "SRC-0043"
+    ],
+    "historical-news": [
+      "SRC-0016"
+    ],
+    "historical-weather": [
+      "SRC-0022"
+    ],
+    "housing": [
+      "SRC-0019"
+    ],
+    "housing-data": [
+      "SRC-0039"
+    ],
+    "image-classification": [
+      "SRC-0035",
+      "SRC-0037"
+    ],
+    "image-embeddings": [
+      "SRC-0037"
+    ],
+    "image-generation": [
+      "SRC-0035"
+    ],
+    "income": [
+      "SRC-0019"
+    ],
+    "industrial-production": [
+      "SRC-0039"
+    ],
+    "inflation": [
+      "SRC-0018",
+      "SRC-0020"
+    ],
+    "inflation-cpi": [
+      "SRC-0039"
+    ],
+    "insider-transactions": [
+      "SRC-0040"
+    ],
+    "instance-segmentation": [
+      "SRC-0037"
+    ],
+    "institutional-repository-data": [
+      "SRC-0007"
+    ],
+    "institutions": [
+      "SRC-0001"
+    ],
+    "interest-rates": [
+      "SRC-0018",
+      "SRC-0024",
+      "SRC-0039"
+    ],
+    "international": [
+      "SRC-0023"
+    ],
+    "ip-geolocation": [
+      "SRC-0028"
+    ],
+    "isp-data": [
+      "SRC-0028"
+    ],
+    "issues": [
+      "SRC-0025"
+    ],
+    "jobs": [
+      "SRC-0029",
+      "SRC-0030"
+    ],
+    "journal-articles": [
+      "SRC-0004"
+    ],
+    "journals": [
+      "SRC-0001"
+    ],
+    "keypoint-detection": [
+      "SRC-0037"
+    ],
+    "knowledge-graph": [
+      "SRC-0005",
+      "SRC-0008"
+    ],
+    "knowledge-graph-edges": [
+      "SRC-0034"
+    ],
+    "labor-statistics": [
+      "SRC-0020"
+    ],
+    "languages": [
+      "SRC-0016"
+    ],
+    "license-info": [
+      "SRC-0004"
+    ],
+    "licenses": [
+      "SRC-0025"
+    ],
+    "live-headlines": [
+      "SRC-0016"
+    ],
+    "marine-weather": [
+      "SRC-0022"
+    ],
+    "market-cap": [
+      "SRC-0041",
+      "SRC-0044"
+    ],
+    "media-files": [
+      "SRC-0006"
+    ],
+    "monetary-policy": [
+      "SRC-0018"
+    ],
+    "money-supply": [
+      "SRC-0039"
+    ],
+    "multilingual-concepts": [
+      "SRC-0034"
+    ],
+    "multilingual-labels": [
+      "SRC-0005"
+    ],
+    "multimodal-embeddings": [
+      "SRC-0036"
+    ],
+    "named-entity-recognition": [
+      "SRC-0035"
+    ],
+    "new-stories": [
+      "SRC-0030"
+    ],
+    "news-articles": [
+      "SRC-0012",
+      "SRC-0013",
+      "SRC-0014",
+      "SRC-0015",
+      "SRC-0016"
+    ],
+    "news-headlines": [
+      "SRC-0012",
+      "SRC-0014"
+    ],
+    "news-sentiment": [
+      "SRC-0040"
+    ],
+    "news-sources": [
+      "SRC-0012"
+    ],
+    "nft-data": [
+      "SRC-0041"
+    ],
+    "object-detection": [
+      "SRC-0035",
+      "SRC-0037"
+    ],
+    "occupational-data": [
+      "SRC-0020"
+    ],
+    "ohlcv-candles": [
+      "SRC-0044"
+    ],
+    "ontology": [
+      "SRC-0008"
+    ],
+    "open-access-content": [
+      "SRC-0007"
+    ],
+    "orcid-ids": [
+      "SRC-0004"
+    ],
+    "organizations": [
+      "SRC-0025"
+    ],
+    "package-metadata": [
+      "SRC-0026",
+      "SRC-0027"
+    ],
+    "package-search": [
+      "SRC-0026"
+    ],
+    "package-versions": [
+      "SRC-0026",
+      "SRC-0027"
+    ],
+    "page-metadata": [
+      "SRC-0006"
+    ],
+    "paper-embeddings": [
+      "SRC-0002"
+    ],
+    "paper-metadata": [
+      "SRC-0003",
+      "SRC-0007"
+    ],
+    "parts-of-speech": [
+      "SRC-0032"
+    ],
+    "phonetics": [
+      "SRC-0032"
+    ],
+    "polls": [
+      "SRC-0029",
+      "SRC-0030"
+    ],
+    "population": [
+      "SRC-0019"
+    ],
+    "poverty": [
+      "SRC-0019",
+      "SRC-0023"
+    ],
+    "precious-metals-rates": [
+      "SRC-0043"
+    ],
+    "preprints": [
+      "SRC-0003"
+    ],
+    "productivity": [
+      "SRC-0020"
+    ],
+    "properties": [
+      "SRC-0005"
+    ],
+    "pull-requests": [
+      "SRC-0025"
+    ],
+    "question-answering": [
+      "SRC-0035"
+    ],
+    "questions": [
+      "SRC-0031"
+    ],
+    "recommendations": [
+      "SRC-0002"
+    ],
+    "references": [
+      "SRC-0002"
+    ],
+    "relationships": [
+      "SRC-0005",
+      "SRC-0008"
+    ],
+    "release-history": [
+      "SRC-0027"
+    ],
+    "releases": [
+      "SRC-0025"
+    ],
+    "repositories": [
+      "SRC-0025"
+    ],
+    "reputation": [
+      "SRC-0031"
+    ],
+    "revision-history": [
+      "SRC-0006"
+    ],
+    "rhymes": [
+      "SRC-0033"
+    ],
+    "rss-feeds": [
+      "SRC-0017"
+    ],
+    "savings-bonds": [
+      "SRC-0024"
+    ],
+    "scholarly-articles": [
+      "SRC-0005"
+    ],
+    "scientific-data": [
+      "SRC-0005"
+    ],
+    "search": [
+      "SRC-0012",
+      "SRC-0014",
+      "SRC-0031"
+    ],
+    "search-results": [
+      "SRC-0006"
+    ],
+    "sec-filings": [
+      "SRC-0040"
+    ],
+    "sections": [
+      "SRC-0013"
+    ],
+    "semantic-relationships": [
+      "SRC-0034"
+    ],
+    "semantic-similarity": [
+      "SRC-0033"
+    ],
+    "semantic-vectors": [
+      "SRC-0036"
+    ],
+    "sentiment-analysis": [
+      "SRC-0015",
+      "SRC-0035"
+    ],
+    "show-hn": [
+      "SRC-0029",
+      "SRC-0030"
+    ],
+    "sound-alike": [
+      "SRC-0033"
+    ],
+    "sources": [
+      "SRC-0016"
+    ],
+    "speech-to-text": [
+      "SRC-0035"
+    ],
+    "spelling-suggestions": [
+      "SRC-0033"
+    ],
+    "stock-prices-historical": [
+      "SRC-0038",
+      "SRC-0040"
+    ],
+    "stock-prices-realtime": [
+      "SRC-0038",
+      "SRC-0040"
+    ],
+    "stories": [
+      "SRC-0029",
+      "SRC-0030"
+    ],
+    "structured-wikipedia-data": [
+      "SRC-0008"
+    ],
+    "summarization": [
+      "SRC-0035"
+    ],
+    "syllable-counts": [
+      "SRC-0033"
+    ],
+    "synonyms": [
+      "SRC-0032"
+    ],
+    "tags": [
+      "SRC-0013",
+      "SRC-0031"
+    ],
+    "technical-indicators": [
+      "SRC-0038"
+    ],
+    "text-embeddings": [
+      "SRC-0035",
+      "SRC-0036"
+    ],
+    "text-generation": [
+      "SRC-0035"
+    ],
+    "text-to-speech": [
+      "SRC-0035"
+    ],
+    "themes": [
+      "SRC-0015"
+    ],
+    "time-series": [
+      "SRC-0018"
+    ],
+    "timelines": [
+      "SRC-0015"
+    ],
+    "timezone": [
+      "SRC-0028"
+    ],
+    "top-stories": [
+      "SRC-0014",
+      "SRC-0030"
+    ],
+    "topics": [
+      "SRC-0025"
+    ],
+    "trade": [
+      "SRC-0023"
+    ],
+    "trade-balance": [
+      "SRC-0039"
+    ],
+    "trading-volume": [
+      "SRC-0041",
+      "SRC-0044"
+    ],
+    "translation": [
+      "SRC-0035"
+    ],
+    "treasury-securities": [
+      "SRC-0024"
+    ],
+    "trending-coins": [
+      "SRC-0041"
+    ],
+    "tv-news": [
+      "SRC-0015"
+    ],
+    "unemployment": [
+      "SRC-0020"
+    ],
+    "unemployment-rate": [
+      "SRC-0039"
+    ],
+    "usage-examples": [
+      "SRC-0032"
+    ],
+    "users": [
+      "SRC-0025",
+      "SRC-0029",
+      "SRC-0030",
+      "SRC-0031"
+    ],
+    "video-generation": [
+      "SRC-0035"
+    ],
+    "vulnerability-data": [
+      "SRC-0027"
+    ],
+    "wages": [
+      "SRC-0020"
+    ],
+    "weather-alerts": [
+      "SRC-0021"
+    ],
+    "weather-forecasts": [
+      "SRC-0021",
+      "SRC-0022"
+    ],
+    "weather-observations": [
+      "SRC-0021"
+    ],
+    "word-associations": [
+      "SRC-0034"
+    ],
+    "word-context": [
+      "SRC-0033"
+    ],
+    "word-definitions": [
+      "SRC-0032"
+    ],
+    "word-embeddings": [
+      "SRC-0034"
+    ],
+    "word-frequency": [
+      "SRC-0033"
+    ],
+    "word-relationships": [
+      "SRC-0033"
+    ]
   },
   "by_access_type": {
-    "free": ["SRC-0002", "SRC-0006", "SRC-0011", "SRC-0012", "SRC-0013", "SRC-0014", "SRC-0016", "SRC-0017", "SRC-0018", "SRC-0020", "SRC-0021", "SRC-0023", "SRC-0024", "SRC-0026", "SRC-0027", "SRC-0028", "SRC-0029", "SRC-0030", "SRC-0031", "SRC-0032", "SRC-0033", "SRC-0034"],
-    "freemium": ["SRC-0001", "SRC-0004", "SRC-0005", "SRC-0007", "SRC-0008", "SRC-0009", "SRC-0022", "SRC-0025", "SRC-0035"],
+    "free": [
+      "SRC-0002",
+      "SRC-0003",
+      "SRC-0004",
+      "SRC-0005",
+      "SRC-0006",
+      "SRC-0008",
+      "SRC-0013",
+      "SRC-0015",
+      "SRC-0020",
+      "SRC-0021",
+      "SRC-0022",
+      "SRC-0023",
+      "SRC-0024",
+      "SRC-0026",
+      "SRC-0027",
+      "SRC-0028",
+      "SRC-0029",
+      "SRC-0030",
+      "SRC-0032",
+      "SRC-0033",
+      "SRC-0034",
+      "SRC-0042",
+      "SRC-0043",
+      "SRC-0044"
+    ],
+    "freemium": [
+      "SRC-0001",
+      "SRC-0012",
+      "SRC-0014",
+      "SRC-0016",
+      "SRC-0017",
+      "SRC-0025",
+      "SRC-0031",
+      "SRC-0035",
+      "SRC-0036",
+      "SRC-0037",
+      "SRC-0038",
+      "SRC-0040",
+      "SRC-0041"
+    ],
     "paid": [],
-    "api-key-required": ["SRC-0003", "SRC-0010", "SRC-0015", "SRC-0019"]
+    "api-key-required": [
+      "SRC-0007",
+      "SRC-0018",
+      "SRC-0019",
+      "SRC-0039"
+    ]
   }
 }

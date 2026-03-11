@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "last_updated": "2026-03-11",
-  "entry_count": 30,
+  "entry_count": 31,
   "entries": [
     {
       "id": "KB-0001",
@@ -227,21 +227,18 @@
     },
     {
       "id": "KB-0012",
-      "title": "Free Public APIs for Developer Tools & General-Purpose Data",
+      "title": "Free Public APIs for Government and Open Data",
       "date": "2026-03-10",
       "team": "TEAM-0010",
       "category": "integration",
       "tags": [
         "public-apis",
-        "developer-tools",
-        "package-registries",
-        "ip-geolocation",
-        "social-data",
-        "hacker-news",
-        "stack-overflow",
-        "github-api",
-        "npm",
-        "pypi"
+        "government-data",
+        "open-data",
+        "weather",
+        "geospatial",
+        "economic-data",
+        "free-apis"
       ],
       "status": "validated",
       "confidence": "high",
@@ -300,6 +297,25 @@
       ]
     },
     {
+      "id": "KB-0015",
+      "title": "JSONL Message Bus: Technical Reference for Inter-Agent Communication",
+      "date": "2026-03-11",
+      "team": "TEAM-0015",
+      "category": "integration",
+      "tags": [
+        "message-bus",
+        "jsonl",
+        "inter-agent-communication",
+        "concurrency",
+        "real-time"
+      ],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": [
+        "KB-0009"
+      ]
+    },
+    {
       "id": "KB-0016",
       "title": "SQLite WAL Shared State: Technical Reference for Inter-Agent Coordination",
       "date": "2026-03-11",
@@ -314,25 +330,6 @@
         "coordination",
         "multi-process",
         "ipc"
-      ],
-      "status": "validated",
-      "confidence": "high",
-      "builds_on": [
-        "KB-0009"
-      ]
-    },
-    {
-      "id": "KB-0015",
-      "title": "JSONL Message Bus: Technical Reference for Inter-Agent Communication",
-      "date": "2026-03-11",
-      "team": "TEAM-0015",
-      "category": "integration",
-      "tags": [
-        "message-bus",
-        "jsonl",
-        "inter-agent-communication",
-        "concurrency",
-        "real-time"
       ],
       "status": "validated",
       "confidence": "high",
@@ -365,7 +362,7 @@
       "title": "Multi-Agent Communication Prototype: Dual Implementation & Test Results",
       "date": "2026-03-11",
       "team": "TEAM-0018",
-      "category": "integration",
+      "category": "methodology",
       "tags": [
         "prototype",
         "multi-agent",
@@ -420,7 +417,11 @@
         "benchmarks",
         "data-gathering",
         "multi-agent",
-        "communication"
+        "communication",
+        "jsonl",
+        "sqlite",
+        "mmap",
+        "fifo"
       ],
       "status": "validated",
       "confidence": "high",
@@ -586,22 +587,24 @@
     },
     {
       "id": "KB-0028",
-      "title": "Deep Bug Analysis: 17 New Bugs Across Coordination & SDK Modules",
+      "title": "Deep Bug Analysis: Coordination Modules (Round 2)",
       "date": "2026-03-11",
-      "team": "TEAM-0021",
+      "team": "bug-hunting-team",
       "category": "debugging",
       "tags": [
-        "bug-hunting",
-        "security",
-        "concurrency",
-        "resource-leaks",
+        "bug-report",
         "coordination",
-        "sdk-launcher",
-        "multi-agent"
+        "concurrency",
+        "resource-leak",
+        "error-handling",
+        "security",
+        "memory",
+        "signal-handling"
       ],
       "status": "validated",
       "confidence": "high",
       "builds_on": [
+        "KB-0023",
         "KB-0025",
         "KB-0027"
       ]
@@ -619,12 +622,11 @@
         "quality"
       ],
       "status": "validated",
-      "confidence": "high",
-      "builds_on": []
+      "confidence": "high"
     },
     {
       "id": "KB-0030",
-      "title": "Cross-Team Analysis: 28 Sessions, 132 Agents — Findings, SOPs, and Improvement Procedures",
+      "title": "Cross-Team Analysis: 28 Sessions, 132 Agents \u2014 Findings, SOPs, and Improvement Procedures",
       "date": "2026-03-11",
       "team": "ANALYSIS-001",
       "category": "methodology",
@@ -647,6 +649,28 @@
         "KB-0028",
         "KB-0029"
       ]
+    },
+    {
+      "id": "KB-0031",
+      "title": "Data Reform Analysis: Machine-Friendly Repository Transformation",
+      "date": "2026-03-11",
+      "team": "TEAM-0029",
+      "category": "methodology",
+      "tags": [
+        "data-reform",
+        "mcp",
+        "pointer-files",
+        "machine-friendly",
+        "agent-ux",
+        "format-audit",
+        "migration-strategy"
+      ],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": [
+        "KB-0026",
+        "KB-0030"
+      ]
     }
   ],
   "categories": {
@@ -662,8 +686,10 @@
       "KB-0014",
       "KB-0015",
       "KB-0016",
-      "KB-0019",
       "KB-0017",
+      "KB-0019",
+      "KB-0022",
+      "KB-0023",
       "KB-0027"
     ],
     "market-research": [
@@ -680,7 +706,8 @@
       "KB-0021",
       "KB-0026",
       "KB-0029",
-      "KB-0030"
+      "KB-0030",
+      "KB-0031"
     ],
     "tool-usage": [
       "KB-0006"
@@ -706,7 +733,9 @@
       "KB-0004",
       "KB-0005",
       "KB-0007",
-      "KB-0008"
+      "KB-0008",
+      "KB-0020",
+      "KB-0021"
     ],
     "scaling": [
       "KB-0001"
@@ -724,8 +753,12 @@
     ],
     "multi-agent": [
       "KB-0002",
-      "KB-0027",
-      "KB-0028"
+      "KB-0018",
+      "KB-0020",
+      "KB-0022",
+      "KB-0023",
+      "KB-0025",
+      "KB-0027"
     ],
     "research-system": [
       "KB-0002"
@@ -754,7 +787,8 @@
     "data-gathering": [
       "KB-0004",
       "KB-0005",
-      "KB-0014"
+      "KB-0014",
+      "KB-0020"
     ],
     "improvement-loop": [
       "KB-0004"
@@ -808,7 +842,8 @@
       "KB-0007"
     ],
     "team-sizing": [
-      "KB-0007"
+      "KB-0007",
+      "KB-0030"
     ],
     "efficiency-fixes": [
       "KB-0007"
@@ -826,7 +861,8 @@
       "KB-0008"
     ],
     "indexing": [
-      "KB-0008"
+      "KB-0008",
+      "KB-0022"
     ],
     "AI-optimization": [
       "KB-0008"
@@ -868,16 +904,47 @@
     "knowledge-graphs": [
       "KB-0010"
     ],
+    "free-apis": [
+      "KB-0010",
+      "KB-0012",
+      "KB-0013"
+    ],
     "self-improvement": [
       "KB-0010"
+    ],
+    "reconstructed": [
+      "KB-0011"
+    ],
+    "placeholder": [
+      "KB-0011"
+    ],
+    "gap-entry": [
+      "KB-0011"
     ],
     "public-apis": [
       "KB-0012",
       "KB-0013",
       "KB-0014"
     ],
-    "data-collection": [
-      "KB-0014"
+    "government-data": [
+      "KB-0012",
+      "KB-0013"
+    ],
+    "open-data": [
+      "KB-0012",
+      "KB-0013"
+    ],
+    "weather": [
+      "KB-0012",
+      "KB-0013"
+    ],
+    "geospatial": [
+      "KB-0012",
+      "KB-0013"
+    ],
+    "economic-data": [
+      "KB-0012",
+      "KB-0013"
     ],
     "api-tools": [
       "KB-0014"
@@ -894,75 +961,8 @@
     "github": [
       "KB-0014"
     ],
-    "government-data": [
-      "KB-0013"
-    ],
-    "open-data": [
-      "KB-0013"
-    ],
-    "weather": [
-      "KB-0013"
-    ],
-    "geospatial": [
-      "KB-0013"
-    ],
-    "economic-data": [
-      "KB-0013"
-    ],
-    "free-apis": [
-      "KB-0010",
-      "KB-0012",
-      "KB-0013"
-    ],
-    "developer-tools": [
-      "KB-0012"
-    ],
-    "package-registries": [
-      "KB-0012"
-    ],
-    "ip-geolocation": [
-      "KB-0012"
-    ],
-    "social-data": [
-      "KB-0012"
-    ],
-    "hacker-news": [
-      "KB-0012"
-    ],
-    "stack-overflow": [
-      "KB-0012"
-    ],
-    "github-api": [
-      "KB-0012"
-    ],
-    "npm": [
-      "KB-0012"
-    ],
-    "pypi": [
-      "KB-0012"
-    ],
-    "sqlite": [
-      "KB-0016",
-      "KB-0018",
-      "KB-0019"
-    ],
-    "wal": [
-      "KB-0016"
-    ],
-    "shared-state": [
-      "KB-0016"
-    ],
-    "inter-agent-communication": [
-      "KB-0015",
-      "KB-0016",
-      "KB-0018",
-      "KB-0019",
-      "KB-0017"
-    ],
-    "concurrency": [
-      "KB-0015",
-      "KB-0016",
-      "KB-0028"
+    "data-collection": [
+      "KB-0014"
     ],
     "message-bus": [
       "KB-0015"
@@ -970,14 +970,39 @@
     "jsonl": [
       "KB-0015",
       "KB-0018",
+      "KB-0019",
+      "KB-0020"
+    ],
+    "inter-agent-communication": [
+      "KB-0015",
+      "KB-0016",
+      "KB-0017",
       "KB-0019"
+    ],
+    "concurrency": [
+      "KB-0015",
+      "KB-0016",
+      "KB-0028"
     ],
     "real-time": [
       "KB-0015"
     ],
-    "coordination": [
+    "sqlite": [
       "KB-0016",
       "KB-0018",
+      "KB-0019",
+      "KB-0020"
+    ],
+    "wal": [
+      "KB-0016"
+    ],
+    "shared-state": [
+      "KB-0016"
+    ],
+    "coordination": [
+      "KB-0016",
+      "KB-0022",
+      "KB-0025",
       "KB-0027",
       "KB-0028"
     ],
@@ -986,27 +1011,6 @@
     ],
     "ipc": [
       "KB-0016"
-    ],
-    "effectiveness-analysis": [
-      "KB-0018"
-    ],
-    "gap-analysis": [
-      "KB-0018"
-    ],
-    "evaluation": [
-      "KB-0018"
-    ],
-    "architecture": [
-      "KB-0019"
-    ],
-    "migration": [
-      "KB-0019"
-    ],
-    "infrastructure": [
-      "KB-0019"
-    ],
-    "integration": [
-      "KB-0019"
     ],
     "failure-analysis": [
       "KB-0017",
@@ -1018,14 +1022,105 @@
     "reliability": [
       "KB-0017"
     ],
-    "reconstructed": [
-      "KB-0011"
+    "prototype": [
+      "KB-0018",
+      "KB-0020"
     ],
-    "placeholder": [
-      "KB-0011"
+    "mmap": [
+      "KB-0018",
+      "KB-0020"
     ],
-    "gap-entry": [
-      "KB-0011"
+    "fifo": [
+      "KB-0018",
+      "KB-0020"
+    ],
+    "testing": [
+      "KB-0018"
+    ],
+    "race-conditions": [
+      "KB-0018"
+    ],
+    "architecture": [
+      "KB-0019"
+    ],
+    "integration": [
+      "KB-0019"
+    ],
+    "migration": [
+      "KB-0019"
+    ],
+    "infrastructure": [
+      "KB-0019"
+    ],
+    "live-testing": [
+      "KB-0020"
+    ],
+    "communication": [
+      "KB-0020",
+      "KB-0021"
+    ],
+    "efficiency-analysis": [
+      "KB-0021"
+    ],
+    "think-tank": [
+      "KB-0021",
+      "KB-0022"
+    ],
+    "proto-a": [
+      "KB-0021",
+      "KB-0022",
+      "KB-0023"
+    ],
+    "dogfooding": [
+      "KB-0021"
+    ],
+    "production-decision": [
+      "KB-0021"
+    ],
+    "production-deployment": [
+      "KB-0022"
+    ],
+    "data-processing": [
+      "KB-0022"
+    ],
+    "dynamic-coordination": [
+      "KB-0023"
+    ],
+    "help-protocol": [
+      "KB-0023"
+    ],
+    "work-stealing": [
+      "KB-0023"
+    ],
+    "direct-channels": [
+      "KB-0023"
+    ],
+    "pipelines": [
+      "KB-0023"
+    ],
+    "scratchpad": [
+      "KB-0023"
+    ],
+    "sops": [
+      "KB-0024"
+    ],
+    "error-protection": [
+      "KB-0024"
+    ],
+    "efficiency": [
+      "KB-0024"
+    ],
+    "knowledge-transfer": [
+      "KB-0024"
+    ],
+    "bug-fixes": [
+      "KB-0025"
+    ],
+    "hub-and-spoke": [
+      "KB-0025"
+    ],
+    "SOPs": [
+      "KB-0025"
     ],
     "agent-teams": [
       "KB-0026"
@@ -1036,12 +1131,14 @@
     "parallel-analysis": [
       "KB-0026"
     ],
+    "coordination-system": [
+      "KB-0026"
+    ],
     "knowledge-base-health": [
       "KB-0026"
     ],
     "sdk-launcher": [
-      "KB-0027",
-      "KB-0028"
+      "KB-0027"
     ],
     "subprocess-management": [
       "KB-0027"
@@ -1058,13 +1155,22 @@
     "claude-code": [
       "KB-0027"
     ],
-    "bug-hunting": [
+    "bug-report": [
+      "KB-0028"
+    ],
+    "resource-leak": [
+      "KB-0028"
+    ],
+    "error-handling": [
       "KB-0028"
     ],
     "security": [
       "KB-0028"
     ],
-    "resource-leaks": [
+    "memory": [
+      "KB-0028"
+    ],
+    "signal-handling": [
       "KB-0028"
     ],
     "best-practices": [
@@ -1078,6 +1184,45 @@
     ],
     "quality": [
       "KB-0029"
+    ],
+    "cross-team-analysis": [
+      "KB-0030"
+    ],
+    "anti-recursion": [
+      "KB-0030"
+    ],
+    "sop-improvements": [
+      "KB-0030"
+    ],
+    "quality-gates": [
+      "KB-0030"
+    ],
+    "improvement-procedures": [
+      "KB-0030"
+    ],
+    "meta-analysis": [
+      "KB-0030"
+    ],
+    "data-reform": [
+      "KB-0031"
+    ],
+    "mcp": [
+      "KB-0031"
+    ],
+    "pointer-files": [
+      "KB-0031"
+    ],
+    "machine-friendly": [
+      "KB-0031"
+    ],
+    "agent-ux": [
+      "KB-0031"
+    ],
+    "format-audit": [
+      "KB-0031"
+    ],
+    "migration-strategy": [
+      "KB-0031"
     ]
   }
 }
