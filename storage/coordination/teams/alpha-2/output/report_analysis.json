@@ -1,0 +1,508 @@
+{
+  "team": "alpha-2",
+  "mission": "report-analysis",
+  "timestamp": "2026-03-11T12:00:00Z",
+
+  "think_tank_synthesis": {
+    "overview": "Three think tanks (Alpha, Beta, Gamma) independently analyzed Proto A efficiency. All three reached unanimous YES verdict with VERY HIGH confidence. The analysis was itself conducted using Proto A (dogfooding), with 31 bus messages across 3 channels enabling real-time cross-referencing.",
+    "alpha_theoretical": {
+      "focus": "Overhead models, scaling behavior, failure detection value",
+      "key_findings": [
+        "ALPHA-1: 13.8% wall-clock overhead yields 16.7% more data points -- net positive trade",
+        "ALPHA-2: Per-agent overhead is sublinear (0.17%/agent at 3 agents, 0.02%/agent at 10 agents) -- larger teams benefit MORE",
+        "ALPHA-3: Failure detection saves 3+ minutes per incident at only 0.8% overhead cost"
+      ],
+      "verdict": "EFFICIENCY_GAIN with HIGH confidence"
+    },
+    "beta_empirical": {
+      "focus": "Throughput analysis, communication cost breakdown, storage costs",
+      "key_findings": [
+        "BETA-1: Throughput ratio 1.025x -- Proto A gets 2.5% more throughput while collecting 16.7% more data",
+        "BETA-2: Total communication overhead is 15.9ms = 0.047% of runtime (53 messages x 0.3ms each)",
+        "BETA-3: Coordinated rate limiting enables 14 vs 12 API calls (16.7% more) with 0 errors and 0 rate limit denials",
+        "BETA-4: Storage cost is 286 bytes/message, projecting to ~279KB for 10 agents over 30 minutes"
+      ],
+      "verdict": "YES with HIGH confidence -- every empirical metric favors Proto A or shows negligible difference"
+    },
+    "gamma_scenarios": {
+      "focus": "Real-world scenario modeling across complexity levels",
+      "key_findings": [
+        "GAMMA-1: Simple 2-agent tasks -- 0.5% overhead, no downside, free operational visibility",
+        "GAMMA-2: Complex 10-agent operations -- 30-50% more useful data throughput with only 0.2% per-agent overhead",
+        "GAMMA-3: Failure scenarios -- saves 6-8 minutes (20-27% of operation time) per failure event",
+        "GAMMA-4: Breakeven achieved after 1 coordinated action with >99% probability"
+      ],
+      "verdict": "YES with VERY HIGH confidence -- Proto A should be DEFAULT ON for all multi-agent operations"
+    },
+    "cross_tank_interactions": {
+      "total_bus_messages": 31,
+      "channels_used": ["global", "topic-think-tank", "topic-insights"],
+      "cross_references_received": {"alpha": 4, "beta": 3, "gamma": 4},
+      "observation": "The think tanks demonstrated Proto A's value through dogfooding -- Gamma integrated Alpha's overhead analysis and Beta's throughput data; Beta incorporated Gamma's scenario models. This cross-pollination would not have occurred without communication."
+    },
+    "consolidated_evidence": [
+      "Communication overhead <1% across ALL scenarios",
+      "16.7% more data points collected via coordinated API utilization",
+      "Sublinear scaling -- larger teams amortize communication costs better",
+      "Failure detection saves 20-27% of operation time per incident",
+      "Breakeven after 1 coordinated action (>99% probability)",
+      "Communication cost (0.3ms/msg) is 1/3900th of average API call",
+      "Storage cost trivial (<300KB for large operations)"
+    ]
+  },
+
+  "kb_synthesis": {
+    "overview": "KB entries KB-0015 through KB-0021 form a coherent chain from foundational technical references through prototype testing to production decision. The knowledge base shows a systematic evolution from theory to implementation to validation.",
+    "entries": {
+      "KB-0015": {
+        "title": "JSONL Message Bus Technical Reference",
+        "key_takeaways": [
+          "POSIX atomic writes guaranteed for messages under 4096 bytes with O_APPEND and raw write()",
+          "Polling at 100-200ms recommended over inotify for simplicity (zero dependencies)",
+          "No fsync needed for ephemeral coordination messages",
+          "Never use NFS or network filesystems",
+          "Epoch-based file rotation preferred over rename-based rotation",
+          "BusWriter/BusReader reference implementations provided"
+        ]
+      },
+      "KB-0016": {
+        "title": "SQLite WAL Shared State Technical Reference",
+        "key_takeaways": [
+          "WAL mode enables concurrent readers with single writer at sub-millisecond latency",
+          "BEGIN IMMEDIATE prevents TOCTOU races in rate-limit checking",
+          "busy_timeout=30000ms handles contention for up to 15 agents",
+          "All processes MUST use the same canonical filesystem path",
+          "Auto-checkpoint at 1000 pages keeps WAL bounded",
+          "No NFS support -- local filesystem only"
+        ]
+      },
+      "KB-0017": {
+        "title": "Failure Mode Analysis",
+        "key_takeaways": [
+          "26 failure modes analyzed across 6 categories",
+          "3 MUST-FIX items identified: TOCTOU rate-limit race (RC-4), git worktree split-brain (SB-1/SB-2), coordinator single point of failure (CR-3/CR-4)",
+          "2 SHOULD-FIX items: enforced data cleanup (RE-1), startup validation (EN-1/EN-4/EN-5)",
+          "Overall assessment: CONDITIONAL GO for prototype",
+          "TOCTOU fix requires combining check+insert into single BEGIN IMMEDIATE transaction",
+          "Split-brain fix requires placing files outside git worktrees at shared absolute path",
+          "Coordinator watchdog needed for production resilience"
+        ]
+      },
+      "KB-0018": {
+        "title": "Dual Prototype Implementation & Test Results",
+        "key_takeaways": [
+          "Proto A: 1437 lines, durability-first (JSONL + SQLite WAL)",
+          "Proto B: 1855 lines, speed-first (Named pipes + mmap)",
+          "113/113 tests passed after 3 fix iterations",
+          "Proto A had 3 bugs (all fixed), Proto B had 7 bugs (all fixed)",
+          "SQLite > mmap for correctness -- BEGIN IMMEDIATE is fundamentally more robust",
+          "POSIX atomic writes confirmed reliable (zero corruption under stress)",
+          "Recommendation: Proto A for production, reserve mmap for 50+ agent scale"
+        ]
+      },
+      "KB-0019": {
+        "title": "Architecture & Integration Analysis",
+        "key_takeaways": [
+          "Critical placement decision: use storage/coordination/ in repo root, gitignored",
+          "Agent discovery via CLAUDE_COORD_DIR env var with git rev-parse fallback",
+          "Coordinator needs write access (departure from read-only pattern) -- safe due to append-only and serialized writes",
+          "Incremental adoption possible -- if coord dir missing, features are no-ops",
+          "Python stdlib only -- no external dependencies",
+          "Memory overhead ~5MB per agent; disk <50MB per operation",
+          "Rollback is trivial -- delete coord dir, unset env var"
+        ]
+      },
+      "KB-0020": {
+        "title": "Live Prototype Testing Results",
+        "key_takeaways": [
+          "All 8 automated benchmark scenarios PASSED (overhead <1%)",
+          "Proto A collected 70 data points vs baseline 60 (16.7% more) in live tests",
+          "Real API latency (150-2200ms) completely dominates -- communication overhead is irrelevant at that scale",
+          "Proto A's SQLite rate limiter actively prevented over-calling (1071 denials in S1)",
+          "Proto B's mmap rate limiter showed no denials = no enforcement (weakness)",
+          "Think tank phase produced actionable architecture that informed testing",
+          "Synthetic benchmarks complement but do not replace live tests"
+        ]
+      },
+      "KB-0021": {
+        "title": "Think Tank Efficiency Analysis (Production Decision)",
+        "key_takeaways": [
+          "Unanimous YES verdict across all 3 think tanks with VERY HIGH confidence",
+          "Proto B archived, Proto A marked as production",
+          "Proto A should be DEFAULT ON for all multi-agent operations",
+          "Dogfooding demonstrated real-time cross-referencing value",
+          "7 key evidence points supporting efficiency gains"
+        ]
+      }
+    },
+    "knowledge_chain": "KB-0015/0016 (foundations) -> KB-0017 (failure analysis) -> KB-0018 (implementation) -> KB-0019 (architecture) -> KB-0020 (live testing) -> KB-0021 (production decision)"
+  },
+
+  "gaps_identified": [
+    {
+      "id": "GAP-1",
+      "title": "No multi-process testing (only threads)",
+      "severity": "high",
+      "description": "KB-0020 explicitly notes: 'the current tests use threads within a single process. Real agent teams would be separate processes.' All benchmarks ran threads, not separate OS processes. SQLite and JSONL behavior under true multi-process concurrency may differ (e.g., different file descriptor tables, separate page cache views, actual WAL checkpoint contention).",
+      "source": "KB-0020 recommendations section"
+    },
+    {
+      "id": "GAP-2",
+      "title": "No network partition or disk failure testing",
+      "severity": "medium",
+      "description": "KB-0017 analyzes 26 failure modes theoretically but only crash/kill scenarios were tested in S4. No tests for: disk I/O latency spikes (EN-2), disk full conditions (RE-1), or file permission errors (EN-1). These were flagged as risks but never empirically validated.",
+      "source": "KB-0017 environmental section"
+    },
+    {
+      "id": "GAP-3",
+      "title": "No long-duration testing",
+      "severity": "medium",
+      "description": "All tests ran 2-5 minutes. KB-0019 estimates 50MB per operation and KB-0017 flags unbounded JSONL growth (RE-1). No test has run for 30+ minutes or hours to validate file rotation, WAL growth, cleanup behavior, and memory stability over time.",
+      "source": "KB-0017 RE-1, KB-0019 section 7.3"
+    },
+    {
+      "id": "GAP-4",
+      "title": "Proto B's rate limiter was never truly validated",
+      "severity": "medium",
+      "description": "KB-0020 shows Proto B's mmap-based rate limiter had 0 denials (compared to Proto A's 1071). This was noted as 'no enforcement' but never debugged. Proto B was archived without understanding whether this was a configuration issue or a fundamental mmap atomicity problem.",
+      "source": "KB-0020 key findings"
+    },
+    {
+      "id": "GAP-5",
+      "title": "No adversarial/security testing",
+      "severity": "low",
+      "description": "Channel write restrictions are enforced by convention, not code (Think Tank Alpha section 4.4). No testing of malformed messages, oversized payloads, or malicious bus writes. While agents are trusted in the current model, this could matter if the system is extended.",
+      "source": "Think Tank Alpha section 4.4"
+    },
+    {
+      "id": "GAP-6",
+      "title": "No cross-machine or distributed testing",
+      "severity": "low",
+      "description": "All testing assumes single-machine, local filesystem. If the system ever needs to span machines, the entire architecture (JSONL + SQLite) breaks. No fallback or migration path to TCP/socket-based communication has been designed.",
+      "source": "KB-0015 section 1.6, KB-0016 section 1.3"
+    },
+    {
+      "id": "GAP-7",
+      "title": "Benchmark runner not integrated into CI",
+      "severity": "medium",
+      "description": "KB-0020 recommends integrating proto_benchmark_runner.py as a regression check before coordinator changes. This has not been done.",
+      "source": "KB-0020 recommendations"
+    },
+    {
+      "id": "GAP-8",
+      "title": "No testing of epoch-based file rotation under load",
+      "severity": "medium",
+      "description": "KB-0015 and Think Tank Alpha recommend epoch-based file rotation, and EpochRotator exists in the code, but no benchmark tested the overhead or correctness of rotation during active multi-agent operations.",
+      "source": "KB-0015 section 3.4, Think Tank Alpha section 1"
+    }
+  ],
+
+  "contradictions": [
+    {
+      "id": "CONTRA-1",
+      "title": "Heartbeat interval disagreement: 15s vs 30s",
+      "description": "Think Tank Alpha (section 3) recommends 15s heartbeat intervals with detailed rationale (30s is 'too coarse for data gathering'). Think Tank Beta and the existing coordinator use 30s intervals. KB-0020 live tests used 30s. The think tank's own recommendation was not followed in testing.",
+      "sources": ["Think Tank Alpha section 3.2", "Think Tank Beta section 4.2", "KB-0020"],
+      "resolution_needed": "Decide on 15s or 30s and document the decision with rationale."
+    },
+    {
+      "id": "CONTRA-2",
+      "title": "Wall-clock overhead: 13.8% (Alpha) vs <1% (benchmarks)",
+      "description": "Think Tank Alpha reports 13.8% wall-clock overhead for Proto A (ALPHA-1), while all automated benchmarks in KB-0020 show <1% overhead. The 13.8% figure comes from the live API test (34146ms vs 30003ms baseline), while <1% comes from synthetic benchmarks. This is not a true contradiction (different test types) but could be misleading if cited without context.",
+      "sources": ["Think Tank Alpha ALPHA-1", "KB-0020 benchmark table"],
+      "resolution_needed": "Clarify that 13.8% is live-test overhead (includes real API variability) while <1% is synthetic. Both are valid for different purposes."
+    },
+    {
+      "id": "CONTRA-3",
+      "title": "Proto A data points: 70 vs 60 discrepancy interpretation",
+      "description": "Think Tank Beta (BETA-3) claims Proto A made '14 API calls vs baseline 12 -- 16.7% more calls' as evidence of better API utilization. However, Proto A also took 13.8% longer. The additional data points may partly be explained by the longer runtime rather than purely better coordination. Alpha and Beta frame this differently -- Alpha acknowledges the overhead/yield tradeoff while Beta presents it as pure efficiency gain.",
+      "sources": ["Think Tank Alpha ALPHA-1", "Think Tank Beta BETA-3"],
+      "resolution_needed": "Normalize data points per unit time (throughput) rather than raw counts for fair comparison."
+    },
+    {
+      "id": "CONTRA-4",
+      "title": "Coordinator write access: departure from pattern",
+      "description": "KB-0019 section 3.3 argues coordinator MUST have write access, departing from the established 'read-only coordinator' pattern. This is presented as safe but represents an architectural shift that previous KB entries (KB-0009) did not anticipate. The risk of a coordinator bug corrupting shared state is non-zero.",
+      "sources": ["KB-0019 section 3.3", "KB-0009"],
+      "resolution_needed": "Accepted tradeoff, but document the specific write operations the coordinator is allowed to perform (phase signals, directives only)."
+    }
+  ],
+
+  "strongest_evidence": {
+    "for_proto_a": [
+      {
+        "point": "Communication overhead is genuinely negligible",
+        "evidence": "0.3ms per message, 15.9ms total for 53 messages, 0.047% of runtime. This was measured empirically, not estimated.",
+        "source": "BETA-2, KB-0020"
+      },
+      {
+        "point": "Rate limiting actually works and prevents API abuse",
+        "evidence": "Proto A's SQLite BEGIN IMMEDIATE enforced 1071 rate limit denials with zero API errors. Baseline and Proto B had no enforcement. This is the strongest differentiator.",
+        "source": "KB-0020 live test results"
+      },
+      {
+        "point": "Failure detection provides massive time savings",
+        "evidence": "120s detection vs 300s without communication. Saves 3-8 minutes per failure event. In a 30-minute operation with one failure, this is 20-27% time savings at 0.8% overhead cost.",
+        "source": "ALPHA-3, GAMMA-3"
+      },
+      {
+        "point": "Sublinear scaling means it gets better with more agents",
+        "evidence": "Per-agent overhead: 0.17% at 3 agents, 0.044% at 9 agents, 0.02% at 10 agents. Communication cost amortizes while coordination benefits compound.",
+        "source": "ALPHA-2"
+      },
+      {
+        "point": "113/113 tests passed after hardening",
+        "evidence": "Comprehensive test suite covering all 26 KB-0017 failure modes, stress tests, and integration tests. Proto A had only 3 bugs, all minor.",
+        "source": "KB-0018"
+      },
+      {
+        "point": "Zero external dependencies",
+        "evidence": "Pure Python stdlib. No pip install, no C extensions, no system packages needed.",
+        "source": "KB-0019 section 7.1"
+      }
+    ],
+    "against_proto_a": [
+      {
+        "point": "Only tested with threads, not separate processes",
+        "evidence": "KB-0020 explicitly acknowledges this gap. Multi-process behavior may differ for SQLite contention, file descriptor handling, and page cache effects.",
+        "source": "KB-0020 recommendations"
+      },
+      {
+        "point": "13.8% wall-clock overhead in live testing",
+        "evidence": "Live test showed 34146ms vs 30003ms baseline. While synthetic benchmarks show <1%, real-world overhead is higher. Think tanks argue the extra data justifies this, but it IS measurable overhead.",
+        "source": "ALPHA-1, KB-0020"
+      },
+      {
+        "point": "Single writer bottleneck at scale",
+        "evidence": "SQLite serializes all writes. KB-0016 notes this works for 5-15 agents with busy_timeout. At 50+ agents, contention could become problematic. Proto B (mmap) was designed for this scale but was archived.",
+        "source": "KB-0016, KB-0018"
+      },
+      {
+        "point": "No long-duration or high-scale validation",
+        "evidence": "All tests ran 2-5 minutes with at most 10 agents. Production operations could run 30+ minutes with many more agents. File growth, WAL accumulation, and cleanup behavior are untested at scale.",
+        "source": "GAP-3"
+      },
+      {
+        "point": "Coordinator is a single point of failure",
+        "evidence": "KB-0017 CR-3 rates this as CRITICAL. The coordinator watchdog was recommended but has not been fully implemented or tested.",
+        "source": "KB-0017 CR-3"
+      },
+      {
+        "point": "Git worktree split-brain is a deployment risk",
+        "evidence": "If files are placed inside worktrees, communication silently fails. The fix (shared directory) is specified but needs rigorous testing across worktree configurations.",
+        "source": "KB-0017 SB-1/SB-2"
+      }
+    ]
+  },
+
+  "unresolved_questions": [
+    {
+      "id": "UQ-1",
+      "question": "Does SQLite BEGIN IMMEDIATE scale to 20+ concurrent agent processes (not threads)?",
+      "context": "All testing used threads. Real deployments use separate processes. SQLite's behavior under heavy multi-process write contention is different from multi-thread.",
+      "priority": "high"
+    },
+    {
+      "id": "UQ-2",
+      "question": "What is the actual failure rate of the coordinator watchdog under realistic conditions?",
+      "context": "The watchdog is implemented but never stress-tested with actual coordinator kills during active operations.",
+      "priority": "high"
+    },
+    {
+      "id": "UQ-3",
+      "question": "How does Proto A perform over 30-60 minute operations?",
+      "context": "File rotation, WAL checkpointing, message cleanup, and memory stability are untested at longer durations.",
+      "priority": "medium"
+    },
+    {
+      "id": "UQ-4",
+      "question": "Should the heartbeat interval be 15s or 30s?",
+      "context": "Think Tank Alpha recommends 15s with solid rationale. All tests used 30s. The 15s recommendation was never validated.",
+      "priority": "medium"
+    },
+    {
+      "id": "UQ-5",
+      "question": "Can Proto A and Proto B coexist for different operational profiles?",
+      "context": "Proto B was archived entirely, but it has lower raw overhead (0.1-0.4% vs 0.2-0.8%) and may be better for latency-critical scenarios. The option to use Proto B selectively was mentioned but not designed.",
+      "priority": "low"
+    },
+    {
+      "id": "UQ-6",
+      "question": "How will the system handle API sources that require authentication or have per-key rate limits?",
+      "context": "Current rate limiting tracks collective calls per endpoint. API keys add another dimension (per-key limits, key rotation, quota management).",
+      "priority": "medium"
+    },
+    {
+      "id": "UQ-7",
+      "question": "What happens when agents join or leave mid-operation?",
+      "context": "Think Tank Beta's failure handling covers agent death, but dynamic scaling (adding agents to a running operation) is not addressed.",
+      "priority": "low"
+    },
+    {
+      "id": "UQ-8",
+      "question": "Is the work_assignments table schema from Think Tank Beta implemented?",
+      "context": "Think Tank Beta section 5 specifies a detailed work_assignments table and distribution algorithm. KB-0018 lists it as 'needs to be added' but it is unclear if it was ever implemented.",
+      "priority": "medium"
+    }
+  ],
+
+  "feature_requests": [
+    {
+      "id": "FR-1",
+      "title": "Work assignment table and weighted distribution algorithm",
+      "source": "Think Tank Beta section 5",
+      "description": "Formal work_assignments SQLite table with weighted round-robin distribution, load-aware rebalancing on agent death.",
+      "priority": "high"
+    },
+    {
+      "id": "FR-2",
+      "title": "Coordinator watchdog with stateless restart",
+      "source": "KB-0017 CR-3, Think Tank Beta section 4",
+      "description": "Coordinator heartbeats itself; sub-teams detect coordinator death; stateless restart from SQLite state.",
+      "priority": "high"
+    },
+    {
+      "id": "FR-3",
+      "title": "CI integration for benchmark runner",
+      "source": "KB-0020 recommendations",
+      "description": "Run proto_benchmark_runner.py as regression check before coordinator changes.",
+      "priority": "medium"
+    },
+    {
+      "id": "FR-4",
+      "title": "Multi-process benchmark tests",
+      "source": "KB-0020 recommendations",
+      "description": "Separate OS process benchmarks (not threads) to validate real-world concurrency behavior.",
+      "priority": "high"
+    },
+    {
+      "id": "FR-5",
+      "title": "Fan-out relay for Proto B shared channels",
+      "source": "Think Tank Alpha section 5.2",
+      "description": "If Proto B is ever resurrected, implement fan-out relay pattern for multi-reader channels.",
+      "priority": "low"
+    },
+    {
+      "id": "FR-6",
+      "title": "Startup validation routine",
+      "source": "KB-0017, KB-0019",
+      "description": "Check directory exists, permissions correct, path canonical, not on /tmp or NFS, SQLite accessible.",
+      "priority": "medium"
+    },
+    {
+      "id": "FR-7",
+      "title": "Fast_validate coordination health check",
+      "source": "KB-0019 section 2.5",
+      "description": "Optional --check-coordination flag in Go fast_validate tool to verify coordination directory, DB health, and bus file sizes.",
+      "priority": "low"
+    },
+    {
+      "id": "FR-8",
+      "title": "Quality validation agent/phase",
+      "source": "Think Tank Alpha section 2.5",
+      "description": "Dedicated quality-check message type and topic-quality channel for automated data validation results.",
+      "priority": "medium"
+    },
+    {
+      "id": "FR-9",
+      "title": "Integration with handoff_tracker.py",
+      "source": "KB-0019 section 2.1",
+      "description": "At operation end, extract key bus messages (blockers, phase completions) into team session log Handoff Notes.",
+      "priority": "medium"
+    },
+    {
+      "id": "FR-10",
+      "title": "Dynamic agent scaling",
+      "source": "Inferred from gaps",
+      "description": "Support adding agents to a running operation without restart. Current system only handles agent removal (death).",
+      "priority": "low"
+    },
+    {
+      "id": "FR-11",
+      "title": "Per-API-key rate limit tracking",
+      "source": "Inferred from gaps",
+      "description": "Extend rate_limit_config to support per-key quotas for APIs requiring authentication.",
+      "priority": "medium"
+    },
+    {
+      "id": "FR-12",
+      "title": "Long-duration operation testing suite",
+      "source": "GAP-3",
+      "description": "30-60 minute test scenarios to validate file rotation, cleanup, and memory stability.",
+      "priority": "high"
+    }
+  ],
+
+  "improvement_recommendations": [
+    {
+      "priority": 1,
+      "title": "Run multi-process benchmarks immediately",
+      "rationale": "The single biggest gap in validation. All current testing used threads. Real deployments use processes. This must be validated before any production use.",
+      "effort": "medium",
+      "source": "KB-0020, GAP-1"
+    },
+    {
+      "priority": 2,
+      "title": "Implement and test coordinator watchdog",
+      "rationale": "Coordinator is a single point of failure rated CRITICAL by KB-0017. Basic watchdog (coordinator self-heartbeat + sub-team detection) is essential for production.",
+      "effort": "medium",
+      "source": "KB-0017 CR-3"
+    },
+    {
+      "priority": 3,
+      "title": "Add work_assignments table to state.py",
+      "rationale": "Think Tank Beta designed a complete work distribution system. Without it, the coordinator has no formal mechanism to assign, track, or reassign work.",
+      "effort": "small",
+      "source": "Think Tank Beta section 5"
+    },
+    {
+      "priority": 4,
+      "title": "Resolve heartbeat interval (15s vs 30s)",
+      "rationale": "Think Tank Alpha made a compelling case for 15s. Run both configurations in benchmarks and pick one definitively.",
+      "effort": "small",
+      "source": "CONTRA-1"
+    },
+    {
+      "priority": 5,
+      "title": "Add startup validation routine",
+      "rationale": "KB-0017 identified silent failures from wrong permissions, /tmp usage, non-canonical paths. A 10-line check at startup prevents hours of debugging.",
+      "effort": "small",
+      "source": "KB-0017 EN-1/EN-4/EN-5"
+    },
+    {
+      "priority": 6,
+      "title": "Run long-duration (30+ min) stress test",
+      "rationale": "Validates file rotation, WAL growth, cleanup, and memory stability. All current tests are 2-5 minutes.",
+      "effort": "medium",
+      "source": "GAP-3"
+    },
+    {
+      "priority": 7,
+      "title": "Integrate benchmark runner into CI pipeline",
+      "rationale": "Prevents regression in communication overhead when coordinator code changes.",
+      "effort": "small",
+      "source": "KB-0020"
+    },
+    {
+      "priority": 8,
+      "title": "Implement quality-check message flow",
+      "rationale": "Think Tank Alpha designed a complete quality validation schema (section 2.5). This ensures data integrity in the pipeline.",
+      "effort": "medium",
+      "source": "Think Tank Alpha section 2.5"
+    },
+    {
+      "priority": 9,
+      "title": "Add handoff_tracker integration",
+      "rationale": "Bridges live communication to cross-session knowledge. Extracts key bus messages into team session logs.",
+      "effort": "small",
+      "source": "KB-0019 section 2.1"
+    },
+    {
+      "priority": 10,
+      "title": "Document Proto B revival conditions",
+      "rationale": "Proto B was archived but has lower raw overhead and may be needed at 50+ agent scale. Document the specific conditions under which it should be resurrected.",
+      "effort": "small",
+      "source": "KB-0018, KB-0021"
+    }
+  ]
+}

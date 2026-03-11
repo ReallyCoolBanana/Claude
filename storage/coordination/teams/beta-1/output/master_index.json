@@ -1,0 +1,872 @@
+{
+  "team": "beta-1",
+  "mission": "kb-log-processing",
+  "timestamp": "2026-03-11T12:00:00Z",
+  "kb_entries": [
+    {
+      "id": "KB-0001",
+      "title": "Storage System Stress Test & Improvement Results",
+      "date": "2026-03-10",
+      "team": "TEAM-0001",
+      "category": "optimization",
+      "tags": ["storage-system", "stress-testing", "benchmarks", "scaling", "cross-references", "validation"],
+      "builds_on": [],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "Flat JSON scales to ~1000 entries before degradation",
+        "Hash indexes provide 7-13x speedup for ID lookups",
+        "No concurrency safety in read-modify-write pattern",
+        "Cross-references essential but missing between subsystems",
+        "Atomic writes via temp file + rename prevent corruption",
+        "Sources subsystem bottleneck due to individual file I/O"
+      ],
+      "tools_created": ["validate-storage.py (SCR-0001)", "test-edge-cases.py (SCR-0002)", "repair-storage.py (SCR-0003)", "search-storage.py", "build-cross-ref-index.py"],
+      "related_entries": ["KB-0002", "KB-0006", "KB-0008"]
+    },
+    {
+      "id": "KB-0002",
+      "title": "Sonnet Research API - Multi-Agent Research System",
+      "date": "2026-03-10",
+      "team": "TEAM-0002",
+      "category": "integration",
+      "tags": ["sonnet-api", "multi-agent", "research-system", "queue-management", "data-import"],
+      "builds_on": ["KB-0001"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "7-module Python system for research dispatching",
+        "Thread-safe priority queue with rate limiting",
+        "Three research depths: quick/standard/deep",
+        "Absolute imports only for Claude Code compatibility",
+        "Auto-import results to repo storage"
+      ],
+      "tools_created": ["sonnet-research-api (TOOL-0001)"],
+      "related_entries": ["KB-0001", "KB-0003"]
+    },
+    {
+      "id": "KB-0003",
+      "title": "Multi-Team Competitive Research: Quantitative Stock Analysis with AI",
+      "date": "2026-03-10",
+      "team": "TEAM-0003",
+      "category": "market-research",
+      "tags": ["quantitative-analysis", "ai-trading", "stock-analysis", "multi-team", "competitive-research"],
+      "builds_on": ["KB-0001", "KB-0002"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "221 unique AI trading techniques identified",
+        "5-team competitive research operation validated",
+        "More sub-agents != proportionally better results",
+        "Verification teams essential for citation quality",
+        "4-5 sub-agents per team optimal for efficiency",
+        "Top techniques: XGBoost, Temporal Fusion Transformers, Deep RL, FinBERT, GNNs"
+      ],
+      "tools_created": ["grade_research.py", "merge_research.py"],
+      "related_entries": ["KB-0001", "KB-0002", "KB-0004"]
+    },
+    {
+      "id": "KB-0004",
+      "title": "Data Gathering Methods: Iteration 1 Benchmarks & Findings",
+      "date": "2026-03-10",
+      "team": "TEAM-0004",
+      "category": "methodology",
+      "tags": ["data-gathering", "benchmarks", "improvement-loop", "api-methods", "verification"],
+      "builds_on": ["KB-0003"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "4 data gathering methods built, only 1 fully operational",
+        "DG-0001 (Web Search) functional, DG-0002/0003 broken",
+        "Silent error handling is dangerous",
+        "API User-Agent compliance matters (Wikipedia blocks)",
+        "HTTPS should be default for all API calls",
+        "3-team continuous improvement loop pattern"
+      ],
+      "tools_created": ["DG-0001 (web search)", "DG-0002 (wikipedia)", "DG-0003 (arxiv)", "DG-0004 (hybrid)"],
+      "related_entries": ["KB-0003", "KB-0005", "KB-0007", "KB-0010", "KB-0012", "KB-0013", "KB-0014"]
+    },
+    {
+      "id": "KB-0005",
+      "title": "Data Gathering Iteration 2: Parallel Hybrid Methods & Academic APIs",
+      "date": "2026-03-10",
+      "team": "TEAM-0005",
+      "category": "methodology",
+      "tags": ["data-gathering", "openalex", "wikidata", "parallel-execution", "deduplication", "tf-idf", "benchmarks", "iteration-2"],
+      "builds_on": ["KB-0004"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "5 of 7 methods functional (up from 1 of 4)",
+        "Hybrid v2: 46 data points, quality 92, 5.1s",
+        "OpenAlex: best free academic API, 250M+ works",
+        "Parallel execution via ThreadPoolExecutor reduces hybrid time 12%",
+        "TF-IDF deduplication at 0.65 cosine threshold",
+        "Credibility weighting: academic 1.5x > encyclopedia 1.2x > web 1.0x"
+      ],
+      "tools_created": ["DG-0006 (OpenAlex)", "DG-0007 (Wikidata)", "dedup_utils.py", "benchmark_runner.py"],
+      "related_entries": ["KB-0004", "KB-0007", "KB-0012", "KB-0013", "KB-0014"]
+    },
+    {
+      "id": "KB-0006",
+      "title": "Archive Tools for Knowledge Base System",
+      "date": "2026-03-10",
+      "team": "TEAM-0006",
+      "category": "tool-usage",
+      "tags": ["archive-tools", "validation", "index-rebuild", "cross-references", "knowledge-base", "automation"],
+      "builds_on": ["KB-0001"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "3 archive tools: validator, rebuilder, cross-ref checker",
+        "YAML frontmatter parsing without PyYAML",
+        "Tag index inconsistencies easy to introduce manually",
+        "Many orphan scripts from stress testing",
+        "builds_on field missing from some index entries"
+      ],
+      "tools_created": ["kb_validator.py (SCR-0012)", "index_rebuilder.py (SCR-0013)", "cross_ref_checker.py (SCR-0014)"],
+      "related_entries": ["KB-0001", "KB-0007", "KB-0009"]
+    },
+    {
+      "id": "KB-0007",
+      "title": "Research Team Configuration Testing & System Improvements",
+      "date": "2026-03-10",
+      "team": "TEAM-0007",
+      "category": "methodology",
+      "tags": ["agent-scaling", "configuration-testing", "research-methodology", "team-sizing", "benchmarks", "archive-tools", "efficiency-fixes"],
+      "builds_on": ["KB-0004", "KB-0005", "KB-0006"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "3 agents + 2 subagents each is optimal for research (Triad config)",
+        "Diminishing returns above 4 agents",
+        "Solo agents find unique things multi-agent configs miss",
+        "Archive tools pay for themselves immediately",
+        "Code duplication most visible inefficiency (DDG parser 4x)",
+        "DDG dedup, request caching, arXiv HTTPS fixes applied"
+      ],
+      "tools_created": ["ddg_utils.py", "request_cache.py"],
+      "related_entries": ["KB-0004", "KB-0005", "KB-0006", "KB-0008", "KB-0009"]
+    },
+    {
+      "id": "KB-0008",
+      "title": "Data Storage Methods & AI-Optimized Storage Research",
+      "date": "2026-03-10",
+      "team": "TEAM-0008",
+      "category": "methodology",
+      "tags": ["data-storage", "storage-formats", "vector-databases", "RAG", "indexing", "benchmarks", "AI-optimization", "key-value-stores"],
+      "builds_on": ["KB-0001", "KB-0007"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "Parquet best for analytical workloads",
+        "MessagePack best binary JSON replacement (30-50% smaller, 2-5x faster)",
+        "SQLite unbeatable for embedded structured storage",
+        "Vector DBs now infrastructure-level (Qdrant, Milvus lead)",
+        "Graph-enhanced vector retrieval emerging 2026 standard",
+        "CrewAI pattern: ChromaDB (short-term) + SQLite3 (long-term)",
+        "Hybrid search (dense vectors + BM25) doubles RAG accuracy",
+        "LMDB best read performance, RocksDB best write throughput"
+      ],
+      "tools_created": [],
+      "related_entries": ["KB-0001", "KB-0007", "KB-0009", "KB-0010"]
+    },
+    {
+      "id": "KB-0009",
+      "title": "Multi-Team Operation 3: Archive Optimization, High-Speed Tools & Coordinated Improvement",
+      "date": "2026-03-10",
+      "team": "TEAM-0009",
+      "category": "optimization",
+      "tags": ["multi-team-orchestration", "go-tools", "archive-automation", "pipeline-optimization", "high-performance", "coordinator-pattern"],
+      "builds_on": ["KB-0006", "KB-0007", "KB-0008"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "Go tools: 28x-143x speedup over Python equivalents",
+        "Coordinator agent pattern works well for 5+ teams",
+        "Orphan script problem is systemic",
+        "Cache integration must be opt-in (USE_CACHE toggle)",
+        "30% of recommendations never addressed (handoff tracking)",
+        "System health score: B+"
+      ],
+      "tools_created": ["kb_search.py (SCR-0018)", "handoff_tracker.py (SCR-0019)", "staleness_detector.py (SCR-0020)", "fast_search (SCR-0015, Go)", "fast_validate (SCR-0016, Go)", "fast_cache (SCR-0017, Go)"],
+      "related_entries": ["KB-0006", "KB-0007", "KB-0008", "KB-0015", "KB-0016", "KB-0019"]
+    },
+    {
+      "id": "KB-0010",
+      "title": "Free Public APIs for AI/ML Self-Improvement",
+      "date": "2026-03-10",
+      "team": "TEAM-0012",
+      "category": "integration",
+      "tags": ["ai-ml-apis", "nlp", "computer-vision", "embeddings", "knowledge-graphs", "free-apis", "self-improvement"],
+      "builds_on": ["KB-0004", "KB-0005", "KB-0008"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "6 high-quality APIs: Free Dictionary, Datamuse, ConceptNet, HuggingFace, Gemini Embeddings, Roboflow",
+        "ConceptNet uniquely valuable for commonsense reasoning",
+        "Google reducing free tier quotas (Dec 2025 cuts)",
+        "Self-hosted alternatives for embeddings and CV",
+        "Structured semantic data more valuable than raw text for AI"
+      ],
+      "tools_created": [],
+      "related_entries": ["KB-0004", "KB-0005", "KB-0008", "KB-0014"]
+    },
+    {
+      "id": "KB-0012",
+      "title": "Free Public APIs for Developer Tools & General-Purpose Data",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "category": "integration",
+      "tags": ["public-apis", "developer-tools", "package-registries", "ip-geolocation", "social-data", "hacker-news", "stack-overflow", "github-api", "npm", "pypi"],
+      "builds_on": ["KB-0004", "KB-0005"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "7 APIs: GitHub, npm, PyPI, ip-api, HN Algolia, HN Firebase, Stack Exchange",
+        "Reddit excluded due to restrictive API policies",
+        "GitHub classified as freemium (60/hr unauthenticated too low)",
+        "Source ID conflicts from parallel teams resolved"
+      ],
+      "tools_created": [],
+      "related_entries": ["KB-0004", "KB-0005", "KB-0013", "KB-0014"]
+    },
+    {
+      "id": "KB-0013",
+      "title": "Free Public APIs for Government and Open Data",
+      "date": "2026-03-10",
+      "team": "TEAM-0013",
+      "category": "integration",
+      "tags": ["public-apis", "government-data", "open-data", "weather", "geospatial", "economic-data", "free-apis"],
+      "builds_on": ["KB-0004", "KB-0005"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "7 APIs: FRED, Census, BLS, NWS Weather, Open-Meteo, World Bank, Treasury Fiscal",
+        "5 of 7 require no authentication",
+        "FRED broadest economic coverage",
+        "World Bank best for international comparative data",
+        "BLS v1 only 25 queries/day, v2 with free key 500/day"
+      ],
+      "tools_created": [],
+      "related_entries": ["KB-0004", "KB-0005", "KB-0012", "KB-0014"]
+    },
+    {
+      "id": "KB-0014",
+      "title": "Operation 4: Public Data API Tool Development",
+      "date": "2026-03-10",
+      "team": "TEAM-0014",
+      "category": "integration",
+      "tags": ["public-apis", "data-gathering", "api-tools", "openalex", "semantic-scholar", "hackernews", "guardian", "wikidata", "github", "data-collection"],
+      "builds_on": ["KB-0004", "KB-0005", "KB-0009", "KB-0010"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "6 new data-gathering tools built (SCR-0023 to SCR-0028)",
+        "method_*.py pattern scales well to new APIs",
+        "OpenAlex inverted abstract index requires reconstruction",
+        "Algolia HN search more useful than Firebase for keyword queries",
+        "Semantic Scholar TLDR uniquely valuable",
+        "GitHub unauthenticated rate limit restrictive (10 searches/min)"
+      ],
+      "tools_created": ["method_openalex.py (SCR-0023)", "method_hackernews.py (SCR-0024)", "method_guardian.py (SCR-0025)", "method_semantic_scholar.py (SCR-0026)", "method_wikidata.py (SCR-0027)", "method_github.py (SCR-0028)"],
+      "related_entries": ["KB-0004", "KB-0005", "KB-0009", "KB-0010", "KB-0012", "KB-0013"]
+    },
+    {
+      "id": "KB-0015",
+      "title": "JSONL Message Bus: Technical Reference for Inter-Agent Communication",
+      "date": "2026-03-11",
+      "team": "TEAM-0015",
+      "category": "integration",
+      "tags": ["message-bus", "jsonl", "inter-agent-communication", "concurrency", "real-time"],
+      "builds_on": ["KB-0009"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "POSIX atomic write guarantees with O_APPEND",
+        "Keep messages under 4096 bytes for atomic writes",
+        "Use os.write() not buffered I/O for concurrent writers",
+        "Never use NFS for JSONL message bus",
+        "Polling at 100-200ms recommended over inotify",
+        "JSONL schema: id, type, channel, team, ts, body",
+        "Channel types: global, team-N, topic-name",
+        "No fsync needed for ephemeral agent messages",
+        "Epoch-based file rotation preferred over rename"
+      ],
+      "tools_created": ["BusWriter class", "BusReader class", "JSONLTail class"],
+      "related_entries": ["KB-0009", "KB-0016", "KB-0017", "KB-0018", "KB-0019"]
+    },
+    {
+      "id": "KB-0016",
+      "title": "SQLite WAL Shared State: Technical Reference for Inter-Agent Coordination",
+      "date": "2026-03-11",
+      "team": "TEAM-0016",
+      "category": "integration",
+      "tags": ["sqlite", "wal", "shared-state", "inter-agent-communication", "concurrency", "coordination", "multi-process", "ipc"],
+      "builds_on": ["KB-0009"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "SQLite WAL mode: concurrent readers + single writer",
+        "Sub-millisecond read latency",
+        "BEGIN IMMEDIATE for write transactions",
+        "Schema for heartbeats, phase signals, rate limits, pub/sub",
+        "Auto-recovery via WAL checksums on crash",
+        "All processes must use same canonical path",
+        "Never delete -wal/-shm files while DB in use"
+      ],
+      "tools_created": ["AgentCoordinator class"],
+      "related_entries": ["KB-0009", "KB-0015", "KB-0017", "KB-0018", "KB-0019"]
+    },
+    {
+      "id": "KB-0017",
+      "title": "Failure Mode Analysis: JSONL Bus + SQLite Shared State",
+      "date": "2026-03-11",
+      "team": "TEAM-0017",
+      "category": "integration",
+      "tags": ["failure-analysis", "risk-assessment", "reliability", "inter-agent-communication"],
+      "builds_on": ["KB-0015", "KB-0016", "KB-0009"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "26 failure modes analyzed across 6 categories",
+        "3 critical must-fix issues: TOCTOU rate-limit race, git worktree split-brain, coordinator SPOF",
+        "2 should-fix issues: enforced data cleanup, startup validation",
+        "CONDITIONAL GO for prototype with 3 mandatory conditions",
+        "RC-4: check-then-increment must use BEGIN IMMEDIATE",
+        "SB-1/SB-2: communication files must be outside git worktrees",
+        "CR-3: coordinator needs watchdog/self-healing"
+      ],
+      "tools_created": [],
+      "related_entries": ["KB-0015", "KB-0016", "KB-0009", "KB-0018"]
+    },
+    {
+      "id": "KB-0018",
+      "title": "Multi-Agent Communication Prototype: Dual Implementation & Test Results",
+      "date": "2026-03-11",
+      "team": "TEAM-0018",
+      "category": "methodology",
+      "tags": ["prototype", "multi-agent", "jsonl", "sqlite", "mmap", "fifo", "testing", "race-conditions"],
+      "builds_on": ["KB-0015", "KB-0016", "KB-0017"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "Proto A (JSONL+SQLite): 1437 lines, durability-first",
+        "Proto B (pipes+mmap): 1855 lines, speed-first",
+        "113 tests all pass after 4 fix iterations",
+        "Proto A: 3 bugs found, Proto B: 7 bugs found",
+        "SQLite BEGIN IMMEDIATE more robust than manual mmap locking",
+        "Proto A recommended for production"
+      ],
+      "tools_created": ["prototype/agent_comm/ (Proto A)", "prototype/agent_comm_b/ (Proto B)"],
+      "related_entries": ["KB-0015", "KB-0016", "KB-0017", "KB-0019", "KB-0020"]
+    },
+    {
+      "id": "KB-0019",
+      "title": "Architecture & Integration Analysis: Live Communication System",
+      "date": "2026-03-11",
+      "team": "TEAM-0019",
+      "category": "integration",
+      "tags": ["architecture", "integration", "inter-agent-communication", "migration", "infrastructure", "jsonl", "sqlite", "coordinator-pattern"],
+      "builds_on": ["KB-0015", "KB-0016", "KB-0009"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "File placement: storage/coordination/ in main repo root",
+        "Discovery via CLAUDE_COORD_DIR env var or git rev-parse fallback",
+        "Coordinator needs write access (departure from read-only pattern)",
+        "Incremental adoption: mixed operations supported",
+        "Python stdlib only, no external dependencies",
+        "Clean between operations (ephemeral state)",
+        "handoff_tracker complements, not replaces, live communication"
+      ],
+      "tools_created": ["coordination_bus.py (SCR-0029)", "coordination_state.py (SCR-0030)", "init_coordination.py (SCR-0031)"],
+      "related_entries": ["KB-0015", "KB-0016", "KB-0009", "KB-0018", "KB-0020"]
+    },
+    {
+      "id": "KB-0020",
+      "title": "Live Prototype Testing: Data Gathering Benchmark Results",
+      "date": "2026-03-11",
+      "team": "TEAM-0020",
+      "category": "methodology",
+      "tags": ["prototype", "live-testing", "benchmarks", "data-gathering", "multi-agent", "communication"],
+      "builds_on": ["KB-0018", "KB-0019"],
+      "status": "validated",
+      "confidence": "high",
+      "key_concepts": [
+        "Both prototypes pass all benchmarks (<1% overhead)",
+        "Proto A collects 16.7% more data via coordinated rate limiting",
+        "Communication adds ~0.3ms per message (negligible vs API latency)",
+        "Failure injection handled cleanly with graceful degradation",
+        "Synthetic benchmarks complement but don't replace live tests",
+        "Think tank phase produced actionable architecture plans"
+      ],
+      "tools_created": ["proto_benchmark_runner.py", "live_test_proto_a.py", "live_test_proto_b.py", "live_test_baseline.py"],
+      "related_entries": ["KB-0018", "KB-0019", "KB-0021"]
+    },
+    {
+      "id": "KB-0021",
+      "title": "Think Tank Efficiency Analysis: Proto A Communication vs No Communication",
+      "date": "2026-03-11",
+      "team": "TEAM-0021",
+      "category": "methodology",
+      "tags": ["efficiency-analysis", "think-tank", "proto-a", "communication", "benchmarks", "dogfooding", "production-decision"],
+      "builds_on": ["KB-0020", "KB-0018", "KB-0019"],
+      "status": "validated",
+      "confidence": "very-high",
+      "key_concepts": [
+        "Unanimous verdict: Proto A provides efficiency gains",
+        "Communication overhead <1% in all scenarios",
+        "16.7% more data collected with coordination",
+        "Sublinear scaling: larger teams benefit more",
+        "Failure detection saves 20-27% of operation time",
+        "Breakeven after first coordinated action (>99% probability)",
+        "Proto A marked production, Proto B archived",
+        "Dogfooding validated real-time cross-referencing value"
+      ],
+      "tools_created": ["think_tank_efficiency.py"],
+      "related_entries": ["KB-0018", "KB-0019", "KB-0020"]
+    }
+  ],
+  "team_sessions": [
+    {
+      "id": "TEAM-0001",
+      "date": "2026-03-10",
+      "members": ["coordinator", "team-lead-1", "team-lead-2", "team-lead-3", "team-lead-4", "sub-agent-alpha-x4", "sub-agent-beta-x4", "sub-agent-gamma-x4"],
+      "agent_count": 16,
+      "objective": "Stress test the storage system across all dimensions",
+      "outputs": ["KB-0001"],
+      "key_decisions": ["Keep flat JSON for now", "Add cross-reference schema", "Create validation/repair tooling", "Plan SQLite migration path"],
+      "action_items": ["Run validate-storage.py before committing", "Clean up 16 orphan test files", "Populate cross-reference fields"]
+    },
+    {
+      "id": "TEAM-0002",
+      "date": "2026-03-10",
+      "members": ["coordinator", "team-a-lead", "team-a-sub-1", "team-a-sub-2", "team-b-lead", "team-b-sub-1", "team-b-sub-2"],
+      "agent_count": 7,
+      "objective": "Build Sonnet Research API for multi-agent research dispatching",
+      "outputs": ["KB-0002"],
+      "key_decisions": ["Anthropic Python SDK", "Thread-based concurrency", "Three research depths", "Absolute imports only"],
+      "action_items": ["Set ANTHROPIC_API_KEY", "Adjust rate limits per API tier"]
+    },
+    {
+      "id": "TEAM-0003",
+      "date": "2026-03-10",
+      "members": ["coordinator", "team1-lead", "team1-agents-x8", "team2-lead", "team2-agents-x4", "team3-lead", "team3-agents-x3", "team4-lead", "team4-agents-x3", "team5-lead", "team5-agents-x4"],
+      "agent_count": 27,
+      "objective": "5-team competitive research on Quantitative Stock Analysis with AI",
+      "outputs": ["KB-0003"],
+      "key_decisions": ["Pivoted from Sonnet API to WebSearch", "Dependency-ordered phases", "Automated grading script"],
+      "action_items": ["Use grading script for future research", "Cap sub-agents at 4-5 per team"]
+    },
+    {
+      "id": "TEAM-0004",
+      "date": "2026-03-10",
+      "members": ["coordinator", "team1a-lead", "team1a-agents-x4", "team1b-lead", "team1b-agents-x4", "team2-lead", "team2-agents-x4", "team3-lead", "team3-agents-x4"],
+      "agent_count": 17,
+      "objective": "3-team continuous improvement loop for data gathering methods",
+      "outputs": ["KB-0004"],
+      "key_decisions": ["3-team improvement loop pattern", "Benchmark runner for standardized testing"],
+      "action_items": ["Fix DG-0002 User-Agent", "Switch DG-0003 to HTTPS", "Add retry logic with exponential backoff"]
+    },
+    {
+      "id": "TEAM-0005",
+      "date": "2026-03-10",
+      "members": ["software-engineer"],
+      "agent_count": 1,
+      "objective": "Iteration 2 improvements to data gathering methods",
+      "outputs": ["KB-0005"],
+      "key_decisions": ["OpenAlex over Semantic Scholar as primary academic source", "Parallel execution with ThreadPoolExecutor", "Credibility tiers for scoring", "Dedup threshold at 0.65"],
+      "action_items": ["Add Semantic Scholar", "Add result caching with TTL", "Add CrossRef for DOI resolution"]
+    },
+    {
+      "id": "TEAM-0006",
+      "date": "2026-03-10",
+      "members": ["agent-a1", "agent-a2", "agent-a3"],
+      "agent_count": 3,
+      "objective": "Build 3 archive tools for KB validation, index rebuilding, cross-reference checking",
+      "outputs": ["KB-0006"],
+      "key_decisions": ["Simple YAML parser (no PyYAML)", "index_rebuilder defaults to --dry-run", "Tools registered as SCR-0012 to SCR-0014"],
+      "action_items": ["Fix KB-0003 tag inconsistency", "Register or delete 11 orphan scripts", "Create teams/sessions/index.json"]
+    },
+    {
+      "id": "TEAM-0007",
+      "date": "2026-03-10",
+      "members": ["coordinator", "research-config-1", "research-config-2", "research-config-3", "research-config-4", "coding-team-a", "coding-team-b", "archive-team"],
+      "agent_count": 8,
+      "objective": "Test research team configurations, build archive tools, fix inefficiencies",
+      "outputs": ["KB-0006", "KB-0007"],
+      "key_decisions": ["Triad config (3+2) is optimal", "DDG parser duplication addressed", "Request cache built"],
+      "action_items": ["Fix method_wikipedia.py broad except clauses", "Register or remove 8 orphan scripts"]
+    },
+    {
+      "id": "TEAM-0008",
+      "date": "2026-03-10",
+      "members": ["research-lead-R1", "research-lead-R2", "research-lead-R3", "subagent-R1a", "subagent-R1b", "subagent-R2a", "subagent-R2b", "subagent-R3a", "subagent-R3b"],
+      "agent_count": 9,
+      "objective": "Research data storage methods and AI-optimized storage",
+      "outputs": ["KB-0008"],
+      "key_decisions": ["Report structured around 6 categories", "Prioritized tools with Python bindings", "Recommended hybrid approaches"],
+      "action_items": ["Run local benchmarks for specific workloads", "Re-evaluate vector DB landscape in 3-6 months"]
+    },
+    {
+      "id": "TEAM-0009",
+      "date": "2026-03-10",
+      "members": ["coordinator", "research-lead", "prog-team-a", "prog-team-b", "prog-team-c", "archive-team-1", "archive-team-2", "archive-team-3"],
+      "agent_count": 20,
+      "objective": "Full coordinated operation: build tools, Go tools, archive, verify, benchmark",
+      "outputs": ["KB-0008", "KB-0009"],
+      "key_decisions": ["Go over Rust/C for high-speed tools", "Cache integration opt-in", "Coordinator read-only access", "fast_validate for pre-commit hooks"],
+      "action_items": ["Add threading.Lock to ddg_utils.py", "Implement staleness auto-fix mode", "Explore GraphRAG for KB entries"]
+    },
+    {
+      "id": "TEAM-0010",
+      "date": "2026-03-10",
+      "members": ["research-team-5"],
+      "agent_count": 1,
+      "objective": "Find best free public APIs for developer tools and general-purpose data",
+      "outputs": ["KB-0012"],
+      "key_decisions": ["Excluded Reddit API", "Classified GitHub as freemium", "Started source numbering at SRC-0025"],
+      "action_items": ["Research GitLab, crates.io, pkg.go.dev APIs"]
+    },
+    {
+      "id": "TEAM-0012",
+      "date": "2026-03-10",
+      "members": ["research-agent-6"],
+      "agent_count": 1,
+      "objective": "Find best free public APIs for AI/ML self-improvement",
+      "outputs": ["KB-0010"],
+      "key_decisions": ["ConceptNet over DBpedia/Wikidata for commonsense", "Included freemium APIs with useful free tiers", "Noted Google free tier reductions"],
+      "action_items": ["Build caching layer for API responses", "Monitor Google free tier changes"]
+    },
+    {
+      "id": "TEAM-0013",
+      "date": "2026-03-10",
+      "members": ["research-team-4"],
+      "agent_count": 1,
+      "objective": "Find best free public APIs for government and open data",
+      "outputs": ["KB-0013"],
+      "key_decisions": ["7 APIs selected for free access + JSON + structured data", "Both NWS and Open-Meteo for weather coverage"],
+      "action_items": ["Register for FRED and Census free API keys"]
+    },
+    {
+      "id": "TEAM-0014",
+      "date": "2026-03-10",
+      "members": ["coordinator", "research-team-1", "research-team-2", "research-team-3", "research-team-4", "research-team-5", "research-team-6", "sw-team-2", "sw-team-3"],
+      "agent_count": 9,
+      "objective": "Build data-gathering tools for 6 high-value public APIs",
+      "outputs": ["KB-0014"],
+      "key_decisions": ["Reused existing source entries", "Pattern compliance with method_*.py", "Script IDs SCR-0023 to SCR-0028"],
+      "action_items": ["Build 5 more tools (FRED, CoinGecko, Open-Meteo, HF Hub, ConceptNet)", "Update method_hybrid.py with new sources", "Build rate limit coordinator module"]
+    },
+    {
+      "id": "TEAM-0018",
+      "date": "2026-03-11",
+      "members": ["Coordinator", "Subagent-A", "Subagent-B", "Subagent-C", "Subagent-D", "Subagent-E", "Subagent-F", "Subagent-G"],
+      "agent_count": 8,
+      "objective": "Build and test two competing communication prototypes, fix bugs through iterative test-fix cycles",
+      "outputs": ["KB-0018"],
+      "key_decisions": ["Proto A recommended for production", "4 fix iterations needed", "113 tests all pass"],
+      "action_items": ["Deploy Proto A to storage/coordination/"]
+    },
+    {
+      "id": "TEAM-0019",
+      "date": "2026-03-11",
+      "members": ["architecture-analysis-agent"],
+      "agent_count": 1,
+      "objective": "Architecture and integration analysis for live inter-agent communication system",
+      "outputs": ["KB-0019"],
+      "key_decisions": ["storage/coordination/ as shared directory", "CLAUDE_COORD_DIR env var", "Coordinator gets write access", "Incremental adoption", "stdlib only"],
+      "action_items": ["Implement coordination_bus.py, coordination_state.py, init_coordination.py", "Update .gitignore", "Update SOPs"]
+    },
+    {
+      "id": "TEAM-0020",
+      "date": "2026-03-11",
+      "members": ["coordinator", "think-alpha-lead", "think-beta-lead", "think-gamma-lead", "data-a-coordinator", "data-a-sub-1", "data-a-sub-2", "data-b-coordinator", "data-b-sub-1", "data-b-sub-2", "data-c-lead", "data-c-sub-1", "data-c-sub-2", "bench-runner"],
+      "agent_count": 14,
+      "objective": "Live prototype testing with think tanks, data gathering, and automated benchmarks",
+      "outputs": ["KB-0020"],
+      "key_decisions": ["Created SOPs-prototype-testing.md", "Synthetic + real API tests", "Think tank before data gathering"],
+      "action_items": ["Multi-process benchmarks (current tests use threads)", "Integrate benchmark runner into CI"]
+    },
+    {
+      "id": "TEAM-0021",
+      "date": "2026-03-11",
+      "members": ["coordinator", "think-tank-alpha", "think-tank-beta", "think-tank-gamma"],
+      "agent_count": 4,
+      "objective": "Determine Proto A efficiency gains; archive Proto B, mark Proto A production",
+      "outputs": ["KB-0021"],
+      "key_decisions": ["Proto B archived", "Proto A marked production", "Efficiency verdict: YES (unanimous)"],
+      "action_items": ["Deploy Proto A to storage/coordination/ per KB-0019", "Update SOPs with Proto A as default-on", "Run multi-process benchmarks"]
+    }
+  ],
+  "cross_references": {
+    "team_to_kb": {
+      "TEAM-0001": ["KB-0001"],
+      "TEAM-0002": ["KB-0002"],
+      "TEAM-0003": ["KB-0003"],
+      "TEAM-0004": ["KB-0004"],
+      "TEAM-0005": ["KB-0005"],
+      "TEAM-0006": ["KB-0006"],
+      "TEAM-0007": ["KB-0006", "KB-0007"],
+      "TEAM-0008": ["KB-0008"],
+      "TEAM-0009": ["KB-0008", "KB-0009"],
+      "TEAM-0010": ["KB-0012"],
+      "TEAM-0012": ["KB-0010"],
+      "TEAM-0013": ["KB-0013"],
+      "TEAM-0014": ["KB-0014"],
+      "TEAM-0018": ["KB-0018"],
+      "TEAM-0019": ["KB-0019"],
+      "TEAM-0020": ["KB-0020"],
+      "TEAM-0021": ["KB-0021"]
+    },
+    "kb_to_team": {
+      "KB-0001": "TEAM-0001",
+      "KB-0002": "TEAM-0002",
+      "KB-0003": "TEAM-0003",
+      "KB-0004": "TEAM-0004",
+      "KB-0005": "TEAM-0005",
+      "KB-0006": "TEAM-0006",
+      "KB-0007": "TEAM-0007",
+      "KB-0008": "TEAM-0008",
+      "KB-0009": "TEAM-0009",
+      "KB-0010": "TEAM-0012",
+      "KB-0012": "TEAM-0010",
+      "KB-0013": "TEAM-0013",
+      "KB-0014": "TEAM-0014",
+      "KB-0015": "TEAM-0015",
+      "KB-0016": "TEAM-0016",
+      "KB-0017": "TEAM-0017",
+      "KB-0018": "TEAM-0018",
+      "KB-0019": "TEAM-0019",
+      "KB-0020": "TEAM-0020",
+      "KB-0021": "TEAM-0021"
+    }
+  },
+  "timeline": [
+    {"date": "2026-03-10", "event": "TEAM-0001: Storage system stress test (16 agents)", "outputs": ["KB-0001"]},
+    {"date": "2026-03-10", "event": "TEAM-0002: Sonnet Research API built (7 agents)", "outputs": ["KB-0002"]},
+    {"date": "2026-03-10", "event": "TEAM-0003: 5-team competitive research on AI trading (27 agents)", "outputs": ["KB-0003"]},
+    {"date": "2026-03-10", "event": "TEAM-0004: Data gathering improvement loop started (17 agents)", "outputs": ["KB-0004"]},
+    {"date": "2026-03-10", "event": "TEAM-0005: Data gathering iteration 2 (1 agent)", "outputs": ["KB-0005"]},
+    {"date": "2026-03-10", "event": "TEAM-0006: Archive tools built (3 agents)", "outputs": ["KB-0006"]},
+    {"date": "2026-03-10", "event": "TEAM-0007: Research config testing + efficiency fixes (8 agents)", "outputs": ["KB-0006", "KB-0007"]},
+    {"date": "2026-03-10", "event": "TEAM-0008: Data storage methods research (9 agents)", "outputs": ["KB-0008"]},
+    {"date": "2026-03-10", "event": "TEAM-0009: Operation 3 - coordinated multi-team build (20 agents)", "outputs": ["KB-0008", "KB-0009"]},
+    {"date": "2026-03-10", "event": "TEAM-0010: Developer tools API research (1 agent)", "outputs": ["KB-0012"]},
+    {"date": "2026-03-10", "event": "TEAM-0012: AI/ML API research (1 agent)", "outputs": ["KB-0010"]},
+    {"date": "2026-03-10", "event": "TEAM-0013: Government/open data API research (1 agent)", "outputs": ["KB-0013"]},
+    {"date": "2026-03-10", "event": "TEAM-0014: Operation 4 - API tool development (9 agents)", "outputs": ["KB-0014"]},
+    {"date": "2026-03-11", "event": "TEAM-0015/0016/0017: Inter-agent communication research (sessions missing)", "outputs": ["KB-0015", "KB-0016", "KB-0017"]},
+    {"date": "2026-03-11", "event": "TEAM-0018: Prototype build and test (8 agents)", "outputs": ["KB-0018"]},
+    {"date": "2026-03-11", "event": "TEAM-0019: Architecture analysis (1 agent)", "outputs": ["KB-0019"]},
+    {"date": "2026-03-11", "event": "TEAM-0020: Live prototype testing (14 agents)", "outputs": ["KB-0020"]},
+    {"date": "2026-03-11", "event": "TEAM-0021: Efficiency analysis + production decision (4 agents)", "outputs": ["KB-0021"]}
+  ],
+  "dependency_graph": {
+    "roots": ["KB-0001"],
+    "edges": {
+      "KB-0001": {"depended_on_by": ["KB-0002", "KB-0003", "KB-0006", "KB-0008"]},
+      "KB-0002": {"depends_on": ["KB-0001"], "depended_on_by": ["KB-0003"]},
+      "KB-0003": {"depends_on": ["KB-0001", "KB-0002"], "depended_on_by": ["KB-0004"]},
+      "KB-0004": {"depends_on": ["KB-0003"], "depended_on_by": ["KB-0005", "KB-0007", "KB-0010", "KB-0012", "KB-0013", "KB-0014"]},
+      "KB-0005": {"depends_on": ["KB-0004"], "depended_on_by": ["KB-0007", "KB-0010", "KB-0012", "KB-0013", "KB-0014"]},
+      "KB-0006": {"depends_on": ["KB-0001"], "depended_on_by": ["KB-0007", "KB-0009"]},
+      "KB-0007": {"depends_on": ["KB-0004", "KB-0005", "KB-0006"], "depended_on_by": ["KB-0008", "KB-0009"]},
+      "KB-0008": {"depends_on": ["KB-0001", "KB-0007"], "depended_on_by": ["KB-0009", "KB-0010"]},
+      "KB-0009": {"depends_on": ["KB-0006", "KB-0007", "KB-0008"], "depended_on_by": ["KB-0014", "KB-0015", "KB-0016", "KB-0017", "KB-0019"]},
+      "KB-0010": {"depends_on": ["KB-0004", "KB-0005", "KB-0008"], "depended_on_by": ["KB-0014"]},
+      "KB-0012": {"depends_on": ["KB-0004", "KB-0005"], "depended_on_by": []},
+      "KB-0013": {"depends_on": ["KB-0004", "KB-0005"], "depended_on_by": []},
+      "KB-0014": {"depends_on": ["KB-0004", "KB-0005", "KB-0009", "KB-0010"], "depended_on_by": []},
+      "KB-0015": {"depends_on": ["KB-0009"], "depended_on_by": ["KB-0017", "KB-0018", "KB-0019"]},
+      "KB-0016": {"depends_on": ["KB-0009"], "depended_on_by": ["KB-0017", "KB-0018", "KB-0019"]},
+      "KB-0017": {"depends_on": ["KB-0015", "KB-0016", "KB-0009"], "depended_on_by": ["KB-0018"]},
+      "KB-0018": {"depends_on": ["KB-0015", "KB-0016", "KB-0017"], "depended_on_by": ["KB-0020", "KB-0021"]},
+      "KB-0019": {"depends_on": ["KB-0015", "KB-0016", "KB-0009"], "depended_on_by": ["KB-0020", "KB-0021"]},
+      "KB-0020": {"depends_on": ["KB-0018", "KB-0019"], "depended_on_by": ["KB-0021"]},
+      "KB-0021": {"depends_on": ["KB-0020", "KB-0018", "KB-0019"], "depended_on_by": []}
+    },
+    "depth_levels": {
+      "0": ["KB-0001"],
+      "1": ["KB-0002", "KB-0006", "KB-0008"],
+      "2": ["KB-0003", "KB-0007"],
+      "3": ["KB-0004", "KB-0009"],
+      "4": ["KB-0005", "KB-0010", "KB-0012", "KB-0013", "KB-0014", "KB-0015", "KB-0016"],
+      "5": ["KB-0017", "KB-0019"],
+      "6": ["KB-0018"],
+      "7": ["KB-0020"],
+      "8": ["KB-0021"]
+    }
+  },
+  "topic_clusters": {
+    "storage_and_infrastructure": {
+      "entries": ["KB-0001", "KB-0006", "KB-0008", "KB-0009"],
+      "description": "Storage system design, validation tools, high-performance Go tools, and optimization",
+      "key_theme": "Building and hardening the foundational storage layer"
+    },
+    "data_gathering_pipeline": {
+      "entries": ["KB-0004", "KB-0005", "KB-0007", "KB-0014"],
+      "description": "Iterative improvement of data gathering methods from 1 working method to 11",
+      "key_theme": "Building a comprehensive, multi-source data gathering toolkit"
+    },
+    "public_api_cataloging": {
+      "entries": ["KB-0010", "KB-0012", "KB-0013"],
+      "description": "Systematic discovery and cataloging of free public APIs across domains",
+      "key_theme": "API landscape mapping for AI self-improvement"
+    },
+    "inter_agent_communication": {
+      "entries": ["KB-0015", "KB-0016", "KB-0017", "KB-0018", "KB-0019", "KB-0020", "KB-0021"],
+      "description": "Full lifecycle from research to production of JSONL bus + SQLite coordination system",
+      "key_theme": "Building production inter-agent communication (Proto A)"
+    },
+    "multi_agent_methodology": {
+      "entries": ["KB-0002", "KB-0003", "KB-0007"],
+      "description": "Research API, competitive research, team configuration testing",
+      "key_theme": "Optimal patterns for multi-agent coordination and research"
+    },
+    "market_research": {
+      "entries": ["KB-0003"],
+      "description": "AI quantitative trading techniques research",
+      "key_theme": "Financial AI techniques catalog"
+    }
+  },
+  "gap_analysis": {
+    "missing_kb_ids": {
+      "KB-0011": "Referenced by TEAM-0010 as their output but file does not exist. Content appears to have been renumbered to KB-0012.",
+      "note": "KB entries skip from KB-0010 to KB-0012. The content for KB-0011 is likely the same as KB-0012 based on team output mapping."
+    },
+    "missing_team_sessions": {
+      "TEAM-0011": "Listed in sessions/index.json but no TEAM-0011.md file exists on disk",
+      "TEAM-0015": "KB-0015 references TEAM-0015 as its source team, but no TEAM-0015.md session log exists",
+      "TEAM-0016": "KB-0016 references TEAM-0016 as its source team, but no TEAM-0016.md session log exists",
+      "TEAM-0017": "KB-0017 references TEAM-0017 as its source team, but no TEAM-0017.md session log exists"
+    },
+    "underdocumented_topics": [
+      "Security and access control for multi-agent systems",
+      "Error recovery patterns and rollback strategies",
+      "Monitoring and observability for agent operations",
+      "Agent launcher/spawner automation",
+      "Pre-commit hook integration (fast_validate discussed but not deployed)",
+      "GraphRAG for knowledge base (mentioned in KB-0009 as future work)",
+      "Multi-process (vs thread) benchmarks for Proto A (noted as needed in KB-0020, KB-0021)",
+      "SOP updates for Proto A default-on (noted as needed but not done)",
+      "5 additional API tools still needed (FRED, CoinGecko, Open-Meteo, HF Hub, ConceptNet)"
+    ],
+    "orphan_issues": [
+      "Orphan test scripts from stress testing (flagged in TEAM-0001, TEAM-0006, TEAM-0007, TEAM-0009)",
+      "method_wikipedia.py still has broad except clauses (flagged in TEAM-0007)",
+      "threading.Lock needed in ddg_utils.py rate limiter (flagged in TEAM-0009)"
+    ],
+    "index_inconsistencies": [
+      "KB index shows entry_count: 20 but there are actually 20 entries with IDs (KB-0001 through KB-0021 minus KB-0011)",
+      "KB-0012 in index says team TEAM-0010, but KB-0012.md frontmatter says team TEAM-0011 (mismatch)",
+      "KB-0013 in index says team TEAM-0013, matching the file correctly",
+      "Sessions index lists TEAM-0011 but no file exists for it",
+      "Sessions index has 18 session_count but only 17 session files exist on disk"
+    ]
+  },
+  "statistics": {
+    "total_kb_entries": 20,
+    "total_team_sessions": 17,
+    "total_agents_deployed": 146,
+    "date_range": {
+      "start": "2026-03-10",
+      "end": "2026-03-11"
+    },
+    "entries_by_category": {
+      "optimization": 2,
+      "integration": 9,
+      "market-research": 1,
+      "methodology": 6,
+      "tool-usage": 1
+    },
+    "entries_by_date": {
+      "2026-03-10": 14,
+      "2026-03-11": 6
+    },
+    "sessions_by_date": {
+      "2026-03-10": 13,
+      "2026-03-11": 4
+    },
+    "tools_created_count": 40,
+    "apis_cataloged": 44,
+    "data_gathering_methods": 11,
+    "dependency_chain_max_depth": 8,
+    "most_depended_on_entries": [
+      {"id": "KB-0004", "depended_on_by_count": 6},
+      {"id": "KB-0005", "depended_on_by_count": 5},
+      {"id": "KB-0001", "depended_on_by_count": 4},
+      {"id": "KB-0009", "depended_on_by_count": 5}
+    ],
+    "largest_team_operations": [
+      {"team": "TEAM-0003", "agents": 27, "objective": "Competitive research"},
+      {"team": "TEAM-0009", "agents": 20, "objective": "Coordinated multi-team build"},
+      {"team": "TEAM-0004", "agents": 17, "objective": "Data gathering improvement loop"},
+      {"team": "TEAM-0001", "agents": 16, "objective": "Storage stress test"},
+      {"team": "TEAM-0020", "agents": 14, "objective": "Live prototype testing"}
+    ]
+  },
+  "improvement_recommendations": [
+    {
+      "priority": "high",
+      "title": "Create missing team session logs",
+      "description": "TEAM-0011, TEAM-0015, TEAM-0016, and TEAM-0017 have KB entries but no session log files. These should be created for complete documentation."
+    },
+    {
+      "priority": "high",
+      "title": "Resolve KB-0011/KB-0012 ID confusion",
+      "description": "TEAM-0010 references KB-0011 as its output, but the actual file is KB-0012. The KB-0012.md frontmatter says team TEAM-0011 while the index says TEAM-0010. This inconsistency should be resolved."
+    },
+    {
+      "priority": "high",
+      "title": "Deploy Proto A to storage/coordination/",
+      "description": "KB-0021 marked Proto A as production, but the deployment to storage/coordination/ per KB-0019 blueprint has not been completed. Extract modules into coordination_bus.py, coordination_state.py, init_coordination.py."
+    },
+    {
+      "priority": "high",
+      "title": "Update SOPs for Proto A default-on",
+      "description": "KB-0019 section 4 specifies SOP changes needed. KB-0021 recommends Proto A as default for all multi-agent operations. SOPs.md has not been updated."
+    },
+    {
+      "priority": "medium",
+      "title": "Run multi-process benchmarks for Proto A",
+      "description": "Current benchmarks use threads within a single process. Real operations use separate processes. Both TEAM-0020 and TEAM-0021 flag this as needed."
+    },
+    {
+      "priority": "medium",
+      "title": "Build remaining 5 API tools",
+      "description": "TEAM-0014 identified FRED, CoinGecko, Open-Meteo, Hugging Face Hub, and ConceptNet as tools to build. None have been built yet."
+    },
+    {
+      "priority": "medium",
+      "title": "Clean up orphan scripts",
+      "description": "Orphan test scripts from stress testing have been flagged by 4 different teams (TEAM-0001, TEAM-0006, TEAM-0007, TEAM-0009) but never resolved."
+    },
+    {
+      "priority": "medium",
+      "title": "Fix method_wikipedia.py broad except clauses",
+      "description": "Flagged by TEAM-0007 as out of scope but still unresolved. All other methods have been fixed."
+    },
+    {
+      "priority": "medium",
+      "title": "Add threading.Lock to ddg_utils.py rate limiter",
+      "description": "TEAM-0009 identified this as needed for thread safety in parallel benchmark scenarios."
+    },
+    {
+      "priority": "low",
+      "title": "Implement staleness_detector auto-fix mode",
+      "description": "Currently report-only per TEAM-0009. Auto-fix mode would enable automated repo health maintenance."
+    },
+    {
+      "priority": "low",
+      "title": "Explore GraphRAG for KB entries",
+      "description": "KB-0008 research found graph-enhanced vector retrieval promising. KB-0009 lists it as future work. Not yet explored."
+    },
+    {
+      "priority": "low",
+      "title": "Deploy fast_validate as pre-commit hook",
+      "description": "KB-0009 recommends this (1.4ms execution time). Ready to deploy but .claude/hooks config not set up."
+    }
+  ]
+}

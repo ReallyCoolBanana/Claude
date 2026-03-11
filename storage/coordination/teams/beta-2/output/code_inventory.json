@@ -1,0 +1,710 @@
+{
+  "team": "beta-2",
+  "mission": "code-tool-processing",
+  "timestamp": "2026-03-11T00:00:00Z",
+  "scripts": {
+    "total_count": 28,
+    "by_language": {
+      "python": 25,
+      "go": 3
+    },
+    "by_category": {
+      "utility": [
+        {
+          "id": "SCR-0001",
+          "name": "validate-storage",
+          "file": "validate-storage.py",
+          "purpose": "Comprehensive validation tool for storage system. Checks schema, referential integrity, file existence, orphan detection, ID format, date format, required fields, duplicates, version validation, length limits.",
+          "dependencies": [],
+          "input": "Storage directory structure (scripts, api-tools, sources)",
+          "output": "Validation report with pass/fail per check",
+          "status": "functional",
+          "team": "TEAM-0003"
+        },
+        {
+          "id": "SCR-0002",
+          "name": "test-edge-cases",
+          "file": "test-edge-cases.py",
+          "purpose": "Edge case and boundary testing suite. 35 tests covering malformed JSON, long descriptions, special characters, ID format violations, category mismatches, version issues, duplicate detection.",
+          "dependencies": [],
+          "input": "Storage directory structure",
+          "output": "Test results with pass/fail counts",
+          "status": "functional",
+          "team": "TEAM-0003"
+        },
+        {
+          "id": "SCR-0003",
+          "name": "repair-storage",
+          "file": "repair-storage.py",
+          "purpose": "Automated repair tool. Fixes versions, dates, rebuilds category indexes, removes duplicates, truncates long descriptions. Supports --dry-run mode.",
+          "dependencies": [],
+          "input": "Storage directory structure",
+          "output": "Repaired files, repair report",
+          "status": "functional",
+          "team": "TEAM-0003"
+        },
+        {
+          "id": "SCR-0012",
+          "name": "kb-validator",
+          "file": "kb_validator.py",
+          "purpose": "Validates KB entries and index.json consistency. Checks YAML frontmatter required fields, builds_on references, index entry/file matching, tag_index completeness, category consistency, team ID format.",
+          "dependencies": [],
+          "input": "knowledge-base/entries/ and knowledge-base/index.json",
+          "output": "Structured JSON validation report",
+          "status": "functional",
+          "team": "TEAM-0006"
+        },
+        {
+          "id": "SCR-0013",
+          "name": "index-rebuilder",
+          "file": "index_rebuilder.py",
+          "purpose": "Auto-generates index.json by scanning KB entries and team sessions. Supports --dry-run and --fix modes with diff output.",
+          "dependencies": [],
+          "input": "knowledge-base/entries/, teams/sessions/",
+          "output": "Rebuilt index.json files",
+          "status": "functional",
+          "team": "TEAM-0006"
+        },
+        {
+          "id": "SCR-0014",
+          "name": "cross-ref-checker",
+          "file": "cross_ref_checker.py",
+          "purpose": "Validates all cross-references. Checks KB builds_on chains, team session KB references, script dependencies. Detects cycles via DFS, finds orphans and dangling entries.",
+          "dependencies": [],
+          "input": "Entire repository",
+          "output": "Dependency tree and structured JSON report",
+          "status": "functional",
+          "team": "TEAM-0006"
+        },
+        {
+          "id": "SCR-0015",
+          "name": "fast-search",
+          "file": "fast_search/main.go",
+          "purpose": "High-speed full-text search index compiled in Go. Builds inverted index of .md, .json, .py, .go files. Supports exact match, multi-word AND, and phrase search. Query time <5ms.",
+          "dependencies": [],
+          "input": "Query string",
+          "output": "JSON results with file, line, column, context",
+          "status": "functional",
+          "capabilities": "compiled binary available",
+          "team": "TEAM-0008"
+        },
+        {
+          "id": "SCR-0016",
+          "name": "fast-validate",
+          "file": "fast_validate/main.go",
+          "purpose": "High-speed repository structure validator in Go. Validates all index.json files, cross-references, file existence, orphan detection, dependency cycle detection in single pass. <2ms runtime.",
+          "dependencies": [],
+          "input": "Repository root",
+          "output": "JSON report with pass/fail and all issues",
+          "status": "functional",
+          "capabilities": "compiled binary available",
+          "team": "TEAM-0008"
+        },
+        {
+          "id": "SCR-0017",
+          "name": "fast-cache",
+          "file": "fast_cache/main.go",
+          "purpose": "High-speed file-based key-value cache for API responses in Go. SHA-256 keys. Supports get, set (with TTL), delete, stats, gc, keys. Sub-millisecond cache hits.",
+          "dependencies": [],
+          "input": "CLI commands (get/set/delete/stats/gc/keys)",
+          "output": "JSON output with cached data",
+          "status": "functional",
+          "capabilities": "compiled binary available",
+          "team": "TEAM-0008"
+        },
+        {
+          "id": "SCR-0018",
+          "name": "kb-search",
+          "file": "kb_search.py",
+          "purpose": "Full-text search across KB entries, team logs, and script metadata using TF-IDF ranking. CLI with argparse supporting query, --tags, --category, --type filters.",
+          "dependencies": [],
+          "input": "Query string with optional filters",
+          "output": "Ranked results with context snippets",
+          "status": "functional",
+          "team": "TEAM-0008"
+        },
+        {
+          "id": "SCR-0019",
+          "name": "handoff-tracker",
+          "file": "handoff_tracker.py",
+          "purpose": "Parses Handoff Notes from team session logs, extracts action items, checks if subsequent teams addressed each item. Tracks resolution rate across iterations.",
+          "dependencies": [],
+          "input": "teams/sessions/ directory",
+          "output": "Resolution tracking report",
+          "status": "functional",
+          "team": "TEAM-0008"
+        },
+        {
+          "id": "SCR-0020",
+          "name": "staleness-detector",
+          "file": "staleness_detector.py",
+          "purpose": "Repository health checker with 6 checks: stale statuses, regressions, unaddressed handoffs, broken references, index mismatches, orphan files. Outputs scored health report.",
+          "dependencies": ["SCR-0012", "SCR-0014", "SCR-0019"],
+          "input": "Repository root",
+          "output": "Scored health report",
+          "status": "functional",
+          "team": "TEAM-0008"
+        }
+      ],
+      "analysis": [
+        {
+          "id": "SCR-0004",
+          "name": "grade-research",
+          "file": "grade_research.py",
+          "purpose": "Evaluates research JSON quality across five dimensions: citation count/quality, coverage breadth, depth (word count), and specificity (metrics, tools, code). Outputs graded report with recommendations.",
+          "dependencies": [],
+          "input": "Research JSON file",
+          "output": "Graded report with scores and recommendations",
+          "status": "functional",
+          "team": "TEAM-0005"
+        },
+        {
+          "id": "SCR-0005",
+          "name": "merge-research",
+          "file": "merge_research.py",
+          "purpose": "Merges multiple team research JSON files by topic category. Deduplicates using string similarity, identifies coverage gaps, outputs unified research document.",
+          "dependencies": [],
+          "input": "Multiple research JSON files",
+          "output": "Unified merged research document",
+          "status": "functional",
+          "team": "TEAM-0005"
+        },
+        {
+          "id": "SCR-0011",
+          "name": "data-gathering-benchmark",
+          "file": "data-gathering/benchmark_runner.py",
+          "purpose": "Benchmark harness running all data gathering methods against test query, timing them, calculating quality scores based on result count, source diversity, information density.",
+          "dependencies": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010"],
+          "input": "Test query string",
+          "output": "Benchmark results JSON with speed and quality scores",
+          "status": "functional",
+          "team": "TEAM-0003"
+        }
+      ],
+      "data-collection": [
+        {
+          "id": "SCR-0006",
+          "name": "data-gathering-websearch",
+          "file": "data-gathering/methods/method_websearch.py",
+          "purpose": "Multi-query web search via DuckDuckGo. Generates 3-5 query variants and deduplicates results by URL.",
+          "dependencies": [],
+          "status": "functional",
+          "avg_duration_seconds": 4.86,
+          "quality_score": 75,
+          "team": "TEAM-0003"
+        },
+        {
+          "id": "SCR-0007",
+          "name": "data-gathering-wikipedia",
+          "file": "data-gathering/methods/method_wikipedia.py",
+          "purpose": "Wikipedia API deep extraction with DuckDuckGo fallback. Extracts summaries, sections, references, categories.",
+          "dependencies": [],
+          "status": "partially functional",
+          "known_bugs": ["Silent HTTP 403 error", "Non-compliant User-Agent"],
+          "avg_duration_seconds": 1.47,
+          "quality_score": 10,
+          "team": "TEAM-0003"
+        },
+        {
+          "id": "SCR-0008",
+          "name": "data-gathering-arxiv",
+          "file": "data-gathering/methods/method_arxiv.py",
+          "purpose": "arXiv academic paper search with DuckDuckGo fallback. Extracts titles, authors, abstracts, categories, dates.",
+          "dependencies": [],
+          "status": "functional",
+          "avg_duration_seconds": 2.66,
+          "quality_score": 50,
+          "team": "TEAM-0003"
+        },
+        {
+          "id": "SCR-0009",
+          "name": "data-gathering-hybrid",
+          "file": "data-gathering/methods/method_hybrid.py",
+          "purpose": "Hybrid multi-source aggregation combining 5 methods (web, Wikipedia, arXiv, OpenAlex, Wikidata). Parallel execution, credibility tiers, TF-IDF deduplication, weighted corroboration scoring.",
+          "dependencies": ["SCR-0006", "SCR-0007", "SCR-0008"],
+          "status": "functional (4 of 5 sub-sources active)",
+          "avg_duration_seconds": 5.11,
+          "quality_score": 92,
+          "team": "TEAM-0003"
+        },
+        {
+          "id": "SCR-0010",
+          "name": "data-gathering-iterative",
+          "file": "data-gathering/methods/method_iterative.py",
+          "purpose": "Iterative deepening search doing 3 rounds of progressively deeper DuckDuckGo queries. Each round refines queries based on previous results.",
+          "dependencies": [],
+          "status": "functional",
+          "avg_duration_seconds": 7.88,
+          "quality_score": 75,
+          "team": "TEAM-0003"
+        },
+        {
+          "id": "SCR-0021",
+          "name": "ddg-utils",
+          "file": "data-gathering/methods/ddg_utils.py",
+          "purpose": "Shared DuckDuckGo search utilities. Contains parser class, search function, rate limiting (0.5s between requests), configurable User-Agent. Extracted from 4 duplicate implementations.",
+          "dependencies": [],
+          "status": "functional",
+          "team": "TEAM-0007"
+        },
+        {
+          "id": "SCR-0022",
+          "name": "request-cache",
+          "file": "data-gathering/methods/request_cache.py",
+          "purpose": "File-based HTTP response cache with SHA-256 keys, base64 storage, configurable TTL (default 1 hour). Functions: cached_request(), clear_cache(), cache_stats().",
+          "dependencies": [],
+          "status": "functional",
+          "team": "TEAM-0007"
+        },
+        {
+          "id": "SCR-0023",
+          "name": "data-gathering-openalex",
+          "file": "data-gathering/methods/method_openalex.py",
+          "purpose": "OpenAlex academic search via REST API. Searches 250M+ works, extracts metadata including citation counts, DOIs, open access status. Polite pool for higher rate limits.",
+          "dependencies": ["SCR-0022"],
+          "status": "functional",
+          "avg_duration_seconds": 0.5,
+          "quality_score": 65,
+          "team": "TEAM-0010"
+        },
+        {
+          "id": "SCR-0024",
+          "name": "data-gathering-hackernews",
+          "file": "data-gathering/methods/method_hackernews.py",
+          "purpose": "Hacker News search via Algolia API plus Firebase top stories. Extracts titles, URLs, authors, points, comment counts. Deduplicates across both sources.",
+          "dependencies": ["SCR-0022"],
+          "status": "functional",
+          "team": "TEAM-0010"
+        },
+        {
+          "id": "SCR-0025",
+          "name": "data-gathering-guardian",
+          "file": "data-gathering/methods/method_guardian.py",
+          "purpose": "Guardian news search via Open Platform API. Extracts headlines, body text, sections, publication dates. Falls back to DuckDuckGo site-scoped search if API fails.",
+          "dependencies": ["SCR-0021", "SCR-0022"],
+          "status": "functional",
+          "team": "TEAM-0010"
+        },
+        {
+          "id": "SCR-0026",
+          "name": "data-gathering-semantic-scholar",
+          "file": "data-gathering/methods/method_semantic_scholar.py",
+          "purpose": "Semantic Scholar paper search via Academic Graph API. Extracts titles, authors, abstracts, TLDRs, citation counts, fields of study, open access links. 1 req/sec rate limit.",
+          "dependencies": ["SCR-0022"],
+          "status": "new (untested)",
+          "team": "TEAM-0010"
+        },
+        {
+          "id": "SCR-0027",
+          "name": "data-gathering-wikidata",
+          "file": "data-gathering/methods/method_wikidata.py",
+          "purpose": "Wikidata knowledge graph search. Two-phase: searches entities then fetches full details including labels, descriptions, key properties, Wikipedia sitelinks.",
+          "dependencies": ["SCR-0022"],
+          "status": "new (untested)",
+          "team": "TEAM-0010"
+        },
+        {
+          "id": "SCR-0028",
+          "name": "data-gathering-github",
+          "file": "data-gathering/methods/method_github.py",
+          "purpose": "GitHub repository and code search via REST API. Searches repos by stars, extracts descriptions, languages, topics, licenses, fork counts. Graceful rate-limit handling.",
+          "dependencies": ["SCR-0022"],
+          "status": "new (untested)",
+          "team": "TEAM-0010"
+        }
+      ]
+    }
+  },
+  "api_tools": {
+    "total_count": 1,
+    "tools": [
+      {
+        "id": "TOOL-0001",
+        "name": "Sonnet Research API",
+        "path": "sonnet-research-api/",
+        "description": "Multi-agent research system using Claude Sonnet. Supports variable sub-agents, request queuing, priority scheduling, result sorting, and automated import into repo storage.",
+        "category": "integration",
+        "auth_type": "api-key (ANTHROPIC_API_KEY env var)",
+        "requires": ["anthropic"],
+        "entry_point": "orchestrator.py",
+        "modules": {
+          "config.py": {
+            "purpose": "Central configuration. Model set to claude-sonnet-4-6. Rate limit 50 req/min, max 3 concurrent. Retry with [1s, 2s, 4s] backoff. Queue max 500.",
+            "lines_of_code": 47
+          },
+          "client.py": {
+            "purpose": "Thin wrapper around Anthropic SDK. Provides query() and query_batch() with structured QueryResult/QueryError returns. Session-level token tracking. Retry on RateLimitError, APIConnectionError, InternalServerError.",
+            "lines_of_code": 194
+          },
+          "queue_manager.py": {
+            "purpose": "Thread-safe priority queue with rate-limited concurrent processing. RequestQueue class with enqueue(), process_queue(), get_status(), get_all_results(). Uses PriorityQueue with negated priorities.",
+            "lines_of_code": 235
+          },
+          "researcher.py": {
+            "purpose": "Multi-step research orchestrator. Supports quick (0 follow-ups), standard (2), and deep (5) depth modes. Initial query -> follow-up rounds -> synthesis. Saves results as JSON.",
+            "lines_of_code": 214
+          },
+          "orchestrator.py": {
+            "purpose": "Main entry point. ResearchOrchestrator coordinates multiple SonnetResearchers. spawn_researchers() for simple topics, run_research_mission() for structured missions with priority sub-tasks. Progress callbacks.",
+            "lines_of_code": 239
+          },
+          "sorter.py": {
+            "purpose": "Result sorter/grouper/categorizer. sort_by_relevance (keyword TF scoring), sort_by_depth, sort_by_topic (greedy clustering), categorize(), filter_results(), export_sorted(), generate_index().",
+            "lines_of_code": 294
+          },
+          "data_importer.py": {
+            "purpose": "Imports research results into repo structure. import_to_knowledge_base() creates MD entries, import_to_sources() creates source JSON, import_to_api_tools() creates tool JSON. update_indexes() refreshes all index.json files.",
+            "lines_of_code": 517
+          }
+        },
+        "rate_limits": "50 requests/minute, max 3 concurrent",
+        "data_format": "JSON (QueryResult/QueryError dataclasses)",
+        "team": "TEAM-0002",
+        "code_quality_notes": [
+          "Well-structured with clear separation of concerns",
+          "Good error handling with structured error types",
+          "Uses relative imports (from config import ...) which requires running from the package directory",
+          "No __init__.py in the sonnet-research-api directory - not a proper Python package"
+        ]
+      }
+    ]
+  },
+  "data_sources": {
+    "total_count": 35,
+    "by_category": {
+      "financial": {
+        "count": 7,
+        "sources": ["SRC-0001 Alpha Vantage", "SRC-0002 Yahoo Finance", "SRC-0003 FRED", "SRC-0004 CoinGecko", "SRC-0005 Twelve Data", "SRC-0006 Exchange Rates", "SRC-0007 Finnhub"]
+      },
+      "news": {
+        "count": 4,
+        "sources": ["SRC-0008 NewsAPI", "SRC-0009 GNews", "SRC-0010 The Guardian", "SRC-0011 Hacker News"]
+      },
+      "scientific": {
+        "count": 10,
+        "sources": ["SRC-0012 OpenAlex", "SRC-0013 Semantic Scholar", "SRC-0014 Wikidata", "SRC-0015 CORE", "SRC-0016 CrossRef", "SRC-0017 DBpedia", "SRC-0018 Papers With Code", "SRC-0031 Hugging Face Hub", "SRC-0034 ConceptNet", "SRC-0035 Wikipedia REST"]
+      },
+      "government": {
+        "count": 5,
+        "sources": ["SRC-0003 FRED", "SRC-0019 US Census Bureau", "SRC-0020 Data.gov CKAN", "SRC-0023 BLS", "SRC-0024 World Bank"]
+      },
+      "geospatial": {
+        "count": 3,
+        "sources": ["SRC-0021 Open-Meteo", "SRC-0022 OpenWeatherMap", "SRC-0030 Nominatim"]
+      },
+      "general": {
+        "count": 11,
+        "sources": ["SRC-0011 Hacker News", "SRC-0014 Wikidata", "SRC-0017 DBpedia", "SRC-0025 GitHub REST API", "SRC-0026 PyPI", "SRC-0027 npm Registry", "SRC-0029 Stack Exchange", "SRC-0031 Hugging Face Hub", "SRC-0032 Free Dictionary", "SRC-0033 Datamuse", "SRC-0035 Wikipedia REST"]
+      },
+      "social-media": {
+        "count": 1,
+        "sources": ["SRC-0028 Reddit"]
+      }
+    },
+    "by_access_type": {
+      "free": 23,
+      "freemium": 8,
+      "api-key-required": 4,
+      "paid": 0
+    },
+    "detailed_source_files_count": 38,
+    "notes": [
+      "38 individual .json source definition files exist in storage/sources/",
+      "The sources/index.json lists 35 sources but some have dedicated per-file JSON definitions beyond what the index tracks",
+      "Duplicate FRED entry: SRC-0003 and SRC-0018 both reference FRED API",
+      "Strong coverage of academic/scientific APIs",
+      "Limited social media coverage (only Reddit)"
+    ]
+  },
+  "proto_a_analysis": {
+    "status": "PRODUCTION",
+    "decision_by": "TEAM-0021",
+    "architecture": {
+      "message_bus": "JSONL append-only files with O_APPEND atomic writes (POSIX guarantees <4096 bytes)",
+      "shared_state": "SQLite WAL with BEGIN IMMEDIATE transactions",
+      "threading": "Thread-per-concern with polling loops (threading.Event.wait())",
+      "cleanup": "EpochRotator for hourly JSONL rotation, SQLite cleanup_expired()"
+    },
+    "modules": {
+      "core.py": {
+        "lines": 358,
+        "classes": ["CommDir", "AgentIdentity", "CommConfig"],
+        "functions": ["setup_comm_environment"],
+        "quality": "excellent",
+        "notes": "Clean separation of concerns. Thorough validation including /tmp rejection (EN-4), NFS detection (EN-5), canonical path enforcement (SB-1/SB-2), write permission checks (EN-1)."
+      },
+      "bus.py": {
+        "lines": 198,
+        "classes": ["Message", "BusWriter", "BusReader"],
+        "functions": ["repair_bus_file"],
+        "quality": "excellent",
+        "notes": "POSIX atomic writes via O_WRONLY|O_APPEND|O_CREAT. Message size limit enforced at 4096 bytes. Reader tracks offset for incremental polling. Handles partial lines correctly. repair_bus_file for corrupt line removal."
+      },
+      "state.py": {
+        "lines": 263,
+        "classes": ["SharedState"],
+        "quality": "excellent",
+        "notes": "WAL mode with configurable busy_timeout. _retry_on_busy decorator for SQLITE_BUSY handling. BEGIN IMMEDIATE in reserve_api_call prevents TOCTOU (RC-4 fix). Proper transaction isolation."
+      },
+      "coordinator.py": {
+        "lines": 605,
+        "classes": ["EpochRotator", "Coordinator", "CoordinatorWatchdog", "Worker"],
+        "quality": "very good",
+        "notes": "Full lifecycle management. Coordinator with heartbeat loop, agent health monitoring, phase transitions, blocker handling. Worker with watchdog integration. EpochRotator prevents unbounded JSONL growth (RE-1)."
+      }
+    },
+    "total_lines": 1424,
+    "test_results": {
+      "regression_tests": "28 tests (all pass)",
+      "deep_stress_tests": "23 tests (all pass)",
+      "total": "51/51 passed",
+      "benchmark_overhead": "0.2-0.8%"
+    },
+    "known_issues": [],
+    "strengths": [
+      "Zero bugs found in deep stress testing",
+      "Active SQLite-based rate limiting prevents API abuse (BEGIN IMMEDIATE)",
+      "JSONL provides durable, human-readable message history",
+      "Comprehensive coordinator watchdog for death detection",
+      "Clean graceful shutdown with daemon threads"
+    ]
+  },
+  "proto_b_comparison": {
+    "status": "ARCHIVED",
+    "architecture": {
+      "message_bus": "Named pipes (FIFOs) with spillover files for offline messages",
+      "shared_state": "mmap with struct packing and fcntl.flock()",
+      "threading": "select.select() event-driven coordination (vs Proto A polling)",
+      "cleanup": "SpilloverCleaner replaces EpochRotator"
+    },
+    "total_lines": 1855,
+    "test_results": {
+      "total": "62/62 passed (after 7 bug fixes)",
+      "benchmark_overhead": "0.1-0.4% (slightly lower than Proto A)"
+    },
+    "key_differences_from_a": {
+      "bus": "FIFOs consume data on read (no persistent history) vs JSONL append-only",
+      "state": "Fixed-size mmap (10368 bytes, max 32 agents, max 16 rate limits) vs dynamic SQLite",
+      "coordination": "select.select() event-driven vs threading.Event.wait() polling",
+      "rate_limiting": "fcntl.flock() based (weaker) vs BEGIN IMMEDIATE (stronger)"
+    },
+    "known_bugs_found": [
+      "flock() is per-fd per-process: DOES NOT serialize threads sharing the same fd. Rate limiter is broken under multi-threaded access.",
+      "_init_header() used self._lock() (no-op lock with fd=None) instead of self._flock() - fixed to use self._flock()",
+      "CoordinatorWatchdog called get_heartbeat() which initially did not exist on SharedStateMap - added",
+      "Coordinator.check_agents() accessed agent['agent_id'] but get_dead_agents() returns AgentSlotView dataclasses, not dicts - uses .agent_id attribute instead",
+      "Fixed-size agent slots (max 32) limits scalability",
+      "No persistent message history makes debugging harder",
+      "Spillover files can accumulate unboundedly if no reader attaches"
+    ],
+    "what_could_be_backported": [
+      "select.select() event-driven coordination could replace Proto A's polling loops for lower CPU usage and faster reaction times",
+      "SpilloverCleaner's get_spill_size() monitoring metric could be added to Proto A for bus directory size monitoring",
+      "The concept of backpressure (FIFO full -> EAGAIN) is missing from Proto A's write-always approach"
+    ]
+  },
+  "test_coverage": {
+    "proto_a_tests": {
+      "test_known_bugs.py": {
+        "test_count": 28,
+        "categories_covered": [
+          "Race Conditions (RC-1 through RC-4): 5 tests",
+          "Crash Recovery (CR-1 through CR-4): 4 tests",
+          "Resource Exhaustion (RE-1 through RE-4): 4 tests",
+          "Split-Brain/Consistency (SB-1 through SB-4): 4 tests",
+          "Stale State (SS-1, SS-3, SS-4): 3 tests",
+          "Environmental (EN-1, EN-4, EN-5, EN-6): 4 tests",
+          "Stress tests (10 concurrent agents, mixed ops, lifecycle, throughput): 4 tests"
+        ]
+      },
+      "test_stress_deep.py": {
+        "test_count": 23,
+        "categories_covered": [
+          "Rapid coordinator restart (3 tests)",
+          "Message flood - 5000 messages from 5 writers (2 tests)",
+          "Interleaved reader/writer (2 tests)",
+          "Rate limit extreme contention - 20 threads (2 tests)",
+          "Heartbeat accuracy under heavy I/O (1 test)",
+          "Large message edge cases - 4095/4096/4097 bytes (4 tests)",
+          "Connection churn - 100 cycles (3 tests)",
+          "Cleanup under active writes (2 tests)",
+          "Multi-channel stress - 20 channels (1 test)",
+          "Phase transition during active work (3 tests)"
+        ]
+      }
+    },
+    "proto_b_tests": {
+      "test_proto_b.py": {
+        "test_count": 62,
+        "categories_covered": [
+          "CommDir creation/validation (5 tests)",
+          "AgentIdentity validation (5 tests)",
+          "CommConfig validation (3 tests)",
+          "Message serialization (2 tests)",
+          "PipeBusWriter/Reader basic (6 tests)",
+          "SharedStateMap register/heartbeat/dead agents (13 tests)",
+          "SpilloverCleaner (2 tests)",
+          "RC-4 TOCTOU rate limit race (1 test)",
+          "SB-1 path canonicalization (2 tests)",
+          "CR-3 coordinator death detection (2 tests)",
+          "EN-4 /tmp rejection (2 tests)",
+          "Coordinator/Worker API bugs (3 tests)",
+          "Concurrent FIFO writers (1 test)",
+          "Mmap concurrent writes (2 tests - including flock threading bug test)",
+          "FIFO blocking behavior (2 tests)",
+          "Spillover accumulation (3 tests)",
+          "Mmap integrity (3 tests)",
+          "Edge cases (4 tests)"
+        ]
+      }
+    },
+    "additional_test_files": {
+      "live_test_baseline.py": "Baseline performance testing",
+      "live_test_proto_a.py": "Proto A live integration testing",
+      "live_test_proto_b.py": "Proto B live integration testing",
+      "proto_benchmark_runner.py": "Benchmark harness for comparing prototypes",
+      "think_tank_efficiency.py": "Think tank efficiency evaluation"
+    },
+    "gaps": [
+      "No unit tests for Sonnet Research API modules (client.py, queue_manager.py, researcher.py, orchestrator.py, sorter.py, data_importer.py)",
+      "No tests for data-gathering methods (method_websearch.py, method_arxiv.py, etc.) - only benchmarks",
+      "No tests for utility scripts (kb_validator.py, index_rebuilder.py, cross_ref_checker.py, etc.)",
+      "No tests for Go compiled tools (fast_search, fast_validate, fast_cache)",
+      "No integration tests verifying Proto A bus_cli.py coordination system end-to-end",
+      "No tests for visualization scripts (viz_kb_graph.js, viz_data_flow.js, viz_team_hierarchy.js)"
+    ]
+  },
+  "integration_opportunities": [
+    {
+      "description": "Data-gathering methods could use Proto A's SharedState rate limiting instead of ad-hoc sleep-based rate limiting",
+      "scripts_involved": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0021", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028"],
+      "benefit": "Centralized, atomic rate limiting across all concurrent agents",
+      "priority": "high"
+    },
+    {
+      "description": "Sonnet Research API orchestrator could use Proto A Coordinator/Worker pattern for multi-agent research coordination",
+      "scripts_involved": ["TOOL-0001"],
+      "benefit": "Heartbeat monitoring, phase transitions, coordinator death detection for long research sessions",
+      "priority": "high"
+    },
+    {
+      "description": "Benchmark runner and stress tests could publish results to Proto A bus for real-time monitoring",
+      "scripts_involved": ["SCR-0011"],
+      "benefit": "Live dashboarding of benchmark progress",
+      "priority": "medium"
+    },
+    {
+      "description": "KB validator, index rebuilder, and cross-ref checker could be orchestrated as a Proto A team for automated repo health checks",
+      "scripts_involved": ["SCR-0012", "SCR-0013", "SCR-0014", "SCR-0020"],
+      "benefit": "Automated health monitoring with blocker escalation",
+      "priority": "medium"
+    },
+    {
+      "description": "fast_cache (Go) could be used as the backing store for request_cache.py (Python) for better performance",
+      "scripts_involved": ["SCR-0017", "SCR-0022"],
+      "benefit": "Sub-millisecond cache hits vs Python file I/O",
+      "priority": "low"
+    }
+  ],
+  "code_quality_issues": [
+    {
+      "severity": "medium",
+      "location": "storage/scripts/data-gathering/methods/method_wikipedia.py",
+      "issue": "Returns limited results due to HTTP 403 from non-compliant User-Agent. Quality score of only 10/100.",
+      "recommendation": "Fix User-Agent header to comply with Wikipedia API policy"
+    },
+    {
+      "severity": "low",
+      "location": "storage/api-tools/sonnet-research-api/",
+      "issue": "Uses relative imports (from config import ...) rather than package-relative imports. No __init__.py. Not a proper Python package.",
+      "recommendation": "Add __init__.py and use relative imports (from .config import ...) for proper package structure"
+    },
+    {
+      "severity": "low",
+      "location": "storage/sources/index.json",
+      "issue": "Duplicate FRED entry: SRC-0003 in sources/index.json and SRC-0018 in sources/index.json",
+      "recommendation": "Remove duplicate and consolidate into single entry"
+    },
+    {
+      "severity": "info",
+      "location": "storage/scripts/data-gathering/methods/",
+      "issue": "Three methods (SCR-0026 semantic_scholar, SCR-0027 wikidata, SCR-0028 github) are marked 'new' and have not been benchmarked",
+      "recommendation": "Run benchmark_runner.py with these methods included"
+    },
+    {
+      "severity": "info",
+      "location": "prototype/agent_comm_b/state.py",
+      "issue": "Proto B's flock() is per-fd per-process and does not serialize threads. Rate limiter is broken under multi-threaded access within single process.",
+      "recommendation": "Documented limitation. Proto A was correctly chosen for production."
+    }
+  ],
+  "improvement_recommendations": [
+    {
+      "priority": 1,
+      "title": "Add unit tests for Sonnet Research API",
+      "description": "The 7-module Sonnet Research API (TOOL-0001) has zero test coverage. Add tests for client.py, queue_manager.py, researcher.py, orchestrator.py, sorter.py, and data_importer.py.",
+      "effort": "medium"
+    },
+    {
+      "priority": 2,
+      "title": "Integrate Proto A rate limiting into data-gathering methods",
+      "description": "Replace ad-hoc sleep-based rate limiting in 10+ data-gathering scripts with Proto A's SharedState.reserve_api_call() for centralized, atomic rate control.",
+      "effort": "medium"
+    },
+    {
+      "priority": 3,
+      "title": "Fix Wikipedia data-gathering method",
+      "description": "method_wikipedia.py (SCR-0007) has a quality score of 10/100 due to HTTP 403 errors from non-compliant User-Agent. Fix the User-Agent header.",
+      "effort": "low"
+    },
+    {
+      "priority": 4,
+      "title": "Benchmark new data-gathering methods",
+      "description": "SCR-0026 (Semantic Scholar), SCR-0027 (Wikidata), and SCR-0028 (GitHub) are marked 'new' and unverified. Run them through benchmark_runner.py.",
+      "effort": "low"
+    },
+    {
+      "priority": 5,
+      "title": "Backport select()-based event loop from Proto B",
+      "description": "Proto B's select.select() on FIFO file descriptors provides event-driven coordination with lower CPU usage than Proto A's threading.Event.wait() polling. Could reduce coordinator CPU overhead.",
+      "effort": "high"
+    },
+    {
+      "priority": 6,
+      "title": "Add integration tests for bus_cli.py coordination",
+      "description": "The bus_cli.py tool used by all teams for inter-agent communication has no dedicated test suite. Add end-to-end integration tests.",
+      "effort": "medium"
+    },
+    {
+      "priority": 7,
+      "title": "Remove duplicate FRED source entry",
+      "description": "SRC-0003 and SRC-0018 both reference FRED API. Consolidate into a single entry.",
+      "effort": "low"
+    },
+    {
+      "priority": 8,
+      "title": "Add tests for Go compiled tools",
+      "description": "fast_search, fast_validate, and fast_cache have no automated test suites. Add Go test files or integration tests.",
+      "effort": "medium"
+    }
+  ],
+  "visualization_scripts": {
+    "count": 3,
+    "scripts": [
+      {
+        "name": "viz_kb_graph.js",
+        "purpose": "Knowledge base dependency graph visualization"
+      },
+      {
+        "name": "viz_data_flow.js",
+        "purpose": "Data flow visualization"
+      },
+      {
+        "name": "viz_team_hierarchy.js",
+        "purpose": "Team hierarchy visualization"
+      }
+    ],
+    "language": "JavaScript",
+    "note": "Not indexed in scripts/index.json"
+  }
+}

@@ -1,0 +1,686 @@
+{
+  "team": "alpha-1",
+  "mission": "benchmark-analysis",
+  "timestamp": "2026-03-11T02:48:37.036633+00:00",
+  "datasets_analyzed": [
+    "prototype/tests/benchmark_results.json",
+    "prototype/tests/live_test_proto_a_results.json",
+    "prototype/tests/live_test_proto_b_results.json",
+    "prototype/tests/live_test_baseline_results.json"
+  ],
+  "metrics": {
+    "benchmark": {
+      "test_date": "2026-03-11",
+      "total_runs": 36,
+      "scenarios": [
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "prototypes_tested": [
+        "baseline",
+        "A",
+        "B"
+      ],
+      "per_prototype": {
+        "baseline": {
+          "runs": 12,
+          "duration_ms": {
+            "mean": 17040.5,
+            "stdev": 6584.3,
+            "min": 8011.4,
+            "max": 25068.1
+          },
+          "throughput_dp_per_sec": {
+            "mean": 151.1,
+            "stdev": 33.94
+          },
+          "data_points": {
+            "mean": 2681.8,
+            "total": 32181
+          },
+          "messages_sent": {
+            "mean": 2681.8,
+            "total": 32181
+          },
+          "messages_received": {
+            "mean": 0,
+            "total": 0
+          },
+          "heartbeats_sent": {
+            "mean": 0,
+            "total": 0
+          },
+          "errors": {
+            "mean": 0,
+            "total": 0
+          },
+          "error_rate": 0.0,
+          "bus_file_bytes": {
+            "mean": 0,
+            "total": 0
+          },
+          "peak_memory_kb": {
+            "mean": 96,
+            "max": 256
+          },
+          "rate_limit_checks": {
+            "total": 0
+          },
+          "rate_limit_denials": {
+            "total": 0,
+            "denial_rate": 0.0
+          },
+          "avg_latency_ms": {
+            "mean": 0.113,
+            "stdev": 0.022
+          },
+          "p95_latency_ms": {
+            "mean": 0.285,
+            "stdev": 0.075
+          }
+        },
+        "A": {
+          "runs": 12,
+          "duration_ms": {
+            "mean": 17111.4,
+            "stdev": 6583.2,
+            "min": 8065.4,
+            "max": 25142.8
+          },
+          "throughput_dp_per_sec": {
+            "mean": 31.64,
+            "stdev": 7.16
+          },
+          "data_points": {
+            "mean": 543.8,
+            "total": 6526
+          },
+          "messages_sent": {
+            "mean": 550.6,
+            "total": 6607
+          },
+          "messages_received": {
+            "mean": 4133.8,
+            "total": 49605
+          },
+          "heartbeats_sent": {
+            "mean": 18.8,
+            "total": 225
+          },
+          "errors": {
+            "mean": 0,
+            "total": 0
+          },
+          "error_rate": 0.0,
+          "bus_file_bytes": {
+            "mean": 173371,
+            "total": 2080457
+          },
+          "peak_memory_kb": {
+            "mean": 322,
+            "max": 1804
+          },
+          "rate_limit_checks": {
+            "total": 18442
+          },
+          "rate_limit_denials": {
+            "total": 11916,
+            "denial_rate": 0.6461
+          },
+          "avg_latency_ms": {
+            "mean": 0.268,
+            "stdev": 0.027
+          },
+          "p95_latency_ms": {
+            "mean": 0.436,
+            "stdev": 0.062
+          }
+        },
+        "B": {
+          "runs": 12,
+          "duration_ms": {
+            "mean": 17068.9,
+            "stdev": 6587.8,
+            "min": 8044.2,
+            "max": 25106.1
+          },
+          "throughput_dp_per_sec": {
+            "mean": 150.16,
+            "stdev": 34.09
+          },
+          "data_points": {
+            "mean": 2671.7,
+            "total": 32060
+          },
+          "messages_sent": {
+            "mean": 2678.4,
+            "total": 32141
+          },
+          "messages_received": {
+            "mean": 0,
+            "total": 0
+          },
+          "heartbeats_sent": {
+            "mean": 18.8,
+            "total": 225
+          },
+          "errors": {
+            "mean": 0,
+            "total": 0
+          },
+          "error_rate": 0.0,
+          "bus_file_bytes": {
+            "mean": 0,
+            "total": 0
+          },
+          "peak_memory_kb": {
+            "mean": 75,
+            "max": 256
+          },
+          "rate_limit_checks": {
+            "total": 32060
+          },
+          "rate_limit_denials": {
+            "total": 0,
+            "denial_rate": 0.0
+          },
+          "avg_latency_ms": {
+            "mean": 0.232,
+            "stdev": 0.072
+          },
+          "p95_latency_ms": {
+            "mean": 0.599,
+            "stdev": 0.23
+          }
+        }
+      },
+      "per_scenario": {
+        "S1": {
+          "baseline": {
+            "mean_data_points": 1484,
+            "mean_duration_ms": 15016.5,
+            "mean_latency_ms": 0.128,
+            "throughput_dp_per_sec": 98.82
+          },
+          "A": {
+            "mean_data_points": 300,
+            "mean_duration_ms": 15092.2,
+            "mean_latency_ms": 0.257,
+            "throughput_dp_per_sec": 19.88
+          },
+          "B": {
+            "mean_data_points": 1469,
+            "mean_duration_ms": 15027.8,
+            "mean_latency_ms": 0.336,
+            "throughput_dp_per_sec": 97.75
+          }
+        },
+        "S2": {
+          "baseline": {
+            "mean_data_points": 3573.3,
+            "mean_duration_ms": 20056.8,
+            "mean_latency_ms": 0.114,
+            "throughput_dp_per_sec": 178.16
+          },
+          "A": {
+            "mean_data_points": 700.3,
+            "mean_duration_ms": 20137.8,
+            "mean_latency_ms": 0.292,
+            "throughput_dp_per_sec": 34.78
+          },
+          "B": {
+            "mean_data_points": 3562.3,
+            "mean_duration_ms": 20093.4,
+            "mean_latency_ms": 0.218,
+            "throughput_dp_per_sec": 177.29
+          }
+        },
+        "S3": {
+          "baseline": {
+            "mean_data_points": 4475.7,
+            "mean_duration_ms": 25067.0,
+            "mean_latency_ms": 0.104,
+            "throughput_dp_per_sec": 178.55
+          },
+          "A": {
+            "mean_data_points": 875,
+            "mean_duration_ms": 25127.4,
+            "mean_latency_ms": 0.267,
+            "throughput_dp_per_sec": 34.82
+          },
+          "B": {
+            "mean_data_points": 4466.3,
+            "mean_duration_ms": 25101.6,
+            "mean_latency_ms": 0.162,
+            "throughput_dp_per_sec": 177.93
+          }
+        },
+        "S4": {
+          "baseline": {
+            "mean_data_points": 1194,
+            "mean_duration_ms": 8021.5,
+            "mean_latency_ms": 0.107,
+            "throughput_dp_per_sec": 148.85
+          },
+          "A": {
+            "mean_data_points": 300,
+            "mean_duration_ms": 8088.4,
+            "mean_latency_ms": 0.255,
+            "throughput_dp_per_sec": 37.09
+          },
+          "B": {
+            "mean_data_points": 1189,
+            "mean_duration_ms": 8052.8,
+            "mean_latency_ms": 0.212,
+            "throughput_dp_per_sec": 147.65
+          }
+        }
+      },
+      "scenario_configs": {
+        "S1": {
+          "num_teams": 1,
+          "agents_per_team": 3,
+          "duration_seconds": 15,
+          "data_sources": 1,
+          "inject_failure": false
+        },
+        "S2": {
+          "num_teams": 3,
+          "agents_per_team": 3,
+          "duration_seconds": 20,
+          "data_sources": 3,
+          "inject_failure": false
+        },
+        "S3": {
+          "num_teams": 3,
+          "agents_per_team": 3,
+          "duration_seconds": 25,
+          "data_sources": 3,
+          "inject_failure": false
+        },
+        "S4": {
+          "num_teams": 2,
+          "agents_per_team": 3,
+          "duration_seconds": 20,
+          "data_sources": 2,
+          "inject_failure": true
+        }
+      }
+    },
+    "live_tests": {
+      "proto_a": {
+        "test_id": "LIVE-TEST-PROTO-A-001",
+        "prototype": "A",
+        "total_duration_ms": 34146,
+        "agents": 3,
+        "data_points_collected": 70,
+        "throughput_dp_per_sec": 2.05,
+        "messages_sent": 53,
+        "messages_received": 51,
+        "heartbeats_sent": 20,
+        "rate_limit_checks": 14,
+        "rate_limit_denials": 0,
+        "bus_file_bytes": 15148,
+        "errors": [],
+        "error_count": 0,
+        "api_call_count": 14,
+        "api_latency_ms": {
+          "mean": 546.5,
+          "min": 153,
+          "max": 2283
+        },
+        "message_delivery_rate": 0.9623
+      },
+      "proto_b": {
+        "test_id": "LIVE-TEST-PROTO-B-001",
+        "prototype": "B",
+        "total_duration_ms": 36660,
+        "agents": 3,
+        "data_points_collected": 60,
+        "throughput_dp_per_sec": 1.64,
+        "messages_sent": 49,
+        "messages_received": 49,
+        "heartbeats_sent": 33,
+        "rate_limit_checks": 12,
+        "rate_limit_denials": 0,
+        "bus_file_bytes": 0,
+        "errors": [],
+        "error_count": 0,
+        "api_call_count": 12,
+        "api_latency_ms": {
+          "mean": 329.8,
+          "min": 149,
+          "max": 637
+        },
+        "message_delivery_rate": 1.0
+      },
+      "baseline": {
+        "test_id": "LIVE-TEST-BASELINE-001",
+        "prototype": "baseline",
+        "total_duration_ms": 30003,
+        "agents": 3,
+        "data_points_collected": 60,
+        "throughput_dp_per_sec": 2.0,
+        "messages_sent": 0,
+        "messages_received": 0,
+        "heartbeats_sent": 0,
+        "rate_limit_checks": 0,
+        "rate_limit_denials": 0,
+        "bus_file_bytes": 0,
+        "errors": [],
+        "error_count": 0,
+        "api_call_count": 12,
+        "api_latency_ms": null,
+        "message_delivery_rate": 0.0
+      }
+    }
+  },
+  "comparisons": {
+    "benchmark_throughput": {
+      "baseline_mean_dp_per_sec": 151.1,
+      "proto_a_mean_dp_per_sec": 31.64,
+      "proto_b_mean_dp_per_sec": 150.16,
+      "a_vs_baseline_ratio": 0.2094,
+      "b_vs_baseline_ratio": 0.9938,
+      "a_vs_b_ratio": 0.2107
+    },
+    "benchmark_latency": {
+      "baseline_avg_ms": 0.113,
+      "proto_a_avg_ms": 0.268,
+      "proto_b_avg_ms": 0.232,
+      "a_latency_increase_pct": 137.2,
+      "b_latency_increase_pct": 105.3
+    },
+    "benchmark_data_points": {
+      "baseline_total": 32181,
+      "proto_a_total": 6526,
+      "proto_b_total": 32060,
+      "a_data_loss_pct": 79.7,
+      "b_data_loss_pct": 0.4
+    },
+    "benchmark_memory": {
+      "baseline_mean_kb": 96,
+      "proto_a_mean_kb": 322,
+      "proto_b_mean_kb": 75,
+      "a_memory_increase_pct": 235.4
+    },
+    "benchmark_rate_limiting": {
+      "baseline_denials": 0,
+      "proto_a_denials": 11916,
+      "proto_b_denials": 0,
+      "proto_a_denial_rate": 0.6461,
+      "proto_b_denial_rate": 0.0
+    },
+    "benchmark_bus_overhead": {
+      "baseline_bus_bytes": 0,
+      "proto_a_bus_bytes": 2080457,
+      "proto_b_bus_bytes": 0,
+      "proto_a_bytes_per_datapoint": 318.8
+    },
+    "live_test_comparison": {
+      "baseline_throughput": 2.0,
+      "proto_a_throughput": 2.05,
+      "proto_b_throughput": 1.64,
+      "baseline_duration_ms": 30003,
+      "proto_a_duration_ms": 34146,
+      "proto_b_duration_ms": 36660,
+      "proto_a_msg_delivery_rate": 0.9623,
+      "proto_b_msg_delivery_rate": 1.0
+    },
+    "scenario_breakdown": {
+      "S1": {
+        "baseline": {
+          "mean_data_points": 1484,
+          "mean_duration_ms": 15016.5,
+          "mean_latency_ms": 0.128,
+          "throughput_dp_per_sec": 98.82
+        },
+        "A": {
+          "mean_data_points": 300,
+          "mean_duration_ms": 15092.2,
+          "mean_latency_ms": 0.257,
+          "throughput_dp_per_sec": 19.88
+        },
+        "B": {
+          "mean_data_points": 1469,
+          "mean_duration_ms": 15027.8,
+          "mean_latency_ms": 0.336,
+          "throughput_dp_per_sec": 97.75
+        }
+      },
+      "S2": {
+        "baseline": {
+          "mean_data_points": 3573.3,
+          "mean_duration_ms": 20056.8,
+          "mean_latency_ms": 0.114,
+          "throughput_dp_per_sec": 178.16
+        },
+        "A": {
+          "mean_data_points": 700.3,
+          "mean_duration_ms": 20137.8,
+          "mean_latency_ms": 0.292,
+          "throughput_dp_per_sec": 34.78
+        },
+        "B": {
+          "mean_data_points": 3562.3,
+          "mean_duration_ms": 20093.4,
+          "mean_latency_ms": 0.218,
+          "throughput_dp_per_sec": 177.29
+        }
+      },
+      "S3": {
+        "baseline": {
+          "mean_data_points": 4475.7,
+          "mean_duration_ms": 25067.0,
+          "mean_latency_ms": 0.104,
+          "throughput_dp_per_sec": 178.55
+        },
+        "A": {
+          "mean_data_points": 875,
+          "mean_duration_ms": 25127.4,
+          "mean_latency_ms": 0.267,
+          "throughput_dp_per_sec": 34.82
+        },
+        "B": {
+          "mean_data_points": 4466.3,
+          "mean_duration_ms": 25101.6,
+          "mean_latency_ms": 0.162,
+          "throughput_dp_per_sec": 177.93
+        }
+      },
+      "S4": {
+        "baseline": {
+          "mean_data_points": 1194,
+          "mean_duration_ms": 8021.5,
+          "mean_latency_ms": 0.107,
+          "throughput_dp_per_sec": 148.85
+        },
+        "A": {
+          "mean_data_points": 300,
+          "mean_duration_ms": 8088.4,
+          "mean_latency_ms": 0.255,
+          "throughput_dp_per_sec": 37.09
+        },
+        "B": {
+          "mean_data_points": 1189,
+          "mean_duration_ms": 8052.8,
+          "mean_latency_ms": 0.212,
+          "throughput_dp_per_sec": 147.65
+        }
+      }
+    }
+  },
+  "anomalies": [
+    {
+      "id": "ANOM-001",
+      "severity": "critical",
+      "description": "Proto A throughput is only 20.9% of baseline (31.64 vs 151.1 dp/s) - a 79.1% reduction",
+      "affected": "Proto A all scenarios",
+      "likely_cause": "Excessive rate limit denials (11,916 denials out of 18,442 checks = 64.6% denial rate) throttling data collection"
+    },
+    {
+      "id": "ANOM-002",
+      "severity": "critical",
+      "description": "Proto A has 11,916 rate limit denials across 12 runs (64.6% denial rate). Baseline and Proto B have zero denials.",
+      "affected": "Proto A rate limiter",
+      "likely_cause": "Proto A's file-bus-based rate limiter is too aggressive or has contention issues with shared bus file"
+    },
+    {
+      "id": "ANOM-003",
+      "severity": "high",
+      "description": "Proto A receives ~7.5x more messages than it sends (mean recv=4134 vs sent=551). This indicates agents are re-reading the entire bus file on each poll.",
+      "affected": "Proto A bus architecture",
+      "likely_cause": "Append-only bus file causes O(n) read amplification as agents re-read all historical messages"
+    },
+    {
+      "id": "ANOM-004",
+      "severity": "medium",
+      "description": "Proto A peak memory is 322KB mean vs baseline 96KB (3.4x higher), with max spike to 1804KB",
+      "affected": "Proto A memory",
+      "likely_cause": "Bus file accumulation and message buffering"
+    },
+    {
+      "id": "ANOM-005",
+      "severity": "medium",
+      "description": "Proto B p95 latency (0.599ms) is 2.1x higher than baseline (0.285ms) with high variability (stdev=0.230ms)",
+      "affected": "Proto B tail latency",
+      "likely_cause": "FIFO/mmap overhead causes occasional latency spikes"
+    },
+    {
+      "id": "ANOM-006",
+      "severity": "high",
+      "description": "Proto A collects exactly 300 data points in S1 (1 team, 15s) and S4 (2 teams, 20s with failure injection) scenarios across all 3 runs each - suggesting a hard cap or severe bottleneck at ~20 dp/s",
+      "affected": "Proto A data collection rate",
+      "likely_cause": "Rate limiter is capping at 20 ops/sec regardless of duration or team count"
+    },
+    {
+      "id": "ANOM-007",
+      "severity": "low",
+      "description": "Scenario S4 has inject_failure=true but zero errors across all prototypes. Failure injection appears non-functional.",
+      "affected": "Test framework",
+      "likely_cause": "Failure injection may not be implemented in the benchmark harness"
+    },
+    {
+      "id": "ANOM-008",
+      "severity": "medium",
+      "description": "Live Proto A test shows 53 messages sent but only 51 received (96.2% delivery rate), indicating 2 lost messages",
+      "affected": "Proto A live message reliability",
+      "likely_cause": "Race condition in file-based bus write/read cycle"
+    }
+  ],
+  "key_findings": [
+    {
+      "id": "F-001",
+      "priority": "critical",
+      "title": "Proto A throughput collapse - 79.1% below baseline",
+      "summary": "Proto A achieves only 31.64 dp/s vs baseline 151.1 dp/s. Root cause is rate limiter denying 64.6% of requests. Proto A collects only 6,526 total data points vs baseline 32,181 (79.7% fewer)."
+    },
+    {
+      "id": "F-002",
+      "priority": "critical",
+      "title": "Proto A rate limiter is fundamentally broken",
+      "summary": "11,916 out of 18,442 rate limit checks (64.6%) are denied. This is the primary bottleneck destroying Proto A performance. The file-bus-based rate limiter has severe contention."
+    },
+    {
+      "id": "F-003",
+      "priority": "high",
+      "title": "Proto B achieves near-baseline performance with coordination",
+      "summary": "Proto B throughput (150.16 dp/s) is 99.4% of baseline with zero rate limit denials, successful heartbeating, and zero bus file overhead. The FIFO/mmap architecture is significantly more efficient."
+    },
+    {
+      "id": "F-004",
+      "priority": "high",
+      "title": "Proto A file bus creates massive I/O overhead",
+      "summary": "Proto A accumulates 2,080,457 bytes of bus file data (318.8 bytes per data point). Message receive amplification is 7.5x (agents re-read entire bus history)."
+    },
+    {
+      "id": "F-005",
+      "priority": "high",
+      "title": "Proto B FIFO architecture eliminates bus overhead",
+      "summary": "Proto B has zero bus file bytes, zero rate limit denials, and near-baseline throughput. The FIFO+mmap design avoids the read-amplification and rate-limiter contention problems of Proto A."
+    },
+    {
+      "id": "F-006",
+      "priority": "medium",
+      "title": "Proto B has higher tail latency than baseline",
+      "summary": "Proto B p95 latency is 0.599ms vs baseline 0.285ms (2.1x higher). The FIFO/mmap overhead causes occasional latency spikes, though mean latency remains low."
+    },
+    {
+      "id": "F-007",
+      "priority": "medium",
+      "title": "Live tests confirm benchmark patterns",
+      "summary": "Live Proto A: 70 data points in 34s (2.05 dp/s) with 15KB bus file. Live Proto B: 60 data points in 37s (1.64 dp/s) with zero bus bytes. Live Baseline: 60 data points in 30s (2.0 dp/s). All zero errors."
+    },
+    {
+      "id": "F-008",
+      "priority": "medium",
+      "title": "Proto B live test shows higher mmap operations",
+      "summary": "Live Proto B performed 412 mmap operations and 98 file I/O ops for 60 data points (6.9 mmap ops per data point). Phase transitions are properly tracked (init -> gathering -> validation -> done)."
+    },
+    {
+      "id": "F-009",
+      "priority": "low",
+      "title": "Failure injection (S4) appears non-functional",
+      "summary": "Scenario S4 configures inject_failure=true but all prototypes report zero errors. The failure injection mechanism may not be implemented."
+    },
+    {
+      "id": "F-010",
+      "priority": "low",
+      "title": "All prototypes show zero errors across all tests",
+      "summary": "Zero errors in all 36 benchmark runs and all 3 live tests. While good for reliability, combined with finding F-009, this may indicate insufficient error testing."
+    }
+  ],
+  "improvement_recommendations": [
+    {
+      "id": "R-001",
+      "priority": "critical",
+      "target": "Proto A",
+      "recommendation": "Fix rate limiter - replace file-bus-based rate limiting with in-memory or FIFO-based approach. Current 64.6% denial rate destroys throughput.",
+      "expected_impact": "Should increase Proto A throughput by 4-5x to match Proto B/baseline levels"
+    },
+    {
+      "id": "R-002",
+      "priority": "critical",
+      "target": "Proto A",
+      "recommendation": "Eliminate bus file read amplification. Currently agents re-read entire bus history on each poll. Implement cursor/offset-based reading or switch to FIFO model.",
+      "expected_impact": "Would reduce messages_received from 7.5x to ~1x of messages_sent"
+    },
+    {
+      "id": "R-003",
+      "priority": "high",
+      "target": "Proto B",
+      "recommendation": "Investigate and reduce p95 latency spikes. Consider reducing mmap operation frequency (currently 6.9 per data point).",
+      "expected_impact": "Could reduce p95 latency from 0.60ms to closer to baseline 0.28ms"
+    },
+    {
+      "id": "R-004",
+      "priority": "high",
+      "target": "Test Framework",
+      "recommendation": "Implement failure injection in benchmark harness. S4 scenario with inject_failure=true produces no errors.",
+      "expected_impact": "Would enable testing resilience and error recovery paths"
+    },
+    {
+      "id": "R-005",
+      "priority": "medium",
+      "target": "Proto A",
+      "recommendation": "Add bus file rotation or compaction. Current implementation accumulates ~173KB per run with no cleanup.",
+      "expected_impact": "Would reduce memory usage and improve read performance"
+    },
+    {
+      "id": "R-006",
+      "priority": "medium",
+      "target": "Both Prototypes",
+      "recommendation": "Add error injection and chaos testing to validate fault tolerance claims. Both prototypes show zero errors which may mask fragility.",
+      "expected_impact": "Would reveal actual failure modes and recovery capabilities"
+    },
+    {
+      "id": "R-007",
+      "priority": "low",
+      "target": "Proto B",
+      "recommendation": "Optimize FIFO throughput. Current live test shows 2.67 ops/sec which could be improved with batching.",
+      "expected_impact": "Minor throughput improvement in real-world scenarios"
+    }
+  ]
+}
