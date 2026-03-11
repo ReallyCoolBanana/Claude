@@ -1,0 +1,180 @@
+{
+  "id": "SOP-032",
+  "title": "Optimal Team Sizing Protocol",
+  "version": "1.0",
+  "status": "active",
+  "created_date": "2026-03-11",
+  "category": "team-operations",
+  "purpose": "Provide a data-driven decision framework for selecting team sizes based on the empirically validated power law E = 4.0 * N^(-0.75), where every doubling of team size reduces per-agent output by 40-50%. This SOP translates 3,247 data points across 20 teams and 132 agents into actionable sizing rules.",
+  "scope": "All multi-agent operations requiring team size selection. Applies to research, build, test, and mixed operations.",
+  "builds_on": ["SOP-022", "SOP-011"],
+
+  "key_findings": {
+    "power_law": "E = 4.0 * N^(-0.75). Efficiency (artifacts per agent) decreases as a power law with team size.",
+    "binding_constraint": "The 89% efficiency loss at 16+ agents is cognitive (context-switching, communication ambiguity, work duplication), NOT infrastructure. Infrastructure overhead is <1% at ALL team sizes (0.35-0.74%).",
+    "pattern_vs_size": "Cooperation pattern selection causes 96x variance in efficiency (parallel-test at 12.0 vs 8-team-pipeline at 0.125). Team size causes only 17x variance. Pattern choice matters 5.6x more than team size.",
+    "efficiency_curve": {
+      "1_agent": {"predicted_efficiency": 5.5, "observed_range": "4.0-7.0", "infra_overhead_ms": 7.4},
+      "3_agents": {"predicted_efficiency": 1.54, "observed_range": "1.0-1.0", "infra_overhead_ms": 14.4},
+      "5_agents": {"predicted_efficiency": 1.10, "observed_range": "0.375-12.0", "infra_overhead_ms": 22.7},
+      "8_agents": {"predicted_efficiency": 0.76, "observed_range": "0.375-12.0", "infra_overhead_ms": 33.8},
+      "10_agents": {"predicted_efficiency": 0.56, "observed_range": "0.111-0.667", "infra_overhead_ms": 45.6},
+      "15_agents": {"predicted_efficiency": 0.40, "observed_range": "0.111-0.667", "infra_overhead_ms": 63.2},
+      "20_agents": {"predicted_efficiency": 0.32, "observed_range": "0.125-0.471", "infra_overhead_ms": 74.9}
+    }
+  },
+
+  "decision_tree": {
+    "title": "Team Size Selection Decision Tree",
+    "step_1": {
+      "question": "What is the primary task type?",
+      "options": {
+        "research_or_exploration": "Go to step_2a",
+        "build_or_implement": "Go to step_2b",
+        "test_or_validate": "Go to step_2c",
+        "mixed_operations": "Go to step_2d"
+      }
+    },
+    "step_2a": {
+      "task_type": "Research / Exploration",
+      "recommendation": "Solo agents (1 per research topic)",
+      "size": 1,
+      "expected_efficiency": "4.0-7.0 artifacts/agent",
+      "rationale": "Solo researchers achieve 5.5x mean efficiency. No inter-agent communication needed. Each agent explores independently.",
+      "team_structure": "N solo researchers + 1 coordinator (hub reporting only)",
+      "max_researchers": 4,
+      "escalation": "If research topics are interdependent, use 2-3 agents with direct channels, but expect efficiency to drop to 1.0-1.5."
+    },
+    "step_2b": {
+      "task_type": "Build / Implement",
+      "question": "How many independent modules or components?",
+      "options": {
+        "1_module": {
+          "recommendation": "3 agents (1 lead + 2 builders)",
+          "expected_efficiency": "0.8-1.2 artifacts/agent",
+          "rationale": "3 agents stays under the SQLite 4-writer contention cliff while providing enough parallelism for one module."
+        },
+        "2_to_3_modules": {
+          "recommendation": "2 teams of 3 agents each + 1 coordinator = 7 total",
+          "expected_efficiency": "0.8-1.2 artifacts/agent",
+          "rationale": "Each team of 3 stays under the contention cliff. Work stealing between teams prevents idle time.",
+          "connection": "Hub for status + channels between teams for work stealing"
+        },
+        "4_plus_modules": {
+          "recommendation": "3-4 teams of 2-3 agents + 1 coordinator = 8-13 total",
+          "expected_efficiency": "0.5-1.0 artifacts/agent",
+          "warning": "Beyond 8 total agents, historical efficiency craters. Use work stealing aggressively to keep agents productive.",
+          "hard_limit": "Never exceed 15 total agents. Beyond 15, mean efficiency drops to 0.32."
+        }
+      }
+    },
+    "step_2c": {
+      "task_type": "Test / Validate",
+      "recommendation": "7-8 parallel testers + 1 coordinator = 8-9 total",
+      "expected_efficiency": "5.0-12.0 test artifacts/agent",
+      "rationale": "Testing parallelizes perfectly with partitioned suites. TEAM-0024 achieved 12.0 efficiency (highest ever observed) with this pattern.",
+      "prerequisites": "Test suites must be partitionable. Each tester gets a disjoint subset.",
+      "connection": "Hub for status + channels for progress broadcast + bottleneck detection"
+    },
+    "step_2d": {
+      "task_type": "Mixed Operations",
+      "recommendation": "14 agents total across 3 tiers",
+      "structure": {
+        "tier_1_research": "3 solo researchers (expected: 4-7 artifacts/agent)",
+        "tier_2_build": "2 teams of 3 builders (expected: 0.8-1.2 artifacts/agent)",
+        "tier_3_test": "4 parallel testers (expected: 5-12 artifacts/agent)",
+        "coordinator": "1 coordinator agent"
+      },
+      "phase_timing": "Research 30% / Build 40% / Test 20% / Convergence 10%",
+      "sqlite_partitioning": "3 databases: research-hub, build-hub, test-hub. Max 4 concurrent writers per DB."
+    }
+  },
+
+  "procedures": [
+    {
+      "step": 1,
+      "title": "Classify the Task",
+      "action": "Determine whether the work is primarily research, build, test, or mixed. Use the decision tree to select initial team size.",
+      "output": "Task classification and initial team size recommendation"
+    },
+    {
+      "step": 2,
+      "title": "Apply Pattern Selection",
+      "action": "Choose the cooperation pattern BEFORE finalizing team size. Pattern selection causes 5.6x more variance in efficiency than team size. Prefer parallel patterns (parallel-test: 12.0, solo: 5.5) over sequential patterns (wave-sequential: 0.176, pipeline: 0.125).",
+      "output": "Selected cooperation pattern"
+    },
+    {
+      "step": 3,
+      "title": "Check SQLite Constraints",
+      "action": "Ensure no single SQLite database has more than 4 concurrent writers. For teams of 5+, partition into sub-groups or use a single-writer coordinator proxy. See SOP-034 for details.",
+      "output": "Database partitioning plan"
+    },
+    {
+      "step": 4,
+      "title": "Validate Against Warning Thresholds",
+      "action": "Check the team size against warning thresholds. If any threshold is exceeded, require written justification before proceeding.",
+      "thresholds": {
+        "yellow_warning": "Team size > 8: Historical mean efficiency drops to 0.36. Requires justification for each agent beyond 8.",
+        "orange_warning": "Team size > 10: Per-agent overhead exceeds 45ms. Total coordination overhead exceeds 45ms.",
+        "red_warning": "Team size > 15: Mean efficiency 0.32. 89% efficiency loss vs solo. Do NOT proceed without unique-per-agent justification.",
+        "hard_stop": "Team size > 20: Only 7 teams have operated at this scale. All showed 0.125-0.471 efficiency. Not recommended under any circumstances."
+      },
+      "output": "Validated team size with justification if thresholds exceeded"
+    },
+    {
+      "step": 5,
+      "title": "Monitor and Adjust",
+      "action": "During operation, track artifacts produced per agent. If efficiency drops below 0.5, consider splitting the team or reassigning idle agents via help protocol.",
+      "monitoring_frequency": "Every phase transition or every 30 seconds via coordinator dashboard",
+      "adjustment_triggers": [
+        "Any agent idle for >120 seconds: reassign via help protocol",
+        "Efficiency below 0.5 artifacts/agent: split team or reduce size",
+        "Work queue empty with agents still running: check for duplication"
+      ]
+    }
+  ],
+
+  "anti_patterns": [
+    {
+      "name": "The Army Approach",
+      "description": "Deploying 20+ agents expecting more agents = more output.",
+      "why_wrong": "Power law E = 4.0 * N^(-0.75) means 20 agents produce only 6.4 total artifacts vs 5.5 from a single agent. The marginal agent at size 20 contributes 0.32 artifacts.",
+      "fix": "Use 5-8 agents with better pattern selection instead."
+    },
+    {
+      "name": "The Pipeline Trap",
+      "description": "Serializing work across teams in a long pipeline (wave-sequential, 8-team-pipeline).",
+      "why_wrong": "Pipeline patterns show 0.125-0.176 efficiency. Agents waiting for upstream stages do zero useful work. Parallel patterns are 30x more efficient on average.",
+      "fix": "Maximize parallelism. Use pipelines ONLY for true stage dependencies, capped at 5-10 stages."
+    },
+    {
+      "name": "Ignoring Pattern Selection",
+      "description": "Optimizing team size without selecting the right cooperation pattern first.",
+      "why_wrong": "Pattern selection causes 96x variance vs team size causing 17x. Optimizing size alone captures <20% of available efficiency gains.",
+      "fix": "Always select cooperation pattern before finalizing team size."
+    }
+  ],
+
+  "references": [
+    {"source": "storage/data/final_analysis.json", "section": "optimal_team_size", "data_points": "20 teams, 132 agents, power law calibration"},
+    {"source": "storage/data/empirical_benchmarks.json", "section": "team_sizing", "data_points": "10 team-size configurations, overhead measurements"},
+    {"source": "storage/data/unified_benchmarks.json", "section": "team_performance", "data_points": "28 teams, efficiency by size and pattern"},
+    {"source": "storage/coordination/teams/think-tank-convergence.json", "section": "finding_1_team_sizing", "data_points": "Cross-analysis of 30 team logs"}
+  ],
+
+  "metrics": {
+    "compliance_indicators": [
+      "All teams sized within recommended ranges for their task type",
+      "No team exceeds 15 agents without documented justification",
+      "Pattern selection documented before team size finalization",
+      "SQLite writer count per database does not exceed 4"
+    ],
+    "performance_targets": {
+      "solo_research": ">= 4.0 artifacts/agent",
+      "build_teams": ">= 0.8 artifacts/agent",
+      "test_teams": ">= 5.0 artifacts/agent",
+      "mixed_operations": ">= 1.0 aggregate artifacts/agent"
+    },
+    "measurement_method": "Track artifacts produced per agent per operation. Compare against power law prediction E = 4.0 * N^(-0.75). Flag if actual efficiency falls below 50% of prediction."
+  }
+}

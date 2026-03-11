@@ -1,0 +1,224 @@
+{
+  "id": "SOP-035",
+  "title": "Benchmark-Driven Development Process",
+  "version": "1.0",
+  "status": "active",
+  "created_date": "2026-03-11",
+  "category": "development-process",
+  "purpose": "Establish a repeatable process for using benchmarks to validate changes, detect regressions, and drive optimization decisions. Based on the repository's empirical benchmark infrastructure (tool_benchmarker.py, tool_tester.py, coord_stress_bench.py) which has produced 3,247 data points across 17 sources and validated 45 tool tests with zero failures.",
+  "scope": "All changes to coordination infrastructure, tools, scripts, and communication primitives. Applies to any code that could affect latency, throughput, correctness, or token efficiency.",
+  "builds_on": ["SOP-020", "SOP-025", "SOP-034"],
+
+  "key_findings": {
+    "benchmark_coverage": {
+      "tools_tested": 12,
+      "total_tests": 45,
+      "pass_rate": "100% (45/45)",
+      "tool_suites": ["auto_index", "cross_ref_checker", "finding_dedup", "import_to_db", "kb_validator", "pattern_analyzer", "quality_scorer", "query_kb", "smart_read", "smart_search", "smart_write", "validate_naming"]
+    },
+    "performance_baselines": {
+      "query_kb_mean_ms": 41.28,
+      "query_kb_peak_memory_kb": 14756,
+      "smart_read_mean_ms": 30.82,
+      "smart_read_token_savings_pct": 91.3,
+      "hub_registration_mean_ms": 0.934,
+      "hub_status_update_mean_ms": 0.333,
+      "channel_message_send_mean_ms": 0.51,
+      "work_steal_mean_ms": 0.355,
+      "sqlite_1_thread_ops_per_sec": 3611
+    },
+    "data_gathering_iteration_gains": {
+      "data_points_increase_pct": 371,
+      "quality_increase_pct": 67,
+      "methods_functional_increase_pct": 400,
+      "lesson": "Second iteration of benchmarks always shows massive gains. Always iterate."
+    }
+  },
+
+  "procedures": [
+    {
+      "step": 1,
+      "title": "Run Baseline Benchmarks Before Changes",
+      "action": "Before making any changes to coordination or tool code, run the relevant benchmark suite to establish a baseline.",
+      "benchmark_suites": {
+        "tool_regression": {
+          "command": "python storage/scripts/tool_tester.py",
+          "what_it_tests": "All 12 repository tools (45 tests total)",
+          "expected_duration": "< 30 seconds",
+          "baseline_metric": "All 45 tests pass, individual tool timings recorded"
+        },
+        "coordination_benchmarks": {
+          "command": "python storage/scripts/coord_stress_bench.py",
+          "what_it_tests": "Hub operations, help protocol, channels, work stealing, pipelines, SQLite contention, team size scaling",
+          "expected_duration": "2-5 minutes",
+          "baseline_metric": "ops/sec and p95/p99 latency for each category"
+        },
+        "token_efficiency": {
+          "command": "python storage/scripts/tool_benchmarker.py",
+          "what_it_tests": "Token consumption for query_kb, smart_read, smart_write operations",
+          "expected_duration": "< 60 seconds",
+          "baseline_metric": "Token count and savings percentage per operation"
+        },
+        "data_gathering": {
+          "command": "python storage/scripts/data-gathering/benchmark_methods.py",
+          "what_it_tests": "All data-gathering methods (WebSearch, Wikipedia, arXiv, Hybrid, Iterative, OpenAlex, Wikidata)",
+          "expected_duration": "30-90 seconds (depends on external API latency)",
+          "baseline_metric": "Speed, data points collected, quality score per method"
+        }
+      },
+      "output": "Baseline benchmark results saved to storage/scripts/ with timestamp"
+    },
+    {
+      "step": 2,
+      "title": "Make Changes with Regression Awareness",
+      "action": "Implement changes. For each modified file, identify which benchmark suite covers it.",
+      "coverage_map": {
+        "storage/scripts/*.py": "tool_regression",
+        "storage/coordination/*.py": "coordination_benchmarks",
+        "storage/scripts/data-gathering/*.py": "data_gathering",
+        "knowledge-base/*.py": "token_efficiency",
+        "prototype/agent_comm/*.py": "coordination_benchmarks + tool_regression"
+      },
+      "output": "List of benchmark suites to re-run after changes"
+    },
+    {
+      "step": 3,
+      "title": "Run Post-Change Benchmarks",
+      "action": "After changes, re-run all relevant benchmark suites. Compare against baseline.",
+      "comparison_method": "For each metric, compute the ratio: (post_change / baseline). Flag any metric that exceeds regression thresholds.",
+      "output": "Post-change benchmark results with comparison to baseline"
+    },
+    {
+      "step": 4,
+      "title": "Apply Regression Detection Thresholds",
+      "action": "Check all metrics against regression thresholds. Any threshold breach requires investigation before the change is accepted.",
+      "regression_thresholds": {
+        "correctness": {
+          "threshold": "Any test failure is a blocking regression",
+          "action": "Fix before proceeding. Zero tolerance for correctness regressions."
+        },
+        "latency_p95": {
+          "threshold": "> 20% increase from baseline",
+          "action": "Investigate cause. If inherent to the change (e.g., added safety check), document and accept. If unintended, fix.",
+          "example": "Hub status update p95 increases from 0.485ms to 0.600ms (24% increase) -> investigate"
+        },
+        "throughput": {
+          "threshold": "> 15% decrease from baseline",
+          "action": "Investigate. Throughput regressions compound across many operations.",
+          "example": "SQLite ops/sec drops from 3611 to 3000 (17% decrease) -> investigate"
+        },
+        "token_efficiency": {
+          "threshold": "> 10% increase in token consumption",
+          "action": "Investigate. Token regressions directly reduce agent context window budget.",
+          "example": "query_kb tokens increase from 123 to 140 (14% increase) -> investigate"
+        },
+        "memory": {
+          "threshold": "> 50% increase in peak memory",
+          "action": "Investigate. Memory increases can affect stability at scale.",
+          "example": "query_kb peak memory increases from 14.8MB to 23MB (55% increase) -> investigate"
+        }
+      },
+      "output": "Regression report: pass/fail per threshold with investigation notes"
+    },
+    {
+      "step": 5,
+      "title": "Store Benchmark Results",
+      "action": "Save all benchmark results (baseline and post-change) for historical tracking.",
+      "storage_format": {
+        "filename_pattern": "YYYYMMDD_HHMMSS_<suite>_results.json",
+        "location": "storage/scripts/ (for tool and coordination benchmarks), storage/scripts/data-gathering/benchmarks/ (for data gathering)",
+        "required_fields": ["run_date", "suite_name", "total_tests", "passed", "failed", "timings", "comparison_to_baseline"],
+        "retention": "Keep all results. They form the historical trend used to detect gradual regressions."
+      },
+      "output": "Benchmark results archived with timestamps"
+    },
+    {
+      "step": 6,
+      "title": "Update Baselines After Accepted Changes",
+      "action": "After a change passes regression checks and is accepted, update the canonical baseline values in this SOP and any monitoring dashboards.",
+      "baseline_update_rules": [
+        "Only update baselines after verified successful changes",
+        "Keep the previous baseline as a reference point",
+        "If a regression was accepted (documented and justified), note the new baseline with the justification",
+        "Never update baselines silently - always log the change and reason"
+      ],
+      "output": "Updated baseline values documented"
+    }
+  ],
+
+  "when_to_benchmark": {
+    "always_before_and_after": [
+      "Changes to any coordination module (coordinator_hub.py, help_protocol.py, direct_channels.py, work_stealing.py)",
+      "Changes to any tool in storage/scripts/ that is covered by tool_tester.py",
+      "Changes to SQLite access patterns or WAL configuration",
+      "Changes to rate limiter configuration",
+      "Changes to bus file I/O (bus_cli.py, message serialization)"
+    ],
+    "before_after_recommended": [
+      "Changes to data-gathering methods",
+      "Changes to knowledge base read/write tools",
+      "Changes to index management scripts",
+      "New tool additions (add to tool_tester.py first)"
+    ],
+    "periodic_no_change_needed": [
+      "Weekly: Run full tool regression suite to catch environmental regressions",
+      "Per operation: Run coordination benchmarks before multi-agent deployment to validate infrastructure health",
+      "Per data-gathering session: Run method benchmarks to track external API availability and performance"
+    ]
+  },
+
+  "anti_patterns": [
+    {
+      "name": "Ship Without Benchmarking",
+      "description": "Making changes to coordination or tool code without running benchmarks.",
+      "why_wrong": "Silent regressions accumulate. A 5% throughput regression per change compounds to 40% loss after 10 changes.",
+      "fix": "Always run relevant benchmark suite before and after changes."
+    },
+    {
+      "name": "Benchmark Only p50",
+      "description": "Checking only mean or median latency and declaring success.",
+      "why_wrong": "p50 stays constant at ~0.24ms for SQLite regardless of contention. The real regressions show in p95/p99 tail latency.",
+      "fix": "Always check p95 and p99 in addition to median."
+    },
+    {
+      "name": "One-Shot Benchmarking",
+      "description": "Running benchmarks once during initial development but never again.",
+      "why_wrong": "Data-gathering iteration 1 to 2 showed 371% improvement. First benchmarks establish a baseline; subsequent iterations validate and improve.",
+      "fix": "Iterate on benchmarks. Run them regularly. Track trends over time."
+    },
+    {
+      "name": "Ignoring Token Regression",
+      "description": "Treating token consumption as unimportant because the operation still works.",
+      "why_wrong": "90.2% token reduction enables 11.7x more operations per context window. A 10% token regression means agents fit 10% fewer operations, compounding across every agent in every session.",
+      "fix": "Track token consumption as a first-class metric alongside latency and throughput."
+    }
+  ],
+
+  "references": [
+    {"source": "storage/data/empirical_benchmarks.json", "section": "tool_regression", "data_points": "45 tests across 12 tools, query_kb and smart_read benchmarks"},
+    {"source": "storage/data/empirical_benchmarks.json", "section": "contention_analysis", "data_points": "SQLite contention baselines across 1-32 threads"},
+    {"source": "storage/data/unified_benchmarks.json", "section": "data_gathering_benchmarks", "data_points": "2 iterations of method benchmarks showing 371% improvement"},
+    {"source": "storage/data/unified_benchmarks.json", "section": "token_efficiency", "data_points": "11 token efficiency benchmarks, 90.2% average reduction"},
+    {"source": "storage/data/unified_benchmarks.json", "section": "coordination_benchmarks", "data_points": "2880 coordination measurements across all primitives"},
+    {"source": "storage/data/final_analysis.json", "section": "cross_cutting_insights", "data_points": "Token efficiency and iteration improvement insights"}
+  ],
+
+  "metrics": {
+    "compliance_indicators": [
+      "Baseline benchmarks run before every infrastructure change",
+      "Post-change benchmarks run and compared against baseline",
+      "Regression thresholds checked: correctness (0 tolerance), latency p95 (<20% increase), throughput (<15% decrease), tokens (<10% increase)",
+      "Benchmark results archived with timestamps",
+      "No silent baseline updates"
+    ],
+    "performance_targets": {
+      "tool_test_pass_rate": "100% (45/45)",
+      "query_kb_mean_ms": "< 45",
+      "smart_read_mean_ms": "< 35",
+      "smart_read_token_savings_pct": "> 89",
+      "hub_registration_p95_ms": "< 1.5",
+      "sqlite_1_thread_ops_per_sec": "> 3400"
+    },
+    "measurement_method": "Compare post-change metrics against stored baselines. Flag any metric exceeding regression thresholds. Track trends over time to detect gradual degradation."
+  }
+}

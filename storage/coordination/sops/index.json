@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "last_updated": "2026-03-11",
-  "sop_count": 20,
+  "sop_count": 28,
   "sops": [
     {
       "id": "SOP-011",
@@ -164,6 +164,70 @@
       "version": "1.0",
       "status": "active",
       "description": "Standard Operating Procedures for all Proto A coordination tools. Designed for AI teams who have never seen the system before."
+    },
+    {
+      "id": "SOP-029",
+      "title": "File Creation & Naming Standards",
+      "filename": "sop_029_file_naming.json",
+      "version": "1.0",
+      "status": "active",
+      "description": "Establishes mandatory naming patterns, directory placement rules, and file size budgets for all repository resources. Addresses naming inconsistencies found in repository audit."
+    },
+    {
+      "id": "SOP-030",
+      "title": "Index Management & Maintenance",
+      "filename": "sop_030_index_management.json",
+      "version": "1.0",
+      "status": "active",
+      "description": "Defines the universal index.json schema, mandates that indexes are generated artifacts, and establishes validation rules for consistent index structure."
+    },
+    {
+      "id": "SOP-031",
+      "title": "AI-Efficient Language Guide",
+      "filename": "sop_031_ai_language.json",
+      "version": "1.0",
+      "status": "active",
+      "description": "Defines controlled vocabulary, abbreviation dictionary, tag taxonomy, and token-efficient writing conventions to minimize boilerplate and use canonical terms."
+    },
+    {
+      "id": "SOP-032",
+      "title": "Optimal Team Sizing Protocol",
+      "filename": "sop_032_optimal_team_sizing.json",
+      "version": "1.0",
+      "status": "active",
+      "description": "Data-driven decision framework for selecting team sizes based on empirically validated power law E=4.0*N^(-0.75). Translates 3247 data points into actionable sizing rules."
+    },
+    {
+      "id": "SOP-033",
+      "title": "Inter-Team Communication Protocol",
+      "filename": "sop_033_inter_team_communication.json",
+      "version": "1.0",
+      "status": "active",
+      "description": "Defines when to use hub-and-spoke vs direct channels vs broadcast based on empirical data: hub 1.9x faster single-thread, channels 1.9x better p95 under concurrency."
+    },
+    {
+      "id": "SOP-034",
+      "title": "SQLite Contention Management",
+      "filename": "sop_034_sqlite_contention_management.json",
+      "version": "1.0",
+      "status": "active",
+      "description": "Prevents SQLite WAL write contention from becoming the coordination bottleneck. Defines max 4 concurrent writers per database, partitioning strategies, backoff procedures, and monitoring thresholds based on empirical contention curve (96% throughput loss at 32 threads)."
+    },
+    {
+      "id": "SOP-035",
+      "title": "Benchmark-Driven Development Process",
+      "filename": "sop_035_benchmark_driven_development.json",
+      "version": "1.0",
+      "status": "active",
+      "description": "Establishes repeatable benchmarking process: baseline before changes, regression detection thresholds (correctness 0-tolerance, latency p95 <20% increase, throughput <15% decrease, tokens <10% increase), and result archival."
+    },
+    {
+      "id": "SOP-036",
+      "title": "Data Collection and Indexing Standards",
+      "filename": "sop_036_data_collection_indexing.json",
+      "version": "1.0",
+      "status": "active",
+      "description": "Standardizes three-tier index system (SUMMARY 79 tokens, INDEX_COMPACT 50 tokens/entry, full index 6093 tokens). Defines required metadata fields, naming conventions, cross-reference requirements, and data quality standards enabling 90.2% token savings."
     }
   ]
 }

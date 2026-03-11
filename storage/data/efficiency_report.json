@@ -1,0 +1,356 @@
+{
+  "report_date": "2026-03-11",
+  "summary": {
+    "total_data_files": 7,
+    "total_index_entries": 188,
+    "duplications_found": 8,
+    "inconsistencies_found": 12,
+    "orphaned_references": 6,
+    "efficiency_score": "4/10",
+    "storage_overhead_estimate": "35%"
+  },
+  "duplications": [
+    {
+      "id": "DUP-001",
+      "severity": "high",
+      "type": "cross-file data duplication",
+      "description": "unified_benchmarks.json and final_analysis.json contain heavily overlapping data: team sizing efficiency by size bucket (solo, small, medium, large, xlarge), cooperation pattern rankings, infrastructure weak links, SQLite contention curves, and power law formula (E=4.0*N^-0.75). final_analysis.json re-states most unified_benchmarks data with minor reformatting.",
+      "files": ["storage/data/unified_benchmarks.json", "storage/data/final_analysis.json"],
+      "estimated_redundancy_bytes": 8000,
+      "recommendation": "final_analysis.json should reference unified_benchmarks.json by key path instead of embedding duplicate values. Use cross-references like {\"source\": \"DATA-0002\", \"path\": \"categories.team_performance.team_analysis\"}."
+    },
+    {
+      "id": "DUP-002",
+      "severity": "high",
+      "type": "cross-file data duplication",
+      "description": "unified_benchmarks.json coordination_benchmarks section and empirical_benchmarks.json contain overlapping benchmark data for the same primitives (hub, help_protocol, channels, work_stealing, pipelines, contention). Values differ slightly (e.g., hub registration mean 0.91ms vs 0.934ms, sqlite 1-thread ops/s 3230 vs 3611) suggesting two separate runs, but this is not labeled clearly.",
+      "files": ["storage/data/unified_benchmarks.json", "storage/data/empirical_benchmarks.json"],
+      "estimated_redundancy_bytes": 6000,
+      "recommendation": "Label each benchmark run with a unique run_id and timestamp. Keep raw runs in separate files and have a single synthesis file reference both by run_id."
+    },
+    {
+      "id": "DUP-003",
+      "severity": "medium",
+      "type": "cross-file data duplication",
+      "description": "final_analysis.json contention_curve and empirical_benchmarks.json contention_analysis contain the same SQLite contention data (1-32 threads) with slightly different values from different runs. Both present ops_per_sec and efficiency percentages for the same thread counts.",
+      "files": ["storage/data/final_analysis.json", "storage/data/empirical_benchmarks.json"],
+      "estimated_redundancy_bytes": 2000,
+      "recommendation": "Consolidate into a single authoritative contention dataset with run provenance."
+    },
+    {
+      "id": "DUP-004",
+      "severity": "medium",
+      "type": "content duplication",
+      "description": "KB-0012 and KB-0013 have identical titles 'Free Public APIs for Government and Open Data', identical tags, identical builds_on references, from different teams (TEAM-0010 and TEAM-0013). This was noted in team_performance as 'T13 duplicated T11 objective'.",
+      "files": ["knowledge-base/entries/KB-0012.md", "knowledge-base/entries/KB-0013.md"],
+      "estimated_redundancy_bytes": 3000,
+      "recommendation": "Merge KB-0013 into KB-0012 or mark KB-0013 as superseded with a redirect."
+    },
+    {
+      "id": "DUP-005",
+      "severity": "medium",
+      "type": "index entry duplication",
+      "description": "SRC-0018 (FRED API) and SRC-0039 (FRED API) in global INDEX_COMPACT.json have the same title. Both refer to Federal Reserve Economic Data API.",
+      "files": ["storage/data/INDEX_COMPACT.json"],
+      "estimated_redundancy_bytes": 200,
+      "recommendation": "Deduplicate SRC entries. Keep one FRED API entry and redirect the other."
+    },
+    {
+      "id": "DUP-006",
+      "severity": "low",
+      "type": "index duplication",
+      "description": "SOP index.json contains both superseded (SOP-012 v1, SOP-016 v1) and active (SOP-012 v2, SOP-016 v2) entries using the same ID field value. Two entries share ID 'SOP-012' and two share ID 'SOP-016'.",
+      "files": ["storage/coordination/sops/index.json"],
+      "estimated_redundancy_bytes": 500,
+      "recommendation": "Use distinct IDs (e.g., SOP-012-v1 and SOP-012-v2) or remove superseded entries from active index, moving them to an archive section."
+    },
+    {
+      "id": "DUP-007",
+      "severity": "low",
+      "type": "tag duplication",
+      "description": "knowledge-base/index.json tag_index contains both 'sops' (line 1128, from KB-0024) and 'SOPs' (line 1146, from KB-0025) as separate tags, and 'sqlite' appears in two separate blocks (lines 1014-1018 for KB-0016/0018/0019/0020 and lines 1257-1258 for KB-0032) rather than being merged.",
+      "files": ["knowledge-base/index.json"],
+      "estimated_redundancy_bytes": 100,
+      "recommendation": "Normalize tags to lowercase. Merge duplicate tag entries in tag_index."
+    },
+    {
+      "id": "DUP-008",
+      "severity": "medium",
+      "type": "multi-tier index redundancy",
+      "description": "Each subsystem has 3 tiers of index files: index.json (full), INDEX_COMPACT.json (compact), SUMMARY.json (counts). Additionally, the global storage/data/ directory has its own INDEX_COMPACT.json and SUMMARY.json that aggregate across all subsystems. The global INDEX_COMPACT.json (171 entries, ~32KB) duplicates information already available in subsystem-level INDEX_COMPACT.json files.",
+      "files": ["storage/data/INDEX_COMPACT.json", "storage/data/SUMMARY.json", "storage/scripts/INDEX_COMPACT.json", "knowledge-base/INDEX_COMPACT.json", "storage/coordination/sops/INDEX_COMPACT.json"],
+      "estimated_redundancy_bytes": 15000,
+      "recommendation": "This is an intentional design for token efficiency (avoiding multi-file reads). Acceptable trade-off but requires strict synchronization. Add a checksum or last_sync timestamp to detect drift."
+    }
+  ],
+  "inconsistencies": [
+    {
+      "id": "INC-001",
+      "severity": "high",
+      "type": "count mismatch",
+      "description": "SUMMARY.json (global) claims KB entry_count=33, but KB index.json has 32 entries (KB-0001 through KB-0032), KB INDEX_COMPACT.json has 31 entries (missing KB-0032), and actual .md files go up to KB-0033.",
+      "files": ["storage/data/SUMMARY.json", "knowledge-base/index.json", "knowledge-base/INDEX_COMPACT.json"],
+      "expected": "All should agree on the same count",
+      "actual": "SUMMARY=33, index.json=32, INDEX_COMPACT=31, files=33"
+    },
+    {
+      "id": "INC-002",
+      "severity": "high",
+      "type": "count mismatch",
+      "description": "SUMMARY.json (global) claims SCR entry_count=54, scripts index.json has 54 entries (SCR-0001 to SCR-0054), but scripts INDEX_COMPACT.json only has 50 entries (missing SCR-0051 through SCR-0054). The scripts SUMMARY.json also says 50.",
+      "files": ["storage/data/SUMMARY.json", "storage/scripts/index.json", "storage/scripts/INDEX_COMPACT.json", "storage/scripts/SUMMARY.json"],
+      "expected": "All should agree",
+      "actual": "Global SUMMARY=54, index.json=54, local INDEX_COMPACT=50, local SUMMARY=50"
+    },
+    {
+      "id": "INC-003",
+      "severity": "high",
+      "type": "count mismatch",
+      "description": "SUMMARY.json (global) claims SOP entry_count=23, SOP index.json has 20 entries (including superseded versions), SOP INDEX_COMPACT.json has 18 entries, and actual SOP JSON files on disk number approximately 21 (excluding index/summary/compact files).",
+      "files": ["storage/data/SUMMARY.json", "storage/coordination/sops/index.json", "storage/coordination/sops/INDEX_COMPACT.json"],
+      "expected": "All should agree",
+      "actual": "Global SUMMARY=23, index.json=20, INDEX_COMPACT=18"
+    },
+    {
+      "id": "INC-004",
+      "severity": "medium",
+      "type": "benchmark value discrepancy",
+      "description": "SQLite contention benchmarks show different values across files for the same metric. unified_benchmarks: 1-thread=3230 ops/s, 32-thread=95 ops/s. empirical_benchmarks: 1-thread=3611 ops/s, 32-thread=120 ops/s. final_analysis: references 3611 in contention_curve but 3230 in cross_cutting_insights. No run IDs distinguish these measurements.",
+      "files": ["storage/data/unified_benchmarks.json", "storage/data/empirical_benchmarks.json", "storage/data/final_analysis.json"],
+      "expected": "Consistent values or clearly labeled different runs",
+      "actual": "Same metric has 2-3 different values without disambiguation"
+    },
+    {
+      "id": "INC-005",
+      "severity": "medium",
+      "type": "schema inconsistency",
+      "description": "unified_benchmarks.json uses 'collected_at' for date. empirical_benchmarks.json uses 'run_date'. final_analysis.json uses 'analysis_date'. INDEX_COMPACT.json uses 'generated'. SUMMARY.json uses 'generated'. No standard date field name.",
+      "files": ["storage/data/unified_benchmarks.json", "storage/data/empirical_benchmarks.json", "storage/data/final_analysis.json", "storage/data/INDEX_COMPACT.json", "storage/data/SUMMARY.json"],
+      "expected": "Consistent date field name across all data files",
+      "actual": "5 different field names for the creation date"
+    },
+    {
+      "id": "INC-006",
+      "severity": "medium",
+      "type": "schema inconsistency",
+      "description": "Scripts index.json uses 'added' for date field. KB index.json uses 'date'. SOP index.json uses no date field on entries. Global INDEX_COMPACT uses 'date' consistently. Each subsystem index has different schema for entries.",
+      "files": ["storage/scripts/index.json", "knowledge-base/index.json", "storage/coordination/sops/index.json"],
+      "expected": "Consistent entry schema across all index files",
+      "actual": "Different field names and different sets of fields per entry"
+    },
+    {
+      "id": "INC-007",
+      "severity": "medium",
+      "type": "schema inconsistency",
+      "description": "SOP index uses 'sop_count' for total while scripts index uses no explicit count field (implied by array length). KB index uses 'entry_count'. Data index uses 'file_count'. No standard count field.",
+      "files": ["storage/coordination/sops/index.json", "storage/scripts/index.json", "knowledge-base/index.json", "storage/data/index.json"],
+      "expected": "Consistent top-level structure",
+      "actual": "Different count field names and top-level keys"
+    },
+    {
+      "id": "INC-008",
+      "severity": "low",
+      "type": "ID gap",
+      "description": "SOP IDs jump from SOP-025 to SOP-029 (missing SOP-026, SOP-027, SOP-028 in INDEX_COMPACT). However, SOP index.json includes SOP-026 (efficiency_guide.json), SOP-027 (future_team_data_strategy.json), SOP-028 (tool_sops.json) which are present on disk.",
+      "files": ["storage/coordination/sops/INDEX_COMPACT.json", "storage/coordination/sops/index.json"],
+      "expected": "INDEX_COMPACT should include all active entries from index.json",
+      "actual": "SOP-026, SOP-027, SOP-028 missing from INDEX_COMPACT"
+    },
+    {
+      "id": "INC-009",
+      "severity": "low",
+      "type": "missing field",
+      "description": "SOP entries in global INDEX_COMPACT.json and local SOP INDEX_COMPACT.json have 'category: null' for all entries. Other resource types (KB, SCR) have meaningful categories. SOPs lack any categorization.",
+      "files": ["storage/data/INDEX_COMPACT.json", "storage/coordination/sops/INDEX_COMPACT.json"],
+      "expected": "Categories assigned to SOPs (e.g., coordination, operations, lifecycle)",
+      "actual": "All SOP categories are null"
+    },
+    {
+      "id": "INC-010",
+      "severity": "low",
+      "type": "missing field",
+      "description": "SRC entries in global INDEX_COMPACT.json have 'category: null' for all entries. Sources have no categorization despite being diverse (academic, news, financial, government, developer tools).",
+      "files": ["storage/data/INDEX_COMPACT.json"],
+      "expected": "Categories assigned to SRC entries",
+      "actual": "All SRC categories are null"
+    },
+    {
+      "id": "INC-011",
+      "severity": "low",
+      "type": "naming inconsistency",
+      "description": "Script filenames use mixed conventions: some use hyphens (validate-storage.py, test-edge-cases.py), others use underscores (grade_research.py, merge_research.py, kb_validator.py). The index 'name' field uses hyphens consistently but 'filename' matches actual file names.",
+      "files": ["storage/scripts/index.json"],
+      "expected": "Consistent naming convention",
+      "actual": "Mix of hyphen and underscore conventions in filenames"
+    },
+    {
+      "id": "INC-012",
+      "severity": "low",
+      "type": "path inconsistency",
+      "description": "Scripts SCR-0029 through SCR-0033 use relative paths starting with '../coordination/' in their filename field, while all other scripts use paths relative to storage/scripts/. This makes filename resolution context-dependent.",
+      "files": ["storage/scripts/index.json"],
+      "expected": "Consistent path convention",
+      "actual": "5 entries use '../coordination/' prefix, 49 use local paths"
+    }
+  ],
+  "orphaned_references": [
+    {
+      "id": "ORP-001",
+      "type": "file exists, not in index",
+      "description": "KB-0033.md exists on disk but is not listed in knowledge-base/index.json, knowledge-base/INDEX_COMPACT.json, or global INDEX_COMPACT.json.",
+      "file": "knowledge-base/entries/KB-0033.md",
+      "missing_from": ["knowledge-base/index.json", "knowledge-base/INDEX_COMPACT.json", "storage/data/INDEX_COMPACT.json"]
+    },
+    {
+      "id": "ORP-002",
+      "type": "file exists, missing from compact index",
+      "description": "KB-0032 exists in knowledge-base/index.json but is missing from knowledge-base/INDEX_COMPACT.json (which stops at KB-0031).",
+      "file": "knowledge-base/entries/KB-0032.md",
+      "missing_from": ["knowledge-base/INDEX_COMPACT.json"]
+    },
+    {
+      "id": "ORP-003",
+      "type": "entries exist in full index, missing from compact index",
+      "description": "SCR-0051 (tool-benchmarker), SCR-0052 (tool-tester), SCR-0053 (coord-stress-bench), SCR-0054 (team-analyzer) exist in storage/scripts/index.json but are missing from storage/scripts/INDEX_COMPACT.json.",
+      "entries": ["SCR-0051", "SCR-0052", "SCR-0053", "SCR-0054"],
+      "missing_from": ["storage/scripts/INDEX_COMPACT.json"]
+    },
+    {
+      "id": "ORP-004",
+      "type": "entries exist in full index, missing from compact index",
+      "description": "SOP-026 (efficiency_guide.json), SOP-027 (future_team_data_strategy.json), SOP-028 (tool_sops.json) exist in SOP index.json and as files on disk but are missing from SOP INDEX_COMPACT.json.",
+      "entries": ["SOP-026", "SOP-027", "SOP-028"],
+      "missing_from": ["storage/coordination/sops/INDEX_COMPACT.json"]
+    },
+    {
+      "id": "ORP-005",
+      "type": "cross-reference target missing from compact index",
+      "description": "DATA-0003 (empirical_benchmarks.json) cross-references SCR-0053 which exists in scripts index.json but not in scripts INDEX_COMPACT.json.",
+      "reference_source": "storage/data/index.json (DATA-0003)",
+      "reference_target": "SCR-0053",
+      "issue": "Target exists in full index but not in compact index"
+    },
+    {
+      "id": "ORP-006",
+      "type": "unregistered files on disk",
+      "description": "Multiple script-adjacent files exist in storage/scripts/ that are not registered in any index: generate_registry.py, validate_naming.py, smart_write.py, auto_index.py, import_to_db.py, smart_search.py, smart_read.py, query_kb.py, test-cross-references.py, viz_team_hierarchy.js, viz_data_flow.js, viz_kb_graph.js, and various stress test result JSON files.",
+      "files": ["storage/scripts/generate_registry.py", "storage/scripts/validate_naming.py", "storage/scripts/smart_write.py", "storage/scripts/auto_index.py", "storage/scripts/import_to_db.py", "storage/scripts/smart_search.py", "storage/scripts/smart_read.py", "storage/scripts/query_kb.py", "storage/scripts/test-cross-references.py", "storage/scripts/viz_team_hierarchy.js", "storage/scripts/viz_data_flow.js", "storage/scripts/viz_kb_graph.js"],
+      "issue": "12+ script files on disk with no index entry"
+    }
+  ],
+  "missing_references": [
+    {
+      "id": "MIS-001",
+      "description": "SOP-032 (sop_032_optimal_team_sizing.json) exists on disk but is not registered in SOP index.json, INDEX_COMPACT.json, or global INDEX_COMPACT.json.",
+      "file": "storage/coordination/sops/sop_032_optimal_team_sizing.json"
+    },
+    {
+      "id": "MIS-002",
+      "description": "Global SUMMARY.json claims TOOL entry_count=2 but only TOOL-0001 and TOOL-0002 appear in INDEX_COMPACT.json. No dedicated tools index.json found in storage/api-tools/.",
+      "issue": "TOOL entries have no subsystem-level index file"
+    },
+    {
+      "id": "MIS-003",
+      "description": "Global SUMMARY.json lists resource_type 'DATA' with entry_count=6, but the data index.json only lists 6 files. These DATA entries (DATA-0001 through DATA-0006) do not appear in any SUMMARY or COMPACT index at the subsystem level.",
+      "issue": "DATA entries exist only in storage/data/index.json, not propagated to compact indexes"
+    }
+  ],
+  "schema_issues": [
+    {
+      "id": "SCH-001",
+      "severity": "high",
+      "description": "No shared schema definition exists for index entries across subsystems. KB entries have {id, title, date, team, category, tags, status, confidence, builds_on}. Script entries have {id, name, filename, language, category, description, dependencies, added, added_by_team}. SOP entries have {id, title, filename, version, status, description}. This makes cross-subsystem queries impossible without custom logic per type.",
+      "recommendation": "Define a base schema with common fields {id, title, date, category, description, status} and type-specific extensions."
+    },
+    {
+      "id": "SCH-002",
+      "severity": "medium",
+      "description": "SOP index.json uses duplicate ID values. Both the superseded SOP-012 v1 and active SOP-012 v2 share id='SOP-012'. Same for SOP-016. This breaks ID uniqueness invariant.",
+      "recommendation": "Use versioned IDs (SOP-012-v1, SOP-012-v2) or remove superseded entries from the active index."
+    },
+    {
+      "id": "SCH-003",
+      "severity": "medium",
+      "description": "The 3-tier index system (index.json, INDEX_COMPACT.json, SUMMARY.json) has no formal specification for which fields each tier must include, nor an automated synchronization mechanism. This is the root cause of most count mismatches and missing entries.",
+      "recommendation": "Create a single-source-of-truth (index.json) and generate INDEX_COMPACT.json and SUMMARY.json programmatically via auto_index.py. Add a 'last_sync' hash to detect drift."
+    },
+    {
+      "id": "SCH-004",
+      "severity": "low",
+      "description": "Cross-references in data files use different formats: DATA index uses array of IDs [\"KB-0032\", \"KB-0008\"], unified_benchmarks uses path strings (\"source\": \"prototype/tests/benchmark_results.json\"), and final_analysis uses dot-notation paths (\"unified_benchmarks.prototype_benchmarks\"). No consistent cross-reference format.",
+      "recommendation": "Standardize on a single cross-reference format: {\"type\": \"DATA|KB|SCR|SOP\", \"id\": \"ID\", \"path\": \"optional.json.path\"}."
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": 1,
+      "action": "Synchronize all index tiers",
+      "description": "Run auto_index.py or equivalent to regenerate INDEX_COMPACT.json and SUMMARY.json from index.json for all subsystems. This fixes INC-001 through INC-003 and ORP-002 through ORP-004. Missing entries: KB-0032 in KB compact, SCR-0051-0054 in scripts compact, SOP-026-028 in SOP compact.",
+      "estimated_effort": "15 minutes",
+      "impact": "Fixes 8 issues (3 high severity)"
+    },
+    {
+      "priority": 2,
+      "action": "Register orphaned files",
+      "description": "Add KB-0033, SOP-032, and 12+ unregistered script files to their respective index.json files. These files exist on disk but are invisible to any index-based lookup.",
+      "estimated_effort": "30 minutes",
+      "impact": "Fixes 3 orphaned reference issues"
+    },
+    {
+      "priority": 3,
+      "action": "Deduplicate data files",
+      "description": "Refactor final_analysis.json to reference unified_benchmarks.json and empirical_benchmarks.json by DATA ID and JSON path instead of embedding duplicate values. This eliminates ~16KB of redundant data and prevents future value drift (INC-004).",
+      "estimated_effort": "45 minutes",
+      "impact": "Eliminates 35% storage overhead, prevents value inconsistencies"
+    },
+    {
+      "priority": 4,
+      "action": "Standardize schemas",
+      "description": "Define a base entry schema used across all subsystems. Standardize date field names (use 'date' everywhere), count field names (use 'entry_count'), and cross-reference format. Document in a SCHEMA.json file.",
+      "estimated_effort": "1 hour",
+      "impact": "Fixes 5 schema issues, enables cross-subsystem tooling"
+    },
+    {
+      "priority": 5,
+      "action": "Fix SOP ID collisions",
+      "description": "Resolve duplicate SOP-012 and SOP-016 IDs in SOP index.json. Either use versioned IDs or archive superseded entries separately.",
+      "estimated_effort": "10 minutes",
+      "impact": "Fixes ID uniqueness violation"
+    },
+    {
+      "priority": 6,
+      "action": "Merge duplicate KB entries",
+      "description": "KB-0012 and KB-0013 have identical titles and content about government/open data APIs. Merge KB-0013 into KB-0012 and add a redirect/deprecation notice.",
+      "estimated_effort": "15 minutes",
+      "impact": "Eliminates content duplication"
+    },
+    {
+      "priority": 7,
+      "action": "Deduplicate SRC entries",
+      "description": "SRC-0018 and SRC-0039 both reference the FRED API. Remove the duplicate and update any references.",
+      "estimated_effort": "5 minutes",
+      "impact": "Minor cleanup"
+    },
+    {
+      "priority": 8,
+      "action": "Normalize tags",
+      "description": "Lowercase all tags in KB index.json to prevent duplicates like 'sops' vs 'SOPs'. Merge duplicate tag entries in tag_index (e.g., two 'sqlite' blocks).",
+      "estimated_effort": "10 minutes",
+      "impact": "Improves search accuracy"
+    },
+    {
+      "priority": 9,
+      "action": "Add automated index validation",
+      "description": "Create a pre-commit or periodic check that verifies: (a) all index tiers agree on counts, (b) all disk files are registered, (c) all index entries point to existing files, (d) no duplicate IDs exist. This prevents future drift.",
+      "estimated_effort": "2 hours",
+      "impact": "Prevents all discovered issues from recurring"
+    },
+    {
+      "priority": 10,
+      "action": "Add benchmark run provenance",
+      "description": "Add run_id and exact_timestamp fields to all benchmark data to distinguish multiple runs of the same test. This resolves the confusion between 3230 vs 3611 ops/s SQLite contention values.",
+      "estimated_effort": "30 minutes",
+      "impact": "Eliminates data ambiguity"
+    }
+  ]
+}

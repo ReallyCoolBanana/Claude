@@ -1,0 +1,74 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-03-11",
+  "description": "Full index of all data files in storage/data/",
+  "file_count": 6,
+  "files": [
+    {
+      "id": "DATA-0001",
+      "filename": "knowledge.db",
+      "format": "sqlite",
+      "size_estimate": "432KB",
+      "description": "SQLite FTS5 full-text search database containing all knowledge base entries, team logs, scripts, and SOPs. Enables sub-millisecond keyword search across the entire repository with ranked results.",
+      "date_created": "2026-03-11",
+      "category": "database",
+      "tags": ["sqlite", "fts5", "full-text-search", "knowledge-base", "indexing"],
+      "cross_references": ["KB-0032", "KB-0008", "SCR-0018"]
+    },
+    {
+      "id": "DATA-0002",
+      "filename": "unified_benchmarks.json",
+      "format": "json",
+      "size_estimate": "27KB",
+      "description": "Unified benchmark dataset from 17 sources covering prototype performance (Proto A vs Proto B vs baseline), coordination overhead measurements, data-gathering method comparisons, and live deployment results. Contains 36 synthetic runs, 3 live tests, 2880 coordination measurements, and 146 data-gathering data points.",
+      "date_created": "2026-03-11",
+      "category": "benchmarks",
+      "tags": ["benchmarks", "proto-a", "proto-b", "performance", "throughput", "latency", "coordination"],
+      "cross_references": ["KB-0020", "KB-0021", "KB-0022", "KB-0030", "DATA-0004"]
+    },
+    {
+      "id": "DATA-0003",
+      "filename": "empirical_benchmarks.json",
+      "format": "json",
+      "size_estimate": "17KB",
+      "description": "Empirical benchmark results from 7 test suites: team sizing (1-50 agents), SQLite contention (1-32 threads), thundering herd simulation, help offer races, pipeline throughput, connection pattern comparison, and tool correctness testing (45 tests). Contains 2000+ measurements per run.",
+      "date_created": "2026-03-11",
+      "category": "benchmarks",
+      "tags": ["benchmarks", "team-sizing", "sqlite-contention", "pipeline", "stress-testing", "empirical"],
+      "cross_references": ["KB-0024", "KB-0030", "SCR-0053", "DATA-0004"]
+    },
+    {
+      "id": "DATA-0004",
+      "filename": "final_analysis.json",
+      "format": "json",
+      "size_estimate": "23KB",
+      "description": "Cross-analysis synthesizing 3247 data points from unified benchmarks, empirical benchmarks, think tank convergence results, and team analysis. Contains optimal team size recommendations (5-8 agents), power law efficiency model (E=4.0*N^-0.75), connection pattern verdicts, and infrastructure weak link priority map.",
+      "date_created": "2026-03-11",
+      "category": "analysis",
+      "tags": ["meta-analysis", "team-sizing", "efficiency", "power-law", "recommendations", "cross-analysis"],
+      "cross_references": ["KB-0030", "KB-0032", "DATA-0002", "DATA-0003"]
+    },
+    {
+      "id": "DATA-0005",
+      "filename": "INDEX_COMPACT.json",
+      "format": "json",
+      "size_estimate": "32KB",
+      "description": "Level 1 compact meta-index of all repository entries across all resource types (KB, SCR, SOP, SRC, TEAM, TOOL). Each entry contains id, title, resource_type, category, and date. Designed for fast lookup without reading individual index files.",
+      "date_created": "2026-03-11",
+      "category": "meta-index",
+      "tags": ["index", "meta-index", "lookup", "compact", "cross-reference"],
+      "cross_references": ["DATA-0006"]
+    },
+    {
+      "id": "DATA-0006",
+      "filename": "SUMMARY.json",
+      "format": "json",
+      "size_estimate": "1KB",
+      "description": "Level 0 summary of all resource types with entry counts, last update dates, and category lists. Provides a quick overview of repository contents without loading any full index.",
+      "date_created": "2026-03-11",
+      "category": "meta-index",
+      "tags": ["summary", "counts", "overview", "meta-index"],
+      "cross_references": ["DATA-0005"]
+    }
+  ]
+}

@@ -1,0 +1,242 @@
+{
+  "id": "SOP-036",
+  "title": "Data Collection and Indexing Standards",
+  "version": "1.0",
+  "status": "active",
+  "created_date": "2026-03-11",
+  "category": "data-management",
+  "purpose": "Standardize how benchmark data, analysis results, and operational metrics are collected, stored, and indexed across the repository. Establishes the three-tier index system (SUMMARY.json, INDEX_COMPACT.json, full index.json) and defines required fields, naming conventions, and cross-reference requirements. Based on empirical evidence that the three-tier system enables 90.2% token savings (11.7x speedup) when agents query indexes, transforming 16 index reads per context window into 190.",
+  "scope": "All data files produced by benchmarks, analyses, team operations, and tool outputs. Applies to storage/data/, storage/scripts/, storage/coordination/, knowledge-base/, and market-research/ directories.",
+  "builds_on": ["SOP-027", "SOP-030", "SOP-015"],
+
+  "key_findings": {
+    "three_tier_impact": {
+      "full_index_tokens": 6093,
+      "summary_tokens": 79,
+      "query_kb_tokens": 123,
+      "savings_pct": 98.7,
+      "speedup": "77.1x (SUMMARY vs full index), 49.5x (query_kb vs full index)",
+      "agent_operations_per_context": "~190 with tiered indexes vs ~16 with raw file reads"
+    },
+    "index_lookup_performance": {
+      "hash_id_lookup_avg_us": 0.11,
+      "linear_id_lookup_avg_us": 1.42,
+      "hash_speedup": "12.9x for scripts, 6.5x for tools, 8.4x for sources",
+      "indexed_category_speedup": "1.6-2.9x",
+      "cross_ref_indexed_speedup": "6.6x"
+    },
+    "data_gathering_improvement": {
+      "iteration_1_to_2_data_points_increase": "371%",
+      "iteration_1_to_2_quality_increase": "67%",
+      "lesson": "Structured data collection with consistent indexing enables compounding improvement across iterations"
+    }
+  },
+
+  "three_tier_index_system": {
+    "tier_1_summary": {
+      "filename": "SUMMARY.json",
+      "purpose": "Ultra-compact directory overview for agent orientation. Answers: what is in this directory, how many entries, what date range?",
+      "required_fields": ["directory", "purpose", "entry_count", "categories", "last_updated", "id_range"],
+      "max_tokens": 100,
+      "when_agents_use_it": "First read when entering any directory. Determines if the directory is relevant before deeper reads.",
+      "example": {
+        "directory": "storage/data",
+        "purpose": "Contains 3 benchmark analysis files and 1 convergence report",
+        "entry_count": 4,
+        "categories": ["benchmarks", "analysis", "convergence"],
+        "last_updated": "2026-03-11",
+        "id_range": "N/A (named files)"
+      }
+    },
+    "tier_2_compact_index": {
+      "filename": "INDEX_COMPACT.json",
+      "purpose": "One-line-per-entry index for scanning. Answers: what specific entries exist and what type/category are they?",
+      "required_fields_per_entry": ["id", "title", "resource_type", "category", "date"],
+      "max_tokens_per_entry": 50,
+      "when_agents_use_it": "When agent needs to find a specific entry by ID, title, or category. Faster than reading full index.",
+      "example_entry": {
+        "id": "SOP-034",
+        "title": "SQLite Contention Management",
+        "resource_type": "SOP",
+        "category": "infrastructure",
+        "date": "2026-03-11"
+      }
+    },
+    "tier_3_full_index": {
+      "filename": "index.json",
+      "purpose": "Complete metadata for all entries. Includes descriptions, cross-references, file paths, and all searchable fields.",
+      "required_fields_per_entry": ["id", "title", "filename", "version", "status", "description"],
+      "optional_fields": ["category", "tags", "builds_on", "superseded_by", "created_date", "team"],
+      "when_agents_use_it": "When agent needs full details about entries, cross-references, or needs to update/add entries.",
+      "note": "Prefer query_kb or smart_read over reading the full index directly. query_kb returns 123 tokens vs 6093 for the full file."
+    }
+  },
+
+  "procedures": [
+    {
+      "step": 1,
+      "title": "Determine Data Category and Storage Location",
+      "action": "Before storing any data file, classify it and identify the correct storage location.",
+      "storage_locations": {
+        "benchmark_results": "storage/scripts/ (tool and coordination benchmarks) or storage/scripts/data-gathering/benchmarks/ (data gathering)",
+        "analysis_results": "storage/data/ (final analyses) or storage/analysis/ (team-specific analyses)",
+        "team_outputs": "storage/coordination/teams/<team-name>/output/",
+        "knowledge_base_entries": "knowledge-base/entries/",
+        "sop_documents": "storage/coordination/sops/",
+        "market_research": "market-research/picks/ or market-research/methods/",
+        "scripts_and_tools": "storage/scripts/ or storage/api-tools/"
+      },
+      "output": "Storage location selected"
+    },
+    {
+      "step": 2,
+      "title": "Apply Naming Conventions",
+      "action": "Name the file according to the conventions for its category.",
+      "naming_conventions": {
+        "benchmarks": "YYYYMMDD_HHMMSS_<suite>_results.json (e.g., 20260311_143022_coord_bench_results.json)",
+        "sops": "sop_NNN_<short_title>.json (e.g., sop_034_sqlite_contention_management.json)",
+        "knowledge_base": "KB-NNNN.md (e.g., KB-0042.md) with YAML frontmatter",
+        "team_logs": "TEAM-NNNN.md (sequential numbering)",
+        "analysis": "<descriptive_name>.json (e.g., final_analysis.json, team_analysis_results.json)",
+        "market_picks": "PICK-NNNN.md (sequential numbering)"
+      },
+      "output": "File named according to conventions"
+    },
+    {
+      "step": 3,
+      "title": "Include Required Metadata Fields",
+      "action": "Every data file must include metadata fields appropriate to its type.",
+      "required_metadata_by_type": {
+        "benchmark_results": {
+          "required": ["run_date", "description", "total_tests_or_measurements", "results_summary"],
+          "recommended": ["comparison_to_baseline", "regression_flags", "environment_info"]
+        },
+        "analysis_results": {
+          "required": ["analysis_date", "data_sources_analyzed", "total_data_points", "key_findings"],
+          "recommended": ["methodology_notes", "confidence_levels", "actionable_recommendations"]
+        },
+        "sop_documents": {
+          "required": ["id", "title", "version", "status", "created_date", "category", "purpose", "scope", "procedures"],
+          "recommended": ["references", "metrics", "anti_patterns", "builds_on"]
+        },
+        "knowledge_base_entries": {
+          "required": ["id", "title", "date", "tags", "summary"],
+          "recommended": ["builds_on", "related_entries", "confidence_level"]
+        }
+      },
+      "output": "Data file with all required metadata fields populated"
+    },
+    {
+      "step": 4,
+      "title": "Update All Three Index Tiers",
+      "action": "After creating or modifying a data file, update all three tiers of the index system in the file's directory.",
+      "update_order": [
+        "1. Update index.json (full index) with complete entry metadata",
+        "2. Update INDEX_COMPACT.json with one-line entry summary",
+        "3. Update SUMMARY.json with updated entry_count, categories, last_updated, and id_range"
+      ],
+      "automation": "Use auto_index tool (storage/scripts/auto_index.py) when available. Falls back to manual updates.",
+      "output": "All three index tiers consistent and up-to-date"
+    },
+    {
+      "step": 5,
+      "title": "Add Cross-References",
+      "action": "Link the new data to related entries using cross-reference fields.",
+      "cross_reference_types": {
+        "builds_on": "This entry extends or refines the referenced entry. E.g., SOP-034 builds_on SOP-032.",
+        "references": "This entry cites data from the referenced source. Include section and data_points count.",
+        "superseded_by": "This entry has been replaced by a newer version. Mark old entry status as 'superseded'.",
+        "related_entries": "Entries covering similar topics or sharing data sources."
+      },
+      "cross_reference_performance": "Indexed cross-reference lookup is 6.6x faster than linear scan (0.29us vs 1.92us). Always use indexed lookups.",
+      "output": "Cross-references added to new entry and referenced entries updated if needed"
+    },
+    {
+      "step": 6,
+      "title": "Validate Index Consistency",
+      "action": "After updates, validate that indexes are consistent with actual files on disk.",
+      "validation_checks": [
+        "Every file in the directory has a corresponding index entry",
+        "Every index entry points to an existing file",
+        "SUMMARY.json entry_count matches actual file count",
+        "INDEX_COMPACT.json entries match index.json entries (subset of fields)",
+        "No duplicate IDs in index.json",
+        "All cross-references point to valid entries"
+      ],
+      "tools": "Use kb_validator (storage/scripts/kb_validator.py) and cross_ref_checker (storage/scripts/cross_ref_checker.py) for automated validation.",
+      "output": "Validation report: pass/fail per check"
+    }
+  ],
+
+  "data_quality_standards": {
+    "benchmark_data": {
+      "minimum_measurements": "50 per metric (consistent with empirical benchmarks using 50-200 measurements per condition)",
+      "required_percentiles": ["p50", "p95", "p99"],
+      "required_aggregate": ["mean", "total", "count"],
+      "comparison_requirement": "All benchmark results must include comparison to established baseline when one exists"
+    },
+    "analysis_data": {
+      "source_attribution": "Every finding must cite specific data sources with section references",
+      "confidence_levels": "HIGH (multiple independent sources agree), MEDIUM (single source or limited observations), LOW (extrapolation or single data point)",
+      "actionable_format": "Analysis must include actionable_recommendations section with immediate/short_term/long_term categories"
+    },
+    "team_output_data": {
+      "artifact_tracking": "Every team output must be catalogued with artifact count and type for efficiency measurement",
+      "session_logging": "Required fields: team_id, agent_count, duration, artifacts_produced, cooperation_pattern, efficiency_score"
+    }
+  },
+
+  "anti_patterns": [
+    {
+      "name": "Index-Less Data Dumping",
+      "description": "Creating data files without updating any index tier.",
+      "why_wrong": "Unindexed data is invisible to agents using smart_read/query_kb. Other teams cannot discover or build on the data. Effectively lost work.",
+      "fix": "Always update all three index tiers (SUMMARY, INDEX_COMPACT, full index) when adding data."
+    },
+    {
+      "name": "Full Index Only",
+      "description": "Maintaining only index.json without SUMMARY.json or INDEX_COMPACT.json.",
+      "why_wrong": "Forces agents to read the full 6093-token index for simple orientation queries. Wastes 98.7% of tokens that SUMMARY.json would save.",
+      "fix": "Maintain all three tiers. SUMMARY for orientation (79 tokens), INDEX_COMPACT for scanning (50 tokens/entry), index.json for full details."
+    },
+    {
+      "name": "Inconsistent Cross-References",
+      "description": "Adding builds_on or references that point to non-existent entries.",
+      "why_wrong": "Broken cross-references mislead agents and fail validation. Cross-ref checker catches these but only if run.",
+      "fix": "Validate cross-references after every update using cross_ref_checker.py."
+    },
+    {
+      "name": "Raw File I/O for Index Reads",
+      "description": "Reading full index.json files directly instead of using query_kb or smart_read.",
+      "why_wrong": "Full file reads consume 6093 tokens. query_kb returns 123 tokens for the same result (49.5x savings). Raw reads waste 90% of context budget.",
+      "fix": "Always use query_kb for index queries and smart_read for entry reads. Reserve full file reads for index updates only."
+    }
+  ],
+
+  "references": [
+    {"source": "storage/data/unified_benchmarks.json", "section": "token_efficiency", "data_points": "11 benchmarks showing 90.2% average token reduction"},
+    {"source": "storage/data/unified_benchmarks.json", "section": "storage_stress_tests", "data_points": "Hash vs linear lookup benchmarks, category and cross-ref benchmarks"},
+    {"source": "storage/data/unified_benchmarks.json", "section": "data_gathering_benchmarks", "data_points": "Iteration comparison showing 371% data point increase"},
+    {"source": "storage/data/final_analysis.json", "section": "cross_cutting_insights", "data_points": "Token efficiency insight (11.7x speedup, 190 vs 16 operations per context)"},
+    {"source": "storage/data/empirical_benchmarks.json", "section": "tool_regression", "data_points": "query_kb and smart_read performance baselines"}
+  ],
+
+  "metrics": {
+    "compliance_indicators": [
+      "All data files have corresponding entries in all three index tiers",
+      "SUMMARY.json exists and is accurate for every indexed directory",
+      "INDEX_COMPACT.json entries match index.json entries",
+      "All cross-references resolve to valid entries",
+      "Benchmark results include required percentiles (p50, p95, p99)",
+      "Analysis results include source attribution and confidence levels"
+    ],
+    "performance_targets": {
+      "index_consistency_pct": 100,
+      "cross_reference_validity_pct": 100,
+      "summary_token_count": "< 100 per directory",
+      "compact_index_tokens_per_entry": "< 50",
+      "agent_index_reads_via_smart_tools_pct": "> 95"
+    },
+    "measurement_method": "Run kb_validator and cross_ref_checker after every data update. Track token consumption for index reads. Flag any directory missing SUMMARY.json or INDEX_COMPACT.json."
+  }
+}
