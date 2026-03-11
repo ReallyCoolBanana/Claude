@@ -1,0 +1,197 @@
+"""
+JSONL Message Bus for inter-agent communication.
+
+Uses append-only JSONL files with POSIX atomic writes (< 4096 bytes per message).
+Each channel maps to a file: {comm_dir}/{channel}.jsonl
+"""
+
+import json
+import logging
+import os
+import time
+import uuid
+from dataclasses import asdict, dataclass, field
+from typing import Optional
+
+logger = logging.getLogger(__name__)
+
+VALID_MSG_TYPES = frozenset({
+    "info", "blocker", "phase-signal", "heartbeat", "request", "response",
+})
+
+MAX_MESSAGE_BYTES = 4096
+
+
+@dataclass
+class Message:
+    id: str
+    type: str
+    channel: str
+    team: str
+    agent_id: str
+    ts: float
+    ttl: int = 300
+    body: dict = field(default_factory=dict)
+    in_reply_to: Optional[str] = None
+
+    def to_json_line(self) -> bytes:
+        """Serialize to a single JSON line (bytes, newline-terminated)."""
+        return json.dumps(asdict(self), separators=(",", ":")).encode("utf-8") + b"\n"
+
+    @classmethod
+    def from_json_line(cls, line: str) -> "Message":
+        d = json.loads(line)
+        return cls(**d)
+
+
+class BusWriter:
+    """Append messages to channel files with POSIX atomic writes."""
+
+    def __init__(self, comm_dir: str, agent_id: str, team: str) -> None:
+        self.comm_dir = comm_dir
+        self.agent_id = agent_id
+        self.team = team
+        os.makedirs(comm_dir, exist_ok=True)
+
+    def _channel_path(self, channel: str) -> str:
+        # Sanitize channel name for filesystem safety
+        safe = channel.replace("/", "_").replace("..", "_")
+        return os.path.join(self.comm_dir, f"{safe}.jsonl")
+
+    def publish(
+        self,
+        channel: str,
+        msg_type: str,
+        body: dict,
+        ttl: int = 300,
+        in_reply_to: Optional[str] = None,
+    ) -> Message:
+        if msg_type not in VALID_MSG_TYPES:
+            raise ValueError(f"Invalid message type {msg_type!r}; must be one of {VALID_MSG_TYPES}")
+
+        msg = Message(
+            id=str(uuid.uuid4()),
+            type=msg_type,
+            channel=channel,
+            team=self.team,
+            agent_id=self.agent_id,
+            ts=time.time(),
+            ttl=ttl,
+            body=body,
+            in_reply_to=in_reply_to,
+        )
+
+        raw = msg.to_json_line()
+        if len(raw) > MAX_MESSAGE_BYTES:
+            raise ValueError(
+                f"Serialized message is {len(raw)} bytes, exceeds {MAX_MESSAGE_BYTES} byte limit"
+            )
+
+        filepath = self._channel_path(channel)
+        # O_WRONLY | O_APPEND | O_CREAT — POSIX guarantees atomic appends
+        # for writes <= PIPE_BUF (typically 4096 on Linux).
+        fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+        try:
+            os.write(fd, raw)
+        finally:
+            os.close(fd)
+
+        return msg
+
+
+class BusReader:
+    """Read new messages from a channel file, tracking position."""
+
+    def __init__(self, comm_dir: str, channel: str) -> None:
+        self.comm_dir = comm_dir
+        safe = channel.replace("/", "_").replace("..", "_")
+        self.filepath = os.path.join(comm_dir, f"{safe}.jsonl")
+        self._offset: int = 0
+
+    def poll(self) -> list[Message]:
+        """Read new complete lines since last poll, filtering expired messages."""
+        if not os.path.exists(self.filepath):
+            return []
+
+        messages: list[Message] = []
+        now = time.time()
+
+        try:
+            with open(self.filepath, "r", encoding="utf-8") as f:
+                f.seek(self._offset)
+                data = f.read()
+        except OSError as e:
+            logger.warning("Failed to read bus file %s: %s", self.filepath, e)
+            return []
+
+        if not data:
+            return []
+
+        # Only process complete lines (ending with \n).
+        # If the last chunk doesn't end with \n, keep it for next poll.
+        if data.endswith("\n"):
+            lines = data.split("\n")
+            lines.pop()  # remove trailing empty string from split
+            self._offset += len(data.encode("utf-8"))
+        else:
+            parts = data.rsplit("\n", 1)
+            if len(parts) == 1:
+                # No complete line yet
+                return []
+            complete_part = parts[0] + "\n"
+            lines = parts[0].split("\n")
+            self._offset += len(complete_part.encode("utf-8"))
+
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                msg = Message.from_json_line(line)
+            except (json.JSONDecodeError, TypeError, KeyError) as e:
+                logger.warning("Skipping malformed bus line: %s (error: %s)", line[:120], e)
+                continue
+
+            # Filter expired
+            if msg.ts + msg.ttl < now:
+                continue
+
+            messages.append(msg)
+
+        return messages
+
+
+def repair_bus_file(filepath: str) -> int:
+    """Remove corrupt (non-JSON) lines from a bus file. Returns count of lines removed."""
+    if not os.path.exists(filepath):
+        return 0
+
+    with open(filepath, "r", encoding="utf-8") as f:
+        raw_lines = f.readlines()
+
+    good_lines: list[str] = []
+    removed = 0
+
+    for line in raw_lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        try:
+            data = json.loads(stripped)
+            # Validate it has the required Message fields
+            if not isinstance(data, dict) or "id" not in data or "type" not in data:
+                removed += 1
+                continue
+            good_lines.append(stripped + "\n")
+        except json.JSONDecodeError:
+            removed += 1
+
+    if removed > 0:
+        # Write repaired content atomically via temp file + rename
+        tmp = filepath + ".repair.tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.writelines(good_lines)
+        os.replace(tmp, filepath)
+        logger.info("Repaired %s: removed %d corrupt lines", filepath, removed)
+
+    return removed
