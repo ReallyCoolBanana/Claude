@@ -1,0 +1,363 @@
+{
+  "meta": {
+    "created": "2026-03-11",
+    "agent": "research-agent-1",
+    "purpose": "Research findings for building an MCP server to expose knowledge base search tools",
+    "sources": [
+      "https://gofastmcp.com/getting-started/quickstart",
+      "https://code.claude.com/docs/en/mcp",
+      "https://modelcontextprotocol.io/specification/2025-03-26/basic/transports",
+      "https://github.com/modelcontextprotocol/python-sdk",
+      "https://github.com/modelcontextprotocol/servers",
+      "https://github.com/jlowin/fastmcp",
+      "https://pypi.org/project/fastmcp/",
+      "https://auth0.com/blog/build-python-mcp-server-for-blog-search/",
+      "https://github.com/Geeksfino/kb-mcp-server",
+      "https://mcpcat.io/guides/building-mcp-server-python-fastmcp/",
+      "https://medium.com/@laurentkubaski/mcp-resources-explained-and-how-they-differ-from-mcp-tools-096f9d15f767"
+    ]
+  },
+
+  "fastmcp_api": {
+    "current_version": "3.1.0 (released 2026-03-03)",
+    "package": "fastmcp (PyPI)",
+    "install": "uv pip install fastmcp",
+    "history": "FastMCP 1.0 was incorporated into official MCP Python SDK in 2024. FastMCP 2.0 added resources/prompts. FastMCP 3.0 (2026-01-19) added component versioning, granular auth, OpenTelemetry. 3.1.0 is latest.",
+    "note_on_mcp_sdk": "The official 'mcp' PyPI package (modelcontextprotocol/python-sdk) also includes a built-in FastMCP class. For simple servers, either package works. The standalone 'fastmcp' package has more advanced features (proxying, composition, etc).",
+    "core_pattern": {
+      "description": "Create a FastMCP instance, decorate functions with @mcp.tool, call mcp.run()",
+      "minimal_example": "from fastmcp import FastMCP\n\nmcp = FastMCP(\"My Server\")\n\n@mcp.tool\ndef add(a: int, b: int) -> int:\n    \"\"\"Add two numbers\"\"\"\n    return a + b\n\nif __name__ == \"__main__\":\n    mcp.run()"
+    },
+    "decorator_syntax": {
+      "tool": "@mcp.tool (no parentheses in fastmcp 3.x) or @mcp.tool() (both work)",
+      "resource": "@mcp.resource(\"protocol://path/{param}\") with URI template",
+      "prompt": "@mcp.prompt for reusable prompt templates"
+    },
+    "key_features": [
+      "Type hints auto-generate JSON schema for tool parameters",
+      "Docstrings become tool descriptions",
+      "Function name becomes tool identifier",
+      "Pydantic model support for complex inputs/outputs",
+      "Both sync and async functions supported",
+      "Return types: str, dict, list, Pydantic models all handled automatically"
+    ],
+    "async_support": "Built-in. Use 'async def' for I/O-bound operations like database queries. FastMCP handles both sync and async transparently.",
+    "context_parameter": "Inject Context object for logging, progress reporting: 'async def my_tool(query: str, ctx: Context) -> str'"
+  },
+
+  "transport_options": {
+    "summary": "Three transport types exist. stdio is best for Claude Code local servers. Streamable HTTP for remote. SSE is deprecated.",
+    "stdio": {
+      "description": "Server runs as a local subprocess. Communication over stdin/stdout.",
+      "best_for": "Local tools, CLI integration, Claude Code",
+      "pros": [
+        "Simplest setup - no network configuration",
+        "No port conflicts",
+        "Default transport for Claude Code",
+        "Direct system access",
+        "Process lifecycle managed by client"
+      ],
+      "cons": [
+        "Single client only",
+        "Local only - no remote access"
+      ],
+      "claude_code_usage": "claude mcp add my-server -- python /path/to/server.py",
+      "code": "mcp.run()  # defaults to stdio"
+    },
+    "streamable_http": {
+      "description": "HTTP POST/GET with optional SSE streaming. Introduced in MCP spec 2025-03-26.",
+      "best_for": "Remote servers, multi-client, cloud deployment",
+      "pros": [
+        "Multiple concurrent clients",
+        "Can be stateless (load-balancer friendly)",
+        "Network accessible",
+        "Standard HTTP infrastructure"
+      ],
+      "cons": [
+        "More complex setup",
+        "Known issues with long-running streaming tools in Claude Code",
+        "Requires network configuration"
+      ],
+      "claude_code_usage": "claude mcp add --transport http my-server https://host:port/mcp",
+      "code": "mcp.run(transport=\"http\", port=8000)"
+    },
+    "sse": {
+      "description": "Server-Sent Events over HTTP. DEPRECATED as of MCP spec 2025-03-26.",
+      "status": "deprecated - use streamable_http instead",
+      "claude_code_usage": "claude mcp add --transport sse my-server https://host:port/sse"
+    },
+    "recommendation_for_this_project": "Use stdio. The KB MCP server will run locally alongside Claude Code. stdio is the default, simplest, and most reliable transport. No network setup needed."
+  },
+
+  "claude_code_config": {
+    "configuration_locations": {
+      "local_scope": {
+        "path": "~/.claude.json (under project path)",
+        "description": "Default. Private to you, current project only.",
+        "how_to_add": "claude mcp add my-server -- python /path/to/server.py"
+      },
+      "project_scope": {
+        "path": ".mcp.json (repo root, version-controlled)",
+        "description": "Shared with team. Claude Code prompts for approval on first use.",
+        "how_to_add": "claude mcp add --scope project my-server -- python /path/to/server.py"
+      },
+      "user_scope": {
+        "path": "~/.claude.json (global section)",
+        "description": "Available across all projects for this user.",
+        "how_to_add": "claude mcp add --scope user my-server -- python /path/to/server.py"
+      }
+    },
+    "mcp_json_format": {
+      "description": "Project-scoped .mcp.json at repo root",
+      "example": {
+        "mcpServers": {
+          "kb-search": {
+            "command": "python",
+            "args": ["storage/scripts/mcp_kb_server.py"],
+            "env": {}
+          }
+        }
+      },
+      "notes": [
+        "command should be absolute path or in PATH",
+        "env supports ${VAR} and ${VAR:-default} expansion",
+        "Claude Code prompts for approval before using project-scoped servers"
+      ]
+    },
+    "settings_json_note": "The existing .claude/settings.json uses 'hooks' key. MCP servers should NOT go in settings.json - they go in .mcp.json (project scope) or ~/.claude.json (local/user scope).",
+    "verification": "Use /mcp command inside Claude Code to check server status",
+    "timeout": "Set MCP_TIMEOUT env var for startup timeout (e.g., MCP_TIMEOUT=10000)",
+    "output_limit": "MAX_MCP_OUTPUT_TOKENS env var (default 25000, warning at 10000)",
+    "cli_commands": {
+      "add": "claude mcp add [options] <name> -- <command> [args...]",
+      "add_json": "claude mcp add-json <name> '<json>'",
+      "list": "claude mcp list",
+      "get": "claude mcp get <name>",
+      "remove": "claude mcp remove <name>",
+      "status": "/mcp (inside Claude Code)"
+    },
+    "recommended_for_this_project": {
+      "scope": "project (via .mcp.json at repo root)",
+      "reason": "All agents/users of this repo should have access to the KB search MCP server. Version-controlled config ensures consistency.",
+      "config": {
+        "mcpServers": {
+          "kb-search": {
+            "command": "python3",
+            "args": ["${CLAUDE_PROJECT_DIR:-./}/storage/scripts/mcp_kb_server.py"],
+            "env": {}
+          }
+        }
+      }
+    }
+  },
+
+  "minimal_server_design": {
+    "description": "Minimal viable MCP server wrapping the existing SQLite FTS5 knowledge base with search/get/list tools",
+    "file_path": "storage/scripts/mcp_kb_server.py",
+    "estimated_lines": "40-60 lines",
+    "dependencies": "fastmcp (or mcp) - single dependency",
+    "tools": [
+      {
+        "name": "kb_search",
+        "description": "Full-text search the knowledge base using FTS5 with BM25 ranking",
+        "parameters": {
+          "query": "str - search query",
+          "resource_type": "str | None - filter by type (KB, SOP, SRC, SCR, TEAM, TOOL)",
+          "limit": "int = 10 - max results"
+        },
+        "returns": "list of {id, title, resource_type, summary, score}"
+      },
+      {
+        "name": "kb_get",
+        "description": "Read a specific knowledge base entry by ID",
+        "parameters": {
+          "entry_id": "str - entry ID (e.g., KB-0034)",
+          "fields": "str | None - comma-separated fields to return"
+        },
+        "returns": "dict with entry fields, tags, and relationships"
+      },
+      {
+        "name": "kb_list",
+        "description": "List all entries of a given resource type",
+        "parameters": {
+          "resource_type": "str - KB, SOP, SRC, SCR, TEAM, or TOOL",
+          "fields": "str | None - comma-separated fields"
+        },
+        "returns": "list of entry dicts"
+      },
+      {
+        "name": "kb_tags",
+        "description": "Get tag frequency cloud, optionally filtered by resource type",
+        "parameters": {
+          "resource_type": "str | None - filter by type"
+        },
+        "returns": "list of {tag, usage_count}"
+      },
+      {
+        "name": "kb_related",
+        "description": "Find entries related to a given entry via builds_on and shared tags",
+        "parameters": {
+          "entry_id": "str - entry ID to find relationships for"
+        },
+        "returns": "dict with builds_on_chain and shared_tag_entries"
+      }
+    ],
+    "architecture_notes": [
+      "Reuse existing query_kb.py logic - import or copy the SQL queries",
+      "Connect to storage/data/knowledge.db with WAL mode",
+      "All tools return JSON-serializable dicts (FastMCP handles serialization)",
+      "Use async def for database operations where possible",
+      "Error handling: return descriptive error messages, not exceptions"
+    ],
+    "pseudocode": "from fastmcp import FastMCP\nimport sqlite3\nfrom pathlib import Path\n\nmcp = FastMCP(\"Knowledge Base Search\")\nDB = Path(__file__).resolve().parent.parent / \"data\" / \"knowledge.db\"\n\ndef get_db():\n    db = sqlite3.connect(str(DB))\n    db.row_factory = sqlite3.Row\n    db.execute(\"PRAGMA journal_mode = WAL\")\n    return db\n\n@mcp.tool\ndef kb_search(query: str, resource_type: str = None, limit: int = 10) -> list[dict]:\n    \"\"\"Search the knowledge base using full-text search with BM25 ranking.\"\"\"\n    db = get_db()\n    # ... FTS5 query from query_kb.py ...\n    return results\n\n@mcp.tool\ndef kb_get(entry_id: str, fields: str = None) -> dict:\n    \"\"\"Read a specific knowledge base entry by ID (e.g., KB-0034).\"\"\"\n    db = get_db()\n    # ... read query from query_kb.py ...\n    return entry\n\n@mcp.tool\ndef kb_list(resource_type: str = \"KB\") -> list[dict]:\n    \"\"\"List all entries of a given type (KB, SOP, SRC, SCR, TEAM, TOOL).\"\"\"\n    db = get_db()\n    # ... list query from query_kb.py ...\n    return entries\n\n@mcp.tool\ndef kb_tags(resource_type: str = None) -> list[dict]:\n    \"\"\"Get tag frequency cloud for the knowledge base.\"\"\"\n    db = get_db()\n    # ... tags query from query_kb.py ...\n    return tags\n\n@mcp.tool\ndef kb_related(entry_id: str) -> dict:\n    \"\"\"Find entries related via builds_on relationships and shared tags.\"\"\"\n    db = get_db()\n    # ... related query from query_kb.py ...\n    return related\n\nif __name__ == \"__main__\":\n    mcp.run()"
+  },
+
+  "tools_vs_resources": {
+    "summary": "Both can be exposed from the same MCP server. For our use case, tools are the right choice for search/get operations because Claude needs to decide when to search.",
+    "tools": {
+      "control": "Model-driven - the LLM decides when to invoke them",
+      "purpose": "Execute actions, perform computation, query data",
+      "side_effects": "Can modify state (but read-only is fine too)",
+      "analogy": "Like POST/PUT endpoints in a REST API",
+      "invocation": "LLM autonomously calls based on context",
+      "client_support": "Universally supported by all MCP clients"
+    },
+    "resources": {
+      "control": "Application-driven - the host app decides when to load them",
+      "purpose": "Provide read-only context data",
+      "side_effects": "None - purely read-only",
+      "analogy": "Like GET endpoints in a REST API",
+      "invocation": "User/app decides via @ mentions in Claude Code (e.g., @kb:entry://KB-0034)",
+      "client_support": "Only 26 of 58 MCP clients support resources",
+      "claude_code_support": "Yes - resources appear in @ mention autocomplete"
+    },
+    "can_expose_both": true,
+    "recommendation": {
+      "primary": "Use tools for all search/get/list operations - Claude needs autonomous access to query the KB during problem-solving",
+      "optional_resources": "Optionally expose individual KB entries as resources (e.g., kb://entry/KB-0034) for direct @ mention reference, but this is lower priority",
+      "rationale": "Tools are model-controlled (Claude decides when to search), which is exactly what we want. Resources require the user to explicitly reference them, which adds friction."
+    }
+  },
+
+  "reference_implementations": {
+    "official": [
+      {
+        "name": "MCP Reference Servers",
+        "url": "https://github.com/modelcontextprotocol/servers",
+        "relevance": "Official examples including 'Everything' test server and Memory (knowledge graph) server",
+        "notes": "The 'Everything' server demonstrates tools + resources + prompts together"
+      },
+      {
+        "name": "MCP Python SDK",
+        "url": "https://github.com/modelcontextprotocol/python-sdk",
+        "relevance": "Official SDK with built-in FastMCP class. Has example servers in examples/ directory.",
+        "notes": "v1.x stable. Includes FastMCP as the high-level API."
+      }
+    ],
+    "knowledge_base_specific": [
+      {
+        "name": "kb-mcp-server (Geeksfino)",
+        "url": "https://github.com/Geeksfino/kb-mcp-server",
+        "relevance": "Most directly relevant - builds knowledge base from documents, serves via MCP with graph search",
+        "features": ["Graph construction", "Path finding", "Community detection", "Causal boosting for relevance"]
+      },
+      {
+        "name": "Knowledge Base MCP Server (leon4s4)",
+        "url": "https://lobehub.com/mcp/leon4s4-knowledge-base-mcp",
+        "relevance": "mem0-like memory system with ChromaDB for semantic search",
+        "features": ["Persistent memory", "Semantic search", "Smart categorization", "Local storage"]
+      },
+      {
+        "name": "Auth0 Blog Search MCP Server",
+        "url": "https://auth0.com/blog/build-python-mcp-server-for-blog-search/",
+        "relevance": "Step-by-step tutorial building a Python MCP server for searching a content knowledge base",
+        "features": ["SerpApi integration", "llms.txt parsing", "Tool calling"]
+      }
+    ],
+    "general_python": [
+      {
+        "name": "FastMCP (PrefectHQ)",
+        "url": "https://github.com/jlowin/fastmcp",
+        "relevance": "The framework we should use. Has extensive examples/ directory.",
+        "notes": "Latest: 3.1.0. Docs at gofastmcp.com."
+      },
+      {
+        "name": "Simple MCP Server Example",
+        "url": "https://github.com/alejandro-ao/mcp-server-example",
+        "relevance": "Educational - shows minimal server patterns",
+        "notes": "Good for understanding basics"
+      }
+    ]
+  },
+
+  "recommended_approach": {
+    "summary": "Build a single-file FastMCP server (~50 lines) that wraps the existing SQLite FTS5 database, expose 5 tools (search, get, list, tags, related), configure via .mcp.json at repo root for project-wide access.",
+    "steps": [
+      {
+        "step": 1,
+        "action": "Install fastmcp",
+        "command": "uv pip install fastmcp",
+        "notes": "Single dependency. Alternatively 'pip install fastmcp' or 'pip install mcp' (official SDK includes FastMCP)"
+      },
+      {
+        "step": 2,
+        "action": "Create storage/scripts/mcp_kb_server.py",
+        "details": "Single file, ~50 lines. Import FastMCP, connect to knowledge.db, define 5 tools wrapping the SQL queries from query_kb.py. All tools return JSON-serializable dicts.",
+        "tools_to_implement": ["kb_search", "kb_get", "kb_list", "kb_tags", "kb_related"]
+      },
+      {
+        "step": 3,
+        "action": "Create .mcp.json at repo root",
+        "config": {
+          "mcpServers": {
+            "kb-search": {
+              "command": "python3",
+              "args": ["storage/scripts/mcp_kb_server.py"],
+              "env": {}
+            }
+          }
+        }
+      },
+      {
+        "step": 4,
+        "action": "Test with Claude Code",
+        "commands": [
+          "claude mcp list (verify kb-search appears)",
+          "/mcp (inside Claude Code, verify connected)",
+          "Ask Claude: 'Search the knowledge base for MCP'"
+        ]
+      },
+      {
+        "step": 5,
+        "action": "Optional: Add resources for direct entry access",
+        "details": "Add @mcp.resource decorators for kb://entry/{id} patterns so users can @ mention specific entries"
+      }
+    ],
+    "key_decisions": {
+      "package": "fastmcp (standalone) or mcp (official SDK) - both work, fastmcp has more features",
+      "transport": "stdio (local, simple, default for Claude Code)",
+      "scope": "project (.mcp.json) for team-wide access",
+      "tools_not_resources": "Tools for search/query (model-controlled), optional resources later",
+      "database": "Reuse existing storage/data/knowledge.db with WAL mode"
+    },
+    "risks_and_mitigations": [
+      {
+        "risk": "fastmcp not installed in Python environment",
+        "mitigation": "Use uv to manage dependencies, or add requirements.txt"
+      },
+      {
+        "risk": "Database locked during concurrent access",
+        "mitigation": "WAL mode already enabled, SQLite handles concurrent reads well"
+      },
+      {
+        "risk": "Large search results exceed MCP output limits",
+        "mitigation": "Default limit parameter on search tools, MAX_MCP_OUTPUT_TOKENS configurable"
+      },
+      {
+        "risk": "Project-scoped .mcp.json requires user approval on first use",
+        "mitigation": "Expected behavior, one-time prompt per user"
+      }
+    ],
+    "estimated_effort": "30 minutes for basic implementation, 1 hour with testing and resources"
+  }
+}
