@@ -441,16 +441,71 @@
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "TEAM-0001"
+    },
+    {
+      "id": "SCR-0041",
+      "name": "finding-dedup",
+      "filename": "finding_dedup.py",
+      "language": "python",
+      "category": "analysis",
+      "description": "Finding deduplicator using fuzzy matching (difflib.SequenceMatcher). Reads findings from multiple team JSON/JSONL files, detects duplicates above configurable similarity threshold, merges duplicates keeping the most complete version, and outputs deduplicated findings with merge metadata.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "PROG-TEAM-3"
+    },
+    {
+      "id": "SCR-0042",
+      "name": "quality-scorer",
+      "filename": "quality_scorer.py",
+      "language": "python",
+      "category": "analysis",
+      "description": "Quality scorer for gathered data entries. Scores on four dimensions: source authority (official docs > academic > blogs), freshness (date decay), completeness (fields filled + key field bonus), and citation count. Configurable weights via CLI or JSON config. Outputs scored and ranked list.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "PROG-TEAM-3"
+    },
+    {
+      "id": "SCR-0043",
+      "name": "archive-formatter",
+      "filename": "archive_formatter.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Archive formatter that converts raw findings (JSON/JSONL) into knowledge-base entries. Generates YAML frontmatter, extracts titles/tags/categories, maps finding fields to KB sections (Context, Method, Result, Lessons, Recommendations). Auto-detects next KB ID and creates properly named files.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "PROG-TEAM-3"
+    },
+    {
+      "id": "SCR-0044",
+      "name": "cross-team-search",
+      "filename": "cross_team_search.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Cross-team search across all team findings, session logs, KB entries, and scripts. Supports keyword, regex, and category search modes. Returns ranked results with team attribution, line numbers, and context. Filters by team and category.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "PROG-TEAM-3"
+    },
+    {
+      "id": "SCR-0045",
+      "name": "bus-monitor",
+      "filename": "bus_monitor.py",
+      "language": "python",
+      "category": "utility",
+      "description": "JSONL message bus monitor. Reads all bus channels, shows recent messages with timestamps, filters by team/channel/message type, generates activity summaries, and supports watch mode for real-time monitoring.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "PROG-TEAM-3"
     }
   ],
   "categories": {
     "data-collection": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028"],
-    "analysis": ["SCR-0004", "SCR-0005", "SCR-0011", "SCR-0031"],
+    "analysis": ["SCR-0004", "SCR-0005", "SCR-0011", "SCR-0031", "SCR-0041", "SCR-0042"],
     "automation": ["SCR-0029", "SCR-0030", "SCR-0033"],
-    "utility": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0015", "SCR-0016", "SCR-0017", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0032", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040"]
+    "utility": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0015", "SCR-0016", "SCR-0017", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0032", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040", "SCR-0043", "SCR-0044", "SCR-0045"]
   },
   "language_index": {
-    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028", "SCR-0029", "SCR-0030", "SCR-0031", "SCR-0032", "SCR-0033", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040"],
+    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028", "SCR-0029", "SCR-0030", "SCR-0031", "SCR-0032", "SCR-0033", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040", "SCR-0041", "SCR-0042", "SCR-0043", "SCR-0044", "SCR-0045"],
     "go": ["SCR-0015", "SCR-0016", "SCR-0017"]
   }
 }

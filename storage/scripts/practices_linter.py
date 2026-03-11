@@ -3,31 +3,46 @@
 
 Takes best practice rules and generates linter configurations for
 pylint, flake8, and ruff. Designed for use by DATA-GATHER-PRACTICES
-teams to codify best practices into enforceable linter rules.
+teams to enforce discovered best practices.
 
 Usage:
-    # Generate configs from a practices JSON file
-    python practices_linter.py generate --input practices.json --linter ruff --output ruff.toml
+    # Generate ruff config from a practices JSON file
+    python practices_linter.py generate --practices practices.json --linter ruff
 
-    # Generate for all supported linters
-    python practices_linter.py generate --input practices.json --linter all --output-dir ./configs/
+    # Generate pylint config
+    python practices_linter.py generate --practices practices.json --linter pylint
 
-    # List available practice-to-rule mappings
-    python practices_linter.py mappings
+    # Generate flake8 config
+    python practices_linter.py generate --practices practices.json --linter flake8
 
-    # Add a custom practice mapping
-    python practices_linter.py add-mapping \
-        --practice "no-bare-except" \
-        --description "Never use bare except clauses" \
-        --pylint "W0702" \
-        --flake8 "E722" \
-        --ruff "E722"
+    # Generate all configs at once
+    python practices_linter.py generate --practices practices.json --linter all --outdir ./configs
 
-    # Validate a practices JSON file
-    python practices_linter.py validate --input practices.json
+    # List available rule mappings
+    python practices_linter.py list-rules --linter ruff
 
-    # Show what rules a practice maps to
-    python practices_linter.py lookup --practice "no-bare-except"
+    # Validate a practices file
+    python practices_linter.py validate --practices practices.json
+
+    # Create a sample practices file
+    python practices_linter.py sample --output sample_practices.json
+
+Practices JSON format:
+    [
+        {
+            "id": "BP-001",
+            "name": "Use type hints",
+            "category": "typing",
+            "severity": "warning",
+            "description": "All public functions should have type annotations",
+            "rules": ["ANN001", "ANN201"],
+            "linter_configs": {
+                "ruff": {"select": ["ANN"]},
+                "pylint": {"enable": ["missing-function-docstring"]},
+                "flake8": {"select": ["ANN"]}
+            }
+        }
+    ]
 """
 
 import argparse
@@ -36,415 +51,591 @@ import json
 import os
 import sys
 from datetime import datetime
-from typing import Any
+from typing import Any, Dict, List, Optional, Tuple
 
-DEFAULT_MAPPINGS_PATH = os.path.join(os.path.dirname(__file__), "practice_mappings.json")
 
-# Built-in mappings from common best practices to linter rules
-BUILTIN_MAPPINGS: dict[str, dict] = {
-    "no-bare-except": {
-        "description": "Never use bare except clauses",
-        "category": "error-handling",
-        "pylint": {"codes": ["W0702"], "options": {}},
-        "flake8": {"codes": ["E722"], "options": {}},
-        "ruff": {"codes": ["E722"], "options": {}},
+# Maps practice categories to linter rules
+RULE_MAPPINGS: Dict[str, Dict[str, Any]] = {
+    "naming": {
+        "description": "Naming conventions and consistency",
+        "ruff": {
+            "select": ["N"],  # pep8-naming
+            "rules": {
+                "N801": "Class names should use CapWords convention",
+                "N802": "Function name should be lowercase",
+                "N803": "Argument name should be lowercase",
+                "N806": "Variable in function should be lowercase",
+                "N815": "Variable in class scope should not be mixedCase",
+            }
+        },
+        "pylint": {
+            "enable": ["invalid-name", "disallowed-name"],
+            "options": {"good-names": "i,j,k,v,e,f,x,y,_"}
+        },
+        "flake8": {
+            "select": ["N8"],
+            "options": {}
+        }
     },
-    "no-wildcard-import": {
-        "description": "Avoid wildcard imports (from x import *)",
-        "category": "imports",
-        "pylint": {"codes": ["W0401"], "options": {}},
-        "flake8": {"codes": ["F403", "F405"], "options": {}},
-        "ruff": {"codes": ["F403", "F405"], "options": {}},
+    "typing": {
+        "description": "Type annotations and type safety",
+        "ruff": {
+            "select": ["ANN", "TCH"],
+            "rules": {
+                "ANN001": "Missing type annotation for function argument",
+                "ANN201": "Missing return type annotation for public function",
+                "ANN202": "Missing return type annotation for private function",
+                "TCH001": "Move application import into TYPE_CHECKING block",
+            }
+        },
+        "pylint": {
+            "enable": [],
+            "options": {}
+        },
+        "flake8": {
+            "select": ["ANN"],
+            "options": {}
+        }
     },
-    "no-unused-imports": {
-        "description": "Remove unused imports",
-        "category": "imports",
-        "pylint": {"codes": ["W0611"], "options": {}},
-        "flake8": {"codes": ["F401"], "options": {}},
-        "ruff": {"codes": ["F401"], "options": {}},
+    "documentation": {
+        "description": "Docstrings and documentation",
+        "ruff": {
+            "select": ["D"],
+            "rules": {
+                "D100": "Missing docstring in public module",
+                "D101": "Missing docstring in public class",
+                "D102": "Missing docstring in public method",
+                "D103": "Missing docstring in public function",
+                "D107": "Missing docstring in __init__",
+                "D200": "No blank lines allowed after function docstring",
+            }
+        },
+        "pylint": {
+            "enable": ["missing-module-docstring", "missing-class-docstring",
+                       "missing-function-docstring"],
+            "options": {}
+        },
+        "flake8": {
+            "select": ["D"],
+            "options": {"docstring-convention": "google"}
+        }
     },
-    "no-unused-variables": {
-        "description": "Remove unused variables",
-        "category": "code-quality",
-        "pylint": {"codes": ["W0612"], "options": {}},
-        "flake8": {"codes": ["F841"], "options": {}},
-        "ruff": {"codes": ["F841"], "options": {}},
+    "complexity": {
+        "description": "Code complexity limits",
+        "ruff": {
+            "select": ["C90", "PLR"],
+            "rules": {
+                "C901": "Function is too complex",
+                "PLR0911": "Too many return statements",
+                "PLR0912": "Too many branches",
+                "PLR0913": "Too many arguments to function call",
+            }
+        },
+        "pylint": {
+            "enable": ["too-many-branches", "too-many-return-statements",
+                       "too-many-arguments", "too-many-locals"],
+            "options": {"max-args": "5", "max-locals": "15",
+                        "max-branches": "12", "max-returns": "6"}
+        },
+        "flake8": {
+            "select": ["C9"],
+            "options": {"max-complexity": "10"}
+        }
     },
-    "max-line-length": {
-        "description": "Enforce maximum line length",
-        "category": "formatting",
-        "pylint": {"codes": ["C0301"], "options": {"max-line-length": 120}},
-        "flake8": {"codes": ["E501"], "options": {"max-line-length": 120}},
-        "ruff": {"codes": ["E501"], "options": {"line-length": 120}},
+    "security": {
+        "description": "Security-related checks",
+        "ruff": {
+            "select": ["S"],
+            "rules": {
+                "S101": "Use of assert detected",
+                "S102": "Use of exec detected",
+                "S103": "Bad file permissions",
+                "S104": "Binding to all interfaces",
+                "S105": "Hardcoded password string",
+                "S106": "Hardcoded password in function argument",
+                "S107": "Hardcoded password default",
+                "S108": "Insecure temp file/directory usage",
+                "S110": "Try-except-pass detected",
+                "S301": "Pickle usage detected",
+                "S311": "Standard pseudo-random generators not suitable for security",
+            }
+        },
+        "pylint": {
+            "enable": ["exec-used", "eval-used"],
+            "options": {}
+        },
+        "flake8": {
+            "select": ["S"],
+            "options": {}
+        }
     },
-    "require-docstrings": {
-        "description": "Require docstrings for public functions/classes",
-        "category": "documentation",
-        "pylint": {"codes": ["C0114", "C0115", "C0116"], "options": {}},
-        "flake8": {"codes": ["D100", "D101", "D102", "D103"], "options": {}, "plugins": ["flake8-docstrings"]},
-        "ruff": {"codes": ["D100", "D101", "D102", "D103"], "options": {}},
+    "imports": {
+        "description": "Import organization and hygiene",
+        "ruff": {
+            "select": ["I", "F401", "F811"],
+            "rules": {
+                "I001": "Import block is un-sorted or un-formatted",
+                "F401": "Unused import",
+                "F811": "Redefinition of unused name",
+            }
+        },
+        "pylint": {
+            "enable": ["unused-import", "reimported", "wrong-import-order",
+                       "ungrouped-imports"],
+            "options": {}
+        },
+        "flake8": {
+            "select": ["I", "F401"],
+            "options": {}
+        }
     },
-    "no-mutable-default-args": {
-        "description": "Do not use mutable default arguments",
-        "category": "bugs",
-        "pylint": {"codes": ["W0102"], "options": {}},
-        "flake8": {"codes": ["B006"], "options": {}, "plugins": ["flake8-bugbear"]},
-        "ruff": {"codes": ["B006"], "options": {}},
+    "error-handling": {
+        "description": "Exception and error handling patterns",
+        "ruff": {
+            "select": ["TRY", "EM", "B"],
+            "rules": {
+                "TRY002": "Create your own exception",
+                "TRY003": "Avoid specifying long messages outside the exception class",
+                "TRY300": "Consider using else block",
+                "EM101": "Exception must not use a string literal",
+                "B904": "Within except clause, raise from err",
+            }
+        },
+        "pylint": {
+            "enable": ["bare-except", "broad-except", "try-except-raise",
+                       "raising-bad-type"],
+            "options": {}
+        },
+        "flake8": {
+            "select": ["E7", "B"],
+            "options": {}
+        }
     },
-    "no-assert-in-production": {
-        "description": "Avoid assert statements in production code",
-        "category": "reliability",
-        "pylint": {"codes": [], "options": {}},
-        "flake8": {"codes": ["S101"], "options": {}, "plugins": ["flake8-bandit"]},
-        "ruff": {"codes": ["S101"], "options": {}},
+    "testing": {
+        "description": "Testing best practices",
+        "ruff": {
+            "select": ["PT"],
+            "rules": {
+                "PT001": "Use @pytest.fixture over @pytest.fixture()",
+                "PT006": "Wrong type for pytest.mark.parametrize names",
+                "PT018": "Assertion should be broken down into multiple parts",
+                "PT023": "Use @pytest.mark.xyz over @pytest.mark.xyz()",
+            }
+        },
+        "pylint": {
+            "enable": [],
+            "options": {}
+        },
+        "flake8": {
+            "select": ["PT"],
+            "options": {}
+        }
     },
-    "use-f-strings": {
-        "description": "Prefer f-strings over format() or % formatting",
-        "category": "style",
-        "pylint": {"codes": ["C0209"], "options": {}},
-        "flake8": {"codes": [], "options": {}},
-        "ruff": {"codes": ["UP031", "UP032"], "options": {}},
+    "style": {
+        "description": "General code style",
+        "ruff": {
+            "select": ["E", "W", "UP", "SIM"],
+            "rules": {
+                "E501": "Line too long",
+                "W291": "Trailing whitespace",
+                "UP": "pyupgrade - modern Python syntax",
+                "SIM": "flake8-simplify - simplifiable constructs",
+            }
+        },
+        "pylint": {
+            "enable": ["line-too-long", "trailing-whitespace",
+                       "unnecessary-pass", "consider-using-f-string"],
+            "options": {"max-line-length": "120"}
+        },
+        "flake8": {
+            "select": ["E", "W"],
+            "options": {"max-line-length": "120"}
+        }
     },
-    "no-print-statements": {
-        "description": "Use logging instead of print statements",
-        "category": "logging",
-        "pylint": {"codes": [], "options": {}},
-        "flake8": {"codes": ["T201"], "options": {}, "plugins": ["flake8-print"]},
-        "ruff": {"codes": ["T201"], "options": {}},
-    },
-    "type-annotations": {
-        "description": "Use type annotations for function signatures",
-        "category": "typing",
-        "pylint": {"codes": [], "options": {}},
-        "flake8": {"codes": ["ANN001", "ANN201"], "options": {}, "plugins": ["flake8-annotations"]},
-        "ruff": {"codes": ["ANN001", "ANN201"], "options": {}},
-    },
-    "no-global-statement": {
-        "description": "Avoid global statement",
-        "category": "code-quality",
-        "pylint": {"codes": ["W0603"], "options": {}},
-        "flake8": {"codes": ["W0603"], "options": {}},
-        "ruff": {"codes": ["PLW0603"], "options": {}},
-    },
-    "naming-conventions": {
-        "description": "Follow PEP 8 naming conventions",
-        "category": "style",
-        "pylint": {"codes": ["C0103"], "options": {}},
-        "flake8": {"codes": ["N801", "N802", "N803", "N806"], "options": {}, "plugins": ["pep8-naming"]},
-        "ruff": {"codes": ["N801", "N802", "N803", "N806"], "options": {}},
-    },
-    "no-complex-functions": {
-        "description": "Keep function complexity low (max cyclomatic complexity)",
-        "category": "complexity",
-        "pylint": {"codes": ["R1260"], "options": {"max-complexity": 10}},
-        "flake8": {"codes": ["C901"], "options": {"max-complexity": 10}},
-        "ruff": {"codes": ["C901"], "options": {}},
-    },
-    "secure-coding": {
-        "description": "Follow secure coding practices (no hardcoded passwords, SQL injection, etc.)",
-        "category": "security",
-        "pylint": {"codes": [], "options": {}},
-        "flake8": {"codes": ["S105", "S106", "S107", "S608"], "options": {}, "plugins": ["flake8-bandit"]},
-        "ruff": {"codes": ["S105", "S106", "S107", "S608"], "options": {}},
-    },
+    "performance": {
+        "description": "Performance and efficiency patterns",
+        "ruff": {
+            "select": ["PERF"],
+            "rules": {
+                "PERF101": "Do not cast an iterable to list before iterating",
+                "PERF102": "Use dict.keys/values/items instead of list comprehension",
+                "PERF401": "Use list comprehension instead of for-append loop",
+                "PERF403": "Use dict comprehension instead of for-loop",
+            }
+        },
+        "pylint": {
+            "enable": ["consider-using-generator", "use-a-generator"],
+            "options": {}
+        },
+        "flake8": {
+            "select": [],
+            "options": {}
+        }
+    }
 }
 
 
-def _load_mappings(path: str) -> dict[str, dict]:
-    """Load custom mappings, falling back to builtins."""
-    mappings = dict(BUILTIN_MAPPINGS)
-    if os.path.exists(path):
-        with open(path, "r") as f:
-            custom = json.load(f)
-        mappings.update(custom.get("mappings", {}))
-    return mappings
+def load_practices(path: str) -> List[Dict[str, Any]]:
+    """Load practices from a JSON file."""
+    with open(path, 'r') as f:
+        data = json.load(f)
+    if isinstance(data, dict) and "practices" in data:
+        data = data["practices"]
+    return data
 
 
-def _save_mappings(mappings: dict[str, dict], path: str) -> None:
-    """Save custom mappings to disk."""
-    os.makedirs(os.path.dirname(path) if os.path.dirname(path) else ".", exist_ok=True)
-    with open(path, "w") as f:
-        json.dump({
-            "version": "1.0",
-            "last_updated": datetime.now().strftime("%Y-%m-%d"),
-            "mappings": mappings,
-        }, f, indent=2)
-
-
-def _resolve_practices(practices_input: list[dict], mappings: dict) -> list[dict]:
-    """Resolve practice definitions into linter rule sets.
-
-    Each practice in the input can have:
-    - name: matches a key in mappings
-    - enabled: bool (default True)
-    - options: override options for this practice
-    """
-    resolved = []
-    for practice in practices_input:
-        name = practice.get("name", "")
-        if name not in mappings:
-            resolved.append({
-                "name": name,
-                "status": "unmapped",
-                "message": f"No linter mapping found for practice '{name}'",
-            })
-            continue
-        if not practice.get("enabled", True):
-            continue
-
-        mapping = dict(mappings[name])
-        # Apply option overrides
-        overrides = practice.get("options", {})
-        if overrides:
-            for linter in ("pylint", "flake8", "ruff"):
-                if linter in mapping and linter in overrides:
-                    mapping[linter]["options"].update(overrides[linter])
-
-        resolved.append({"name": name, "status": "mapped", "mapping": mapping})
-    return resolved
-
-
-def generate_pylint_config(resolved: list[dict]) -> str:
-    """Generate a .pylintrc configuration."""
-    enable_codes = []
-    options: dict[str, Any] = {}
-
-    for item in resolved:
-        if item.get("status") != "mapped":
-            continue
-        mapping = item["mapping"]
-        pylint = mapping.get("pylint", {})
-        enable_codes.extend(pylint.get("codes", []))
-        options.update(pylint.get("options", {}))
-
-    lines = [
-        "# Generated by practices_linter.py",
-        f"# Date: {datetime.now().strftime('%Y-%m-%d')}",
-        "",
-        "[MAIN]",
-        "",
-        "[MESSAGES CONTROL]",
-    ]
-    if enable_codes:
-        lines.append(f"enable={','.join(sorted(set(enable_codes)))}")
-    lines.append("")
-    lines.append("[FORMAT]")
-    if "max-line-length" in options:
-        lines.append(f"max-line-length={options['max-line-length']}")
-    lines.append("")
-    lines.append("[DESIGN]")
-    if "max-complexity" in options:
-        lines.append(f"max-complexity={options['max-complexity']}")
-    lines.append("")
-    return "\n".join(lines)
-
-
-def generate_flake8_config(resolved: list[dict]) -> str:
-    """Generate a .flake8 configuration."""
-    select_codes = []
-    options: dict[str, Any] = {}
-    plugins = set()
-
-    for item in resolved:
-        if item.get("status") != "mapped":
-            continue
-        mapping = item["mapping"]
-        flake8 = mapping.get("flake8", {})
-        select_codes.extend(flake8.get("codes", []))
-        options.update(flake8.get("options", {}))
-        plugins.update(flake8.get("plugins", []))
-
-    lines = [
-        "# Generated by practices_linter.py",
-        f"# Date: {datetime.now().strftime('%Y-%m-%d')}",
-        "",
-        "[flake8]",
-    ]
-    if select_codes:
-        lines.append(f"select = {','.join(sorted(set(select_codes)))}")
-    if "max-line-length" in options:
-        lines.append(f"max-line-length = {options['max-line-length']}")
-    if "max-complexity" in options:
-        lines.append(f"max-complexity = {options['max-complexity']}")
-    if plugins:
-        lines.append(f"# Required plugins: {', '.join(sorted(plugins))}")
-    lines.append("")
-    return "\n".join(lines)
-
-
-def generate_ruff_config(resolved: list[dict]) -> str:
-    """Generate a ruff.toml configuration."""
-    select_codes = []
-    options: dict[str, Any] = {}
-
-    for item in resolved:
-        if item.get("status") != "mapped":
-            continue
-        mapping = item["mapping"]
-        ruff = mapping.get("ruff", {})
-        select_codes.extend(ruff.get("codes", []))
-        options.update(ruff.get("options", {}))
-
-    lines = [
-        "# Generated by practices_linter.py",
-        f"# Date: {datetime.now().strftime('%Y-%m-%d')}",
-        "",
-    ]
-    if "line-length" in options:
-        lines.append(f"line-length = {options['line-length']}")
-    lines.append("")
-    lines.append("[lint]")
-    if select_codes:
-        codes_str = ", ".join(f'"{c}"' for c in sorted(set(select_codes)))
-        lines.append(f"select = [{codes_str}]")
-    lines.append("")
-    return "\n".join(lines)
-
-
-def generate_config(practices_input: list[dict], linter: str, mappings: dict) -> str:
-    """Generate linter configuration from practices.
-
-    Args:
-        practices_input: List of practice dicts with 'name' and optional 'enabled', 'options'
-        linter: One of 'pylint', 'flake8', 'ruff'
-        mappings: Practice-to-rule mappings
-    Returns:
-        Config file content as string
-    """
-    resolved = _resolve_practices(practices_input, mappings)
-    generators = {
-        "pylint": generate_pylint_config,
-        "flake8": generate_flake8_config,
-        "ruff": generate_ruff_config,
-    }
-    if linter not in generators:
-        raise ValueError(f"Unsupported linter: {linter}. Supported: {list(generators.keys())}")
-    return generators[linter](resolved)
-
-
-def validate_practices(practices_input: list[dict], mappings: dict) -> dict:
-    """Validate a practices definition and return a report."""
-    report = {"valid": True, "total": len(practices_input), "mapped": 0, "unmapped": [], "disabled": 0}
-    for practice in practices_input:
-        name = practice.get("name", "")
-        if not practice.get("enabled", True):
-            report["disabled"] += 1
-            continue
-        if name in mappings:
-            report["mapped"] += 1
+def validate_practices(practices: List[Dict[str, Any]]) -> List[str]:
+    """Validate practice entries. Returns list of issues."""
+    issues = []
+    seen_ids = set()
+    for i, p in enumerate(practices):
+        if "id" not in p:
+            issues.append(f"Practice {i}: missing 'id'")
+        elif p["id"] in seen_ids:
+            issues.append(f"Practice {i}: duplicate id '{p['id']}'")
         else:
-            report["unmapped"].append(name)
-    if report["unmapped"]:
-        report["valid"] = False
-    return report
+            seen_ids.add(p["id"])
+        if "name" not in p:
+            issues.append(f"Practice {i}: missing 'name'")
+        if "category" not in p:
+            issues.append(f"Practice {i}: missing 'category'")
+        if "severity" in p and p["severity"] not in ("error", "warning", "info", "convention"):
+            issues.append(f"Practice {i}: invalid severity '{p['severity']}'")
+    return issues
+
+
+def _collect_ruff_config(practices: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Build ruff configuration from practices."""
+    select = set()
+    ignore = set()
+    per_file_ignores: Dict[str, List[str]] = {}
+    options: Dict[str, Any] = {}
+
+    for p in practices:
+        cat = p.get("category", "")
+        severity = p.get("severity", "warning")
+
+        # Use custom linter_configs if provided
+        if "linter_configs" in p and "ruff" in p["linter_configs"]:
+            rc = p["linter_configs"]["ruff"]
+            select.update(rc.get("select", []))
+            ignore.update(rc.get("ignore", []))
+            for k, v in rc.get("per-file-ignores", {}).items():
+                per_file_ignores.setdefault(k, []).extend(v)
+            options.update(rc.get("options", {}))
+            continue
+
+        # Map category to rules
+        if cat in RULE_MAPPINGS:
+            mapping = RULE_MAPPINGS[cat]["ruff"]
+            sel = mapping.get("select", [])
+            if isinstance(sel, list):
+                select.update(sel)
+            elif isinstance(sel, str):
+                select.add(sel)
+
+    config = {
+        "line-length": int(options.get("line-length", 120)),
+        "target-version": options.get("target-version", "py39"),
+        "lint": {
+            "select": sorted(select),
+        }
+    }
+    if ignore:
+        config["lint"]["ignore"] = sorted(ignore)
+    if per_file_ignores:
+        config["lint"]["per-file-ignores"] = per_file_ignores
+    return config
+
+
+def generate_ruff_toml(practices: List[Dict[str, Any]]) -> str:
+    """Generate ruff.toml configuration."""
+    config = _collect_ruff_config(practices)
+    lines = [
+        "# Auto-generated ruff configuration from best practices",
+        f"# Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+        "",
+        f'line-length = {config["line-length"]}',
+        f'target-version = "{config["target-version"]}"',
+        "",
+        "[lint]",
+        f'select = {json.dumps(config["lint"]["select"])}',
+    ]
+    if "ignore" in config["lint"]:
+        lines.append(f'ignore = {json.dumps(config["lint"]["ignore"])}')
+    if "per-file-ignores" in config["lint"]:
+        lines.append("")
+        lines.append("[lint.per-file-ignores]")
+        for pattern, rules in config["lint"]["per-file-ignores"].items():
+            lines.append(f'"{pattern}" = {json.dumps(rules)}')
+
+    return "\n".join(lines) + "\n"
+
+
+def _collect_pylint_config(practices: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Build pylint configuration from practices."""
+    enable = set()
+    disable = set()
+    options: Dict[str, str] = {}
+
+    for p in practices:
+        cat = p.get("category", "")
+        if "linter_configs" in p and "pylint" in p["linter_configs"]:
+            pc = p["linter_configs"]["pylint"]
+            enable.update(pc.get("enable", []))
+            disable.update(pc.get("disable", []))
+            options.update(pc.get("options", {}))
+            continue
+        if cat in RULE_MAPPINGS:
+            mapping = RULE_MAPPINGS[cat]["pylint"]
+            enable.update(mapping.get("enable", []))
+            options.update(mapping.get("options", {}))
+
+    return {"enable": sorted(enable), "disable": sorted(disable), "options": options}
+
+
+def generate_pylintrc(practices: List[Dict[str, Any]]) -> str:
+    """Generate .pylintrc configuration."""
+    config = _collect_pylint_config(practices)
+    cp = configparser.ConfigParser()
+
+    cp["MAIN"] = {"jobs": "0", "suggestion-mode": "yes"}
+    cp["MESSAGES CONTROL"] = {}
+    if config["enable"]:
+        cp["MESSAGES CONTROL"]["enable"] = ",\n    ".join(config["enable"])
+    if config["disable"]:
+        cp["MESSAGES CONTROL"]["disable"] = ",\n    ".join(config["disable"])
+
+    cp["FORMAT"] = {
+        "max-line-length": config["options"].get("max-line-length", "120"),
+        "max-module-lines": "1000",
+    }
+    cp["DESIGN"] = {
+        "max-args": config["options"].get("max-args", "5"),
+        "max-locals": config["options"].get("max-locals", "15"),
+        "max-branches": config["options"].get("max-branches", "12"),
+        "max-returns": config["options"].get("max-returns", "6"),
+        "max-statements": config["options"].get("max-statements", "50"),
+    }
+
+    import io
+    buf = io.StringIO()
+    buf.write(f"# Auto-generated pylint configuration from best practices\n")
+    buf.write(f"# Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n")
+    cp.write(buf)
+    return buf.getvalue()
+
+
+def _collect_flake8_config(practices: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Build flake8 configuration from practices."""
+    select = set()
+    ignore = set()
+    options: Dict[str, str] = {}
+
+    for p in practices:
+        cat = p.get("category", "")
+        if "linter_configs" in p and "flake8" in p["linter_configs"]:
+            fc = p["linter_configs"]["flake8"]
+            select.update(fc.get("select", []))
+            ignore.update(fc.get("ignore", []))
+            options.update(fc.get("options", {}))
+            continue
+        if cat in RULE_MAPPINGS:
+            mapping = RULE_MAPPINGS[cat]["flake8"]
+            sel = mapping.get("select", [])
+            if isinstance(sel, list):
+                select.update(sel)
+            options.update(mapping.get("options", {}))
+
+    return {"select": sorted(select), "ignore": sorted(ignore), "options": options}
+
+
+def generate_flake8(practices: List[Dict[str, Any]]) -> str:
+    """Generate .flake8 configuration."""
+    config = _collect_flake8_config(practices)
+    cp = configparser.ConfigParser()
+    section = {
+        "max-line-length": config["options"].get("max-line-length", "120"),
+        "max-complexity": config["options"].get("max-complexity", "10"),
+    }
+    if config["select"]:
+        section["select"] = ",".join(config["select"])
+    if config["ignore"]:
+        section["ignore"] = ",".join(config["ignore"])
+    if "docstring-convention" in config["options"]:
+        section["docstring-convention"] = config["options"]["docstring-convention"]
+
+    cp["flake8"] = section
+
+    import io
+    buf = io.StringIO()
+    buf.write(f"# Auto-generated flake8 configuration from best practices\n")
+    buf.write(f"# Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n")
+    cp.write(buf)
+    return buf.getvalue()
+
+
+GENERATORS = {
+    "ruff": ("ruff.toml", generate_ruff_toml),
+    "pylint": (".pylintrc", generate_pylintrc),
+    "flake8": (".flake8", generate_flake8),
+}
+
+
+def generate_sample_practices() -> List[Dict[str, Any]]:
+    """Generate a sample practices file."""
+    return [
+        {
+            "id": "BP-001",
+            "name": "Use type hints for all public functions",
+            "category": "typing",
+            "severity": "warning",
+            "description": "All public functions and methods should have type annotations for parameters and return types."
+        },
+        {
+            "id": "BP-002",
+            "name": "Write docstrings for public APIs",
+            "category": "documentation",
+            "severity": "warning",
+            "description": "Every public module, class, and function should have a docstring."
+        },
+        {
+            "id": "BP-003",
+            "name": "Keep functions simple",
+            "category": "complexity",
+            "severity": "error",
+            "description": "Functions should have low cyclomatic complexity (max 10)."
+        },
+        {
+            "id": "BP-004",
+            "name": "No hardcoded secrets",
+            "category": "security",
+            "severity": "error",
+            "description": "Never hardcode passwords, API keys, or other secrets in source code."
+        },
+        {
+            "id": "BP-005",
+            "name": "Organize imports",
+            "category": "imports",
+            "severity": "convention",
+            "description": "Imports should be sorted and grouped: stdlib, third-party, local."
+        },
+        {
+            "id": "BP-006",
+            "name": "Proper exception handling",
+            "category": "error-handling",
+            "severity": "warning",
+            "description": "Avoid bare except clauses. Use specific exception types and chain exceptions."
+        },
+        {
+            "id": "BP-007",
+            "name": "Follow PEP 8 naming",
+            "category": "naming",
+            "severity": "convention",
+            "description": "Use snake_case for functions/variables, CamelCase for classes."
+        },
+        {
+            "id": "BP-008",
+            "name": "Use list comprehensions",
+            "category": "performance",
+            "severity": "info",
+            "description": "Prefer list/dict comprehensions over for-append loops."
+        }
+    ]
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Best Practices Linter Config Generator")
-    parser.add_argument("--mappings-file", default=DEFAULT_MAPPINGS_PATH, help="Path to custom mappings file")
-    sub = parser.add_subparsers(dest="command")
+    parser = argparse.ArgumentParser(
+        description="Best Practices Linter Config Generator",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    subparsers = parser.add_subparsers(dest="command")
 
     # generate
-    p_gen = sub.add_parser("generate", help="Generate linter config from practices")
-    p_gen.add_argument("--input", required=True, help="Practices JSON file")
-    p_gen.add_argument("--linter", choices=["pylint", "flake8", "ruff", "all"], required=True)
-    p_gen.add_argument("--output", default=None, help="Output file (stdout if omitted)")
-    p_gen.add_argument("--output-dir", default=None, help="Output directory (for --linter all)")
+    gen_p = subparsers.add_parser("generate", help="Generate linter config from practices")
+    gen_p.add_argument("--practices", required=True, help="Path to practices JSON file")
+    gen_p.add_argument("--linter", required=True,
+                       choices=["ruff", "pylint", "flake8", "all"],
+                       help="Target linter")
+    gen_p.add_argument("--outdir", default=".", help="Output directory")
 
-    # mappings
-    sub.add_parser("mappings", help="List available practice-to-rule mappings")
-
-    # add-mapping
-    p_add = sub.add_parser("add-mapping", help="Add a custom practice mapping")
-    p_add.add_argument("--practice", required=True)
-    p_add.add_argument("--description", default="")
-    p_add.add_argument("--category", default="custom")
-    p_add.add_argument("--pylint", default="", help="Comma-separated pylint codes")
-    p_add.add_argument("--flake8", default="", help="Comma-separated flake8 codes")
-    p_add.add_argument("--ruff", default="", help="Comma-separated ruff codes")
+    # list-rules
+    list_p = subparsers.add_parser("list-rules", help="List available rule mappings")
+    list_p.add_argument("--linter", choices=["ruff", "pylint", "flake8"],
+                        help="Show rules for specific linter")
+    list_p.add_argument("--category", help="Show rules for specific category")
 
     # validate
-    p_val = sub.add_parser("validate", help="Validate a practices JSON file")
-    p_val.add_argument("--input", required=True)
+    val_p = subparsers.add_parser("validate", help="Validate a practices file")
+    val_p.add_argument("--practices", required=True, help="Path to practices JSON")
 
-    # lookup
-    p_look = sub.add_parser("lookup", help="Look up rules for a practice")
-    p_look.add_argument("--practice", required=True)
+    # sample
+    sample_p = subparsers.add_parser("sample", help="Generate sample practices file")
+    sample_p.add_argument("--output", default="-", help="Output file (- for stdout)")
 
     args = parser.parse_args()
-    if not args.command:
-        parser.print_help()
-        return
-
-    mappings = _load_mappings(args.mappings_file)
 
     if args.command == "generate":
-        with open(args.input, "r") as f:
-            practices_data = json.load(f)
-        if isinstance(practices_data, dict) and "practices" in practices_data:
-            practices_data = practices_data["practices"]
+        practices = load_practices(args.practices)
+        issues = validate_practices(practices)
+        if issues:
+            print("Validation warnings:", file=sys.stderr)
+            for issue in issues:
+                print(f"  - {issue}", file=sys.stderr)
 
-        if args.linter == "all":
-            out_dir = args.output_dir or "."
-            os.makedirs(out_dir, exist_ok=True)
-            filenames = {"pylint": ".pylintrc", "flake8": ".flake8", "ruff": "ruff.toml"}
-            for linter, fname in filenames.items():
-                config = generate_config(practices_data, linter, mappings)
-                path = os.path.join(out_dir, fname)
-                with open(path, "w") as f:
-                    f.write(config)
-                print(f"Generated {path}")
-        else:
-            config = generate_config(practices_data, args.linter, mappings)
-            if args.output:
-                with open(args.output, "w") as f:
-                    f.write(config)
-                print(f"Generated {args.output}")
-            else:
-                print(config)
+        os.makedirs(args.outdir, exist_ok=True)
+        linters = list(GENERATORS.keys()) if args.linter == "all" else [args.linter]
+        for linter in linters:
+            filename, generator = GENERATORS[linter]
+            content = generator(practices)
+            outpath = os.path.join(args.outdir, filename)
+            with open(outpath, 'w') as f:
+                f.write(content)
+            print(f"Generated {outpath}")
 
-    elif args.command == "mappings":
-        for name, mapping in sorted(mappings.items()):
-            desc = mapping.get("description", "")
-            cat = mapping.get("category", "")
-            pylint_codes = mapping.get("pylint", {}).get("codes", [])
-            flake8_codes = mapping.get("flake8", {}).get("codes", [])
-            ruff_codes = mapping.get("ruff", {}).get("codes", [])
-            print(f"{name}:")
-            print(f"  Description: {desc}")
-            print(f"  Category:    {cat}")
-            print(f"  Pylint:      {', '.join(pylint_codes) if pylint_codes else '(none)'}")
-            print(f"  Flake8:      {', '.join(flake8_codes) if flake8_codes else '(none)'}")
-            print(f"  Ruff:        {', '.join(ruff_codes) if ruff_codes else '(none)'}")
-            print()
-
-    elif args.command == "add-mapping":
-        new_mapping = {
-            "description": args.description,
-            "category": args.category,
-            "pylint": {"codes": [c.strip() for c in args.pylint.split(",") if c.strip()], "options": {}},
-            "flake8": {"codes": [c.strip() for c in args.flake8.split(",") if c.strip()], "options": {}},
-            "ruff": {"codes": [c.strip() for c in args.ruff.split(",") if c.strip()], "options": {}},
-        }
-        mappings[args.practice] = new_mapping
-        _save_mappings(mappings, args.mappings_file)
-        print(f"Added mapping for '{args.practice}'")
-        print(json.dumps(new_mapping, indent=2))
+    elif args.command == "list-rules":
+        for cat, mapping in sorted(RULE_MAPPINGS.items()):
+            if args.category and cat != args.category:
+                continue
+            print(f"\n=== {cat} === ({mapping['description']})")
+            linters_to_show = [args.linter] if args.linter else ["ruff", "pylint", "flake8"]
+            for linter in linters_to_show:
+                if linter in mapping:
+                    m = mapping[linter]
+                    print(f"  [{linter}]")
+                    if "rules" in m:
+                        for rule_id, desc in m["rules"].items():
+                            print(f"    {rule_id}: {desc}")
+                    elif "enable" in m:
+                        for rule in m["enable"]:
+                            print(f"    {rule}")
+                    sel = m.get("select", [])
+                    if sel and "rules" not in m:
+                        print(f"    select: {', '.join(sel) if isinstance(sel, list) else sel}")
 
     elif args.command == "validate":
-        with open(args.input, "r") as f:
-            practices_data = json.load(f)
-        if isinstance(practices_data, dict) and "practices" in practices_data:
-            practices_data = practices_data["practices"]
-        report = validate_practices(practices_data, mappings)
-        print(json.dumps(report, indent=2))
-
-    elif args.command == "lookup":
-        if args.practice in mappings:
-            print(json.dumps(mappings[args.practice], indent=2))
-        else:
-            print(f"No mapping found for '{args.practice}'")
+        practices = load_practices(args.practices)
+        issues = validate_practices(practices)
+        if issues:
+            print(f"Found {len(issues)} issues:")
+            for issue in issues:
+                print(f"  - {issue}")
             sys.exit(1)
+        else:
+            print(f"Valid: {len(practices)} practices, no issues found.")
+
+    elif args.command == "sample":
+        sample = generate_sample_practices()
+        output = json.dumps(sample, indent=2)
+        if args.output == "-":
+            print(output)
+        else:
+            with open(args.output, 'w') as f:
+                f.write(output)
+            print(f"Sample practices written to {args.output}")
+
+    else:
+        parser.print_help()
 
 
 if __name__ == "__main__":
