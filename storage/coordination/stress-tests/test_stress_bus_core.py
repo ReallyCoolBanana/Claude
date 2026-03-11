@@ -10,6 +10,7 @@ on all thread joins.
 
 import json
 import os
+import shutil
 import sqlite3
 import tempfile
 import threading

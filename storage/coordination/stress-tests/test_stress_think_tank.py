@@ -652,5 +652,293 @@ class TestFingerprintStress(_StressBase):
         self.assertEqual(_fingerprint(f1), _fingerprint(f2))
 
 
+# ===================================================================
+# 9. Mixed Collection Sources (SQLite + File)
+# ===================================================================
+
+
+class TestMixedCollectionSources(_StressBase):
+    """Collect findings from both SQLite and JSON files, then merge and dedup."""
+
+    def test_sqlite_and_file_merge_with_overlap(self):
+        """Insert findings in SQLite and write to files; merge and dedup overlaps."""
+        # SQLite findings
+        sqlite_raw = []
+        for i in range(30):
+            sqlite_raw.append({
+                "team": "team-db",
+                "agent_id": "agent-db",
+                "category": "build",
+                "title": f"Finding-{i}",
+                "content": f"SQLite content {i}",
+                "priority": "medium",
+                "ts": time.time() + i * 0.001,
+            })
+        _setup_sqlite_findings(self.db_path, sqlite_raw)
+
+        # File findings -- 10 overlap with SQLite (same title+category), 10 unique
+        file_findings = []
+        for i in range(20):
+            file_findings.append({
+                "team": "team-file",
+                "agent_id": "agent-file",
+                "category": "build",
+                "title": f"Finding-{i}" if i < 10 else f"File-Only-{i}",
+                "content": f"File content {i}",
+                "priority": "high" if i < 10 else "medium",
+                "ts": time.time() + 100 + i * 0.001,
+            })
+
+        # Write file findings to expected location
+        team_out = os.path.join(self.output_dir, "team-file", "output")
+        os.makedirs(team_out, exist_ok=True)
+        filepath = os.path.join(team_out, "findings.json")
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(file_findings, f)
+
+        # Manually collect from both sources and merge
+        conn = sqlite3.connect(self.db_path, timeout=10)
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute("SELECT * FROM team_findings").fetchall()
+        from_sqlite = [_normalise_finding(dict(r), "sqlite") for r in rows]
+        conn.close()
+
+        from_file = [_normalise_finding(ff, "file") for ff in file_findings]
+        all_findings = from_sqlite + from_file
+
+        self.assertEqual(len(all_findings), 50)  # 30 + 20
+
+        deduped = _deduplicate(all_findings)
+        # 10 overlapping title+category -> 40 unique
+        self.assertEqual(len(deduped), 40)
+
+        # Overlapping findings with "high" priority from file should win
+        by_title = {f["title"]: f for f in deduped}
+        for i in range(10):
+            f = by_title[f"Finding-{i}"]
+            self.assertEqual(f["priority"], "high",
+                             f"Finding-{i} should have high priority from file source")
+
+    def test_file_only_no_database(self):
+        """Findings from files only, no database -- pipeline should work."""
+        file_findings = [
+            {"title": f"FileFind-{i}", "category": "docs",
+             "priority": "medium", "team": "team-docs",
+             "agent_id": "agent-1", "content": f"Content {i}",
+             "ts": time.time() + i}
+            for i in range(25)
+        ]
+        normalised = [_normalise_finding(f, "file") for f in file_findings]
+        deduped = _deduplicate(normalised)
+        self.assertEqual(len(deduped), 25)
+
+        grouped = _group_findings(deduped)
+        self.assertEqual(len(grouped), 1)
+        self.assertIn("docs", grouped)
+
+        roadmap = _generate_roadmap(grouped)
+        self.assertGreater(len(roadmap), 0)
+
+
+# ===================================================================
+# 10. Findings with Very Long Descriptions
+# ===================================================================
+
+
+class TestVeryLongDescriptions(_StressBase):
+    """Findings with extremely long content fields."""
+
+    def test_long_content_dedup_and_group(self):
+        """Findings with 10KB+ content should dedup and group correctly."""
+        long_content = "A" * 10000
+        findings = [
+            _make_finding(
+                title=f"Long-{i}",
+                category=f"cat-{i % 5}",
+                content=long_content,
+            )
+            for i in range(50)
+        ]
+
+        deduped = _deduplicate(findings)
+        self.assertEqual(len(deduped), 50)
+
+        grouped = _group_findings(deduped)
+        self.assertEqual(len(grouped), 5)
+        for cat, items in grouped.items():
+            self.assertEqual(len(items), 10)
+
+        roadmap = _generate_roadmap(grouped)
+        self.assertGreater(len(roadmap), 0)
+
+    def test_long_content_report_write(self):
+        """Write a report containing findings with 50KB content each to disk."""
+        long_content = "B" * 50000
+        findings = [
+            _make_finding(
+                title=f"LongWrite-{i}",
+                category="perf",
+                content=long_content,
+            )
+            for i in range(20)
+        ]
+        grouped = _group_findings(_deduplicate(findings))
+        roadmap = _generate_roadmap(grouped)
+
+        report = {
+            "generated_at": time.time(),
+            "total_findings": len(findings),
+            "categories": {
+                cat: {"total": len(items), "findings": items}
+                for cat, items in grouped.items()
+            },
+            "roadmap": roadmap,
+            "summary": "Long content stress test",
+        }
+
+        output_path = os.path.join(self.output_dir, "long-report.json")
+        path = write_report(report, output_path)
+        self.assertTrue(os.path.exists(path))
+
+        # File should be large (at least 20 x 50KB of content)
+        file_size = os.path.getsize(path)
+        self.assertGreater(file_size, 50000 * 20)
+
+        # Verify valid JSON round-trip
+        with open(path, "r", encoding="utf-8") as f:
+            loaded = json.load(f)
+        self.assertEqual(loaded["total_findings"], 20)
+
+    def test_very_long_titles(self):
+        """Findings with 1000-character titles should normalise and dedup correctly."""
+        findings = [
+            _make_finding(
+                title="T" * 1000 + f"-{i}",
+                category="edge",
+            )
+            for i in range(30)
+        ]
+        deduped = _deduplicate(findings)
+        self.assertEqual(len(deduped), 30)
+
+        # Verify fingerprints are still unique
+        fps = {_fingerprint(f) for f in deduped}
+        self.assertEqual(len(fps), 30)
+
+
+# ===================================================================
+# 11. Rapid Collect-Deduplicate-Report Cycles
+# ===================================================================
+
+
+class TestRapidCycles(_StressBase):
+    """Rapid cycles of collecting, deduplicating, and generating reports."""
+
+    def test_20_rapid_cycles_growing_dataset(self):
+        """Run 20 cycles of add-dedup-group-roadmap on a growing dataset."""
+        all_findings = []
+
+        for cycle in range(20):
+            # Add 10 new findings per cycle
+            for i in range(10):
+                idx = cycle * 10 + i
+                all_findings.append(_make_finding(
+                    title=f"Cycle{cycle}-F{i}",
+                    category=f"cat-{idx % 7}",
+                    priority=["critical", "high", "medium", "low"][idx % 4],
+                    team=f"team-{cycle % 3}",
+                ))
+
+            deduped = _deduplicate(list(all_findings))
+            grouped = _group_findings(deduped)
+            roadmap = _generate_roadmap(grouped)
+
+            expected_count = (cycle + 1) * 10
+            self.assertEqual(len(deduped), expected_count,
+                             f"Cycle {cycle}: expected {expected_count} deduped, got {len(deduped)}")
+            self.assertGreater(len(grouped), 0)
+            self.assertGreater(len(roadmap), 0)
+
+    def test_concurrent_pipeline_cycles(self):
+        """5 threads each run 10 dedup-group-roadmap cycles concurrently."""
+        num_threads = 5
+        cycles = 10
+        barrier = threading.Barrier(num_threads, timeout=30)
+        errors = []
+        results = [None] * num_threads
+
+        def cycle_worker(idx):
+            try:
+                barrier.wait()
+                for c in range(cycles):
+                    findings = [
+                        _make_finding(
+                            title=f"T{idx}-C{c}-F{i}",
+                            category=f"cat-{i % 4}",
+                        )
+                        for i in range(20)
+                    ]
+                    deduped = _deduplicate(findings)
+                    grouped = _group_findings(deduped)
+                    roadmap = _generate_roadmap(grouped)
+
+                    if len(deduped) != 20:
+                        errors.append((idx, c, f"dedup={len(deduped)}"))
+                        return
+                    if len(grouped) != 4:
+                        errors.append((idx, c, f"groups={len(grouped)}"))
+                        return
+
+                results[idx] = "ok"
+            except Exception as e:
+                errors.append((idx, e))
+
+        threads = [threading.Thread(target=cycle_worker, args=(i,))
+                   for i in range(num_threads)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(timeout=60)
+
+        self.assertEqual(errors, [], f"Cycle errors: {errors}")
+        for i in range(num_threads):
+            self.assertEqual(results[i], "ok", f"Thread {i} did not finish")
+
+    def test_rapid_write_and_reload_cycle(self):
+        """Write a report, re-read it, feed it back in, 10 times."""
+        findings = [
+            _make_finding(
+                title=f"Reload-{i}",
+                category=f"cat-{i % 3}",
+            )
+            for i in range(30)
+        ]
+
+        for cycle in range(10):
+            deduped = _deduplicate(findings)
+            grouped = _group_findings(deduped)
+            roadmap = _generate_roadmap(grouped)
+
+            report = {
+                "generated_at": time.time(),
+                "cycle": cycle,
+                "total_findings": len(deduped),
+                "categories": {
+                    cat: {"total": len(items), "findings": items}
+                    for cat, items in grouped.items()
+                },
+                "roadmap": roadmap,
+            }
+
+            path = os.path.join(self.output_dir, f"cycle-{cycle}.json")
+            write_report(report, path)
+
+            # Reload and verify
+            with open(path, "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+            self.assertEqual(loaded["total_findings"], 30)
+            self.assertEqual(loaded["cycle"], cycle)
+
+
 if __name__ == "__main__":
     unittest.main()
