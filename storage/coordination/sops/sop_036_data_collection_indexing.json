@@ -5,238 +5,332 @@
   "status": "active",
   "created_date": "2026-03-11",
   "category": "data-management",
-  "purpose": "Standardize how benchmark data, analysis results, and operational metrics are collected, stored, and indexed across the repository. Establishes the three-tier index system (SUMMARY.json, INDEX_COMPACT.json, full index.json) and defines required fields, naming conventions, and cross-reference requirements. Based on empirical evidence that the three-tier system enables 90.2% token savings (11.7x speedup) when agents query indexes, transforming 16 index reads per context window into 190.",
-  "scope": "All data files produced by benchmarks, analyses, team operations, and tool outputs. Applies to storage/data/, storage/scripts/, storage/coordination/, knowledge-base/, and market-research/ directories.",
-  "builds_on": ["SOP-027", "SOP-030", "SOP-015"],
+  "purpose": "Establish mandatory standards for data collection, indexing, naming, and cross-referencing across all repository resource types. The efficiency_report.json audit scored repository data management at 4/10 with 35% storage overhead, 8 duplications, 12 inconsistencies, and 6 orphaned references. This SOP defines the three-tier index system, required fields per tier, naming conventions, cross-reference format, and automated validation requirements to prevent future drift.",
+  "scope": "All repository resource types: knowledge base entries (KB), scripts (SCR), SOPs (SOP), data files (DATA), sources (SRC), tools (TOOL). Applies to any operation that creates, modifies, or deletes indexed resources.",
+  "builds_on": ["SOP-026", "SOP-027", "SOP-028"],
 
   "key_findings": {
-    "three_tier_impact": {
-      "full_index_tokens": 6093,
-      "summary_tokens": 79,
-      "query_kb_tokens": 123,
-      "savings_pct": 98.7,
-      "speedup": "77.1x (SUMMARY vs full index), 49.5x (query_kb vs full index)",
-      "agent_operations_per_context": "~190 with tiered indexes vs ~16 with raw file reads"
+    "efficiency_audit_score": "4/10 with 35% storage overhead (efficiency_report.json)",
+    "duplications_found": {
+      "count": 8,
+      "high_severity": ["DUP-001: unified_benchmarks.json and final_analysis.json overlap (~8KB redundant)", "DUP-002: unified_benchmarks.json and empirical_benchmarks.json overlap (~6KB redundant)"],
+      "medium_severity": ["DUP-003: Contention data duplicated across final_analysis and empirical_benchmarks", "DUP-004: KB-0012 and KB-0013 identical content", "DUP-005: SRC-0018 and SRC-0039 both FRED API", "DUP-008: Multi-tier index intentional redundancy (~15KB)"],
+      "root_cause": "No deduplication checks before creating entries. No cross-reference system to link related data."
     },
-    "index_lookup_performance": {
-      "hash_id_lookup_avg_us": 0.11,
-      "linear_id_lookup_avg_us": 1.42,
-      "hash_speedup": "12.9x for scripts, 6.5x for tools, 8.4x for sources",
-      "indexed_category_speedup": "1.6-2.9x",
-      "cross_ref_indexed_speedup": "6.6x"
+    "inconsistencies_found": {
+      "count": 12,
+      "critical_count_mismatches": ["INC-001: KB count differs across tiers (SUMMARY=33, index=32, COMPACT=31, files=33)", "INC-002: SCR count differs (SUMMARY=54, index=54, COMPACT=50, local SUMMARY=50)", "INC-003: SOP count differs (SUMMARY=23, index=20, COMPACT=18)"],
+      "schema_inconsistencies": ["INC-005: 5 different date field names across data files", "INC-006: Different entry schemas per subsystem index", "INC-007: Different count field names per subsystem"],
+      "root_cause": "No automated synchronization between index tiers. No shared schema definition."
     },
-    "data_gathering_improvement": {
-      "iteration_1_to_2_data_points_increase": "371%",
-      "iteration_1_to_2_quality_increase": "67%",
-      "lesson": "Structured data collection with consistent indexing enables compounding improvement across iterations"
+    "orphaned_references": {
+      "count": 6,
+      "examples": ["ORP-001: KB-0033.md exists on disk, not in any index", "ORP-003: SCR-0051 through SCR-0054 in index.json but missing from INDEX_COMPACT", "ORP-006: 12+ script files on disk with no index entry"],
+      "root_cause": "No validation step after creating files. No check that all tiers are updated together."
+    },
+    "schema_issues": {
+      "no_shared_schema": "SCH-001: KB, SCR, SOP, DATA each have different entry schemas with no common base fields",
+      "duplicate_ids": "SCH-002: SOP-012 and SOP-016 have duplicate IDs (v1 and v2 share same ID)",
+      "no_tier_spec": "SCH-003: Three-tier index system has no formal specification for which fields each tier must include",
+      "inconsistent_crossrefs": "SCH-004: Cross-references use 3 different formats (ID arrays, path strings, dot-notation)"
     }
   },
 
   "three_tier_index_system": {
+    "description": "Every resource subsystem MUST maintain exactly three index tiers, generated from a single source of truth (index.json). INDEX_COMPACT.json and SUMMARY.json are derived views.",
     "tier_1_summary": {
       "filename": "SUMMARY.json",
-      "purpose": "Ultra-compact directory overview for agent orientation. Answers: what is in this directory, how many entries, what date range?",
-      "required_fields": ["directory", "purpose", "entry_count", "categories", "last_updated", "id_range"],
-      "max_tokens": 100,
-      "when_agents_use_it": "First read when entering any directory. Determines if the directory is relevant before deeper reads.",
-      "example": {
-        "directory": "storage/data",
-        "purpose": "Contains 3 benchmark analysis files and 1 convergence report",
-        "entry_count": 4,
-        "categories": ["benchmarks", "analysis", "convergence"],
-        "last_updated": "2026-03-11",
-        "id_range": "N/A (named files)"
-      }
+      "purpose": "Quick counts and metadata for lightweight agent lookups. Minimal token cost.",
+      "required_fields": {
+        "generated": "ISO date string (YYYY-MM-DD)",
+        "resource_type": "KB | SCR | SOP | DATA | SRC | TOOL",
+        "entry_count": "Integer count of active entries",
+        "categories": "Object mapping category names to counts",
+        "last_modified_entry": "ID of most recently modified entry"
+      },
+      "max_size": "< 500 bytes",
+      "update_trigger": "Any change to index.json"
     },
-    "tier_2_compact_index": {
+    "tier_2_compact": {
       "filename": "INDEX_COMPACT.json",
-      "purpose": "One-line-per-entry index for scanning. Answers: what specific entries exist and what type/category are they?",
-      "required_fields_per_entry": ["id", "title", "resource_type", "category", "date"],
-      "max_tokens_per_entry": 50,
-      "when_agents_use_it": "When agent needs to find a specific entry by ID, title, or category. Faster than reading full index.",
-      "example_entry": {
-        "id": "SOP-034",
-        "title": "SQLite Contention Management",
-        "resource_type": "SOP",
-        "category": "infrastructure",
-        "date": "2026-03-11"
+      "purpose": "Searchable listing with key fields for each entry. Agents use this for discovery without reading full entries.",
+      "required_fields_per_entry": {
+        "id": "Unique identifier (e.g., KB-0033, SCR-0054, SOP-036)",
+        "title": "Human-readable title",
+        "date": "ISO date string (YYYY-MM-DD). Use 'date' field name universally.",
+        "category": "Category string (never null). Must be one of the defined categories for the resource type.",
+        "status": "active | superseded | deprecated | draft"
+      },
+      "optional_fields": ["tags", "description", "version"],
+      "max_size": "< 50KB per subsystem",
+      "update_trigger": "Any change to index.json"
+    },
+    "tier_3_full": {
+      "filename": "index.json",
+      "purpose": "Complete index with all metadata. Source of truth for generating other tiers.",
+      "required_fields_per_entry": {
+        "id": "Unique identifier. MUST be globally unique across all resource types.",
+        "title": "Human-readable title",
+        "date": "ISO date string (YYYY-MM-DD)",
+        "category": "Category string (never null)",
+        "status": "active | superseded | deprecated | draft",
+        "description": "1-2 sentence description of the entry",
+        "filename": "Path to the actual file, relative to the subsystem root. Use consistent convention (no mixed ../ paths).",
+        "cross_references": "Array of cross-reference objects (see cross_reference_format)"
+      },
+      "type_specific_extensions": {
+        "KB": ["team", "tags", "confidence", "builds_on"],
+        "SCR": ["language", "dependencies", "added_by_team"],
+        "SOP": ["version", "builds_on", "supersedes"],
+        "DATA": ["data_points", "sources"],
+        "SRC": ["api_type", "rate_limits", "auth_required"]
+      },
+      "update_trigger": "Any entry creation, modification, or deletion"
+    }
+  },
+
+  "naming_conventions": {
+    "id_format": {
+      "knowledge_base": "KB-NNNN (4-digit zero-padded, e.g., KB-0033)",
+      "scripts": "SCR-NNNN (4-digit zero-padded, e.g., SCR-0054)",
+      "sops": "SOP-NNN (3-digit zero-padded, e.g., SOP-036)",
+      "data": "DATA-NNNN (4-digit zero-padded, e.g., DATA-0006)",
+      "sources": "SRC-NNNN (4-digit zero-padded, e.g., SRC-0039)",
+      "tools": "TOOL-NNNN (4-digit zero-padded, e.g., TOOL-0002)",
+      "rule": "IDs are assigned sequentially and NEVER reused. Superseded entries keep their ID with a version suffix (e.g., SOP-012 v2 supersedes SOP-012 v1). Use distinct IDs in index to avoid SCH-002 collisions."
+    },
+    "filename_format": {
+      "knowledge_base": "KB-NNNN.md (in knowledge-base/entries/)",
+      "scripts": "snake_case.py or kebab-case.py (pick ONE per subsystem and stick with it). Recommendation: snake_case for Python files.",
+      "sops": "sop_NNN_descriptive_name.json (in storage/coordination/sops/)",
+      "data": "descriptive_name.json (in storage/data/)",
+      "sources": "SRC-NNNN.json (in storage/sources/)",
+      "rule": "No mixed conventions within a subsystem. See INC-011: scripts currently mix hyphens and underscores. New scripts MUST use snake_case."
+    },
+    "path_format": {
+      "rule": "All paths in index entries MUST be relative to the subsystem root directory. Never use ../ paths (see INC-012). Never use absolute paths.",
+      "examples": {
+        "correct": "tool_benchmarker.py",
+        "incorrect_relative": "../coordination/coordinator_hub.py",
+        "incorrect_absolute": "/home/user/Claude/storage/scripts/tool_benchmarker.py"
       }
     },
-    "tier_3_full_index": {
-      "filename": "index.json",
-      "purpose": "Complete metadata for all entries. Includes descriptions, cross-references, file paths, and all searchable fields.",
-      "required_fields_per_entry": ["id", "title", "filename", "version", "status", "description"],
-      "optional_fields": ["category", "tags", "builds_on", "superseded_by", "created_date", "team"],
-      "when_agents_use_it": "When agent needs full details about entries, cross-references, or needs to update/add entries.",
-      "note": "Prefer query_kb or smart_read over reading the full index directly. query_kb returns 123 tokens vs 6093 for the full file."
+    "tag_format": {
+      "rule": "All tags MUST be lowercase. No duplicate tags with different casing (see DUP-007: 'sops' vs 'SOPs').",
+      "normalization": "Before adding a tag, lowercase it and check for existing exact match in tag_index."
+    },
+    "date_format": {
+      "rule": "Use 'date' as the field name universally. Format: YYYY-MM-DD. This resolves INC-005 (5 different date field names).",
+      "deprecated_names": ["collected_at", "run_date", "analysis_date", "added", "generated (in entry context)"]
     }
+  },
+
+  "cross_reference_format": {
+    "standard_format": {
+      "type": "KB | SCR | SOP | DATA | SRC | TOOL",
+      "id": "The target resource ID (e.g., KB-0032, SCR-0051)",
+      "path": "Optional. JSON dot-notation path to specific section within the target (e.g., 'contention_analysis.results')"
+    },
+    "examples": [
+      {"type": "DATA", "id": "DATA-0002", "path": "categories.team_performance.team_analysis"},
+      {"type": "SCR", "id": "SCR-0051"},
+      {"type": "SOP", "id": "SOP-034", "path": "key_findings.contention_curve"},
+      {"type": "KB", "id": "KB-0032"}
+    ],
+    "rule": "All cross-references MUST use this format. Deprecated formats (bare ID arrays, path strings, dot-notation without type) must be migrated. See SCH-004.",
+    "validation": "The referenced ID must exist in the target subsystem's index.json. Orphaned cross-references must be flagged by automated validation."
   },
 
   "procedures": [
     {
       "step": 1,
-      "title": "Determine Data Category and Storage Location",
-      "action": "Before storing any data file, classify it and identify the correct storage location.",
-      "storage_locations": {
-        "benchmark_results": "storage/scripts/ (tool and coordination benchmarks) or storage/scripts/data-gathering/benchmarks/ (data gathering)",
-        "analysis_results": "storage/data/ (final analyses) or storage/analysis/ (team-specific analyses)",
-        "team_outputs": "storage/coordination/teams/<team-name>/output/",
-        "knowledge_base_entries": "knowledge-base/entries/",
-        "sop_documents": "storage/coordination/sops/",
-        "market_research": "market-research/picks/ or market-research/methods/",
-        "scripts_and_tools": "storage/scripts/ or storage/api-tools/"
-      },
-      "output": "Storage location selected"
+      "title": "Check for Duplicates Before Creating",
+      "action": "Before creating any new entry, search INDEX_COMPACT.json for the relevant resource type. Check for entries with similar titles, overlapping content, or identical data sources. If a potential duplicate is found, extend the existing entry instead of creating a new one.",
+      "duplicate_check_method": [
+        "Search INDEX_COMPACT.json by title keywords",
+        "Check tag_index for entries with the same tags",
+        "For data files: check if the same data source or benchmark run already has an entry",
+        "For KB entries: check builds_on chains for related prior work"
+      ],
+      "output": "Duplicate check result: 'no duplicate found' or 'potential duplicate: <ID>, recommend extending'"
     },
     {
       "step": 2,
-      "title": "Apply Naming Conventions",
-      "action": "Name the file according to the conventions for its category.",
-      "naming_conventions": {
-        "benchmarks": "YYYYMMDD_HHMMSS_<suite>_results.json (e.g., 20260311_143022_coord_bench_results.json)",
-        "sops": "sop_NNN_<short_title>.json (e.g., sop_034_sqlite_contention_management.json)",
-        "knowledge_base": "KB-NNNN.md (e.g., KB-0042.md) with YAML frontmatter",
-        "team_logs": "TEAM-NNNN.md (sequential numbering)",
-        "analysis": "<descriptive_name>.json (e.g., final_analysis.json, team_analysis_results.json)",
-        "market_picks": "PICK-NNNN.md (sequential numbering)"
-      },
-      "output": "File named according to conventions"
+      "title": "Assign ID and Create Entry",
+      "action": "Assign the next sequential ID for the resource type. Create the entry file following naming conventions.",
+      "id_assignment": "Read the current highest ID from index.json. Increment by 1. Never reuse deleted or superseded IDs.",
+      "output": "New entry file created with correct ID and filename"
     },
     {
       "step": 3,
-      "title": "Include Required Metadata Fields",
-      "action": "Every data file must include metadata fields appropriate to its type.",
-      "required_metadata_by_type": {
-        "benchmark_results": {
-          "required": ["run_date", "description", "total_tests_or_measurements", "results_summary"],
-          "recommended": ["comparison_to_baseline", "regression_flags", "environment_info"]
-        },
-        "analysis_results": {
-          "required": ["analysis_date", "data_sources_analyzed", "total_data_points", "key_findings"],
-          "recommended": ["methodology_notes", "confidence_levels", "actionable_recommendations"]
-        },
-        "sop_documents": {
-          "required": ["id", "title", "version", "status", "created_date", "category", "purpose", "scope", "procedures"],
-          "recommended": ["references", "metrics", "anti_patterns", "builds_on"]
-        },
-        "knowledge_base_entries": {
-          "required": ["id", "title", "date", "tags", "summary"],
-          "recommended": ["builds_on", "related_entries", "confidence_level"]
-        }
-      },
-      "output": "Data file with all required metadata fields populated"
+      "title": "Update All Three Index Tiers",
+      "action": "Update index.json, INDEX_COMPACT.json, and SUMMARY.json for the relevant subsystem. All three MUST be updated in the same operation.",
+      "update_order": [
+        "1. Add entry to index.json (source of truth) with all required fields",
+        "2. Add entry to INDEX_COMPACT.json with required compact fields",
+        "3. Update SUMMARY.json entry_count and categories",
+        "4. If a global INDEX_COMPACT.json or SUMMARY.json exists in storage/data/, update those too"
+      ],
+      "critical_rule": "NEVER update only one tier. If you update index.json, you MUST also update INDEX_COMPACT.json and SUMMARY.json in the same commit. This prevents the drift that caused INC-001 through INC-003.",
+      "output": "All three tiers updated and consistent"
     },
     {
       "step": 4,
-      "title": "Update All Three Index Tiers",
-      "action": "After creating or modifying a data file, update all three tiers of the index system in the file's directory.",
-      "update_order": [
-        "1. Update index.json (full index) with complete entry metadata",
-        "2. Update INDEX_COMPACT.json with one-line entry summary",
-        "3. Update SUMMARY.json with updated entry_count, categories, last_updated, and id_range"
+      "title": "Add Cross-References",
+      "action": "For any new entry that references other resources, add cross-references using the standard format. Verify that all referenced IDs exist in their respective indexes.",
+      "validation": [
+        "Each cross-reference target ID must exist in the target subsystem's index.json",
+        "Each cross-reference path (if specified) must be a valid JSON path in the target file",
+        "Bidirectional references are encouraged: if A references B, B should reference A"
       ],
-      "automation": "Use auto_index tool (storage/scripts/auto_index.py) when available. Falls back to manual updates.",
-      "output": "All three index tiers consistent and up-to-date"
+      "output": "Cross-references added and validated"
     },
     {
       "step": 5,
-      "title": "Add Cross-References",
-      "action": "Link the new data to related entries using cross-reference fields.",
-      "cross_reference_types": {
-        "builds_on": "This entry extends or refines the referenced entry. E.g., SOP-034 builds_on SOP-032.",
-        "references": "This entry cites data from the referenced source. Include section and data_points count.",
-        "superseded_by": "This entry has been replaced by a newer version. Mark old entry status as 'superseded'.",
-        "related_entries": "Entries covering similar topics or sharing data sources."
-      },
-      "cross_reference_performance": "Indexed cross-reference lookup is 6.6x faster than linear scan (0.29us vs 1.92us). Always use indexed lookups.",
-      "output": "Cross-references added to new entry and referenced entries updated if needed"
-    },
-    {
-      "step": 6,
-      "title": "Validate Index Consistency",
-      "action": "After updates, validate that indexes are consistent with actual files on disk.",
+      "title": "Run Automated Validation",
+      "action": "After any index modification, run the validation checks to ensure consistency across all tiers.",
       "validation_checks": [
-        "Every file in the directory has a corresponding index entry",
-        "Every index entry points to an existing file",
-        "SUMMARY.json entry_count matches actual file count",
-        "INDEX_COMPACT.json entries match index.json entries (subset of fields)",
-        "No duplicate IDs in index.json",
-        "All cross-references point to valid entries"
+        "Count consistency: entry_count in SUMMARY matches array length in INDEX_COMPACT matches array length in index.json",
+        "Coverage: every file on disk in the subsystem directory has a corresponding index entry",
+        "No orphans: every index entry points to a file that exists on disk",
+        "No duplicate IDs: every ID in index.json is unique",
+        "Schema compliance: every entry has all required fields for its resource type",
+        "Cross-reference validity: every referenced ID exists in the target index",
+        "Tag normalization: all tags are lowercase with no duplicates"
       ],
-      "tools": "Use kb_validator (storage/scripts/kb_validator.py) and cross_ref_checker (storage/scripts/cross_ref_checker.py) for automated validation.",
+      "tools": "Use auto_index.py, cross_ref_checker.py, validate_naming.py, kb_validator.py as applicable",
       "output": "Validation report: pass/fail per check"
     }
   ],
 
-  "data_quality_standards": {
-    "benchmark_data": {
-      "minimum_measurements": "50 per metric (consistent with empirical benchmarks using 50-200 measurements per condition)",
-      "required_percentiles": ["p50", "p95", "p99"],
-      "required_aggregate": ["mean", "total", "count"],
-      "comparison_requirement": "All benchmark results must include comparison to established baseline when one exists"
+  "decision_tree": {
+    "title": "Index Update Decision Tree",
+    "step_1": {
+      "question": "What operation are you performing?",
+      "options": {
+        "creating_new_entry": "Go to step_2a",
+        "modifying_existing_entry": "Go to step_2b",
+        "deleting_entry": "Go to step_2c",
+        "bulk_operation": "Go to step_2d"
+      }
     },
-    "analysis_data": {
-      "source_attribution": "Every finding must cite specific data sources with section references",
-      "confidence_levels": "HIGH (multiple independent sources agree), MEDIUM (single source or limited observations), LOW (extrapolation or single data point)",
-      "actionable_format": "Analysis must include actionable_recommendations section with immediate/short_term/long_term categories"
+    "step_2a": {
+      "scenario": "Creating a new entry",
+      "actions": [
+        "1. Duplicate check against INDEX_COMPACT.json",
+        "2. Assign next sequential ID",
+        "3. Create entry file with correct naming convention",
+        "4. Update index.json with all required + type-specific fields",
+        "5. Update INDEX_COMPACT.json with required compact fields",
+        "6. Update SUMMARY.json (increment entry_count, update categories)",
+        "7. Update global storage/data/ indexes if they exist",
+        "8. Add cross-references in standard format",
+        "9. Run validation checks"
+      ]
     },
-    "team_output_data": {
-      "artifact_tracking": "Every team output must be catalogued with artifact count and type for efficiency measurement",
-      "session_logging": "Required fields: team_id, agent_count, duration, artifacts_produced, cooperation_pattern, efficiency_score"
+    "step_2b": {
+      "scenario": "Modifying an existing entry",
+      "actions": [
+        "1. Update the entry file",
+        "2. Update index.json if any indexed fields changed (title, category, status, tags)",
+        "3. Update INDEX_COMPACT.json if compact fields changed",
+        "4. Update SUMMARY.json if category or status changed (affects counts)",
+        "5. Verify cross-references still valid",
+        "6. Run validation checks"
+      ]
+    },
+    "step_2c": {
+      "scenario": "Deleting or deprecating an entry",
+      "actions": [
+        "1. Set status to 'deprecated' in index.json (prefer deprecation over deletion)",
+        "2. Update INDEX_COMPACT.json status field",
+        "3. Update SUMMARY.json (decrement active entry_count if removing from active set)",
+        "4. Check for incoming cross-references from other entries and update them",
+        "5. Run validation checks"
+      ],
+      "rule": "Never delete an ID from the index. Mark as deprecated. This preserves cross-reference integrity."
+    },
+    "step_2d": {
+      "scenario": "Bulk operation (multiple entries)",
+      "actions": [
+        "1. Perform all individual entry operations first",
+        "2. Run auto_index.py to regenerate INDEX_COMPACT.json and SUMMARY.json from index.json",
+        "3. Run full validation suite",
+        "4. Verify all counts match across tiers"
+      ],
+      "rationale": "For bulk operations, regenerating derived tiers from source of truth is more reliable than incremental updates."
     }
   },
 
   "anti_patterns": [
     {
-      "name": "Index-Less Data Dumping",
-      "description": "Creating data files without updating any index tier.",
-      "why_wrong": "Unindexed data is invisible to agents using smart_read/query_kb. Other teams cannot discover or build on the data. Effectively lost work.",
-      "fix": "Always update all three index tiers (SUMMARY, INDEX_COMPACT, full index) when adding data."
+      "name": "Update One Tier Only",
+      "description": "Adding an entry to index.json but forgetting to update INDEX_COMPACT.json and SUMMARY.json.",
+      "why_wrong": "This is the root cause of INC-001 through INC-003 and ORP-002 through ORP-004 in the efficiency report. Agents querying INDEX_COMPACT miss entries that exist in the full index. Count mismatches confuse tooling.",
+      "fix": "ALWAYS update all three tiers in the same operation. Use auto_index.py for regeneration when possible."
     },
     {
-      "name": "Full Index Only",
-      "description": "Maintaining only index.json without SUMMARY.json or INDEX_COMPACT.json.",
-      "why_wrong": "Forces agents to read the full 6093-token index for simple orientation queries. Wastes 98.7% of tokens that SUMMARY.json would save.",
-      "fix": "Maintain all three tiers. SUMMARY for orientation (79 tokens), INDEX_COMPACT for scanning (50 tokens/entry), index.json for full details."
+      "name": "File Without Index Entry",
+      "description": "Creating a file on disk without registering it in any index.",
+      "why_wrong": "ORP-006 found 12+ unregistered script files on disk. These files are invisible to any index-based lookup, making them effectively undiscoverable.",
+      "fix": "Every file in an indexed directory MUST have a corresponding index entry. Register before or during file creation, never after."
     },
     {
-      "name": "Inconsistent Cross-References",
-      "description": "Adding builds_on or references that point to non-existent entries.",
-      "why_wrong": "Broken cross-references mislead agents and fail validation. Cross-ref checker catches these but only if run.",
-      "fix": "Validate cross-references after every update using cross_ref_checker.py."
+      "name": "Inconsistent Date Fields",
+      "description": "Using different field names for dates across files (collected_at, run_date, analysis_date, added, generated).",
+      "why_wrong": "INC-005 found 5 different date field names. This makes cross-subsystem queries impossible without custom parsing logic per type.",
+      "fix": "Use 'date' as the universal field name. Format: YYYY-MM-DD."
     },
     {
-      "name": "Raw File I/O for Index Reads",
-      "description": "Reading full index.json files directly instead of using query_kb or smart_read.",
-      "why_wrong": "Full file reads consume 6093 tokens. query_kb returns 123 tokens for the same result (49.5x savings). Raw reads waste 90% of context budget.",
-      "fix": "Always use query_kb for index queries and smart_read for entry reads. Reserve full file reads for index updates only."
+      "name": "Null Categories",
+      "description": "Setting category to null in index entries.",
+      "why_wrong": "INC-009 and INC-010 found all SOP and SRC entries have null categories. This defeats category-based filtering and aggregation.",
+      "fix": "Every entry MUST have a non-null category. Define a category taxonomy per resource type and enforce it."
+    },
+    {
+      "name": "Mixed Cross-Reference Formats",
+      "description": "Using bare ID arrays in one file, path strings in another, and dot-notation in a third.",
+      "why_wrong": "SCH-004 found 3 different cross-reference formats. Tooling cannot follow references without format-specific parsers.",
+      "fix": "Use the standard cross-reference format: {\"type\": \"...\", \"id\": \"...\", \"path\": \"...\"}."
+    },
+    {
+      "name": "Duplicate IDs for Versioned Entries",
+      "description": "Using the same ID for both v1 and v2 of a superseded entry.",
+      "why_wrong": "SCH-002 found SOP-012 and SOP-016 have duplicate IDs. This breaks ID uniqueness and confuses cross-references.",
+      "fix": "Superseded entries keep their original ID with status 'superseded'. New versions get new IDs, or use version suffix (SOP-012-v2)."
     }
   ],
 
   "references": [
-    {"source": "storage/data/unified_benchmarks.json", "section": "token_efficiency", "data_points": "11 benchmarks showing 90.2% average token reduction"},
-    {"source": "storage/data/unified_benchmarks.json", "section": "storage_stress_tests", "data_points": "Hash vs linear lookup benchmarks, category and cross-ref benchmarks"},
-    {"source": "storage/data/unified_benchmarks.json", "section": "data_gathering_benchmarks", "data_points": "Iteration comparison showing 371% data point increase"},
-    {"source": "storage/data/final_analysis.json", "section": "cross_cutting_insights", "data_points": "Token efficiency insight (11.7x speedup, 190 vs 16 operations per context)"},
-    {"source": "storage/data/empirical_benchmarks.json", "section": "tool_regression", "data_points": "query_kb and smart_read performance baselines"}
+    {"source": "storage/data/efficiency_report.json", "section": "summary", "data_points": "4/10 score, 35% overhead, 8 duplications, 12 inconsistencies, 6 orphaned references"},
+    {"source": "storage/data/efficiency_report.json", "section": "duplications", "data_points": "8 duplication instances with severity and recommendations"},
+    {"source": "storage/data/efficiency_report.json", "section": "inconsistencies", "data_points": "12 inconsistency instances across count mismatches, schema issues, and naming"},
+    {"source": "storage/data/efficiency_report.json", "section": "orphaned_references", "data_points": "6 orphaned reference instances including 12+ unregistered files"},
+    {"source": "storage/data/efficiency_report.json", "section": "schema_issues", "data_points": "4 schema issues: no shared schema, duplicate IDs, no tier spec, inconsistent crossrefs"},
+    {"source": "storage/data/efficiency_report.json", "section": "recommendations", "data_points": "10 prioritized recommendations for fixing data management issues"},
+    {"source": "storage/data/final_analysis.json", "section": "cross_cutting_insights[4]", "data_points": "Token efficiency: 90.2% reduction enables 11.7x more I/O per context window, making index reads cheap"}
   ],
 
   "metrics": {
     "compliance_indicators": [
-      "All data files have corresponding entries in all three index tiers",
-      "SUMMARY.json exists and is accurate for every indexed directory",
-      "INDEX_COMPACT.json entries match index.json entries",
-      "All cross-references resolve to valid entries",
-      "Benchmark results include required percentiles (p50, p95, p99)",
-      "Analysis results include source attribution and confidence levels"
+      "All three index tiers updated together for every entry change",
+      "Zero count mismatches between SUMMARY, INDEX_COMPACT, and index.json",
+      "Zero orphaned files (files on disk without index entries)",
+      "Zero orphaned index entries (entries pointing to nonexistent files)",
+      "Zero null categories in any index entry",
+      "All cross-references use standard format and point to valid targets",
+      "All tags normalized to lowercase with no duplicates",
+      "All date fields use 'date' as the field name with YYYY-MM-DD format",
+      "Validation checks run after every index modification"
     ],
     "performance_targets": {
-      "index_consistency_pct": 100,
-      "cross_reference_validity_pct": 100,
-      "summary_token_count": "< 100 per directory",
-      "compact_index_tokens_per_entry": "< 50",
-      "agent_index_reads_via_smart_tools_pct": "> 95"
+      "efficiency_score": ">= 8/10 (up from 4/10)",
+      "storage_overhead_pct": "< 15 (down from 35)",
+      "count_mismatches": 0,
+      "orphaned_references": 0,
+      "duplicate_entries": 0,
+      "null_categories": 0
     },
-    "measurement_method": "Run kb_validator and cross_ref_checker after every data update. Track token consumption for index reads. Flag any directory missing SUMMARY.json or INDEX_COMPACT.json."
+    "measurement_method": "Run efficiency_report.json-equivalent audit monthly. Track score, overhead, and issue counts over time. Flag any regression from previous audit."
   }
 }
