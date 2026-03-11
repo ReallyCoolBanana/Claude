@@ -1,0 +1,263 @@
+{
+  "title": "TOCTOU Race Condition Fixes for SQLite-Based Coordination System",
+  "researcher": "Research Agent 3",
+  "date": "2026-03-11",
+  "summary": "Analysis of four TOCTOU bugs and recommended fix patterns using SQLite atomic operations",
+
+  "sqlite_atomic_patterns": {
+    "description": "Two primary patterns eliminate TOCTOU races in SQLite multi-process coordination",
+    "pattern_1_begin_immediate": {
+      "name": "BEGIN IMMEDIATE + SELECT + UPDATE + COMMIT",
+      "mechanism": "BEGIN IMMEDIATE acquires a RESERVED lock immediately, which prevents any other connection from starting a write transaction. Other connections can still read, but any concurrent BEGIN IMMEDIATE will get SQLITE_BUSY. This serializes all check-then-act sequences.",
+      "when_to_use": "When you need to SELECT a row, inspect its values, and conditionally UPDATE. The SELECT and UPDATE must see a consistent snapshot.",
+      "example": "conn.execute('BEGIN IMMEDIATE'); row = conn.execute('SELECT ...').fetchone(); if condition(row): conn.execute('UPDATE ...'); conn.execute('COMMIT')",
+      "already_used_in_codebase": [
+        "work_stealing.py steal_work() at line 251",
+        "work_stealing.py reclaim_abandoned_work() at line 363",
+        "help_protocol.py accept_help() at line 506"
+      ]
+    },
+    "pattern_2_single_statement": {
+      "name": "UPDATE ... WHERE (conditional single-statement)",
+      "mechanism": "A single UPDATE with WHERE clauses encoding the preconditions is inherently atomic in SQLite. The check and the mutation happen in one statement. Use cursor.rowcount to detect whether the precondition was met.",
+      "when_to_use": "When the precondition can be expressed entirely in SQL WHERE clauses. Preferred over pattern 1 when feasible because it is simpler, faster, and impossible to get wrong.",
+      "example": "cursor = conn.execute('UPDATE help_requests SET status=fulfilled WHERE id=? AND status=accepted AND accepted_by_team=?', (id, team)); if cursor.rowcount == 0: raise ValueError('...')"
+    }
+  },
+
+  "begin_immediate_vs_exclusive": {
+    "BEGIN_IMMEDIATE": {
+      "lock_acquired": "RESERVED lock",
+      "readers_blocked": false,
+      "writers_blocked": true,
+      "upgrade_to_exclusive": "Automatically upgrades to EXCLUSIVE when COMMIT writes to disk",
+      "recommendation": "USE THIS. It allows concurrent readers while serializing writers, which is ideal for WAL mode."
+    },
+    "BEGIN_EXCLUSIVE": {
+      "lock_acquired": "EXCLUSIVE lock",
+      "readers_blocked": "Yes in rollback journal mode; No in WAL mode (readers use snapshot)",
+      "writers_blocked": true,
+      "recommendation": "Unnecessary for this codebase. In WAL mode, EXCLUSIVE and IMMEDIATE behave almost identically because WAL readers are never blocked. Use IMMEDIATE for clarity and convention consistency."
+    },
+    "BEGIN_DEFERRED": {
+      "lock_acquired": "No lock until first write statement",
+      "problem": "This is the default. A SELECT under DEFERRED does not acquire any write lock, so another process can modify data between your SELECT and your UPDATE. This is the root cause of bugs 2, 3, and 4.",
+      "recommendation": "NEVER use for check-then-act patterns."
+    },
+    "verdict": "Use BEGIN IMMEDIATE consistently for all check-then-act operations. The codebase already uses it in steal_work() and accept_help() — the bugs exist where this pattern was not applied."
+  },
+
+  "single_statement_fix": {
+    "description": "Using UPDATE ... WHERE as a single atomic check-and-act",
+    "mechanism": "SQLite executes a single statement atomically. An UPDATE with WHERE clauses that encode preconditions combines the check and the mutation into one operation. No transaction wrapper is needed for atomicity of a single statement.",
+    "rowcount_usage": {
+      "description": "cursor.rowcount returns the number of rows modified by the last DML statement",
+      "reliability": "Fully reliable in Python sqlite3 module. Defined by PEP 249.",
+      "pattern": "cursor = conn.execute('UPDATE ... WHERE preconditions'); if cursor.rowcount == 0: handle_failure()",
+      "caveat_1": "rowcount cannot distinguish between 'row not found' and 'row found but precondition failed'. If you need to report different errors for these cases, you must do a SELECT first (inside BEGIN IMMEDIATE).",
+      "caveat_2": "rowcount is -1 for SELECT statements; only meaningful for INSERT/UPDATE/DELETE."
+    },
+    "trade_offs": {
+      "pros": [
+        "Simpler code — no transaction management boilerplate",
+        "No risk of forgetting COMMIT or ROLLBACK",
+        "Faster — single round-trip to SQLite engine",
+        "Impossible to have TOCTOU because check and act are the same operation"
+      ],
+      "cons": [
+        "Cannot provide detailed error messages (e.g., 'not found' vs 'wrong status' vs 'wrong team')",
+        "Complex preconditions may produce hard-to-read SQL",
+        "Cannot perform multi-table updates atomically without BEGIN IMMEDIATE"
+      ]
+    },
+    "applicability_to_bugs": {
+      "bug_2_join_channel": "PARTIALLY applicable — the join_channel read-modify-write on JSON requires SELECT first because participants is a JSON array that must be deserialized, appended to, and written back. Use BEGIN IMMEDIATE.",
+      "bug_3_complete_work": "FULLY applicable — can be rewritten as single UPDATE ... WHERE with authorization check in WHERE clause.",
+      "bug_4_fulfill_help": "PARTIALLY applicable — the help_requests UPDATE can be a single statement, but the work_items UPDATE depends on the help_requests row data. Use BEGIN IMMEDIATE for the two-table case."
+    }
+  },
+
+  "wal_mode_implications": {
+    "description": "How WAL mode affects locking behavior for TOCTOU fix patterns",
+    "key_points": [
+      "WAL mode allows concurrent readers and a single writer. Readers never block writers and writers never block readers.",
+      "BEGIN IMMEDIATE in WAL mode acquires a write lock immediately. Other writers get SQLITE_BUSY, but readers continue unimpeded.",
+      "A DEFERRED transaction that only does SELECT will NOT acquire a write lock even when it later does an UPDATE — the lock acquisition is deferred to the first write statement. Between the SELECT and the write lock acquisition, another process can modify the data. This is the TOCTOU window.",
+      "In WAL mode, EXCLUSIVE and IMMEDIATE behave identically for practical purposes because readers use snapshots and are never blocked regardless.",
+      "The busy_timeout pragma (set to 30000ms in this codebase) handles SQLITE_BUSY by retrying internally. The @_retry_on_busy decorator provides application-level retry on top of this.",
+      "With WAL mode + BEGIN IMMEDIATE, write transactions are serialized but do not block readers, making it the ideal pattern for this coordination system's workload."
+    ],
+    "interaction_with_retry": "The @_retry_on_busy decorator already wraps the affected methods. When BEGIN IMMEDIATE fails with SQLITE_BUSY (another writer holds the lock), the decorator retries. This is correct and sufficient."
+  },
+
+  "threading_plus_sqlite": {
+    "description": "Best practices for combining Python threading.Lock with SQLite locking",
+    "analysis": {
+      "current_pattern": "All four files use threading.Lock (self._lock) around SQLite operations. check_same_thread=False is set on all connections.",
+      "why_threading_lock_is_still_needed": [
+        "Python sqlite3 module is not thread-safe for concurrent use of the same connection object. check_same_thread=False disables the safety check but does not make the connection thread-safe.",
+        "Without threading.Lock, two threads using the same connection could interleave their SQL statements (e.g., Thread A does SELECT, Thread B does SELECT, Thread A does UPDATE using Thread B's cursor).",
+        "threading.Lock serializes access to the connection object within a single process."
+      ],
+      "why_threading_lock_is_not_sufficient": [
+        "threading.Lock only protects within a single process. It has no effect on other processes accessing the same SQLite database.",
+        "In a multi-process coordination system, the TOCTOU window exists between processes, not between threads.",
+        "SQLite's own locking (via BEGIN IMMEDIATE) is required to protect across processes."
+      ],
+      "recommended_pattern": "Use BOTH: threading.Lock to protect the connection object within a process, AND BEGIN IMMEDIATE to serialize write transactions across processes. This is exactly what steal_work() already does correctly."
+    },
+    "anti_pattern_sleeping_inside_lock": {
+      "description": "Bug 1 (ddg_utils.py) sleeps inside the lock, blocking all other threads",
+      "problem": "If the rate limit requires a 0.4s sleep, all other threads are blocked for that duration even though they could be doing non-rate-limited work",
+      "fix": "Calculate sleep duration inside the lock, update _last_request_time inside the lock, then release the lock and sleep outside it. Or use a different synchronization primitive like threading.Event or a dedicated rate-limiting class."
+    }
+  },
+
+  "per_bug_fix_plan": {
+    "bug_1_ddg_rate_limiter": {
+      "file": "storage/scripts/data-gathering/methods/ddg_utils.py",
+      "lines": "112-120",
+      "issue": "Sleep inside threading.Lock blocks other threads; RATE_LIMIT_SECONDS read uses different lock than _rate_limit_lock",
+      "severity": "Low — performance issue, not a correctness bug in multi-process context (single-process only)",
+      "fix_approach": "Capture the sleep duration and update _last_request_time inside the lock, then sleep outside. Read RATE_LIMIT_SECONDS under _rate_limit_lock (or _config_lock, but using _rate_limit_lock is simpler since set_rate_limit is rarely called).",
+      "fix_code_sketch": [
+        "def _enforce_rate_limit():",
+        "    global _last_request_time",
+        "    with _rate_limit_lock:",
+        "        now = time.monotonic()",
+        "        elapsed = now - _last_request_time",
+        "        limit = RATE_LIMIT_SECONDS  # read while holding lock",
+        "        if _last_request_time > 0 and elapsed < limit:",
+        "            sleep_time = limit - elapsed",
+        "        else:",
+        "            sleep_time = 0",
+        "        # Reserve our slot by updating timestamp now",
+        "        _last_request_time = now + sleep_time",
+        "    # Sleep outside the lock",
+        "    if sleep_time > 0:",
+        "        time.sleep(sleep_time)"
+      ],
+      "note": "The RATE_LIMIT_SECONDS race with set_rate_limit() is technically benign since set_rate_limit uses _config_lock not _rate_limit_lock. Simplest fix: have set_rate_limit also acquire _rate_limit_lock, or just read RATE_LIMIT_SECONDS inside _rate_limit_lock (Python GIL makes float reads atomic anyway, but explicit locking is clearer)."
+    },
+
+    "bug_2_join_channel": {
+      "file": "storage/coordination/direct_channels.py",
+      "lines": "370-389",
+      "issue": "SELECT participants then UPDATE — not atomic across processes. threading.Lock only protects within one process.",
+      "severity": "Medium — silent data loss (first joiner's append is overwritten by second joiner's append)",
+      "fix_approach": "Wrap the SELECT + UPDATE in BEGIN IMMEDIATE transaction following the pattern already used in work_stealing.py steal_work(). The JSON read-modify-write cannot be reduced to a single UPDATE statement because it requires JSON deserialization and list manipulation.",
+      "fix_code_sketch": [
+        "def join_channel(self, channel_name: str) -> None:",
+        "    self._check_closed()",
+        "    with self._lock:",
+        "        try:",
+        "            self._conn.execute('BEGIN IMMEDIATE')",
+        "        except sqlite3.OperationalError:",
+        "            raise  # let @_retry_on_busy handle",
+        "        try:",
+        "            row = self._conn.execute(",
+        "                \"SELECT participants FROM channels WHERE channel_name = ? AND status = 'active'\",",
+        "                (channel_name,),",
+        "            ).fetchone()",
+        "            if row is None:",
+        "                self._conn.execute('ROLLBACK')",
+        "                raise ValueError(f'Channel {channel_name!r} not found')",
+        "            current = json.loads(row['participants'])",
+        "            if self.team not in current:",
+        "                current.append(self.team)",
+        "                current.sort()",
+        "            self._conn.execute(",
+        "                'UPDATE channels SET participants = ?, last_activity = ? WHERE channel_name = ?',",
+        "                (json.dumps(current), time.time(), channel_name),",
+        "            )",
+        "            self._conn.execute('COMMIT')",
+        "        except Exception:",
+        "            try: self._conn.execute('ROLLBACK')",
+        "            except sqlite3.OperationalError: pass",
+        "            raise"
+      ],
+      "alternative": "SQLite 3.38+ has json_array_append via json_insert/json_set. Could potentially do: UPDATE channels SET participants = json_insert(participants, '$[#]', ?) WHERE channel_name = ? AND NOT json_each.value = ? — but this is fragile and harder to maintain. Stick with BEGIN IMMEDIATE."
+    },
+
+    "bug_3_complete_work": {
+      "file": "storage/coordination/work_stealing.py",
+      "lines": "294-318",
+      "issue": "SELECT authorization check then UPDATE — not atomic across processes. Another process could reassign the work item between the SELECT and UPDATE.",
+      "severity": "Medium — could allow unauthorized completion or fail to prevent it",
+      "fix_approach_primary": "Single-statement UPDATE with authorization in WHERE clause. Use rowcount to detect failure. If detailed error messages are needed, do a follow-up SELECT (outside transaction) to determine the reason.",
+      "fix_code_sketch_single_statement": [
+        "def complete_work(self, work_id: int, result: dict) -> None:",
+        "    now = time.time()",
+        "    with self._lock:",
+        "        cursor = self._conn.execute(",
+        "            'UPDATE work_queue SET status = ?, result = ?, completed_at = ? WHERE id = ? AND (claimed_by = ? OR owner_team = ?)',",
+        "            ('completed', json.dumps(result), now, work_id, self.team, self.team),",
+        "        )",
+        "        self._conn.commit()",
+        "        if cursor.rowcount == 0:",
+        "            # Determine reason for failure",
+        "            row = self._conn.execute('SELECT claimed_by, owner_team FROM work_queue WHERE id = ?', (work_id,)).fetchone()",
+        "            if row is None:",
+        "                raise ValueError(f'Work item {work_id} not found')",
+        "            raise ValueError(f\"Team '{self.team}' not authorized to complete work item {work_id} (claimed by '{row[\"claimed_by\"]}', owned by '{row[\"owner_team\"]}')\")"
+      ],
+      "fix_approach_alternative": "BEGIN IMMEDIATE around the existing SELECT + UPDATE pattern (same as steal_work). This is simpler if you want to keep the existing error message logic unchanged.",
+      "recommendation": "Single-statement approach is cleaner and eliminates the TOCTOU entirely. The follow-up SELECT for error messages is safe because it runs after the atomic operation — it only affects error reporting, not correctness."
+    },
+
+    "bug_4_fulfill_help": {
+      "file": "storage/coordination/help_protocol.py",
+      "lines": "572-613",
+      "issue": "SELECT status check then UPDATE on help_requests + UPDATE on work_items — not atomic across processes. Two processes could both see status='accepted' and both fulfill.",
+      "severity": "High — could result in duplicate fulfillment and inconsistent state across help_requests and work_items tables",
+      "fix_approach": "BEGIN IMMEDIATE transaction wrapping all three operations (SELECT + UPDATE help_requests + UPDATE work_items). Cannot use single-statement fix because: (1) need to read work_item_id from the SELECT result, (2) need to update two tables atomically.",
+      "fix_code_sketch": [
+        "def fulfill_help(self, request_id: int) -> None:",
+        "    self._check_closed()",
+        "    now = time.time()",
+        "    with self._lock:",
+        "        try:",
+        "            self._conn.execute('BEGIN IMMEDIATE')",
+        "        except sqlite3.OperationalError:",
+        "            raise",
+        "        try:",
+        "            row = self._conn.execute(",
+        "                'SELECT work_item_id, accepted_by_team, status FROM help_requests WHERE id = ?',",
+        "                (request_id,),",
+        "            ).fetchone()",
+        "            if row is None:",
+        "                self._conn.execute('ROLLBACK')",
+        "                raise ValueError(f'Help request {request_id} does not exist')",
+        "            if row['status'] != 'accepted':",
+        "                self._conn.execute('ROLLBACK')",
+        "                raise ValueError(f'Help request {request_id} has status {row[\"status\"]!r}')",
+        "            if row['accepted_by_team'] != self.team:",
+        "                self._conn.execute('ROLLBACK')",
+        "                raise ValueError(f'Team {self.team!r} not the accepted helper')",
+        "            self._conn.execute(",
+        "                'UPDATE help_requests SET status = ?, resolved_at = ? WHERE id = ?',",
+        "                ('fulfilled', now, request_id),",
+        "            )",
+        "            if row['work_item_id'] is not None:",
+        "                self._conn.execute(",
+        "                    'UPDATE work_items SET status = ?, updated_at = ? WHERE id = ?',",
+        "                    ('completed', now, row['work_item_id']),",
+        "                )",
+        "            self._conn.execute('COMMIT')",
+        "        except Exception:",
+        "            try: self._conn.execute('ROLLBACK')",
+        "            except sqlite3.OperationalError: pass",
+        "            raise"
+      ],
+      "hybrid_optimization": "The help_requests UPDATE itself could use a single-statement approach: UPDATE help_requests SET status='fulfilled', resolved_at=? WHERE id=? AND status='accepted' AND accepted_by_team=? — then check rowcount. But you still need BEGIN IMMEDIATE for the work_items UPDATE, so the savings are minimal. Prefer the full BEGIN IMMEDIATE approach for clarity."
+    }
+  },
+
+  "general_recommendations": [
+    "Establish a codebase convention: ALL check-then-act operations on shared SQLite databases MUST use BEGIN IMMEDIATE. Add a comment or docstring noting this requirement in each coordination module.",
+    "Consider adding a context manager utility (e.g., 'with immediate_transaction(conn):') to reduce boilerplate and prevent missing ROLLBACK on error.",
+    "The @_retry_on_busy decorator is already correct for handling SQLITE_BUSY from BEGIN IMMEDIATE contention. No changes needed to retry logic.",
+    "Python's sqlite3 module default isolation_level='' means it auto-begins transactions for DML statements, which can interfere with manual BEGIN IMMEDIATE. Consider setting isolation_level=None on connections used with manual transaction management to disable auto-begin. This is not currently causing bugs but could in edge cases.",
+    "For ddg_utils.py (Bug 1), the fix is purely threading — no SQLite involved. The other three bugs all follow the same BEGIN IMMEDIATE pattern already established in steal_work()."
+  ]
+}
