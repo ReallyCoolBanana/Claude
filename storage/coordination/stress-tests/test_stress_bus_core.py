@@ -745,5 +745,159 @@ class TestInitDbStress(unittest.TestCase):
             self.assertNotIn("..", r.replace("__", ""))
 
 
+# ===================================================================
+# Per-Publisher Message Ordering Verification
+# ===================================================================
+
+
+class TestPerPublisherOrdering(unittest.TestCase):
+    """Verify that messages from a single publisher maintain order."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.bus_dir = os.path.join(self.tmpdir, "bus")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def test_ordering_preserved_per_publisher(self):
+        """10 publishers write sequenced msgs concurrently; verify per-publisher order."""
+        num_pubs = 10
+        msgs_per_pub = 20
+        barrier = threading.Barrier(num_pubs, timeout=30)
+        errors = []
+        errors_lock = threading.Lock()
+
+        def publish_sequenced(idx):
+            try:
+                barrier.wait(timeout=JOIN_TIMEOUT)
+                for seq in range(msgs_per_pub):
+                    bus_write(
+                        self.bus_dir, "ordered-ch", "info",
+                        {"pub": idx, "seq": seq},
+                        team="team-a", agent_id=f"pub-{idx}",
+                    )
+            except Exception as e:
+                with errors_lock:
+                    errors.append((idx, e))
+
+        threads = [threading.Thread(target=publish_sequenced, args=(i,))
+                   for i in range(num_pubs)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(timeout=JOIN_TIMEOUT)
+
+        self.assertEqual(len(errors), 0, f"Ordering errors: {errors}")
+
+        msgs, _ = bus_read(self.bus_dir, "ordered-ch", 0)
+        self.assertEqual(len(msgs), num_pubs * msgs_per_pub)
+
+        # Group messages by publisher and verify sequence order
+        by_pub = {}
+        for m in msgs:
+            pub = m["body"]["pub"]
+            by_pub.setdefault(pub, []).append(m["body"]["seq"])
+
+        self.assertEqual(len(by_pub), num_pubs)
+        for pub, seqs in by_pub.items():
+            self.assertEqual(len(seqs), msgs_per_pub,
+                             f"Publisher {pub}: expected {msgs_per_pub} msgs, got {len(seqs)}")
+            # Sequence numbers should be monotonically increasing
+            for i in range(1, len(seqs)):
+                self.assertGreater(
+                    seqs[i], seqs[i - 1],
+                    f"Publisher {pub}: seq {seqs[i]} not > {seqs[i - 1]}",
+                )
+
+
+# ===================================================================
+# Sustained Throughput (Burst-Then-Read Cycles)
+# ===================================================================
+
+
+class TestSustainedThroughput(unittest.TestCase):
+    """Repeated burst-write then bulk-read cycles."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.bus_dir = os.path.join(self.tmpdir, "bus")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def test_burst_then_read_10_cycles(self):
+        """10 cycles of writing 20 messages then reading all new ones."""
+        channel = "sustained-ch"
+        offset = 0
+        total_written = 0
+        total_read = 0
+
+        for cycle in range(10):
+            # Burst write
+            for m in range(20):
+                mid = bus_write(
+                    self.bus_dir, channel, "info",
+                    {"cycle": cycle, "seq": m},
+                    team="team-a", agent_id=f"agent-c{cycle}",
+                )
+                self.assertIsNotNone(mid)
+                total_written += 1
+
+            # Read all new messages
+            msgs, offset = bus_read(self.bus_dir, channel, offset)
+            total_read += len(msgs)
+
+        # Total read across all cycles should equal total written
+        self.assertEqual(total_read, total_written)
+        self.assertEqual(total_written, 200)
+
+    def test_concurrent_burst_read_cycles(self):
+        """5 threads each do 5 burst-then-read cycles on separate channels."""
+        num_threads = 5
+        cycles = 5
+        msgs_per_burst = 10
+        barrier = threading.Barrier(num_threads, timeout=30)
+        errors = []
+        errors_lock = threading.Lock()
+        totals = [0] * num_threads
+
+        def burst_cycle(idx):
+            try:
+                barrier.wait(timeout=JOIN_TIMEOUT)
+                ch = f"burst-{idx}"
+                offset = 0
+                total = 0
+                for c in range(cycles):
+                    for m in range(msgs_per_burst):
+                        bus_write(
+                            self.bus_dir, ch, "info",
+                            {"thread": idx, "cycle": c, "seq": m},
+                            team="team-a", agent_id=f"agent-{idx}",
+                        )
+                    msgs, offset = bus_read(self.bus_dir, ch, offset)
+                    total += len(msgs)
+                totals[idx] = total
+            except Exception as e:
+                with errors_lock:
+                    errors.append((idx, e))
+
+        threads = [threading.Thread(target=burst_cycle, args=(i,))
+                   for i in range(num_threads)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(timeout=JOIN_TIMEOUT)
+
+        self.assertEqual(len(errors), 0, f"Burst cycle errors: {errors}")
+
+        expected_per_thread = cycles * msgs_per_burst
+        for i, total in enumerate(totals):
+            self.assertEqual(
+                total, expected_per_thread,
+                f"Thread {i}: read {total}, expected {expected_per_thread}",
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
