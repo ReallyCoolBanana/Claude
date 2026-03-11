@@ -1,0 +1,158 @@
+{
+  "id": "SOP-023",
+  "version": "1.0",
+  "created": "2026-03-11",
+  "team": "ANALYSIS-001",
+  "title": "Anti-Recursion Protocol: Preventing Inward-Facing Gravity",
+  "purpose": "Prevents the pattern where teams spend their time building coordination infrastructure to build more coordination infrastructure. Enforces a minimum ratio of domain work to infrastructure work. Based on the critical finding that Teams 22-28 (7 consecutive teams) all focused inward.",
+  "builds_on": ["SOP-011", "SOP-014", "ANALYSIS-001"],
+  "evidence_base": "TT-3 finding: 'The repository is becoming a coordination system that coordinates the building of more coordination systems.'",
+
+  "section_1_domain_work_ratio": {
+    "title": "Mandatory Domain Work Ratio",
+    "description": "Every operation must allocate a minimum percentage of agent capacity to domain work (market research, data analysis, tool building for external use).",
+
+    "rules": [
+      {
+        "id": "AR-01",
+        "rule": "Minimum 60% of agent capacity on domain work",
+        "definition": "Domain work = any work that produces artifacts used OUTSIDE the coordination system. Examples: market research picks, data analysis reports, external API tools, knowledge base entries about domain topics (not coordination topics).",
+        "measurement": "Count agents. At least 60% must be assigned domain tasks.",
+        "exception": "New session after a system failure — may spend up to 100% on recovery for one session only"
+      },
+      {
+        "id": "AR-02",
+        "rule": "Maximum 30% of agent capacity on infrastructure",
+        "definition": "Infrastructure work = modifications to coordination system, SOPs, bus, protocols, monitoring tools, dashboards.",
+        "hard_cap": "No more than 3 infrastructure agents in any single operation regardless of team size"
+      },
+      {
+        "id": "AR-03",
+        "rule": "10% reserved for documentation and handoff",
+        "definition": "KB entries, session logs, index updates. This is overhead, not discretionary."
+      }
+    ],
+
+    "enforcement": {
+      "pre_launch_check": "Before launching, coordinator tallies agents by category. If domain < 60% or infra > 30%, must rebalance.",
+      "mid_session_check": "At CP-3 (mid-session), verify domain agents are actually doing domain work (not drifting into infra)",
+      "post_session_audit": "Session log must report actual domain/infra/overhead split with evidence"
+    }
+  },
+
+  "section_2_infrastructure_freeze": {
+    "title": "Infrastructure Modification Controls",
+    "description": "The coordination system is mature enough for production use. Further changes require justification.",
+
+    "freeze_rules": [
+      {
+        "id": "FREEZE-01",
+        "rule": "No new SOPs unless a genuinely novel failure mode is encountered",
+        "test": "Can you point to a specific incident where the existing 13 SOPs were insufficient? If no → do not create a new SOP.",
+        "rationale": "13 SOPs + 10 ASR rules approaches process overhead saturation per TT-3 analysis"
+      },
+      {
+        "id": "FREEZE-02",
+        "rule": "No new coordination modules unless blocking a domain task",
+        "test": "Is a domain team unable to complete their work due to a missing coordination feature? If no → do not build it.",
+        "rationale": "Teams 22-28 built 5 new coordination modules (help protocol, work stealing, direct channels, coordinator hub, SDK launcher) without any domain team requesting them"
+      },
+      {
+        "id": "FREEZE-03",
+        "rule": "Bug fixes to existing infrastructure are always allowed",
+        "rationale": "The 2 high-severity bugs (fulfill_help transaction, complete_work TOCTOU) and 15 medium-severity bugs should be fixed. Fixing != building new."
+      },
+      {
+        "id": "FREEZE-04",
+        "rule": "Performance improvements to existing infrastructure require evidence of bottleneck",
+        "test": "Can you show monitoring data where infrastructure performance blocked domain work? If no → do not optimize."
+      }
+    ]
+  },
+
+  "section_3_recursion_detection": {
+    "title": "Detecting Recursive Patterns",
+    "description": "Signs that the team is falling into inward-facing gravity.",
+
+    "warning_signs": [
+      {
+        "sign": "Think tanks analyzing the coordination system",
+        "detection": "Think tank prompt contains words: 'coordination', 'protocol', 'bus', 'SOP', 'infrastructure'",
+        "action": "Redirect to domain analysis. The coordination system does not need more analysis."
+      },
+      {
+        "sign": "Coding teams modifying coordination code",
+        "detection": "Output path is in storage/coordination/ and not a bug fix",
+        "action": "Verify this was explicitly requested to unblock a domain task. If not, redirect."
+      },
+      {
+        "sign": "Research teams studying multi-agent patterns",
+        "detection": "Research questions about agent communication, coordination, or orchestration",
+        "action": "Unless this is academic research for KB, redirect to domain research (market analysis, API evaluation, etc.)"
+      },
+      {
+        "sign": "Session log has zero domain artifacts",
+        "detection": "No market picks, no domain KB entries, no external-facing tools produced",
+        "action": "Flag as AR violation. Next session MUST be domain-focused."
+      },
+      {
+        "sign": "New SOP or protocol proposed",
+        "detection": "Agent proposes creating SOP-024+",
+        "action": "Apply FREEZE-01 test. Block unless novel failure mode documented."
+      }
+    ]
+  },
+
+  "section_4_domain_work_catalog": {
+    "title": "Approved Domain Work Categories",
+    "description": "Pre-approved domain work that teams should prioritize over infrastructure.",
+
+    "high_priority": [
+      {
+        "category": "Market Research Execution",
+        "sop": "SOP-018",
+        "status": "NEVER EXECUTED — zero picks logged",
+        "action": "Execute SOP-018. Use existing methods in market-research/methods/. Log picks."
+      },
+      {
+        "category": "Data Gathering Operations",
+        "sop": "SOP-017",
+        "status": "Tools built (13 scripts) but not used for systematic gathering since T14",
+        "action": "Run data gathering operations using existing tools. Populate storage/sources/."
+      },
+      {
+        "category": "API Tool Building for External Data",
+        "status": "5 tool gaps identified by TT-OBS-2: StackOverflow, PubMed, Reddit, PyPI/npm, CrossRef",
+        "action": "Build tools that enable domain research. These are domain-enabling, not infrastructure."
+      }
+    ],
+
+    "medium_priority": [
+      {
+        "category": "Knowledge Base Content",
+        "status": "34% integration + 34% methodology = infrastructure-heavy distribution",
+        "action": "Create KB entries about domain topics: market analysis techniques, data sources evaluation, industry trends"
+      },
+      {
+        "category": "Data Analysis and Reporting",
+        "status": "No domain analysis reports produced",
+        "action": "Use gathered data to produce analytical reports. Apply methods from market-research/methods/."
+      }
+    ]
+  },
+
+  "checklists": {
+    "pre_launch": [
+      "Domain agent count ≥ 60% of total agents",
+      "Infrastructure agent count ≤ 30% of total (max 3 agents)",
+      "At least one domain deliverable defined in operation objectives",
+      "No new SOP creation planned (unless FREEZE-01 test passes)",
+      "No new coordination module planned (unless FREEZE-02 test passes)"
+    ],
+    "post_session": [
+      "Domain artifacts produced (picks, reports, tools, domain KB entries)",
+      "Actual domain/infra/overhead split recorded in session log",
+      "If zero domain output: document why and commit to domain-first next session"
+    ]
+  }
+}
