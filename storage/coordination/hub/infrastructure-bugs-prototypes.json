@@ -1,0 +1,396 @@
+{
+  "metadata": {
+    "team": "TT-A4",
+    "task": "bug-testing-prototypes",
+    "date": "2026-03-11",
+    "files_analyzed": 17,
+    "sub_agents": 3,
+    "analysis_scope": "prototype/agent_comm/*, prototype/agent_comm_b/*, storage/scripts/validate-storage.py, storage/scripts/kb_validator.py, storage/scripts/data-gathering/methods/*.py"
+  },
+  "test_results": {
+    "total": 113,
+    "passed": 113,
+    "failed": 0,
+    "errors": 0,
+    "duration_seconds": 19.63,
+    "test_files": [
+      "prototype/tests/test_known_bugs.py (28 tests)",
+      "prototype/tests/test_proto_b.py (62 tests)",
+      "prototype/tests/test_stress_deep.py (23 tests)"
+    ]
+  },
+  "bugs_verified_fixed": [
+    {
+      "id": "BUG-PROTO-001",
+      "file": "prototype/agent_comm_b/bus.py",
+      "description": "Spillover drain TOCTOU race in PipeBusReader._drain_spillover() -- FIXED. The code now uses os.rename() to atomically move the spill file to a temp name before reading (L300-L303), preventing writers from appending to a file being drained."
+    },
+    {
+      "id": "BUG-PROTO-003",
+      "file": "prototype/agent_comm_b/state.py",
+      "description": "SharedStateMap._open() TOCTOU race on file creation -- FIXED. The code now uses O_EXCL flag (L151-L153) for atomic creation detection. Only the process that successfully creates via O_EXCL initializes the header. The fallback on FileExistsError (L157-L162) opens the existing file. Magic byte check at L176 provides additional safety."
+    },
+    {
+      "id": "BUG-PROTO-007",
+      "file": "prototype/agent_comm/bus.py",
+      "description": "BusReader.poll() text/binary mode offset mismatch -- FIXED. The file is now opened in binary mode ('rb') at L120. Offset tracking at L135 uses len(raw) on raw bytes directly, and lines are decoded manually per-line at L146-L149. This eliminates text/byte encoding drift."
+    },
+    {
+      "id": "BUG-PROTO-009",
+      "file": "prototype/agent_comm/coordinator.py",
+      "description": "Coordinator.get_status() bypassing SharedState lock via raw SQL -- FIXED. The code now calls self._state.get_all_agents() at L363, which is a proper public API method that acquires the threading lock internally (state.py L140-L146)."
+    },
+    {
+      "id": "SB-1",
+      "file": "prototype/agent_comm/core.py",
+      "description": "Worktree split-brain from unsymlinked paths -- FIXED via os.path.realpath() canonicalization in CommDir.__init__() (L78). Both prototypes apply this consistently."
+    },
+    {
+      "id": "SB-2",
+      "file": "prototype/agent_comm/core.py",
+      "description": "Shared state resolving different physical paths -- FIXED. _check_canonical_match() (L139-L151) verifies the canonical path matches the requested path."
+    },
+    {
+      "id": "EN-1",
+      "file": "prototype/agent_comm/core.py",
+      "description": "Write permission validation -- FIXED. _check_writable() (L153-L170) checks os.access(W_OK) and handles root user specially via permission bit check."
+    },
+    {
+      "id": "EN-4",
+      "file": "prototype/agent_comm/core.py",
+      "description": "/tmp rejection for systemd-tmpfiles -- FIXED. _check_no_tmp() (L131-L137) rejects paths under /tmp."
+    },
+    {
+      "id": "EN-5",
+      "file": "prototype/agent_comm/core.py",
+      "description": "NFS mount detection and warning -- FIXED. _check_nfs() (L172-L199) uses os.statvfs f_type to detect NFS mounts and issues a warning."
+    },
+    {
+      "id": "RC-4",
+      "file": "prototype/agent_comm/state.py",
+      "description": "Rate limit TOCTOU race -- FIXED. reserve_api_call() (L174-L225) uses BEGIN IMMEDIATE for atomic check+reserve."
+    },
+    {
+      "id": "CR-3",
+      "file": "prototype/agent_comm/coordinator.py",
+      "description": "Coordinator single point of failure -- FIXED. CoordinatorWatchdog class (L381-L481) monitors coordinator heartbeat from worker perspective with configurable timeout and death callbacks."
+    },
+    {
+      "id": "RE-1",
+      "file": "prototype/agent_comm/coordinator.py",
+      "description": "Unbounded JSONL growth -- FIXED. EpochRotator class (L57-L151) implements hourly epoch-based file rotation with configurable retention."
+    }
+  ],
+  "bugs_still_present": [
+    {
+      "id": "BUG-PROTO-002",
+      "file": "prototype/agent_comm_b/bus.py",
+      "description": "Message ordering broken across FIFO/spillover boundary. When FIFO is full (EAGAIN), messages spill to file. Reader drains spillover before FIFO (correct for startup), but messages spilled mid-session arrive out of order relative to FIFO messages.",
+      "severity": "medium",
+      "fix_plan": "Document that cross-FIFO/spillover ordering is not guaranteed, or implement sequence numbers for total ordering."
+    },
+    {
+      "id": "BUG-PROTO-004",
+      "file": "prototype/agent_comm_b/state.py",
+      "description": "Unused _lock inner class (L215-L232) that does NOT acquire threading.Lock creates confusion. Only _combined_lock via _flock() is correct for all operations. The _lock class could be accidentally used, bypassing thread safety.",
+      "severity": "medium",
+      "fix_plan": "Remove the unused _lock inner class. Document that _flock() is the only correct locking mechanism."
+    },
+    {
+      "id": "BUG-PROTO-005",
+      "file": "prototype/agent_comm_b/state.py",
+      "description": "agent_count header field is maintained but never used for optimization. _find_slot_by_agent_id reads it at L336 but still scans all _MAX_AGENTS slots. Dead code that could mislead developers.",
+      "severity": "low",
+      "fix_plan": "Either use agent_count to limit slot scanning or remove it from the header. Add a comment documenting the design choice."
+    },
+    {
+      "id": "BUG-PROTO-006",
+      "file": "prototype/agent_comm_b/coordinator.py",
+      "description": "Coordinator.get_status() returns AgentSlotView dataclass instances in the 'agents' list without serialization. json.dumps() on the result raises TypeError. The code at L405 does use asdict() but this is only applied to the list comprehension -- verified the code does have [asdict(a) for a in agents] which should work. However, if get_all_agents() throws, agents=[] and asdict is never called, which is fine. REVISED: The asdict() call IS present at L405. This is actually FIXED for the JSON serialization case. The remaining issue is the API inconsistency between Prototype A (dict access) and Prototype B (attribute access) for dead agent lists.",
+      "severity": "low",
+      "fix_plan": "Document the API difference. Prototype A returns list[dict], Prototype B returns list[AgentSlotView]. Consider unifying."
+    },
+    {
+      "id": "BUG-PROTO-010",
+      "file": "prototype/agent_comm/coordinator.py",
+      "description": "CoordinatorWatchdog._monitor_loop() never fires callbacks if coordinator crashes before its first heartbeat (coordinator_was_alive never transitions True->False). Worker waits forever.",
+      "severity": "medium",
+      "fix_plan": "Add a startup grace period option. If coordinator hasn't appeared within N seconds, fire callbacks."
+    },
+    {
+      "id": "BUG-PROTO-011",
+      "file": "prototype/agent_comm_b/coordinator.py",
+      "description": "Coordinator event_loop accesses private _fifo_fd attributes of PipeBusReader directly (L218-L221). If FIFO is deleted and recreated externally, select() gets stale fd causing EBADF loop. Error handler at L237-L241 catches but never refreshes the fd.",
+      "severity": "medium",
+      "fix_plan": "Add a fileno() method to PipeBusReader. On EBADF, reopen readers and retry."
+    },
+    {
+      "id": "BUG-PROTO-012",
+      "file": "prototype/agent_comm_b/bus.py",
+      "description": "_ensure_fifo() TOCTOU race: two concurrent calls to os.mkfifo() on same path, second gets uncaught FileExistsError.",
+      "severity": "medium",
+      "fix_plan": "Wrap os.mkfifo() in try/except FileExistsError, then re-verify the path is a FIFO."
+    },
+    {
+      "id": "BUG-PROTO-013",
+      "file": "prototype/agent_comm_b/coordinator.py",
+      "description": "Worker.start() partial failure leaves agent registered in SharedStateMap with no heartbeat updates. No cleanup on watchdog start failure.",
+      "severity": "low",
+      "fix_plan": "Add error handling in Worker.start() that calls stop() on failure. Add unregister_agent in Worker.stop()."
+    },
+    {
+      "id": "BUG-PROTO-014",
+      "file": "prototype/agent_comm/state.py",
+      "description": "_retry_on_busy decorator does not use functools.wraps(), losing function __name__, __doc__ metadata. Affects introspection and debugging.",
+      "severity": "low",
+      "fix_plan": "Add @functools.wraps(func) to the wrapper function."
+    },
+    {
+      "id": "BUG-PROTO-015",
+      "file": "prototype/agent_comm_b/core.py",
+      "description": "_check_no_tmp() only checks self._path (canonical) but not self._requested. Prototype A checks both. Inconsistency between prototypes.",
+      "severity": "low",
+      "fix_plan": "Add self._requested.startswith('/tmp') check to match Prototype A behavior."
+    },
+    {
+      "id": "BUG-PROTO-020",
+      "file": "prototype/agent_comm_b/bus.py",
+      "description": "PipeBusReader.poll() reads fixed 65536 bytes from FIFO. If more data available, returns partial results. Not documented that callers must loop.",
+      "severity": "low",
+      "fix_plan": "Either loop the read inside poll() until EAGAIN, or document partial-result behavior."
+    },
+    {
+      "id": "BUG-PROTO-024",
+      "file": "prototype/agent_comm/state.py",
+      "description": "SharedState.__init__() does not check PRAGMA journal_mode=WAL return value. Silently falls back to DELETE mode on unsupported filesystems, changing concurrency semantics.",
+      "severity": "low",
+      "fix_plan": "Check the return value and log a warning if WAL mode was not enabled."
+    },
+    {
+      "id": "BUG-PROTO-025",
+      "file": "prototype/agent_comm_b/bus.py",
+      "description": "Message.from_json_line() uses cls(**d) which fails with TypeError on forward-compatible messages with extra fields. Same issue in prototype/agent_comm/bus.py.",
+      "severity": "low",
+      "fix_plan": "Filter dict to known dataclass fields before construction."
+    }
+  ],
+  "new_bugs_found": [
+    {
+      "id": "NEW-PROTO-001",
+      "file": "storage/scripts/validate-storage.py",
+      "line": 116,
+      "description": "load_index() opens file without specifying encoding. On non-UTF-8 systems, json.load() may fail or produce mojibake if index.json contains non-ASCII characters. The file is opened as 'r' with system default encoding rather than explicit 'utf-8'.",
+      "severity": "low",
+      "category": "encoding",
+      "fix_plan": "Change open(path, 'r') to open(path, 'r', encoding='utf-8') at L116."
+    },
+    {
+      "id": "NEW-PROTO-002",
+      "file": "storage/scripts/validate-storage.py",
+      "line": 233,
+      "description": "validate_scripts() orphan file detection iterates scripts_dir.iterdir() which includes subdirectories. Subdirectory names (like 'data-gathering') will be flagged as orphan files since they are not in seen_filenames. The check 'f.is_file()' prevents false positives for directories, but any non-.py file in subdirectories is missed since iterdir() is non-recursive.",
+      "severity": "low",
+      "category": "logic-error",
+      "fix_plan": "This is actually correct since it only checks f.is_file(). Non-issue. RETRACTED."
+    },
+    {
+      "id": "NEW-PROTO-003",
+      "file": "storage/scripts/kb_validator.py",
+      "line": 59,
+      "description": "parse_yaml_frontmatter() YAML parser does not handle multi-line values or nested YAML structures. A value like 'description: |\\n  multi-line text' would be parsed as the literal string '|' rather than the multi-line block. Also does not handle YAML arrays in block form (lines starting with '- ').",
+      "severity": "medium",
+      "category": "logic-error",
+      "fix_plan": "Document the limitation or add support for block scalars ('|', '>') and block sequences ('- item'). For the current KB format this may not matter if all values are single-line."
+    },
+    {
+      "id": "NEW-PROTO-004",
+      "file": "storage/scripts/kb_validator.py",
+      "line": 51,
+      "description": "parse_yaml_frontmatter() splits on '---' with maxsplit=2, but if the markdown body contains '---' (e.g., horizontal rules), parts[1] might not be the full frontmatter. However, since it splits from the start and '---' is the first line, parts[0] is empty, parts[1] is frontmatter, parts[2] is body. If frontmatter itself contains '---', the split would truncate it. This is unlikely but possible.",
+      "severity": "low",
+      "category": "logic-error",
+      "fix_plan": "Use a more robust frontmatter parser that finds the second '---' on its own line rather than splitting the whole content."
+    },
+    {
+      "id": "NEW-PROTO-005",
+      "file": "storage/scripts/data-gathering/methods/request_cache.py",
+      "line": 137,
+      "description": "clear_cache() parameter 'all' shadows the Python builtin 'all'. While not a runtime bug, it prevents using the builtin all() inside this function and is a code quality issue.",
+      "severity": "low",
+      "category": "code-quality",
+      "fix_plan": "Rename parameter to 'purge_all' or 'remove_all'."
+    },
+    {
+      "id": "NEW-PROTO-006",
+      "file": "storage/scripts/data-gathering/methods/request_cache.py",
+      "line": 104,
+      "description": "cached_request() has a TOCTOU race between os.path.exists() check (L104) and open() (L106). Another process could delete the cache file between the check and the open, causing FileNotFoundError. The except clause on L110 catches OSError which covers this, but the file could also be created by another process between the 'cache miss' network fetch and the cache write at L129, causing one process to overwrite another's cache entry. This is benign (same URL = same data) but wastes a write.",
+      "severity": "low",
+      "category": "race-condition",
+      "fix_plan": "Use try/except instead of exists check. The current code handles this via the except clause, so this is low priority."
+    },
+    {
+      "id": "NEW-PROTO-007",
+      "file": "storage/scripts/data-gathering/methods/ddg_utils.py",
+      "line": 42,
+      "description": "Module-level mutable global state for rate limiting (_last_request_time) is not thread-safe. If search_duckduckgo() is called from multiple threads (as in method_hybrid.py's ThreadPoolExecutor), the rate limiter can be bypassed: two threads check elapsed time simultaneously, both see it's been long enough, both proceed without sleeping.",
+      "severity": "medium",
+      "category": "race-condition",
+      "fix_plan": "Add a threading.Lock around the rate limit check-and-update in _enforce_rate_limit(). Or use a threading.Semaphore with timed release."
+    },
+    {
+      "id": "NEW-PROTO-008",
+      "file": "storage/scripts/data-gathering/methods/ddg_utils.py",
+      "line": 44,
+      "description": "set_user_agent() and set_rate_limit() mutate module-level globals (DEFAULT_USER_AGENT, RATE_LIMIT_SECONDS) without any thread safety. If called during concurrent execution, this is a data race.",
+      "severity": "low",
+      "category": "race-condition",
+      "fix_plan": "Make these thread-local or use a lock. In practice these are likely only called at startup."
+    },
+    {
+      "id": "NEW-PROTO-009",
+      "file": "storage/scripts/data-gathering/methods/method_hybrid.py",
+      "line": 80,
+      "description": "STOP_WORDS is populated at module import time by calling _get_stop_words() which calls _load_dedup() which calls _load_method() which does importlib exec_module. This has a side effect: dedup_utils.py is fully imported at module load time. If dedup_utils.py has any import-time side effects or fails, method_hybrid.py fails to import entirely.",
+      "severity": "low",
+      "category": "logic-error",
+      "fix_plan": "Lazy-load STOP_WORDS on first use, or wrap in try/except at module level (partially done via _load_dedup's except)."
+    },
+    {
+      "id": "NEW-PROTO-010",
+      "file": "storage/scripts/data-gathering/methods/benchmark_runner.py",
+      "line": 433,
+      "description": "The --parallel flag defaults to True via 'default=True' in argparse, and --sequential defaults to False. The logic 'use_parallel = not args.sequential' means --parallel flag is completely ignored. Passing '--parallel' does nothing because use_parallel is always True unless --sequential is also passed.",
+      "severity": "low",
+      "category": "logic-error",
+      "fix_plan": "Remove the --parallel flag since it's the default, or make --sequential and --parallel mutually exclusive with add_mutually_exclusive_group()."
+    },
+    {
+      "id": "NEW-PROTO-011",
+      "file": "storage/scripts/data-gathering/methods/method_hybrid.py",
+      "line": 206,
+      "description": "cross_reference_results() has O(n^2) complexity in the keyword comparison loop (L201-L221). For each of n results, it compares against all other n results. With 100+ results from multiple sources, this is 10,000+ comparisons. The keyword extraction is pre-cached (good), but the inner loop still does set intersection for every pair.",
+      "severity": "low",
+      "category": "performance",
+      "fix_plan": "Build an inverted keyword index and only compare results that share keywords, reducing comparisons significantly."
+    },
+    {
+      "id": "NEW-PROTO-012",
+      "file": "prototype/agent_comm/coordinator.py",
+      "line": 22,
+      "description": "Coordinator imports use bare module names (from agent_comm.bus import ...) without ensuring the parent package is on sys.path. This works when agent_comm is installed as a package or when the prototype directory is the working directory, but fails if the script is invoked from elsewhere. The tests work around this via sys.path manipulation in the proto fixture.",
+      "severity": "low",
+      "category": "integration",
+      "fix_plan": "Add a conftest.py or __init__.py-based path setup. Or use relative imports."
+    },
+    {
+      "id": "NEW-PROTO-013",
+      "file": "prototype/agent_comm_b/coordinator.py",
+      "line": 538,
+      "description": "Worker.start() creates a CoordinatorWatchdog passing self._comm.path (a string) which creates a new CommDir internally. This CommDir re-runs validation (_check_no_tmp, _check_canonical_match, etc.) which is redundant since the Worker already validated in its __init__. More importantly, the watchdog creates its OWN SharedStateMap instance (second mmap handle to same file), doubling fd and mmap usage per worker.",
+      "severity": "low",
+      "category": "resource-leak",
+      "fix_plan": "Pass the existing SharedStateMap instance to CoordinatorWatchdog instead of having it create its own."
+    },
+    {
+      "id": "NEW-PROTO-014",
+      "file": "prototype/agent_comm/bus.py",
+      "line": 168,
+      "description": "repair_bus_file() opens the file in text mode ('r', encoding='utf-8') for reading, then writes repaired content via a temp file. If another process is actively writing to the bus file during repair (appending via POSIX atomic write), the repair function reads a consistent snapshot but the os.replace() at L198 atomically replaces the original. Messages appended between the read (L173) and the replace (L198) are lost because the replacement file only contains lines read before the append.",
+      "severity": "medium",
+      "category": "race-condition",
+      "fix_plan": "Use flock or rename-then-repair pattern: rename original to .repairing, repair from renamed copy, then swap back. Or document that repair_bus_file should only be called when no writers are active."
+    },
+    {
+      "id": "NEW-PROTO-015",
+      "file": "storage/scripts/data-gathering/methods/dedup_utils.py",
+      "line": 172,
+      "description": "deduplicate_results() greedy deduplication uses O(n^2) pairwise cosine similarity comparison. With large result sets (e.g., 500+ from hybrid method), this becomes slow. Each comparison does a set intersection and sqrt operations.",
+      "severity": "low",
+      "category": "performance",
+      "fix_plan": "Use locality-sensitive hashing (MinHash) for approximate deduplication at scale, or set a max_results cap before dedup."
+    }
+  ],
+  "script_bugs": {
+    "validate-storage.py": {
+      "status": "mostly-clean",
+      "issues": [
+        {
+          "id": "NEW-PROTO-001",
+          "description": "Missing explicit encoding='utf-8' in load_index() file open",
+          "severity": "low"
+        }
+      ]
+    },
+    "kb_validator.py": {
+      "status": "has-limitations",
+      "issues": [
+        {
+          "id": "NEW-PROTO-003",
+          "description": "YAML parser does not handle multi-line values or block sequences",
+          "severity": "medium"
+        },
+        {
+          "id": "NEW-PROTO-004",
+          "description": "Frontmatter delimiter split may truncate if frontmatter contains '---'",
+          "severity": "low"
+        }
+      ]
+    },
+    "data-gathering/methods": {
+      "status": "has-bugs",
+      "issues": [
+        {
+          "id": "NEW-PROTO-007",
+          "description": "ddg_utils.py rate limiter not thread-safe (used by hybrid parallel executor)",
+          "severity": "medium"
+        },
+        {
+          "id": "NEW-PROTO-010",
+          "description": "benchmark_runner.py --parallel flag is dead code",
+          "severity": "low"
+        },
+        {
+          "id": "NEW-PROTO-011",
+          "description": "method_hybrid.py cross_reference_results() O(n^2) performance",
+          "severity": "low"
+        }
+      ]
+    }
+  },
+  "summary": {
+    "total_bugs_in_existing_reports": 25,
+    "fixed": 12,
+    "remaining_from_reports": 13,
+    "new_bugs_found": 13,
+    "total_active_bugs": 26,
+    "by_severity": {
+      "critical": 0,
+      "high": 0,
+      "medium": 7,
+      "low": 19
+    },
+    "by_category": {
+      "race-condition": 5,
+      "logic-error": 9,
+      "resource-leak": 2,
+      "encoding": 1,
+      "code-quality": 1,
+      "performance": 3,
+      "integration": 1,
+      "message-loss": 1,
+      "missing-error-handling": 0
+    },
+    "test_health": "ALL 113 TESTS PASSING. No failures or errors. Test coverage is strong for core functionality but gaps remain for concurrency edge cases and forward-compatibility scenarios.",
+    "key_findings": [
+      "All previously-reported critical and high-severity prototype bugs (BUG-PROTO-001, -003, -007, -009) have been FIXED in the current codebase.",
+      "The original race condition bugs (SB-1/SB-2, RC-4, EN-1/EN-4/EN-5, CR-3, RE-1) are all properly addressed.",
+      "The BusReader binary mode fix (BUG-PROTO-007) is verified -- file is now opened in 'rb' mode with byte-level offset tracking.",
+      "SharedStateMap O_EXCL creation fix (BUG-PROTO-003) is verified -- atomic file creation detection implemented.",
+      "13 remaining bugs from prior reports are low-to-medium severity, mostly design trade-offs and edge cases.",
+      "13 new bugs found: 2 medium (ddg_utils rate limiter thread safety, repair_bus_file race), 11 low severity.",
+      "The ddg_utils.py thread-safety bug (NEW-PROTO-007) is the most impactful new finding since method_hybrid.py runs DDG searches in parallel via ThreadPoolExecutor.",
+      "No critical or high-severity bugs remain in the prototype modules."
+    ]
+  }
+}

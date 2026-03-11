@@ -1,0 +1,829 @@
+{
+  "metadata": {
+    "team": "TT-B2",
+    "task": "mass-documentation",
+    "date": "2026-03-11",
+    "description": "Comprehensive infrastructure documentation for the Claude Agent Repository, covering all systems, tools, SOPs, and workflows."
+  },
+
+  "documentation_gaps": [
+    {
+      "area": "Coordination Tools (multi_team_runner.py, think_tank.py, dashboard.py, bus_cli.py)",
+      "missing": "These 4 production tools (created by TEAM-0022) are not registered in storage/scripts/index.json. No SCR-IDs assigned.",
+      "priority": "high"
+    },
+    {
+      "area": "Coordinator Hub (coordinator_hub.py)",
+      "missing": "Created by TEAM-0025 (607 lines), not registered in any index. No SOP exists for it despite SOPs existing for help_protocol, direct_channels, and work_stealing.",
+      "priority": "high"
+    },
+    {
+      "area": "Missing KB entries: KB-0011",
+      "missing": "KB-0011 does not exist in the entries directory. The index skips from KB-0010 to KB-0012. No team log for TEAM-0011 either.",
+      "priority": "medium"
+    },
+    {
+      "area": "Missing team session logs",
+      "missing": "TEAM-0015, TEAM-0016, TEAM-0017 have team logs in teams/ root but not in teams/sessions/. TEAM-0011 has no log at all. TEAM-0020 through TEAM-0025 logs exist in sessions/ but some may be incomplete.",
+      "priority": "medium"
+    },
+    {
+      "area": "Prototype A/B source code documentation",
+      "missing": "No dedicated documentation file for prototype/agent_comm/ (Proto A) or prototype/agent_comm_b/ (Proto B, archived). Architecture is documented in KB entries but no standalone user guide exists.",
+      "priority": "medium"
+    },
+    {
+      "area": "Visualization scripts (viz_*.js)",
+      "missing": "Three visualization scripts (viz_team_hierarchy.js, viz_data_flow.js, viz_kb_graph.js) have no documentation, no index registration, and no usage instructions.",
+      "priority": "low"
+    },
+    {
+      "area": "Market Research operational guides",
+      "missing": "market-research/methods/ has technique indexes but no operational SOP for how to conduct market research using the system. picks/index.json shows 0 picks -- no guide on the workflow.",
+      "priority": "low"
+    },
+    {
+      "area": "Data gathering methods index completeness",
+      "missing": "storage/scripts/data-gathering/methods/index.json may be out of sync with actual method files. benchmark_runner.py in data-gathering/ root vs methods/ subdirectory creates confusion.",
+      "priority": "medium"
+    },
+    {
+      "area": "End-to-end deployment guide",
+      "missing": "No single document describes how to set up a fresh environment, install dependencies, and run a multi-team operation from scratch.",
+      "priority": "high"
+    },
+    {
+      "area": "Error handling and recovery procedures",
+      "missing": "KB-0017 identifies 26 failure modes but no runbook-style recovery procedure document exists. SOPs cover normal operations but not failure recovery.",
+      "priority": "medium"
+    }
+  ],
+
+  "system_documentation": {
+    "architecture_overview": {
+      "description": "The Claude Agent Repository is a multi-agent AI coordination platform where teams of AI agents collaborate on research, coding, analysis, and data gathering tasks. It uses a file-based architecture with JSON/JSONL for communication and SQLite for shared state.",
+      "directory_structure": {
+        "knowledge-base/": "Shared knowledge entries in Markdown with YAML frontmatter. 24 entries (KB-0001 through KB-0025, excluding KB-0011). Index at knowledge-base/index.json.",
+        "teams/": "Team session logs documenting what each team accomplished. 22 sessions logged. Template at teams/TEAM_LOG_TEMPLATE.md.",
+        "storage/scripts/": "28 reusable scripts (25 Python, 3 Go). Index at storage/scripts/index.json. Includes data-gathering methods, validation tools, search tools, and Go compiled binaries.",
+        "storage/api-tools/": "API tool definitions. Currently 1 tool (Sonnet Research API). Index at storage/api-tools/index.json.",
+        "storage/sources/": "35 curated data sources across 7 categories (financial, news, scientific, government, geospatial, social-media, general). Index at storage/sources/index.json.",
+        "storage/coordination/": "Multi-agent coordination infrastructure including JSONL message bus, SQLite shared state, coordination modules, tests, stress tests, SOPs, and team outputs.",
+        "market-research/": "Stock picking methods and performance tracking. Contains AI quant techniques index with 8 categories and 221 techniques. No active picks yet.",
+        ".claude/": "Claude Code configuration and hooks."
+      },
+      "key_design_principles": [
+        "Every AI team builds on the knowledge of the last team (Prime Directive)",
+        "Flat JSON indexes scale to ~1000 entries before needing migration to SQLite",
+        "Proto A (JSONL + SQLite WAL) is the production communication system",
+        "All teams launch simultaneously unless a hard data dependency exists (SOP-011)",
+        "BEGIN IMMEDIATE is the universal concurrency primitive for SQLite coordination",
+        "Bus messages must stay under 4096 bytes for POSIX atomic write guarantees"
+      ],
+      "evolution_timeline": [
+        "TEAM-0001: Storage system stress testing and validation (16 agents)",
+        "TEAM-0002: Sonnet Research API built (7 modules)",
+        "TEAM-0003: Multi-team competitive research on AI quant trading (5 teams, 20+ agents)",
+        "TEAM-0004/0005: Data gathering methods built and improved (7 methods, 2 iterations)",
+        "TEAM-0006/0007: Archive tools and configuration testing (3 tools, 4 configs tested)",
+        "TEAM-0008: Storage methods research + Go compiled tools (fast_search, fast_validate, fast_cache)",
+        "TEAM-0009: 20-agent coordinated operation with coordinator pattern",
+        "TEAM-0010/0012/0013: Public API research (35 sources catalogued)",
+        "TEAM-0014: API tool development (6 new data gathering methods)",
+        "TEAM-0015/0016/0017: Inter-agent communication research (JSONL bus + SQLite WAL)",
+        "TEAM-0018: Dual prototype build and testing (Proto A vs Proto B, 113 tests)",
+        "TEAM-0019: Architecture and integration analysis",
+        "TEAM-0020: Live prototype testing with benchmarks",
+        "TEAM-0021: Proto A marked production, Proto B archived",
+        "TEAM-0022: First production deployment (18 agents, 6 teams)",
+        "TEAM-0023: Dynamic coordination features (help protocol, direct channels, work stealing)",
+        "TEAM-0024: Stress testing (96 tests), 10 SOPs, efficiency guide",
+        "TEAM-0025: Bug analysis (41 bugs), coordinator hub, 3 more SOPs"
+      ]
+    },
+
+    "coordination_system": {
+      "overview": "The coordination system enables multiple AI agent processes to communicate and share state in real-time. It uses two layers: a JSONL append-only message bus for ephemeral communication and a SQLite WAL database for persistent shared state.",
+      "communication_layer": {
+        "technology": "JSONL append-only files with POSIX O_APPEND atomic writes",
+        "location": "storage/coordination/bus/*.jsonl",
+        "message_limit": "4096 bytes per message (POSIX atomic write guarantee on Linux)",
+        "message_schema": {
+          "required_fields": ["id", "type", "channel", "team", "agent_id", "ts", "body"],
+          "optional_fields": ["ttl"],
+          "valid_types": ["info", "blocker", "phase-signal", "heartbeat", "request", "response"],
+          "default_ttl": "3600 seconds"
+        },
+        "channels": {
+          "global.jsonl": "System-wide announcements and status updates",
+          "direct-{team_a}-{team_b}.jsonl": "Peer-to-peer communication between two teams",
+          "topic-{name}.jsonl": "Multi-team discussion channels on specific topics"
+        }
+      },
+      "state_layer": {
+        "technology": "SQLite in WAL mode with BEGIN IMMEDIATE transactions",
+        "location": "storage/coordination/db/state.db",
+        "concurrency": "Multiple readers + single writer. Writers never block readers. SQLITE_BUSY handled with retry_on_busy decorator (exponential backoff, 5 retries, busy_timeout=30000ms).",
+        "key_tables": [
+          "agents - Agent registration and heartbeats",
+          "rate_limits / rate_limit_config - API rate limiting coordination",
+          "phase_signals - Phase transition signaling",
+          "messages - Persistent message store",
+          "team_findings - Shared findings database",
+          "think_tank - Think tank proposals and convergence",
+          "work_items - Work tracking for help protocol",
+          "help_requests - Help request/offer/fulfill flow",
+          "team_capabilities - Capability registration for matching",
+          "team_status - Team status tracking",
+          "channels - Named communication channels",
+          "presence - Team availability tracking",
+          "progress - Progress broadcasting",
+          "work_queue - Shared work stealing queue",
+          "pipelines / pipeline_stages - DAG pipeline management",
+          "scratchpad - Namespaced key-value store with TTL",
+          "runner_state - Multi-team runner state",
+          "agent_status - Hub-and-spoke agent reporting",
+          "coordinator_instructions - Hub-and-spoke coordinator commands"
+        ]
+      },
+      "coordination_modules": {
+        "help_protocol.py": {
+          "lines": 698,
+          "class": "HelpProtocol",
+          "purpose": "Manages team help requests, idle detection, and automatic work assignment",
+          "key_operations": ["register_capabilities", "update_status", "add_work_item", "request_help", "offer_help", "fulfill_help", "auto_assign_idle_teams", "get_idle_teams", "get_open_help_requests"],
+          "sop": "SOP-001"
+        },
+        "direct_channels.py": {
+          "lines": 589,
+          "class": "DirectChannels",
+          "purpose": "Named channels (direct/topic/broadcast), presence tracking, progress broadcasting with bottleneck detection",
+          "key_operations": ["create_direct_channel", "send_direct", "read_direct", "create_topic_channel", "set_presence", "update_progress", "get_slowest_team", "get_teams_below_progress", "get_available_teams"],
+          "sop": "SOP-002"
+        },
+        "work_stealing.py": {
+          "lines": 677,
+          "class": "WorkStealing, PipelineManager, Scratchpad",
+          "purpose": "Shared work queue with atomic steal, DAG pipeline management, namespaced key-value store with TTL",
+          "key_operations": ["enqueue_work", "steal_work", "complete_work", "create_pipeline", "complete_stage", "trigger_downstream", "get_ready_stages", "scratchpad.write", "scratchpad.read"],
+          "sop": "SOP-003"
+        },
+        "coordinator_hub.py": {
+          "lines": 607,
+          "class": "AgentReporter, CoordinatorDashboard",
+          "purpose": "Hub-and-spoke architecture for real-time agent monitoring with status reporting and coordinator instructions",
+          "key_operations": ["AgentReporter.register", "AgentReporter.update_status", "AgentReporter.report_error", "AgentReporter.poll_instructions", "CoordinatorDashboard.get_all_agents", "CoordinatorDashboard.get_blocked_agents", "CoordinatorDashboard.send_instruction"],
+          "sop": "MISSING - needs SOP-014"
+        }
+      },
+      "production_tools": {
+        "bus_cli.py": {
+          "purpose": "CLI wrapper for all Proto A bus operations. Decouples agents from Python import paths.",
+          "commands": {
+            "write": "bus_cli.py write <channel> <agent_id> <team> <msg_type> <body_json>",
+            "read": "bus_cli.py read <channel> [--since <offset>]",
+            "init": "bus_cli.py init <db_path>",
+            "register": "bus_cli.py register <agent_id> <team> <role>",
+            "heartbeat": "bus_cli.py heartbeat <db_path> <agent_id>",
+            "status": "bus_cli.py status",
+            "help-request": "bus_cli.py help-request <team> <agent> <description> [--capabilities cap1,cap2] [--priority high]",
+            "help-offer": "bus_cli.py help-offer <team> <agent> <request_id>",
+            "status-update": "bus_cli.py status-update <team> <agent> <status> <progress_pct> [--task 'current task']",
+            "work-add": "bus_cli.py work-add <team> <agent> <title> [--description '...'] [--priority medium] [--est-minutes 10]",
+            "idle-teams": "bus_cli.py idle-teams",
+            "help-needed": "bus_cli.py help-needed"
+          },
+          "note": "Not registered in scripts/index.json"
+        },
+        "multi_team_runner.py": {
+          "purpose": "Production multi-team launcher with config file support",
+          "usage": "python multi_team_runner.py --config <path> | --status | --shutdown | --teams N --agents-per-team N [--foreground]",
+          "note": "Not registered in scripts/index.json"
+        },
+        "think_tank.py": {
+          "purpose": "Cross-team findings convergence engine. Deduplicates findings, categorizes, and generates roadmaps.",
+          "usage": "python think_tank.py [--output PATH] [--summary] [--category CAT] [--no-write]",
+          "note": "Not registered in scripts/index.json"
+        },
+        "dashboard.py": {
+          "purpose": "Real-time system status dashboard showing agents, bus activity, and findings",
+          "usage": "python dashboard.py [--watch] [--interval N] [--agents] [--bus] [--findings] [--json]",
+          "note": "Not registered in scripts/index.json"
+        }
+      },
+      "hub_and_spoke": {
+        "description": "Added by TEAM-0025. A coordinator-mediated architecture where agents report status to a central hub and receive instructions. Agents cannot see each other directly -- the coordinator mediates all cross-agent communication.",
+        "agent_statuses": ["initializing", "working", "blocked", "complete", "error"],
+        "instruction_types": ["redirect", "pause", "priority_change"],
+        "implementation": "coordinator_hub.py with AgentReporter and CoordinatorDashboard classes"
+      }
+    },
+
+    "prototype_systems": {
+      "overview": "Two competing prototypes were built and tested for inter-agent communication. Proto A was selected for production; Proto B was archived.",
+      "proto_a": {
+        "name": "JSONL + SQLite WAL",
+        "status": "PRODUCTION (marked by TEAM-0021)",
+        "architecture": "JSONL append-only files for message bus + SQLite WAL for shared state",
+        "lines_of_code": 1437,
+        "strengths": [
+          "More correct out-of-the-box (0 new bugs in deep stress testing)",
+          "SQLite WAL auto-recovery from crashes",
+          "BEGIN IMMEDIATE provides robust transaction isolation",
+          "Unlimited agent count",
+          "Communication overhead <1% across all scenarios",
+          "16.7% more data points collected vs baseline"
+        ],
+        "test_results": "113/113 tests passed + 96/96 stress tests + 36 benchmark runs",
+        "known_bugs": "41 bugs identified by TEAM-0025 think tanks across help_protocol (14), direct_channels (14), work_stealing (13). 8 critical. Fix proposals documented."
+      },
+      "proto_b": {
+        "name": "Named pipes (FIFOs) + mmap",
+        "status": "ARCHIVED",
+        "architecture": "Named pipes with spillover files for messaging + mmap'd fixed-size structs for shared state",
+        "lines_of_code": 1855,
+        "limitations": [
+          "7 integration bugs found (vs 3 for Proto A)",
+          "Limited to 32 agents (fixed mmap slots)",
+          "No journal for crash recovery",
+          "fcntl.flock ineffective for threads"
+        ],
+        "archival_reason": "Proto A more correct, better tested, simpler, more extensible. Proto B reserved for future 50+ agent optimization if needed."
+      }
+    },
+
+    "data_gathering": {
+      "overview": "A suite of 13 data gathering methods (SCR-0006 through SCR-0028) that collect information from diverse sources. Built through 2 iterations with benchmarking.",
+      "methods": {
+        "method_websearch.py": {
+          "id": "SCR-0006",
+          "source": "DuckDuckGo HTML search",
+          "description": "Multi-query web search with 3-5 query variants and URL deduplication",
+          "status": "functional"
+        },
+        "method_wikipedia.py": {
+          "id": "SCR-0007",
+          "source": "Wikipedia API",
+          "description": "Deep extraction with summaries, sections, references, categories, See Also links",
+          "status": "functional (was broken in iteration 1, fixed)"
+        },
+        "method_arxiv.py": {
+          "id": "SCR-0008",
+          "source": "arXiv API",
+          "description": "Academic paper search with Atom XML parsing",
+          "status": "functional (fixed HTTPS, error handling in iteration 2)"
+        },
+        "method_hybrid.py": {
+          "id": "SCR-0009",
+          "source": "Multi-source aggregation",
+          "description": "Combines all sources with parallel execution, TF-IDF dedup, credibility weighting, corroboration scoring",
+          "status": "functional - recommended default method",
+          "performance": "46 data points, quality score 92, 5.1s"
+        },
+        "method_iterative.py": {
+          "id": "SCR-0010",
+          "source": "DuckDuckGo (iterative)",
+          "description": "3 rounds of progressively deeper queries, each refining based on previous results",
+          "status": "functional"
+        },
+        "method_openalex.py": {
+          "id": "SCR-0023",
+          "source": "OpenAlex API (250M+ works)",
+          "description": "Academic search with citation metadata, DOIs, open access status. Best free academic API.",
+          "status": "functional",
+          "performance": "0.5s, 15 results typical"
+        },
+        "method_hackernews.py": {
+          "id": "SCR-0024",
+          "source": "Hacker News (Algolia + Firebase)",
+          "description": "Tech news search with points, comments, deduplication across both sources",
+          "status": "functional"
+        },
+        "method_guardian.py": {
+          "id": "SCR-0025",
+          "source": "The Guardian Open Platform API",
+          "description": "News search with headlines, body text, sections. DuckDuckGo fallback.",
+          "status": "functional"
+        },
+        "method_semantic_scholar.py": {
+          "id": "SCR-0026",
+          "source": "Semantic Scholar Academic Graph API",
+          "description": "Paper search with TLDRs, citation counts, fields of study, open access PDFs. 1 req/sec.",
+          "status": "functional"
+        },
+        "method_wikidata.py": {
+          "id": "SCR-0027",
+          "source": "Wikidata knowledge graph",
+          "description": "Entity search with labels, descriptions, properties, Wikipedia sitelinks",
+          "status": "functional (may return 403 from some networks)"
+        },
+        "method_github.py": {
+          "id": "SCR-0028",
+          "source": "GitHub REST API",
+          "description": "Repository and code search with stars, languages, topics, licenses",
+          "status": "functional"
+        }
+      },
+      "support_tools": {
+        "ddg_utils.py": {
+          "id": "SCR-0021",
+          "purpose": "Shared DuckDuckGo search utilities with rate limiting (0.5s between requests)"
+        },
+        "request_cache.py": {
+          "id": "SCR-0022",
+          "purpose": "File-based HTTP response cache with SHA-256 keys, base64 storage, configurable TTL (default 1 hour)"
+        },
+        "benchmark_runner.py": {
+          "id": "SCR-0011",
+          "purpose": "Benchmark harness for all data gathering methods. Times execution and calculates quality scores.",
+          "usage": "python benchmark_runner.py (runs all methods against test query)"
+        }
+      },
+      "benchmark_results_location": "storage/scripts/data-gathering/benchmarks/"
+    },
+
+    "tool_reference": {
+      "validation_tools": {
+        "validate-storage.py": {
+          "id": "SCR-0001",
+          "purpose": "Comprehensive 10-check validation suite for the storage system",
+          "usage": "python3 storage/scripts/validate-storage.py",
+          "args": "No arguments. Runs all checks and prints report.",
+          "verified": true,
+          "notes": "Currently reports 322 errors due to missing optional fields in sources and api-tools entries. These are field completeness issues, not corruption."
+        },
+        "test-edge-cases.py": {
+          "id": "SCR-0002",
+          "purpose": "35-test edge case and boundary testing suite",
+          "usage": "python3 storage/scripts/test-edge-cases.py",
+          "verified": false,
+          "notes": "No --help flag. Run directly."
+        },
+        "repair-storage.py": {
+          "id": "SCR-0003",
+          "purpose": "Automated repair for common storage issues",
+          "usage": "python3 storage/scripts/repair-storage.py [--dry-run]",
+          "verified": true,
+          "notes": "WARNING: Without --dry-run, modifies files immediately. Always use --dry-run first."
+        },
+        "kb_validator.py": {
+          "id": "SCR-0012",
+          "purpose": "Validates KB entries and index.json consistency",
+          "usage": "python3 storage/scripts/kb_validator.py [--kb-dir PATH]",
+          "verified": true
+        },
+        "index_rebuilder.py": {
+          "id": "SCR-0013",
+          "purpose": "Auto-rebuilds index.json from directory scans",
+          "usage": "python3 storage/scripts/index_rebuilder.py [--dry-run | --fix]",
+          "verified": true,
+          "notes": "--dry-run is the default. Use --fix to actually write changes."
+        },
+        "cross_ref_checker.py": {
+          "id": "SCR-0014",
+          "purpose": "Validates all cross-references, detects cycles, finds orphans",
+          "usage": "python3 storage/scripts/cross_ref_checker.py",
+          "verified": true,
+          "notes": "Prints dependency tree and structured report. No arguments needed."
+        },
+        "fast_validate": {
+          "id": "SCR-0016",
+          "purpose": "High-speed Go repository structure validator (1.4ms)",
+          "usage": "storage/scripts/fast_validate/fast_validate [--root DIR] [--verbose]",
+          "verified": true,
+          "notes": "143x faster than Python equivalent. Good for pre-commit hooks."
+        }
+      },
+      "search_tools": {
+        "kb_search.py": {
+          "id": "SCR-0018",
+          "purpose": "Full-text TF-IDF search across KB entries, team logs, and scripts",
+          "usage": "python3 storage/scripts/kb_search.py <query> [--tags TAGS] [--category CAT] [--type kb,team,script] [--top N] [--json]",
+          "verified": true
+        },
+        "search-storage.py": {
+          "id": "not registered",
+          "purpose": "Unified cross-subsystem search (scripts, tools, sources)",
+          "usage": "python3 storage/scripts/search-storage.py -k KEYWORD [-c CATEGORY] [-t TEAM] [--after DATE] [--before DATE] [-d DATA_TYPE] [-s {scripts,tools,sources}] [--demo]",
+          "verified": true
+        },
+        "fast_search": {
+          "id": "SCR-0015",
+          "purpose": "High-speed Go full-text search with inverted index (3.5ms)",
+          "usage": "storage/scripts/fast_search/fast_search [--root DIR] [--mode {exact,and,phrase}] [--limit N] <query>",
+          "verified": true,
+          "notes": "28x faster than Python kb_search.py. Recommended for interactive use."
+        }
+      },
+      "analysis_tools": {
+        "grade_research.py": {
+          "id": "SCR-0004",
+          "purpose": "Evaluates research JSON quality across 5 dimensions",
+          "usage": "python3 storage/scripts/grade_research.py <research_json_path> [--output <output_path>]",
+          "verified": true
+        },
+        "merge_research.py": {
+          "id": "SCR-0005",
+          "purpose": "Merges multiple team research JSON files with deduplication",
+          "usage": "python3 storage/scripts/merge_research.py <file1.json> <file2.json> [file3.json ...] [--output <path>]",
+          "verified": true
+        }
+      },
+      "monitoring_tools": {
+        "handoff_tracker.py": {
+          "id": "SCR-0019",
+          "purpose": "Extracts and tracks action items from team session logs",
+          "usage": "python3 storage/scripts/handoff_tracker.py [--unresolved-only] [--json]",
+          "verified": true,
+          "notes": "Run at start of each new team session to see what is still open. ~30% of recommendations are never addressed."
+        },
+        "staleness_detector.py": {
+          "id": "SCR-0020",
+          "purpose": "6-check repository health scoring (stale statuses, regressions, broken refs, etc.)",
+          "usage": "python3 storage/scripts/staleness_detector.py [--verbose] [--json]",
+          "verified": true
+        }
+      },
+      "caching_tools": {
+        "fast_cache": {
+          "id": "SCR-0017",
+          "purpose": "High-speed Go file-based key-value cache with TTL",
+          "usage": "storage/scripts/fast_cache/fast_cache [--dir PATH] <command> [args]",
+          "commands": {
+            "get": "fast_cache get <url>",
+            "set": "fast_cache set <url> <value> [--ttl <secs>]",
+            "set_file": "fast_cache set <url> --file <path> [--ttl <secs>]",
+            "delete": "fast_cache delete <url>",
+            "stats": "fast_cache stats",
+            "gc": "fast_cache gc",
+            "keys": "fast_cache keys"
+          },
+          "verified": true
+        }
+      },
+      "visualization_tools": {
+        "viz_team_hierarchy.js": {
+          "id": "not registered",
+          "purpose": "Visualize team hierarchy",
+          "status": "undocumented"
+        },
+        "viz_data_flow.js": {
+          "id": "not registered",
+          "purpose": "Visualize data flow",
+          "status": "undocumented"
+        },
+        "viz_kb_graph.js": {
+          "id": "not registered",
+          "purpose": "Visualize knowledge base dependency graph",
+          "status": "undocumented"
+        }
+      }
+    },
+
+    "sop_reference": {
+      "overview": "13 SOPs exist covering all coordination tools and operational procedures. SOPs are stored in storage/coordination/sops/ as JSON files.",
+      "sops": {
+        "SOP-001": {
+          "title": "Help Protocol Operating Procedure",
+          "tool": "help_protocol.py",
+          "steps": 9,
+          "file": "storage/coordination/sops/tool_sops.json"
+        },
+        "SOP-002": {
+          "title": "Direct Channels Operating Procedure",
+          "tool": "direct_channels.py",
+          "steps": 9,
+          "file": "storage/coordination/sops/tool_sops.json"
+        },
+        "SOP-003": {
+          "title": "Work Stealing Operating Procedure",
+          "tool": "work_stealing.py (WorkStealing + PipelineManager + Scratchpad)",
+          "file": "storage/coordination/sops/tool_sops.json"
+        },
+        "SOP-004": {
+          "title": "Bus CLI Operating Procedure",
+          "tool": "bus_cli.py",
+          "file": "storage/coordination/sops/tool_sops.json"
+        },
+        "SOP-005": {
+          "title": "Dashboard Operating Procedure",
+          "tool": "dashboard.py",
+          "file": "storage/coordination/sops/tool_sops.json"
+        },
+        "SOP-006": {
+          "title": "Think Tank Convergence Operating Procedure",
+          "tool": "think_tank.py",
+          "file": "storage/coordination/sops/tool_sops.json"
+        },
+        "SOP-007": {
+          "title": "Multi-Team Runner Operating Procedure",
+          "tool": "multi_team_runner.py",
+          "file": "storage/coordination/sops/tool_sops.json"
+        },
+        "SOP-008": {
+          "title": "Data Gathering Methods Operating Procedure",
+          "tool": "data-gathering/methods/",
+          "file": "storage/coordination/sops/tool_sops.json"
+        },
+        "SOP-009": {
+          "title": "KB Validation and Maintenance Operating Procedure",
+          "tool": "kb_validator.py, index_rebuilder.py, cross_ref_checker.py",
+          "file": "storage/coordination/sops/tool_sops.json"
+        },
+        "SOP-010": {
+          "title": "New Team Onboarding",
+          "description": "11-step guide for new AI teams joining the system",
+          "file": "storage/coordination/sops/tool_sops.json"
+        },
+        "SOP-011": {
+          "title": "Central Commander Launch Protocol",
+          "description": "Ensures coordinator maximizes parallelism. ALL teams launch simultaneously unless hard data dependency. Includes Hard Dependency Test, 10 Anti-Sequential Rules, decision trees.",
+          "file": "storage/coordination/sops/sop_011_central_commander_launch.json"
+        },
+        "SOP-012": {
+          "title": "Real-Time Monitoring and Intervention Protocol",
+          "description": "5-checkpoint polling strategy, 7 intervention triggers with severity ratings, 6 intervention actions with escalation path, completion handling procedures.",
+          "file": "storage/coordination/sops/sop_012_monitoring_intervention.json"
+        },
+        "SOP-013": {
+          "title": "Agent Prompt Engineering and Context Distribution",
+          "description": "6-part canonical prompt template, context distribution rules, pre-built templates for 5 agent types, 12-point QA checklist, 8 common mistakes documented.",
+          "file": "storage/coordination/sops/sop_013_prompt_engineering.json"
+        }
+      },
+      "supplementary_guides": {
+        "efficiency_guide.json": {
+          "description": "9 efficiency patterns and anti-patterns for multi-team coordination",
+          "patterns": ["EFF-001: Idle team reassignment", "EFF-002: Work decomposition for parallelism", "EFF-003: Pipeline chaining", "EFF-004: Scratchpad for intermediate results", "EFF-005: Progress broadcasting", "EFF-006: CLI-first agent communication", "EFF-007: Capability-based team matching", "EFF-008: Findings-first output strategy", "EFF-009+: Additional patterns"],
+          "file": "storage/coordination/sops/efficiency_guide.json"
+        },
+        "future_team_data_strategy.json": {
+          "description": "Data storage strategy and knowledge transfer protocol. Defines 9 data categories with what/where/format/retention/naming/indexing for each.",
+          "categories": ["Knowledge Base Entries", "Team Session Logs", "Coordination State (SQLite)", "Bus Messages (JSONL)", "Team Output Files", "Scripts and Tools", "Think Tank Reports", "Data Sources", "Market Research"],
+          "file": "storage/coordination/sops/future_team_data_strategy.json"
+        }
+      }
+    },
+
+    "testing_guide": {
+      "overview": "The system has 289+ tests across unit tests, stress tests, and benchmarks.",
+      "test_suites": {
+        "coordination_unit_tests": {
+          "location": "storage/coordination/tests/",
+          "files": [
+            "test_help_protocol.py (16 tests)",
+            "test_direct_channels.py (33 tests)",
+            "test_work_stealing.py (31 tests)",
+            "test_coordinator_hub.py"
+          ],
+          "total": "80+ tests",
+          "run_command": "cd /home/user/Claude && python3 -m pytest storage/coordination/tests/ -v",
+          "duration": "~2.8 seconds"
+        },
+        "coordination_stress_tests": {
+          "location": "storage/coordination/stress-tests/",
+          "files": [
+            "test_stress_help_protocol.py (30 tests)",
+            "test_stress_direct_channels.py (28 tests)",
+            "test_stress_work_stealing.py (38 tests)"
+          ],
+          "total": "96 tests",
+          "run_command": "cd /home/user/Claude && python3 -m pytest storage/coordination/stress-tests/ -v",
+          "duration": "~18.78 seconds",
+          "covers": "Concurrent offers, volume limits, race conditions, unicode, zombies, thundering herd, pipeline DAGs, scratchpad TTL, channel name safety, message boundaries"
+        },
+        "prototype_tests": {
+          "total": "113 tests (28 regression + 23 deep stress + 62 Proto B functional)",
+          "location": "prototype/ directory (if present)"
+        },
+        "storage_tests": {
+          "location": "storage/scripts/",
+          "files": [
+            "test-edge-cases.py (35 tests)",
+            "test-cross-references.py"
+          ]
+        },
+        "benchmarks": {
+          "data_gathering": "storage/scripts/data-gathering/benchmarks/ (36+ benchmark runs)",
+          "stress_reads": "storage/scripts/stress-test-reads-*.py (ID, category, cross-system lookups)",
+          "stress_writes": "storage/scripts/stress-test-writes.py"
+        }
+      },
+      "running_all_tests": "cd /home/user/Claude && python3 -m pytest storage/coordination/tests/ storage/coordination/stress-tests/ -v",
+      "pre_commit_checklist": [
+        "Run fast_validate (1.4ms) for structural validation",
+        "Run kb_validator.py for KB consistency",
+        "Run cross_ref_checker.py for reference integrity",
+        "Run pytest on coordination tests (2.8s for unit tests)"
+      ]
+    },
+
+    "operations_guide": {
+      "launching_multi_team_operation": {
+        "step_1": "Read CLAUDE.md and recent team session logs",
+        "step_2": "Read SOP-010 (New Team Onboarding) and SOP-011 (Central Commander Launch Protocol)",
+        "step_3": "Run handoff_tracker.py --unresolved-only to see open action items",
+        "step_4": "Decompose the task into parallel work units using the Hard Dependency Test from SOP-011",
+        "step_5": "Assign team types (think tank, coding, research, SOP) using SOP-013 prompt templates",
+        "step_6": "Initialize coordination: python bus_cli.py init storage/coordination/db/state.db",
+        "step_7": "Launch ALL teams simultaneously in a single message (SOP-011 core principle)",
+        "step_8": "Monitor using SOP-012: 5 checkpoints (post-launch, early, mid, completion, final)",
+        "step_9": "Run think_tank.py --summary to converge findings",
+        "step_10": "Create KB entries for validated insights, team session log, update indexes"
+      },
+      "optimal_team_configurations": {
+        "research": "3 leads + 2 subs each = 9 agents (Config 3, best efficiency ratio from KB-0007)",
+        "coding": "2-3 agents per coding team",
+        "think_tank": "3-4 agents per think tank",
+        "recommended_total": "5-7 teams, 18-20 agents total for complex operations"
+      },
+      "key_operational_patterns": [
+        "Use bus_cli.py for all inter-agent communication (CLI-first, EFF-006)",
+        "Register capabilities on startup for auto-assignment (EFF-007)",
+        "Post findings incrementally, not at end (EFF-008)",
+        "Use Scratchpad for large intermediate data, bus for notifications (EFF-004)",
+        "Update progress after each significant step for bottleneck detection (EFF-005)",
+        "Use PipelineManager for DAG dependencies instead of manual coordination (EFF-003)"
+      ],
+      "post_operation_checklist": [
+        "Run think_tank.py to generate convergence report",
+        "Create KB entry for significant findings (use knowledge-base/TEMPLATE.md)",
+        "Write team session log (use teams/TEAM_LOG_TEMPLATE.md)",
+        "Update knowledge-base/index.json with new KB entry",
+        "Run kb_validator.py and cross_ref_checker.py to verify consistency",
+        "Run index_rebuilder.py --fix if indexes are out of sync",
+        "Register any new scripts in storage/scripts/index.json"
+      ]
+    }
+  },
+
+  "undocumented_tools": [
+    {
+      "tool": "bus_cli.py",
+      "location": "storage/coordination/bus_cli.py",
+      "status": "No SOP exists (though usage is documented in SOP-004 within tool_sops.json). Not in scripts/index.json.",
+      "verified_working": true
+    },
+    {
+      "tool": "multi_team_runner.py",
+      "location": "storage/coordination/multi_team_runner.py",
+      "status": "Has SOP-007 in tool_sops.json. Not in scripts/index.json.",
+      "verified_working": true
+    },
+    {
+      "tool": "think_tank.py",
+      "location": "storage/coordination/think_tank.py",
+      "status": "Has SOP-006 in tool_sops.json. Not in scripts/index.json.",
+      "verified_working": true
+    },
+    {
+      "tool": "dashboard.py",
+      "location": "storage/coordination/dashboard.py",
+      "status": "Has SOP-005 in tool_sops.json. Not in scripts/index.json.",
+      "verified_working": true
+    },
+    {
+      "tool": "coordinator_hub.py",
+      "location": "storage/coordination/coordinator_hub.py",
+      "status": "No SOP. Not in any index. Created by TEAM-0025, 607 lines. Has AgentReporter and CoordinatorDashboard classes.",
+      "verified_working": true
+    },
+    {
+      "tool": "viz_team_hierarchy.js",
+      "location": "storage/scripts/viz_team_hierarchy.js",
+      "status": "No documentation, no index registration, no usage instructions",
+      "verified_working": false
+    },
+    {
+      "tool": "viz_data_flow.js",
+      "location": "storage/scripts/viz_data_flow.js",
+      "status": "No documentation, no index registration, no usage instructions",
+      "verified_working": false
+    },
+    {
+      "tool": "viz_kb_graph.js",
+      "location": "storage/scripts/viz_kb_graph.js",
+      "status": "No documentation, no index registration, no usage instructions",
+      "verified_working": false
+    },
+    {
+      "tool": "build-cross-ref-index.py",
+      "location": "storage/scripts/build-cross-ref-index.py",
+      "status": "Not in scripts/index.json",
+      "verified_working": false
+    },
+    {
+      "tool": "search-storage.py",
+      "location": "storage/scripts/search-storage.py",
+      "status": "Not in scripts/index.json. Has --help. Works.",
+      "verified_working": true
+    }
+  ],
+
+  "outdated_docs": [
+    {
+      "doc": "knowledge-base/index.json categories field",
+      "issue": "Categories map does not include KB-0022, KB-0023, KB-0024, KB-0025 in integration/testing/debugging. entry_count says 24 but 24 entries exist (KB-0011 is missing, so entries are KB-0001 through KB-0025 minus KB-0011 = 24 entries, which is correct).",
+      "severity": "low"
+    },
+    {
+      "doc": "storage/api-tools/index.json",
+      "issue": "Only 1 tool registered (Sonnet Research API). The 4 coordination tools (bus_cli, multi_team_runner, think_tank, dashboard) should arguably be registered here or in scripts/index.json.",
+      "severity": "medium"
+    },
+    {
+      "doc": "storage/sources/index.json SRC-0035",
+      "issue": "SRC-0035 in sources/index.json refers to Wikipedia REST, but KB-0010 refers to SRC-0035 as Hugging Face Hub. The sources index may have been overwritten/modified. Index shows 35 sources but SRC-0031 through SRC-0035 in the file may not match the KB-0010 references.",
+      "severity": "medium"
+    },
+    {
+      "doc": "storage/scripts/index.json",
+      "issue": "Missing entries for: search-storage.py, build-cross-ref-index.py, viz_*.js (3 files), stress-test scripts (6+ files), and all coordination tools. 28 scripts registered but ~40+ script files exist.",
+      "severity": "high"
+    },
+    {
+      "doc": "teams/sessions/index.json",
+      "issue": "Shows 22 sessions but some session logs from teams/ root (TEAM-0015.md, TEAM-0016.md, TEAM-0017.md, TEAM-0018.md, TEAM-0019.md) are not in teams/sessions/. Split location causes confusion.",
+      "severity": "medium"
+    },
+    {
+      "doc": "CLAUDE.md",
+      "issue": "Does not mention the coordination system, Proto A, SOPs, or the coordination directory structure. New teams reading only CLAUDE.md would miss the entire coordination infrastructure.",
+      "severity": "high"
+    }
+  ],
+
+  "new_sop_recommendations": [
+    {
+      "id": "SOP-014",
+      "title": "Coordinator Hub Operating Procedure",
+      "description": "Step-by-step guide for using coordinator_hub.py's AgentReporter and CoordinatorDashboard classes. Covers agent registration, status reporting, polling for instructions, and coordinator monitoring/intervention patterns.",
+      "priority": "high"
+    },
+    {
+      "id": "SOP-015",
+      "title": "Failure Recovery Runbook",
+      "description": "Operational procedures for recovering from the 26 failure modes identified in KB-0017. Covers SQLITE_BUSY cascades, coordinator crashes, bus file corruption, split-brain scenarios, and resource exhaustion. Step-by-step recovery for each failure mode.",
+      "priority": "high"
+    },
+    {
+      "id": "SOP-016",
+      "title": "Index Maintenance and Cleanup SOP",
+      "description": "Procedures for keeping all index.json files in sync, registering orphan scripts, cleaning up stress test artifacts, and running the full validation pipeline (validate-storage.py, kb_validator.py, cross_ref_checker.py, fast_validate).",
+      "priority": "medium"
+    },
+    {
+      "id": "SOP-017",
+      "title": "Data Gathering Operations SOP",
+      "description": "End-to-end guide for conducting data gathering operations: selecting methods, configuring caching, running benchmarks, handling API failures, and archiving results. Covers all 11 data gathering methods with decision tree for method selection.",
+      "priority": "medium"
+    },
+    {
+      "id": "SOP-018",
+      "title": "Market Research Operations SOP",
+      "description": "Guide for conducting market research using the system. Covers technique selection from the 8 categories, pick logging using market-research/picks/TEMPLATE.md, performance tracking, and integration with the Sonnet Research API.",
+      "priority": "low"
+    },
+    {
+      "id": "SOP-019",
+      "title": "Environment Setup and Fresh Deployment SOP",
+      "description": "Step-by-step guide for setting up a fresh Claude Agent Repository environment from scratch. Covers prerequisites (Python 3.11+, Go), directory initialization, coordination system setup, Go binary compilation, and verification checklist.",
+      "priority": "high"
+    },
+    {
+      "id": "SOP-020",
+      "title": "Bug Fix Workflow SOP",
+      "description": "Standard procedure for addressing the 41 identified bugs across help_protocol.py, direct_channels.py, and work_stealing.py. Covers prioritization (critical first), testing requirements, regression prevention, and documentation updates.",
+      "priority": "medium"
+    }
+  ],
+
+  "summary": {
+    "areas_documented": 8,
+    "gaps_found": 10,
+    "sops_recommended": 7,
+    "tools_verified": 16,
+    "tools_unverified": 4,
+    "undocumented_tools_found": 10,
+    "outdated_docs_found": 6,
+    "existing_sops": 13,
+    "total_kb_entries": 24,
+    "total_team_sessions": 22,
+    "total_registered_scripts": 28,
+    "total_script_files": "40+",
+    "total_data_sources": 35,
+    "total_tests": "289+",
+    "key_findings": [
+      "CLAUDE.md does not mention the coordination system -- highest priority documentation gap",
+      "4 production coordination tools (bus_cli, multi_team_runner, think_tank, dashboard) are not registered in any index",
+      "coordinator_hub.py (607 lines) has no SOP despite being a core infrastructure component",
+      "~12 script files exist on disk but are not registered in storage/scripts/index.json",
+      "Team session logs are split across teams/ root and teams/sessions/ causing confusion",
+      "All 16 verified tools have correct --help output and are functional",
+      "The testing infrastructure is comprehensive: 80 unit tests + 96 stress tests + 113 prototype tests + 35 edge case tests",
+      "The SOP system is mature (13 SOPs) but has gaps in failure recovery and environment setup",
+      "KB-0011 is missing entirely -- no entry, no team log, no explanation",
+      "41 bugs identified across coordination modules remain unfixed (documented in KB-0025)"
+    ]
+  }
+}

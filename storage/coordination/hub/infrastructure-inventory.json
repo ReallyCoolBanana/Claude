@@ -1,0 +1,1013 @@
+{
+  "metadata": {
+    "team": "TT-A2",
+    "task": "mass-inventory",
+    "date": "2026-03-11",
+    "description": "Comprehensive inventory of all tools, capabilities, APIs, data sources, and systems in the repository"
+  },
+  "inventory": {
+    "software_tools": [
+      {
+        "id": "SCR-0001",
+        "name": "validate-storage",
+        "location": "storage/scripts/validate-storage.py",
+        "language": "python",
+        "category": "utility",
+        "description": "Comprehensive validation tool for the storage system. Checks schema validation, referential integrity, file existence, orphan detection, ID format, date format, required fields, duplicates, version validation, and length limits.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0003"
+      },
+      {
+        "id": "SCR-0002",
+        "name": "test-edge-cases",
+        "location": "storage/scripts/test-edge-cases.py",
+        "language": "python",
+        "category": "utility",
+        "description": "Edge case and boundary testing suite (35 tests) for the storage system.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0003"
+      },
+      {
+        "id": "SCR-0003",
+        "name": "repair-storage",
+        "location": "storage/scripts/repair-storage.py",
+        "language": "python",
+        "category": "utility",
+        "description": "Automated repair tool for common storage system issues. Supports --dry-run mode.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0003"
+      },
+      {
+        "id": "SCR-0004",
+        "name": "grade-research",
+        "location": "storage/scripts/grade_research.py",
+        "language": "python",
+        "category": "analysis",
+        "description": "Evaluates research JSON quality across five dimensions: citation count/quality, coverage breadth, depth, and specificity.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0005"
+      },
+      {
+        "id": "SCR-0005",
+        "name": "merge-research",
+        "location": "storage/scripts/merge_research.py",
+        "language": "python",
+        "category": "analysis",
+        "description": "Merges multiple team research JSON files by topic category with deduplication.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0005"
+      },
+      {
+        "id": "SCR-0006",
+        "name": "data-gathering-websearch",
+        "location": "storage/scripts/data-gathering/methods/method_websearch.py",
+        "language": "python",
+        "category": "data-collection",
+        "description": "Multi-query web search via DuckDuckGo. Generates 3-5 query variants and deduplicates results.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0003"
+      },
+      {
+        "id": "SCR-0007",
+        "name": "data-gathering-wikipedia",
+        "location": "storage/scripts/data-gathering/methods/method_wikipedia.py",
+        "language": "python",
+        "category": "data-collection",
+        "description": "Wikipedia API deep extraction with DuckDuckGo fallback.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0003"
+      },
+      {
+        "id": "SCR-0008",
+        "name": "data-gathering-arxiv",
+        "location": "storage/scripts/data-gathering/methods/method_arxiv.py",
+        "language": "python",
+        "category": "data-collection",
+        "description": "arXiv academic paper search with DuckDuckGo fallback.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0003"
+      },
+      {
+        "id": "SCR-0009",
+        "name": "data-gathering-hybrid",
+        "location": "storage/scripts/data-gathering/methods/method_hybrid.py",
+        "language": "python",
+        "category": "data-collection",
+        "description": "Hybrid multi-source aggregation combining web search, Wikipedia, and arXiv.",
+        "dependencies": ["SCR-0006", "SCR-0007", "SCR-0008"],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0003"
+      },
+      {
+        "id": "SCR-0010",
+        "name": "data-gathering-iterative",
+        "location": "storage/scripts/data-gathering/methods/method_iterative.py",
+        "language": "python",
+        "category": "data-collection",
+        "description": "Iterative deepening search doing 3 rounds of progressively deeper DuckDuckGo queries.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0003"
+      },
+      {
+        "id": "SCR-0011",
+        "name": "data-gathering-benchmark",
+        "location": "storage/scripts/data-gathering/benchmark_runner.py",
+        "language": "python",
+        "category": "analysis",
+        "description": "Benchmark harness that runs all data gathering methods and calculates quality scores.",
+        "dependencies": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010"],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0003"
+      },
+      {
+        "id": "SCR-0012",
+        "name": "kb-validator",
+        "location": "storage/scripts/kb_validator.py",
+        "language": "python",
+        "category": "utility",
+        "description": "Validates knowledge base entries and index.json consistency.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0006"
+      },
+      {
+        "id": "SCR-0013",
+        "name": "index-rebuilder",
+        "location": "storage/scripts/index_rebuilder.py",
+        "language": "python",
+        "category": "utility",
+        "description": "Auto-generates index.json files by scanning KB entries and team sessions. Supports --dry-run and --fix.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0006"
+      },
+      {
+        "id": "SCR-0014",
+        "name": "cross-ref-checker",
+        "location": "storage/scripts/cross_ref_checker.py",
+        "language": "python",
+        "category": "utility",
+        "description": "Validates all cross-references across the repository. Detects cycles, orphans, and dangling entries.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0006"
+      },
+      {
+        "id": "SCR-0015",
+        "name": "fast-search",
+        "location": "storage/scripts/fast_search/main.go",
+        "language": "go",
+        "category": "utility",
+        "description": "High-speed full-text search index compiled in Go. Query time <5ms. Supports exact match, multi-word AND, and phrase search.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0008",
+        "compiled_binary": "storage/scripts/fast_search/fast_search"
+      },
+      {
+        "id": "SCR-0016",
+        "name": "fast-validate",
+        "location": "storage/scripts/fast_validate/main.go",
+        "language": "go",
+        "category": "utility",
+        "description": "High-speed repository structure validator compiled in Go. Completes in <2ms.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0008",
+        "compiled_binary": "storage/scripts/fast_validate/fast_validate"
+      },
+      {
+        "id": "SCR-0017",
+        "name": "fast-cache",
+        "location": "storage/scripts/fast_cache/main.go",
+        "language": "go",
+        "category": "utility",
+        "description": "High-speed file-based key-value cache for API responses. SHA-256 keys, TTL support, sub-millisecond cache hits.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0008",
+        "compiled_binary": "storage/scripts/fast_cache/fast_cache"
+      },
+      {
+        "id": "SCR-0018",
+        "name": "kb-search",
+        "location": "storage/scripts/kb_search.py",
+        "language": "python",
+        "category": "utility",
+        "description": "Full-text search across KB entries, team logs, and script metadata using TF-IDF ranking.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0008"
+      },
+      {
+        "id": "SCR-0019",
+        "name": "handoff-tracker",
+        "location": "storage/scripts/handoff_tracker.py",
+        "language": "python",
+        "category": "utility",
+        "description": "Parses Handoff Notes from team session logs and tracks action item resolution.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0008"
+      },
+      {
+        "id": "SCR-0020",
+        "name": "staleness-detector",
+        "location": "storage/scripts/staleness_detector.py",
+        "language": "python",
+        "category": "utility",
+        "description": "Repository health checker with 6 checks: stale statuses, regressions, unaddressed handoffs, broken references, index mismatches, orphan files.",
+        "dependencies": ["SCR-0012", "SCR-0014", "SCR-0019"],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0008"
+      },
+      {
+        "id": "SCR-0021",
+        "name": "ddg-utils",
+        "location": "storage/scripts/data-gathering/methods/ddg_utils.py",
+        "language": "python",
+        "category": "data-collection",
+        "description": "Shared DuckDuckGo search utilities with rate limiting (0.5s between requests).",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0007"
+      },
+      {
+        "id": "SCR-0022",
+        "name": "request-cache",
+        "location": "storage/scripts/data-gathering/methods/request_cache.py",
+        "language": "python",
+        "category": "data-collection",
+        "description": "File-based HTTP response cache with SHA-256 keys, base64 storage, configurable TTL.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0007"
+      },
+      {
+        "id": "SCR-0023",
+        "name": "data-gathering-openalex",
+        "location": "storage/scripts/data-gathering/methods/method_openalex.py",
+        "language": "python",
+        "category": "data-collection",
+        "description": "OpenAlex academic search via REST API. Searches 250M+ scholarly works.",
+        "dependencies": ["SCR-0022"],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0010"
+      },
+      {
+        "id": "SCR-0024",
+        "name": "data-gathering-hackernews",
+        "location": "storage/scripts/data-gathering/methods/method_hackernews.py",
+        "language": "python",
+        "category": "data-collection",
+        "description": "Hacker News search via Algolia API plus Firebase top stories.",
+        "dependencies": ["SCR-0022"],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0010"
+      },
+      {
+        "id": "SCR-0025",
+        "name": "data-gathering-guardian",
+        "location": "storage/scripts/data-gathering/methods/method_guardian.py",
+        "language": "python",
+        "category": "data-collection",
+        "description": "Guardian news search via Open Platform API with DuckDuckGo fallback.",
+        "dependencies": ["SCR-0021", "SCR-0022"],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0010"
+      },
+      {
+        "id": "SCR-0026",
+        "name": "data-gathering-semantic-scholar",
+        "location": "storage/scripts/data-gathering/methods/method_semantic_scholar.py",
+        "language": "python",
+        "category": "data-collection",
+        "description": "Semantic Scholar paper search via Academic Graph API.",
+        "dependencies": ["SCR-0022"],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0010"
+      },
+      {
+        "id": "SCR-0027",
+        "name": "data-gathering-wikidata",
+        "location": "storage/scripts/data-gathering/methods/method_wikidata.py",
+        "language": "python",
+        "category": "data-collection",
+        "description": "Wikidata knowledge graph search. Two-phase: search entities then fetch full details.",
+        "dependencies": ["SCR-0022"],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0010"
+      },
+      {
+        "id": "SCR-0028",
+        "name": "data-gathering-github",
+        "location": "storage/scripts/data-gathering/methods/method_github.py",
+        "language": "python",
+        "category": "data-collection",
+        "description": "GitHub repository and code search via REST API.",
+        "dependencies": ["SCR-0022"],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0010"
+      },
+      {
+        "id": "SCR-UNREG-01",
+        "name": "dedup-utils",
+        "location": "storage/scripts/data-gathering/methods/dedup_utils.py",
+        "language": "python",
+        "category": "data-collection",
+        "description": "TF-IDF-based similarity scoring, deduplication, and source merging utilities.",
+        "dependencies": [],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "unknown",
+        "note": "Not registered in scripts index.json"
+      },
+      {
+        "id": "SCR-UNREG-02",
+        "name": "build-cross-ref-index",
+        "location": "storage/scripts/build-cross-ref-index.py",
+        "language": "python",
+        "category": "utility",
+        "description": "Builds a master cross-reference index at storage/cross-references.json.",
+        "dependencies": [],
+        "status": "unknown",
+        "added": "unknown",
+        "note": "Not registered in scripts index.json"
+      },
+      {
+        "id": "SCR-UNREG-03",
+        "name": "search-storage",
+        "location": "storage/scripts/search-storage.py",
+        "language": "python",
+        "category": "utility",
+        "description": "Unified Search and Discovery Tool for the storage system.",
+        "dependencies": [],
+        "status": "unknown",
+        "added": "unknown",
+        "note": "Not registered in scripts index.json"
+      },
+      {
+        "id": "SCR-UNREG-04",
+        "name": "viz-data-flow",
+        "location": "storage/scripts/viz_data_flow.js",
+        "language": "javascript",
+        "category": "visualization",
+        "description": "D3.js v7 left-to-right flow diagram showing script-to-source data connections.",
+        "dependencies": ["d3.js v7"],
+        "status": "untested",
+        "added": "unknown",
+        "note": "Not registered in scripts index.json"
+      },
+      {
+        "id": "SCR-UNREG-05",
+        "name": "viz-kb-graph",
+        "location": "storage/scripts/viz_kb_graph.js",
+        "language": "javascript",
+        "category": "visualization",
+        "description": "D3.js v7 top-down layered DAG of Knowledge Base entry dependencies.",
+        "dependencies": ["d3.js v7"],
+        "status": "untested",
+        "added": "unknown",
+        "note": "Not registered in scripts index.json"
+      },
+      {
+        "id": "SCR-UNREG-06",
+        "name": "viz-team-hierarchy",
+        "location": "storage/scripts/viz_team_hierarchy.js",
+        "language": "javascript",
+        "category": "visualization",
+        "description": "D3.js v7 force-directed graph showing team hierarchy, agent membership, and knowledge dependencies.",
+        "dependencies": ["d3.js v7"],
+        "status": "untested",
+        "added": "unknown",
+        "note": "Not registered in scripts index.json"
+      },
+      {
+        "id": "SCR-UNREG-07",
+        "name": "stress-test-writes",
+        "location": "storage/scripts/stress-test-writes.py",
+        "language": "python",
+        "category": "testing",
+        "description": "Stress test for storage system write operations.",
+        "dependencies": [],
+        "status": "working",
+        "added": "unknown",
+        "note": "Not registered in scripts index.json"
+      },
+      {
+        "id": "SCR-UNREG-08",
+        "name": "stress-test-reads (id)",
+        "location": "storage/scripts/stress-test-reads-id.py",
+        "language": "python",
+        "category": "testing",
+        "description": "Stress test for storage system reads by ID.",
+        "dependencies": [],
+        "status": "working",
+        "added": "unknown",
+        "note": "Not registered in scripts index.json"
+      },
+      {
+        "id": "SCR-UNREG-09",
+        "name": "stress-test-reads (category)",
+        "location": "storage/scripts/stress-test-reads-category.py",
+        "language": "python",
+        "category": "testing",
+        "description": "Stress test for storage system reads by category.",
+        "dependencies": [],
+        "status": "working",
+        "added": "unknown",
+        "note": "Not registered in scripts index.json"
+      },
+      {
+        "id": "SCR-UNREG-10",
+        "name": "stress-test-reads (cross-ref)",
+        "location": "storage/scripts/stress-test-reads-cross.py",
+        "language": "python",
+        "category": "testing",
+        "description": "Stress test for storage system cross-reference reads.",
+        "dependencies": [],
+        "status": "working",
+        "added": "unknown",
+        "note": "Not registered in scripts index.json"
+      },
+      {
+        "id": "SCR-UNREG-11",
+        "name": "stress-test-setup-reads",
+        "location": "storage/scripts/stress-test-setup-reads.py",
+        "language": "python",
+        "category": "testing",
+        "description": "Setup script for storage stress test read operations.",
+        "dependencies": [],
+        "status": "working",
+        "added": "unknown",
+        "note": "Not registered in scripts index.json"
+      },
+      {
+        "id": "SCR-UNREG-12",
+        "name": "test-cross-references",
+        "location": "storage/scripts/test-cross-references.py",
+        "language": "python",
+        "category": "testing",
+        "description": "Test suite for cross-reference functionality.",
+        "dependencies": [],
+        "status": "working",
+        "added": "unknown",
+        "note": "Not registered in scripts index.json"
+      },
+      {
+        "id": "SCR-UNREG-13",
+        "name": "data-gathering-methods-benchmark",
+        "location": "storage/scripts/data-gathering/methods/benchmark_runner.py",
+        "language": "python",
+        "category": "analysis",
+        "description": "Benchmark runner within methods directory (distinct from SCR-0011).",
+        "dependencies": [],
+        "status": "working",
+        "added": "unknown",
+        "note": "Not registered in scripts index.json"
+      }
+    ],
+    "api_integrations": [
+      {
+        "id": "TOOL-0001",
+        "name": "Sonnet Research API",
+        "location": "storage/api-tools/sonnet-research-api/",
+        "description": "Multi-agent research system using Claude Sonnet. Supports variable sub-agents, request queuing, priority scheduling, result sorting, and automated import into repo storage.",
+        "entry_point": "orchestrator.py",
+        "modules": ["client.py", "config.py", "queue_manager.py", "researcher.py", "orchestrator.py", "sorter.py", "data_importer.py"],
+        "auth_type": "api-key",
+        "requires": ["anthropic"],
+        "status": "working",
+        "added": "2026-03-10",
+        "added_by": "TEAM-0002"
+      }
+    ],
+    "data_sources": [
+      {"id": "SRC-0001", "name": "Alpha Vantage", "url": "https://www.alphavantage.co/query", "data_types": ["financial"], "access_type": "freemium", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0038-alpha-vantage.json", "status": "available"},
+      {"id": "SRC-0002", "name": "Yahoo Finance", "url": "https://query1.finance.yahoo.com/v8/finance", "data_types": ["financial"], "access_type": "free", "has_detailed_spec": false, "status": "available"},
+      {"id": "SRC-0003", "name": "FRED", "url": "https://api.stlouisfed.org/fred", "data_types": ["financial", "government"], "access_type": "api-key-required", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0018-fred.json", "status": "available"},
+      {"id": "SRC-0004", "name": "CoinGecko", "url": "https://api.coingecko.com/api/v3", "data_types": ["financial"], "access_type": "freemium", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0041-coingecko.json", "status": "available"},
+      {"id": "SRC-0005", "name": "Twelve Data", "url": "https://api.twelvedata.com", "data_types": ["financial"], "access_type": "freemium", "has_detailed_spec": false, "status": "available"},
+      {"id": "SRC-0006", "name": "Exchange Rates", "url": "https://api.exchangerate.host", "data_types": ["financial"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0042-exchangerate-api.json", "status": "available"},
+      {"id": "SRC-0007", "name": "Finnhub", "url": "https://finnhub.io/api/v1", "data_types": ["financial"], "access_type": "freemium", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0040-finnhub.json", "status": "available"},
+      {"id": "SRC-0008", "name": "NewsAPI", "url": "https://newsapi.org/v2", "data_types": ["news"], "access_type": "freemium", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0012-newsapi-org.json", "status": "available"},
+      {"id": "SRC-0009", "name": "GNews", "url": "https://gnews.io/api/v4", "data_types": ["news"], "access_type": "freemium", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0014-gnews.json", "status": "available"},
+      {"id": "SRC-0010", "name": "The Guardian", "url": "https://content.guardianapis.com", "data_types": ["news"], "access_type": "api-key-required", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0013-guardian-api.json", "status": "available"},
+      {"id": "SRC-0011", "name": "Hacker News", "url": "https://hacker-news.firebaseio.com/v0", "data_types": ["news", "general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0030-hn-firebase.json", "status": "available"},
+      {"id": "SRC-0012", "name": "OpenAlex", "url": "https://api.openalex.org", "data_types": ["scientific"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0001-openalex.json", "status": "available"},
+      {"id": "SRC-0013", "name": "Semantic Scholar", "url": "https://api.semanticscholar.org/graph/v1", "data_types": ["scientific"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0002-semantic-scholar.json", "status": "available"},
+      {"id": "SRC-0014", "name": "Wikidata", "url": "https://www.wikidata.org/w/api.php", "data_types": ["scientific", "general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0005-wikidata.json", "status": "available"},
+      {"id": "SRC-0015", "name": "CORE", "url": "https://api.core.ac.uk/v3", "data_types": ["scientific"], "access_type": "api-key-required", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0007-core.json", "status": "available"},
+      {"id": "SRC-0016", "name": "CrossRef", "url": "https://api.crossref.org", "data_types": ["scientific"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0004-crossref.json", "status": "available"},
+      {"id": "SRC-0017", "name": "DBpedia", "url": "https://dbpedia.org/sparql", "data_types": ["scientific", "general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0008-dbpedia.json", "status": "available"},
+      {"id": "SRC-0018", "name": "Papers With Code", "url": "https://paperswithcode.com/api/v1", "data_types": ["scientific"], "access_type": "free", "has_detailed_spec": false, "status": "available"},
+      {"id": "SRC-0019", "name": "US Census Bureau", "url": "https://api.census.gov/data", "data_types": ["government"], "access_type": "api-key-required", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0019-census.json", "status": "available"},
+      {"id": "SRC-0020", "name": "Data.gov CKAN", "url": "https://catalog.data.gov/api/3", "data_types": ["government"], "access_type": "free", "has_detailed_spec": false, "status": "available"},
+      {"id": "SRC-0021", "name": "Open-Meteo", "url": "https://api.open-meteo.com/v1", "data_types": ["geospatial"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0022-open-meteo.json", "status": "available"},
+      {"id": "SRC-0022", "name": "OpenWeatherMap", "url": "https://api.openweathermap.org/data/2.5", "data_types": ["geospatial"], "access_type": "freemium", "has_detailed_spec": false, "status": "available"},
+      {"id": "SRC-0023", "name": "BLS", "url": "https://api.bls.gov/publicAPI/v2", "data_types": ["government"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0020-bls.json", "status": "available"},
+      {"id": "SRC-0024", "name": "World Bank", "url": "https://api.worldbank.org/v2", "data_types": ["government"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0023-world-bank.json", "status": "available"},
+      {"id": "SRC-0025", "name": "GitHub REST API", "url": "https://api.github.com", "data_types": ["general"], "access_type": "freemium", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0025-github-api.json", "status": "available"},
+      {"id": "SRC-0026", "name": "PyPI", "url": "https://pypi.org/pypi", "data_types": ["general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0027-pypi-api.json", "status": "available"},
+      {"id": "SRC-0027", "name": "npm Registry", "url": "https://registry.npmjs.org", "data_types": ["general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0026-npm-registry.json", "status": "available"},
+      {"id": "SRC-0028", "name": "Reddit", "url": "https://www.reddit.com", "data_types": ["social-media"], "access_type": "free", "has_detailed_spec": false, "status": "available"},
+      {"id": "SRC-0029", "name": "Stack Exchange", "url": "https://api.stackexchange.com/2.3", "data_types": ["general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0031-stackexchange-api.json", "status": "available"},
+      {"id": "SRC-0030", "name": "Nominatim", "url": "https://nominatim.openstreetmap.org", "data_types": ["geospatial"], "access_type": "free", "has_detailed_spec": false, "status": "available"},
+      {"id": "SRC-0031", "name": "Hugging Face Hub", "url": "https://huggingface.co/api", "data_types": ["scientific", "general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0035-huggingface-inference.json", "status": "available"},
+      {"id": "SRC-0032", "name": "Free Dictionary", "url": "https://api.dictionaryapi.dev/api/v2/entries", "data_types": ["general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0032-free-dictionary.json", "status": "available"},
+      {"id": "SRC-0033", "name": "Datamuse", "url": "https://api.datamuse.com", "data_types": ["general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0033-datamuse.json", "status": "available"},
+      {"id": "SRC-0034", "name": "ConceptNet", "url": "https://api.conceptnet.io", "data_types": ["scientific"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0034-conceptnet.json", "status": "available"},
+      {"id": "SRC-0035", "name": "Wikipedia REST", "url": "https://en.wikipedia.org/api/rest_v1", "data_types": ["general", "scientific"], "access_type": "free", "has_detailed_spec": false, "status": "available"},
+      {
+        "id": "SRC-DETAIL-ONLY",
+        "note": "The following sources have detailed spec files in storage/sources/ but are NOT in the sources index.json",
+        "sources": [
+          {"file": "SRC-0003-arxiv.json", "name": "arXiv API"},
+          {"file": "SRC-0006-wikipedia.json", "name": "Wikipedia API"},
+          {"file": "SRC-0015-gdelt.json", "name": "GDELT"},
+          {"file": "SRC-0016-mediastack.json", "name": "Mediastack"},
+          {"file": "SRC-0017-rss2json.json", "name": "RSS2JSON"},
+          {"file": "SRC-0021-nws-weather.json", "name": "NWS Weather"},
+          {"file": "SRC-0024-treasury-fiscal.json", "name": "Treasury Fiscal Data"},
+          {"file": "SRC-0028-ip-api.json", "name": "IP-API"},
+          {"file": "SRC-0029-hn-algolia.json", "name": "HN Algolia"},
+          {"file": "SRC-0036-gemini-embeddings.json", "name": "Gemini Embeddings"},
+          {"file": "SRC-0037-roboflow.json", "name": "Roboflow"},
+          {"file": "SRC-0039-fred.json", "name": "FRED (duplicate spec)"},
+          {"file": "SRC-0043-fawazahmed0-exchange.json", "name": "Fawaz Ahmed Exchange Rates"},
+          {"file": "SRC-0044-coinpaprika.json", "name": "Coinpaprika"}
+        ]
+      }
+    ],
+    "communication_systems": [
+      {
+        "id": "PROTO-A",
+        "name": "Proto A - JSONL Message Bus + SQLite Shared State",
+        "location": "prototype/agent_comm/",
+        "status": "working",
+        "production_status": "PRODUCTION",
+        "description": "Primary inter-agent communication system. JSONL append-only message bus with SQLite WAL shared state.",
+        "modules": [
+          {"name": "core.py", "description": "Core message types and constants"},
+          {"name": "bus.py", "description": "JSONL append-only message bus with POSIX atomic writes"},
+          {"name": "state.py", "description": "SQLite WAL shared state (agent registry, rate limiting, phase signals, findings)"},
+          {"name": "coordinator.py", "description": "Coordinator that bridges bus and state layers"}
+        ],
+        "tested": true,
+        "last_validation": "2026-03-11"
+      },
+      {
+        "id": "PROTO-B",
+        "name": "Proto B - Alternative Communication System",
+        "location": "prototype/agent_comm_b/",
+        "status": "archived",
+        "production_status": "ARCHIVED",
+        "description": "Alternative communication system using mmap and FIFOs. Archived after comparative testing showed Proto A was superior.",
+        "modules": [
+          {"name": "core.py", "description": "Core message types and constants"},
+          {"name": "bus.py", "description": "Alternative bus implementation"},
+          {"name": "state.py", "description": "Alternative state management"},
+          {"name": "coordinator.py", "description": "Alternative coordinator"}
+        ],
+        "tested": true,
+        "last_validation": "2026-03-11",
+        "note": "See ARCHIVED.md for deprecation details"
+      }
+    ],
+    "coordination_infrastructure": [
+      {
+        "id": "COORD-01",
+        "name": "Coordinator Hub",
+        "location": "storage/coordination/coordinator_hub.py",
+        "description": "Real-time agent monitoring via shared SQLite status table. Hub-and-spoke model with AgentReporter and CoordinatorDashboard.",
+        "status": "working",
+        "added_by": "TEAM-0025"
+      },
+      {
+        "id": "COORD-02",
+        "name": "Dashboard",
+        "location": "storage/coordination/dashboard.py",
+        "description": "Text-based dashboard for Proto A coordination system. Displays agents, status, messages, and system health.",
+        "status": "working",
+        "added_by": "TEAM-0023"
+      },
+      {
+        "id": "COORD-03",
+        "name": "Help Protocol",
+        "location": "storage/coordination/help_protocol.py",
+        "description": "Team help requests, idle detection, and automatic work assignment. Solves the problem of teams finishing early and sitting idle.",
+        "status": "working",
+        "added_by": "TEAM-0023"
+      },
+      {
+        "id": "COORD-04",
+        "name": "Direct Channels",
+        "location": "storage/coordination/direct_channels.py",
+        "description": "Direct team-to-team channels, presence tracking, and work progress broadcasting. Supports named, topic, team, and broadcast channels.",
+        "status": "working",
+        "added_by": "TEAM-0023"
+      },
+      {
+        "id": "COORD-05",
+        "name": "Work Stealing",
+        "location": "storage/coordination/work_stealing.py",
+        "description": "Work Stealing, Pipeline Chaining, and Shared Scratchpad for Proto A. Three coordination primitives on top of SQLite WAL.",
+        "status": "working",
+        "added_by": "TEAM-0023"
+      },
+      {
+        "id": "COORD-06",
+        "name": "Multi-Team Runner",
+        "location": "storage/coordination/multi_team_runner.py",
+        "description": "Production-ready multi-team runner for Proto A. Launches N teams with M agents each, communicating via bus and SQLite.",
+        "status": "working",
+        "added_by": "TEAM-0022"
+      },
+      {
+        "id": "COORD-07",
+        "name": "Think Tank Convergence",
+        "location": "storage/coordination/think_tank.py",
+        "description": "Reads team findings from SQLite and output JSON files, cross-references and deduplicates them.",
+        "status": "working",
+        "added_by": "TEAM-0022"
+      },
+      {
+        "id": "COORD-08",
+        "name": "Bus CLI",
+        "location": "storage/coordination/bus_cli.py",
+        "description": "CLI tool for agents to read/write the Proto A JSONL message bus. Commands: write, read_msgs, list_channels.",
+        "status": "working",
+        "added_by": "TEAM-0022"
+      },
+      {
+        "id": "COORD-09",
+        "name": "Hub Monitor Database",
+        "location": "storage/coordination/hub/monitor.db",
+        "description": "SQLite database used by the Coordinator Hub for agent status tracking.",
+        "status": "working",
+        "added_by": "TEAM-0025"
+      },
+      {
+        "id": "COORD-10",
+        "name": "Bug Reports",
+        "location": "storage/coordination/hub/",
+        "description": "Structured bug reports: bug-report-core.json, bug-report-infra.json, bug-report-proto.json",
+        "status": "reference",
+        "added_by": "TEAM-0025"
+      },
+      {
+        "id": "COORD-11",
+        "name": "Efficiency Reports",
+        "location": "storage/coordination/hub/",
+        "description": "Efficiency analysis reports: efficiency-report-design.json, efficiency-report-perf.json",
+        "status": "reference",
+        "added_by": "TEAM-0025"
+      },
+      {
+        "id": "COORD-12",
+        "name": "Feature Proposals",
+        "location": "storage/coordination/hub/",
+        "description": "Feature proposals: feature-proposals-commands.json, feature-proposals-control.json",
+        "status": "reference",
+        "added_by": "TEAM-0025"
+      },
+      {
+        "id": "COORD-13",
+        "name": "Team Directories",
+        "location": "storage/coordination/teams/",
+        "description": "18 team output directories for coordination data: alpha-1, alpha-2, beta-1, beta-2, gamma, research, research-bugs, research-stress, think-tank-bugs, think-tank-bugs-1/2/3, think-tank-hub, think-tank-proposals, think-tank-report.json, think-tank-stress, think-tank-v2, think-tank-v3",
+        "status": "working",
+        "team_count": 18
+      }
+    ],
+    "knowledge_base": [
+      {"id": "KB-0001", "title": "Storage System Stress Test & Improvement Results", "team": "TEAM-0001", "category": "optimization", "status": "validated", "confidence": "high", "builds_on": []},
+      {"id": "KB-0002", "title": "Sonnet Research API -- Multi-Agent Research System", "team": "TEAM-0002", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0001"]},
+      {"id": "KB-0003", "title": "Multi-Team Competitive Research: Quantitative Stock Analysis with AI", "team": "TEAM-0003", "category": "market-research", "status": "validated", "confidence": "high", "builds_on": ["KB-0001", "KB-0002"]},
+      {"id": "KB-0004", "title": "Data Gathering Methods: Iteration 1 Benchmarks & Findings", "team": "TEAM-0004", "category": "methodology", "status": "validated", "confidence": "high", "builds_on": ["KB-0003"]},
+      {"id": "KB-0005", "title": "Data Gathering Iteration 2: Parallel Hybrid Methods & Academic APIs", "team": "TEAM-0005", "category": "methodology", "status": "validated", "confidence": "high", "builds_on": ["KB-0004"]},
+      {"id": "KB-0006", "title": "Archive Tools for Knowledge Base System", "team": "TEAM-0006", "category": "tool-usage", "status": "validated", "confidence": "high", "builds_on": ["KB-0001"]},
+      {"id": "KB-0007", "title": "Research Team Configuration Testing & System Improvements", "team": "TEAM-0007", "category": "methodology", "status": "validated", "confidence": "high", "builds_on": ["KB-0004", "KB-0005", "KB-0006"]},
+      {"id": "KB-0008", "title": "Data Storage Methods & AI-Optimized Storage Research", "team": "TEAM-0008", "category": "methodology", "status": "validated", "confidence": "high", "builds_on": ["KB-0001", "KB-0007"]},
+      {"id": "KB-0009", "title": "Multi-Team Operation 3: Archive Optimization, High-Speed Tools & Coordinated Improvement", "team": "TEAM-0009", "category": "optimization", "status": "validated", "confidence": "high", "builds_on": ["KB-0006", "KB-0007", "KB-0008"]},
+      {"id": "KB-0010", "title": "Free Public APIs for AI/ML Self-Improvement", "team": "TEAM-0012", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0004", "KB-0005", "KB-0008"]},
+      {"id": "KB-0012", "title": "Free Public APIs for Developer Tools & General-Purpose Data", "team": "TEAM-0010", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0004", "KB-0005"]},
+      {"id": "KB-0013", "title": "Free Public APIs for Government and Open Data", "team": "TEAM-0013", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0004", "KB-0005"]},
+      {"id": "KB-0014", "title": "Operation 4: Public Data API Tool Development", "team": "TEAM-0014", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0004", "KB-0005", "KB-0009", "KB-0010"]},
+      {"id": "KB-0015", "title": "JSONL Message Bus: Technical Reference for Inter-Agent Communication", "team": "TEAM-0015", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0009"]},
+      {"id": "KB-0016", "title": "SQLite WAL Shared State: Technical Reference for Inter-Agent Coordination", "team": "TEAM-0016", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0009"]},
+      {"id": "KB-0017", "title": "Failure Mode Analysis: JSONL Bus + SQLite Shared State", "team": "TEAM-0017", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0015", "KB-0016", "KB-0009"]},
+      {"id": "KB-0018", "title": "Multi-Agent Communication Prototype: Dual Implementation & Test Results", "team": "TEAM-0018", "category": "methodology", "status": "validated", "confidence": "high", "builds_on": ["KB-0015", "KB-0016", "KB-0017"]},
+      {"id": "KB-0019", "title": "Architecture & Integration Analysis: Live Communication System", "team": "TEAM-0019", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0015", "KB-0016", "KB-0009"]},
+      {"id": "KB-0020", "title": "Live Prototype Testing: Data Gathering Benchmark Results", "team": "TEAM-0020", "category": "methodology", "status": "validated", "confidence": "high", "builds_on": ["KB-0018", "KB-0019"]},
+      {"id": "KB-0021", "title": "Think Tank Efficiency Analysis: Proto A Communication vs No Communication", "team": "TEAM-0021", "category": "methodology", "status": "validated", "confidence": "very-high", "builds_on": ["KB-0020", "KB-0018", "KB-0019"]},
+      {"id": "KB-0022", "title": "Multi-Team Production Deployment: 18-Agent Coordination Results", "team": "TEAM-0022", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0018", "KB-0019", "KB-0020", "KB-0021"]},
+      {"id": "KB-0023", "title": "Dynamic Team Coordination: Help Protocol, Work Stealing, Direct Channels", "team": "TEAM-0023", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0022"]},
+      {"id": "KB-0024", "title": "Stress Testing, SOPs, and Knowledge Preservation for Coordination System", "team": "TEAM-0024", "category": "testing", "status": "validated", "confidence": "high", "builds_on": ["KB-0023", "KB-0022"]},
+      {"id": "KB-0025", "title": "Bug Fixes, Coordinator Hub, and Central Commander SOPs", "team": "TEAM-0025", "category": "debugging", "status": "validated", "confidence": "high", "builds_on": ["KB-0024"]}
+    ],
+    "sops": [
+      {"id": "SOP-001", "title": "Help Protocol SOP", "tool": "help_protocol", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
+      {"id": "SOP-002", "title": "Direct Channels SOP", "tool": "direct_channels", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
+      {"id": "SOP-003", "title": "Work Stealing SOP", "tool": "work_stealing", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
+      {"id": "SOP-004", "title": "Pipeline Management SOP", "tool": "pipeline_manager", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
+      {"id": "SOP-005", "title": "Scratchpad SOP", "tool": "scratchpad", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
+      {"id": "SOP-006", "title": "Bus CLI SOP", "tool": "bus_cli", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
+      {"id": "SOP-007", "title": "Multi-Team Runner SOP", "tool": "multi_team_runner", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
+      {"id": "SOP-008", "title": "Think Tank Convergence SOP", "tool": "think_tank", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
+      {"id": "SOP-009", "title": "Dashboard SOP", "tool": "dashboard", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
+      {"id": "SOP-010", "title": "New Team Onboarding SOP", "tool": "new_team_onboarding", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
+      {"id": "SOP-011", "title": "Central Commander Launch Protocol", "location": "storage/coordination/sops/sop_011_central_commander_launch.json", "status": "working", "added_by": "TEAM-0025"},
+      {"id": "SOP-012", "title": "Real-Time Monitoring and Intervention Protocol", "location": "storage/coordination/sops/sop_012_monitoring_intervention.json", "status": "working", "added_by": "TEAM-0025"},
+      {"id": "SOP-013", "title": "Agent Prompt Engineering and Context Distribution", "location": "storage/coordination/sops/sop_013_prompt_engineering.json", "status": "working", "added_by": "TEAM-0025"},
+      {"id": "SOP-EFF", "title": "Efficiency Guide", "location": "storage/coordination/sops/efficiency_guide.json", "description": "Efficiency patterns and anti-patterns for multi-team AI coordination", "status": "working"},
+      {"id": "SOP-DATA", "title": "Future Team Data Strategy", "location": "storage/coordination/sops/future_team_data_strategy.json", "description": "Data storage strategy and knowledge transfer protocol for future AI teams", "status": "working"}
+    ],
+    "test_suites": [
+      {
+        "id": "TEST-COORD-01",
+        "name": "Coordinator Hub Tests",
+        "location": "storage/coordination/tests/test_coordinator_hub.py",
+        "status": "working",
+        "coverage": "coordinator_hub.py"
+      },
+      {
+        "id": "TEST-COORD-02",
+        "name": "Direct Channels Tests",
+        "location": "storage/coordination/tests/test_direct_channels.py",
+        "status": "working",
+        "coverage": "direct_channels.py"
+      },
+      {
+        "id": "TEST-COORD-03",
+        "name": "Help Protocol Tests",
+        "location": "storage/coordination/tests/test_help_protocol.py",
+        "status": "working",
+        "coverage": "help_protocol.py"
+      },
+      {
+        "id": "TEST-COORD-04",
+        "name": "Work Stealing Tests",
+        "location": "storage/coordination/tests/test_work_stealing.py",
+        "status": "working",
+        "coverage": "work_stealing.py"
+      },
+      {
+        "id": "TEST-STRESS-01",
+        "name": "Stress Test: Direct Channels",
+        "location": "storage/coordination/stress-tests/test_stress_direct_channels.py",
+        "status": "working",
+        "coverage": "direct_channels.py under load"
+      },
+      {
+        "id": "TEST-STRESS-02",
+        "name": "Stress Test: Help Protocol",
+        "location": "storage/coordination/stress-tests/test_stress_help_protocol.py",
+        "status": "working",
+        "coverage": "help_protocol.py under load"
+      },
+      {
+        "id": "TEST-STRESS-03",
+        "name": "Stress Test: Work Stealing",
+        "location": "storage/coordination/stress-tests/test_stress_work_stealing.py",
+        "status": "working",
+        "coverage": "work_stealing.py under load"
+      },
+      {
+        "id": "TEST-PROTO-01",
+        "name": "Live Test Baseline (No Communication)",
+        "location": "prototype/tests/live_test_baseline.py",
+        "status": "working",
+        "coverage": "Baseline multi-agent performance without communication",
+        "results_file": "prototype/tests/live_test_baseline_results.json"
+      },
+      {
+        "id": "TEST-PROTO-02",
+        "name": "Live Test Proto A",
+        "location": "prototype/tests/live_test_proto_a.py",
+        "status": "working",
+        "coverage": "Proto A communication system live testing",
+        "results_file": "prototype/tests/live_test_proto_a_results.json"
+      },
+      {
+        "id": "TEST-PROTO-03",
+        "name": "Live Test Proto B",
+        "location": "prototype/tests/live_test_proto_b.py",
+        "status": "working",
+        "coverage": "Proto B communication system live testing",
+        "results_file": "prototype/tests/live_test_proto_b_results.json"
+      },
+      {
+        "id": "TEST-PROTO-04",
+        "name": "Proto B Unit Tests",
+        "location": "prototype/tests/test_proto_b.py",
+        "status": "working",
+        "coverage": "Proto B module unit tests"
+      },
+      {
+        "id": "TEST-PROTO-05",
+        "name": "Known Bugs Tests",
+        "location": "prototype/tests/test_known_bugs.py",
+        "status": "working",
+        "coverage": "Regression tests for known bugs"
+      },
+      {
+        "id": "TEST-PROTO-06",
+        "name": "Deep Stress Tests",
+        "location": "prototype/tests/test_stress_deep.py",
+        "status": "working",
+        "coverage": "Deep stress testing of communication systems"
+      },
+      {
+        "id": "TEST-PROTO-07",
+        "name": "Think Tank Efficiency Tests",
+        "location": "prototype/tests/think_tank_efficiency.py",
+        "status": "working",
+        "coverage": "Proto A vs No-Communication efficiency comparison",
+        "results_file": "prototype/tests/think-tank-efficiency-report.json"
+      },
+      {
+        "id": "TEST-PROTO-08",
+        "name": "Proto Benchmark Runner",
+        "location": "prototype/tests/proto_benchmark_runner.py",
+        "status": "working",
+        "coverage": "Comprehensive benchmark suite for both prototypes",
+        "results_file": "prototype/tests/benchmark_results.json"
+      },
+      {
+        "id": "TEST-STORAGE-01",
+        "name": "Storage Stress Test Writes",
+        "location": "storage/scripts/stress-test-writes.py",
+        "status": "working",
+        "coverage": "Storage system write performance"
+      },
+      {
+        "id": "TEST-STORAGE-02",
+        "name": "Storage Stress Test Reads (ID)",
+        "location": "storage/scripts/stress-test-reads-id.py",
+        "status": "working",
+        "coverage": "Storage system read-by-ID performance"
+      },
+      {
+        "id": "TEST-STORAGE-03",
+        "name": "Storage Stress Test Reads (Category)",
+        "location": "storage/scripts/stress-test-reads-category.py",
+        "status": "working",
+        "coverage": "Storage system read-by-category performance"
+      },
+      {
+        "id": "TEST-STORAGE-04",
+        "name": "Storage Stress Test Reads (Cross-Ref)",
+        "location": "storage/scripts/stress-test-reads-cross.py",
+        "status": "working",
+        "coverage": "Storage system cross-reference read performance"
+      },
+      {
+        "id": "TEST-STORAGE-05",
+        "name": "Storage Edge Case Tests",
+        "location": "storage/scripts/test-edge-cases.py",
+        "status": "working",
+        "coverage": "35 edge case and boundary tests for storage"
+      },
+      {
+        "id": "TEST-STORAGE-06",
+        "name": "Storage Cross-Reference Tests",
+        "location": "storage/scripts/test-cross-references.py",
+        "status": "working",
+        "coverage": "Cross-reference integrity tests"
+      }
+    ],
+    "market_research": [
+      {
+        "id": "MR-METHODS",
+        "name": "Analysis Methods",
+        "location": "market-research/methods/",
+        "items": [
+          {"name": "Fundamental Analysis", "file": "fundamental.md", "status": "working"},
+          {"name": "Technical Analysis", "file": "technical.md", "status": "working"},
+          {"name": "Sentiment Analysis", "file": "sentiment.md", "status": "working"},
+          {"name": "Quantitative Analysis", "file": "quantitative.md", "status": "working"}
+        ]
+      },
+      {
+        "id": "MR-AI-QUANT",
+        "name": "AI Quantitative Trading Techniques",
+        "location": "market-research/methods/ai-quant-techniques/",
+        "description": "Master index of 47 categorized AI/ML techniques across 8 categories for quantitative stock analysis. 72 references, 50 tools catalogued.",
+        "categories": [
+          {"name": "ML Trading Strategies", "technique_count": 6},
+          {"name": "AI Portfolio Optimization", "technique_count": 7},
+          {"name": "AI Risk Management", "technique_count": 5},
+          {"name": "Data Pipelines & Infrastructure", "technique_count": 6},
+          {"name": "Alternative Data Sources", "technique_count": 6},
+          {"name": "High-Frequency Trading", "technique_count": 5},
+          {"name": "NLP & Sentiment Analysis", "technique_count": 4},
+          {"name": "Explainable AI & Governance", "technique_count": 8}
+        ],
+        "status": "working",
+        "total_techniques": 47,
+        "total_references": 72
+      },
+      {
+        "id": "MR-PICKS",
+        "name": "Stock Picks Tracker",
+        "location": "market-research/picks/index.json",
+        "description": "Pick tracking system - no picks recorded yet",
+        "total_picks": 0,
+        "status": "empty"
+      },
+      {
+        "id": "MR-WATCHLIST",
+        "name": "Watchlist",
+        "location": "market-research/watchlist.json",
+        "description": "Watchlist - currently empty",
+        "status": "empty"
+      }
+    ]
+  },
+  "summary": {
+    "total_items": 152,
+    "by_category": {
+      "software_tools": 41,
+      "api_integrations": 1,
+      "data_sources": 35,
+      "communication_systems": 2,
+      "coordination_infrastructure": 13,
+      "knowledge_base_entries": 24,
+      "sops": 15,
+      "test_suites": 21,
+      "market_research": 4
+    },
+    "working": 121,
+    "broken": 0,
+    "untested": 3,
+    "unknown": 2,
+    "archived": 1,
+    "empty": 2,
+    "reference_only": 3,
+    "languages": {
+      "python": 35,
+      "go": 3,
+      "javascript": 3
+    },
+    "teams_involved": 21,
+    "team_sessions_logged": 21,
+    "kb_entries": 24,
+    "note": "KB-0011 ID is missing (gap in sequence). TEAM-0011, TEAM-0015, TEAM-0016, TEAM-0017 have no session logs in teams/sessions/"
+  },
+  "gaps": [
+    "KB-0011 ID is missing from index (gap between KB-0010 and KB-0012)",
+    "13 scripts are not registered in storage/scripts/index.json (viz scripts, stress tests, build-cross-ref-index, search-storage, dedup_utils)",
+    "14 detailed source spec files exist in storage/sources/ but are not tracked in sources/index.json (arXiv, Wikipedia, GDELT, Mediastack, RSS2JSON, NWS Weather, Treasury, IP-API, HN Algolia, Gemini, Roboflow, FRED duplicate, Fawaz Ahmed Exchange, Coinpaprika)",
+    "SRC-0039-fred.json appears to be a duplicate of SRC-0018-fred.json",
+    "Sources index.json SRC IDs (SRC-0001 through SRC-0035) do not match source spec file IDs (SRC-0001-openalex through SRC-0044-coinpaprika) - two different numbering systems",
+    "No data gathering method exists for several indexed sources: Reddit, Nominatim, Stack Exchange, BLS, Census, World Bank, FRED, CoinGecko, Finnhub, Alpha Vantage, npm, PyPI, ConceptNet",
+    "Market research picks system is empty - no picks or watchlist entries recorded",
+    "Proto B is archived but its test files are still maintained - could be cleaned up",
+    "TEAM-0011 through TEAM-0017 have KB entries but no session logs in teams/sessions/ (TEAM-0015 through TEAM-0019 have logs in teams/ root)",
+    "storage/coordination/bus/ directory is empty (bus files not persisted)",
+    "storage/coordination/db/ directory is empty (no persistent state.db)",
+    "No automated CI/CD or periodic validation pipeline - all validation is manual",
+    "Visualization scripts (viz_*.js) require D3.js but have never been tested in the environment",
+    "Only 1 API tool exists (Sonnet Research API) - no standalone tools for individual data source APIs",
+    "No SOP exists for storage/scripts/ tools (validate-storage, repair-storage, etc.)",
+    "No SOP exists for data gathering methods usage"
+  ]
+}

@@ -1,0 +1,369 @@
+{
+  "metadata": {
+    "team": "TT-A3",
+    "task": "bug-testing-coordination",
+    "date": "2026-03-11",
+    "files_analyzed": [
+      "storage/coordination/coordinator_hub.py",
+      "storage/coordination/help_protocol.py",
+      "storage/coordination/direct_channels.py",
+      "storage/coordination/work_stealing.py",
+      "storage/coordination/multi_team_runner.py",
+      "storage/coordination/dashboard.py",
+      "storage/coordination/bus_cli.py",
+      "storage/coordination/think_tank.py"
+    ],
+    "tests_run": "storage/coordination/tests/ (4 test files)",
+    "prior_report": "storage/coordination/hub/bug-report-core.json"
+  },
+  "test_results": {
+    "total": 173,
+    "passed": 173,
+    "failed": 0,
+    "errors": 0,
+    "notes": "All tests pass. Test coverage is reasonable but has gaps documented in prior bug report."
+  },
+  "bugs_verified_fixed": [
+    {
+      "id": "BUG-CORE-001",
+      "file": "storage/coordination/coordinator_hub.py",
+      "description": "_retry_on_busy missing @functools.wraps -- FIXED. Line 83 now uses @functools.wraps(func) in coordinator_hub.py. However, the help_protocol.py and direct_channels.py and work_stealing.py copies of _retry_on_busy still lack @functools.wraps (see NEW-COORD-001)."
+    },
+    {
+      "id": "BUG-CORE-002",
+      "file": "storage/coordination/coordinator_hub.py",
+      "description": "update_status used INSERT OR REPLACE which could lose started_at -- FIXED. Lines 281-303 now use INSERT ... ON CONFLICT(agent_id) DO UPDATE SET ... (UPSERT pattern), matching the _register pattern. started_at is properly preserved."
+    },
+    {
+      "id": "BUG-CORE-003",
+      "file": "storage/coordination/coordinator_hub.py",
+      "description": "update_status did not validate progress_pct range -- FIXED. Lines 275-278 now validate 0 <= progress_pct <= 100 and raise ValueError."
+    },
+    {
+      "id": "BUG-CORE-004",
+      "file": "storage/coordination/coordinator_hub.py",
+      "description": "report_error did not reset progress_pct -- FIXED. Line 328 now sets progress_pct = 0 on error."
+    },
+    {
+      "id": "BUG-CORE-005",
+      "file": "storage/coordination/coordinator_hub.py",
+      "description": "check_instructions had race condition between SELECT and UPDATE -- FIXED. Lines 382-405 now use BEGIN IMMEDIATE with proper COMMIT/ROLLBACK for atomic read-and-mark."
+    },
+    {
+      "id": "BUG-CORE-006",
+      "file": "storage/coordination/coordinator_hub.py",
+      "description": "Channel name sanitization was weak -- FIXED. Line 156 now uses re.sub(r'[^a-zA-Z0-9_-]', '_', channel) which is a strict allowlist."
+    },
+    {
+      "id": "BUG-CORE-007",
+      "file": "storage/coordination/coordinator_hub.py",
+      "description": "send_instruction did not verify target_agent exists -- FIXED. Lines 551-582 now include a verify_exists parameter (default False) that validates the agent exists in agent_status before inserting."
+    },
+    {
+      "id": "BUG-CORE-008",
+      "file": "storage/coordination/help_protocol.py",
+      "description": "HelpProtocol.close() did not check if already closed -- FIXED. Lines 160-165 now check 'if not self._closed' before closing."
+    },
+    {
+      "id": "BUG-CORE-009",
+      "file": "storage/coordination/help_protocol.py",
+      "description": "request_help did not verify work_item exists -- FIXED. Lines 401-406 now check if the work item exists and raise ValueError if not found."
+    },
+    {
+      "id": "BUG-CORE-010",
+      "file": "storage/coordination/help_protocol.py",
+      "description": "fulfill_help allowed fulfillment of non-accepted requests -- FIXED. Lines 546-559 now validate that status is 'accepted' and that the calling team matches accepted_by_team, raising ValueError otherwise."
+    },
+    {
+      "id": "BUG-CORE-011",
+      "file": "storage/coordination/help_protocol.py",
+      "description": "auto_assign_idle_teams could double-assign teams -- FIXED. Lines 743-744 now track assigned_teams in a set and skip teams already assigned within the same call."
+    },
+    {
+      "id": "BUG-CORE-013",
+      "file": "storage/coordination/direct_channels.py",
+      "description": "send_direct had missing/incorrect return type for None case -- FIXED. Lines 415-441 now has return type Optional[str] and logs a warning when bus publish returns None."
+    },
+    {
+      "id": "BUG-CORE-014",
+      "file": "storage/coordination/direct_channels.py",
+      "description": "read_direct had thread-safety issue with _read_offsets -- FIXED. Lines 443-455 now wrap the entire read operation (offset lookup, bus_read, offset update) inside self._lock."
+    },
+    {
+      "id": "BUG-CORE-015",
+      "file": "storage/coordination/direct_channels.py",
+      "description": "_bus_read used text mode with byte offsets -- FIXED. Lines 154-205 now use binary mode ('rb') with proper byte-level offset tracking."
+    },
+    {
+      "id": "BUG-CORE-017",
+      "file": "storage/coordination/coordinator_hub.py",
+      "description": "Dual timeout configuration (connect + PRAGMA) was confusing -- FIXED. Lines 109-127 now have a docstring explicitly documenting that both are intentional and explaining why."
+    },
+    {
+      "id": "BUG-CORE-019",
+      "file": "storage/coordination/help_protocol.py",
+      "description": "mark_work_available did not check rowcount -- FIXED. Lines 350-363 now check cur.rowcount and raise ValueError if no rows affected."
+    },
+    {
+      "id": "BUG-CORE-020",
+      "file": "storage/coordination/help_protocol.py",
+      "description": "complete_work_item did not filter by team -- FIXED. Lines 371-384 now include 'AND team = ?' in the WHERE clause and check rowcount."
+    },
+    {
+      "id": "BUG-CORE-022",
+      "file": "storage/coordination/coordinator_hub.py",
+      "description": "broadcast_instruction had race condition and Row object invalidation -- FIXED. Lines 652-693 now use BEGIN IMMEDIATE for atomic SELECT+INSERT, and extract agent_ids to a list before COMMIT to avoid Row invalidation."
+    },
+    {
+      "id": "BUG-CORE-023",
+      "file": "storage/coordination/direct_channels.py",
+      "description": "DirectChannels had no __del__ method for cleanup -- FIXED. Lines 255-259 now include a __del__ method that calls close()."
+    },
+    {
+      "id": "BUG-CORE-024",
+      "file": "storage/coordination/help_protocol.py",
+      "description": "add_work_item did not validate priority -- FIXED. Lines 323-327 now validate priority against {'critical', 'high', 'medium', 'low'} and raise ValueError."
+    }
+  ],
+  "bugs_still_present": [
+    {
+      "id": "BUG-CORE-012",
+      "file": "storage/coordination/help_protocol.py",
+      "line": 768,
+      "description": "In auto_assign_idle_teams, when BEGIN IMMEDIATE fails with OperationalError, the code does 'continue' to try the next helper, silently swallowing persistent database busy errors. The _retry_on_busy decorator on the outer method does not help because the exception is caught inside the loop.",
+      "severity": "medium",
+      "fix_plan": "Add retry logic around the BEGIN IMMEDIATE inside the loop, or log a warning when it fails, or re-raise after N consecutive failures."
+    },
+    {
+      "id": "BUG-CORE-016",
+      "file": "storage/coordination/direct_channels.py",
+      "line": 177,
+      "description": "_bus_read edge case with multiple consecutive trailing newlines may cause offset miscalculation. The separator length logic for the last element in split() results is fragile when files end with multiple blank lines.",
+      "severity": "low",
+      "fix_plan": "Simplify offset tracking by accumulating raw byte positions with f.tell() or tracking cumulative consumed bytes without complex separator math."
+    },
+    {
+      "id": "BUG-CORE-018",
+      "file": "storage/coordination/help_protocol.py",
+      "line": 694,
+      "description": "find_compatible_helpers releases the lock between querying the help request and querying idle teams. The help request could be modified or deleted between the two queries, producing stale capability data. The docstring now documents this as eventually consistent, but the behavior remains.",
+      "severity": "low",
+      "fix_plan": "Accept the documented eventual consistency, or read both the help request and idle teams within a single lock acquisition."
+    },
+    {
+      "id": "BUG-CORE-021",
+      "file": "storage/coordination/direct_channels.py",
+      "line": 505,
+      "description": "get_presence returns different types (dict vs list[dict]) depending on the team parameter. This polymorphic return is error-prone for callers.",
+      "severity": "low",
+      "fix_plan": "Split into get_presence(team) -> dict and get_all_presence() -> list[dict], or keep current API with clear documentation."
+    }
+  ],
+  "new_bugs_found": [
+    {
+      "id": "NEW-COORD-001",
+      "file": "storage/coordination/help_protocol.py",
+      "line": 101,
+      "description": "_retry_on_busy decorator in help_protocol.py lacks @functools.wraps(func). While coordinator_hub.py was fixed (BUG-CORE-001), the copies of this decorator in help_protocol.py, direct_channels.py (line 83), and work_stealing.py (line 39) still do not use @functools.wraps. This breaks introspection, help(), and inspect.signature() on all decorated methods in these modules.",
+      "severity": "low",
+      "category": "api-contract-violation",
+      "fix_plan": "Add @functools.wraps(func) to the wrapper function in all three copies, or extract the decorator to a shared utility module."
+    },
+    {
+      "id": "NEW-COORD-002",
+      "file": "storage/coordination/help_protocol.py",
+      "line": 199,
+      "description": "_publish_bus sanitizes channel names by replacing '/' and '..' but does not use the strict re.sub allowlist that coordinator_hub.py uses (line 156). Channels with special characters (null bytes, backslashes, colons) could produce unexpected file paths or security issues.",
+      "severity": "low",
+      "category": "inconsistent-sanitization",
+      "fix_plan": "Use the same re.sub(r'[^a-zA-Z0-9_-]', '_', channel) pattern from coordinator_hub.py."
+    },
+    {
+      "id": "NEW-COORD-003",
+      "file": "storage/coordination/work_stealing.py",
+      "line": 163,
+      "description": "_bus_notify in work_stealing.py sanitizes channel names with simple replace('/', '_').replace('..', '_') instead of the strict allowlist used in coordinator_hub.py. Same inconsistency as NEW-COORD-002.",
+      "severity": "low",
+      "category": "inconsistent-sanitization",
+      "fix_plan": "Use the same re.sub(r'[^a-zA-Z0-9_-]', '_', channel) pattern."
+    },
+    {
+      "id": "NEW-COORD-004",
+      "file": "storage/coordination/multi_team_runner.py",
+      "line": 195,
+      "description": "_shared_conn is a module-level global mutable shared across all uses of the module. If multi_team_runner is imported by multiple independent systems in the same process, they will share the same SQLite connection. The _shared_conn_lock protects concurrent access, but the global state creates implicit coupling between otherwise unrelated users.",
+      "severity": "medium",
+      "category": "global-mutable-state",
+      "fix_plan": "Encapsulate the connection management inside the MultiTeamRunner class instead of using module-level globals, or use a connection factory pattern."
+    },
+    {
+      "id": "NEW-COORD-005",
+      "file": "storage/coordination/multi_team_runner.py",
+      "line": 612,
+      "description": "_runner_instance is a module-level global used by the signal handler. If two MultiTeamRunner instances are created in the same process, only the most recent one will receive the shutdown signal. The first instance becomes orphaned with no clean shutdown path.",
+      "severity": "medium",
+      "category": "global-mutable-state",
+      "fix_plan": "Use a weakref or a registry pattern to track all active runner instances, or document that only one runner per process is supported."
+    },
+    {
+      "id": "NEW-COORD-006",
+      "file": "storage/coordination/multi_team_runner.py",
+      "line": 63,
+      "description": "Module-level logging.basicConfig() is called at import time. This overrides any logging configuration the importing application may have set up. Library code should not call basicConfig(); it should only configure handlers if the user explicitly requests it.",
+      "severity": "medium",
+      "category": "side-effect-on-import",
+      "fix_plan": "Move logging.basicConfig() inside main() or behind an if __name__ == '__main__' guard. For library use, let the importing application configure logging."
+    },
+    {
+      "id": "NEW-COORD-007",
+      "file": "storage/coordination/multi_team_runner.py",
+      "line": 408,
+      "description": "register_all_agents() is not idempotent across concurrent runners. If two runners start with overlapping team configs, the _register_agent UPSERT will silently overwrite the first runner's agent registrations (resetting last_heartbeat), potentially causing the first runner's health checks to incorrectly mark agents as alive when they belong to a different runner process.",
+      "severity": "medium",
+      "category": "logic-error",
+      "fix_plan": "Include the runner PID or a runner instance ID in agent registrations, or add conflict detection."
+    },
+    {
+      "id": "NEW-COORD-008",
+      "file": "storage/coordination/dashboard.py",
+      "line": 122,
+      "description": "_get_db() opens a new SQLite connection on every call and callers close it in finally blocks. However, the _get_runner_state(), _get_agents(), _get_phase_signals(), _get_findings_summary(), and _get_bus_activity() functions each open and close their own connection independently. If dashboard rendering calls all of them (render_dashboard), 4-5 connections are opened and closed in sequence, which is inefficient.",
+      "severity": "low",
+      "category": "performance",
+      "fix_plan": "Open a single connection and pass it to all data-fetching functions, or use a context manager that shares one connection for the duration of a render cycle."
+    },
+    {
+      "id": "NEW-COORD-009",
+      "file": "storage/coordination/dashboard.py",
+      "line": 232,
+      "description": "_get_bus_activity() reads bus files using text mode ('r') and seeks to near the end using f.seek(0, 2) then f.seek(max(0, size - read_size)). On large files, the seek position is a byte offset but read() in text mode may interpret it differently for multi-byte UTF-8 content. This can cause truncated reads or UnicodeDecodeError in edge cases.",
+      "severity": "low",
+      "category": "encoding-issue",
+      "fix_plan": "Use binary mode ('rb') for the initial seek and size measurement, then decode the tail data, or read lines from the end using a reverse-line-reader pattern."
+    },
+    {
+      "id": "NEW-COORD-010",
+      "file": "storage/coordination/bus_cli.py",
+      "line": 60,
+      "description": "read_msgs() in bus_cli.py uses text mode reading with byte-based offset tracking (new_offset = since_offset + len(data.encode('utf-8'))). This has the same text-mode-vs-byte-offset mismatch that was fixed in direct_channels.py (BUG-CORE-015). Multi-byte UTF-8 characters will cause incorrect offsets.",
+      "severity": "medium",
+      "category": "logic-error",
+      "fix_plan": "Use binary mode ('rb') for consistent byte-offset tracking, matching the fix applied to direct_channels._bus_read."
+    },
+    {
+      "id": "NEW-COORD-011",
+      "file": "storage/coordination/bus_cli.py",
+      "line": 84,
+      "description": "init_db() creates a SQLite connection without setting check_same_thread=False and without WAL busy_timeout PRAGMA. The connection also does not use the WAL journal mode PRAGMA in the same way as other modules (it sets it but closes the connection immediately). While functional for CLI use, it is inconsistent with other modules.",
+      "severity": "low",
+      "category": "inconsistency",
+      "fix_plan": "Align init_db() connection setup with the pattern used in other modules (check_same_thread=False, consistent PRAGMA setup)."
+    },
+    {
+      "id": "NEW-COORD-012",
+      "file": "storage/coordination/bus_cli.py",
+      "line": 158,
+      "description": "register_agent() and post_finding() each open their own SQLite connection but do not set check_same_thread=False. If these functions are called from threads in a library context, they will raise ProgrammingError. This is inconsistent with coordinator_hub.py and help_protocol.py which use check_same_thread=False.",
+      "severity": "low",
+      "category": "inconsistency",
+      "fix_plan": "Add check_same_thread=False to all sqlite3.connect() calls in bus_cli.py, or centralize connection creation."
+    },
+    {
+      "id": "NEW-COORD-013",
+      "file": "storage/coordination/bus_cli.py",
+      "line": 178,
+      "description": "post_finding() does not set PRAGMA journal_mode=WAL. If this is the first function to create the database, it will use the default rollback journal mode instead of WAL, potentially causing lock contention issues with other modules that expect WAL mode.",
+      "severity": "low",
+      "category": "inconsistency",
+      "fix_plan": "Set PRAGMA journal_mode=WAL in all functions that open connections, or centralize DB setup."
+    },
+    {
+      "id": "NEW-COORD-014",
+      "file": "storage/coordination/think_tank.py",
+      "line": 117,
+      "description": "_collect_from_sqlite() opens a connection, queries, and closes it but does not use WAL mode or busy_timeout. If the database is under heavy contention from other coordination modules, this function may fail with SQLITE_BUSY without retries.",
+      "severity": "low",
+      "category": "missing-error-handling",
+      "fix_plan": "Add PRAGMA busy_timeout=30000 and PRAGMA journal_mode=WAL when opening the connection, or add retry logic."
+    },
+    {
+      "id": "NEW-COORD-015",
+      "file": "storage/coordination/work_stealing.py",
+      "line": 596,
+      "description": "get_ready_stages() performs two separate lock acquisitions: one to read all stages (line 597-602), and another to update waiting stages to ready (line 614-621). Between these two lock acquisitions, another process or thread could modify stage statuses, leading to a TOCTOU race where stages are incorrectly marked ready or a stage is started by another thread while get_ready_stages is still processing.",
+      "severity": "medium",
+      "category": "race-condition",
+      "fix_plan": "Perform the read and update within a single lock acquisition, using BEGIN IMMEDIATE to prevent concurrent modifications."
+    },
+    {
+      "id": "NEW-COORD-016",
+      "file": "storage/coordination/work_stealing.py",
+      "line": 660,
+      "description": "trigger_downstream() also performs two separate lock acquisitions (line 666-670 for read, line 683-689 for write). Between reads, another call to trigger_downstream or complete_stage could change stage statuses, causing a stage to be incorrectly marked ready twice.",
+      "severity": "medium",
+      "category": "race-condition",
+      "fix_plan": "Combine the read and write into a single atomic operation under one lock acquisition with BEGIN IMMEDIATE."
+    },
+    {
+      "id": "NEW-COORD-017",
+      "file": "storage/coordination/work_stealing.py",
+      "line": 498,
+      "description": "check_stage_ready() performs two separate lock acquisitions (line 501-506 for depends_on read, line 514-521 for status checks). Between these, dependencies could change, producing inconsistent results. This is a minor issue since stage dependencies don't change after pipeline creation, but the split lock pattern is still a code smell.",
+      "severity": "low",
+      "category": "unnecessary-lock-split",
+      "fix_plan": "Perform both queries under a single lock acquisition."
+    },
+    {
+      "id": "NEW-COORD-018",
+      "file": "storage/coordination/multi_team_runner.py",
+      "line": 493,
+      "description": "_heartbeat_loop and _cleanup_loop catch exceptions broadly (except Exception) and log them, but do not implement any backoff or circuit breaker. If the database is corrupted or unavailable, these loops will spin rapidly logging the same error every heartbeat_interval/cleanup_interval seconds, potentially filling disk with log output.",
+      "severity": "low",
+      "category": "missing-error-handling",
+      "fix_plan": "Add exponential backoff on repeated failures, or a circuit breaker that pauses the loop after N consecutive failures."
+    },
+    {
+      "id": "NEW-COORD-019",
+      "file": "storage/coordination/direct_channels.py",
+      "line": 112,
+      "description": "_safe_channel() sanitizes channel names with simple replace() calls (replace('/', '_').replace('..', '_')), while coordinator_hub.py uses a strict regex allowlist re.sub(r'[^a-zA-Z0-9_-]', '_', channel). The inconsistent sanitization means direct_channels.py allows characters that coordinator_hub.py would reject.",
+      "severity": "low",
+      "category": "inconsistent-sanitization",
+      "fix_plan": "Replace the simple replace() calls with the same re.sub allowlist pattern used in coordinator_hub.py."
+    }
+  ],
+  "summary": {
+    "total_bugs": 43,
+    "fixed": 20,
+    "remaining": 4,
+    "new": 19,
+    "breakdown_by_severity": {
+      "high": 0,
+      "medium": 8,
+      "low": 15
+    },
+    "breakdown_by_category": {
+      "inconsistent-sanitization": 3,
+      "race-condition": 3,
+      "global-mutable-state": 2,
+      "logic-error": 2,
+      "api-contract-violation": 2,
+      "inconsistency": 3,
+      "missing-error-handling": 2,
+      "performance": 1,
+      "encoding-issue": 1,
+      "side-effect-on-import": 1,
+      "unnecessary-lock-split": 1,
+      "thread-safety": 1
+    },
+    "notes": [
+      "All 173 tests pass (100% pass rate). No test failures or errors.",
+      "20 of 24 previously reported bugs have been fixed with proper implementations.",
+      "4 previously reported bugs remain (BUG-CORE-012, 016, 018, 021) -- all low/medium severity.",
+      "19 new bugs found, mostly in the less-tested modules (multi_team_runner.py, bus_cli.py, dashboard.py, think_tank.py).",
+      "The core modules (coordinator_hub.py, help_protocol.py, direct_channels.py, work_stealing.py) are in good shape.",
+      "Key pattern: DRY violation -- _retry_on_busy, _bus_notify, and channel sanitization are duplicated across 4 files with inconsistent implementations.",
+      "Most critical new findings are the split-lock race conditions in PipelineManager (NEW-COORD-015/016) and the text-mode byte-offset bug in bus_cli.py (NEW-COORD-010)."
+    ]
+  }
+}

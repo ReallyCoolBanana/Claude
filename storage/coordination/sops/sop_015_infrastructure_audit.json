@@ -1,0 +1,245 @@
+{
+  "id": "SOP-015",
+  "version": "1.0",
+  "created": "2026-03-11",
+  "team": "TEAM-0026-central-command",
+  "title": "Infrastructure Audit and Mass Indexing Protocol",
+  "purpose": "Standardized procedure for conducting comprehensive repository audits including mass file indexing, tool inventory, bug testing, and documentation generation. Ensures consistent, repeatable infrastructure assessment.",
+  "builds_on": ["SOP-011", "SOP-012", "SOP-014"],
+
+  "section_1_audit_scope": {
+    "title": "Audit Scope Definition",
+    "description": "Define what an infrastructure audit covers and how to scope it for different repository sizes.",
+
+    "audit_dimensions": [
+      {
+        "dimension": "File Index",
+        "purpose": "Map every file in the repository with type, purpose, module, and dependencies",
+        "output": "infrastructure-index.json",
+        "team_type": "think_tank",
+        "typical_agents": 3
+      },
+      {
+        "dimension": "Tool Inventory",
+        "purpose": "Catalog all tools, scripts, APIs, and utilities with status and capabilities",
+        "output": "infrastructure-inventory.json",
+        "team_type": "think_tank",
+        "typical_agents": 3
+      },
+      {
+        "dimension": "Bug Audit",
+        "purpose": "Identify all bugs, verify previous fixes, find new issues",
+        "output": "infrastructure-bugs-*.json",
+        "team_type": "think_tank",
+        "typical_agents": 6,
+        "note": "Split by subsystem: coordination, prototypes, scripts"
+      },
+      {
+        "dimension": "Documentation Audit",
+        "purpose": "Identify documentation gaps, create missing docs, update stale docs",
+        "output": "infrastructure-documentation.json",
+        "team_type": "think_tank",
+        "typical_agents": 4
+      },
+      {
+        "dimension": "Tool Verification",
+        "purpose": "Test every tool, fix broken ones, verify working ones",
+        "output": "infrastructure-tool-assessment.json",
+        "team_type": "coding_team",
+        "typical_agents": 4
+      }
+    ]
+  },
+
+  "section_2_indexing_methodology": {
+    "title": "Mass File Indexing Methodology",
+    "description": "How to systematically index every file in a repository.",
+
+    "phase_1_discovery": {
+      "action": "Use Glob to find all files by type",
+      "patterns": [
+        "**/*.py - Python source and scripts",
+        "**/*.json - Configuration, data, metadata",
+        "**/*.md - Documentation, knowledge base, templates",
+        "**/*.go - Go source code",
+        "**/*.html - Web interfaces",
+        "**/*.sh - Shell scripts",
+        "**/*.jsonl - Append-only data files"
+      ]
+    },
+
+    "phase_2_classification": {
+      "action": "For each file, determine",
+      "fields": {
+        "path": "Absolute path",
+        "type": "File extension / language",
+        "size_category": "small (<1KB), medium (1-10KB), large (10-50KB), xlarge (>50KB)",
+        "purpose": "1-2 sentence description from docstrings/comments/content",
+        "module": "Which system it belongs to (coordination, prototype, scripts, kb, config, etc.)",
+        "dependencies": "What it imports or references",
+        "has_tests": "Whether test coverage exists for this file",
+        "status": "active, deprecated, draft, unknown"
+      }
+    },
+
+    "phase_3_relationship_mapping": {
+      "action": "Build dependency graph showing which files depend on which others",
+      "methods": [
+        "Parse Python imports to find internal dependencies",
+        "Check JSON cross-references (builds_on, depends_on fields)",
+        "Check index.json references to discover file relationships"
+      ]
+    },
+
+    "phase_4_statistics": {
+      "action": "Generate summary statistics",
+      "metrics": [
+        "Files by type (Python, JSON, Markdown, etc.)",
+        "Files by module (coordination, prototype, scripts, etc.)",
+        "Files by size category",
+        "Test coverage percentage (files with tests / total testable files)",
+        "Dependency depth (max chain length)",
+        "Orphan files (no references, no imports)"
+      ]
+    }
+  },
+
+  "section_3_tool_inventory_methodology": {
+    "title": "Tool Inventory Methodology",
+    "description": "How to catalog and assess all software tools in a repository.",
+
+    "tool_categories": {
+      "validators": "Tools that check correctness (validate-storage.py, kb_validator.py, fast_validate)",
+      "builders": "Tools that construct artifacts (index_rebuilder.py, build-cross-ref-index.py)",
+      "searchers": "Tools that find information (kb_search.py, fast_search, search-storage.py)",
+      "analyzers": "Tools that evaluate quality (grade_research.py, staleness_detector.py, cross_ref_checker.py)",
+      "data_gatherers": "Tools that collect external data (method_*.py, method_hybrid.py)",
+      "coordination": "Tools for multi-agent operation (coordinator_hub.py, help_protocol.py, etc.)",
+      "stress_testers": "Tools for load testing (stress-test-*.py, test_stress_*.py)",
+      "utilities": "Shared helper libraries (ddg_utils.py, request_cache.py, dedup_utils.py)"
+    },
+
+    "assessment_criteria": {
+      "functionality": "Does the tool do what it claims? (run it and check)",
+      "reliability": "Does it handle edge cases? (check error handling)",
+      "performance": "Is it fast enough? (check for Go vs Python alternatives)",
+      "documentation": "Is it documented? (check docstrings, README, SOP)",
+      "test_coverage": "Does it have tests? (check for test_* files)",
+      "dependencies": "What does it need? (check imports, requirements)",
+      "maintenance": "When was it last updated? Is it actively used?"
+    },
+
+    "status_classification": {
+      "working": "Tool runs successfully, produces correct output",
+      "broken": "Tool fails with errors, produces incorrect output",
+      "partially_functional": "Tool works for some inputs but fails for others",
+      "untested": "Tool has never been verified in this session",
+      "deprecated": "Tool has been superseded by another tool"
+    }
+  },
+
+  "section_4_bug_audit_methodology": {
+    "title": "Bug Audit Methodology",
+    "description": "How to systematically identify, verify, and track bugs across the codebase.",
+
+    "bug_identification_techniques": [
+      {
+        "technique": "Code review",
+        "focus": "Race conditions, resource leaks, missing validation, type errors",
+        "effective_for": "Concurrency bugs, logic errors"
+      },
+      {
+        "technique": "Test execution",
+        "focus": "Run existing tests, check for failures",
+        "effective_for": "Regression bugs, broken functionality"
+      },
+      {
+        "technique": "Prior report cross-reference",
+        "focus": "Check bugs from previous reports, verify fixes applied",
+        "effective_for": "Tracking fix completeness"
+      },
+      {
+        "technique": "Static analysis patterns",
+        "focus": "Common anti-patterns: bare except, mutable defaults, unclosed files",
+        "effective_for": "Systematic scanning for known bug patterns"
+      }
+    ],
+
+    "bug_severity_scale": {
+      "critical": "Data loss, security vulnerability, system crash under normal conditions",
+      "high": "Race condition under concurrent use, incorrect results silently produced",
+      "medium": "Error handling gap, edge case failure, performance degradation",
+      "low": "Missing validation, cosmetic issue, documentation mismatch"
+    },
+
+    "bug_report_format": {
+      "id": "BUG-{SUBSYSTEM}-{NNN}",
+      "fields": ["file", "line", "description", "severity", "category", "fix_plan", "fix_complexity", "verified_fixed"]
+    },
+
+    "verification_protocol": {
+      "for_previously_reported_bugs": "Read the source code at the reported line. Check if the fix described in the report was applied. Mark as 'verified_fixed' or 'still_present'.",
+      "for_new_bugs": "Provide line number, description, severity, category, and a concrete fix plan. Include code snippet showing the bug."
+    }
+  },
+
+  "section_5_data_priority_rules": {
+    "title": "Data Priority Rules",
+    "description": "When multiple sources of information exist, how to prioritize them.",
+
+    "priority_order": [
+      {
+        "rank": 1,
+        "source": "Newest reports and outputs",
+        "rationale": "Most recent data reflects current state. Previous session outputs (bug reports, feature proposals, efficiency reports) are the most authoritative source.",
+        "location": "storage/coordination/hub/*.json"
+      },
+      {
+        "rank": 2,
+        "source": "Current test results",
+        "rationale": "Running tests reveals the actual current state. Tests passing > written claims about state.",
+        "method": "python3 -m pytest -v"
+      },
+      {
+        "rank": 3,
+        "source": "Knowledge base entries (newest first)",
+        "rationale": "KB entries are validated findings from prior teams. Newer entries supersede older ones on the same topic.",
+        "location": "knowledge-base/entries/KB-*.md"
+      },
+      {
+        "rank": 4,
+        "source": "SOPs",
+        "rationale": "SOPs codify institutional knowledge. Follow SOPs unless evidence contradicts them.",
+        "location": "storage/coordination/sops/*.json"
+      },
+      {
+        "rank": 5,
+        "source": "Team session logs",
+        "rationale": "Session logs provide operational context. Useful for understanding decisions but may contain outdated information.",
+        "location": "teams/sessions/TEAM-*.md"
+      },
+      {
+        "rank": 6,
+        "source": "Source code comments and docstrings",
+        "rationale": "Inline documentation is close to the code but may be stale. Trust code behavior over comments."
+      }
+    ],
+
+    "conflict_resolution": "When two sources disagree, trust the higher-ranked source. When same-ranked sources disagree, trust the newer one. Always note the conflict in your report."
+  },
+
+  "quick_reference": {
+    "audit_team_template": {
+      "small_audit": "2 teams, 4-6 agents: 1 indexing/inventory team, 1 bug testing team",
+      "medium_audit": "4 teams, 8-12 agents: 1 indexing, 1 inventory, 1 bug testing, 1 documentation",
+      "large_audit": "6 teams, 16-20 agents: 2 indexing/inventory, 2 bug testing (split by subsystem), 2 documentation/tool assessment"
+    },
+    "output_files": [
+      "infrastructure-index.json - Complete file index",
+      "infrastructure-inventory.json - Tool and capability inventory",
+      "infrastructure-bugs-*.json - Bug reports by subsystem",
+      "infrastructure-tool-assessment.json - Tool test results",
+      "infrastructure-documentation.json - Documentation and gap analysis"
+    ]
+  }
+}
