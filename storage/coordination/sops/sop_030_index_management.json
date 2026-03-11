@@ -1,0 +1,249 @@
+{
+  "id": "SOP-030",
+  "version": "1.0",
+  "created": "2026-03-11",
+  "team": "A1-Gamma",
+  "title": "Index Management & Maintenance",
+  "purpose": "Defines the universal index.json schema, mandates that indexes are generated artifacts (never hand-edited), and establishes validation rules. Addresses the A1-Alpha finding that every index.json has a different schema -- no shared structure for array key, count field, or attribution fields.",
+  "builds_on": ["SOP-029", "SOP-024"],
+
+  "section_1_universal_schema": {
+    "title": "Universal index.json Schema",
+    "description": "All index.json files MUST use the same top-level structure. Type-specific fields go inside individual entries, not at the top level.",
+    "schema": {
+      "version": {
+        "type": "string",
+        "format": "semver (e.g., '1.0')",
+        "description": "Schema version of this index file",
+        "note": "Use 'version', never 'schema' or other synonyms"
+      },
+      "last_updated": {
+        "type": "string",
+        "format": "ISO 8601 date (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ)",
+        "description": "When this index was last regenerated",
+        "note": "Use 'last_updated', never 'generated' or 'modified'"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Total number of entries in the items array",
+        "note": "Use 'count', never 'entry_count', 'source_count', 'sop_count', 'total_picks', etc."
+      },
+      "entries": {
+        "type": "array",
+        "description": "The canonical list of items indexed in this directory",
+        "note": "Use 'entries', never 'tools', 'scripts', 'sources', 'sops', 'sessions', 'methods', 'picks'. The resource type is implied by the directory."
+      }
+    },
+    "universal_entry_fields": {
+      "id": "Required. The PREFIX-NNNN identifier.",
+      "title": "Required. Human-readable title, max 80 chars.",
+      "file": "Required. Filename only (not full path). Use 'file', never 'filename', 'path', or 'name'.",
+      "date": "Required. Creation or last-modified date (YYYY-MM-DD).",
+      "team": "Required. Team that created this entry. Use 'team', never 'added_by_team', 'populated_by', 'verified_by'.",
+      "tags": "Optional. Array of kebab-case tags, max 5 per entry.",
+      "status": "Optional. One of: active, validated, experimental, deprecated, superseded, draft."
+    },
+    "type_specific_fields": "Additional fields (e.g., 'category', 'confidence', 'builds_on' for KB; 'superseded_by' for SOPs; 'url', 'access_type' for sources) are allowed inside entries but must not duplicate universal fields."
+  },
+
+  "section_2_derived_data_policy": {
+    "title": "Derived Data is NOT Stored in Indexes",
+    "description": "Indexes contain only canonical data. All derived views are computed on demand.",
+    "banned_fields": [
+      {
+        "field": "tag_index",
+        "reason": "Fully derivable from entries[].tags. Costs ~3,500 tokens in KB index (57% of file).",
+        "alternative": "Compute with: entries.filter(e => e.tags.includes(tag))"
+      },
+      {
+        "field": "categories",
+        "reason": "Fully derivable from entries[].category.",
+        "alternative": "Compute with: [...new Set(entries.map(e => e.category))]"
+      },
+      {
+        "field": "by_data_type / by_access_type",
+        "reason": "Reverse lookup maps derivable from entries.",
+        "alternative": "Compute by grouping entries on the relevant field"
+      },
+      {
+        "field": "language_index",
+        "reason": "Derivable from entries[].language.",
+        "alternative": "Group entries by language field"
+      },
+      {
+        "field": "auth_types",
+        "reason": "Derivable from entries[].auth_type.",
+        "alternative": "Group entries by auth_type field"
+      },
+      {
+        "field": "performance_summary",
+        "reason": "Derivable from entries[] with status and return fields.",
+        "alternative": "Compute win_rate, avg_return from entries at query time"
+      }
+    ],
+    "rationale": "Removing derived data from knowledge-base/index.json alone saves ~14,000 bytes (~3,500 tokens) per read -- a 57% reduction. Across 10 index files, estimated savings of ~8,000 tokens per full-index scan.",
+    "exception": "The root REGISTRY.json may contain cross-index pointers as a navigation aid, but must not duplicate data that exists in individual index.json files."
+  },
+
+  "section_3_generation_rules": {
+    "title": "Indexes are GENERATED, Never Hand-Edited",
+    "rules": [
+      {
+        "id": "IDX-01",
+        "rule": "Source files are truth, indexes are derived artifacts",
+        "description": "The contents of individual resource files (KB entries, SOPs, sources, etc.) are the canonical data. The index.json is regenerated from those files.",
+        "evidence": "TEAM-0029 established this principle. A1-Alpha found 3 indexes with stale or incorrect data."
+      },
+      {
+        "id": "IDX-02",
+        "rule": "Regenerate after any file CRUD operation",
+        "trigger_events": [
+          "A new file is created in an indexed directory",
+          "An existing file is updated (content or metadata change)",
+          "A file is deleted or moved",
+          "A file is renamed"
+        ],
+        "method": "Run the auto-index script for the affected directory. See section_6."
+      },
+      {
+        "id": "IDX-03",
+        "rule": "Never manually edit index.json",
+        "rationale": "Manual edits drift from source files. The A1-Alpha audit found TEAM-0011 listed in the sessions index but no TEAM-0011.md file exists. Manual edits cause this.",
+        "enforcement": "Pre-commit hook should regenerate indexes and diff against staged version. If they differ, the commit includes stale index data."
+      }
+    ]
+  },
+
+  "section_4_conflict_resolution": {
+    "title": "Handling Index Conflicts",
+    "rules": [
+      {
+        "id": "CONFLICT-01",
+        "rule": "Last-write-wins with auto-regeneration",
+        "description": "If two agents modify files in the same directory, the index is regenerated from the current file state after both writes complete. No merge logic needed -- the index is always derivable from files.",
+        "rationale": "Since indexes are generated artifacts, conflicts are impossible as long as regeneration runs after all file operations."
+      },
+      {
+        "id": "CONFLICT-02",
+        "rule": "File-level conflicts are resolved by the agents, not the index",
+        "description": "If two agents create files with the same ID, that is a file naming conflict (SOP-029 violation), not an index conflict. Resolve at the file level by assigning the next available ID."
+      },
+      {
+        "id": "CONFLICT-03",
+        "rule": "Stale indexes are never worse than a regeneration away",
+        "description": "If an index is suspected stale, regenerate it. The regeneration script is idempotent -- running it twice produces the same result."
+      }
+    ]
+  },
+
+  "section_5_validation_rules": {
+    "title": "Index Consistency Validation",
+    "checks": [
+      {
+        "id": "VAL-01",
+        "check": "Every file in the directory has a corresponding entry in the index",
+        "severity": "error",
+        "fix": "Regenerate the index"
+      },
+      {
+        "id": "VAL-02",
+        "check": "Every entry in the index has a corresponding file in the directory",
+        "severity": "error",
+        "fix": "Regenerate the index (orphan entries removed automatically)",
+        "evidence": "A1-Alpha: TEAM-0011 in sessions index but no file exists"
+      },
+      {
+        "id": "VAL-03",
+        "check": "No duplicate IDs in the entries array",
+        "severity": "error",
+        "fix": "Assign unique IDs. Versioned entries (v1/v2) use the same base ID with superseded_by field, but appear as one entry in the index (the active version).",
+        "evidence": "A1-Alpha: SOP-012 and SOP-016 appear twice in SOP index"
+      },
+      {
+        "id": "VAL-04",
+        "check": "The 'count' field matches entries.length",
+        "severity": "error",
+        "fix": "Regenerate the index"
+      },
+      {
+        "id": "VAL-05",
+        "check": "All universal fields (id, title, file, date, team) are present in every entry",
+        "severity": "warning",
+        "fix": "Add missing fields by reading source file metadata"
+      },
+      {
+        "id": "VAL-06",
+        "check": "No derived data fields (tag_index, categories, by_data_type, etc.) are present",
+        "severity": "warning",
+        "fix": "Remove derived fields per section_2"
+      },
+      {
+        "id": "VAL-07",
+        "check": "The 'file' field uses filename only, not a path",
+        "severity": "warning",
+        "fix": "Strip directory prefix. Use 'KB-0001.md' not 'entries/KB-0001.md' or '../knowledge-base/entries/KB-0001.md'",
+        "evidence": "A1-Alpha: SCR-0029 through SCR-0033 use relative paths (../) in scripts/index.json"
+      },
+      {
+        "id": "VAL-08",
+        "check": "Tags are kebab-case, max 5 per entry, from controlled vocabulary (SOP-031)",
+        "severity": "warning",
+        "fix": "Normalize tags per SOP-031 tag taxonomy"
+      }
+    ]
+  },
+
+  "section_6_auto_index_script": {
+    "title": "Auto-Index Script Requirements",
+    "description": "A script that regenerates any index.json from the source files in its directory.",
+    "requirements": [
+      {
+        "id": "SCRIPT-01",
+        "requirement": "Accept a directory path as argument",
+        "description": "python generate_index.py knowledge-base/entries/ regenerates knowledge-base/index.json"
+      },
+      {
+        "id": "SCRIPT-02",
+        "requirement": "Read metadata from each source file",
+        "description": "For .md files: parse YAML frontmatter. For .json files: read top-level fields. Extract universal fields (id, title, date, team) plus type-specific fields."
+      },
+      {
+        "id": "SCRIPT-03",
+        "requirement": "Output the universal schema from section_1",
+        "description": "Always use 'version', 'last_updated', 'count', 'entries' at the top level. Never include derived data."
+      },
+      {
+        "id": "SCRIPT-04",
+        "requirement": "Be idempotent",
+        "description": "Running the script twice on the same directory produces byte-identical output. Sort entries by ID. Use consistent JSON formatting (2-space indent, no trailing commas)."
+      },
+      {
+        "id": "SCRIPT-05",
+        "requirement": "Report validation issues",
+        "description": "Print warnings for files that lack required metadata fields, have duplicate IDs, or violate naming conventions."
+      },
+      {
+        "id": "SCRIPT-06",
+        "requirement": "Run in pre-commit hook or CI",
+        "description": "Integrate into the commit workflow so indexes are always current. The hook regenerates affected indexes and stages them."
+      }
+    ],
+    "existing_tools": "storage/scripts/index_rebuilder.py and TEAM-0029's generate_registry.py are partial implementations. Consolidate into one canonical script."
+  },
+
+  "checklists": {
+    "after_any_file_crud": [
+      "Regenerate the index.json for the affected directory",
+      "Verify count matches actual file count",
+      "Verify no orphan entries or missing files",
+      "Verify no derived data was added"
+    ],
+    "index_review": [
+      "Schema uses 'version', 'last_updated', 'count', 'entries' (universal fields)",
+      "Entry fields use 'id', 'title', 'file', 'date', 'team' (universal entry fields)",
+      "No tag_index, categories, or other derived lookup maps",
+      "No duplicate IDs in entries array",
+      "All file references are filenames only (no paths)"
+    ]
+  }
+}
