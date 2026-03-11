@@ -1,0 +1,185 @@
+{
+  "version": "1.0",
+  "created": "2026-03-11",
+  "team": "think-tank-sops",
+  "description": "Data storage strategy and knowledge transfer protocol for future AI teams. Defines what data to store, where to store it, how to format it, and how to hand off knowledge between sessions.",
+  "data_categories": [
+    {
+      "category": "Knowledge Base Entries",
+      "what_to_store": "Validated insights, discoveries, methodology results, architecture decisions, and lessons learned. Each entry should be a self-contained document that a future team can understand without additional context.",
+      "where_to_store": "knowledge-base/entries/KB-XXXX.md",
+      "format": "Markdown with YAML frontmatter. Use knowledge-base/TEMPLATE.md as the format reference. Required frontmatter fields: id, date, team, role, category, tags, status, confidence, builds_on.",
+      "retention": "Permanent. KB entries are the long-term memory of the project. Never delete, only supersede with new entries that reference the old ones via builds_on.",
+      "naming_convention": "KB-XXXX.md where XXXX is a zero-padded sequential number. Check knowledge-base/index.json for the next available number.",
+      "indexing": "Must be added to knowledge-base/index.json with id, title, category, tags, date, and status fields."
+    },
+    {
+      "category": "Team Session Logs",
+      "what_to_store": "What the team was assigned to do, what was accomplished, key decisions made, problems encountered, and recommendations for future teams. Include quantitative results where possible (lines of code, tests passed, data points collected).",
+      "where_to_store": "teams/TEAM-XXXX-session.md",
+      "format": "Markdown using teams/TEAM_LOG_TEMPLATE.md as the format reference. Must include: team ID, date, members, objectives, results, lessons learned, recommendations.",
+      "retention": "Permanent. Session logs provide the narrative context that KB entries alone cannot capture.",
+      "naming_convention": "TEAM-XXXX-session.md where XXXX is the team number assigned by the orchestrator. Check existing files in teams/ to determine the next number.",
+      "indexing": "Update teams/index.json if it exists. Cross-reference with KB entries created during the session."
+    },
+    {
+      "category": "Coordination State (SQLite)",
+      "what_to_store": "Agent registrations, heartbeat timestamps, team findings, think tank proposals, phase signals, rate limit records, help requests, work items, team status, channels, presence, progress, work queue, pipelines, scratchpad entries.",
+      "where_to_store": "storage/coordination/db/state.db",
+      "format": "SQLite database in WAL mode. Schema is auto-created by the coordination tools. Tables: agents, rate_limits, rate_limit_config, phase_signals, messages, team_findings, think_tank, work_items, help_requests, team_capabilities, team_status, channels, presence, progress, work_queue, pipelines, pipeline_stages, scratchpad, runner_state.",
+      "retention": "Per-session. Each new multi-team session typically starts fresh. Valuable findings should be extracted to KB entries before the session database is overwritten. The scratchpad has built-in TTL expiration.",
+      "naming_convention": "Always state.db in storage/coordination/db/.",
+      "indexing": "Self-indexed via SQLite. Use dashboard.py --json to export current state."
+    },
+    {
+      "category": "Bus Messages (JSONL)",
+      "what_to_store": "Inter-agent communication: status updates, help requests, phase signals, findings announcements, progress broadcasts, direct messages. Each message is a JSON object with id, type, channel, team, agent_id, ts, ttl, body.",
+      "where_to_store": "storage/coordination/bus/*.jsonl",
+      "format": "Append-only JSONL (one JSON object per line). Each file represents a channel. Channel name maps to filename: {channel_name}.jsonl. Messages must be under 4096 bytes.",
+      "retention": "Ephemeral. Messages have a TTL (default 300-3600 seconds). Bus files grow indefinitely but old messages are filtered out on read. Can be safely deleted between sessions.",
+      "naming_convention": "{channel_name}.jsonl. Channel names are sanitized (/ replaced with _, .. replaced with _). Common channels: global.jsonl, direct-{team_a}-{team_b}.jsonl, topic-{name}.jsonl.",
+      "indexing": "Not indexed. Use bus_cli.py read <channel> to read messages. Dashboard shows recent activity."
+    },
+    {
+      "category": "Team Output Files",
+      "what_to_store": "Structured results from team work: analysis reports, data processing results, API collection summaries, convergence reports. These are the primary deliverables from each team.",
+      "where_to_store": "storage/coordination/teams/{team_name}/output/*.json OR teams/{team_name}/output/*.json (repo-level)",
+      "format": "JSON files. Can contain a single object or an array of objects. For findings, each object should have at minimum: team, category, title, content, priority. The think_tank.py script scans these directories.",
+      "retention": "Permanent for significant results. Ephemeral for intermediate/partial results. Significant outputs should be summarized in KB entries.",
+      "naming_convention": "Descriptive filenames: findings.json, analysis-results.json, api-data.json. Avoid generic names like output.json.",
+      "indexing": "Think_tank.py automatically scans for these files. For important outputs, reference them in the team session log."
+    },
+    {
+      "category": "Scripts and Tools",
+      "what_to_store": "Reusable scripts, CLI tools, automation utilities, and API integrations created during sessions.",
+      "where_to_store": "storage/scripts/ for general scripts, storage/coordination/ for coordination tools, storage/api-tools/ for API integrations.",
+      "format": "Python scripts with docstrings explaining usage. Include a shebang line (#!/usr/bin/env python3) for CLI tools. Use argparse for command-line interfaces.",
+      "retention": "Permanent. Scripts should be maintained and improved across sessions.",
+      "naming_convention": "snake_case.py with descriptive names. Include metadata in storage/scripts/index.json.",
+      "indexing": "Must be added to the relevant index.json file with name, description, path, and usage information."
+    },
+    {
+      "category": "Think Tank Reports",
+      "what_to_store": "Consolidated convergence reports from think_tank.py: deduplicated findings, category summaries, priority breakdowns, and improvement roadmaps.",
+      "where_to_store": "storage/coordination/teams/think-tank-report.json",
+      "format": "JSON with structure: generated_at, total_findings, total_categories, priority_breakdown, categories (with findings), roadmap (prioritized action items), summary.",
+      "retention": "Per-session. Each new convergence run overwrites the previous report. Archive important reports as KB entries or copy to a versioned filename.",
+      "naming_convention": "think-tank-report.json (default). Use --output flag for custom paths.",
+      "indexing": "Referenced in team session logs. Key findings should be extracted to KB entries."
+    },
+    {
+      "category": "Data Sources",
+      "what_to_store": "Curated information about external APIs, data feeds, and web resources used for research and data collection.",
+      "where_to_store": "storage/sources/",
+      "format": "JSON files using storage/sources/TEMPLATE.json format. Include: name, URL, description, authentication requirements, rate limits, data format, and example responses.",
+      "retention": "Permanent. Update when API endpoints change or new sources are discovered.",
+      "naming_convention": "Descriptive names: arxiv-api.json, github-api.json. Index in storage/sources/index.json.",
+      "indexing": "Must be added to storage/sources/index.json."
+    },
+    {
+      "category": "Market Research",
+      "what_to_store": "Stock picking methods, investment picks, performance tracking, and analysis results.",
+      "where_to_store": "market-research/ (methods in methods/, picks in picks/)",
+      "format": "Markdown for methods, structured JSON/Markdown for picks using market-research/picks/TEMPLATE.md.",
+      "retention": "Permanent. Performance tracking requires historical data preservation.",
+      "naming_convention": "Follow existing conventions in each subdirectory. Index in market-research/picks/index.json.",
+      "indexing": "Update market-research/picks/index.json for new picks."
+    }
+  ],
+  "handoff_checklist": [
+    {
+      "step": 1,
+      "action": "Extract findings from session database",
+      "details": "Run think_tank.py --summary to generate a convergence report of all findings from the session. Review the report for critical and high-priority items that need immediate action."
+    },
+    {
+      "step": 2,
+      "action": "Create knowledge base entries",
+      "details": "For each significant insight, methodology result, or architectural decision, create a KB entry using knowledge-base/TEMPLATE.md. Set the builds_on field to reference any prior KB entries that your work extends. Set confidence to 'high' for validated results, 'medium' for preliminary findings, 'low' for hypotheses."
+    },
+    {
+      "step": 3,
+      "action": "Write team session log",
+      "details": "Create teams/TEAM-XXXX-session.md documenting: (1) Assigned mission and team composition, (2) What was accomplished (with quantitative results), (3) What was NOT accomplished and why, (4) Key decisions and their rationale, (5) Problems encountered and how they were solved (or not), (6) Specific recommendations for the next team."
+    },
+    {
+      "step": 4,
+      "action": "Update all index files",
+      "details": "Add new entries to: knowledge-base/index.json, storage/scripts/index.json, storage/sources/index.json, storage/api-tools/index.json, market-research/picks/index.json -- whichever are relevant to your session's outputs."
+    },
+    {
+      "step": 5,
+      "action": "Archive important team outputs",
+      "details": "Ensure team output files in storage/coordination/teams/{team}/output/ contain all significant results. For truly important outputs, copy or summarize them into permanent storage (KB entries or storage/ subdirectories)."
+    },
+    {
+      "step": 6,
+      "action": "Document any known issues or incomplete work",
+      "details": "List any bugs, incomplete features, or technical debt in your session log. Be specific about what remains to be done and any blockers. This helps the next team prioritize their work."
+    },
+    {
+      "step": 7,
+      "action": "Verify cross-references are consistent",
+      "details": "Check that KB entries reference the correct prior entries in builds_on. Verify that index.json files have correct paths and descriptions. Ensure session logs reference the KB entries created during the session."
+    },
+    {
+      "step": 8,
+      "action": "Signal completion on the bus",
+      "details": "Post a final status update: python bus_cli.py status-update <team> <agent> complete 100 --task 'Session complete, handoff artifacts created'. This lets the orchestrator and dashboard know the team has finished."
+    }
+  ],
+  "knowledge_transfer_protocol": {
+    "required_artifacts": [
+      "At least one KB entry per significant discovery or methodology result (knowledge-base/entries/KB-XXXX.md)",
+      "One team session log (teams/TEAM-XXXX-session.md)",
+      "Updated index.json files for any new entries created",
+      "Team output files with structured results (storage/coordination/teams/{team}/output/*.json)",
+      "Think tank convergence report if multiple teams participated (storage/coordination/teams/think-tank-report.json)"
+    ],
+    "naming_conventions": {
+      "kb_entries": "KB-XXXX.md with zero-padded sequential numbering (e.g., KB-0024.md). The XXXX number must be unique and sequential.",
+      "session_logs": "TEAM-XXXX-session.md matching the team number (e.g., TEAM-0024-session.md).",
+      "scripts": "snake_case.py with descriptive names (e.g., multi_team_runner.py, not runner.py).",
+      "output_files": "Descriptive JSON filenames (e.g., coordination-sops.json, api-analysis-results.json).",
+      "bus_channels": "Lowercase with hyphens: global, topic-{name}, direct-{team_a}-{team_b}.",
+      "team_names": "Lowercase with hyphens: team-alpha, team-01, coding-team-1. Used as identifiers in SQLite and bus messages.",
+      "agent_ids": "Format: {team_name}-{role_or_number}: alpha-lead, alpha-worker-1, beta-lead."
+    },
+    "cross_referencing": {
+      "kb_to_kb": "Use the builds_on field in YAML frontmatter to reference prior KB entry IDs (e.g., builds_on: [KB-0022, KB-0023]). This creates a knowledge graph showing how insights build on each other.",
+      "session_to_kb": "In the session log, explicitly list which KB entries were created (e.g., 'Created KB-0024 documenting coordination SOPs'). Also list which prior KB entries were read and relied upon.",
+      "kb_to_session": "In KB entries, reference the team and session that produced the finding (e.g., 'Discovered during TEAM-0024 session').",
+      "output_to_kb": "Team output files should reference their KB entry ID if one exists. KB entries should reference the output file path for detailed data.",
+      "cross_team": "When one team's finding builds on or contradicts another team's finding, explicitly note this in both the KB entry and session log. This cross-team referencing was identified as a key value-add in TEAM-0022 (finding the benchmark vs live test contradiction)."
+    },
+    "data_flow_diagram": {
+      "during_session": [
+        "Teams post findings -> team_findings SQLite table",
+        "Teams write results -> storage/coordination/teams/{team}/output/*.json",
+        "Teams communicate -> storage/coordination/bus/*.jsonl",
+        "Teams share data -> scratchpad (SQLite, ephemeral with TTL)",
+        "Orchestrator monitors -> dashboard.py reads from SQLite + bus"
+      ],
+      "at_session_end": [
+        "think_tank.py consolidates SQLite findings + output files -> think-tank-report.json",
+        "Team writes session log -> teams/TEAM-XXXX-session.md",
+        "Team creates KB entries -> knowledge-base/entries/KB-XXXX.md",
+        "Team updates indexes -> */index.json files"
+      ],
+      "between_sessions": [
+        "New team reads session logs <- teams/TEAM-XXXX-session.md",
+        "New team reads KB entries <- knowledge-base/entries/KB-XXXX.md",
+        "New team reads indexes <- */index.json",
+        "Session database may be reset (ephemeral state is lost)",
+        "KB entries and session logs persist (permanent knowledge)"
+      ]
+    },
+    "version_strategy": {
+      "knowledge_base": "Append-only. Never modify or delete existing KB entries. Create new entries that supersede old ones using builds_on references. If a finding is invalidated, create a new KB entry explaining why and referencing the old one.",
+      "scripts": "In-place updates with change documentation in session logs. For breaking changes, create a new script and deprecate the old one. Track scripts in storage/scripts/index.json.",
+      "coordination_tools": "In-place updates to the modules in storage/coordination/. Document changes in KB entries. Run existing tests to verify backward compatibility.",
+      "session_database": "Ephemeral -- each session can start fresh. Extract valuable data to permanent storage before session ends.",
+      "bus_messages": "Ephemeral -- auto-expire based on TTL. No versioning needed."
+    }
+  }
+}

@@ -1,0 +1,360 @@
+{
+  "module": "help_protocol.py",
+  "analysis_date": "2026-03-11",
+  "team": "think-tank-stress-1",
+
+  "failure_modes": [
+    {
+      "id": "FM-HP-001",
+      "name": "Zombie work items from crashed helpers",
+      "description": "A team accepts a help request and its work_item transitions to 'in_progress', but the helper team crashes or is killed before calling fulfill_help(). The work item remains permanently in 'in_progress' and the help_request remains 'accepted' forever. No other team can pick it up because it is no longer 'open'.",
+      "severity": "critical",
+      "likelihood": "high",
+      "current_protection": "none",
+      "recommended_fix": "Add a heartbeat/last_seen column to team_status and a reaper method that detects stale 'accepted' help requests (e.g., helper team has not updated status in N minutes). Reaper should reset the help_request to 'open' and the work_item to 'available_for_help', allowing reassignment."
+    },
+    {
+      "id": "FM-HP-002",
+      "name": "Stale team_status from crashed teams",
+      "description": "If a team process crashes without calling close() or updating its status to 'complete'/'idle', its team_status row remains at whatever state it was last in (e.g., 'working' at 50%). Other teams' idle detection and auto_assign logic will incorrectly believe this team is still active. get_idle_teams() will never return it, get_busy_teams() will include it forever.",
+      "severity": "critical",
+      "likelihood": "high",
+      "current_protection": "last_updated field exists but is never checked for staleness",
+      "recommended_fix": "Add a staleness threshold check. Teams with last_updated older than a configurable timeout (e.g., 5 minutes) should be treated as crashed. Add a cleanup_stale_teams() method that transitions stale 'working'/'helping' teams to 'crashed' status and reopens their accepted help requests."
+    },
+    {
+      "id": "FM-HP-003",
+      "name": "SQLite database corruption mid-transaction",
+      "description": "If the process is killed (SIGKILL) or disk fills up during a COMMIT inside offer_help() or auto_assign_idle_teams(), the WAL file may be left in an inconsistent state. On next connection, SQLite WAL recovery may fail if the -wal or -shm files are corrupted or partially written. This would make the entire help protocol database inaccessible.",
+      "severity": "critical",
+      "likelihood": "low",
+      "current_protection": "WAL journal mode provides crash recovery in most cases. BEGIN IMMEDIATE ensures atomic writes.",
+      "recommended_fix": "Add integrity checking on startup: run PRAGMA integrity_check and PRAGMA quick_check. If corruption is detected, attempt recovery from WAL. As a last resort, recreate the schema and log a critical error. Consider periodic PRAGMA wal_checkpoint(TRUNCATE) to keep WAL file size manageable."
+    },
+    {
+      "id": "FM-HP-004",
+      "name": "Bus directory full or permission denied",
+      "description": "_publish_bus() calls os.open() with O_WRONLY|O_APPEND|O_CREAT. If the filesystem is full or the directory permissions have changed, os.write() or os.open() will raise OSError. Since _publish_bus() is called after DB commits (e.g., in request_help, offer_help, update_status), the DB state is updated but the bus notification is lost. This means other teams monitoring the bus will never learn about the event, even though the DB reflects the change.",
+      "severity": "high",
+      "likelihood": "medium",
+      "current_protection": "none - exceptions propagate up uncaught from _publish_bus()",
+      "recommended_fix": "Wrap _publish_bus() calls in try/except to catch OSError. Log the failure but do not let it crash the caller. Consider a retry queue for failed bus messages. Also add bus_dir health checks on __init__."
+    },
+    {
+      "id": "FM-HP-005",
+      "name": "TOCTOU race in auto_assign_idle_teams capability matching",
+      "description": "auto_assign_idle_teams() calls get_open_help_requests() then find_compatible_helpers() then attempts to claim. Between find_compatible_helpers() (which calls get_idle_teams()) and the BEGIN IMMEDIATE claim, the helper team may have changed status from 'idle' to 'working'. The code updates team_status to 'helping' regardless, potentially overwriting a legitimate 'working' status. The team could end up assigned to help while already working on its own task.",
+      "severity": "high",
+      "likelihood": "medium",
+      "current_protection": "BEGIN IMMEDIATE prevents concurrent writes but does NOT verify the helper team is still idle before assignment",
+      "recommended_fix": "Inside the BEGIN IMMEDIATE block of auto_assign_idle_teams(), add a check: SELECT status FROM team_status WHERE team = ? AND status IN ('idle', 'complete'). Only proceed with assignment if the team is still idle/complete."
+    },
+    {
+      "id": "FM-HP-006",
+      "name": "Connection used after close()",
+      "description": "close() sets no flag; it just calls self._conn.close(). Any subsequent method call (e.g., add_work_item, offer_help) will attempt to use the closed connection, raising sqlite3.ProgrammingError. In multi-threaded scenarios, one thread could close() while another is mid-operation.",
+      "severity": "high",
+      "likelihood": "medium",
+      "current_protection": "none",
+      "recommended_fix": "Add a self._closed = True flag in close(). Check it at the top of every public method, raising a clear RuntimeError('HelpProtocol instance is closed'). Ensure close() acquires self._lock before closing the connection."
+    },
+    {
+      "id": "FM-HP-007",
+      "name": "Unbounded bus file growth",
+      "description": "Every status update, help request, and help acceptance appends a line to global.jsonl. With 50+ teams updating status frequently, the file grows without bound. There is no rotation, truncation, or TTL-based cleanup. Over thousands of operations, the file could grow to hundreds of MB, slowing down any consumers that read it sequentially.",
+      "severity": "medium",
+      "likelihood": "high",
+      "current_protection": "TTL field is set to 3600 in messages but never enforced",
+      "recommended_fix": "Add bus file rotation or a cleanup method that removes messages older than their TTL. Consider splitting channels into per-team files or using a rotating file approach (e.g., global.jsonl.1, global.jsonl.2)."
+    },
+    {
+      "id": "FM-HP-008",
+      "name": "Self-help request not prevented",
+      "description": "A team can call request_help() and then offer_help() on its own request. The offer_help() method has no check to prevent a team from accepting its own help request. Only auto_assign_idle_teams() has a self-assignment guard. This could result in a team 'helping itself' and the work item being assigned to the same team that requested help.",
+      "severity": "medium",
+      "likelihood": "low",
+      "current_protection": "auto_assign_idle_teams checks helper_team != req['requesting_team'], but offer_help() does not",
+      "recommended_fix": "In offer_help(), read the requesting_team from the help_request row and reject if self.team == requesting_team."
+    },
+    {
+      "id": "FM-HP-009",
+      "name": "No validation of status transitions",
+      "description": "update_status() accepts any string for status with no validation. A team could set status to 'banana' or an empty string, breaking get_idle_teams(), get_busy_teams(), and get_teams_needing_help() which filter on specific status values. Similarly, work item status changes are not validated - complete_work_item() can be called on an already-completed item.",
+      "severity": "medium",
+      "likelihood": "medium",
+      "current_protection": "none",
+      "recommended_fix": "Define VALID_TEAM_STATUSES = {'idle', 'working', 'needs_help', 'helping', 'complete'} and VALID_WORK_STATUSES = {'pending', 'available_for_help', 'in_progress', 'completed'}. Validate in update_status() and state-transition methods, raising ValueError for invalid states."
+    },
+    {
+      "id": "FM-HP-010",
+      "name": "Concurrent auto_assign_idle_teams double-assigns helper",
+      "description": "If two different teams (or a coordinator) call auto_assign_idle_teams() simultaneously, both read the same set of open requests and idle teams. Both could successfully assign the same idle helper to different help requests because the BEGIN IMMEDIATE in each only locks for its own request_id. Team B could be set to 'helping' for request 1, then immediately overwritten to 'helping' for request 2.",
+      "severity": "high",
+      "likelihood": "medium",
+      "current_protection": "BEGIN IMMEDIATE prevents concurrent claims on the same request, but NOT concurrent claims on different requests targeting the same helper team",
+      "recommended_fix": "Inside the BEGIN IMMEDIATE block, add a check: verify helper team's status is still 'idle'/'complete' before assigning. This way, the second auto_assign call would see the helper is already 'helping' and skip it."
+    },
+    {
+      "id": "FM-HP-011",
+      "name": "Memory leak from long-lived HelpProtocol instances",
+      "description": "Each HelpProtocol instance holds an open SQLite connection with WAL mode. SQLite WAL connections hold shared memory mappings (-shm file). In a long-running coordinator that creates many HelpProtocol instances (e.g., one per team interaction) without calling close(), connection handles and associated memory accumulate. Python's GC may not close them promptly.",
+      "severity": "medium",
+      "likelihood": "medium",
+      "current_protection": "close() method exists but no __del__, __enter__/__exit__, or context manager support",
+      "recommended_fix": "Implement __enter__/__exit__ for context manager support (with HelpProtocol(...) as hp:). Add __del__ as a safety net that calls close() if not already closed. Document that close() must be called."
+    }
+  ],
+
+  "stress_tests": [
+    {
+      "id": "ST-HP-001",
+      "name": "50 concurrent teams requesting and offering help simultaneously",
+      "description": "Simulate 50 teams, each creating work items, requesting help, and offering help on random open requests all at the same time. Verifies that the system maintains consistency under extreme concurrency.",
+      "target": "Thread safety of offer_help(), request_help(), and auto_assign_idle_teams() under heavy concurrent load",
+      "setup": "Create 50 HelpProtocol instances sharing the same DB. Register capabilities for each. Pre-create 20 work items across various teams.",
+      "execution": "1. Spawn 50 threads, each running: register_capabilities, update_status, add_work_item, request_help, then offer_help on a random open request. 2. Use a threading.Barrier to synchronize start. 3. Each thread runs 10 cycles of offer/request. 4. Run for 30 seconds.",
+      "expected_behavior": "Each help request accepted by exactly one team. No duplicate assignments. All DB constraints satisfied. No unhandled exceptions.",
+      "failure_indicators": "Multiple winners for the same request. sqlite3 errors other than SQLITE_BUSY. Deadlocks (threads hang past timeout). Data corruption on read-back.",
+      "priority": "critical"
+    },
+    {
+      "id": "ST-HP-002",
+      "name": "Help request pile-up with zero idle teams",
+      "description": "Create 100 help requests with no idle teams available. Verify the system degrades gracefully, then add idle teams one by one and verify drain-down.",
+      "target": "System behavior when demand far exceeds supply; auto_assign_idle_teams with large open request queues",
+      "setup": "Create 20 teams all in 'working' status. Have each create 5 help requests (100 total).",
+      "execution": "1. Call auto_assign_idle_teams() - verify 0 assignments. 2. Transition 1 team to 'idle'. 3. Call auto_assign_idle_teams() - verify exactly 1 assignment. 4. Repeat, adding idle teams one by one. 5. Verify priority ordering is respected.",
+      "expected_behavior": "Zero assignments when no idle teams. Exactly one assignment per idle team per auto_assign call. Highest priority requests served first.",
+      "failure_indicators": "Assignments when no idle teams exist. Wrong priority ordering. Same team assigned multiple times. Performance degradation (>5s for auto_assign with 100 open requests).",
+      "priority": "high"
+    },
+    {
+      "id": "ST-HP-003",
+      "name": "Rapid fire status updates from all teams",
+      "description": "50 teams each call update_status() 100 times in rapid succession with varying statuses. Measures throughput and verifies final state consistency.",
+      "target": "SQLite write throughput under WAL mode; _retry_on_busy effectiveness",
+      "setup": "Create 50 HelpProtocol instances. Each in a separate thread.",
+      "execution": "1. Barrier-synchronized start. 2. Each thread calls update_status 100 times, cycling through idle/working/needs_help. 3. Measure wall-clock time. 4. After all threads complete, verify each team has exactly one row in team_status with the correct final state.",
+      "expected_behavior": "All 5000 updates complete within 60 seconds. Final state in team_status matches the last update for each team. No lost updates.",
+      "failure_indicators": "SQLITE_BUSY errors exceeding retry budget (raised to caller). Final state mismatches. Throughput below 50 ops/sec. WAL file grows beyond 100MB.",
+      "priority": "high"
+    },
+    {
+      "id": "ST-HP-004",
+      "name": "Database recovery after simulated crash",
+      "description": "Kill the process mid-transaction and verify the database recovers correctly on the next connection.",
+      "target": "WAL crash recovery; data consistency after unclean shutdown",
+      "setup": "Create HelpProtocol instance. Add work items and help requests.",
+      "execution": "1. Start a help offer (BEGIN IMMEDIATE). 2. Before COMMIT, forcefully close the connection (simulate crash via conn.interrupt() or process kill). 3. Create a new HelpProtocol instance on the same DB. 4. Verify schema is intact. 5. Verify all committed data is present. 6. Verify the interrupted transaction was rolled back.",
+      "expected_behavior": "New connection opens successfully. WAL recovery is automatic. Pre-crash committed data is intact. Interrupted transaction is rolled back. Help request remains 'open'.",
+      "failure_indicators": "Database fails to open. Data loss of committed transactions. Interrupted transaction partially applied. Schema corruption.",
+      "priority": "critical"
+    },
+    {
+      "id": "ST-HP-005",
+      "name": "Bus file write under disk pressure",
+      "description": "Simulate filesystem-full conditions during bus writes and verify the DB operations still succeed.",
+      "target": "_publish_bus() error handling; decoupling of bus writes from DB commits",
+      "setup": "Create a tmpfs or small ramdisk for bus_dir. Fill it near capacity. Create HelpProtocol with that bus_dir.",
+      "execution": "1. Fill the bus_dir filesystem to 99% capacity. 2. Call request_help() - bus write may fail. 3. Verify the help_request is still created in DB. 4. Call offer_help() - bus write may fail. 5. Verify the offer is still recorded in DB.",
+      "expected_behavior": "DB operations succeed regardless of bus write failures. Bus write failures are logged but do not crash the caller.",
+      "failure_indicators": "DB operations fail due to bus errors. Unhandled OSError propagates. Help request not created despite bus failure. Process crashes.",
+      "priority": "high"
+    },
+    {
+      "id": "ST-HP-006",
+      "name": "Millions of work items - ID space and query performance",
+      "description": "Insert 1 million work items and help requests. Verify ID uniqueness, query performance, and memory usage.",
+      "target": "INTEGER PRIMARY KEY AUTOINCREMENT behavior at scale; query performance with large tables",
+      "setup": "Create HelpProtocol instance. Disable bus writes for speed.",
+      "execution": "1. Insert 1M work items via add_work_item() in batches. 2. Insert 100K help requests. 3. Time get_open_help_requests() with 50K open requests. 4. Time find_compatible_helpers() with 100 idle teams. 5. Time auto_assign_idle_teams() with 1000 open requests and 50 idle teams. 6. Check memory usage of the process.",
+      "expected_behavior": "All IDs unique and monotonically increasing. get_open_help_requests < 1s. find_compatible_helpers < 2s. auto_assign < 5s. Memory usage < 500MB.",
+      "failure_indicators": "Duplicate IDs. Query times exceed 10s. Memory usage exceeds 1GB. SQLite integer overflow (not expected until 2^63 but worth verifying).",
+      "priority": "medium"
+    },
+    {
+      "id": "ST-HP-007",
+      "name": "Concurrent auto_assign_idle_teams from multiple coordinators",
+      "description": "Three coordinator instances call auto_assign_idle_teams() simultaneously on the same DB with overlapping idle teams and open requests.",
+      "target": "Race condition in auto_assign_idle_teams between find_compatible_helpers and BEGIN IMMEDIATE claim",
+      "setup": "Create 10 open help requests and 5 idle teams. Create 3 HelpProtocol coordinator instances.",
+      "execution": "1. Barrier-synchronized: all 3 coordinators call auto_assign_idle_teams() simultaneously. 2. Collect all assignments from all 3 calls. 3. Verify no double-assignments: each request assigned at most once, each helper assigned at most once.",
+      "expected_behavior": "Total assignments across all coordinators = min(open_requests, idle_teams) = 5. Each helper team appears in at most one assignment. Each request appears in at most one assignment.",
+      "failure_indicators": "A helper team assigned to multiple requests. A request assigned to multiple helpers. Total assignments > 5. Any 'helping' status overwritten.",
+      "priority": "critical"
+    },
+    {
+      "id": "ST-HP-008",
+      "name": "Capability change during matching window",
+      "description": "Team registers new capabilities or changes status between when find_compatible_helpers reads capabilities and when auto_assign attempts to claim.",
+      "target": "TOCTOU vulnerability in capability matching + assignment flow",
+      "setup": "Team A has open help request requiring 'ml'. Team B is idle with ['ml']. Team C is idle with ['web'].",
+      "execution": "1. Coordinator starts auto_assign. 2. find_compatible_helpers returns Team B as match. 3. Before BEGIN IMMEDIATE, Team B changes status to 'working' (simulated via another thread). 4. Coordinator tries to assign Team B. 5. Verify behavior.",
+      "expected_behavior": "Ideally: assignment fails for Team B, falls back to Team C or no assignment. Currently: assignment succeeds and overwrites Team B's 'working' status with 'helping'.",
+      "failure_indicators": "Team B's legitimate 'working' status overwritten with 'helping'. Team B now has two conflicting tasks.",
+      "priority": "high"
+    },
+    {
+      "id": "ST-HP-009",
+      "name": "Rapid open/close cycles of HelpProtocol instances",
+      "description": "Create and destroy 1000 HelpProtocol instances rapidly to check for resource leaks (file descriptors, WAL files, connections).",
+      "target": "Resource cleanup; SQLite connection lifecycle; WAL checkpoint behavior",
+      "setup": "Single DB path. Bus dir on regular filesystem.",
+      "execution": "1. Loop 1000 times: create HelpProtocol, do one operation, close(). 2. After loop, check: open file descriptors for the process, WAL file size, -shm file presence. 3. Repeat without calling close() to test GC behavior.",
+      "expected_behavior": "File descriptors stay bounded. WAL file stays reasonable (<10MB). -shm file cleaned up. No 'too many open files' errors.",
+      "failure_indicators": "File descriptor count grows linearly. 'too many open files' error. WAL file grows unbounded. -shm file not cleaned up.",
+      "priority": "medium"
+    },
+    {
+      "id": "ST-HP-010",
+      "name": "Pathological bus channel names",
+      "description": "Test _publish_bus with channel names containing path traversal attempts, unicode, very long strings, and special characters.",
+      "target": "_publish_bus channel name sanitization",
+      "setup": "Create HelpProtocol instance.",
+      "execution": "1. Call _publish_bus with channel='../../etc/passwd'. 2. Verify file is created in bus_dir, not outside it. 3. Call with channel containing null bytes, unicode, 10000-char string. 4. Verify no files created outside bus_dir.",
+      "expected_behavior": "All files created within bus_dir. Path traversal attempts neutralized by the replace('/', '_') and replace('..', '_') sanitization. Long names truncated or handled gracefully.",
+      "failure_indicators": "Files created outside bus_dir. Unhandled exceptions on special characters. Null byte injection creates unexpected files.",
+      "priority": "medium"
+    },
+    {
+      "id": "ST-HP-011",
+      "name": "Help request with invalid work_item_id",
+      "description": "Call request_help with a work_item_id that does not exist, belongs to another team, or has already been completed.",
+      "target": "Foreign key and ownership validation in request_help()",
+      "setup": "Team A creates work item 1. Team B creates work item 2.",
+      "execution": "1. Team A calls request_help(work_item_id=999) - nonexistent. 2. Team A calls request_help(work_item_id=2) - Team B's item. 3. Team A completes item 1, then calls request_help(work_item_id=1) - completed item. 4. Check what state the DB is in after each.",
+      "expected_behavior": "Ideally: all three should raise errors or return failure. Currently: all succeed silently, creating invalid help requests.",
+      "failure_indicators": "Help requests created for nonexistent work items. Cross-team work item modification without authorization. Completed items reopened as 'available_for_help'.",
+      "priority": "high"
+    },
+    {
+      "id": "ST-HP-012",
+      "name": "Sustained load test over extended period",
+      "description": "Run 20 teams through a realistic workload (create items, request help, offer help, fulfill) for 10 minutes continuously.",
+      "target": "Long-running stability; WAL file growth; connection pool behavior; memory stability",
+      "setup": "20 HelpProtocol instances, each in its own thread. Realistic work patterns: create 1-3 items, work for random interval, request help, wait, fulfill.",
+      "execution": "1. Run for 10 minutes with randomized operations. 2. Monitor: memory usage every 30s, WAL file size, open file descriptors, error counts. 3. After completion, verify DB consistency: no orphaned records, all completed items have correct timestamps, no 'accepted' requests without a helper team.",
+      "expected_behavior": "Memory usage stable (not growing). WAL file stays bounded. Zero unhandled errors. DB fully consistent at end.",
+      "failure_indicators": "Memory growth over time. WAL file exceeds 100MB. Error rate increases over time. DB inconsistencies at end.",
+      "priority": "high"
+    }
+  ],
+
+  "missing_features": [
+    {
+      "id": "MF-HP-001",
+      "name": "Help request timeout and automatic reopening",
+      "description": "No mechanism to timeout accepted help requests that are never fulfilled. If a helper team accepts a request but never calls fulfill_help(), the request is stuck in 'accepted' forever.",
+      "justification": "Critical for system liveness. In any distributed work system, tasks must have timeouts. Without this, a single crashed helper can block work indefinitely. The zombie work item problem (FM-HP-001) depends on this feature.",
+      "complexity": "medium",
+      "priority": "critical"
+    },
+    {
+      "id": "MF-HP-002",
+      "name": "Help request cancellation",
+      "description": "No way for the requesting team to cancel a help request. Once created, a request can only be accepted or left open. If a team solves the problem itself or the request becomes irrelevant, it remains open, potentially wasting an idle team's assignment.",
+      "justification": "Teams frequently resolve their own blockers. Without cancellation, open request counts are inflated and idle teams get assigned to already-resolved problems.",
+      "complexity": "low",
+      "priority": "high"
+    },
+    {
+      "id": "MF-HP-003",
+      "name": "Help request priority escalation",
+      "description": "No mechanism for help request priorities to escalate over time. A low-priority request that has been open for 30 minutes may be more urgent than a fresh high-priority request, but the current CASE-based ordering only considers static priority.",
+      "justification": "Prevents starvation of lower-priority requests. In practice, any request left unresolved for a long time indicates a real problem that needs attention.",
+      "complexity": "medium",
+      "priority": "medium"
+    },
+    {
+      "id": "MF-HP-004",
+      "name": "Team health monitoring and heartbeat",
+      "description": "No heartbeat mechanism to detect crashed or hung teams. The last_updated field in team_status is only updated when a team explicitly calls update_status(). There is no periodic health check or automatic detection of non-responsive teams.",
+      "justification": "Essential for detecting FM-HP-001 (zombie work items) and FM-HP-002 (stale team status). Without heartbeats, the system cannot distinguish between a team that is busy and a team that has crashed.",
+      "complexity": "medium",
+      "priority": "critical"
+    },
+    {
+      "id": "MF-HP-005",
+      "name": "Work item dependency tracking",
+      "description": "No way to express dependencies between work items. If work item B depends on work item A being completed first, there is no mechanism to enforce or even track this ordering.",
+      "justification": "Real coordination scenarios frequently involve ordered tasks. Without dependencies, teams may work on items whose prerequisites are not yet met, wasting effort.",
+      "complexity": "high",
+      "priority": "medium"
+    },
+    {
+      "id": "MF-HP-006",
+      "name": "Metrics and observability",
+      "description": "No metrics collection for: average help request resolution time, number of requests per team, average idle time, auto-assignment success rate, retry counts, or error rates.",
+      "justification": "Without observability, operators cannot tune the system, identify bottlenecks, or detect degradation. The retry_on_busy decorator logs at DEBUG but there are no aggregate counters.",
+      "complexity": "low",
+      "priority": "high"
+    },
+    {
+      "id": "MF-HP-007",
+      "name": "Context manager and resource lifecycle support",
+      "description": "HelpProtocol does not implement __enter__/__exit__ for use as a context manager, nor __del__ as a safety net. Resource leaks are likely if callers forget to call close().",
+      "justification": "Pythonic resource management. Every test in test_help_protocol.py must manually call hp.close(). A context manager would prevent resource leaks and simplify usage.",
+      "complexity": "low",
+      "priority": "high"
+    }
+  ],
+
+  "error_protection": [
+    {
+      "id": "EP-HP-001",
+      "name": "Bus write failures crash callers",
+      "gap": "_publish_bus() can raise OSError (disk full, permission denied, path too long) and this exception propagates uncaught to the caller. Since _publish_bus is called AFTER the DB commit in request_help(), offer_help(), and update_status(), a bus failure means the DB state changed but the caller sees an exception and may incorrectly assume the operation failed.",
+      "impact": "Callers may retry operations that already succeeded in DB, creating duplicate help requests or work items. Or callers may abort entirely, leaving inconsistent state between DB and bus.",
+      "recommended_protection": "Wrap all _publish_bus() calls in try/except OSError, log the failure at ERROR level, and return None instead of raising. The bus is a notification mechanism and should not be transactional with the DB.",
+      "priority": "critical"
+    },
+    {
+      "id": "EP-HP-002",
+      "name": "No input validation on any public method",
+      "gap": "No validation on: team/agent_id strings (could be empty or None), status values (any string accepted), progress_pct (could be negative or >100), priority values (any string accepted), work_item_id (no existence check in several methods). json.loads on required_capabilities could fail if the stored JSON is malformed.",
+      "impact": "Invalid data silently written to DB. Downstream queries may return unexpected results. json.loads could raise ValueError/JSONDecodeError, crashing callers.",
+      "recommended_protection": "Add validation at the top of each public method: assert non-empty strings for team/agent_id, validate status against allowed values, clamp progress_pct to 0-100, validate priority against allowed values, check work_item existence in request_help/mark_work_available/complete_work_item.",
+      "priority": "high"
+    },
+    {
+      "id": "EP-HP-003",
+      "name": "No protection against SQL injection via team/agent names",
+      "gap": "While parameterized queries are used throughout (preventing direct SQL injection), the team and agent_id strings are also used in string interpolation for bus messages and current_task fields (e.g., f\"Helping {req['requesting_team']}: {req['description'][:100]}\"). If these contain control characters or extremely long strings, they could cause issues in JSON serialization or DB storage.",
+      "impact": "Malformed JSON in bus files if team names contain quotes or backslashes. Extremely long team names could cause performance issues in GROUP_CONCAT queries.",
+      "recommended_protection": "Validate team and agent_id in __init__: must be non-empty, alphanumeric with hyphens/underscores, max 64 characters. Reject invalid names early.",
+      "priority": "medium"
+    },
+    {
+      "id": "EP-HP-004",
+      "name": "retry_on_busy swallows non-busy OperationalErrors",
+      "gap": "The _retry_on_busy decorator checks for 'locked' or 'busy' in the error string. Other OperationalErrors (e.g., 'disk I/O error', 'database disk image is malformed', 'unable to open database file') are re-raised immediately, which is correct. However, if the error message format changes in a future SQLite version and doesn't contain 'busy' or 'locked', genuine busy errors would be raised instead of retried.",
+      "impact": "Under high contention, operations that should retry instead fail immediately, causing cascading failures.",
+      "recommended_protection": "Check the SQLite error code directly (e.g., sqlite3.OperationalError with errno SQLITE_BUSY = 5, SQLITE_LOCKED = 6) instead of string matching. Python 3.11+ exposes sqlite_errorcode on the exception object.",
+      "priority": "medium"
+    },
+    {
+      "id": "EP-HP-005",
+      "name": "fulfill_help on non-accepted requests",
+      "gap": "fulfill_help() does not check that the request is in 'accepted' status or that the calling team is the accepted helper. Any team can call fulfill_help() on any request in any state, including 'open' or already 'fulfilled' requests.",
+      "impact": "A team that did not accept a request could mark it as fulfilled, preventing the actual helper from completing it. An already-fulfilled request could have its resolved_at timestamp overwritten. The associated work_item would be marked completed even if no work was done.",
+      "recommended_protection": "In fulfill_help(), verify: (1) request status is 'accepted', (2) accepted_by_team matches self.team. Raise ValueError or return False if conditions not met.",
+      "priority": "high"
+    },
+    {
+      "id": "EP-HP-006",
+      "name": "No protection against concurrent close() and operation",
+      "gap": "If thread A is inside offer_help() executing within self._lock, and thread B calls close() which also acquires self._lock, thread B will wait. But once A releases the lock, B closes the connection. If A calls _publish_bus after releasing the lock (which it does in offer_help), that is fine. But if close() is called between the lock release and _publish_bus, subsequent operations on other threads will fail with 'Cannot operate on a closed database'.",
+      "impact": "ProgrammingError exceptions in multi-threaded usage when close() races with other operations.",
+      "recommended_protection": "Add a self._closed flag checked under self._lock at the start of every method. close() sets this flag before closing the connection. Methods raise RuntimeError if _closed is True.",
+      "priority": "medium"
+    },
+    {
+      "id": "EP-HP-007",
+      "name": "No handling of AUTOINCREMENT exhaustion",
+      "gap": "SQLite AUTOINCREMENT guarantees monotonically increasing IDs but has a hard limit at 2^63-1. After that, INSERT fails with SQLITE_FULL. While practically unreachable, the code has no error handling for this case and the error would surface as an unhandled OperationalError.",
+      "impact": "In an extremely long-running system, work_item and help_request creation would fail with an opaque error.",
+      "recommended_protection": "Low priority but worth documenting. Consider removing AUTOINCREMENT (plain INTEGER PRIMARY KEY allows ID reuse) if monotonicity is not required, or add monitoring for max(id) approaching limits.",
+      "priority": "low"
+    }
+  ]
+}

@@ -1,0 +1,359 @@
+{
+  "module": "work_stealing.py",
+  "analysis_date": "2026-03-11",
+  "team": "think-tank-stress-2",
+
+  "failure_modes": [
+    {
+      "id": "FM-WS-001",
+      "name": "Thundering herd on steal_work with many idle teams",
+      "description": "When 20+ teams all call steal_work() simultaneously, each executes BEGIN IMMEDIATE. Only one can hold the write lock at a time; the rest get SQLITE_BUSY. With _MAX_RETRIES=5 and exponential backoff starting at 0.1s, the maximum wait is 0.1+0.2+0.4+0.8+1.6 = 3.1s. If more than ~5-6 teams contend simultaneously and each successful steal takes ~10ms of lock time, 20 teams may exhaust retries. The backoff has no jitter, so retries synchronize and collide again.",
+      "severity": "critical",
+      "likelihood": "high",
+      "current_protection": "_retry_on_busy with 5 retries and exponential backoff. BEGIN IMMEDIATE prevents double-steal. PRAGMA busy_timeout=30000 at SQLite level.",
+      "recommended_fix": "1) Add random jitter to backoff: delay *= 2 + random.uniform(0, 0.1). 2) Increase _MAX_RETRIES to 10 for steal operations. 3) Consider a SELECT ... LIMIT 1 OFFSET random(N) approach to scatter contention across different rows. 4) Use PRAGMA busy_timeout as primary backoff, remove Python-level retry sleep to avoid double-waiting."
+    },
+    {
+      "id": "FM-WS-002",
+      "name": "Priority inversion: low-priority items processed first when high-priority enqueued during processing",
+      "description": "steal_work() uses ORDER BY priority ASC, created_at ASC. This means the oldest low-priority item is always stolen first. If a high-priority item (priority=1) is enqueued while teams are busy processing low-priority items (priority=10), the high-priority item must wait until all previously-queued lower-priority items are claimed. There is no preemption or priority boosting.",
+      "severity": "high",
+      "likelihood": "medium",
+      "current_protection": "Priority ordering in steal query. But no mechanism for urgent items to skip the queue or for claimed-but-unfinished low-priority items to be released.",
+      "recommended_fix": "1) Change ORDER BY to priority ASC, created_at ASC (already correct, but add priority aging: items waiting longer than threshold get priority boosted). 2) Add a 'urgent' flag that puts items at absolute front. 3) Add work release/abandon so teams can drop low-priority items when urgent work appears."
+    },
+    {
+      "id": "FM-WS-003",
+      "name": "Circular dependencies in pipeline DAG",
+      "description": "create_pipeline does not validate the dependency graph. A pipeline with stages A depends_on B and B depends_on A creates a deadlock: neither stage ever becomes 'ready'. There is no cycle detection. The pipeline stays 'active' forever with both stages in 'waiting' state.",
+      "severity": "critical",
+      "likelihood": "medium",
+      "current_protection": "None. No dependency graph validation on pipeline creation.",
+      "recommended_fix": "1) Implement topological sort validation in create_pipeline. Reject pipelines with cycles. 2) Add a 'stalled' detection method that identifies pipelines where no stage is ready/in_progress but not all are completed. 3) Add a timeout for pipelines that should have completed."
+    },
+    {
+      "id": "FM-WS-004",
+      "name": "Scratchpad TTL race: read starts just before expiry, cleanup runs during read",
+      "description": "Scratchpad.read() does SELECT ... WHERE expires_at > now. If cleanup_expired() runs concurrently from another thread/process, it may DELETE the row between the SELECT and the time the caller processes the return value. The read succeeds, returns data, but the key is now gone. If the caller then writes based on the stale read, it may overwrite fresher data. More critically, since there is no transaction wrapping read + subsequent write, any read-modify-write pattern is unsafe.",
+      "severity": "medium",
+      "likelihood": "medium",
+      "current_protection": "SQLite WAL mode provides snapshot reads within a transaction. But read() and cleanup_expired() use separate transactions. The read returns a snapshot as of its SELECT time, which is correct. The 'race' is really about the logical validity of acting on stale data.",
+      "recommended_fix": "1) Document that scratchpad reads are not a lock; callers must handle stale reads. 2) Add compare-and-swap (CAS) method: write_if_unchanged(key, expected_value, new_value). 3) Add a 'renew' method to extend TTL without rewriting value."
+    },
+    {
+      "id": "FM-WS-005",
+      "name": "Zombie pipeline stages: started but never completed",
+      "description": "A team calls start_stage() setting status to 'in_progress', then crashes. The stage remains 'in_progress' forever. No timeout, no heartbeat, no detection. trigger_downstream skips 'in_progress' stages (they never become 'completed'), so downstream stages are permanently blocked. The entire pipeline stalls.",
+      "severity": "critical",
+      "likelihood": "high",
+      "current_protection": "None. started_at timestamp is recorded but never used for timeout detection.",
+      "recommended_fix": "1) Add a stage_timeout parameter (default 1 hour). 2) Add a check_zombie_stages(pipeline_id) method that identifies stages in 'in_progress' longer than timeout. 3) Add a reset_stage() method to revert an in_progress stage to 'ready'. 4) Add a 'failed' status for stages."
+    },
+    {
+      "id": "FM-WS-006",
+      "name": "Scratchpad memory growth with no automated cleanup",
+      "description": "cleanup_expired() exists but must be called manually. In practice, nobody calls it. Expired entries accumulate in the scratchpad table, consuming SQLite pages. Over days of operation with high write volume, the database file grows continuously. There is no scheduled or automatic cleanup.",
+      "severity": "high",
+      "likelihood": "high",
+      "current_protection": "cleanup_expired() method exists. Read operations filter by expires_at. But expired rows stay on disk.",
+      "recommended_fix": "1) Add auto-cleanup: on every Nth write (e.g., every 100 writes), trigger cleanup_expired(). 2) Add a background cleanup thread option. 3) Add database size monitoring via PRAGMA page_count * PRAGMA page_size."
+    },
+    {
+      "id": "FM-WS-007",
+      "name": "Pipeline_stages table growth with millions of rows",
+      "description": "Pipeline stages are never deleted, even for completed pipelines. There is no archival or cleanup mechanism. Queries like get_ready_stages fetch all stages for a pipeline_id, which is fine for individual pipelines, but trigger_downstream also scans all stages. If thousands of pipelines are created, the table grows to millions of rows. No indexes beyond the primary key exist on pipeline_id or status.",
+      "severity": "high",
+      "likelihood": "medium",
+      "current_protection": "None. No indexes on pipeline_stages for common query patterns. No cleanup of completed pipelines.",
+      "recommended_fix": "1) Add indexes: CREATE INDEX idx_ps_pipeline_status ON pipeline_stages(pipeline_id, status). 2) Add archive_pipeline() that moves completed pipeline data to an archive table or deletes it. 3) Add a completed_pipelines cleanup method."
+    },
+    {
+      "id": "FM-WS-008",
+      "name": "Work queue starvation when one team floods the queue",
+      "description": "enqueue_work() has no rate limiting. A single team can enqueue millions of items, all with priority=5 (default). steal_work() processes items FIFO within a priority level (ORDER BY created_at ASC). If team-A floods the queue and then team-B enqueues a few items at the same priority, team-B's items are buried behind millions of team-A items.",
+      "severity": "high",
+      "likelihood": "medium",
+      "current_protection": "Priority ordering allows urgent items (priority 1) to skip ahead. But within the same priority level, pure FIFO means a flood blocks everyone.",
+      "recommended_fix": "1) Add per-team queue depth limits (max_queued_per_team parameter). 2) Add fair-share scheduling: round-robin across owner_teams within same priority. 3) Add queue monitoring: get_queue_depth_by_team() already exists but there is no enforcement."
+    },
+    {
+      "id": "FM-WS-009",
+      "name": "Claimed but abandoned work items",
+      "description": "A team calls steal_work() claiming an item, then crashes without calling complete_work() or fail_work(). The item remains 'claimed' forever. No other team can steal it. There is no timeout on claims, no mechanism to detect abandonment, and no automatic re-queue.",
+      "severity": "critical",
+      "likelihood": "high",
+      "current_protection": "claimed_at timestamp is recorded but never used for timeout detection.",
+      "recommended_fix": "1) Add a claim_timeout parameter (default 30 minutes). 2) Add a recover_abandoned() method that re-queues items claimed longer than the timeout. 3) Call this from steal_work() before attempting to claim. 4) Track claim attempt count to detect repeatedly-failing items."
+    },
+    {
+      "id": "FM-WS-010",
+      "name": "No pipeline stage failure handling",
+      "description": "Pipeline stages have no 'failed' status. If a stage cannot complete (error, invalid input, dependency on external resource that is down), there is no way to mark it failed. It can only be 'waiting', 'ready', 'in_progress', or 'completed'. A failed stage blocks all downstream stages with no recovery path.",
+      "severity": "high",
+      "likelihood": "high",
+      "current_protection": "None. The code even has a comment: 'any_failed = False  # no failure state for stages currently'.",
+      "recommended_fix": "1) Add 'failed' and 'skipped' status options. 2) Add fail_stage(pipeline_id, stage_name, error) method. 3) Add retry logic: fail_stage can optionally re-queue to 'ready' with a retry counter. 4) Add cascade failure: when a stage fails, optionally mark all dependents as 'blocked'."
+    }
+  ],
+
+  "stress_tests": [
+    {
+      "id": "ST-WS-001",
+      "name": "Thundering herd: 20 teams steal simultaneously",
+      "description": "20 threads simultaneously call steal_work() on a queue with 10 items. Verify exactly 10 items are claimed, 10 threads get None, and no double-claiming occurs.",
+      "target": "steal_work, BEGIN IMMEDIATE atomicity",
+      "setup": "Create a WorkStealing instance. Enqueue 10 items with varying priorities. Create 20 WorkStealing instances (one per simulated team). Create a threading.Barrier(20).",
+      "execution": "All 20 threads wait on barrier, then call steal_work(). Collect results. Verify: exactly 10 non-None results with unique work IDs, exactly 10 None results. No SQLITE_BUSY propagation to caller. Total elapsed time under 10 seconds.",
+      "expected_behavior": "10 winners, 10 losers, no double-claims, no exceptions, within time limit.",
+      "failure_indicators": "Any work_id claimed by 2+ teams. More or fewer than 10 winners. SQLITE_BUSY exception propagated. Elapsed time > 10s. Deadlock.",
+      "priority": "critical"
+    },
+    {
+      "id": "ST-WS-002",
+      "name": "Priority ordering under continuous enqueue/steal",
+      "description": "One thread continuously enqueues items at alternating priorities while 5 other threads continuously steal. Verify that higher-priority items (lower number) are always stolen before lower-priority ones that were enqueued before them.",
+      "target": "steal_work priority ordering, concurrent enqueue",
+      "setup": "Create WorkStealing instances: 1 producer (team-enqueuer) and 5 consumers. Producer will enqueue 1000 items: alternating priority 1 and priority 10.",
+      "execution": "Producer enqueues items with 1ms delay. Consumers steal continuously. Record the order each consumer receives items. Post-hoc analysis: for each consumer's sequence, verify that within a 100ms window, priority-1 items are always taken before priority-10 items.",
+      "expected_behavior": "Priority-1 items are preferentially stolen. No priority-10 item is stolen while a priority-1 item remains queued (within scheduling jitter tolerance).",
+      "failure_indicators": "Priority-10 items stolen while priority-1 items remain queued. Significant priority inversions (> 5% of steals).",
+      "priority": "high"
+    },
+    {
+      "id": "ST-WS-003",
+      "name": "Circular dependency pipeline stall detection",
+      "description": "Create a pipeline with circular dependencies and verify the system's behavior. Currently there is no protection; this test documents the failure.",
+      "target": "create_pipeline, dependency validation (missing)",
+      "setup": "Define stages: A depends_on [B], B depends_on [C], C depends_on [A].",
+      "execution": "Create the pipeline. Call get_ready_stages(). Call get_pipeline_status(). Verify that no stage is ever 'ready'. Attempt trigger_downstream for each stage. Verify the pipeline is permanently stalled.",
+      "expected_behavior": "Current: pipeline is created, all stages stuck in 'waiting', no error raised. After fix: create_pipeline raises ValueError with cycle description.",
+      "failure_indicators": "N/A for current code (documents the gap). After fix: pipeline with cycles is accepted without error.",
+      "priority": "critical"
+    },
+    {
+      "id": "ST-WS-004",
+      "name": "Scratchpad TTL race condition",
+      "description": "Write a key with very short TTL. Have one thread continuously reading it while another thread continuously calls cleanup_expired(). Verify no crashes or undefined behavior.",
+      "target": "Scratchpad.read, cleanup_expired, concurrent access",
+      "setup": "Create a Scratchpad instance. Write a key with TTL=2 seconds. Create two threads.",
+      "execution": "Thread 1: loop calling read('key') every 10ms for 5 seconds, recording results. Thread 2: loop calling cleanup_expired() every 50ms for 5 seconds. Verify: no exceptions. Results transition from valid data to None at some point. No corrupt data returned.",
+      "expected_behavior": "Read returns valid data, then at some point returns None (after expiry). No exceptions. No partial or corrupt data.",
+      "failure_indicators": "Any exception during concurrent access. Read returns corrupt data. Read returns data after cleanup_expired should have removed it (within tolerance).",
+      "priority": "high"
+    },
+    {
+      "id": "ST-WS-005",
+      "name": "Zombie pipeline stages after simulated crash",
+      "description": "Start a pipeline stage, then simulate the team crashing (drop the instance). Verify the stage remains in_progress and blocks downstream forever.",
+      "target": "start_stage, zombie detection (missing)",
+      "setup": "Create a 3-stage pipeline: A -> B -> C. Start and complete A. Start B (status becomes in_progress).",
+      "execution": "Destroy the PipelineManager instance for the team running B (simulating crash). Create a new instance. Check pipeline status. Verify B is stuck in 'in_progress'. Check get_ready_stages: C should not be ready. Wait 60 seconds and check again: still stuck.",
+      "expected_behavior": "Current: B remains in_progress indefinitely, C never becomes ready. After fix: B should be detectable as zombie (started_at + timeout exceeded) and resettable.",
+      "failure_indicators": "N/A for current code (documents the gap). After fix: zombie stage not detected within timeout period.",
+      "priority": "critical"
+    },
+    {
+      "id": "ST-WS-006",
+      "name": "Scratchpad with 100K entries and no cleanup",
+      "description": "Write 100,000 entries with short TTL (1 second), let them all expire, then measure performance of read_all, list_keys, and a final cleanup_expired.",
+      "target": "Scratchpad performance, cleanup_expired bulk deletion",
+      "setup": "Create a Scratchpad instance. Write 100,000 entries with TTL=1 to the same namespace, each with a unique key.",
+      "execution": "Wait 2 seconds for all to expire. Measure time for: read_all() (should return empty dict), list_keys() (should return empty list), cleanup_expired() (should delete 100K rows). Measure database file size before and after cleanup. Run VACUUM and measure again.",
+      "expected_behavior": "read_all and list_keys return empty results quickly (under 1 second). cleanup_expired completes under 5 seconds for 100K rows. Database shrinks after VACUUM.",
+      "failure_indicators": "Any operation takes > 30 seconds. cleanup_expired fails or only partially deletes. Database remains bloated after VACUUM. Memory spike during cleanup.",
+      "priority": "high"
+    },
+    {
+      "id": "ST-WS-007",
+      "name": "Pipeline with millions of historical stages",
+      "description": "Create 1000 pipelines with 100 stages each (100K total stage rows). Then create one more pipeline and measure query latency for get_ready_stages, trigger_downstream, and get_pipeline_status.",
+      "target": "pipeline_stages table scaling, missing indexes",
+      "setup": "Create 1000 pipelines programmatically, each with 100 stages. Complete all stages in all pipelines. Then create pipeline #1001 with 5 stages.",
+      "execution": "Measure latency of: get_pipeline_status(1001), get_ready_stages(1001), trigger_downstream(1001, 'stage-1'). Compare against the same operations on a fresh database with only pipeline #1001.",
+      "expected_behavior": "Query times should be under 100ms regardless of historical data volume (with proper indexes). Without indexes, expect significant degradation.",
+      "failure_indicators": "Query latency > 1 second. Linear or worse scaling with table size. SQLite lock held too long during queries.",
+      "priority": "high"
+    },
+    {
+      "id": "ST-WS-008",
+      "name": "Work queue flood: 10K items from one team",
+      "description": "One team enqueues 10,000 items at default priority, then another team enqueues 5 items at the same priority. Measure how many of the first team's items must be stolen before the second team's items become accessible.",
+      "target": "enqueue_work fairness, queue starvation",
+      "setup": "Team-A enqueues 10,000 items (priority 5). Team-B enqueues 5 items (priority 5). 10 consumer teams begin stealing.",
+      "execution": "Consumers steal all items, recording the owner_team of each stolen item. Count how many team-A items are stolen before the first team-B item is stolen.",
+      "expected_behavior": "Current: all 10,000 team-A items stolen before any team-B item (pure FIFO within priority). After fix with fair scheduling: team-B items interleaved with team-A items.",
+      "failure_indicators": "N/A for documenting starvation. After fix: team-B items not stolen within first 100 steals.",
+      "priority": "high"
+    },
+    {
+      "id": "ST-WS-009",
+      "name": "Abandoned work item detection",
+      "description": "Steal a work item, then never complete or fail it. Verify no mechanism exists to recover it. Measure queue depth over time.",
+      "target": "steal_work, complete_work, claim abandonment (missing)",
+      "setup": "Enqueue 5 items. Steal all 5 (by 5 different teams). Complete 3. Leave 2 claimed but never finished.",
+      "execution": "Check get_queue_depth(): should be 0 (all claimed). Check get_stealable_work(): should be empty. Wait 5 minutes. Check again. The 2 abandoned items are permanently lost to the system.",
+      "expected_behavior": "Current: abandoned items remain 'claimed' forever. After fix: items claimed longer than timeout return to 'queued' status.",
+      "failure_indicators": "N/A for current code. After fix: abandoned items not recovered after timeout.",
+      "priority": "critical"
+    },
+    {
+      "id": "ST-WS-010",
+      "name": "Concurrent pipeline stage transitions",
+      "description": "Two teams simultaneously try to start_stage on the same ready stage. Verify only one succeeds or both succeed without corruption.",
+      "target": "start_stage, race condition",
+      "setup": "Create a pipeline with stage 'shared-work' (no dependencies, starts as 'ready'). Create two PipelineManager instances for different teams.",
+      "execution": "Both threads simultaneously call start_stage(pid, 'shared-work'). Check pipeline status. Verify: stage is 'in_progress', started_at is set, the last writer wins (both UPDATEs succeed but one overwrites the other).",
+      "expected_behavior": "Both succeed (UPDATE is idempotent for status change). The stage ends up in_progress. Only one team's name/timestamp persists.",
+      "failure_indicators": "Database corruption. Stage stuck in wrong state. Exception from either thread.",
+      "priority": "medium"
+    },
+    {
+      "id": "ST-WS-011",
+      "name": "Pipeline with wide fan-out: 1 stage triggers 50 downstream",
+      "description": "Create a pipeline where stage A has 50 downstream stages all depending only on A. Complete A and call trigger_downstream. Verify all 50 stages become ready.",
+      "target": "trigger_downstream, get_ready_stages, wide DAG",
+      "setup": "Create pipeline with 51 stages: 'root' (no deps) and 'branch-1' through 'branch-50' (each depends_on ['root']).",
+      "execution": "Start and complete 'root'. Call trigger_downstream(pid, 'root'). Verify return value has 50 stage names. Call get_pipeline_status and verify all 50 are 'ready'.",
+      "expected_behavior": "All 50 downstream stages transition to 'ready'. trigger_downstream returns 50 names. 50 bus notifications sent.",
+      "failure_indicators": "Fewer than 50 stages marked ready. SQLITE_BUSY during the 50 UPDATEs. Partial commit (some marked ready, others still waiting).",
+      "priority": "medium"
+    },
+    {
+      "id": "ST-WS-012",
+      "name": "Scratchpad CAS-like pattern under contention",
+      "description": "Two threads both read a counter from the scratchpad, increment it, and write it back. Run 1000 iterations. Verify the final value (should be 2000 with proper locking, will be less without).",
+      "target": "Scratchpad read-modify-write atomicity (missing)",
+      "setup": "Create a Scratchpad. Write key 'counter' with value 0 in 'global' namespace.",
+      "execution": "Two threads each loop 1000 times: read('counter', 'global'), increment, write('counter', incremented, 'global'). Check final value.",
+      "expected_behavior": "Current: final value < 2000 due to lost updates (no CAS support). After fix with CAS: final value = 2000.",
+      "failure_indicators": "N/A for documenting the gap. After fix: final value != 2000.",
+      "priority": "medium"
+    }
+  ],
+
+  "missing_features": [
+    {
+      "id": "MF-WS-001",
+      "name": "Abandoned work item recovery",
+      "description": "No mechanism to detect or recover work items that were claimed but never completed (team crashed, timed out, etc.). claimed_at timestamp is stored but never used for timeout detection. Need a recover_abandoned(timeout_seconds) method that re-queues stale claimed items.",
+      "justification": "In any distributed work queue, consumer failures are inevitable. Without recovery, claimed items are permanently lost from the queue. This is a fundamental reliability gap that will cause work to silently disappear in production.",
+      "complexity": "low",
+      "priority": "critical"
+    },
+    {
+      "id": "MF-WS-002",
+      "name": "Pipeline cycle detection",
+      "description": "create_pipeline accepts arbitrary dependency graphs with no validation. Circular dependencies cause permanent stalls with no error or warning. Need topological sort validation at pipeline creation time.",
+      "justification": "A circular dependency causes a silent permanent stall that is extremely difficult to debug. Validation at creation time is trivial to implement (standard DFS cycle detection) and prevents a class of bugs that are painful to diagnose.",
+      "complexity": "low",
+      "priority": "critical"
+    },
+    {
+      "id": "MF-WS-003",
+      "name": "Pipeline stage failure and retry handling",
+      "description": "No 'failed' status for pipeline stages. The code explicitly notes this gap: 'any_failed = False  # no failure state for stages currently'. Need fail_stage(), retry semantics, and cascade failure/blocking for dependents.",
+      "justification": "Stages will fail in practice (bad input, external service down, timeout). Without failure handling, teams must use workarounds (complete with error data) or leave stages stuck. This undermines pipeline reliability.",
+      "complexity": "medium",
+      "priority": "critical"
+    },
+    {
+      "id": "MF-WS-004",
+      "name": "Zombie stage detection and timeout",
+      "description": "Stages set to 'in_progress' have no timeout. started_at is recorded but never checked. Need a configurable stage timeout with automatic detection of stalled stages.",
+      "justification": "A crashed team leaves an in_progress stage that blocks all downstream work forever. Combined with the lack of failure handling, this means a single team crash can stall an entire pipeline permanently.",
+      "complexity": "low",
+      "priority": "critical"
+    },
+    {
+      "id": "MF-WS-005",
+      "name": "Automatic scratchpad cleanup scheduling",
+      "description": "cleanup_expired() exists but is never called automatically. Need either a periodic auto-cleanup (every N writes or every M seconds) or a background cleanup thread. Without this, the scratchpad table grows without bound.",
+      "justification": "Manual cleanup requires every consumer to remember to call it. In practice, nobody does. The table grows silently until disk or performance issues surface. A simple counter-based auto-trigger on write would solve this.",
+      "complexity": "low",
+      "priority": "high"
+    },
+    {
+      "id": "MF-WS-006",
+      "name": "Database indexes for common query patterns",
+      "description": "No secondary indexes exist on work_queue(status, priority, created_at), pipeline_stages(pipeline_id, status), or scratchpad(namespace, expires_at). All queries rely on full table scans. Need appropriate indexes for production-scale data.",
+      "justification": "Every steal_work() does a full table scan of work_queue filtered by status. Every get_ready_stages() scans all pipeline_stages for a pipeline_id. At scale (10K+ rows), these become performance bottlenecks.",
+      "complexity": "low",
+      "priority": "high"
+    },
+    {
+      "id": "MF-WS-007",
+      "name": "Work queue fair-share scheduling",
+      "description": "Within the same priority level, items are stolen in pure FIFO order. A single team flooding the queue starves all other teams' items at the same priority. Need round-robin or weighted fair-share across owner_teams.",
+      "justification": "In multi-team coordination, fairness matters. One runaway team should not prevent other teams from having their work processed. Fair scheduling is a standard feature in production work queues.",
+      "complexity": "medium",
+      "priority": "medium"
+    },
+    {
+      "id": "MF-WS-008",
+      "name": "Scratchpad compare-and-swap (CAS) for safe read-modify-write",
+      "description": "No atomic read-modify-write primitive. Two teams reading the same key, modifying, and writing back will have lost updates. Need a CAS method: write_if_value(key, expected_old, new_value) that only writes if the current value matches expected.",
+      "justification": "Shared state coordination (counters, aggregations, status flags) requires atomic updates. Without CAS, teams cannot safely coordinate through the scratchpad on mutable shared state.",
+      "complexity": "medium",
+      "priority": "medium"
+    }
+  ],
+
+  "error_protection": [
+    {
+      "id": "EP-WS-001",
+      "name": "No validation on work item fields",
+      "gap": "enqueue_work() accepts any string for title and description, any integer for priority. Empty title, negative priority, extremely long strings, and non-integer priorities are all accepted. Priority has no defined range.",
+      "impact": "Empty titles make items unidentifiable. Extreme priority values (negative, MAX_INT) may cause unexpected ordering. Very long strings waste database space and may hit SQLite row size limits.",
+      "recommended_protection": "Validate: title must be non-empty and under 1000 chars. Priority must be 1-10. Description under 10KB. Raise ValueError for violations.",
+      "priority": "medium"
+    },
+    {
+      "id": "EP-WS-002",
+      "name": "complete_work does not verify the caller claimed the item",
+      "gap": "Any team can call complete_work(work_id, result) on any work item, even one they did not claim. There is no check that claimed_by matches self.team. A team could accidentally or maliciously mark another team's work as completed with bogus results.",
+      "impact": "Work items marked completed with incorrect results. No audit trail of who actually completed the work. Potential for coordination errors.",
+      "recommended_protection": "Add a check: SELECT claimed_by FROM work_queue WHERE id = ? before updating. Raise PermissionError if claimed_by != self.team. Add an optional force=True parameter for administrative overrides.",
+      "priority": "high"
+    },
+    {
+      "id": "EP-WS-003",
+      "name": "Pipeline stage name uniqueness not enforced within a pipeline",
+      "gap": "create_pipeline does not check for duplicate stage names in the stages list. Two stages with the same name in the same pipeline create ambiguity: depends_on references become ambiguous, get_ready_stages may return duplicates, and trigger_downstream matches both rows.",
+      "impact": "Undefined behavior when stages share names. SQL queries may update wrong rows. Pipeline progression becomes unpredictable.",
+      "recommended_protection": "In create_pipeline, validate that all stage names are unique within the pipeline. Also validate that depends_on references only name stages that exist in the same pipeline.",
+      "priority": "high"
+    },
+    {
+      "id": "EP-WS-004",
+      "name": "No protection against double-start of pipeline stages",
+      "gap": "start_stage() does UPDATE ... SET status='in_progress' without checking the current status. A stage that is already 'in_progress' or 'completed' can be re-started, overwriting started_at and reverting a completed stage to in_progress.",
+      "impact": "A completed stage reset to in_progress causes pipeline regression. started_at timestamp becomes unreliable. Downstream triggers may fire again if the stage is re-completed.",
+      "recommended_protection": "Add a guard: only allow start if current status is 'ready'. Raise InvalidStateError for other states. Use UPDATE ... WHERE status = 'ready' and check rowcount.",
+      "priority": "high"
+    },
+    {
+      "id": "EP-WS-005",
+      "name": "Bus notification failure silently ignored",
+      "gap": "_bus_notify uses fire-and-forget JSONL append. If the write fails (disk full, permission error, bus_dir deleted), the exception propagates from os.write and crashes the caller. The database transaction has already been committed, so the state change is persisted but the notification is lost.",
+      "impact": "Teams relying on bus notifications for pipeline stage readiness never learn about state changes. State divergence between what is in SQLite and what has been communicated.",
+      "recommended_protection": "Wrap _bus_notify in try/except, log failures, but do not crash the caller. The SQLite state is the source of truth; bus notifications are best-effort. Add a warning log when notification fails.",
+      "priority": "high"
+    },
+    {
+      "id": "EP-WS-006",
+      "name": "No double-close protection on any class",
+      "gap": "WorkStealing.close(), PipelineManager.close(), and Scratchpad.close() all call self._conn.close() without checking if already closed. Second close raises sqlite3.ProgrammingError.",
+      "impact": "Crash on double-close. Affects code using try/finally patterns or context managers where close may be called multiple times.",
+      "recommended_protection": "Add a self._closed flag. Guard close() with it. Optionally implement __enter__/__exit__ for context manager support across all three classes.",
+      "priority": "low"
+    },
+    {
+      "id": "EP-WS-007",
+      "name": "get_ready_stages has a TOCTOU race between read and update",
+      "gap": "get_ready_stages() first reads all stages (under lock), computes which are ready (without lock), then updates waiting->ready (under lock). Between the read and the update, another process could have started or completed a stage, making the computed ready list stale. The status update may overwrite a concurrent start_stage transition.",
+      "impact": "A stage that was just started by another team could be reset to 'ready' by get_ready_stages. Minor race window but possible under high concurrency.",
+      "recommended_protection": "Use UPDATE ... SET status='ready' WHERE status='waiting' AND id=? to ensure the update only applies if status has not changed. Check rowcount to detect conflicts.",
+      "priority": "medium"
+    }
+  ]
+}

@@ -1,0 +1,343 @@
+{
+  "module": "direct_channels.py",
+  "analysis_date": "2026-03-11",
+  "team": "think-tank-stress-2",
+
+  "failure_modes": [
+    {
+      "id": "FM-DC-001",
+      "name": "In-memory read offset loss on process restart",
+      "description": "_read_offsets is stored only in self._read_offsets (a plain dict). When a DirectChannels instance is destroyed and recreated (team crash, process restart), all offsets reset to 0. The next read_direct() call replays every non-expired message from the beginning of the JSONL file, causing duplicate processing.",
+      "severity": "critical",
+      "likelihood": "high",
+      "current_protection": "None. Offsets are never persisted.",
+      "recommended_fix": "Persist read offsets to SQLite (or a sidecar JSON file) keyed by (team, channel). Restore on __init__. Optionally add a 'last_seen_msg_id' dedup check so replayed messages are filtered."
+    },
+    {
+      "id": "FM-DC-002",
+      "name": "JSONL torn write on messages near the POSIX atomic boundary",
+      "description": "os.write(fd, raw) is used for atomic append. POSIX only guarantees atomicity for writes <= PIPE_BUF (typically 4096 bytes on Linux). MAX_MESSAGE_BYTES is 4096 but that is the serialized JSON size; the actual write also includes the newline, so the real max is 4097 bytes. Even if kept under 4096, on some filesystems (NFS, FUSE) or under extreme I/O pressure, writes may not be atomic. A torn write leaves a partial JSON line that corrupts the channel file for all subsequent readers.",
+      "severity": "critical",
+      "likelihood": "medium",
+      "current_protection": "MAX_MESSAGE_BYTES check on serialized message, but the check is on len(raw) which includes the newline, so the actual JSON payload can be up to 4095 bytes plus newline = 4096. This is right at the PIPE_BUF boundary. json.loads failure on corrupt lines is silently skipped in _bus_read, but the offset calculation can land mid-line.",
+      "recommended_fix": "1) Reduce MAX_MESSAGE_BYTES to 4000 to stay safely under PIPE_BUF. 2) Use write-to-temp-then-rename for larger messages. 3) Add a CRC or length header per line so readers can detect partial writes. 4) _bus_read should handle partial trailing lines by not advancing the offset past incomplete data."
+    },
+    {
+      "id": "FM-DC-003",
+      "name": "Stale presence when teams crash without cleanup",
+      "description": "If a team process crashes or is killed (SIGKILL), it never calls set_presence('away'). Its presence row remains 'available' or 'busy' indefinitely. Other teams querying get_available_teams() will see a ghost team and may try to send it messages or assign it work that will never be processed.",
+      "severity": "high",
+      "likelihood": "high",
+      "current_protection": "last_seen timestamp is recorded, but nothing reads or acts on it. There is no TTL, heartbeat requirement, or reaper process.",
+      "recommended_fix": "1) Add a heartbeat mechanism: teams must call set_presence() periodically (e.g., every 30s). 2) get_available_teams() should filter out teams whose last_seen is older than a configurable staleness threshold (e.g., 60s). 3) Optionally add a reaper method that marks stale teams as 'away'."
+    },
+    {
+      "id": "FM-DC-004",
+      "name": "Channel name injection via special characters in team names",
+      "description": "_safe_channel() only replaces '/' and '..'. Team names containing characters like null bytes, newlines, spaces, colons, or other filesystem-unfriendly characters can produce invalid or colliding filenames. A team named 'team\\x00evil' could cause truncation. A team named 'a-team-b' creates direct-a-team-b-team-c which could collide with direct-a-team-b-team-c from different teams.",
+      "severity": "high",
+      "likelihood": "medium",
+      "current_protection": "_safe_channel replaces '/' and '..' only. No validation on team names at construction time. No validation on topic names in create_topic_channel.",
+      "recommended_fix": "1) Validate team names in __init__ against a strict regex (e.g., ^[a-zA-Z0-9_-]+$). 2) Validate topic names similarly. 3) Use URL-safe base64 or SHA256 hashing for filesystem channel names to prevent any injection."
+    },
+    {
+      "id": "FM-DC-005",
+      "name": "Progress with NaN or negative percentages corrupts queries",
+      "description": "update_progress() accepts any float for progress_pct. NaN values break SQLite ORDER BY (NaN comparisons are undefined). Negative percentages break get_teams_below_progress threshold logic. Values > 100 are semantically invalid but accepted. items_done > items_total is not checked.",
+      "severity": "medium",
+      "likelihood": "medium",
+      "current_protection": "None. No input validation on progress_pct, items_total, or items_done.",
+      "recommended_fix": "Add validation: reject NaN/Inf (math.isfinite check), clamp progress_pct to [0, 100], ensure items_done <= items_total and both are >= 0. Raise ValueError for invalid inputs."
+    },
+    {
+      "id": "FM-DC-006",
+      "name": "Disk full during JSONL append causes silent data loss",
+      "description": "If the disk is full when _bus_publish calls os.write(), the write may partially succeed or raise OSError. The function does close the fd in the finally block, but the partial write can corrupt the JSONL file. No error handling or notification occurs; the caller gets an unhandled OSError. The SQLite channel metadata (last_activity) may already be updated even though the message was not delivered.",
+      "severity": "high",
+      "likelihood": "low",
+      "current_protection": "fd is closed in a finally block, preventing fd leak. No other protection.",
+      "recommended_fix": "1) Wrap os.write in try/except OSError, log the failure, and raise a custom ChannelWriteError. 2) Consider writing to a temp file and renaming atomically. 3) Check available disk space before write. 4) Update channel last_activity only after successful bus publish."
+    },
+    {
+      "id": "FM-DC-007",
+      "name": "Unbounded JSONL file growth with no compaction",
+      "description": "JSONL bus files grow indefinitely. Expired messages (past TTL) are filtered on read but never deleted from the file. Over long-running sessions with many messages, read performance degrades as _bus_read must parse all lines from the offset, and disk usage grows without bound.",
+      "severity": "medium",
+      "likelihood": "high",
+      "current_protection": "TTL filtering on read excludes expired messages from the result set. But expired data remains on disk.",
+      "recommended_fix": "1) Add a compact_channel(channel) method that rewrites the JSONL file containing only non-expired messages. 2) Update all read offsets after compaction. 3) Consider periodic auto-compaction or file rotation (e.g., daily). 4) Add an index or binary search for large files."
+    },
+    {
+      "id": "FM-DC-008",
+      "name": "Concurrent creation of 100+ channels causes SQLite contention storm",
+      "description": "If 100+ teams all call create_direct_channel or create_topic_channel simultaneously, each holds self._lock while executing an INSERT ... ON CONFLICT + COMMIT. WAL mode helps, but with 100 concurrent connections each doing immediate writes, SQLITE_BUSY retries with exponential backoff (max 5 retries, max delay 1.6s) may not be sufficient. The busy_timeout of 30s helps at the SQLite level but the threading lock is per-instance. Cross-process contention relies entirely on SQLite busy handling.",
+      "severity": "medium",
+      "likelihood": "medium",
+      "current_protection": "_retry_on_busy with 5 retries and exponential backoff (0.1s * 2^n). PRAGMA busy_timeout=30000. WAL mode.",
+      "recommended_fix": "1) Increase _MAX_RETRIES for batch operations. 2) Add jitter to the backoff to prevent synchronized retries. 3) Consider batching channel creation. 4) Use connection pooling with limits."
+    },
+    {
+      "id": "FM-DC-009",
+      "name": "Message size boundary off-by-one at exactly 4096 bytes",
+      "description": "The check is len(raw) > MAX_MESSAGE_BYTES where raw includes the trailing newline. A message serializing to exactly 4096 bytes (including newline) passes the check. This means the JSON payload can be 4095 bytes + 1 byte newline = 4096, which is exactly PIPE_BUF. A message at 4097 bytes is rejected. But the semantic meaning is unclear: is the limit on the wire format or the payload? The boundary behavior is under-specified.",
+      "severity": "low",
+      "likelihood": "medium",
+      "current_protection": "The > check (not >=) means exactly 4096 passes. This is coincidentally fine for PIPE_BUF atomicity on Linux but fragile.",
+      "recommended_fix": "Change to >= to ensure all writes stay strictly under PIPE_BUF. Document whether the limit is on the payload or the wire format. Add a test for the exact boundary."
+    },
+    {
+      "id": "FM-DC-010",
+      "name": "Race between _touch_channel and archive_channel",
+      "description": "send_direct() calls _ensure_direct_channel() then _touch_channel() then _bus_publish(). If another team calls archive_channel() between _ensure_direct_channel and _bus_publish, the channel is archived but a message is still written to the bus. Readers may see messages on a channel that is marked archived in the database.",
+      "severity": "low",
+      "likelihood": "low",
+      "current_protection": "None. The operations are not in a single transaction.",
+      "recommended_fix": "Wrap the ensure + touch + publish in a single logical operation, or at minimum check channel status before publishing. Alternatively, make archive_channel rename/move the bus file to prevent further writes."
+    }
+  ],
+
+  "stress_tests": [
+    {
+      "id": "ST-DC-001",
+      "name": "Mass simultaneous channel creation",
+      "description": "100 threads each create a direct channel with a unique partner team, all starting at the same instant via a threading.Barrier.",
+      "target": "create_direct_channel, SQLite WAL contention",
+      "setup": "Create one shared db_path and bus_dir. Instantiate 100 DirectChannels instances with unique team names. Create a threading.Barrier(100).",
+      "execution": "Each thread waits on the barrier, then calls create_direct_channel('common-target'). Measure elapsed time and count successes/failures.",
+      "expected_behavior": "All 100 calls succeed within 60 seconds. All create unique channel entries. No SQLITE_BUSY exceptions propagate.",
+      "failure_indicators": "Any thread raises sqlite3.OperationalError. Elapsed time exceeds 60s. Duplicate channel names. Database corruption (PRAGMA integrity_check fails).",
+      "priority": "critical"
+    },
+    {
+      "id": "ST-DC-002",
+      "name": "Message at exact PIPE_BUF boundary",
+      "description": "Send messages at exactly 4095, 4096, and 4097 bytes (serialized + newline) and verify correct acceptance/rejection and file integrity.",
+      "target": "_bus_publish, MAX_MESSAGE_BYTES enforcement",
+      "setup": "Create a DirectChannels instance. Craft body dicts with padding strings to produce exact serialized sizes of 4095, 4096, and 4097 bytes.",
+      "execution": "Call send_direct with each crafted body. Verify the 4097-byte message raises ValueError. Read back the accepted messages and verify JSON integrity.",
+      "expected_behavior": "4095 and 4096 byte messages succeed and are readable. 4097 byte message raises ValueError. The JSONL file contains no partial lines.",
+      "failure_indicators": "Wrong messages accepted/rejected. JSONL file contains corrupt lines. read_direct returns garbled data.",
+      "priority": "high"
+    },
+    {
+      "id": "ST-DC-003",
+      "name": "JSONL concurrent append integrity",
+      "description": "50 threads simultaneously write messages to the same direct channel and verify no message interleaving or corruption.",
+      "target": "_bus_publish, JSONL atomic write",
+      "setup": "Create 50 DirectChannels instances all sending to the same target team. Prepare unique message bodies with sequential IDs.",
+      "execution": "All 50 threads simultaneously call send_direct. After all complete, read the JSONL file line by line. Parse each line as JSON. Verify all 50 messages are present, each on its own complete line, with no partial or merged lines.",
+      "expected_behavior": "50 valid JSON lines in the file. All message IDs present. No duplicate IDs. No partial lines.",
+      "failure_indicators": "JSON parse errors on any line. Missing messages. Lines containing multiple JSON objects concatenated. File size does not equal sum of individual message sizes.",
+      "priority": "critical"
+    },
+    {
+      "id": "ST-DC-004",
+      "name": "Presence staleness after simulated crash",
+      "description": "Verify that a team that crashes (connection dropped without set_presence('away')) appears stale to other teams.",
+      "target": "Presence tracking, get_available_teams",
+      "setup": "Create two DirectChannels instances (team-a, team-b). Both set_presence('available'). Record team-b's last_seen.",
+      "execution": "Delete team-b's DirectChannels instance without calling set_presence('away') (simulating crash). Wait 5 seconds. From team-a, call get_available_teams(). Check if team-b is still listed as available despite being dead.",
+      "expected_behavior": "Current behavior: team-b remains 'available' (this is the bug). After fix: team-b should be filtered out or marked stale.",
+      "failure_indicators": "N/A for current code (this demonstrates the gap). After fix: team-b still appears available after staleness threshold.",
+      "priority": "high"
+    },
+    {
+      "id": "ST-DC-005",
+      "name": "Progress with NaN, Inf, and negative values",
+      "description": "Submit progress updates with NaN, positive infinity, negative infinity, -50.0, and 200.0 percentages. Verify that downstream queries (get_slowest_team, get_teams_below_progress) produce correct/safe results.",
+      "target": "update_progress, get_slowest_team, get_teams_below_progress",
+      "setup": "Create 5 DirectChannels instances with different teams. Each sets a different pathological progress value.",
+      "execution": "Call update_progress with NaN, Inf, -Inf, -50.0, 200.0 for each team. Then call get_slowest_team() and get_teams_below_progress(50.0) and get_all_progress().",
+      "expected_behavior": "Current behavior: NaN causes undefined ORDER BY results. After fix: ValueError raised for non-finite and out-of-range values.",
+      "failure_indicators": "get_slowest_team returns wrong team or crashes. get_teams_below_progress includes NaN teams inconsistently. SQLite returns unexpected results.",
+      "priority": "high"
+    },
+    {
+      "id": "ST-DC-006",
+      "name": "Channel name injection with special characters",
+      "description": "Create channels with team names containing path separators, null bytes, newlines, spaces, unicode, and very long strings.",
+      "target": "_safe_channel, _direct_channel_name, filesystem interaction",
+      "setup": "Prepare a list of adversarial team names: 'team/../../etc', 'team\\x00evil', 'team\\ninjection', 'team with spaces', 'team-' + 'a'*1000, emoji team names.",
+      "execution": "For each adversarial name, instantiate DirectChannels and attempt create_direct_channel with a normal target. Verify the resulting JSONL filename is safe. Check for file creation in unexpected directories.",
+      "expected_behavior": "After fix: ValueError raised for invalid team names. Current: some names create files in unexpected locations or with problematic names.",
+      "failure_indicators": "Files created outside bus_dir. Filenames containing null bytes. Filenames colliding with other channels. Crash on certain character combinations.",
+      "priority": "high"
+    },
+    {
+      "id": "ST-DC-007",
+      "name": "Read offset persistence across instance recreation",
+      "description": "Send messages, read them, destroy the instance, recreate it, and verify whether duplicate messages appear.",
+      "target": "_read_offsets in-memory dict, read_direct",
+      "setup": "Create DirectChannels for team-a and team-b. Send 10 messages from team-a to team-b. Read all from team-b (offset advances).",
+      "execution": "Close team-b's instance. Create a new DirectChannels for team-b with same db_path/bus_dir. Call read_direct('team-a'). Count returned messages.",
+      "expected_behavior": "Current behavior: all 10 messages replayed (if not yet expired). After fix: 0 new messages returned.",
+      "failure_indicators": "N/A for demonstrating the gap. After fix: messages replayed after restart.",
+      "priority": "critical"
+    },
+    {
+      "id": "ST-DC-008",
+      "name": "Disk full during bus publish",
+      "description": "Simulate disk-full condition during _bus_publish and verify graceful handling.",
+      "target": "_bus_publish, error handling",
+      "setup": "Create a tmpfs mount or use a small ramdisk as bus_dir. Fill it to near capacity. Create a DirectChannels instance.",
+      "execution": "Attempt send_direct with a large message body. Catch and record the exception. Verify the JSONL file is not corrupted (no partial lines). Verify the SQLite database is still consistent.",
+      "expected_behavior": "OSError raised to the caller. JSONL file either has the complete message or no new data (no partial write). Database remains consistent.",
+      "failure_indicators": "Partial JSON line in the JSONL file. Database has updated last_activity but message was not written. Silent data loss.",
+      "priority": "high"
+    },
+    {
+      "id": "ST-DC-009",
+      "name": "Long-running JSONL file with 100K messages",
+      "description": "Write 100,000 messages to a single channel and measure read latency degradation. Verify offset-based reading scales linearly.",
+      "target": "_bus_read, offset tracking, performance",
+      "setup": "Create a DirectChannels pair. Generate 100,000 small messages. Write them all to the same direct channel.",
+      "execution": "Measure time to read_direct in batches (first 1000, next 1000, etc). Measure final read_direct (should be fast since offset skips past old data). Measure full-file-scan read (offset=0) for comparison.",
+      "expected_behavior": "Incremental reads (using offset) should be O(new_messages), not O(total_messages). A full-scan read with offset=0 should complete in under 10 seconds for 100K messages.",
+      "failure_indicators": "Incremental reads slow down proportionally to total file size. Memory usage grows unbounded. Offset calculation errors after large files.",
+      "priority": "medium"
+    },
+    {
+      "id": "ST-DC-010",
+      "name": "Simultaneous presence updates from 50 teams",
+      "description": "50 teams all call set_presence() simultaneously and verify the database ends up with exactly 50 correct rows.",
+      "target": "set_presence, SQLite contention, presence table",
+      "setup": "Create 50 DirectChannels instances with unique team names. Create a threading.Barrier(50).",
+      "execution": "Each thread waits on the barrier, then calls set_presence('available'). After all complete, query presence table and verify 50 rows exist with correct data. Repeat with rapid status toggling (available -> busy -> available).",
+      "expected_behavior": "All 50 rows present with status 'available'. No lost updates. No SQLITE_BUSY propagation.",
+      "failure_indicators": "Fewer than 50 rows. Incorrect status values. Unhandled SQLITE_BUSY exceptions. Deadlocks.",
+      "priority": "medium"
+    },
+    {
+      "id": "ST-DC-011",
+      "name": "Archive race with concurrent messaging",
+      "description": "One thread continuously sends messages on a channel while another thread archives it midway.",
+      "target": "archive_channel, send_direct, race condition",
+      "setup": "Create two DirectChannels instances (team-a, team-b). Create a direct channel between them.",
+      "execution": "Thread 1: send 100 messages with 10ms delay. Thread 2: after 500ms, archive the channel. Monitor whether messages continue to be written after archive. Read all messages and check for consistency.",
+      "expected_behavior": "Current behavior: messages continue being written to bus after archive (no check on channel status). After fix: send_direct should raise an error for archived channels.",
+      "failure_indicators": "Messages written to archived channel without error. Inconsistency between database state and bus state.",
+      "priority": "medium"
+    },
+    {
+      "id": "ST-DC-012",
+      "name": "UTF-8 multibyte characters in message body and offset calculation",
+      "description": "Send messages containing multibyte UTF-8 characters (emoji, CJK, etc.) and verify offset tracking does not drift.",
+      "target": "_bus_read, _bus_publish, offset calculation",
+      "setup": "Create DirectChannels pair. Prepare messages with bodies containing multibyte UTF-8: emoji, CJK characters, combining diacriticals.",
+      "execution": "Send 10 messages with varying multibyte content. After each send, read and verify correct offset. Check that incremental reads never miss or double-read messages.",
+      "expected_behavior": "All messages correctly read. No offset drift. new_offset calculation using len(data.encode('utf-8')) matches actual file positions.",
+      "failure_indicators": "Offset drift causing missed or duplicate messages. UnicodeDecodeError. Off-by-N errors on multibyte boundaries.",
+      "priority": "medium"
+    }
+  ],
+
+  "missing_features": [
+    {
+      "id": "MF-DC-001",
+      "name": "Persistent read offsets",
+      "description": "Read offsets are stored in-memory only (_read_offsets dict). When a process restarts, all offsets are lost and messages are replayed from offset 0. Need a persistence layer (SQLite table or sidecar file) for offset tracking.",
+      "justification": "Any production system will restart. Replaying all non-expired messages on every restart causes duplicate processing and confuses downstream consumers. This is the single biggest reliability gap in the module.",
+      "complexity": "low",
+      "priority": "critical"
+    },
+    {
+      "id": "MF-DC-002",
+      "name": "Presence staleness detection and heartbeat protocol",
+      "description": "No mechanism to detect crashed teams. The last_seen column is written but never read by any filtering logic. Need a heartbeat interval, a staleness threshold, and automatic 'away' marking for stale teams.",
+      "justification": "In a multi-team coordination system, knowing which teams are actually alive is fundamental. Stale presence causes work to be assigned to dead teams and blockers to go unnoticed.",
+      "complexity": "medium",
+      "priority": "critical"
+    },
+    {
+      "id": "MF-DC-003",
+      "name": "JSONL file compaction and rotation",
+      "description": "Bus files grow without bound. Need a mechanism to compact (remove expired messages), rotate (split by time window), or truncate files. Also need to update all reader offsets after compaction.",
+      "justification": "Without compaction, long-running systems will consume unbounded disk. Read performance degrades for cold-start readers (offset=0) scanning gigabytes of expired messages.",
+      "complexity": "medium",
+      "priority": "high"
+    },
+    {
+      "id": "MF-DC-004",
+      "name": "Message delivery acknowledgment",
+      "description": "No way to know if a message was read by the target team. Need read receipts or acknowledgment messages so senders can detect unresponsive recipients.",
+      "justification": "Critical for blocker messages and requests. If team-A sends a 'blocker' to team-B, team-A has no way to know if team-B saw it. This undermines the purpose of direct communication.",
+      "complexity": "medium",
+      "priority": "high"
+    },
+    {
+      "id": "MF-DC-005",
+      "name": "Input validation for team names and topic names",
+      "description": "No validation on team names passed to __init__, create_direct_channel, create_topic_channel, or send_direct. Adversarial or accidental names with filesystem-unsafe characters can cause path traversal, filename collisions, or crashes.",
+      "justification": "Security and correctness. In a multi-team system, team names may come from configuration or user input. Accepting arbitrary strings creates injection vectors.",
+      "complexity": "low",
+      "priority": "high"
+    },
+    {
+      "id": "MF-DC-006",
+      "name": "Channel access control",
+      "description": "Any team can read any channel's JSONL file by constructing the filename. Direct channels between team-A and team-B can be read by team-C if it knows the naming convention. No authentication or authorization on the bus layer.",
+      "justification": "For sensitive coordination (e.g., teams working on different security-critical components), message privacy matters. The current system offers no isolation beyond obscurity of channel names.",
+      "complexity": "high",
+      "priority": "medium"
+    },
+    {
+      "id": "MF-DC-007",
+      "name": "Progress input validation and sanitization",
+      "description": "No validation that progress_pct is finite and in [0, 100], items_done <= items_total, or that items are non-negative. NaN and Inf break SQLite ordering. Need comprehensive input validation.",
+      "justification": "A single team reporting NaN progress corrupts bottleneck detection for all teams. Garbage-in-garbage-out undermines the coordination value of progress broadcasting.",
+      "complexity": "low",
+      "priority": "high"
+    }
+  ],
+
+  "error_protection": [
+    {
+      "id": "EP-DC-001",
+      "name": "Missing error handling on os.write in _bus_publish",
+      "gap": "os.write(fd, raw) can raise OSError (ENOSPC, EIO, etc.) which propagates as an unhandled exception. The fd is properly closed, but the caller has no structured error type to catch. The database may already have been updated (last_activity) before the publish fails.",
+      "impact": "Silent inconsistency between SQLite metadata and bus state. Unhandled OSError crashes the caller without useful context.",
+      "recommended_protection": "Wrap os.write in try/except OSError, convert to a domain-specific BusPublishError. Ensure database updates happen only after successful publish.",
+      "priority": "high"
+    },
+    {
+      "id": "EP-DC-002",
+      "name": "No deduplication on message replay",
+      "gap": "When offsets are lost (process restart), read_direct returns previously-seen messages. There is no message ID tracking or deduplication at the reader level.",
+      "impact": "Consumers process the same messages multiple times. For idempotent consumers this is harmless; for non-idempotent ones (e.g., counting, state transitions) it causes incorrect behavior.",
+      "recommended_protection": "Add a 'last_processed_id' tracker per channel. On read, filter out messages with IDs already seen. Persist this tracker alongside read offsets.",
+      "priority": "critical"
+    },
+    {
+      "id": "EP-DC-003",
+      "name": "SQLite connection not thread-safe despite check_same_thread=False",
+      "gap": "check_same_thread=False allows cross-thread access but does not make sqlite3 operations thread-safe. The code uses self._lock for its own operations, but if any external code accesses the connection directly, or if close() is called while another thread is mid-operation, undefined behavior results.",
+      "impact": "Potential database corruption or segfault under concurrent access from unexpected code paths.",
+      "recommended_protection": "Use a connection-per-thread model or a connection pool. Add a context manager protocol to ensure connections are not used after close(). Use atexit handler to close connections.",
+      "priority": "medium"
+    },
+    {
+      "id": "EP-DC-004",
+      "name": "No protection against double-close",
+      "gap": "Calling close() twice on a DirectChannels instance will call self._conn.close() twice. The second call raises sqlite3.ProgrammingError('Cannot operate on a closed database'). No guard against this.",
+      "impact": "Crashes if close() is called in both a finally block and a context manager, or on garbage collection.",
+      "recommended_protection": "Add a _closed flag. Guard close() with it. Optionally implement __enter__/__exit__ for context manager support.",
+      "priority": "low"
+    },
+    {
+      "id": "EP-DC-005",
+      "name": "Unprotected JSON deserialization in _bus_read",
+      "gap": "_bus_read catches json.JSONDecodeError but does not validate the structure of the decoded message. A malformed message (missing 'ts' or 'ttl' keys) will default to 0/300 via .get() but could still cause downstream issues if expected keys like 'body' or 'id' are missing.",
+      "impact": "Consumers accessing msg['body'] or msg['id'] get KeyError if the message is structurally invalid. The TTL default of 300 means invalid messages survive for 5 minutes.",
+      "recommended_protection": "Add schema validation for decoded messages. Require at minimum 'id', 'type', 'body', 'ts', 'ttl' keys. Skip messages that fail validation with a warning log.",
+      "priority": "medium"
+    },
+    {
+      "id": "EP-DC-006",
+      "name": "set_presence calls list_active_channels without lock coordination",
+      "gap": "set_presence() calls self.list_active_channels() (which acquires and releases self._lock) to build the current_channels list, then separately acquires self._lock again to write the presence row. Between these two lock acquisitions, channels can change, making the persisted current_channels stale.",
+      "impact": "Presence data shows incorrect channel membership. Minor correctness issue but could confuse monitoring or routing decisions.",
+      "recommended_protection": "Inline the channels query within the same lock acquisition as the presence write, or accept eventual consistency with a comment documenting the trade-off.",
+      "priority": "low"
+    }
+  ]
+}

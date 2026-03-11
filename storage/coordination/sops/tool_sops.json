@@ -1,0 +1,755 @@
+{
+  "version": "1.0",
+  "created": "2026-03-11",
+  "team": "think-tank-sops",
+  "description": "Standard Operating Procedures for all Proto A coordination tools. These SOPs are designed for AI teams who have never seen this codebase before.",
+  "architecture_overview": {
+    "communication_layer": "JSONL append-only message bus (files in storage/coordination/bus/). Each channel is a .jsonl file. Messages are JSON objects with id, type, channel, team, agent_id, ts, ttl, body fields. POSIX atomic writes guarantee message integrity for payloads under 4096 bytes.",
+    "state_layer": "SQLite database in WAL mode (storage/coordination/db/state.db). Provides agent registry, rate limiting, phase signals, findings, and proposals. All concurrent writes use BEGIN IMMEDIATE transactions with retry-on-busy decorators.",
+    "coordination_layer": "Three orthogonal modules: help_protocol.py (who needs help), direct_channels.py (how to communicate), work_stealing.py (what work to do). Each uses both the bus and SQLite.",
+    "valid_message_types": ["info", "blocker", "phase-signal", "heartbeat", "request", "response"],
+    "key_paths": {
+      "bus_dir": "storage/coordination/bus/",
+      "db_path": "storage/coordination/db/state.db",
+      "scripts": "storage/coordination/",
+      "teams_dir": "storage/coordination/teams/"
+    }
+  },
+  "sops": [
+    {
+      "id": "SOP-001",
+      "tool": "help_protocol",
+      "title": "Standard Operating Procedure for Help Protocol",
+      "file": "storage/coordination/help_protocol.py",
+      "class": "HelpProtocol",
+      "purpose": "Manages team help requests, idle detection, and automatic work assignment. Solves the problem of teams finishing early and sitting idle while other teams are still busy.",
+      "when_to_use": "When a team needs assistance from other teams, when tracking work items across teams, when detecting idle teams for reassignment, or when implementing automatic load balancing.",
+      "prerequisites": [
+        "SQLite database initialized (run bus_cli.py init first)",
+        "Bus directory exists (storage/coordination/bus/)",
+        "Team and agent identifiers chosen"
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "action": "Initialize HelpProtocol instance",
+          "details": "Create an instance with the shared database path, bus directory, team name, and agent ID. The constructor creates all required tables automatically.",
+          "example_code": "from help_protocol import HelpProtocol\nhp = HelpProtocol(\n    db_path='storage/coordination/db/state.db',\n    bus_dir='storage/coordination/bus/',\n    team='team-alpha',\n    agent_id='alpha-lead'\n)"
+        },
+        {
+          "step": 2,
+          "action": "Register team capabilities",
+          "details": "Declare what this team can do. Capabilities are used for matching help requests to qualified teams. Common capabilities: coding, research, testing, analysis, data-processing, documentation.",
+          "example_code": "hp.register_capabilities(['coding', 'testing', 'research'])"
+        },
+        {
+          "step": 3,
+          "action": "Update team status regularly",
+          "details": "Call update_status() whenever the team's state changes. Valid statuses: idle, working, needs_help, helping, complete. This publishes a status-update event to the global bus channel.",
+          "example_code": "hp.update_status(\n    status='working',\n    progress_pct=45.0,\n    current_task='Implementing feature X',\n    est_completion=time.time() + 600  # 10 minutes from now\n)"
+        },
+        {
+          "step": 4,
+          "action": "Add work items for tracking",
+          "details": "Create work items to track what needs to be done. Returns a work_item_id used in subsequent operations. Priority values: low, medium, high, critical.",
+          "example_code": "work_id = hp.add_work_item(\n    title='Implement caching layer',\n    description='Add Redis-based caching for API responses',\n    priority='high',\n    est_minutes=30,\n    required_caps=['coding']\n)"
+        },
+        {
+          "step": 5,
+          "action": "Request help when needed",
+          "details": "When stuck or overloaded, create a help request linked to a work item. This marks the work item as available_for_help and publishes a help-request event on the bus. Returns request_id.",
+          "example_code": "request_id = hp.request_help(\n    work_item_id=work_id,\n    description='Need help implementing caching - expertise in Redis required'\n)"
+        },
+        {
+          "step": 6,
+          "action": "Offer help (from the helping team's side)",
+          "details": "An idle team calls offer_help() with the request_id. Uses BEGIN IMMEDIATE for atomic claiming -- returns True if this team won the claim, False if another team claimed it first.",
+          "example_code": "# From the helper team's HelpProtocol instance\nwon = helper_hp.offer_help(request_id=request_id)\nif won:\n    print('Help request accepted -- start working on it')\nelse:\n    print('Another team already claimed this request')"
+        },
+        {
+          "step": 7,
+          "action": "Fulfill help request when done",
+          "details": "After completing the helped work, call fulfill_help() to mark both the request and work item as completed.",
+          "example_code": "helper_hp.fulfill_help(request_id=request_id)"
+        },
+        {
+          "step": 8,
+          "action": "Use auto-assignment for hands-off load balancing",
+          "details": "Call auto_assign_idle_teams() from the orchestrator to automatically match idle teams to open help requests based on capabilities. Returns a list of assignments made.",
+          "example_code": "assignments = hp.auto_assign_idle_teams()\nfor a in assignments:\n    print(f\"Request {a['request_id']} assigned to {a['team']}\")"
+        },
+        {
+          "step": 9,
+          "action": "Close the connection when done",
+          "details": "Always close the HelpProtocol instance when finished to release the SQLite connection.",
+          "example_code": "hp.close()"
+        }
+      ],
+      "cli_alternative": "All operations are also available via bus_cli.py:\n  python bus_cli.py help-request <team> <agent> <description> [--capabilities cap1,cap2] [--priority high]\n  python bus_cli.py help-offer <team> <agent> <request_id>\n  python bus_cli.py status-update <team> <agent> <status> <progress_pct> [--task 'current task']\n  python bus_cli.py work-add <team> <agent> <title> [--description '...'] [--priority medium]\n  python bus_cli.py idle-teams\n  python bus_cli.py help-needed\n  python bus_cli.py auto-assign",
+      "common_mistakes": [
+        "Forgetting to call update_status() -- other teams cannot detect you as idle or needing help if your status is stale.",
+        "Not registering capabilities -- auto_assign_idle_teams() uses capabilities to match teams. Without registration, matching falls back to any idle team.",
+        "Not closing the HelpProtocol instance -- SQLite connections left open can cause SQLITE_BUSY errors for other teams.",
+        "Creating help requests without work items -- always create a work item first, then request help on it.",
+        "Calling offer_help() without checking the return value -- it returns False if another team already claimed the request."
+      ],
+      "troubleshooting": [
+        {
+          "problem": "SQLITE_BUSY errors",
+          "solution": "The _retry_on_busy decorator handles this automatically with exponential backoff (5 retries). If errors persist, check that all instances are using WAL mode and busy_timeout=30000. Ensure no long-running transactions are holding locks."
+        },
+        {
+          "problem": "offer_help() always returns False",
+          "solution": "Another team is claiming requests faster. Check get_open_help_requests() to see if requests exist. Verify the request status is 'open' -- it may already be 'accepted' or 'fulfilled'."
+        },
+        {
+          "problem": "auto_assign_idle_teams() returns empty list",
+          "solution": "Either there are no open help requests (check get_open_help_requests()) or no idle teams (check get_idle_teams()). Teams must have status 'idle' or 'complete' to be assignable."
+        },
+        {
+          "problem": "Bus messages not appearing",
+          "solution": "Check that bus_dir path exists and is writable. Messages have a TTL of 3600 seconds -- older messages are filtered out on read."
+        }
+      ]
+    },
+    {
+      "id": "SOP-002",
+      "tool": "direct_channels",
+      "title": "Standard Operating Procedure for Direct Channels",
+      "file": "storage/coordination/direct_channels.py",
+      "class": "DirectChannels",
+      "purpose": "Provides named communication channels (direct, topic, broadcast), team presence tracking, and progress broadcasting with bottleneck detection.",
+      "when_to_use": "When teams need private peer-to-peer communication, when broadcasting progress updates, when identifying bottleneck teams, or when tracking which teams are available.",
+      "prerequisites": [
+        "SQLite database initialized",
+        "Bus directory exists",
+        "Team and agent identifiers chosen"
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "action": "Initialize DirectChannels instance",
+          "details": "Create an instance. The constructor creates channels, presence, and progress tables in SQLite.",
+          "example_code": "from direct_channels import DirectChannels\ndc = DirectChannels(\n    db_path='storage/coordination/db/state.db',\n    bus_dir='storage/coordination/bus/',\n    team='team-alpha',\n    agent_id='alpha-lead'\n)"
+        },
+        {
+          "step": 2,
+          "action": "Set your presence status",
+          "details": "Announce your availability. Valid statuses: available, busy, helping, away. This is broadcast on the global bus channel.",
+          "example_code": "dc.set_presence('available')"
+        },
+        {
+          "step": 3,
+          "action": "Create a direct channel for peer-to-peer communication",
+          "details": "Creates a deterministic channel name (alphabetically sorted team names). Channel names follow the pattern 'direct-{team_a}-{team_b}'. Idempotent -- calling again reactivates an archived channel.",
+          "example_code": "channel = dc.create_direct_channel('team-beta')\n# Returns e.g. 'direct-team-alpha-team-beta'"
+        },
+        {
+          "step": 4,
+          "action": "Send and read direct messages",
+          "details": "send_direct() auto-creates the channel if needed. read_direct() returns only new messages since the last read (tracks offsets internally). Valid msg_types: info, blocker, phase-signal, heartbeat, request, response.",
+          "example_code": "# Send\nmsg_id = dc.send_direct(\n    target_team='team-beta',\n    msg_type='info',\n    body={'event': 'data-ready', 'file': '/path/to/output.json'}\n)\n\n# Read (from the other team)\nmsgs = dc.read_direct(from_team='team-alpha')\nfor m in msgs:\n    print(f\"{m['team']}: {m['body']}\")"
+        },
+        {
+          "step": 5,
+          "action": "Create topic channels for multi-team discussions",
+          "details": "Topic channels allow multiple teams to participate. The creator's team is automatically added.",
+          "example_code": "channel = dc.create_topic_channel(\n    topic='architecture-review',\n    participants=['team-alpha', 'team-beta', 'team-gamma']\n)\n# Returns 'topic-architecture-review'"
+        },
+        {
+          "step": 6,
+          "action": "Update and broadcast progress",
+          "details": "Publish progress updates visible to all teams. Includes optional bottleneck identification and estimated completion time.",
+          "example_code": "dc.update_progress(\n    phase='implementation',\n    progress_pct=65.0,\n    items_total=10,\n    items_done=6,\n    est_completion_ts=time.time() + 1200,\n    bottleneck='waiting for API rate limit reset'\n)"
+        },
+        {
+          "step": 7,
+          "action": "Monitor team progress and identify bottlenecks",
+          "details": "Query progress across all teams to find the slowest team or teams below a threshold.",
+          "example_code": "# Find the overall bottleneck\nslowest = dc.get_slowest_team()\nprint(f\"Bottleneck: {slowest['team']} at {slowest['progress_pct']}%\")\n\n# Find all teams below 50%\nbehind = dc.get_teams_below_progress(50.0)\nfor t in behind:\n    print(f\"{t['team']}: {t['progress_pct']}% - {t.get('current_bottleneck', 'N/A')}\")"
+        },
+        {
+          "step": 8,
+          "action": "Check team availability",
+          "details": "Query presence status to find available teams for collaboration.",
+          "example_code": "available = dc.get_available_teams()\nfor t in available:\n    print(f\"{t['team']}: {t['status']}, channels: {t['current_channels']}\")"
+        },
+        {
+          "step": 9,
+          "action": "Manage channel lifecycle",
+          "details": "Join existing channels, leave channels, list active channels, or archive completed channels.",
+          "example_code": "dc.join_channel('topic-architecture-review')\nmy_channels = dc.list_active_channels()\ndc.leave_channel('topic-architecture-review')\ndc.archive_channel('topic-architecture-review')"
+        }
+      ],
+      "common_mistakes": [
+        "Not setting presence -- other teams cannot find you via get_available_teams() if presence is never set.",
+        "Sending messages larger than 4096 bytes -- the bus enforces a MAX_MESSAGE_BYTES limit. Split large data into files and share file paths instead.",
+        "Forgetting that read_direct() tracks offsets internally -- calling it twice without new messages returns an empty list. This is by design, not a bug.",
+        "Using invalid message types -- only these are valid: info, blocker, phase-signal, heartbeat, request, response.",
+        "Not updating progress regularly -- stale progress data makes bottleneck detection unreliable."
+      ],
+      "troubleshooting": [
+        {
+          "problem": "Channel not found error when joining",
+          "solution": "The channel must exist and have status='active'. Check list_active_channels() or create the channel first."
+        },
+        {
+          "problem": "read_direct() returns empty list",
+          "solution": "Three possible causes: (1) No new messages since last read, (2) All messages have expired (TTL default is 3600s), (3) The channel bus file does not exist yet (no messages sent)."
+        },
+        {
+          "problem": "Presence shows 'unknown' for a team",
+          "solution": "That team has never called set_presence(). It must be called at least once to register in the presence table."
+        }
+      ]
+    },
+    {
+      "id": "SOP-003",
+      "tool": "work_stealing",
+      "title": "Standard Operating Procedure for Work Stealing",
+      "file": "storage/coordination/work_stealing.py",
+      "class": "WorkStealing",
+      "purpose": "Shared work queue where any team can enqueue tasks and idle teams can atomically steal unclaimed work items. Prevents double-steal via BEGIN IMMEDIATE transactions.",
+      "when_to_use": "When work can be decomposed into independent units that any team can execute. Ideal for embarrassingly parallel tasks like processing files, running tests, or collecting data from multiple APIs.",
+      "prerequisites": [
+        "SQLite database initialized",
+        "Bus directory exists (optional, can be None to skip notifications)",
+        "Work items should be self-contained descriptions that any team can execute without context from the enqueueing team"
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "action": "Initialize WorkStealing instance",
+          "details": "Create an instance. The constructor creates the work_queue table automatically.",
+          "example_code": "from work_stealing import WorkStealing\nws = WorkStealing(\n    db_path='storage/coordination/db/state.db',\n    bus_dir='storage/coordination/bus/',\n    team='team-alpha',\n    agent_id='alpha-lead'\n)"
+        },
+        {
+          "step": 2,
+          "action": "Enqueue work items",
+          "details": "Add tasks to the shared queue. Priority is an integer (lower = higher priority, default 5). Returns the work item ID. Any team can enqueue for any other team to pick up.",
+          "example_code": "work_id = ws.enqueue_work(\n    title='Process batch 1 of API responses',\n    description='Parse and normalize API responses in /data/batch1/',\n    priority=3  # Higher priority than default 5\n)"
+        },
+        {
+          "step": 3,
+          "action": "Steal work when idle",
+          "details": "Call steal_work() to atomically claim the highest-priority unclaimed item. Uses BEGIN IMMEDIATE to prevent double-steal. Returns the work item dict or None if queue is empty.",
+          "example_code": "item = ws.steal_work()\nif item:\n    print(f\"Claimed: {item['title']} (id={item['id']})\")\n    # Do the work...\nelse:\n    print('No work available')"
+        },
+        {
+          "step": 4,
+          "action": "Complete or fail work items",
+          "details": "After finishing work, call complete_work() with a result dict. If the work failed, call fail_work() with a reason string.",
+          "example_code": "# On success\nws.complete_work(work_id=item['id'], result={\n    'records_processed': 150,\n    'output_file': '/data/processed/batch1.json'\n})\n\n# On failure\nws.fail_work(work_id=item['id'], reason='API endpoint returned 503')"
+        },
+        {
+          "step": 5,
+          "action": "Monitor queue depth",
+          "details": "Check how much work remains. Can filter by owner team.",
+          "example_code": "total = ws.get_queue_depth()  # All unclaimed items\nmy_items = ws.get_queue_depth(team='team-alpha')  # Only my team's items\nstealable = ws.get_stealable_work()  # Full details of unclaimed items"
+        }
+      ],
+      "common_mistakes": [
+        "Not checking steal_work() return value for None -- the queue may be empty.",
+        "Using string priorities instead of integers -- WorkStealing uses integer priorities (lower = higher priority), unlike HelpProtocol which uses string priorities.",
+        "Forgetting to call complete_work() or fail_work() -- claimed items that are never completed stay in 'claimed' status permanently.",
+        "Making work items that require context from the enqueueing team -- work items should be self-contained because any team might steal them.",
+        "Enqueueing too many fine-grained items -- each steal_work() call acquires a database lock. Batch related work into single items when possible."
+      ],
+      "troubleshooting": [
+        {
+          "problem": "steal_work() always returns None",
+          "solution": "Check get_stealable_work() to see if items exist. Items must have status='queued'. If items exist but are 'claimed', another team already took them."
+        },
+        {
+          "problem": "Two teams claimed the same item",
+          "solution": "This should not happen -- BEGIN IMMEDIATE prevents it. If it does, check that all teams are using the same db_path. Separate databases cannot coordinate."
+        },
+        {
+          "problem": "Work items stuck in 'claimed' status",
+          "solution": "The claiming team likely crashed before calling complete_work() or fail_work(). Manually update the status in the database or implement a timeout-based reclaim mechanism."
+        }
+      ]
+    },
+    {
+      "id": "SOP-004",
+      "tool": "pipeline_manager",
+      "title": "Standard Operating Procedure for Pipeline Management",
+      "file": "storage/coordination/work_stealing.py",
+      "class": "PipelineManager",
+      "purpose": "Multi-stage pipeline execution with dependency tracking (DAGs). Stages auto-trigger when upstream dependencies complete. Supports assigning stages to specific teams.",
+      "when_to_use": "When work has sequential dependencies (stage B depends on stage A completing). Examples: data collection -> processing -> analysis, or code generation -> testing -> deployment.",
+      "prerequisites": [
+        "SQLite database initialized",
+        "Bus directory exists (optional)",
+        "Pipeline stages and their dependency graph designed before creation"
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "action": "Initialize PipelineManager instance",
+          "details": "Create an instance. Shares the same database as WorkStealing and Scratchpad.",
+          "example_code": "from work_stealing import PipelineManager\npm = PipelineManager(\n    db_path='storage/coordination/db/state.db',\n    bus_dir='storage/coordination/bus/',\n    team='orchestrator',\n    agent_id='orch-lead'\n)"
+        },
+        {
+          "step": 2,
+          "action": "Design and create a pipeline",
+          "details": "Define stages as a list of dicts with name, optional team assignment, and optional depends_on list. Stages with no dependencies start in 'ready' status. Returns pipeline_id.",
+          "example_code": "pipeline_id = pm.create_pipeline(\n    name='data-processing-v1',\n    stages=[\n        {'name': 'collect', 'team': 'team-gamma'},\n        {'name': 'validate', 'team': 'team-alpha', 'depends_on': ['collect']},\n        {'name': 'transform', 'team': 'team-beta', 'depends_on': ['collect']},\n        {'name': 'analyze', 'team': 'team-alpha', 'depends_on': ['validate', 'transform']},\n        {'name': 'report', 'depends_on': ['analyze']}  # Any team can do this\n    ]\n)"
+        },
+        {
+          "step": 3,
+          "action": "Start and complete stages",
+          "details": "When a team picks up a ready stage, call start_stage(). When done, call complete_stage() with output data. Then trigger downstream stages.",
+          "example_code": "# Check what's ready\nready = pm.get_ready_stages(pipeline_id)\nfor stage in ready:\n    print(f\"Ready: {stage['stage_name']} (assigned to {stage['assigned_team']})\")\n\n# Start working on a stage\npm.start_stage(pipeline_id, 'collect')\n\n# Complete with output\npm.complete_stage(pipeline_id, 'collect', output_data={\n    'records': 500,\n    'output_path': '/data/raw/collected.json'\n})\n\n# Trigger downstream stages that are now unblocked\nnewly_ready = pm.trigger_downstream(pipeline_id, 'collect')\nprint(f\"Now ready: {newly_ready}\")  # ['validate', 'transform']"
+        },
+        {
+          "step": 4,
+          "action": "Monitor pipeline status",
+          "details": "Get the full pipeline status including all stages and their current states.",
+          "example_code": "status = pm.get_pipeline_status(pipeline_id)\nprint(f\"Pipeline: {status['name']} - {status['status']}\")\nfor s in status['stages']:\n    print(f\"  {s['stage_name']}: {s['status']}\")"
+        }
+      ],
+      "common_mistakes": [
+        "Forgetting to call trigger_downstream() after complete_stage() -- downstream stages will stay in 'waiting' status forever.",
+        "Creating circular dependencies -- stage A depends on B which depends on A. The pipeline will deadlock with both stages stuck in 'waiting'.",
+        "Starting a stage before checking check_stage_ready() -- the stage may still have incomplete dependencies.",
+        "Not storing output_data in complete_stage() -- downstream stages may need the output from upstream stages. Pass meaningful data.",
+        "Using duplicate pipeline names -- pipeline names must be unique (UNIQUE constraint on name column)."
+      ],
+      "troubleshooting": [
+        {
+          "problem": "Stages stuck in 'waiting' status",
+          "solution": "Check if upstream stages are completed. Call trigger_downstream() on each completed upstream stage. If dependencies are met but status is still 'waiting', call get_ready_stages() which also updates statuses."
+        },
+        {
+          "problem": "Pipeline status shows 'active' even though all stages are done",
+          "solution": "Pipeline status is derived by checking if all stages are completed. Verify all stages show status='completed' in get_pipeline_status()."
+        },
+        {
+          "problem": "Cannot create pipeline with existing name",
+          "solution": "Pipeline names are unique. Choose a different name or version suffix (e.g., 'data-processing-v2')."
+        }
+      ]
+    },
+    {
+      "id": "SOP-005",
+      "tool": "scratchpad",
+      "title": "Standard Operating Procedure for Scratchpad",
+      "file": "storage/coordination/work_stealing.py",
+      "class": "Scratchpad",
+      "purpose": "Namespaced key-value store with TTL expiration for sharing intermediate results between agents and teams. Values are JSON-serializable.",
+      "when_to_use": "When teams need to share intermediate data that does not fit in bus messages (which are limited to 4096 bytes). When teams need to pass structured results to each other. When data should auto-expire after a time period.",
+      "prerequisites": [
+        "SQLite database initialized",
+        "Team and agent identifiers chosen"
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "action": "Initialize Scratchpad instance",
+          "details": "Create an instance. Default namespace is the team name. Use 'global' namespace for cross-team sharing.",
+          "example_code": "from work_stealing import Scratchpad\nsp = Scratchpad(\n    db_path='storage/coordination/db/state.db',\n    team='team-alpha',\n    agent_id='alpha-lead'\n)"
+        },
+        {
+          "step": 2,
+          "action": "Write data to scratchpad",
+          "details": "Write any JSON-serializable value. Default TTL is 3600 seconds (1 hour). Use namespace='global' for cross-team visibility. Overwrites if key+namespace already exists.",
+          "example_code": "# Team-private data (namespace defaults to team name)\nsp.write('api_results', {'records': 150, 'status': 'complete'})\n\n# Cross-team shared data\nsp.write('shared_config', {'max_retries': 3, 'timeout': 30},\n         namespace='global', ttl=7200)  # 2 hour TTL"
+        },
+        {
+          "step": 3,
+          "action": "Read data from scratchpad",
+          "details": "Read by key. Returns None if not found or expired. Use namespace to read from other teams or 'global'.",
+          "example_code": "# Read own team's data\nresults = sp.read('api_results')\n\n# Read cross-team data\nconfig = sp.read('shared_config', namespace='global')\n\n# Read another team's data (if you know their namespace)\nbeta_results = sp.read('api_results', namespace='team-beta')"
+        },
+        {
+          "step": 4,
+          "action": "List and manage keys",
+          "details": "Enumerate all keys in a namespace, read all entries at once, or delete specific keys.",
+          "example_code": "# List all keys in global namespace\nkeys = sp.list_keys(namespace='global')\n\n# Read everything in a namespace\nall_data = sp.read_all(namespace='global')\n\n# Delete a key\nsp.delete('old_data', namespace='global')\n\n# Clean up all expired entries across all namespaces\nremoved = sp.cleanup_expired()\nprint(f'Cleaned up {removed} expired entries')"
+        }
+      ],
+      "common_mistakes": [
+        "Using the wrong namespace -- team data defaults to the team name. Cross-team sharing requires namespace='global' on both write and read.",
+        "Storing very large values -- the scratchpad uses SQLite TEXT columns. For datasets larger than a few KB, write to a file and store the file path in the scratchpad instead.",
+        "Not accounting for TTL -- data expires silently. Set a longer TTL for data that must persist across team sessions.",
+        "Key naming collisions -- use prefixes to avoid collisions (e.g., 'team-alpha/results' rather than just 'results') when using the global namespace.",
+        "Not calling cleanup_expired() -- expired entries remain in the database until explicitly cleaned. Call periodically to reclaim space."
+      ],
+      "troubleshooting": [
+        {
+          "problem": "read() returns None but I just wrote the data",
+          "solution": "Check the namespace parameter matches between write and read. If you wrote without specifying namespace, it defaults to your team name. Reading from 'global' will not find it."
+        },
+        {
+          "problem": "Data disappears after some time",
+          "solution": "TTL expiration. The default TTL is 3600 seconds (1 hour). Increase it with the ttl parameter on write()."
+        },
+        {
+          "problem": "stale data from a previous run",
+          "solution": "Call cleanup_expired() or delete() to remove old entries. Alternatively, overwrite with a fresh write() call (same key+namespace)."
+        }
+      ]
+    },
+    {
+      "id": "SOP-006",
+      "tool": "bus_cli",
+      "title": "Standard Operating Procedure for Bus CLI",
+      "file": "storage/coordination/bus_cli.py",
+      "purpose": "Command-line interface for reading/writing the JSONL message bus and managing shared state. This is the primary interface for agents that interact via bash commands rather than Python imports.",
+      "when_to_use": "When an agent needs to communicate via the bus from bash/shell scripts, when initializing the coordination system, when checking system status, or when agents cannot easily import Python modules.",
+      "prerequisites": [
+        "Python 3 available on PATH",
+        "Working directory or absolute path to bus_cli.py known"
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "action": "Initialize the system",
+          "details": "Creates the SQLite database and required tables. Must be run once before any other operations.",
+          "example_code": "python storage/coordination/bus_cli.py init"
+        },
+        {
+          "step": 2,
+          "action": "Register an agent",
+          "details": "Register this agent in the shared state database. Required for heartbeat tracking and agent discovery.",
+          "example_code": "python storage/coordination/bus_cli.py register alpha-lead team-alpha coordinator"
+        },
+        {
+          "step": 3,
+          "action": "Write messages to the bus",
+          "details": "Publish a message to a channel. Body must be valid JSON. Valid message types: info, blocker, phase-signal, heartbeat, request, response.",
+          "example_code": "python storage/coordination/bus_cli.py write global alpha-lead team-alpha info '{\"event\": \"task-complete\", \"results\": 42}'"
+        },
+        {
+          "step": 4,
+          "action": "Read messages from the bus",
+          "details": "Read messages from a channel. Optionally specify a byte offset to read only new messages. Returns JSON with messages array and new offset.",
+          "example_code": "python storage/coordination/bus_cli.py read global\npython storage/coordination/bus_cli.py read global --since 1024"
+        },
+        {
+          "step": 5,
+          "action": "Check system status",
+          "details": "View all registered agents, total findings, proposals, and bus channel files.",
+          "example_code": "python storage/coordination/bus_cli.py status"
+        },
+        {
+          "step": 6,
+          "action": "Use Help Protocol commands",
+          "details": "The CLI wraps all Help Protocol operations for bash-based agents.",
+          "example_code": "# Request help\npython bus_cli.py help-request team-alpha alpha-lead 'Need help with data parsing' --capabilities coding,analysis --priority high\n\n# Offer help on a request\npython bus_cli.py help-offer team-beta beta-lead 3\n\n# Update team status\npython bus_cli.py status-update team-alpha alpha-lead working 45 --task 'Processing batch data'\n\n# Add a work item\npython bus_cli.py work-add team-alpha alpha-lead 'Parse CSV files' --description 'Parse all CSV files in /data' --priority high --est-minutes 15\n\n# Check idle teams\npython bus_cli.py idle-teams\n\n# Check who needs help\npython bus_cli.py help-needed\n\n# Auto-assign idle teams to help requests\npython bus_cli.py auto-assign"
+        }
+      ],
+      "common_mistakes": [
+        "Forgetting to run 'init' first -- all other commands will fail if the database does not exist.",
+        "Passing invalid JSON as body -- use single quotes around the JSON string in bash to avoid shell escaping issues.",
+        "Not quoting arguments with spaces -- wrap descriptions in quotes.",
+        "Reading from a channel that does not exist -- returns empty messages list, not an error.",
+        "Assuming bus_cli.py uses the project root -- paths are relative to the script's own directory (storage/coordination/)."
+      ],
+      "troubleshooting": [
+        {
+          "problem": "ModuleNotFoundError for help_protocol",
+          "solution": "Run bus_cli.py from its own directory or ensure storage/coordination/ is on sys.path. The script adds its own directory to sys.path automatically."
+        },
+        {
+          "problem": "No output from status command",
+          "solution": "Run 'init' first to create the database. The status command checks for the database file's existence."
+        },
+        {
+          "problem": "JSON parse errors in body argument",
+          "solution": "Use single quotes in bash: '{\"key\": \"value\"}'. Double-check JSON validity. Do not use Python-style dicts (single quotes, True/False)."
+        }
+      ]
+    },
+    {
+      "id": "SOP-007",
+      "tool": "multi_team_runner",
+      "title": "Standard Operating Procedure for Multi-Team Runner",
+      "file": "storage/coordination/multi_team_runner.py",
+      "class": "MultiTeamRunner",
+      "purpose": "Launches and manages N teams with M agents each. Handles environment initialization, agent registration, heartbeat monitoring, health checks, phase management, and clean shutdown.",
+      "when_to_use": "When starting a new multi-team session, when managing the lifecycle of multiple concurrent teams, or when you need heartbeat monitoring and dead agent detection.",
+      "prerequisites": [
+        "Team configuration JSON file prepared (or use --teams/--agents-per-team for auto-generation)",
+        "No other runner instance active on the same database"
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "action": "Prepare team configuration",
+          "details": "Create a JSON file defining teams and their agents. Each team needs a name and list of agents with agent_id and role.",
+          "example_code": "{\n  \"teams\": [\n    {\n      \"name\": \"alpha\",\n      \"agents\": [\n        {\"agent_id\": \"alpha-lead\", \"role\": \"coordinator\"},\n        {\"agent_id\": \"alpha-worker-1\", \"role\": \"worker\"}\n      ]\n    },\n    {\n      \"name\": \"beta\",\n      \"agents\": [\n        {\"agent_id\": \"beta-lead\", \"role\": \"coordinator\"},\n        {\"agent_id\": \"beta-worker-1\", \"role\": \"worker\"},\n        {\"agent_id\": \"beta-worker-2\", \"role\": \"worker\"}\n      ]\n    }\n  ],\n  \"heartbeat_interval\": 30,\n  \"dead_agent_timeout\": 120,\n  \"cleanup_interval\": 600\n}"
+        },
+        {
+          "step": 2,
+          "action": "Launch the runner",
+          "details": "Start with a config file or auto-generated teams. Use --foreground to block until shutdown.",
+          "example_code": "# With config file\npython multi_team_runner.py --config teams.json --foreground\n\n# Auto-generate 3 teams with 2 agents each\npython multi_team_runner.py --teams 3 --agents-per-team 2 --foreground"
+        },
+        {
+          "step": 3,
+          "action": "Check runner status",
+          "details": "Query the current state of the runner and all registered agents.",
+          "example_code": "python multi_team_runner.py --status"
+        },
+        {
+          "step": 4,
+          "action": "Manage phases programmatically",
+          "details": "When using as a library, advance the phase to signal transitions to all agents.",
+          "example_code": "runner.advance_phase('analysis', data={'focus': 'performance'})\n# This records a phase_signal in SQLite and publishes to the bus"
+        },
+        {
+          "step": 5,
+          "action": "Shutdown gracefully",
+          "details": "Send SIGTERM or use the --shutdown CLI flag. The runner will stop heartbeat threads, broadcast a shutdown event, and exit cleanly.",
+          "example_code": "python multi_team_runner.py --shutdown\n# Or: Ctrl+C in foreground mode\n# Or: kill -TERM <pid>"
+        }
+      ],
+      "common_mistakes": [
+        "Running multiple runner instances on the same database -- they will conflict. Check --status first.",
+        "Not using --foreground when you want the runner to stay alive -- without it, daemon threads may exit when the main process ends.",
+        "Forgetting to include 'agent_id' and 'role' for every agent in config -- validation will fail.",
+        "Setting dead_agent_timeout too low -- agents may be falsely detected as dead during long operations. 120 seconds is a reasonable default.",
+        "Not handling the heartbeat in your agents -- the runner detects dead agents based on heartbeat timestamps. Call heartbeat() or use bus_cli.py heartbeat regularly."
+      ],
+      "troubleshooting": [
+        {
+          "problem": "Runner process (pid=X) is not running",
+          "solution": "The previous runner crashed or was killed. Run --status to confirm, then start a new runner. The old state persists in the database."
+        },
+        {
+          "problem": "Agents showing as DEAD in dashboard",
+          "solution": "Agents must update their heartbeat timestamp within dead_agent_timeout seconds (default 120s). Add heartbeat calls to agent loops."
+        },
+        {
+          "problem": "Phase signals not visible to agents",
+          "solution": "Agents must poll the phase_signals table or read the bus for phase-signal type messages. Phase transitions are written to both locations."
+        }
+      ]
+    },
+    {
+      "id": "SOP-008",
+      "tool": "think_tank",
+      "title": "Standard Operating Procedure for Think Tank Convergence",
+      "file": "storage/coordination/think_tank.py",
+      "purpose": "Collects findings from all teams (SQLite + output files), deduplicates them, groups by category and priority, and generates a consolidated improvement roadmap.",
+      "when_to_use": "After multiple teams have completed their work and posted findings. Use this to consolidate insights, remove duplicates, and prioritize next steps.",
+      "prerequisites": [
+        "Teams have posted findings via bus_cli.py or the team_findings SQLite table",
+        "Team output JSON files exist in storage/coordination/teams/*/output/*.json or teams/*/output/*.json"
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "action": "Post findings during team work",
+          "details": "Each team should post findings as they work. Use bus_cli.py or write directly to team_findings table. Findings need: team, agent_id, category, title, content, priority.",
+          "example_code": "# Via bus_cli.py (from any agent)\nimport sqlite3, time\nconn = sqlite3.connect('storage/coordination/db/state.db')\nconn.execute(\n    'INSERT INTO team_findings (team, agent_id, category, title, content, priority, ts) VALUES (?, ?, ?, ?, ?, ?, ?)',\n    ('team-alpha', 'alpha-lead', 'architecture', 'Caching needed', 'API calls are slow, need Redis caching layer', 'high', time.time())\n)\nconn.commit()\nconn.close()"
+        },
+        {
+          "step": 2,
+          "action": "Also write findings to output files",
+          "details": "For persistence beyond SQLite, write JSON files to the team output directory. Files can contain a single finding dict or a list of findings.",
+          "example_code": "# Write to storage/coordination/teams/team-alpha/output/findings.json\nimport json, os\nos.makedirs('storage/coordination/teams/team-alpha/output', exist_ok=True)\nwith open('storage/coordination/teams/team-alpha/output/findings.json', 'w') as f:\n    json.dump([{\n        'team': 'team-alpha',\n        'category': 'architecture',\n        'title': 'Caching needed',\n        'content': 'API calls are slow',\n        'priority': 'high'\n    }], f)"
+        },
+        {
+          "step": 3,
+          "action": "Generate the convergence report",
+          "details": "Run the think tank script to collect, deduplicate, and generate the report. Output goes to storage/coordination/teams/think-tank-report.json by default.",
+          "example_code": "# Generate report (writes to file)\npython storage/coordination/think_tank.py\n\n# With human-readable summary\npython storage/coordination/think_tank.py --summary\n\n# Filter by category\npython storage/coordination/think_tank.py --category architecture\n\n# Generate without writing to disk\npython storage/coordination/think_tank.py --no-write"
+        },
+        {
+          "step": 4,
+          "action": "Review the roadmap",
+          "details": "The report contains a prioritized improvement roadmap. Critical and high-priority items should be addressed first. The report exits with code 1 if critical findings exist.",
+          "example_code": "# Programmatic usage\nfrom think_tank import generate_report, print_summary\nreport = generate_report()\nprint_summary(report)\nfor item in report['roadmap']:\n    print(f\"[{item['priority']}] {item['category']}: {item['action']}\")"
+        }
+      ],
+      "deduplication_rules": "Findings are fingerprinted by SHA-256 hash of lowercase(category + ':' + title). Two findings with the same title and category are considered duplicates. When duplicates exist, the higher-priority or more-recent finding wins. The losing finding's source is tracked in the 'also_from' field.",
+      "common_mistakes": [
+        "Not including required fields -- findings must have at least 'title' or 'content' to be collected from files.",
+        "Using inconsistent categories -- categories are lowered and stripped, but 'Architecture' and 'architecture' are the same. Standardize your categories.",
+        "Running think_tank.py before teams have posted findings -- the report will be empty.",
+        "Ignoring the exit code -- exit code 1 means critical findings exist and need immediate attention.",
+        "Not cross-referencing findings -- the value of think tank is in cross-team insights. Make sure multiple teams contribute findings."
+      ],
+      "troubleshooting": [
+        {
+          "problem": "Report shows 0 findings",
+          "solution": "Check: (1) SQLite database has team_findings rows, (2) Output JSON files exist in the expected directories, (3) JSON files contain dicts with 'title' or 'content' fields."
+        },
+        {
+          "problem": "Duplicate findings not being removed",
+          "solution": "Deduplication is based on category+title. If titles differ slightly, they will not be detected as duplicates. Standardize titles across teams."
+        },
+        {
+          "problem": "File-based findings not collected",
+          "solution": "Files must be in storage/coordination/teams/*/output/*.json or teams/*/output/*.json (relative to repo root). Check the glob pattern matches your file locations."
+        }
+      ]
+    },
+    {
+      "id": "SOP-009",
+      "tool": "dashboard",
+      "title": "Standard Operating Procedure for Dashboard",
+      "file": "storage/coordination/dashboard.py",
+      "purpose": "Text-based real-time dashboard showing agent status, message bus activity, phase signals, and findings summary. Can run in watch mode for continuous monitoring.",
+      "when_to_use": "When you need to monitor the overall health and activity of the coordination system. When debugging issues with agents, bus messages, or team progress.",
+      "prerequisites": [
+        "Coordination system initialized (bus_cli.py init or multi_team_runner.py)",
+        "At least some agents registered and/or bus messages written"
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "action": "View the full dashboard",
+          "details": "Shows all sections: agents, bus activity, phase signals, and findings.",
+          "example_code": "python storage/coordination/dashboard.py"
+        },
+        {
+          "step": 2,
+          "action": "Watch mode for continuous monitoring",
+          "details": "Auto-refreshes the dashboard at a configurable interval. Press Ctrl+C to stop.",
+          "example_code": "python storage/coordination/dashboard.py --watch\npython storage/coordination/dashboard.py --watch --interval 2  # Refresh every 2 seconds"
+        },
+        {
+          "step": 3,
+          "action": "View specific sections only",
+          "details": "Filter to show only agents, bus activity, or findings.",
+          "example_code": "python storage/coordination/dashboard.py --agents    # Only agent status\npython storage/coordination/dashboard.py --bus       # Only bus activity\npython storage/coordination/dashboard.py --findings  # Only findings summary"
+        },
+        {
+          "step": 4,
+          "action": "Export as JSON",
+          "details": "Get raw data as JSON for programmatic consumption.",
+          "example_code": "python storage/coordination/dashboard.py --json"
+        }
+      ],
+      "status_indicators": {
+        "[ OK ]": "Agent heartbeat is within thresholds (less than 60 seconds old)",
+        "[WARN]": "Agent heartbeat is stale (60-120 seconds old) -- may be slow or overloaded",
+        "[DEAD]": "Agent heartbeat is expired (more than 120 seconds old) or status is not 'alive'"
+      },
+      "common_mistakes": [
+        "Running dashboard before initializing the system -- shows 'No state DB found' or empty sections.",
+        "Confusing [WARN] with actual problems -- agents doing long operations may have stale heartbeats. Check if they are still producing bus messages.",
+        "Not using --json when piping output -- the text format is for human reading. Use --json for machine consumption."
+      ],
+      "troubleshooting": [
+        {
+          "problem": "Dashboard shows 'No state DB found'",
+          "solution": "Run bus_cli.py init or start the multi_team_runner.py to create the database."
+        },
+        {
+          "problem": "All agents show [DEAD]",
+          "solution": "Agents must update their heartbeat timestamp. If the session is old, all heartbeats will be expired. This is expected for non-running systems."
+        },
+        {
+          "problem": "Bus activity shows no messages",
+          "solution": "Messages have TTL (default 300-3600 seconds). Old messages are filtered out. Check that the bus/ directory contains .jsonl files."
+        }
+      ]
+    },
+    {
+      "id": "SOP-010",
+      "tool": "new_team_onboarding",
+      "title": "Standard Operating Procedure for New Team Onboarding",
+      "purpose": "Step-by-step process for a new AI team starting work in this repository. Covers reading prior knowledge, initializing coordination, doing work, and creating handoff artifacts.",
+      "when_to_use": "Every time a new AI team or session begins. This is the FIRST thing to do.",
+      "prerequisites": [
+        "Access to the repository",
+        "Team name and role assigned by orchestrator"
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "action": "Read CLAUDE.md for project instructions",
+          "details": "The CLAUDE.md file at the repository root contains the prime directive, repository structure, and workflow instructions. Follow these exactly.",
+          "example_code": "cat /path/to/repo/CLAUDE.md"
+        },
+        {
+          "step": 2,
+          "action": "Read previous team session logs",
+          "details": "Check the teams/ directory for session logs from previous teams. Read at minimum the most recent 2-3 logs to understand current state.",
+          "example_code": "ls teams/\n# Read the most recent logs\ncat teams/TEAM-00XX-session.md"
+        },
+        {
+          "step": 3,
+          "action": "Check the knowledge base index",
+          "details": "Read knowledge-base/index.json to find relevant prior knowledge entries. Read any KB entries related to your task.",
+          "example_code": "cat knowledge-base/index.json\ncat knowledge-base/entries/KB-XXXX.md"
+        },
+        {
+          "step": 4,
+          "action": "Initialize coordination system (if not already done)",
+          "details": "If starting a fresh multi-team session, initialize the bus and database.",
+          "example_code": "python storage/coordination/bus_cli.py init"
+        },
+        {
+          "step": 5,
+          "action": "Register your agent",
+          "details": "Register in the shared state database so other teams can discover you.",
+          "example_code": "python storage/coordination/bus_cli.py register my-agent-id my-team coordinator"
+        },
+        {
+          "step": 6,
+          "action": "Set presence and capabilities",
+          "details": "Use the help_protocol or direct_channels to announce your availability and capabilities.",
+          "example_code": "python storage/coordination/bus_cli.py status-update my-team my-agent working 0 --task 'Starting assigned work'"
+        },
+        {
+          "step": 7,
+          "action": "Do your assigned work",
+          "details": "Execute your mission. Post findings to the shared database as you discover them. Update progress regularly. Request help if blocked.",
+          "example_code": "# Post findings as you work\n# Update progress: python bus_cli.py status-update my-team my-agent working 50 --task 'Halfway done'\n# Request help if needed: python bus_cli.py help-request my-team my-agent 'Need help with X'"
+        },
+        {
+          "step": 8,
+          "action": "Create knowledge base entries",
+          "details": "For anything significant you learned, create a KB entry using the template at knowledge-base/TEMPLATE.md. Place in knowledge-base/entries/.",
+          "example_code": "cp knowledge-base/TEMPLATE.md knowledge-base/entries/KB-XXXX.md\n# Edit with your findings"
+        },
+        {
+          "step": 9,
+          "action": "Write a team session log",
+          "details": "Document what you did, what you found, and what future teams should know. Use teams/TEAM_LOG_TEMPLATE.md.",
+          "example_code": "cp teams/TEAM_LOG_TEMPLATE.md teams/TEAM-00XX-session.md\n# Fill in your session details"
+        },
+        {
+          "step": 10,
+          "action": "Update indexes",
+          "details": "Update knowledge-base/index.json with any new KB entries. Update any other relevant index files.",
+          "example_code": "# Edit knowledge-base/index.json to add your new entries"
+        },
+        {
+          "step": 11,
+          "action": "Signal completion",
+          "details": "Update your status to 'complete' and announce on the bus.",
+          "example_code": "python storage/coordination/bus_cli.py status-update my-team my-agent complete 100 --task 'All work completed'"
+        }
+      ],
+      "common_mistakes": [
+        "Skipping step 1-3 (reading prior knowledge) -- you will duplicate work or miss critical context that previous teams already discovered.",
+        "Not creating KB entries -- future teams lose your insights. The prime directive says 'Every AI team builds on the knowledge of the last team.'",
+        "Not writing a session log -- the next team has no way to know what you did.",
+        "Not updating index files -- entries without index references are invisible to future teams.",
+        "Not posting findings during work -- only posting at the end means the think tank convergence tool misses your contributions if you crash.",
+        "Not requesting help when stuck -- other teams may be idle and able to help. Use the help protocol."
+      ],
+      "troubleshooting": [
+        {
+          "problem": "Cannot find previous team logs",
+          "solution": "Check both teams/ at the repo root and storage/coordination/teams/. Some sessions may not have created logs (known gap for TEAM-0011, -0015, -0016, -0017)."
+        },
+        {
+          "problem": "Knowledge base index is empty or missing",
+          "solution": "The knowledge base may be new. Create the index.json file and populate it as you create KB entries."
+        },
+        {
+          "problem": "Coordination tools not working",
+          "solution": "Run bus_cli.py init to create the database. Check that Python 3 is available. Ensure you are running from the correct directory."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,288 @@
+{
+  "research_date": "2026-03-11",
+  "team": "research-stress",
+  "topics": [
+    {
+      "id": "RT-001",
+      "topic": "SQLite Concurrent Stress Testing",
+      "findings": [
+        {
+          "finding": "Critical WAL-reset bug (fixed 2026-03-06 in SQLite 3.52.0) can cause database corruption when two connections attempt to write or checkpoint simultaneously in WAL mode. The bug existed since SQLite 3.7.0 (2010). Backports available for 3.44.6, 3.50.7, 3.51.3.",
+          "source": "https://sqlite.org/wal.html",
+          "relevance": "Our coordination database uses SQLite WAL mode with multiple agent processes. We are vulnerable to this corruption bug if running an unpatched version.",
+          "recommendation": "Immediately verify SQLite version is >= 3.52.0 or use a backported version. Add version check to system startup."
+        },
+        {
+          "finding": "SkyPilot's stress testing at 1000x concurrency showed that increasing busy_timeout by ~20s reduces timeout probability by 10x. They use a 60-second busy_timeout in production. The relationship between timeout and concurrency is roughly logarithmic.",
+          "source": "https://blog.skypilot.co/abusing-sqlite-to-handle-concurrency/",
+          "relevance": "Our multi-agent system has multiple processes contending for write access. A generous busy_timeout prevents SQLITE_BUSY errors that could cause agents to lose coordination state.",
+          "recommendation": "Set busy_timeout to at least 30000ms (30s) for coordination databases. At peak concurrency (5+ agents), consider 60000ms."
+        },
+        {
+          "finding": "WAL file growth is a self-reinforcing failure mode: large WAL -> slower reads -> longer transactions -> blocked checkpoints -> even larger WAL. Setting wal_autocheckpoint=500 (vs default 1000) prevents runaway growth under high concurrency.",
+          "source": "https://ericdraken.com/sqlite-performance-testing/",
+          "relevance": "Long-running agent sessions could cause WAL file growth that degrades all agents' performance progressively.",
+          "recommendation": "Set PRAGMA wal_autocheckpoint=500. Add WAL file size monitoring as a health metric. Alert if WAL exceeds 10MB."
+        },
+        {
+          "finding": "WAL mode and threading mode are orthogonal - WAL does NOT provide thread safety. Common misconception leads to race conditions. Each connection must still use proper synchronization.",
+          "source": "https://sqlite.org/forum/info/461653af585fb599",
+          "relevance": "If our system assumes WAL mode handles thread safety, we may have latent race conditions in the coordination layer.",
+          "recommendation": "Ensure each agent process uses its own SQLite connection. Never share connections across threads without explicit serialization."
+        },
+        {
+          "finding": "synchronous=NORMAL in WAL mode does NOT provide durability guarantees. Some popular SQLite drivers (e.g., Go's go-sqlite3) silently set this. Only synchronous=FULL provides durability in WAL mode.",
+          "source": "https://www.agwa.name/blog/post/sqlite_durability",
+          "relevance": "If our coordination database loses durability, agent state could be silently lost during crashes, causing coordination failures that are very hard to debug.",
+          "recommendation": "Explicitly set PRAGMA synchronous=FULL after enabling WAL mode. Verify this in connection initialization code."
+        },
+        {
+          "finding": "SQLite has an experimental BEGIN CONCURRENT feature allowing non-conflicting writes to partially overlap, but it's only available in a special branch (not mainline SQLite).",
+          "source": "https://sqlite.org/wal.html",
+          "relevance": "Could significantly improve our write throughput for non-conflicting agent operations, but adoption risk is high since it's not in mainline.",
+          "recommendation": "Monitor BEGIN CONCURRENT for mainline inclusion. Do not adopt experimental branches for production coordination."
+        }
+      ]
+    },
+    {
+      "id": "RT-002",
+      "topic": "Error Protection for Multi-Agent Coordination",
+      "findings": [
+        {
+          "finding": "Circuit breaker pattern operates in three states (Closed/Open/Half-Open) and prevents cascading failures. For agent systems, a common threshold is 5 failures in 2 minutes before opening the circuit. Half-open state tests with a single request before restoring full traffic.",
+          "source": "https://temporal.io/blog/error-handling-in-distributed-systems",
+          "relevance": "If one agent repeatedly fails (e.g., database locked, resource exhausted), it can cascade to other agents waiting on its output. A circuit breaker would isolate the failing agent.",
+          "recommendation": "Implement a simple circuit breaker for agent task execution: track failure count per agent, pause agent after 3 consecutive failures, attempt recovery after 30s cooldown."
+        },
+        {
+          "finding": "The Saga pattern coordinates distributed transactions with compensating actions. Orchestration approach (central coordinator) is simpler to implement and debug than choreography (event-driven). Compensating transactions must be designed explicitly - there is no automatic rollback.",
+          "source": "https://learn.microsoft.com/en-us/azure/architecture/patterns/saga",
+          "relevance": "Multi-step agent workflows (e.g., research -> analyze -> write) need compensation logic when intermediate steps fail. Without it, partial results can corrupt shared state.",
+          "recommendation": "For multi-agent workflows, use orchestration pattern with explicit compensation. Each task should define its undo operation. Store workflow state in the coordination database."
+        },
+        {
+          "finding": "Combining Circuit Breaker + Saga provides the most robust error handling: when circuit opens, saga immediately triggers compensation without attempting the failed call. This reduces system load and improves recovery time.",
+          "source": "https://medium.com/@shekhar.manna83/architecture-microservices-patterns-saga-and-circuit-breaker-in-data-engineering-814c8fe7dcf1",
+          "relevance": "Our agent coordination can benefit from both patterns: saga for workflow integrity, circuit breaker for agent health.",
+          "recommendation": "Layer circuit breaker inside saga orchestrator. When agent circuit opens, saga compensates and reassigns task to healthy agent."
+        },
+        {
+          "finding": "Semantic failure detection is the most overlooked failure mode in multi-agent systems - when an agent returns a technically valid but incorrect response. Detection requires output validation: schema checking, required fields, minimum confidence thresholds.",
+          "source": "https://dev.to/leena_malhotra/the-architecture-of-multi-agent-ai-systems-explained-5440",
+          "relevance": "Our agents could produce structurally valid but semantically wrong outputs that propagate through the system undetected.",
+          "recommendation": "Add output validation for all agent results: JSON schema validation, required field checks, and basic sanity checks on output size/content."
+        },
+        {
+          "finding": "Bulkhead pattern isolates resources (threads, memory, connections) so failure in one component doesn't bring down the entire system. Applied to agents: each agent should have isolated resource pools.",
+          "source": "https://dev.to/geampiere/mastering-microservices-patterns-circuit-breaker-fallback-bulkhead-saga-and-cqrs-4h55",
+          "relevance": "If one agent consumes excessive resources (memory, disk), it shouldn't impact other agents' ability to function.",
+          "recommendation": "Set resource limits per agent process. Use separate database connections per agent. Consider separate WAL files for high-contention tables."
+        },
+        {
+          "finding": "The critical difference between traditional distributed systems and multi-agent AI systems is non-determinism. LLM-powered agents may take different reasoning paths with the same prompt, making orchestration harder - the coordination layer must account for variability in both latency and response quality.",
+          "source": "https://gurusup.com/blog/multi-agent-orchestration-guide",
+          "relevance": "Our coordination system must handle variable agent execution times and quality without treating variability as failure.",
+          "recommendation": "Implement adaptive timeouts based on task type rather than fixed timeouts. Add quality gates (output validation) rather than just completion checks."
+        }
+      ]
+    },
+    {
+      "id": "RT-003",
+      "topic": "SOP Development Best Practices",
+      "findings": [
+        {
+          "finding": "Effective SOPs have: cover page (title, ID, version, author, approver), purpose/scope section, step-by-step procedures with timelines and responsible persons, roles/responsibilities matrix, and required tools/resources list.",
+          "source": "https://www.splunk.com/en_us/blog/learn/standard-operating-procedures-sop.html",
+          "relevance": "Our agent SOPs need consistent structure so that both human developers and AI agents can follow them reliably.",
+          "recommendation": "Create a standard SOP template with: unique ID, version, purpose, scope, prerequisites, step-by-step procedure, expected outputs, error handling, and review schedule."
+        },
+        {
+          "finding": "SOPs should be process-focused, not tool-specific. Work instructions are tool-specific, whereas SOPs define the process. This separation allows tools to change without requiring SOP rewrites.",
+          "source": "https://helpjuice.com/blog/standard-operating-procedure",
+          "relevance": "Our SOPs should describe what agents need to accomplish and the quality criteria, not the specific prompts or code to use.",
+          "recommendation": "Structure SOPs in two layers: process-level SOP (what and why) and work instructions (how with specific tools). This allows tool changes without SOP rewrites."
+        },
+        {
+          "finding": "SOPs should be tested by less experienced users to validate they serve their purpose. The draft should be created by domain experts but independently verified by newcomers.",
+          "source": "https://tractian.com/en/blog/standard-operating-procedure-sop-full-guide-to-apply-it",
+          "relevance": "New AI agent teams are analogous to 'less experienced users' - they need SOPs that are self-contained and unambiguous.",
+          "recommendation": "Test each SOP with a fresh agent session (no prior context). If the agent cannot follow the SOP without clarification, the SOP needs revision."
+        },
+        {
+          "finding": "SOPs are living documents that require version control and regular review. Changes in tools, processes, or team structure require immediate updates. Assign ownership for each SOP.",
+          "source": "https://blogs.helixops.ai/sop-standard-operating-procedure/",
+          "relevance": "As our system evolves, SOPs will drift from reality. Outdated SOPs cause agents to follow incorrect procedures.",
+          "recommendation": "Add version field and last_reviewed date to each SOP. Set 2-week review cycle. Assign SOP ownership to the team that uses it most."
+        },
+        {
+          "finding": "Imperial College RSE Team uses SOPs that define roles, responsibilities, and actions for software-oriented project work, including decision gates and escalation paths.",
+          "source": "https://imperialcollegelondon.github.io/RSE_SOPs/SOP01_Project_Work.html",
+          "relevance": "Decision gates and escalation paths are directly applicable to agent workflows where agents need to know when to escalate vs. proceed autonomously.",
+          "recommendation": "Add explicit decision gates to SOPs: define conditions under which an agent should stop and escalate (e.g., confidence below threshold, unexpected state, resource limits exceeded)."
+        },
+        {
+          "finding": "GitHub's SOPLibrary project provides industry-standard software engineering SOPs with integration guidelines for incorporating them into existing workflows.",
+          "source": "https://github.com/peytontolbert/SOPLibrary",
+          "relevance": "Reference implementation for structuring SOPs in a repository format similar to our knowledge-base approach.",
+          "recommendation": "Review peytontolbert/SOPLibrary for structural inspiration. Adapt their format for our AI-agent-specific needs."
+        }
+      ]
+    },
+    {
+      "id": "RT-004",
+      "topic": "Efficiency Patterns for Message Bus Systems",
+      "findings": [
+        {
+          "finding": "Kafka's log compaction retains only the last value per key, enabling consumers to rebuild state from a compacted topic. The compaction algorithm builds a hash table of latest offsets per key from 'dirty' segments, then rewrites segments keeping only those entries. Original offsets are preserved (with gaps).",
+          "source": "https://docs.confluent.io/kafka/design/log_compaction.html",
+          "relevance": "Our JSONL message bus can adopt key-based compaction: keep only the latest message per agent/task key, discard superseded entries.",
+          "recommendation": "Implement compaction for JSONL logs: scan for duplicate keys, keep latest entry per key, rewrite to new file. Run compaction when log exceeds a size threshold (e.g., 1MB)."
+        },
+        {
+          "finding": "Offsets are permanent identifiers for log positions. Even after compaction, all offsets remain valid positions - a compacted-away offset is treated the same as the next highest offset that still exists. This allows readers to resume from any previously-saved offset.",
+          "source": "https://medium.com/swlh/introduction-to-topic-log-compaction-in-apache-kafka-3e4d4afd2262",
+          "relevance": "Our reader offset management must handle gaps after compaction. Readers should store their last-read offset and seek to the next available entry.",
+          "recommendation": "Store reader offsets as byte positions or line numbers. After compaction, map old offsets to nearest valid position in compacted file. Use monotonic sequence numbers rather than line numbers for stability."
+        },
+        {
+          "finding": "Tombstone records (key + null payload) act as delete markers. They are retained for a configurable period after compaction to ensure all consumers see the deletion, then cleaned up. This prevents deleted keys from reappearing if a consumer was offline during the delete.",
+          "source": "https://www.baeldung.com/ops/kafka-topics-compaction",
+          "relevance": "Our message bus needs a way to mark tasks as completed/cancelled that survives compaction. Tombstones serve this purpose.",
+          "recommendation": "Support tombstone messages in JSONL format: {\"key\": \"task-123\", \"payload\": null, \"type\": \"tombstone\"}. Retain tombstones for 24 hours after compaction."
+        },
+        {
+          "finding": "min.cleanable.dirty.ratio controls when compaction triggers. Lower values = more frequent compaction = less disk usage but more I/O. Default is 0.5 (compact when 50% of log is dirty). For high-write scenarios, 0.3-0.4 is recommended.",
+          "source": "https://cloudurable.com/blog/kafka-architecture-log-compaction/index.html",
+          "relevance": "Our JSONL compaction needs a similar trigger mechanism to avoid excessive compaction overhead.",
+          "recommendation": "Trigger JSONL compaction when: (a) file exceeds 1MB, OR (b) ratio of unique keys to total entries drops below 0.5, OR (c) on agent session start as a maintenance step."
+        },
+        {
+          "finding": "JSONL files are not optimized for random access or updates at scale. For frequently updating/querying scenarios, databases are more appropriate. JSONL excels for sequential append and batch processing.",
+          "source": "https://dev.to/lovestaco/handling-large-json-files-in-python-efficient-read-write-and-update-strategies-3jgg",
+          "relevance": "Our JSONL message bus is appropriate for append-only event logs but not for stateful queries. We should use SQLite for state and JSONL for event history.",
+          "recommendation": "Use JSONL for event log/audit trail only. Move any stateful queries (task status, agent state) to SQLite. Keep JSONL files under 5MB through regular compaction."
+        },
+        {
+          "finding": "Segment-based log management (splitting logs into fixed-size segments) enables efficient compaction and retention. Old segments can be compacted independently, and readers can skip fully-consumed segments.",
+          "source": "https://medium.com/the-software-frontier/this-one-apache-kafka-internal-changed-everything-how-log-compaction-unlocked-stateful-event-b82d6dc57047",
+          "relevance": "Rather than one monolithic JSONL file, segment the log into time-based or size-based files for better management.",
+          "recommendation": "Split JSONL logs into segments: one file per session or per 1000 entries. Name with monotonic prefix (e.g., 00001-messages.jsonl). Compact and archive old segments independently."
+        }
+      ]
+    },
+    {
+      "id": "RT-005",
+      "topic": "Data Preservation for AI Team Handoffs",
+      "findings": [
+        {
+          "finding": "Most 'agent failures' are actually orchestration and context-transfer issues, not agent capability issues. Reliability lives and dies in the handoffs. Free-text handoffs are the main source of context loss.",
+          "source": "https://skywork.ai/blog/ai-agent-orchestration-best-practices-handoffs/",
+          "relevance": "Our team session logs are currently free-text, which loses structured context. Agents receiving handoffs may miss critical information.",
+          "recommendation": "Supplement free-text session logs with structured JSON summaries: decisions made, files modified, blockers encountered, open questions, and next steps with specific acceptance criteria."
+        },
+        {
+          "finding": "Treat inter-agent transfer like a public API: use JSON Schema-based structured outputs. Version payloads with schemaVersion field and semver. Validate with strict schema validation; on failure, run repair.",
+          "source": "https://skywork.ai/blog/ai-agent-orchestration-best-practices-handoffs/",
+          "relevance": "Our team handoff data should be schema-validated to prevent context loss and ensure receiving teams can parse all fields.",
+          "recommendation": "Define a JSON Schema for team session logs. Include schemaVersion field. Validate all session logs against schema before marking complete."
+        },
+        {
+          "finding": "Essential handoff data includes: state transfer (inputs, progress, failures), provenance and tool state, trace IDs for audit/replay, full interaction history, intermediate data, and the agent's reasoning path.",
+          "source": "https://towardsdatascience.com/how-agent-handoffs-work-in-multi-agent-systems/",
+          "relevance": "Our current session logs may not capture intermediate reasoning or failed approaches, which are valuable for avoiding repeated mistakes.",
+          "recommendation": "Add to session log template: (1) approaches tried and why they failed, (2) key decisions with rationale, (3) assumptions made, (4) files read but not modified (context files), (5) performance metrics."
+        },
+        {
+          "finding": "OpenAI Agents SDK collapses prior transcript into a single assistant summary wrapped in a <CONVERSATION HISTORY> block when nesting handoff history. This prevents context window overflow while preserving key information.",
+          "source": "https://openai.github.io/openai-agents-python/handoffs/",
+          "relevance": "As our team chain grows longer, full history becomes too large. We need progressive summarization - detailed recent history, summarized older history.",
+          "recommendation": "Implement tiered history: full detail for last 2 sessions, structured summary for sessions 3-5, key decisions/outcomes only for older sessions. Store in knowledge-base entries."
+        },
+        {
+          "finding": "Map out agent responsibilities up front. Assign clear boundaries and create a registry of 'who does what.' This prevents looping or 'ping-pong' between agents. Each agent should have clear input/output contracts.",
+          "source": "https://www.jetlink.io/post/understanding-handoff-in-multi-agent-ai-systems",
+          "relevance": "Our team roles (research, coding, testing) need explicit boundaries and clear deliverable specs to prevent duplicate work or gaps.",
+          "recommendation": "Create a team capability registry: for each team type, define inputs accepted, outputs produced, dependencies, and escalation criteria."
+        },
+        {
+          "finding": "LangGraph maintains state as the system's short-term memory, capturing recent conversations and key information so each agent can act based on prior context. State is structured as a typed graph.",
+          "source": "https://towardsdatascience.com/how-agent-handoffs-work-in-multi-agent-systems/",
+          "relevance": "Our coordination system needs both short-term state (current session) and long-term state (knowledge base) with clear boundaries between them.",
+          "recommendation": "Separate ephemeral state (task queue, active agents, current progress) from durable knowledge (findings, patterns learned, code written). Ephemeral state lives in coordination DB; durable knowledge lives in knowledge-base/."
+        }
+      ]
+    }
+  ],
+  "top_recommendations": [
+    {
+      "rank": 1,
+      "recommendation": "Verify SQLite version >= 3.52.0 to fix WAL-reset corruption bug, and set busy_timeout >= 30000ms, synchronous=FULL, wal_autocheckpoint=500",
+      "justification": "The WAL-reset bug can cause silent database corruption - an existential risk to coordination state. The configuration changes prevent the most common stress-test failure modes (SQLITE_BUSY, WAL growth, durability loss).",
+      "effort": "low",
+      "impact": "high"
+    },
+    {
+      "rank": 2,
+      "recommendation": "Add structured JSON summaries to team session logs alongside free-text descriptions, with schema validation",
+      "justification": "Research consistently shows that free-text handoffs are the primary source of context loss in multi-agent systems. Structured handoffs with schema validation prevent the most common handoff failures.",
+      "effort": "medium",
+      "impact": "high"
+    },
+    {
+      "rank": 3,
+      "recommendation": "Implement circuit breaker pattern for agent task execution (3 failures -> 30s cooldown -> single-request test)",
+      "justification": "Prevents cascading failures when one agent is unhealthy. Simple to implement (failure counter + timestamp) with high resilience payoff. Combined with saga compensation, enables automatic recovery.",
+      "effort": "medium",
+      "impact": "high"
+    },
+    {
+      "rank": 4,
+      "recommendation": "Add output validation (JSON schema + sanity checks) for all agent deliverables",
+      "justification": "Semantic failure (valid but wrong output) is the most overlooked failure mode in multi-agent systems. Schema validation catches structural issues; size/content checks catch obvious semantic failures.",
+      "effort": "low",
+      "impact": "high"
+    },
+    {
+      "rank": 5,
+      "recommendation": "Implement JSONL log segmentation and key-based compaction with tombstone support",
+      "justification": "Prevents unbounded log growth that degrades read performance. Segment-based management enables efficient compaction and archival. Tombstones ensure deleted/completed tasks don't reappear.",
+      "effort": "medium",
+      "impact": "medium"
+    },
+    {
+      "rank": 6,
+      "recommendation": "Create two-layer SOP structure: process-level SOPs (what/why) + work instructions (how/tools), with version tracking and 2-week review cycles",
+      "justification": "Separating process from tools enables tool evolution without SOP rewrites. Version tracking prevents agents from following outdated procedures. Testing SOPs with fresh agent sessions validates completeness.",
+      "effort": "medium",
+      "impact": "medium"
+    },
+    {
+      "rank": 7,
+      "recommendation": "Implement tiered history for team handoffs: full detail (last 2 sessions), structured summary (sessions 3-5), key outcomes only (older)",
+      "justification": "Prevents context window overflow as team chains grow longer while preserving the most actionable information. Balances completeness with efficiency.",
+      "effort": "low",
+      "impact": "medium"
+    },
+    {
+      "rank": 8,
+      "recommendation": "Create team capability registry defining inputs, outputs, dependencies, and escalation criteria for each team type",
+      "justification": "Prevents task ping-pong, duplicate work, and gaps between teams. Makes team coordination explicit and auditable.",
+      "effort": "low",
+      "impact": "medium"
+    },
+    {
+      "rank": 9,
+      "recommendation": "Use SQLite for stateful queries (task status, agent state) and JSONL only for append-only event logs/audit trails",
+      "justification": "JSONL is not optimized for random access or updates. Using the right tool for each access pattern improves both performance and reliability.",
+      "effort": "medium",
+      "impact": "medium"
+    },
+    {
+      "rank": 10,
+      "recommendation": "Add WAL file size monitoring as a system health metric with alerts at 10MB threshold",
+      "justification": "WAL growth is a leading indicator of concurrency problems and can cause self-reinforcing performance degradation. Early detection enables proactive intervention.",
+      "effort": "low",
+      "impact": "medium"
+    }
+  ]
+}

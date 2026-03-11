@@ -1,0 +1,170 @@
+{
+  "version": "1.0",
+  "created": "2026-03-11",
+  "team": "think-tank-sops",
+  "description": "Efficiency patterns and anti-patterns for multi-team AI coordination using Proto A. Based on observations from TEAM-0022 (18-agent deployment) and TEAM-0023 (20-agent deployment with dynamic coordination).",
+  "efficiency_patterns": [
+    {
+      "id": "EFF-001",
+      "name": "Idle Team Reassignment via Help Protocol",
+      "description": "When teams finish early, automatically reassign them to help teams that are still working, rather than letting them sit idle.",
+      "before": "Teams finish their work and the session ends with some teams idle for significant time while the slowest team (e.g., Beta-1 in TEAM-0022) continues working alone. The slowest team becomes the bottleneck for the entire session.",
+      "after": "Teams finishing early update their status to 'idle' or 'complete'. The auto_assign_idle_teams() function matches them to open help requests based on capabilities. Idle teams begin helping immediately. The orchestrator can also manually call help-needed and assign teams.",
+      "expected_improvement": "Reduces total session time proportional to the gap between fastest and slowest team. In TEAM-0022, Beta-1 was the last to finish indexing all files. With reassignment, idle Alpha teams could have helped process remaining files.",
+      "implementation": "python bus_cli.py auto-assign  # Run periodically from orchestrator"
+    },
+    {
+      "id": "EFF-002",
+      "name": "Work Decomposition for Parallelism",
+      "description": "Break large tasks into small, independent work items that can be distributed across multiple teams via the work stealing queue.",
+      "before": "One team is assigned to 'index all 20 KB entries' and processes them sequentially. Other teams wait or work on unrelated tasks.",
+      "after": "The orchestrator enqueues each KB entry as a separate work item in the work stealing queue (priority-ordered). Multiple teams steal and process items in parallel. Results are collected via the scratchpad.",
+      "expected_improvement": "Linear speedup proportional to the number of available teams. 20 items across 4 teams completes roughly 4x faster than 1 team doing all 20.",
+      "implementation": "# Orchestrator enqueues\nfor i in range(20):\n    ws.enqueue_work(f'Index KB-{i:04d}', description=f'Process knowledge-base/entries/KB-{i:04d}.md', priority=5)\n\n# Each idle team steals\nitem = ws.steal_work()\nif item:\n    # Process it\n    ws.complete_work(item['id'], result={'summary': '...'})"
+    },
+    {
+      "id": "EFF-003",
+      "name": "Pipeline Chaining for Dependent Work",
+      "description": "Use PipelineManager to define DAGs of dependent stages instead of manual sequencing. Downstream stages auto-trigger when dependencies complete.",
+      "before": "Team A finishes data collection and writes to the bus 'collection done'. Team B polls the bus waiting for this message, then starts processing. Coordination is ad-hoc and fragile.",
+      "after": "Define a pipeline with stages and dependencies. PipelineManager tracks completion and trigger_downstream() notifies when stages become ready. Teams poll get_ready_stages() to find work.",
+      "expected_improvement": "Eliminates manual coordination overhead and polling delays. Downstream stages start within seconds of upstream completion instead of waiting for polling intervals.",
+      "implementation": "pm.create_pipeline('data-flow', [\n    {'name': 'collect', 'team': 'gamma'},\n    {'name': 'process', 'team': 'alpha', 'depends_on': ['collect']},\n    {'name': 'analyze', 'team': 'beta', 'depends_on': ['process']}\n])"
+    },
+    {
+      "id": "EFF-004",
+      "name": "Scratchpad for Intermediate Results Instead of Bus Messages",
+      "description": "Use the Scratchpad for sharing structured intermediate data between teams instead of cramming data into 4096-byte bus messages.",
+      "before": "Teams try to pass large data structures through bus messages, hit the 4096-byte limit, resort to splitting into multiple messages, and the receiving team has to reassemble them. Alternatively, teams write files with ad-hoc naming and the receiving team has to guess the file path.",
+      "after": "Writing team stores results in the Scratchpad with a known key and 'global' namespace. Reading team retrieves by the same key. Data is JSON-serializable and has configurable TTL.",
+      "expected_improvement": "Eliminates message splitting, reduces bus channel noise, and provides a reliable key-based lookup instead of ad-hoc file discovery.",
+      "implementation": "# Writing team\nsp.write('api_results_batch1', {'records': [...], 'count': 150}, namespace='global', ttl=7200)\n\n# Reading team\nresults = sp.read('api_results_batch1', namespace='global')"
+    },
+    {
+      "id": "EFF-005",
+      "name": "Progress Broadcasting for Early Bottleneck Detection",
+      "description": "Teams regularly broadcast their progress so the orchestrator can detect bottlenecks early and reassign resources before the slowest team becomes a critical-path blocker.",
+      "before": "Orchestrator only discovers a team is behind when the session is nearly over. By then, it is too late to reassign resources effectively.",
+      "after": "All teams call update_progress() after each significant step. The orchestrator uses get_slowest_team() and get_teams_below_progress() to identify lagging teams and proactively offer help or reassign idle teams.",
+      "expected_improvement": "Reduces the risk of one team being a surprise bottleneck at the end. Enables proactive rebalancing during the session rather than reactive scrambling.",
+      "implementation": "# From each team, after each significant step:\ndc.update_progress('implementation', progress_pct=65.0, items_total=10, items_done=6,\n                   bottleneck='waiting for API rate limit')\n\n# Orchestrator checks periodically:\nslowest = dc.get_slowest_team()\nbehind = dc.get_teams_below_progress(50.0)"
+    },
+    {
+      "id": "EFF-006",
+      "name": "CLI-First Agent Communication",
+      "description": "Use bus_cli.py for all agent communication instead of requiring Python imports. This decouples agents from import paths and works from any shell environment.",
+      "before": "Agents import Python modules directly, requiring correct sys.path setup and module resolution. Different agents in different environments may fail to import.",
+      "after": "All coordination is done via bus_cli.py shell commands. Any agent that can execute bash can participate regardless of its Python environment.",
+      "expected_improvement": "Eliminates import path issues entirely. Validated in TEAM-0022 as the primary communication pattern for 18 agents across 6 teams.",
+      "implementation": "# Instead of:\nfrom help_protocol import HelpProtocol\nhp = HelpProtocol(...)\nhp.update_status(...)\n\n# Use:\npython bus_cli.py status-update team-alpha alpha-lead working 50 --task 'Processing data'"
+    },
+    {
+      "id": "EFF-007",
+      "name": "Capability-Based Team Matching",
+      "description": "Register team capabilities upfront so that help requests are automatically matched to the most qualified available team.",
+      "before": "Help requests are assigned to whatever idle team happens to be available, even if they lack the required skills. The assigned team wastes time figuring out they cannot help.",
+      "after": "Teams register capabilities on startup (e.g., 'coding', 'research', 'testing'). Help requests specify required capabilities. auto_assign_idle_teams() matches by capability overlap score.",
+      "expected_improvement": "Ensures the right team gets assigned to the right task. Reduces wasted effort from mismatched assignments.",
+      "implementation": "# On startup:\nhp.register_capabilities(['coding', 'testing', 'python'])\n\n# When requesting help:\nwid = hp.add_work_item('Fix test failures', required_caps=['testing', 'python'])\nhp.request_help(wid, 'Tests failing, need Python testing expertise')"
+    },
+    {
+      "id": "EFF-008",
+      "name": "Findings-First Output Strategy",
+      "description": "Post findings to the shared database incrementally during work, not just at the end. This ensures insights are captured even if a team crashes or runs out of time.",
+      "before": "Teams accumulate findings locally and write them all in a final output file at session end. If the team crashes or the session times out, all findings are lost.",
+      "after": "Teams post each finding to the team_findings table immediately when discovered. The think_tank.py convergence script can aggregate at any time, not just at session end.",
+      "expected_improvement": "Zero data loss from team crashes. Enables mid-session convergence analysis. Other teams can see findings in real-time and adjust their approach.",
+      "implementation": "# Post findings as you discover them, not at the end\nconn.execute('INSERT INTO team_findings (team, agent_id, category, title, content, priority, ts) VALUES (?, ?, ?, ?, ?, ?, ?)',\n    ('team-alpha', 'alpha-lead', 'architecture', 'Caching needed', 'API response times exceed 2s', 'high', time.time()))\nconn.commit()"
+    },
+    {
+      "id": "EFF-009",
+      "name": "Direct Channel for Tight Collaboration",
+      "description": "Use direct peer-to-peer channels for detailed back-and-forth between two teams instead of flooding the global bus.",
+      "before": "Two teams needing to collaborate post all their messages to the global bus channel. Every other team sees these messages, adding noise. The collaborating teams have to scan through unrelated messages.",
+      "after": "Create a direct channel between the two teams. Messages are isolated to a dedicated bus file. Other teams are not affected.",
+      "expected_improvement": "Reduces global bus noise. Enables focused conversation without distraction. Channel can be archived when collaboration is complete.",
+      "implementation": "channel = dc.create_direct_channel('team-beta')\ndc.send_direct('team-beta', 'request', {'question': 'What format is your output?'})\nmsgs = dc.read_direct(from_team='team-beta')"
+    },
+    {
+      "id": "EFF-010",
+      "name": "Batch Work Enqueueing with Priority Ordering",
+      "description": "When distributing work across teams, enqueue all items upfront with priorities so the most important work is stolen first.",
+      "before": "Work items are created one-at-a-time as teams encounter them. Priority order is effectively FIFO (first in, first out) which may not match business importance.",
+      "after": "Orchestrator analyzes all pending work, assigns priority scores (lower = higher priority), and enqueues the full batch. Teams stealing work automatically get the most important items first.",
+      "expected_improvement": "Critical work is completed first even if not all work can be finished. Teams self-organize around priority without orchestrator intervention after initial enqueue.",
+      "implementation": "# Enqueue critical items first\nws.enqueue_work('Fix production bug', priority=1)\nws.enqueue_work('Run regression tests', priority=2)\nws.enqueue_work('Update documentation', priority=8)\nws.enqueue_work('Refactor utils module', priority=9)"
+    }
+  ],
+  "anti_patterns": [
+    {
+      "id": "AP-001",
+      "name": "Fire and Forget Communication",
+      "description": "Posting a message to the bus and assuming the target team received and acted on it, without any acknowledgment or follow-up.",
+      "why_bad": "Bus messages have TTL and can expire. Teams may be busy, crashed, or not polling the channel. No delivery guarantee exists in the JSONL bus.",
+      "better_approach": "For critical coordination, use request/response message types and check for responses. For work assignment, use the help protocol's atomic offer_help() which returns True/False. For important data, use the scratchpad which persists in SQLite."
+    },
+    {
+      "id": "AP-002",
+      "name": "Monolithic Work Assignment",
+      "description": "Assigning one large task to one team with no breakpoints, leaving no opportunity for other teams to help even if they become idle.",
+      "why_bad": "Creates a single point of failure and bottleneck. Other teams cannot help because the work is not decomposed. If the assigned team is slow, the entire session waits.",
+      "better_approach": "Decompose large tasks into independent work items. Use work stealing for items any team can do, or pipelines for dependent stages. This enables parallel execution and idle team reassignment."
+    },
+    {
+      "id": "AP-003",
+      "name": "Stale Status Syndrome",
+      "description": "Not updating team status, progress, or heartbeat regularly, leading to stale data in the coordination system.",
+      "why_bad": "The dashboard shows stale or incorrect information. Idle detection fails (teams appear busy when they are actually done). Auto-assignment cannot find idle teams. Dead agent detection may falsely trigger.",
+      "better_approach": "Update status after every significant state change. Call update_progress() after each work item completion. Send heartbeats at least every 30 seconds. Set presence to reflect actual availability."
+    },
+    {
+      "id": "AP-004",
+      "name": "Global Bus Channel Flooding",
+      "description": "Posting all messages to the 'global' bus channel instead of using topic-specific or direct channels.",
+      "why_bad": "The global channel becomes noisy and hard to parse. Important messages (like blockers or help requests) get buried among routine info messages. All agents must process all messages even if irrelevant.",
+      "better_approach": "Use the global channel only for system-wide announcements (phase transitions, help requests, status updates). Use topic channels for domain-specific discussions. Use direct channels for peer-to-peer coordination."
+    },
+    {
+      "id": "AP-005",
+      "name": "Ignoring Prior Knowledge",
+      "description": "Starting work without reading previous team session logs or knowledge base entries.",
+      "why_bad": "Duplicates work already done by previous teams. Misses critical context (e.g., TEAM-0022 discovered the benchmark vs live test contradiction that would have been missed by a single team). Violates the prime directive: 'Every AI team builds on the knowledge of the last team.'",
+      "better_approach": "Always follow SOP-010 (New Team Onboarding). Read the last 2-3 team session logs and relevant KB entries before starting any work."
+    },
+    {
+      "id": "AP-006",
+      "name": "Large Data in Bus Messages",
+      "description": "Trying to pass datasets, file contents, or large JSON objects through the 4096-byte bus message limit.",
+      "why_bad": "Messages are rejected if they exceed 4096 bytes. Splitting across multiple messages creates reassembly complexity and ordering issues. Bus files grow unnecessarily large.",
+      "better_approach": "Write large data to files (output directories) or the Scratchpad. Pass file paths or scratchpad keys in the bus message body. Keep bus messages small and metadata-focused."
+    },
+    {
+      "id": "AP-007",
+      "name": "Single Point of Failure Orchestration",
+      "description": "Having a single orchestrator agent that must manually coordinate every interaction between teams.",
+      "why_bad": "The orchestrator becomes a bottleneck. If it crashes, all coordination stops. It cannot scale to large numbers of teams. Response time to team requests depends on orchestrator availability.",
+      "better_approach": "Use self-service coordination tools: teams request help directly, idle teams steal work from the queue, pipelines auto-trigger downstream stages. The orchestrator monitors and intervenes only for exceptions."
+    },
+    {
+      "id": "AP-008",
+      "name": "Silent Failure",
+      "description": "Teams encountering errors but not reporting them via the bus or help protocol.",
+      "why_bad": "Other teams and the orchestrator are unaware of the problem. The team wastes time retrying silently. Idle teams that could help are never notified.",
+      "better_approach": "Post blocker messages to the bus immediately when encountering blocking issues. Use help-request for problems that need another team's expertise. Update status to 'needs_help'. Log findings about the failure for future teams."
+    },
+    {
+      "id": "AP-009",
+      "name": "Polling Without Offset Tracking",
+      "description": "Reading the entire bus channel file from the beginning every time instead of tracking read offsets.",
+      "why_bad": "O(n) cost per poll where n is total messages in the channel. Processes the same messages repeatedly. Wastes compute on expired message filtering.",
+      "better_approach": "Use BusReader.poll() which tracks the byte offset internally. For CLI usage, track the offset returned by read_msgs() and pass it via --since on subsequent calls."
+    },
+    {
+      "id": "AP-010",
+      "name": "Skipping Handoff Artifacts",
+      "description": "Completing work without creating knowledge base entries, session logs, or updating indexes.",
+      "why_bad": "All insights from the session are lost. Future teams start from scratch. The knowledge base stagnates. Known gaps (like missing session logs for TEAM-0011, -0015, -0016, -0017) accumulate.",
+      "better_approach": "Always create: (1) KB entries for anything significant learned, (2) A team session log documenting what was done and what was found, (3) Updated index.json files. This is not optional -- it is the prime directive."
+    }
+  ]
+}
