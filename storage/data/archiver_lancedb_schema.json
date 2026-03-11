@@ -1,0 +1,203 @@
+{
+  "schema_version": "1.0",
+  "designed_by": "data-archiver-2",
+  "date": "2026-03-11",
+
+  "document_analysis": {
+    "kb_entries": {
+      "count": 38,
+      "typical_length_chars": "2000-15000 (median ~4000)",
+      "structure": "YAML frontmatter (id, date, team, category, tags, builds_on, status, confidence) + Markdown body with sections (Context, Method, Result, Lessons Learned, Recommendations, Tools Created)",
+      "embedding_strategy": "Chunk by major sections (## headings). Each chunk gets title + section heading prepended for context. Short entries (<2000 chars) embedded whole. Long entries (e.g. KB-0015 at ~15k chars) split into 5-10 chunks.",
+      "text_to_embed": "For each chunk: '{title} - {section_heading}: {section_body}'. Frontmatter tags and category are metadata-only, not embedded.",
+      "metadata_fields": ["id", "title", "date", "team", "category", "tags", "status", "confidence", "builds_on", "section_heading", "file_path"]
+    },
+    "team_session_logs": {
+      "count": 31,
+      "typical_length_chars": "1500-4000 (median ~2500)",
+      "structure": "YAML frontmatter (team_id, date, members, objective, parent_team, builds_on_knowledge) + Markdown body with sections (Objective, Approach, Decisions Made, Knowledge Generated, Artifacts Produced, Handoff Notes)",
+      "embedding_strategy": "Embed as a single record per log since most are under 3000 chars. For the rare long log, chunk by ## section. Always prepend objective to each chunk.",
+      "text_to_embed": "'{objective}\\n{body}' for single-record logs. For chunked: '{objective} - {section_heading}: {section_body}'.",
+      "metadata_fields": ["team_id", "date", "objective", "members", "parent_team", "builds_on_knowledge", "section_heading", "file_path"]
+    },
+    "scripts": {
+      "count": 41,
+      "typical_length_chars": "5000-20000",
+      "structure": "Python files with module docstring (purpose, usage examples) + function/class definitions with docstrings",
+      "embedding_strategy": "Embed the module docstring as primary chunk (captures purpose and usage). Optionally embed each top-level function/class docstring as a separate chunk with filename prepended. Do NOT embed raw code — it adds noise for semantic search.",
+      "text_to_embed": "Primary chunk: '{filename}: {module_docstring}'. Per-function chunks: '{filename}.{function_name}: {function_docstring}'.",
+      "metadata_fields": ["filename", "file_path", "has_main", "dependencies_stdlib", "estimated_lines"]
+    },
+    "sops": {
+      "count": 24,
+      "typical_length_chars": "2000-8000",
+      "structure": "JSON with fields: id, version, title, purpose, builds_on, plus nested section objects with title/description/rules or steps",
+      "embedding_strategy": "Embed the title + purpose as one chunk. Embed each top-level section (section_1_*, section_2_*, etc.) as separate chunks with SOP title prepended. Section content is flattened from nested JSON to readable text.",
+      "text_to_embed": "Primary chunk: '{title}: {purpose}'. Per-section: '{title} - {section.title}: {flattened_section_text}'.",
+      "metadata_fields": ["id", "version", "created", "team", "title", "builds_on", "section_key", "file_path"]
+    },
+    "data_sources": {
+      "count": 40,
+      "typical_length_chars": "300-800",
+      "structure": "JSON with fields: id, name, url, api_docs_url, data_types, access_type, auth_method, rate_limits, response_format, reliability, notes, added_by_team",
+      "embedding_strategy": "Embed as a single record per source — they are small. Combine name + data_types + notes into the embedded text since these carry the semantic meaning.",
+      "text_to_embed": "'{name}: {notes}. Data types: {data_types_joined}. Access: {access_type}, auth: {auth_method}.'",
+      "metadata_fields": ["id", "name", "url", "api_docs_url", "data_types", "access_type", "auth_method", "rate_limits", "response_format", "reliability", "last_verified", "added_by_team", "file_path"]
+    }
+  },
+
+  "table_schema": {
+    "design_decision": "Single unified table. Rationale: (1) enables cross-type semantic search in one query, (2) LanceDB handles filtering efficiently via metadata columns, (3) avoids query-time table joins or multi-table fan-out, (4) all document types share the same embedding space so cross-type similarity is meaningful.",
+    "table_name": "documents",
+    "columns": {
+      "id": {
+        "type": "string",
+        "description": "Unique record ID: '{doc_type}:{doc_id}:{chunk_index}' e.g. 'kb:KB-0001:0', 'sop:SOP-022:section_1'",
+        "primary_key": true
+      },
+      "doc_type": {
+        "type": "string",
+        "description": "One of: kb_entry, team_log, script, sop, data_source",
+        "filterable": true
+      },
+      "doc_id": {
+        "type": "string",
+        "description": "Source document ID (KB-0001, TEAM-0020, SOP-022, SRC-0001, or filename for scripts)",
+        "filterable": true
+      },
+      "chunk_index": {
+        "type": "int32",
+        "description": "0-based chunk index within the document. 0 for single-chunk documents.",
+        "filterable": false
+      },
+      "title": {
+        "type": "string",
+        "description": "Document title or name",
+        "filterable": false
+      },
+      "section_heading": {
+        "type": "string",
+        "description": "Section heading for chunked documents, empty string for single-chunk docs",
+        "filterable": false
+      },
+      "text": {
+        "type": "string",
+        "description": "The raw text that was embedded (for display in search results and re-ranking)",
+        "filterable": false
+      },
+      "vector": {
+        "type": "vector(384)",
+        "description": "Embedding vector. Dimension 384 for all-MiniLM-L6-v2 (recommended) or 768 for all-mpnet-base-v2. Choose based on available compute.",
+        "index": "IVF_PQ"
+      },
+      "date": {
+        "type": "string",
+        "description": "ISO date string (YYYY-MM-DD) from frontmatter or file modification. Enables temporal filtering.",
+        "filterable": true
+      },
+      "team": {
+        "type": "string",
+        "description": "Team ID that created the document (TEAM-0001, ANALYSIS-001, etc.)",
+        "filterable": true
+      },
+      "category": {
+        "type": "string",
+        "description": "Category from KB frontmatter (optimization, methodology, integration, etc.) or SOP domain. Empty for other types.",
+        "filterable": true
+      },
+      "tags": {
+        "type": "list<string>",
+        "description": "Tags array from KB frontmatter. Empty list for non-KB types.",
+        "filterable": true
+      },
+      "file_path": {
+        "type": "string",
+        "description": "Relative path from repo root to the source file",
+        "filterable": false
+      },
+      "builds_on": {
+        "type": "list<string>",
+        "description": "IDs of documents this builds on (KB entries, SOPs). Enables knowledge graph traversal.",
+        "filterable": true
+      }
+    }
+  },
+
+  "chunking_strategy": {
+    "approach": "Adaptive chunking by document type",
+    "max_chunk_chars": 2000,
+    "overlap_chars": 200,
+    "rules": [
+      {
+        "doc_type": "kb_entry",
+        "method": "Split on ## headings. Each section becomes one chunk. If a section exceeds 2000 chars, split on paragraph boundaries (double newline) with 200-char overlap. Prepend document title to every chunk.",
+        "expected_chunks_per_doc": "3-8"
+      },
+      {
+        "doc_type": "team_log",
+        "method": "Embed whole if under 3000 chars. Otherwise split on ## headings. Prepend objective to every chunk.",
+        "expected_chunks_per_doc": "1-4"
+      },
+      {
+        "doc_type": "script",
+        "method": "Chunk 1: module docstring (always). Additional chunks: one per top-level function/class that has a docstring longer than 50 chars. Skip raw code.",
+        "expected_chunks_per_doc": "1-6"
+      },
+      {
+        "doc_type": "sop",
+        "method": "Chunk 1: title + purpose. Additional chunks: one per top-level section key (section_1_*, section_2_*, etc.). Flatten nested JSON to readable text before embedding.",
+        "expected_chunks_per_doc": "3-6"
+      },
+      {
+        "doc_type": "data_source",
+        "method": "Single chunk per source. Concatenate name, notes, and data_types into one text block.",
+        "expected_chunks_per_doc": "1"
+      }
+    ]
+  },
+
+  "metadata_columns": {
+    "filterable_columns": ["doc_type", "doc_id", "date", "team", "category", "tags", "builds_on"],
+    "display_columns": ["title", "section_heading", "text", "file_path", "chunk_index"],
+    "usage_patterns": [
+      "Filter by doc_type to search only KB entries or only SOPs",
+      "Filter by team to find all artifacts from a specific team session",
+      "Filter by category for domain-specific KB searches",
+      "Filter by tags for fine-grained topic matching (complements semantic search)",
+      "Filter by date range for temporal queries (e.g., 'what was learned today')",
+      "Use builds_on for knowledge graph traversal after initial semantic match"
+    ]
+  },
+
+  "estimated_total_records": {
+    "kb_entries": "38 docs x ~5 chunks avg = ~190 records",
+    "team_logs": "31 docs x ~2 chunks avg = ~62 records",
+    "scripts": "41 docs x ~3 chunks avg = ~123 records",
+    "sops": "24 docs x ~4 chunks avg = ~96 records",
+    "data_sources": "40 docs x 1 chunk = 40 records",
+    "total": "~511 records",
+    "growth_projection": "Repository adds ~5-15 docs per team session. At 5 sessions/day, expect ~25-75 new docs/day or ~75-375 new records/day. LanceDB handles millions of records so this is well within capacity."
+  },
+
+  "embedding_model_recommendations": {
+    "primary": {
+      "model": "all-MiniLM-L6-v2",
+      "dimensions": 384,
+      "reason": "Fast, small, good quality for English text. Runs on CPU in <1s for 500 records. Available via sentence-transformers."
+    },
+    "alternative": {
+      "model": "all-mpnet-base-v2",
+      "dimensions": 768,
+      "reason": "Higher quality embeddings at 2x dimension cost. Use if search quality with MiniLM is insufficient."
+    },
+    "note": "If using the Gemini embeddings API (SRC-0036 in sources), dimension is 768 and requires API key. Prefer local models for zero-dependency operation."
+  },
+
+  "query_patterns": {
+    "semantic_search": "Embed query text, find top-K nearest neighbors in vector column. Optionally pre-filter by doc_type, team, or category.",
+    "hybrid_search": "Combine vector similarity with FTS on the text column (LanceDB supports this natively). Improves recall for exact-match terms.",
+    "knowledge_graph_walk": "After finding a relevant KB entry, follow its builds_on links to retrieve related entries. Then find other docs by the same team.",
+    "temporal_search": "Filter by date range, then rank by vector similarity. Useful for 'what did we learn recently about X'.",
+    "cross_type_discovery": "Search without doc_type filter to find connections across KB entries, SOPs, scripts, and data sources about the same topic."
+  }
+}

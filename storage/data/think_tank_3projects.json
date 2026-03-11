@@ -1,0 +1,312 @@
+{
+  "meta": {
+    "generated": "2026-03-11",
+    "strategist": "think-tank-agent",
+    "projects_analyzed": 3,
+    "sources": ["KB-0030", "KB-0034", "KB-0035", "bug_report_coordination.md"]
+  },
+
+  "dependencies": {
+    "summary": "Projects are mostly independent with one strong integration opportunity. All three CAN run in parallel, but sequencing LanceDB before MCP yields a better MCP server.",
+    "matrix": {
+      "mcp_server_depends_on": {
+        "lancedb": "soft — MCP server can launch with TF-IDF/FTS5 backend first, then add LanceDB as a second search tool once available. Not a blocker.",
+        "rate_limiter_fix": "none — MCP server is a new module, does not touch coordination code."
+      },
+      "lancedb_depends_on": {
+        "mcp_server": "none — LanceDB is a backend concern, MCP is a serving concern. Fully independent.",
+        "rate_limiter_fix": "none — LanceDB indexes knowledge-base content, not coordination state."
+      },
+      "rate_limiter_fix_depends_on": {
+        "mcp_server": "none — purely internal coordination fix.",
+        "lancedb": "none — operates on different SQLite databases entirely."
+      }
+    },
+    "optimal_sequencing": "Start all three in parallel. If resources are constrained: rate limiter fix first (smallest scope, removes tech debt), then LanceDB (creates semantic search capability), then MCP server (exposes both FTS5 and LanceDB via universal protocol).",
+    "critical_path": "LanceDB -> MCP integration is the only meaningful dependency edge. MCP can ship v1 without it."
+  },
+
+  "risks": {
+    "mcp_server": {
+      "risk_level": "low",
+      "blast_radius": "minimal — new standalone module, no changes to existing code",
+      "risks": [
+        {
+          "risk": "Scope creep — temptation to expose coordination bus, work stealing, help protocol etc. via MCP",
+          "likelihood": "high",
+          "impact": "medium",
+          "mitigation": "Hard scope: KB search only. No coordination tools in v1."
+        },
+        {
+          "risk": "FastMCP version compatibility — SDK is evolving rapidly (97M+ downloads means fast iteration)",
+          "likelihood": "low",
+          "impact": "low",
+          "mitigation": "Pin FastMCP version. The core @mcp.tool() decorator API is stable."
+        },
+        {
+          "risk": "Testing difficulty — MCP servers are typically tested via integration, not unit tests",
+          "likelihood": "medium",
+          "impact": "low",
+          "mitigation": "Use FastMCP's built-in test client. Keep tool functions pure and testable independently."
+        }
+      ]
+    },
+    "lancedb": {
+      "risk_level": "medium",
+      "blast_radius": "moderate — introduces first external dependency (lancedb pip package), adds embedding generation step",
+      "risks": [
+        {
+          "risk": "Embedding model selection — need to choose an embedding model (local vs API-based)",
+          "likelihood": "certain",
+          "impact": "medium",
+          "mitigation": "Use sentence-transformers with a small local model (all-MiniLM-L6-v2) to avoid API dependency. LanceDB supports this natively."
+        },
+        {
+          "risk": "Index staleness — KB entries change; vector index must stay in sync",
+          "likelihood": "high",
+          "impact": "medium",
+          "mitigation": "Build a simple rebuild-index script. With 38 KB entries, full reindex takes seconds."
+        },
+        {
+          "risk": "Dependency weight — lancedb + pyarrow + sentence-transformers could be 500MB+",
+          "likelihood": "high",
+          "impact": "medium",
+          "mitigation": "Document install requirements. Consider making it optional (graceful fallback to FTS5-only)."
+        },
+        {
+          "risk": "Yak-shaving into RAG architecture — KB-0034 mentions GraphRAG, LightRAG, Agentic RAG, hybrid retrieval",
+          "likelihood": "high",
+          "impact": "high",
+          "mitigation": "HARD STOP at basic semantic search. No graph construction, no agentic retrieval, no re-ranking. Pure vector similarity + optional FTS5 hybrid."
+        }
+      ]
+    },
+    "rate_limiter_fix": {
+      "risk_level": "medium",
+      "blast_radius": "high — modifying live coordination code used by all agents. Regression could break multi-agent operations.",
+      "risks": [
+        {
+          "risk": "Regression in multi-agent coordination — fix introduces new bug in hot path",
+          "likelihood": "medium",
+          "impact": "critical",
+          "mitigation": "Existing stress tests cover these paths. Run full test suite before and after. Write targeted regression tests for each TOCTOU fix."
+        },
+        {
+          "risk": "Scope expansion — bug report lists 32 bugs (2 high, 15 medium, 15 low). Temptation to fix them all.",
+          "likelihood": "high",
+          "impact": "medium",
+          "mitigation": "Scope to exactly the 2 high-severity TOCTOU bugs: BUG-HELP-001 (fulfill_help) and BUG-WS-001 (complete_work). Medium bugs are fix-later."
+        },
+        {
+          "risk": "Incomplete fix — wrapping in BEGIN IMMEDIATE without handling all edge cases",
+          "likelihood": "medium",
+          "impact": "medium",
+          "mitigation": "Each fix should include: (1) BEGIN IMMEDIATE wrapping, (2) proper ROLLBACK on failure, (3) stress test proving the race is closed."
+        },
+        {
+          "risk": "SQLite locking contention increase — BEGIN IMMEDIATE acquires a write lock earlier, potentially increasing contention",
+          "likelihood": "low",
+          "impact": "low",
+          "mitigation": "These are short transactions (SELECT + UPDATE). Lock hold time is microseconds. Existing busy_timeout handles contention."
+        }
+      ]
+    }
+  },
+
+  "effort_estimates": {
+    "scale": "relative_complexity_1_to_10",
+    "mcp_server": {
+      "complexity": 2,
+      "rationale": "KB-0034 says under 50 lines with FastMCP. Existing kb_search.py provides the search logic. This is primarily a wrapping exercise: expose existing functions as MCP tools.",
+      "key_tasks": [
+        "Install FastMCP (pip install fastmcp)",
+        "Create mcp_kb_server.py with @mcp.tool() decorators wrapping kb_search.py functions",
+        "Expose 2-3 tools: search_kb(query), get_entry(id), list_entries(filter)",
+        "Test with MCP inspector or FastMCP test client",
+        "Document usage in CLAUDE.md or storage/scripts/index.json"
+      ],
+      "lines_of_code_estimate": "50-120 lines new code"
+    },
+    "lancedb": {
+      "complexity": 5,
+      "rationale": "Requires embedding model selection, index creation script, search API, and integration with existing search. First external dependency introduces packaging concerns.",
+      "key_tasks": [
+        "Install lancedb + embedding model",
+        "Write indexer script to vectorize all KB entries, team logs, scripts metadata",
+        "Create search API module with semantic_search(query, top_k) function",
+        "Build hybrid search combining FTS5 scores with vector similarity",
+        "Write reindex script for keeping vectors current",
+        "Add graceful fallback when lancedb not installed",
+        "Test with representative queries"
+      ],
+      "lines_of_code_estimate": "200-400 lines new code"
+    },
+    "rate_limiter_fix": {
+      "complexity": 4,
+      "rationale": "The fixes themselves are small (wrapping operations in BEGIN IMMEDIATE), but the testing burden is high. Must prove race conditions are closed without introducing regressions across 2573 lines of coordination code.",
+      "key_tasks": [
+        "Fix BUG-HELP-001: wrap fulfill_help SELECT + 2x UPDATE in BEGIN IMMEDIATE with ROLLBACK",
+        "Fix BUG-WS-001: wrap complete_work SELECT + UPDATE in BEGIN IMMEDIATE or add WHERE clause for optimistic locking",
+        "Write targeted stress tests proving each race is closed",
+        "Run existing stress test suite to check for regressions",
+        "Optionally fix BUG-DC-003 (join/leave_channel TOCTOU) if time permits"
+      ],
+      "lines_of_code_estimate": "30-60 lines changed, 100-200 lines new tests"
+    }
+  },
+
+  "integration_plan": {
+    "vision": "MCP server serves as the universal access layer; LanceDB provides semantic search backend; rate limiter fixes ensure the coordination layer these tools rely on is sound.",
+    "integrations": [
+      {
+        "pair": "MCP + LanceDB",
+        "integration": "MCP server exposes a semantic_search tool backed by LanceDB, alongside the existing FTS5-based keyword search tool. Users get both search modalities through one MCP interface.",
+        "implementation": "MCP server imports from both kb_search.py (keyword) and new lancedb_search.py (semantic). Two separate @mcp.tool() endpoints.",
+        "priority": "high — this is the primary value combination"
+      },
+      {
+        "pair": "MCP + Rate Limiter Fix",
+        "integration": "No direct integration. However, if MCP server later exposes coordination tools (v2+), the rate limiter fixes ensure those tools are safe.",
+        "implementation": "None needed for v1.",
+        "priority": "low — only relevant for future MCP coordination tools"
+      },
+      {
+        "pair": "LanceDB + Rate Limiter Fix",
+        "integration": "No integration. They operate on completely separate data stores and code paths.",
+        "implementation": "None.",
+        "priority": "none"
+      }
+    ],
+    "architecture": {
+      "layer_1_data": "knowledge-base/entries/*.md, teams/sessions/*.md, storage/scripts/index.json",
+      "layer_2_search": "kb_search.py (FTS5/TF-IDF) + lancedb_search.py (vector similarity) -> hybrid_search()",
+      "layer_3_serving": "mcp_kb_server.py exposes search tools via MCP protocol",
+      "layer_4_coordination": "work_stealing.py, help_protocol.py (hardened with TOCTOU fixes)"
+    }
+  },
+
+  "anti_patterns": {
+    "source": "KB-0035, KB-0030, empirical data from 30+ team sessions",
+    "patterns_to_avoid": [
+      {
+        "name": "Infrastructure Gravity",
+        "description": "KB-0035 identifies 7 consecutive infrastructure teams with 0 domain output. These 3 projects are ALL infrastructure.",
+        "severity": "critical",
+        "mitigation": "Time-box all three projects aggressively. Each should be 'done enough' in one session. Do NOT iterate on infrastructure in subsequent sessions. The next session after this MUST produce domain output (market research picks).",
+        "trigger_signs": ["'Let me also refactor...', 'While I'm here, I should also...', 'This would be even better if...'"]
+      },
+      {
+        "name": "Scope Creep via Adjacent Discovery",
+        "description": "The bug report lists 32 bugs. LanceDB research mentions 6 RAG architectures. MCP could expose 14+ coordination endpoints. Each project has a 'galaxy brain' expansion path.",
+        "severity": "high",
+        "mitigation": "Define DONE criteria before starting: MCP = serves 2-3 KB search tools and responds to queries. LanceDB = indexes KB entries and returns ranked results. Rate limiter = BUG-HELP-001 and BUG-WS-001 fixed with tests passing.",
+        "trigger_signs": ["Discussing GraphRAG or LightRAG during LanceDB work", "Adding coordination tools to MCP server", "Fixing medium-severity bugs during TOCTOU sprint"]
+      },
+      {
+        "name": "Anti-Recursion Violation (SOP-023)",
+        "description": "Building tools to search our own tools. KB-0030 warns about 7 inward-facing sessions. These projects are useful ONLY if they enable domain output in future sessions.",
+        "severity": "high",
+        "mitigation": "Frame each project by its domain enablement: MCP server = future agents can search KB without file system access. LanceDB = 'what do we know about X?' becomes answerable semantically. Rate limiter = coordination doesn't corrupt during actual research operations.",
+        "trigger_signs": ["Building a tool to manage the tools we built to manage our tools"]
+      },
+      {
+        "name": "Premature Generalization",
+        "description": "Making LanceDB index 'everything' (all repo data, all bus messages, all SOPs) when 38 KB entries is the actual corpus.",
+        "severity": "medium",
+        "mitigation": "Index KB entries only in v1. Team logs and scripts are stretch goals. Bus messages and coordination state should NEVER be indexed.",
+        "trigger_signs": ["Designing a 'universal vector store'", "Adding configurable data sources before the first source works"]
+      },
+      {
+        "name": "Test Theater",
+        "description": "Writing elaborate test infrastructure for the TOCTOU fixes instead of focused regression tests that prove the specific race is closed.",
+        "severity": "medium",
+        "mitigation": "Each TOCTOU fix needs exactly one stress test: spawn N threads, all trying the racy operation simultaneously, assert no data corruption. Reuse existing stress test patterns.",
+        "trigger_signs": ["Creating a new test framework", "More test code than fix code by 10x+"]
+      }
+    ]
+  },
+
+  "execution_recommendation": {
+    "team_structure": {
+      "total_agents": 7,
+      "allocation": [
+        {
+          "project": "Fix Rate Limiter TOCTOU Bugs",
+          "agents": 2,
+          "roles": ["fixer (writes code)", "tester (writes stress tests, runs regression suite)"],
+          "rationale": "Smallest scope but highest blast radius. Two agents provide review/test coverage. One agent could do it but the testing burden justifies a pair."
+        },
+        {
+          "project": "Add LanceDB for Semantic Search",
+          "agents": 2,
+          "roles": ["indexer (builds embedding pipeline and index)", "searcher (builds search API and hybrid ranking)"],
+          "rationale": "Medium complexity with clear separation between indexing and querying. Two agents can parallelize these concerns."
+        },
+        {
+          "project": "Build MCP Server for KB Search",
+          "agents": 1,
+          "roles": ["builder (creates MCP server wrapping existing search)"],
+          "rationale": "Lowest complexity (under 50 lines core). Solo agent is most efficient for small, well-defined tasks (KB-0035: 4.0 artifacts/agent solo vs 0.44 at scale)."
+        },
+        {
+          "project": "Integration and Strategy",
+          "agents": 1,
+          "roles": ["integrator (connects LanceDB backend to MCP server once both are ready, validates end-to-end)"],
+          "rationale": "This agent starts as think-tank strategist, then pivots to integration work in the second half of the session."
+        },
+        {
+          "project": "Think Tank / Quality Gate",
+          "agents": 1,
+          "roles": ["strategist (this agent — monitors progress, catches scope creep, ensures DONE criteria are met)"],
+          "rationale": "KB-0035 shows think tank convergence produces unique cross-cutting insights. Also serves as anti-recursion watchdog per SOP-023."
+        }
+      ]
+    },
+    "execution_order": {
+      "phase_1_parallel_start": {
+        "description": "All three projects kick off simultaneously",
+        "mcp": "Solo agent creates mcp_kb_server.py wrapping kb_search.py with 2-3 @mcp.tool() endpoints",
+        "lancedb": "Pair starts with embedding model selection and index script",
+        "toctou": "Pair starts with BUG-HELP-001 fix (higher severity, fulfill_help transaction wrapping)"
+      },
+      "phase_2_parallel_continue": {
+        "description": "Each project reaches its DONE criteria independently",
+        "mcp": "Solo agent tests MCP server, adds to storage/scripts/index.json",
+        "lancedb": "Pair builds search API and validates with representative queries",
+        "toctou": "Pair fixes BUG-WS-001, runs full stress test suite"
+      },
+      "phase_3_integration": {
+        "description": "Integrator agent connects LanceDB to MCP server",
+        "actions": [
+          "Add semantic_search @mcp.tool() to MCP server backed by LanceDB",
+          "Test hybrid search (keyword + semantic) through MCP interface",
+          "Verify rate limiter fixes pass all existing tests"
+        ]
+      },
+      "phase_4_documentation": {
+        "description": "All agents converge on session artifacts",
+        "actions": [
+          "Write KB entries for each project (KB-0039, KB-0040, KB-0041)",
+          "Update CLAUDE.md with MCP server usage",
+          "Write team session log",
+          "Think tank produces final convergence report"
+        ]
+      }
+    },
+    "done_criteria": {
+      "mcp_server": "MCP server responds to search queries via MCP protocol. Minimum 2 tools: search_kb(query) and get_entry(id). Tested with at least 3 queries.",
+      "lancedb": "All 38 KB entries indexed with embeddings. semantic_search(query, top_k) returns relevant results. Tested with 5+ queries showing semantic understanding beyond keyword matching.",
+      "toctou_fix": "BUG-HELP-001 and BUG-WS-001 fixed. Each fix wrapped in BEGIN IMMEDIATE with proper ROLLBACK. At least 1 stress test per fix proving the race is closed. Full existing test suite passes.",
+      "integration": "MCP server has both keyword and semantic search tools. End-to-end test: query MCP -> get semantically relevant KB entries."
+    },
+    "session_time_budget": {
+      "rule": "If any project is not converging by 60% of session time, descope it to its minimum viable version rather than allowing it to consume remaining time.",
+      "descope_plan": {
+        "mcp": "Ship with just search_kb tool wrapping existing TF-IDF search. No semantic search integration.",
+        "lancedb": "Ship indexer script only. Search API deferred to next session.",
+        "toctou": "Ship BUG-HELP-001 fix only. BUG-WS-001 deferred."
+      }
+    },
+    "next_session_mandate": "Per KB-0035 and SOP-023: the session AFTER this one MUST be domain work (market research picks). These 3 infrastructure projects are the LAST infrastructure work before forced domain output."
+  }
+}
