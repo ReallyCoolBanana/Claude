@@ -371,22 +371,31 @@ class DirectChannels:
         """Add this team to an existing channel's participant list."""
         self._check_closed()
         with self._lock:
-            row = self._conn.execute(
-                "SELECT participants FROM channels WHERE channel_name = ? AND status = 'active'",
-                (channel_name,),
-            ).fetchone()
-            if row is None:
-                raise ValueError(f"Channel {channel_name!r} does not exist or is archived")
+            self._conn.execute("BEGIN IMMEDIATE")
+            try:
+                row = self._conn.execute(
+                    "SELECT participants FROM channels WHERE channel_name = ? AND status = 'active'",
+                    (channel_name,),
+                ).fetchone()
+                if row is None:
+                    self._conn.execute("ROLLBACK")
+                    raise ValueError(f"Channel {channel_name!r} does not exist or is archived")
 
-            current = json.loads(row["participants"])
-            if self.team not in current:
-                current.append(self.team)
-                current.sort()
-            self._conn.execute(
-                "UPDATE channels SET participants = ?, last_activity = ? WHERE channel_name = ?",
-                (json.dumps(current), time.time(), channel_name),
-            )
-            self._conn.commit()
+                current = json.loads(row["participants"])
+                if self.team not in current:
+                    current.append(self.team)
+                    current.sort()
+                self._conn.execute(
+                    "UPDATE channels SET participants = ?, last_activity = ? WHERE channel_name = ?",
+                    (json.dumps(current), time.time(), channel_name),
+                )
+                self._conn.commit()
+            except Exception:
+                try:
+                    self._conn.execute("ROLLBACK")
+                except sqlite3.OperationalError:
+                    pass
+                raise
 
         _bus_publish(
             self.bus_dir, "global", self.agent_id, self.team, "info",
@@ -398,21 +407,30 @@ class DirectChannels:
         """Remove this team from a channel's participant list."""
         self._check_closed()
         with self._lock:
-            row = self._conn.execute(
-                "SELECT participants FROM channels WHERE channel_name = ?",
-                (channel_name,),
-            ).fetchone()
-            if row is None:
-                return
+            self._conn.execute("BEGIN IMMEDIATE")
+            try:
+                row = self._conn.execute(
+                    "SELECT participants FROM channels WHERE channel_name = ?",
+                    (channel_name,),
+                ).fetchone()
+                if row is None:
+                    self._conn.execute("ROLLBACK")
+                    return
 
-            current = json.loads(row["participants"])
-            if self.team in current:
-                current.remove(self.team)
-            self._conn.execute(
-                "UPDATE channels SET participants = ?, last_activity = ? WHERE channel_name = ?",
-                (json.dumps(current), time.time(), channel_name),
-            )
-            self._conn.commit()
+                current = json.loads(row["participants"])
+                if self.team in current:
+                    current.remove(self.team)
+                self._conn.execute(
+                    "UPDATE channels SET participants = ?, last_activity = ? WHERE channel_name = ?",
+                    (json.dumps(current), time.time(), channel_name),
+                )
+                self._conn.commit()
+            except Exception:
+                try:
+                    self._conn.execute("ROLLBACK")
+                except sqlite3.OperationalError:
+                    pass
+                raise
 
     @_retry_on_busy
     def list_active_channels(self) -> list[dict]:

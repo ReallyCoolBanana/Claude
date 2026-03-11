@@ -300,21 +300,23 @@ class WorkStealing:
         """
         now = time.time()
         with self._lock:
-            row = self._conn.execute(
-                "SELECT claimed_by, owner_team FROM work_queue WHERE id = ?",
-                (work_id,),
-            ).fetchone()
-            if row is None:
-                raise ValueError(f"Work item {work_id} not found")
-            if row["claimed_by"] != self.team and row["owner_team"] != self.team:
+            cur = self._conn.execute(
+                "UPDATE work_queue SET status = 'completed', result = ?, completed_at = ? "
+                "WHERE id = ? AND (claimed_by = ? OR owner_team = ?)",
+                (json.dumps(result), now, work_id, self.team, self.team),
+            )
+            if cur.rowcount == 0:
+                # Determine reason: not found vs not authorized
+                row = self._conn.execute(
+                    "SELECT claimed_by, owner_team FROM work_queue WHERE id = ?",
+                    (work_id,),
+                ).fetchone()
+                if row is None:
+                    raise ValueError(f"Work item {work_id} not found")
                 raise ValueError(
                     f"Team '{self.team}' is not authorized to complete work item {work_id} "
                     f"(claimed by '{row['claimed_by']}', owned by '{row['owner_team']}')"
                 )
-            self._conn.execute(
-                "UPDATE work_queue SET status = 'completed', result = ?, completed_at = ? WHERE id = ?",
-                (json.dumps(result), now, work_id),
-            )
             self._conn.commit()
 
         _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {

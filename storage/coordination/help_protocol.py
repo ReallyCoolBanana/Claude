@@ -578,39 +578,50 @@ class HelpProtocol:
         self._check_closed()
         now = time.time()
         with self._lock:
-            row = self._conn.execute(
-                "SELECT work_item_id, accepted_by_team, status FROM help_requests WHERE id = ?",
-                (request_id,),
-            ).fetchone()
+            self._conn.execute("BEGIN IMMEDIATE")
+            try:
+                row = self._conn.execute(
+                    "SELECT work_item_id, accepted_by_team, status FROM help_requests WHERE id = ?",
+                    (request_id,),
+                ).fetchone()
 
-            if row is None:
-                raise ValueError(f"Help request {request_id} does not exist")
+                if row is None:
+                    self._conn.execute("ROLLBACK")
+                    raise ValueError(f"Help request {request_id} does not exist")
 
-            if row["status"] != "accepted":
-                raise ValueError(
-                    f"Help request {request_id} has status {row['status']!r}, "
-                    f"expected 'accepted'. Cannot fulfill an un-accepted request."
-                )
+                if row["status"] != "accepted":
+                    self._conn.execute("ROLLBACK")
+                    raise ValueError(
+                        f"Help request {request_id} has status {row['status']!r}, "
+                        f"expected 'accepted'. Cannot fulfill an un-accepted request."
+                    )
 
-            # FIX: BUG-HP-005 - only the assigned team can fulfill a help request
-            if row["accepted_by_team"] != self.team:
-                raise ValueError(
-                    f"Team {self.team!r} is not the accepted helper for request {request_id}. "
-                    f"Accepted by {row['accepted_by_team']!r}."
-                )
+                # FIX: BUG-HP-005 - only the assigned team can fulfill a help request
+                if row["accepted_by_team"] != self.team:
+                    self._conn.execute("ROLLBACK")
+                    raise ValueError(
+                        f"Team {self.team!r} is not the accepted helper for request {request_id}. "
+                        f"Accepted by {row['accepted_by_team']!r}."
+                    )
 
-            self._conn.execute(
-                "UPDATE help_requests SET status = 'fulfilled', resolved_at = ? WHERE id = ?",
-                (now, request_id),
-            )
-
-            if row and row["work_item_id"] is not None:
                 self._conn.execute(
-                    "UPDATE work_items SET status = 'completed', updated_at = ? WHERE id = ?",
-                    (now, row["work_item_id"]),
+                    "UPDATE help_requests SET status = 'fulfilled', resolved_at = ? WHERE id = ?",
+                    (now, request_id),
                 )
 
-            self._conn.commit()
+                if row and row["work_item_id"] is not None:
+                    self._conn.execute(
+                        "UPDATE work_items SET status = 'completed', updated_at = ? WHERE id = ?",
+                        (now, row["work_item_id"]),
+                    )
+
+                self._conn.execute("COMMIT")
+            except Exception:
+                try:
+                    self._conn.execute("ROLLBACK")
+                except sqlite3.OperationalError:
+                    pass
+                raise
 
     # ------------------------------------------------------------------
     # Idle detection
