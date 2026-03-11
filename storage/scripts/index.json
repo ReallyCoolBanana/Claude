@@ -551,16 +551,38 @@
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "PROG-TEAM-2"
+    },
+    {
+      "id": "SCR-0051",
+      "name": "tool-benchmarker",
+      "filename": "tool_benchmarker.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Generic benchmark harness for repository scripts. Measures execution time, output size (chars/tokens), memory usage. Supports single command benchmarks, A/B comparisons, JSON suite definitions, built-in auto profiles for known tools (smart_read, query_kb, smart_search, smart_write, validate_naming, kb_validator), and regression checking against saved baselines.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0030"
+    },
+    {
+      "id": "SCR-0052",
+      "name": "tool-tester",
+      "filename": "tool_tester.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Generic test harness for repository scripts. Validates correctness via exit codes, stdout/stderr pattern matching, JSON schema checks, CSV validation, and line count assertions. Built-in test profiles for 12 tools (45 tests total). Supports JSON suite definitions and --all mode for full regression testing.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0030"
     }
   ],
   "categories": {
     "data-collection": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028", "SCR-0046", "SCR-0047", "SCR-0048"],
     "analysis": ["SCR-0004", "SCR-0005", "SCR-0011", "SCR-0031", "SCR-0041", "SCR-0042", "SCR-0050"],
     "automation": ["SCR-0029", "SCR-0030", "SCR-0033"],
-    "utility": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0015", "SCR-0016", "SCR-0017", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0032", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040", "SCR-0043", "SCR-0044", "SCR-0045", "SCR-0049"]
+    "utility": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0015", "SCR-0016", "SCR-0017", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0032", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040", "SCR-0043", "SCR-0044", "SCR-0045", "SCR-0049", "SCR-0051", "SCR-0052"]
   },
   "language_index": {
-    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028", "SCR-0029", "SCR-0030", "SCR-0031", "SCR-0032", "SCR-0033", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040", "SCR-0041", "SCR-0042", "SCR-0043", "SCR-0044", "SCR-0045", "SCR-0046", "SCR-0047", "SCR-0048", "SCR-0049", "SCR-0050"],
+    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028", "SCR-0029", "SCR-0030", "SCR-0031", "SCR-0032", "SCR-0033", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040", "SCR-0041", "SCR-0042", "SCR-0043", "SCR-0044", "SCR-0045", "SCR-0046", "SCR-0047", "SCR-0048", "SCR-0049", "SCR-0050", "SCR-0051", "SCR-0052"],
     "go": ["SCR-0015", "SCR-0016", "SCR-0017"]
   }
 }
