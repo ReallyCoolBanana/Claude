@@ -1,0 +1,700 @@
+{
+  "id": "UNIFIED-FINDINGS-2026-03-11",
+  "generated_by": "ARCHIVER-D1",
+  "date": "2026-03-11",
+  "source_reports": [
+    {"id": "TT-ALPHA-DOMAIN-STRATEGY", "title": "Domain Output Strategy", "team": "THINK-TANK-ALPHA"},
+    {"id": "TT-BETA-TOOLS-2026-03-11", "title": "Tools & Capabilities Assessment", "team": "THINK-TANK-BETA"},
+    {"id": "TT-GAMMA-HEALTH-AUDIT", "title": "System Health Audit", "team": "THINK-TANK-GAMMA"}
+  ],
+
+  "executive_summary": "All three think tanks converge on a single core finding: the repository has extensive infrastructure but ZERO domain output. Alpha says 'stop building, start executing.' Beta says 'add 2-3 MCP servers and start producing picks.' Gamma says 'fix data hygiene debt but it is not blocking execution.' The path forward is clear: execute market research using existing tools, fix critical bugs opportunistically, and resist the infrastructure recursion trap.",
+
+  "categorized_findings": {
+
+    "DOMAIN_READY": {
+      "description": "Things ready to execute NOW for domain output",
+      "items": [
+        {
+          "id": "DR-001",
+          "finding": "Fundamental analysis method is fully documented and executable",
+          "source": "ALPHA",
+          "details": "Complete guide at market-research/methods/fundamental.md with valuation ratios, growth metrics, balance sheet health, moat analysis, DCF template, and pick checklist. Data available via WebSearch/WebFetch from Yahoo Finance, MarketWatch, Google Finance.",
+          "action": "Execute fundamental analysis on target stocks using WebSearch. No tools or scripts needed.",
+          "impact": "HIGH",
+          "effort": "TRIVIAL",
+          "urgency": "IMMEDIATE"
+        },
+        {
+          "id": "DR-002",
+          "finding": "Sentiment analysis method is fully documented and executable",
+          "source": "ALPHA",
+          "details": "Complete guide at market-research/methods/sentiment.md with news sentiment, insider activity, institutional positioning, contrarian signals. Multiple data sources available: GDELT (free, no key), Finnhub (insider txns), Guardian, HN.",
+          "action": "Execute sentiment analysis using WebSearch + existing scripts (SCR-0024 HN, SCR-0025 Guardian, SCR-0009 hybrid).",
+          "impact": "HIGH",
+          "effort": "TRIVIAL",
+          "urgency": "IMMEDIATE"
+        },
+        {
+          "id": "DR-003",
+          "finding": "Technical analysis method ready with numerical-only limitation",
+          "source": "ALPHA",
+          "details": "Complete guide at market-research/methods/technical.md. Cannot render charts but Alpha Vantage has built-in technical indicator endpoints (SMA, EMA, RSI, MACD). Numerical indicator values are sufficient for scoring.",
+          "action": "Use Alpha Vantage technical indicator API endpoints or WebSearch for indicator values. Apply checklist numerically.",
+          "impact": "MEDIUM",
+          "effort": "SMALL",
+          "urgency": "IMMEDIATE"
+        },
+        {
+          "id": "DR-004",
+          "finding": "Pick template and workflow fully defined",
+          "source": "ALPHA",
+          "details": "market-research/picks/TEMPLATE.md defines all required fields. SOP-018 defines the end-to-end workflow. market-research/picks/index.json ready for entries.",
+          "action": "Generate picks using TEMPLATE.md format. File as YYYY-MM-DD_TICKER.md.",
+          "impact": "HIGH",
+          "effort": "TRIVIAL",
+          "urgency": "IMMEDIATE"
+        },
+        {
+          "id": "DR-005",
+          "finding": "9 no-key data sources immediately usable",
+          "source": "ALPHA",
+          "details": "GDELT, BLS, US Treasury, World Bank, HN Algolia, HN Firebase, ExchangeRate-API, fawazahmed0 Exchange, CoinPaprika -- all free with no API key required.",
+          "action": "Use these sources directly for macro backdrop, sentiment, and economic context.",
+          "impact": "MEDIUM",
+          "effort": "TRIVIAL",
+          "urgency": "IMMEDIATE"
+        },
+        {
+          "id": "DR-006",
+          "finding": "Complete 6-step execution plan ready for single-session delivery",
+          "source": "ALPHA",
+          "details": "Steps: (1) macro backdrop 5min, (2) sector screening 10min, (3) stock screening 15min, (4) deep analysis 15min, (5) generate 3-5 picks 10min, (6) update index/KB 5min. Total ~60 minutes.",
+          "action": "Follow the execution plan verbatim. Requires zero new tooling.",
+          "impact": "HIGH",
+          "effort": "SMALL",
+          "urgency": "IMMEDIATE"
+        },
+        {
+          "id": "DR-007",
+          "finding": "Technology industry analysis reports feasible with existing tools",
+          "source": "ALPHA",
+          "details": "Existing scripts SCR-0024 (HN), SCR-0028 (GitHub), SCR-0025 (Guardian), SCR-0009 (hybrid) can produce structured reports on tech trends, emerging frameworks, AI developments.",
+          "action": "Run data-gathering scripts and synthesize into domain KB entries.",
+          "impact": "MEDIUM",
+          "effort": "SMALL",
+          "urgency": "NEXT_SESSION"
+        },
+        {
+          "id": "DR-008",
+          "finding": "Economic indicator reports feasible with free APIs",
+          "source": "ALPHA",
+          "details": "BLS (employment, CPI), US Treasury (debt, rates), World Bank (global indicators) -- all free, no key. Can produce monthly macro summaries.",
+          "action": "Fetch and analyze economic data to produce macro-economic analysis reports.",
+          "impact": "MEDIUM",
+          "effort": "SMALL",
+          "urgency": "NEXT_SESSION"
+        }
+      ]
+    },
+
+    "TOOLS_TO_BUILD": {
+      "description": "New tools/scripts needed, prioritized by domain-enabling value",
+      "items": [
+        {
+          "id": "TB-001",
+          "finding": "Add financial MCP servers to .mcp.json",
+          "source": "BETA",
+          "details": "Alpha Vantage (official MCP server), Yahoo Finance/Stockflow (no auth), Financial Datasets (OAuth). Adding these gives instant access to stock prices, fundamentals, financial statements without building custom scripts.",
+          "action": "Add 2-3 MCP server entries to .mcp.json configuration.",
+          "impact": "HIGH",
+          "effort": "TRIVIAL",
+          "urgency": "IMMEDIATE",
+          "build_vs_adopt": "ADOPT"
+        },
+        {
+          "id": "TB-002",
+          "finding": "Build SEC EDGAR data-gathering tool",
+          "source": "BETA",
+          "details": "Free, no-auth access to all US public company financial filings (10-K, 10-Q, 8-K), XBRL data. No existing MCP server. THE foundational data source for fundamental analysis.",
+          "action": "Build method_sec_edgar.py following existing method_*.py pattern. Support ticker/CIK lookup, XBRL extraction.",
+          "impact": "HIGH",
+          "effort": "MEDIUM",
+          "urgency": "NEXT_SESSION",
+          "build_vs_adopt": "BUILD"
+        },
+        {
+          "id": "TB-003",
+          "finding": "Build pick_logger tool",
+          "source": "BETA",
+          "details": "Structured pick logging with entry price, thesis, confidence, timestamps. Enables performance tracking over time. Uses existing market-research/picks/ directory and TEMPLATE.md.",
+          "action": "Build pick_logger.py. Include ticker, entry_price, thesis, confidence, date, data_sources_used. Auto-generate next pick ID. Update index.json.",
+          "impact": "HIGH",
+          "effort": "SMALL",
+          "urgency": "IMMEDIATE",
+          "build_vs_adopt": "BUILD"
+        },
+        {
+          "id": "TB-004",
+          "finding": "Build FRED data-gathering tool",
+          "source": "BETA",
+          "details": "820,000+ economic time series. Essential for macro analysis contextualizing stock picks. Free API key, 120 req/min. No MCP server available.",
+          "action": "Build method_fred.py. Support series search and retrieval. Key series: GDP, CPI, UNRATE, DFF, T10Y2Y.",
+          "impact": "HIGH",
+          "effort": "SMALL",
+          "urgency": "NEXT_SESSION",
+          "build_vs_adopt": "BUILD"
+        },
+        {
+          "id": "TB-005",
+          "finding": "Build cost_tracker for API usage monitoring",
+          "source": "BETA",
+          "details": "Tracks API call counts and costs per session. Essential for managing free-tier rate limits (Alpha Vantage 25 calls/day, Finnhub 60/min). Builds on SCR-0022 request_cache.py.",
+          "action": "Build cost_tracker.py wrapping request_cache with per-API daily call counting.",
+          "impact": "MEDIUM",
+          "effort": "SMALL",
+          "urgency": "NEXT_SESSION",
+          "build_vs_adopt": "BUILD"
+        },
+        {
+          "id": "TB-006",
+          "finding": "Extend dedup_checker for pre-creation validation",
+          "source": "BETA",
+          "details": "SCR-0041 (finding_dedup.py) already does fuzzy matching. Extend with pre-creation check mode for KB entries and picks to prevent redundant research.",
+          "action": "Extend finding_dedup.py with pre-creation check mode.",
+          "impact": "MEDIUM",
+          "effort": "SMALL",
+          "urgency": "NEXT_SESSION",
+          "build_vs_adopt": "EXTEND"
+        },
+        {
+          "id": "TB-007",
+          "finding": "Catalog and build Financial Modeling Prep (FMP) integration",
+          "source": "BETA",
+          "details": "New discovery: financial statements, DCF valuations, stock screener, earnings calendars. 250 req/day free tier -- more generous than Alpha Vantage.",
+          "action": "Catalog as new SRC entry. Build method_fmp.py.",
+          "impact": "MEDIUM",
+          "effort": "SMALL",
+          "urgency": "NEXT_SESSION",
+          "build_vs_adopt": "BUILD"
+        },
+        {
+          "id": "TB-008",
+          "finding": "Package market research workflow as Agent Skill",
+          "source": "BETA",
+          "details": "Agent Skills (.skill.md) are an open standard for packaging agent capabilities. Package the pick-making workflow as a reusable skill: gather data -> analyze fundamentals -> check technicals -> generate pick -> log.",
+          "action": "Create .skill.md file with workflow instructions and reference material.",
+          "impact": "MEDIUM",
+          "effort": "SMALL",
+          "urgency": "BACKLOG",
+          "build_vs_adopt": "BUILD"
+        },
+        {
+          "id": "TB-009",
+          "finding": "Build context_budget_monitor",
+          "source": "BETA",
+          "details": "Token counting utility to prevent context overflow during financial data analysis. Protects domain output quality.",
+          "action": "Build context_budget_monitor.py.",
+          "impact": "LOW",
+          "effort": "SMALL",
+          "urgency": "BACKLOG",
+          "build_vs_adopt": "BUILD"
+        }
+      ]
+    },
+
+    "BUGS_TO_FIX": {
+      "description": "Bugs and data quality issues, prioritized by severity",
+      "items": [
+        {
+          "id": "BF-001",
+          "finding": "15 orphaned scripts not in storage/scripts/index.json",
+          "source": "GAMMA",
+          "details": "Includes MCP KB server, smart_read/write/search, query_kb, semantic_indexer, semantic_search, validate_naming, auto_index, generate_registry, import_to_db, test-cross-references, benchmark_runner, dedup_utils, test_utilities. Several are actively referenced by SOP-035.",
+          "action": "Add all 15 scripts to storage/scripts/index.json with proper metadata.",
+          "severity": "Critical",
+          "impact": "HIGH",
+          "effort": "TRIVIAL",
+          "urgency": "IMMEDIATE"
+        },
+        {
+          "id": "BF-002",
+          "finding": "TOCTOU-WS-001: complete_work race condition in work_stealing.py",
+          "source": "GAMMA",
+          "details": "Lines 294-318 in work_stealing.py. No BEGIN IMMEDIATE wraps SELECT+UPDATE. Another process can reclaim and reassign work between authorization check and completion UPDATE, causing result overwrites.",
+          "action": "Wrap in BEGIN IMMEDIATE transaction, add WHERE claimed_by=? AND status='claimed' to UPDATE, verify rowcount==1.",
+          "severity": "Critical",
+          "impact": "HIGH",
+          "effort": "SMALL",
+          "urgency": "IMMEDIATE"
+        },
+        {
+          "id": "BF-003",
+          "finding": "TOCTOU-HP-001: fulfill_help crash inconsistency in help_protocol.py",
+          "source": "GAMMA",
+          "details": "Lines 573-613 in help_protocol.py. Two separate UPDATEs (help_requests + work_items) without BEGIN IMMEDIATE. Crash between them leaves inconsistent state.",
+          "action": "Wrap both UPDATEs in BEGIN IMMEDIATE. Add WHERE status='accepted' AND accepted_by_team=? guard. Check rowcount.",
+          "severity": "Critical",
+          "impact": "HIGH",
+          "effort": "SMALL",
+          "urgency": "IMMEDIATE"
+        },
+        {
+          "id": "BF-004",
+          "finding": "34 of 41 KB entries missing 'title' field in YAML frontmatter",
+          "source": "GAMMA",
+          "details": "Titles exist only in knowledge-base/index.json, not in the source .md files. Index rebuilding from files would lose all titles. Tools reading entries directly cannot display titles.",
+          "action": "Backfill title field into YAML frontmatter of all 34 entries from index.json. Scriptable.",
+          "severity": "High",
+          "impact": "MEDIUM",
+          "effort": "TRIVIAL",
+          "urgency": "NEXT_SESSION"
+        },
+        {
+          "id": "BF-005",
+          "finding": "TEAM-0032 session not in teams/sessions/index.json",
+          "source": "GAMMA",
+          "details": "TEAM-0032.md exists on disk but is not indexed. session_count shows 30 but 31 files exist. TEAM-0032 documented MCP server creation, LanceDB integration, and 4 TOCTOU fixes.",
+          "action": "Add TEAM-0032 entry to sessions/index.json, update session_count to 31.",
+          "severity": "High",
+          "impact": "MEDIUM",
+          "effort": "TRIVIAL",
+          "urgency": "IMMEDIATE"
+        },
+        {
+          "id": "BF-006",
+          "finding": "TOCTOU-DC-001: join_channel participant loss in direct_channels.py",
+          "source": "GAMMA",
+          "details": "Lines 370-389. Read-modify-write on JSON participants list without BEGIN IMMEDIATE. Concurrent joins silently drop participants.",
+          "action": "Use BEGIN IMMEDIATE + json_insert() or json_set() in SQL. Or use compare-and-swap with expected version.",
+          "severity": "High",
+          "impact": "MEDIUM",
+          "effort": "SMALL",
+          "urgency": "NEXT_SESSION"
+        },
+        {
+          "id": "BF-007",
+          "finding": "TOCTOU-WS-002: pipeline stage double-start in work_stealing.py",
+          "source": "GAMMA",
+          "details": "Lines 570-592. Two agents can both start the same pipeline stage because status check and update are not atomic. Causes duplicate work.",
+          "action": "Add WHERE status='ready' to UPDATE. Use BEGIN IMMEDIATE. Check rowcount==1.",
+          "severity": "High",
+          "impact": "MEDIUM",
+          "effort": "SMALL",
+          "urgency": "NEXT_SESSION"
+        },
+        {
+          "id": "BF-008",
+          "finding": "Duplicate FRED source (SRC-0018 + SRC-0039)",
+          "source": "GAMMA + BETA",
+          "details": "Both are FRED API entries with different data_types and slightly different URLs (trailing slash). SRC-0018 from TEAM-0010/0011, SRC-0039 from TEAM-0013.",
+          "action": "Merge into single canonical entry, combine data_types, update by_data_type and by_access_type indexes.",
+          "severity": "Medium",
+          "impact": "LOW",
+          "effort": "TRIVIAL",
+          "urgency": "NEXT_SESSION"
+        },
+        {
+          "id": "BF-009",
+          "finding": "11 Python scripts use kebab-case filenames violating SOP-029",
+          "source": "GAMMA",
+          "details": "build-cross-ref-index.py, repair-storage.py, search-storage.py, 5 stress-test-*.py files, test-cross-references.py, test-edge-cases.py, validate-storage.py. SOP-029 mandates snake_case.",
+          "action": "Rename files to snake_case, update index.json filename references, update any import references.",
+          "severity": "Medium",
+          "impact": "LOW",
+          "effort": "SMALL",
+          "urgency": "BACKLOG"
+        },
+        {
+          "id": "BF-010",
+          "finding": "3 SOP files with non-standard filenames",
+          "source": "GAMMA",
+          "details": "efficiency_guide.json (SOP-026), future_team_data_strategy.json (SOP-027), tool_sops.json (SOP-028) do not follow sop_NNN_name.json pattern.",
+          "action": "Rename to follow sop_NNN_name.json convention. Update index references.",
+          "severity": "Medium",
+          "impact": "LOW",
+          "effort": "TRIVIAL",
+          "urgency": "BACKLOG"
+        },
+        {
+          "id": "BF-011",
+          "finding": "TOCTOU-MTR-004: double stop() invocation in multi_team_runner.py",
+          "source": "GAMMA",
+          "details": "Lines 491-508. No guard against double invocation from signal handler + main thread. Can call _close_connection twice, send duplicate shutdown messages.",
+          "action": "Add threading.Event or atomic flag. Check at entry: if not self._stopped.is_set(): self._stopped.set() else: return.",
+          "severity": "High",
+          "impact": "LOW",
+          "effort": "TRIVIAL",
+          "urgency": "BACKLOG"
+        },
+        {
+          "id": "BF-012",
+          "finding": "13 remaining medium/low TOCTOU bugs",
+          "source": "GAMMA",
+          "details": "9 medium-severity (DC-003, HP-004, CH-001, CH-002, MTR-001, MTR-003, WS-004, WS-005, HP-006) and 5 low-severity (MTR-002, MTR-005, DDG-001, DDG-002, HP-005). Most are stale-snapshot issues or config read races.",
+          "action": "Address in dedicated bug-fix session. Most are low-impact in practice.",
+          "severity": "Medium/Low",
+          "impact": "LOW",
+          "effort": "MEDIUM",
+          "urgency": "BACKLOG"
+        },
+        {
+          "id": "BF-013",
+          "finding": "ai-quant-techniques comparison template is empty placeholder",
+          "source": "ALPHA",
+          "details": "market-research/methods/ai-quant-techniques/analysis/technique-comparison.md has empty tables saying 'populated by merge_research.py'. Never populated.",
+          "action": "Either populate or remove. Not blocking for first picks.",
+          "severity": "Low",
+          "impact": "LOW",
+          "effort": "TRIVIAL",
+          "urgency": "BACKLOG"
+        }
+      ]
+    },
+
+    "INFRASTRUCTURE_IMPROVEMENTS": {
+      "description": "Infrastructure improvements (lowest priority per SOP-023)",
+      "items": [
+        {
+          "id": "II-001",
+          "finding": "Adopt LightRAG for graph-based KB retrieval",
+          "source": "BETA",
+          "details": "KB has 40+ entries with builds_on chains forming a natural graph. LightRAG (EMNLP 2025) would enable relationship-aware queries. Replace or augment current TF-IDF/FTS5 search.",
+          "action": "Install LightRAG, index KB corpus, optionally wrap as MCP server.",
+          "impact": "MEDIUM",
+          "effort": "MEDIUM",
+          "urgency": "BACKLOG"
+        },
+        {
+          "id": "II-002",
+          "finding": "SOP execution tracking absent",
+          "source": "GAMMA",
+          "details": "No mechanism to track which SOPs have been executed, by whom, or when. Cannot measure SOP effectiveness.",
+          "action": "Add optional last_executed and execution_count fields to SOP index entries.",
+          "impact": "LOW",
+          "effort": "SMALL",
+          "urgency": "BACKLOG"
+        },
+        {
+          "id": "II-003",
+          "finding": "Auto-briefing tool for new teams",
+          "source": "BETA",
+          "details": "Would auto-generate briefing documents from session logs, KB entries, and market picks. MCP kb-search already provides searchable access, making this nice-to-have.",
+          "action": "DEFER. Current onboarding prompt in MCP repo server covers this.",
+          "impact": "LOW",
+          "effort": "MEDIUM",
+          "urgency": "BACKLOG"
+        },
+        {
+          "id": "II-004",
+          "finding": "Session planner tool",
+          "source": "BETA",
+          "details": "Plans session work based on prior outputs and handoff items. think_tank.py and multi_team_runner.py already coordinate sessions.",
+          "action": "DEFER. Coordination infrastructure, not domain-enabling.",
+          "impact": "LOW",
+          "effort": "MEDIUM",
+          "urgency": "BACKLOG"
+        }
+      ]
+    },
+
+    "NEW_CAPABILITIES": {
+      "description": "Novel techniques, APIs, frameworks to evaluate",
+      "items": [
+        {
+          "id": "NC-001",
+          "finding": "MCP Financial Data Servers available for immediate adoption",
+          "source": "BETA",
+          "details": "Alpha Vantage (official MCP), Yahoo Finance/Stockflow (no auth), Financial Datasets (OAuth). Pre-built, production-grade, minutes to configure. Highest-leverage adoption opportunity.",
+          "action": "Evaluate and add to .mcp.json. Test data quality and rate limits.",
+          "impact": "HIGH",
+          "effort": "SMALL",
+          "urgency": "IMMEDIATE"
+        },
+        {
+          "id": "NC-002",
+          "finding": "SEC EDGAR API discovered -- free, no-auth company financials",
+          "source": "BETA",
+          "details": "https://data.sec.gov provides free access to all US public company financial filings with XBRL data. 10 req/sec, only requires User-Agent header. Not previously cataloged.",
+          "action": "Catalog as new SRC entry. Build method_sec_edgar.py.",
+          "impact": "HIGH",
+          "effort": "MEDIUM",
+          "urgency": "NEXT_SESSION"
+        },
+        {
+          "id": "NC-003",
+          "finding": "Financial Modeling Prep (FMP) API discovered",
+          "source": "BETA",
+          "details": "Financial statements, DCF valuations, stock screener, earnings calendars. 250 req/day free tier. Not previously cataloged.",
+          "action": "Catalog as new SRC entry. Consider building integration.",
+          "impact": "MEDIUM",
+          "effort": "SMALL",
+          "urgency": "NEXT_SESSION"
+        },
+        {
+          "id": "NC-004",
+          "finding": "Agent Skills standard for packaging workflows",
+          "source": "BETA",
+          "details": "Open standard (agentskills.io, Dec 2025) for packaging agent capabilities as .skill.md files. Works across Claude.ai, Claude Code, Agent SDK.",
+          "action": "Package key domain workflows (market-research-pick, financial-analysis) as skills.",
+          "impact": "MEDIUM",
+          "effort": "SMALL",
+          "urgency": "BACKLOG"
+        },
+        {
+          "id": "NC-005",
+          "finding": "LightRAG graph-enhanced retrieval framework",
+          "source": "BETA",
+          "details": "Graph-enhanced RAG from EMNLP 2025. Dual-level retrieval (entities + themes). Natural fit for KB with builds_on chains.",
+          "action": "Evaluate for KB retrieval improvement. Lower priority than domain execution.",
+          "impact": "MEDIUM",
+          "effort": "MEDIUM",
+          "urgency": "BACKLOG"
+        },
+        {
+          "id": "NC-006",
+          "finding": "Claude Agent SDK underutilized capabilities",
+          "source": "BETA",
+          "details": "Already running inside Agent SDK. Underutilized: Agent Skills packaging, subagent spawning (could replace custom coordination).",
+          "action": "Explore Skills packaging. Evaluate subagent spawning vs custom coordination system.",
+          "impact": "MEDIUM",
+          "effort": "MEDIUM",
+          "urgency": "BACKLOG"
+        },
+        {
+          "id": "NC-007",
+          "finding": "MCP Apps interactive UI extension",
+          "source": "BETA",
+          "details": "Official MCP extension (live 2026) for interactive UI components: dashboards, forms, visualizations rendered in conversation. Could enable stock screener dashboards.",
+          "action": "Monitor for production readiness. Future-looking.",
+          "impact": "LOW",
+          "effort": "LARGE",
+          "urgency": "BACKLOG"
+        },
+        {
+          "id": "NC-008",
+          "finding": "EODHD and Twelve Data APIs discovered",
+          "source": "BETA",
+          "details": "EODHD: historical EOD data, 20 req/day free. Twelve Data: intraday/historical prices, 800 req/day free.",
+          "action": "Catalog if needed. Lower priority than Alpha Vantage, Finnhub, FMP.",
+          "impact": "LOW",
+          "effort": "SMALL",
+          "urgency": "BACKLOG"
+        }
+      ]
+    }
+  },
+
+  "cross_references": {
+    "agreements": [
+      {
+        "topic": "Infrastructure recursion is the primary blocker",
+        "alpha_position": "CRITICAL blocker. 14+ team sessions of building infrastructure with zero domain output. 'Stop planning. Stop building frameworks. JUST DO THE RESEARCH.'",
+        "beta_position": "Agrees. Anti-recommendations explicitly say 'Do NOT build sop_consolidator, trace_propagator, or zombie_reclaimer.' Ranks domain-enabling tools above infrastructure tools.",
+        "gamma_position": "Agrees implicitly. Priority matrix ranks items by 'blocks_domain_work' flag. Infrastructure issues ranked lower.",
+        "consensus": "UNANIMOUS. All three reports identify infrastructure recursion as the anti-pattern to break."
+      },
+      {
+        "topic": "FRED API source is duplicated (SRC-0018 + SRC-0039)",
+        "alpha_position": "Lists both IDs in data sources inventory.",
+        "beta_position": "Explicitly calls out duplicate. Recommends deduplication as part of FRED tool build.",
+        "gamma_position": "Identified as Medium severity data quality issue. Provides specific fix approach.",
+        "consensus": "UNANIMOUS. Merge into single entry."
+      },
+      {
+        "topic": "Existing tools are sufficient for first market picks",
+        "alpha_position": "WebSearch/WebFetch plus existing methods guides are enough. 'The primary blocker is not tooling.'",
+        "beta_position": "Agrees but recommends adding MCP servers for better data access. 'The biggest gap is not in tools or infrastructure.'",
+        "gamma_position": "Confirms sources index is functional (correcting KB-0031 claim of catastrophic breakage).",
+        "consensus": "UNANIMOUS. First picks can be produced now. Additional tools enhance but do not enable."
+      },
+      {
+        "topic": "Sources index quality is acceptable",
+        "alpha_position": "Calls sources index issues 'cosmetic' and LOW severity.",
+        "beta_position": "Uses source catalog data without flagging quality issues.",
+        "gamma_position": "Explicitly corrects KB-0031: 'All 41 entries match their corresponding SRC-*.json files. The index was likely rebuilt since KB-0031.'",
+        "consensus": "UNANIMOUS. Sources index is functional. KB-0031's 'catastrophically broken' assessment is outdated."
+      }
+    ],
+    "disagreements": [
+      {
+        "topic": "Whether to build custom data-gathering scripts vs adopt MCP servers",
+        "alpha_position": "Says 'No scripts needed -- this is analytical work.' Recommends WebSearch/WebFetch as primary data mechanism. Notes 'No financial-data-specific scripts exist' as LOW severity blocker.",
+        "beta_position": "Recommends building method_sec_edgar.py, method_fred.py, method_finnhub.py AND adopting MCP servers. Explicitly says 'Do NOT build custom financial data scripts when MCP servers exist' for Alpha Vantage/Yahoo/FMP, but BUILD for SEC EDGAR and FRED where no MCP servers exist.",
+        "resolution": "Beta's nuanced position is more actionable: ADOPT MCP servers where they exist (Alpha Vantage, Yahoo Finance), BUILD only where no MCP server exists (SEC EDGAR, FRED). Alpha's position of 'just use WebSearch' is a valid immediate-action approach but not sustainable for repeated research."
+      },
+      {
+        "topic": "Alpha Vantage free tier rate limits",
+        "alpha_position": "States '5 API calls/minute on free tier, 500/day'",
+        "beta_position": "States '25 calls/day (free tier, reduced from 500 in late 2024)'",
+        "resolution": "Beta's data appears more current (explicitly notes the 2024 reduction). The free tier was significantly reduced, making MCP servers and alternative APIs more important."
+      },
+      {
+        "topic": "Urgency of TOCTOU bug fixes",
+        "alpha_position": "Does not mention TOCTOU bugs. Implies coordination system is working well enough.",
+        "beta_position": "Does not mention TOCTOU bugs directly. Anti-recommends building more coordination tools.",
+        "gamma_position": "Identifies 18 remaining TOCTOU bugs, 2 critical. Says critical ones 'block domain work.'",
+        "resolution": "Gamma's position deserves attention for the 2 critical bugs (WS-001, HP-001) which can cause silent data loss in multi-agent coordination. However, for single-agent market research execution (Alpha's plan), these bugs are not blocking."
+      }
+    ]
+  },
+
+  "priority_matrix": {
+    "description": "All items ranked across categories by impact, effort, and urgency. Sorted by composite priority (IMMEDIATE+HIGH+TRIVIAL first, BACKLOG+LOW+LARGE last).",
+    "tier_1_do_now": [
+      {"id": "DR-001", "item": "Execute fundamental analysis on target stocks", "impact": "HIGH", "effort": "TRIVIAL", "urgency": "IMMEDIATE", "category": "DOMAIN_READY"},
+      {"id": "DR-002", "item": "Execute sentiment analysis using existing tools", "impact": "HIGH", "effort": "TRIVIAL", "urgency": "IMMEDIATE", "category": "DOMAIN_READY"},
+      {"id": "DR-004", "item": "Generate picks using TEMPLATE.md", "impact": "HIGH", "effort": "TRIVIAL", "urgency": "IMMEDIATE", "category": "DOMAIN_READY"},
+      {"id": "DR-006", "item": "Follow the 6-step execution plan for first picks", "impact": "HIGH", "effort": "SMALL", "urgency": "IMMEDIATE", "category": "DOMAIN_READY"},
+      {"id": "TB-001", "item": "Add financial MCP servers to .mcp.json", "impact": "HIGH", "effort": "TRIVIAL", "urgency": "IMMEDIATE", "category": "TOOLS_TO_BUILD"},
+      {"id": "BF-001", "item": "Index 15 orphaned scripts in scripts/index.json", "impact": "HIGH", "effort": "TRIVIAL", "urgency": "IMMEDIATE", "category": "BUGS_TO_FIX"},
+      {"id": "BF-005", "item": "Add TEAM-0032 to sessions/index.json", "impact": "MEDIUM", "effort": "TRIVIAL", "urgency": "IMMEDIATE", "category": "BUGS_TO_FIX"}
+    ],
+    "tier_2_do_next": [
+      {"id": "DR-003", "item": "Execute technical analysis with numerical indicators", "impact": "MEDIUM", "effort": "SMALL", "urgency": "IMMEDIATE", "category": "DOMAIN_READY"},
+      {"id": "DR-005", "item": "Use 9 no-key data sources for macro/sentiment", "impact": "MEDIUM", "effort": "TRIVIAL", "urgency": "IMMEDIATE", "category": "DOMAIN_READY"},
+      {"id": "TB-003", "item": "Build pick_logger.py tool", "impact": "HIGH", "effort": "SMALL", "urgency": "IMMEDIATE", "category": "TOOLS_TO_BUILD"},
+      {"id": "NC-001", "item": "Evaluate and adopt MCP financial data servers", "impact": "HIGH", "effort": "SMALL", "urgency": "IMMEDIATE", "category": "NEW_CAPABILITIES"},
+      {"id": "BF-002", "item": "Fix TOCTOU-WS-001 complete_work race condition", "impact": "HIGH", "effort": "SMALL", "urgency": "IMMEDIATE", "category": "BUGS_TO_FIX"},
+      {"id": "BF-003", "item": "Fix TOCTOU-HP-001 fulfill_help crash inconsistency", "impact": "HIGH", "effort": "SMALL", "urgency": "IMMEDIATE", "category": "BUGS_TO_FIX"}
+    ],
+    "tier_3_next_session": [
+      {"id": "DR-007", "item": "Produce technology industry analysis reports", "impact": "MEDIUM", "effort": "SMALL", "urgency": "NEXT_SESSION", "category": "DOMAIN_READY"},
+      {"id": "DR-008", "item": "Produce economic indicator reports from free APIs", "impact": "MEDIUM", "effort": "SMALL", "urgency": "NEXT_SESSION", "category": "DOMAIN_READY"},
+      {"id": "TB-002", "item": "Build SEC EDGAR data-gathering tool", "impact": "HIGH", "effort": "MEDIUM", "urgency": "NEXT_SESSION", "category": "TOOLS_TO_BUILD"},
+      {"id": "TB-004", "item": "Build FRED data-gathering tool", "impact": "HIGH", "effort": "SMALL", "urgency": "NEXT_SESSION", "category": "TOOLS_TO_BUILD"},
+      {"id": "TB-005", "item": "Build cost_tracker for API monitoring", "impact": "MEDIUM", "effort": "SMALL", "urgency": "NEXT_SESSION", "category": "TOOLS_TO_BUILD"},
+      {"id": "TB-006", "item": "Extend dedup_checker for pre-creation validation", "impact": "MEDIUM", "effort": "SMALL", "urgency": "NEXT_SESSION", "category": "TOOLS_TO_BUILD"},
+      {"id": "TB-007", "item": "Catalog and integrate Financial Modeling Prep", "impact": "MEDIUM", "effort": "SMALL", "urgency": "NEXT_SESSION", "category": "TOOLS_TO_BUILD"},
+      {"id": "NC-002", "item": "Catalog SEC EDGAR as new SRC entry", "impact": "HIGH", "effort": "MEDIUM", "urgency": "NEXT_SESSION", "category": "NEW_CAPABILITIES"},
+      {"id": "NC-003", "item": "Catalog Financial Modeling Prep as new SRC entry", "impact": "MEDIUM", "effort": "SMALL", "urgency": "NEXT_SESSION", "category": "NEW_CAPABILITIES"},
+      {"id": "BF-004", "item": "Backfill titles into 34 KB entry YAML frontmatter", "impact": "MEDIUM", "effort": "TRIVIAL", "urgency": "NEXT_SESSION", "category": "BUGS_TO_FIX"},
+      {"id": "BF-006", "item": "Fix TOCTOU-DC-001 join_channel participant loss", "impact": "MEDIUM", "effort": "SMALL", "urgency": "NEXT_SESSION", "category": "BUGS_TO_FIX"},
+      {"id": "BF-007", "item": "Fix TOCTOU-WS-002 pipeline stage double-start", "impact": "MEDIUM", "effort": "SMALL", "urgency": "NEXT_SESSION", "category": "BUGS_TO_FIX"},
+      {"id": "BF-008", "item": "Merge duplicate FRED source entries", "impact": "LOW", "effort": "TRIVIAL", "urgency": "NEXT_SESSION", "category": "BUGS_TO_FIX"}
+    ],
+    "tier_4_backlog": [
+      {"id": "TB-008", "item": "Package market research as Agent Skill", "impact": "MEDIUM", "effort": "SMALL", "urgency": "BACKLOG", "category": "TOOLS_TO_BUILD"},
+      {"id": "TB-009", "item": "Build context_budget_monitor", "impact": "LOW", "effort": "SMALL", "urgency": "BACKLOG", "category": "TOOLS_TO_BUILD"},
+      {"id": "NC-004", "item": "Package workflows as Agent Skills", "impact": "MEDIUM", "effort": "SMALL", "urgency": "BACKLOG", "category": "NEW_CAPABILITIES"},
+      {"id": "NC-005", "item": "Evaluate LightRAG for KB retrieval", "impact": "MEDIUM", "effort": "MEDIUM", "urgency": "BACKLOG", "category": "NEW_CAPABILITIES"},
+      {"id": "NC-006", "item": "Explore Agent SDK subagent spawning", "impact": "MEDIUM", "effort": "MEDIUM", "urgency": "BACKLOG", "category": "NEW_CAPABILITIES"},
+      {"id": "NC-007", "item": "Monitor MCP Apps interactive UI extension", "impact": "LOW", "effort": "LARGE", "urgency": "BACKLOG", "category": "NEW_CAPABILITIES"},
+      {"id": "NC-008", "item": "Catalog EODHD and Twelve Data APIs", "impact": "LOW", "effort": "SMALL", "urgency": "BACKLOG", "category": "NEW_CAPABILITIES"},
+      {"id": "II-001", "item": "Adopt LightRAG for graph-based KB retrieval", "impact": "MEDIUM", "effort": "MEDIUM", "urgency": "BACKLOG", "category": "INFRASTRUCTURE_IMPROVEMENTS"},
+      {"id": "II-002", "item": "Add SOP execution tracking", "impact": "LOW", "effort": "SMALL", "urgency": "BACKLOG", "category": "INFRASTRUCTURE_IMPROVEMENTS"},
+      {"id": "II-003", "item": "Auto-briefing tool for new teams", "impact": "LOW", "effort": "MEDIUM", "urgency": "BACKLOG", "category": "INFRASTRUCTURE_IMPROVEMENTS"},
+      {"id": "II-004", "item": "Session planner tool", "impact": "LOW", "effort": "MEDIUM", "urgency": "BACKLOG", "category": "INFRASTRUCTURE_IMPROVEMENTS"},
+      {"id": "BF-009", "item": "Rename 11 kebab-case Python scripts", "impact": "LOW", "effort": "SMALL", "urgency": "BACKLOG", "category": "BUGS_TO_FIX"},
+      {"id": "BF-010", "item": "Rename 3 non-standard SOP filenames", "impact": "LOW", "effort": "TRIVIAL", "urgency": "BACKLOG", "category": "BUGS_TO_FIX"},
+      {"id": "BF-011", "item": "Fix TOCTOU-MTR-004 double stop()", "impact": "LOW", "effort": "TRIVIAL", "urgency": "BACKLOG", "category": "BUGS_TO_FIX"},
+      {"id": "BF-012", "item": "Fix 13 remaining medium/low TOCTOU bugs", "impact": "LOW", "effort": "MEDIUM", "urgency": "BACKLOG", "category": "BUGS_TO_FIX"},
+      {"id": "BF-013", "item": "Fix or remove empty ai-quant-techniques template", "impact": "LOW", "effort": "TRIVIAL", "urgency": "BACKLOG", "category": "BUGS_TO_FIX"}
+    ]
+  },
+
+  "session_recommendations": {
+    "next_3_sessions": [
+      {
+        "session": 1,
+        "title": "MARKET RESEARCH EXECUTION -- First Picks",
+        "focus": "80% domain execution, 20% quick fixes",
+        "domain_work": [
+          "Follow Alpha's 6-step execution plan to produce 3-5 market picks",
+          "Use WebSearch/WebFetch for data gathering (fundamental + sentiment methods)",
+          "Write pick files using TEMPLATE.md, update market-research/picks/index.json",
+          "Create 1 KB entry documenting the methodology and results"
+        ],
+        "quick_fixes": [
+          "Add financial MCP servers to .mcp.json (TB-001, 10 min)",
+          "Index 15 orphaned scripts (BF-001, 5 min)",
+          "Add TEAM-0032 to session index (BF-005, 2 min)"
+        ],
+        "success_criteria": "3-5 pick files in market-research/picks/ with all required fields. This alone would represent more domain output than all previous sessions combined.",
+        "anti_pattern_guard": "DO NOT build new frameworks, data pipelines, or tooling. If tempted to 'build a better system first,' re-read Alpha's critical_insight section."
+      },
+      {
+        "session": 2,
+        "title": "DOMAIN TOOLS + DATA QUALITY",
+        "focus": "60% domain tool building, 20% data quality fixes, 20% more picks",
+        "domain_tools": [
+          "Build pick_logger.py for structured pick tracking (TB-003)",
+          "Build method_sec_edgar.py for company financials (TB-002)",
+          "Build method_fred.py for economic data (TB-004)",
+          "Catalog SEC EDGAR and FMP as new SRC entries (NC-002, NC-003)"
+        ],
+        "data_quality": [
+          "Backfill titles into 34 KB entry YAML frontmatter (BF-004)",
+          "Merge duplicate FRED source entries (BF-008)",
+          "Fix 2 critical TOCTOU bugs: WS-001, HP-001 (BF-002, BF-003)"
+        ],
+        "more_picks": [
+          "Produce 2-3 additional picks using newly available SEC EDGAR data",
+          "Review and update Session 1 picks with any price movements"
+        ],
+        "success_criteria": "pick_logger.py working, SEC EDGAR tool working, 2-3 more picks logged, 2 critical TOCTOU bugs fixed."
+      },
+      {
+        "session": 3,
+        "title": "RESEARCH EXPANSION + SUSTAINABILITY",
+        "focus": "50% domain research, 30% domain tools, 20% sustainability",
+        "domain_research": [
+          "Produce technology industry analysis report using HN/GitHub/Guardian scripts (DR-007)",
+          "Produce economic indicator report using BLS/Treasury APIs (DR-008)",
+          "Review all existing picks for performance tracking"
+        ],
+        "domain_tools": [
+          "Build cost_tracker.py for API usage monitoring (TB-005)",
+          "Extend dedup_checker for pre-creation validation (TB-006)",
+          "Package market research workflow as Agent Skill (TB-008)"
+        ],
+        "sustainability": [
+          "Fix TOCTOU-DC-001, TOCTOU-WS-002 (BF-006, BF-007)",
+          "Rename kebab-case scripts if time permits (BF-009)"
+        ],
+        "success_criteria": "1 tech industry report, 1 economic report, pick performance tracking operational, Agent Skill packaged."
+      }
+    ]
+  },
+
+  "anti_recommendations": {
+    "description": "Things explicitly recommended AGAINST by one or more think tanks",
+    "items": [
+      {"item": "Build sop_consolidator, trace_propagator, or zombie_reclaimer", "source": "BETA", "reason": "Pure infrastructure recursion. Per SOP-023, simplify rather than manage complexity."},
+      {"item": "Build Reddit data-gathering tool", "source": "BETA", "reason": "Reddit API pricing (post-2023) makes it expensive. HN and news APIs cover sentiment."},
+      {"item": "Build custom scripts where MCP servers exist", "source": "BETA", "reason": "Alpha Vantage, Yahoo Finance, Financial Datasets have production MCP servers. Config, not code."},
+      {"item": "Pursue ConceptNet or Open-Meteo tools", "source": "BETA", "reason": "Not relevant to market research or financial analysis mission."},
+      {"item": "Spend more time planning instead of executing", "source": "ALPHA", "reason": "'This strategy document itself is the LAST piece of analysis needed. The next action must be execution, not more analysis.'"},
+      {"item": "Build 'a better data pipeline' before making first picks", "source": "ALPHA", "reason": "The recursive infrastructure trap. WebSearch/WebFetch is sufficient for first 3-5 picks."}
+    ]
+  },
+
+  "statistics": {
+    "total_findings_categorized": 42,
+    "by_category": {
+      "DOMAIN_READY": 8,
+      "TOOLS_TO_BUILD": 9,
+      "BUGS_TO_FIX": 13,
+      "INFRASTRUCTURE_IMPROVEMENTS": 4,
+      "NEW_CAPABILITIES": 8
+    },
+    "by_urgency": {
+      "IMMEDIATE": 13,
+      "NEXT_SESSION": 13,
+      "BACKLOG": 16
+    },
+    "by_impact": {
+      "HIGH": 16,
+      "MEDIUM": 17,
+      "LOW": 9
+    },
+    "by_effort": {
+      "TRIVIAL": 11,
+      "SMALL": 19,
+      "MEDIUM": 9,
+      "LARGE": 1
+    },
+    "cross_reference_agreements": 4,
+    "cross_reference_disagreements": 3
+  }
+}
