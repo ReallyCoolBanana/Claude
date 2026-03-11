@@ -1,0 +1,181 @@
+{
+  "metadata": {
+    "team": "A1-Delta",
+    "date": "2026-03-11",
+    "purpose": "Report on validation and enforcement tools built for repository naming and index management"
+  },
+  "tools_built": [
+    {
+      "name": "validate_naming.py",
+      "path": "storage/scripts/validate_naming.py",
+      "description": "Linter that checks all file names against naming conventions from SOP-029. Walks all repo directories, checks files against resource-type-specific regex patterns, and reports violations with severity levels.",
+      "features": [
+        "Checks KB entries (KB-NNNN.md), team logs (TEAM-NNNN.md), SOPs, sources, scripts, coordination modules, tests, templates, and markdown docs",
+        "Skips .git, __pycache__, node_modules, .claude directories",
+        "Reports violations with file_path, expected_pattern, actual_name, severity (error/warning)",
+        "--fix flag prints suggested mv commands without executing",
+        "--json flag for machine-readable output",
+        "Exit code 0 if no errors, 1 if errors found",
+        "Summary at end: files checked, errors, warnings"
+      ],
+      "rules_implemented": 8,
+      "dependencies": "Python stdlib only (argparse, json, os, re, sys, pathlib)"
+    },
+    {
+      "name": "auto_index.py",
+      "path": "storage/scripts/auto_index.py",
+      "description": "Regenerates all index.json files from source file metadata using the unified SOP-030 schema. Reads YAML frontmatter from .md files and JSON fields from .json files.",
+      "features": [
+        "Scans 6 indexed directories: knowledge-base, teams/sessions, sops, sources, scripts, api-tools",
+        "Parses YAML frontmatter from Markdown files (custom parser, no external deps)",
+        "Reads JSON metadata from .json source files",
+        "Outputs unified SOP-030 schema: version, last_updated, count, entries[]",
+        "Removes derived sections (tag_index, categories, by_data_type, etc.)",
+        "Renames non-standard array keys (scripts/tools/sources/sops/sessions -> entries)",
+        "Renames non-standard count fields to 'count'",
+        "--dry-run shows what would change without writing",
+        "--diff shows before/after structural comparison",
+        "Idempotent: entries sorted by filename, consistent JSON formatting"
+      ],
+      "indexes_covered": 6,
+      "dependencies": "Python stdlib only (argparse, json, os, re, sys, pathlib, datetime)"
+    }
+  ],
+  "validation_results": {
+    "files_checked": 266,
+    "errors": 14,
+    "warnings": 22,
+    "error_breakdown": {
+      "sop_files_missing_prefix": {
+        "count": 3,
+        "files": [
+          "storage/coordination/sops/efficiency_guide.json",
+          "storage/coordination/sops/future_team_data_strategy.json",
+          "storage/coordination/sops/tool_sops.json"
+        ],
+        "description": "SOP files without the required sop_NNN_ or SOP-NNNN prefix"
+      },
+      "scripts_using_kebab_case": {
+        "count": 11,
+        "files": [
+          "storage/scripts/build-cross-ref-index.py",
+          "storage/scripts/repair-storage.py",
+          "storage/scripts/search-storage.py",
+          "storage/scripts/validate-storage.py",
+          "storage/scripts/stress-test-reads-category.py",
+          "storage/scripts/stress-test-reads-cross.py",
+          "storage/scripts/stress-test-reads-id.py",
+          "storage/scripts/stress-test-setup-reads.py",
+          "storage/scripts/stress-test-writes.py",
+          "storage/scripts/test-cross-references.py",
+          "storage/scripts/test-edge-cases.py"
+        ],
+        "description": "Python scripts using kebab-case instead of required snake_case",
+        "all_have_suggested_fix": true
+      }
+    },
+    "warning_breakdown": {
+      "markdown_snake_case": {
+        "count": 19,
+        "description": "Markdown files using snake_case instead of kebab-case, spread across coordination/, coordination/teams/, coordination/research/, prototype/tests/, api-tools/"
+      },
+      "template_naming": {
+        "count": 2,
+        "files": ["teams/TEAM_LOG_TEMPLATE.md", "storage/coordination/team_templates.yaml"],
+        "description": "Template files not matching TEMPLATE.ext pattern"
+      },
+      "api_tools_report": {
+        "count": 1,
+        "files": ["storage/api-tools/sonnet-research-api/results/final_report.md"],
+        "description": "Report file using snake_case instead of kebab-case"
+      }
+    }
+  },
+  "index_regen_results": {
+    "mode": "dry-run",
+    "indexes_to_regenerate": 6,
+    "total_entries": 162,
+    "warnings": 29,
+    "per_index": [
+      {
+        "name": "knowledge-base",
+        "entries": 31,
+        "changes": "Removes tag_index, categories derived sections. Renames entry_count to count.",
+        "warnings": 24,
+        "warning_type": "Missing 'title' in YAML frontmatter for 24 of 31 KB entries (title stored in body, not frontmatter)"
+      },
+      {
+        "name": "teams/sessions",
+        "entries": 28,
+        "changes": "Renames sessions->entries, session_count->count. Entry count changes 29->28 (orphan TEAM-0011 removed).",
+        "warnings": 2,
+        "warning_type": "TEAM-0018.md missing title and date fields"
+      },
+      {
+        "name": "sops",
+        "entries": 23,
+        "changes": "Renames sops->entries, sop_count->count. Entry count 20->23 (picks up sop_029/030/031 new SOPs).",
+        "warnings": 3,
+        "warning_type": "3 SOP files without parseable ID (efficiency_guide.json, future_team_data_strategy.json, tool_sops.json)"
+      },
+      {
+        "name": "sources",
+        "entries": 41,
+        "changes": "Renames sources->entries, source_count->count. Removes by_data_type, by_access_type derived sections.",
+        "warnings": 0
+      },
+      {
+        "name": "scripts",
+        "entries": 37,
+        "changes": "Renames scripts->entries. Removes categories, language_index derived sections. Entry count 50->37 (only files directly in scripts/ dir, not subdirs or cross-references to coordination/).",
+        "warnings": 0
+      },
+      {
+        "name": "api-tools",
+        "entries": 2,
+        "changes": "Renames tools->entries. Removes auth_types, categories derived sections.",
+        "warnings": 0
+      }
+    ]
+  },
+  "issues_found": [
+    {
+      "severity": "high",
+      "issue": "11 Python scripts in storage/scripts/ use kebab-case instead of snake_case",
+      "fix": "Run validate_naming.py --fix to get mv commands. All have auto-suggested fixes."
+    },
+    {
+      "severity": "high",
+      "issue": "3 SOP files lack the required sop_NNN_ or SOP-NNNN prefix",
+      "fix": "Rename: efficiency_guide.json -> sop_026_efficiency_patterns.json, future_team_data_strategy.json -> sop_027_future_data_strategy.json, tool_sops.json -> sop_028_tool_sops.json"
+    },
+    {
+      "severity": "medium",
+      "issue": "19 markdown files across coordination/ use snake_case instead of kebab-case",
+      "fix": "Run validate_naming.py --fix for rename commands"
+    },
+    {
+      "severity": "medium",
+      "issue": "All 6 index.json files use different schemas (different array keys, count fields, derived sections)",
+      "fix": "Run auto_index.py to regenerate all indexes with unified SOP-030 schema"
+    },
+    {
+      "severity": "medium",
+      "issue": "24 of 31 KB entries lack 'title' in YAML frontmatter (title is in the markdown body instead)",
+      "fix": "Add title field to YAML frontmatter so auto_index.py can extract it"
+    },
+    {
+      "severity": "low",
+      "issue": "TEAM_LOG_TEMPLATE.md and team_templates.yaml do not follow TEMPLATE.ext naming",
+      "fix": "Rename to TEMPLATE.md and TEMPLATE.yaml respectively"
+    }
+  ],
+  "recommendations": [
+    "Run the kebab-to-snake renames for scripts first (Phase 1 from naming_conventions.json). These are safe, no cross-references depend on script filenames.",
+    "Add title field to KB entry YAML frontmatter before running auto_index.py in write mode. Without titles, the regenerated KB index will have empty title fields.",
+    "Run auto_index.py (without --dry-run) after fixing the KB frontmatter titles. This will remove derived sections and unify all index schemas, saving an estimated 3,500+ tokens per index read.",
+    "Consider adding validate_naming.py to a pre-commit hook to prevent future naming violations.",
+    "The SOP files (efficiency_guide.json, etc.) need manual renaming before auto_index.py can properly extract their IDs.",
+    "The scripts index drops from 50 to 37 entries because the current index includes cross-references to coordination/ scripts via relative paths (SCR-0029 through SCR-0033). Those should either be moved to the scripts directory or tracked in a separate index."
+  ]
+}
