@@ -1,0 +1,204 @@
+{
+  "title": "Think Tank Convergence: Optimal Team Structure & Operations",
+  "date": "2026-03-11",
+  "methodology": "Cross-analysis of 30 team session logs, 155 stress tests, coordination benchmarks across 50 agents and 32 threads, historical productivity data, and infrastructure weak link mapping.",
+  "data_sources": [
+    "30 team session logs (TEAM-0001 through TEAM-0030)",
+    "96 coordination stress tests (TEAM-0024)",
+    "23 deep stress tests (Proto A)",
+    "coord_stress_bench.py: 7 benchmark categories, 2000+ measurements",
+    "team_analyzer.py: 20 teams with structured performance data",
+    "SOP-022 evidence-based team sizing",
+    "B2-Epsilon token efficiency benchmarks (11 scenarios)"
+  ],
+
+  "think_tank_findings": {
+
+    "finding_1_team_sizing": {
+      "title": "Empirical Team Size Optimization",
+      "verdict": "5-8 agents is the sweet spot. Solo for research. Never 15+ without justification.",
+      "evidence": {
+        "efficiency_by_size": {
+          "solo (1)": {"mean_efficiency": 5.5, "range": "4.0-7.0", "teams": 2},
+          "small (2-3)": {"mean_efficiency": 1.0, "range": "1.0-1.0", "teams": 1},
+          "medium (4-8)": {"mean_efficiency": 2.711, "range": "0.375-12.0", "teams": 6},
+          "large (9-15)": {"mean_efficiency": 0.361, "range": "0.111-0.667", "teams": 4},
+          "xlarge (16+)": {"mean_efficiency": 0.321, "range": "0.125-0.471", "teams": 7}
+        },
+        "power_law": "E = 4.0 * N^(-0.75). Every doubling reduces per-agent output 40-50%.",
+        "coordination_overhead_empirical": {
+          "1_agent": {"overhead_ms": 9.6, "pct_of_1s": 0.964},
+          "5_agents": {"overhead_ms": 23.4, "pct_of_1s": 0.468},
+          "8_agents": {"overhead_ms": 32.2, "pct_of_1s": 0.402},
+          "10_agents": {"overhead_ms": 44.0, "pct_of_1s": 0.440},
+          "20_agents": {"overhead_ms": 83.5, "pct_of_1s": 0.418},
+          "50_agents": {"overhead_ms": 173.1, "pct_of_1s": 0.346}
+        },
+        "note": "Infrastructure overhead is <1% regardless of size. The real overhead is cognitive: context-switching, communication, and duplication."
+      },
+      "top_5_teams": [
+        {"team": "TEAM-0024", "size": 8, "efficiency": 12.0, "pattern": "parallel-test"},
+        {"team": "TEAM-0010", "size": 1, "efficiency": 7.0, "pattern": "solo"},
+        {"team": "TEAM-0005", "size": 1, "efficiency": 4.0, "pattern": "solo"},
+        {"team": "TEAM-0002", "size": 7, "efficiency": 1.143, "pattern": "lead-sub"},
+        {"team": "TEAM-0006", "size": 3, "efficiency": 1.0, "pattern": "small-parallel"}
+      ]
+    },
+
+    "finding_2_cooperation_patterns": {
+      "title": "Cooperation Pattern Effectiveness Ranking",
+      "verdict": "parallel-test > solo > small-parallel > lead-sub. Pipeline and wave-sequential are worst.",
+      "ranked_patterns": [
+        {"pattern": "parallel-test", "efficiency": 12.0, "use_case": "Testing/auditing with partitioned suites"},
+        {"pattern": "solo", "efficiency": 5.5, "use_case": "Research, architecture analysis, API exploration"},
+        {"pattern": "small-parallel", "efficiency": 1.0, "use_case": "2-4 independent tools"},
+        {"pattern": "parallel-audit", "efficiency": 1.0, "use_case": "Repository-wide validation"},
+        {"pattern": "parallel-build", "efficiency": 0.7, "use_case": "Multiple related modules"},
+        {"pattern": "lead-sub", "efficiency": 0.668, "use_case": "5-12 agents with domain partitioning"},
+        {"pattern": "wave-sequential", "efficiency": 0.176, "use_case": "AVOID: introduces idle time"},
+        {"pattern": "8-team-pipeline", "efficiency": 0.125, "use_case": "AVOID: high coordination cost"}
+      ],
+      "key_insight": "Patterns that maximize parallelism and minimize inter-agent communication win. Pipeline and sequential patterns lose because they serialize work."
+    },
+
+    "finding_3_weak_links": {
+      "title": "Infrastructure Weak Links & Scaling Limits",
+      "verdict": "SQLite contention is the primary scaling bottleneck. Rate limiter is broken. Bus needs compaction.",
+      "sqlite_contention_data": {
+        "1_thread": {"ops_per_sec": 3230, "p99_ms": 0},
+        "2_threads": {"ops_per_sec": 2172, "p99_ms": 19.2},
+        "4_threads": {"ops_per_sec": 1278, "p99_ms": 34.3},
+        "8_threads": {"ops_per_sec": 568, "p99_ms": 79.6},
+        "16_threads": {"ops_per_sec": 205, "p99_ms": 130.3},
+        "32_threads": {"ops_per_sec": 126, "p99_ms": 230.7}
+      },
+      "contention_analysis": "Ops/sec drops from 3230 (1 thread) to 126 (32 threads) - a 96% reduction. p99 latency spikes to 230ms at 32 threads. SQLite WAL handles median operations fine (0.2ms) but tail latency explodes under contention.",
+      "weak_link_priority": [
+        {"rank": 1, "component": "rate_limiter", "severity": "critical", "detail": "64.6% denial rate, 79.1% throughput collapse at production load"},
+        {"rank": 2, "component": "sqlite_contention", "severity": "high", "detail": "p99 latency >100ms at 16+ threads. Scale limit ~15 concurrent writers."},
+        {"rank": 3, "component": "zombie_work_items", "severity": "high", "detail": "No timeout-based reclaim. Can silently deadlock pipelines."},
+        {"rank": 4, "component": "bus_compaction", "severity": "medium", "detail": "JSONL files grow unbounded. 318 bytes/datapoint at production rate."},
+        {"rank": 5, "component": "read_offset_persistence", "severity": "medium", "detail": "Bus offsets lost on restart. Causes message re-processing."},
+        {"rank": 6, "component": "scratchpad_cleanup", "severity": "low", "detail": "No automatic TTL enforcement. Disk accumulation over time."}
+      ]
+    },
+
+    "finding_4_real_use_cases": {
+      "title": "Stress Test Results for Real Use Cases",
+      "verdict": "All coordination primitives are production-ready for up to 10 teams. Hub is fastest, help protocol has race safety, work stealing prevents double-claims.",
+      "benchmark_highlights": {
+        "hub_registration": "50 agents registered in <50ms total. Mean 0.9ms/agent.",
+        "hub_status_updates": "50 agents x 1 update in <25ms total. Mean 0.4ms/update.",
+        "hub_concurrent_10_threads": "10 simultaneous status updates: 0 errors, mean <5ms.",
+        "help_offer_race_5_threads": "5 teams competing for same request: exactly 1 winner, 0 double-claims.",
+        "work_stealing_thundering_herd": "10 threads stealing 50 items: total_stolen <= 50, no double-steal.",
+        "pipeline_5_stages": "Create + run all stages in <15ms.",
+        "scratchpad_100_entries": "100 writes + 100 reads in <50ms.",
+        "channel_concurrent_8_threads": "80 messages across 8 senders: 0 errors."
+      }
+    },
+
+    "finding_5_token_efficiency": {
+      "title": "Token-Efficient I/O Impact on Team Productivity",
+      "verdict": "90.2% average token reduction. Enables 11.7x more operations per context window.",
+      "impact_on_team_operations": {
+        "before": "Agent reads full index.json (6093 tokens) to find one entry. 96.7% waste.",
+        "after": "Agent uses query_kb (123 tokens) for same result. 98% savings.",
+        "net_effect": "An agent that previously could do ~16 index reads per context window can now do ~190. This fundamentally changes what's achievable per agent session."
+      }
+    }
+  },
+
+  "operational_plan": {
+    "title": "Recommended Team Structure & Execution Plan",
+
+    "structure": {
+      "tier_1_solo_researchers": {
+        "count": "2-4 agents",
+        "role": "Deep research, API exploration, architecture analysis",
+        "pattern": "Solo execution with hub reporting",
+        "expected_efficiency": "4-7 artifacts/agent",
+        "coordination": "Report to coordinator via AgentReporter only"
+      },
+      "tier_2_build_teams": {
+        "count": "2 teams of 3-4 agents each",
+        "role": "Tool building, feature implementation, bug fixes",
+        "pattern": "Small-parallel with work stealing queue",
+        "expected_efficiency": "0.8-1.2 artifacts/agent",
+        "coordination": "Shared WorkStealing queue, direct channels between teams"
+      },
+      "tier_3_test_team": {
+        "count": "1 team of 5-8 agents",
+        "role": "Testing, validation, stress testing, auditing",
+        "pattern": "Parallel-test with partitioned suites",
+        "expected_efficiency": "5-12 test artifacts/agent",
+        "coordination": "Progress broadcasting, bottleneck detection"
+      },
+      "coordinator": {
+        "count": "1 agent",
+        "role": "Orchestration, think tank convergence, phase transitions",
+        "pattern": "Hub-and-spoke monitoring",
+        "tools": ["CoordinatorDashboard", "think_tank.py", "team_analyzer.py"]
+      }
+    },
+
+    "total_recommended_agents": "14-21",
+
+    "execution_phases": [
+      {
+        "phase": 1,
+        "name": "Research & Discovery",
+        "teams": "Tier 1 (solo researchers)",
+        "duration_estimate": "First third of session",
+        "deliverables": "KB entries, findings, domain maps"
+      },
+      {
+        "phase": 2,
+        "name": "Build & Implement",
+        "teams": "Tier 2 (build teams) + remaining Tier 1 assist via help protocol",
+        "duration_estimate": "Middle third",
+        "deliverables": "Scripts, tools, features"
+      },
+      {
+        "phase": 3,
+        "name": "Test & Validate",
+        "teams": "Tier 3 (test team) + idle teams assist",
+        "duration_estimate": "Final third",
+        "deliverables": "Test suites, stress tests, validation reports"
+      },
+      {
+        "phase": 4,
+        "name": "Convergence",
+        "teams": "Coordinator",
+        "duration_estimate": "Last 10%",
+        "deliverables": "Think tank report, KB entries, session log"
+      }
+    ],
+
+    "scaling_rules": [
+      "Never exceed 15 concurrent SQLite writers (p99 > 130ms).",
+      "Use work stealing when >2 teams to prevent idle time.",
+      "Enable progress broadcasting at >5 total agents.",
+      "Use direct channels (not broadcast) for team-to-team coordination.",
+      "Run think tank convergence after each phase, not just at end.",
+      "Monitor with CoordinatorDashboard.get_stale_agents(timeout=120) every 30s."
+    ],
+
+    "anti_patterns_to_avoid": [
+      "DO NOT use 15+ agents without unique capability per agent.",
+      "DO NOT use wave-sequential execution (introduces idle time).",
+      "DO NOT pipeline tasks that can be parallelized.",
+      "DO NOT share a single SQLite DB across >15 writer threads.",
+      "DO NOT skip progress broadcasting with >5 agents.",
+      "DO NOT run competitive teams for engineering work (high duplication)."
+    ],
+
+    "prerequisites_before_scaling": [
+      "Fix rate limiter (CRITICAL: 64.6% denial rate blocks production use).",
+      "Add zombie work item reclaim (timeout-based, default 30min).",
+      "Implement bus file rotation (>1MB trigger compaction).",
+      "Persist bus read offsets to SQLite (survive restarts).",
+      "Increase _MAX_RETRIES from 5 to 10 for >16 concurrent writers."
+    ]
+  }
+}

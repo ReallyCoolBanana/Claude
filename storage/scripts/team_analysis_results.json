@@ -1,0 +1,556 @@
+{
+  "sizing": {
+    "size_bucket_analysis": {
+      "solo (1)": {
+        "count": 2,
+        "mean_efficiency": 5.5,
+        "min_efficiency": 4.0,
+        "max_efficiency": 7.0
+      },
+      "small (2-3)": {
+        "count": 1,
+        "mean_efficiency": 1.0,
+        "min_efficiency": 1.0,
+        "max_efficiency": 1.0
+      },
+      "medium (4-8)": {
+        "count": 6,
+        "mean_efficiency": 2.711,
+        "min_efficiency": 0.375,
+        "max_efficiency": 12.0
+      },
+      "large (9-15)": {
+        "count": 4,
+        "mean_efficiency": 0.361,
+        "min_efficiency": 0.111,
+        "max_efficiency": 0.667
+      },
+      "xlarge (16+)": {
+        "count": 7,
+        "mean_efficiency": 0.321,
+        "min_efficiency": 0.125,
+        "max_efficiency": 0.471
+      }
+    },
+    "optimal_teams": [
+      {
+        "team": "TEAM-0024",
+        "size": 8,
+        "artifacts": 96,
+        "efficiency": 12.0,
+        "category": "testing",
+        "cooperation": "parallel-test"
+      },
+      {
+        "team": "TEAM-0010",
+        "size": 1,
+        "artifacts": 7,
+        "efficiency": 7.0,
+        "category": "research",
+        "cooperation": "solo"
+      },
+      {
+        "team": "TEAM-0005",
+        "size": 1,
+        "artifacts": 4,
+        "efficiency": 4.0,
+        "category": "tooling",
+        "cooperation": "solo"
+      },
+      {
+        "team": "TEAM-0002",
+        "size": 7,
+        "artifacts": 8,
+        "efficiency": 1.143,
+        "category": "integration",
+        "cooperation": "lead-sub"
+      },
+      {
+        "team": "TEAM-0006",
+        "size": 3,
+        "artifacts": 3,
+        "efficiency": 1.0,
+        "category": "tooling",
+        "cooperation": "small-parallel"
+      },
+      {
+        "team": "TEAM-0018",
+        "size": 8,
+        "artifacts": 8,
+        "efficiency": 1.0,
+        "category": "engineering",
+        "cooperation": "parallel-build"
+      },
+      {
+        "team": "TEAM-0027",
+        "size": 5,
+        "artifacts": 5,
+        "efficiency": 1.0,
+        "category": "testing",
+        "cooperation": "parallel-audit"
+      },
+      {
+        "team": "TEAM-0007",
+        "size": 8,
+        "artifacts": 6,
+        "efficiency": 0.75,
+        "category": "testing",
+        "cooperation": "lead-sub"
+      },
+      {
+        "team": "TEAM-0014",
+        "size": 9,
+        "artifacts": 6,
+        "efficiency": 0.667,
+        "category": "tooling",
+        "cooperation": "lead-sub"
+      },
+      {
+        "team": "TEAM-0004",
+        "size": 17,
+        "artifacts": 7,
+        "efficiency": 0.471,
+        "category": "tooling",
+        "cooperation": "iteration-loop"
+      }
+    ],
+    "sizing_recommendation": {
+      "solo_tasks": "Research, architecture analysis, single-file fixes. Efficiency: 4-7x artifacts/agent.",
+      "small_team": "2-4 related tools. Efficiency: 1.0/agent. Minimal overhead.",
+      "sweet_spot": "5-8 agents for parallel streams. Best total-output-to-overhead ratio.",
+      "large_team": "9-12 only with lead-sub pattern and clear domain partitioning.",
+      "avoid": "15+ agents unless each has unique capability. Per-agent efficiency drops 89%."
+    },
+    "key_finding": "Every doubling of team size reduces per-agent artifact output by 40-50%. The efficiency curve follows a power law: E = 4.0 * N^(-0.75)."
+  },
+  "patterns": {
+    "patterns": {
+      "wave-sequential": {
+        "team_count": 1,
+        "teams": [
+          "TEAM-0001"
+        ],
+        "mean_efficiency": 0.176,
+        "outcome_distribution": {
+          "good": 1
+        }
+      },
+      "lead-sub": {
+        "team_count": 4,
+        "teams": [
+          "TEAM-0002",
+          "TEAM-0007",
+          "TEAM-0008",
+          "TEAM-0014"
+        ],
+        "mean_efficiency": 0.668,
+        "outcome_distribution": {
+          "good": 3,
+          "poor": 1
+        }
+      },
+      "competitive-5-team": {
+        "team_count": 1,
+        "teams": [
+          "TEAM-0003"
+        ],
+        "mean_efficiency": 0.444,
+        "outcome_distribution": {
+          "mixed": 1
+        }
+      },
+      "iteration-loop": {
+        "team_count": 1,
+        "teams": [
+          "TEAM-0004"
+        ],
+        "mean_efficiency": 0.471,
+        "outcome_distribution": {
+          "good": 1
+        }
+      },
+      "solo": {
+        "team_count": 2,
+        "teams": [
+          "TEAM-0005",
+          "TEAM-0010"
+        ],
+        "mean_efficiency": 5.5,
+        "outcome_distribution": {
+          "excellent": 2
+        }
+      },
+      "small-parallel": {
+        "team_count": 1,
+        "teams": [
+          "TEAM-0006"
+        ],
+        "mean_efficiency": 1.0,
+        "outcome_distribution": {
+          "good": 1
+        }
+      },
+      "6-team-coordinated": {
+        "team_count": 1,
+        "teams": [
+          "TEAM-0009"
+        ],
+        "mean_efficiency": 0.45,
+        "outcome_distribution": {
+          "good": 1
+        }
+      },
+      "parallel-build": {
+        "team_count": 2,
+        "teams": [
+          "TEAM-0018",
+          "TEAM-0020"
+        ],
+        "mean_efficiency": 0.7,
+        "outcome_distribution": {
+          "good": 2
+        }
+      },
+      "8-team-pipeline": {
+        "team_count": 1,
+        "teams": [
+          "TEAM-0022"
+        ],
+        "mean_efficiency": 0.125,
+        "outcome_distribution": {
+          "mixed": 1
+        }
+      },
+      "dynamic-assignment": {
+        "team_count": 1,
+        "teams": [
+          "TEAM-0023"
+        ],
+        "mean_efficiency": 0.25,
+        "outcome_distribution": {
+          "good": 1
+        }
+      },
+      "parallel-test": {
+        "team_count": 1,
+        "teams": [
+          "TEAM-0024"
+        ],
+        "mean_efficiency": 12.0,
+        "outcome_distribution": {
+          "excellent": 1
+        }
+      },
+      "batch-parallel": {
+        "team_count": 1,
+        "teams": [
+          "TEAM-0025"
+        ],
+        "mean_efficiency": 0.267,
+        "outcome_distribution": {
+          "good": 1
+        }
+      },
+      "parallel-audit": {
+        "team_count": 1,
+        "teams": [
+          "TEAM-0027"
+        ],
+        "mean_efficiency": 1.0,
+        "outcome_distribution": {
+          "excellent": 1
+        }
+      },
+      "think-tank-3": {
+        "team_count": 1,
+        "teams": [
+          "TEAM-0028"
+        ],
+        "mean_efficiency": 0.375,
+        "outcome_distribution": {
+          "good": 1
+        }
+      },
+      "5-phase-14-team": {
+        "team_count": 1,
+        "teams": [
+          "TEAM-0030"
+        ],
+        "mean_efficiency": 0.333,
+        "outcome_distribution": {
+          "good": 1
+        }
+      }
+    },
+    "ranked_patterns": [
+      [
+        "parallel-test",
+        12.0
+      ],
+      [
+        "solo",
+        5.5
+      ],
+      [
+        "small-parallel",
+        1.0
+      ],
+      [
+        "parallel-audit",
+        1.0
+      ],
+      [
+        "parallel-build",
+        0.7
+      ],
+      [
+        "lead-sub",
+        0.668
+      ],
+      [
+        "iteration-loop",
+        0.471
+      ],
+      [
+        "6-team-coordinated",
+        0.45
+      ],
+      [
+        "competitive-5-team",
+        0.444
+      ],
+      [
+        "think-tank-3",
+        0.375
+      ],
+      [
+        "5-phase-14-team",
+        0.333
+      ],
+      [
+        "batch-parallel",
+        0.267
+      ],
+      [
+        "dynamic-assignment",
+        0.25
+      ],
+      [
+        "wave-sequential",
+        0.176
+      ],
+      [
+        "8-team-pipeline",
+        0.125
+      ]
+    ],
+    "best_patterns": {
+      "highest_efficiency": "parallel-test",
+      "most_reliable": "lead-sub",
+      "best_for_testing": "parallel-test",
+      "best_for_research": "solo",
+      "best_for_engineering": "parallel-build"
+    },
+    "pattern_recommendations": [
+      "Solo: Best for focused research and API exploration (4-7x efficiency).",
+      "Small-parallel: Best for 2-4 independent tools (1.0x efficiency, low overhead).",
+      "Lead-sub: Best for 5-12 agents (reliable 0.5-1.0x efficiency).",
+      "Parallel-test: Exceptional for test suites (12x efficiency when well-partitioned).",
+      "Competitive-team: High total output but low per-agent efficiency.",
+      "Pipeline: Only for tasks with clear stage dependencies. High coordination cost."
+    ]
+  },
+  "weak_links": {
+    "team_weak_links": [
+      {
+        "type": "poor_outcome",
+        "team": "TEAM-0003",
+        "size": 27,
+        "efficiency": 0.444,
+        "cause": [],
+        "pattern": "competitive-5-team"
+      },
+      {
+        "type": "poor_outcome",
+        "team": "TEAM-0008",
+        "size": 9,
+        "efficiency": 0.111,
+        "cause": [],
+        "pattern": "lead-sub"
+      },
+      {
+        "type": "poor_outcome",
+        "team": "TEAM-0022",
+        "size": 16,
+        "efficiency": 0.125,
+        "cause": [
+          "api doc gaps"
+        ],
+        "pattern": "8-team-pipeline"
+      },
+      {
+        "type": "oversized_team",
+        "team": "TEAM-0001",
+        "size": 17,
+        "efficiency": 0.176,
+        "recommendation": "Split into 2-3 smaller teams with clear domain boundaries."
+      },
+      {
+        "type": "oversized_team",
+        "team": "TEAM-0003",
+        "size": 27,
+        "efficiency": 0.444,
+        "recommendation": "Split into 2-3 smaller teams with clear domain boundaries."
+      },
+      {
+        "type": "oversized_team",
+        "team": "TEAM-0004",
+        "size": 17,
+        "efficiency": 0.471,
+        "recommendation": "Split into 2-3 smaller teams with clear domain boundaries."
+      },
+      {
+        "type": "oversized_team",
+        "team": "TEAM-0009",
+        "size": 20,
+        "efficiency": 0.45,
+        "recommendation": "Split into 2-3 smaller teams with clear domain boundaries."
+      },
+      {
+        "type": "oversized_team",
+        "team": "TEAM-0022",
+        "size": 16,
+        "efficiency": 0.125,
+        "recommendation": "Split into 2-3 smaller teams with clear domain boundaries."
+      },
+      {
+        "type": "oversized_team",
+        "team": "TEAM-0023",
+        "size": 20,
+        "efficiency": 0.25,
+        "recommendation": "Split into 2-3 smaller teams with clear domain boundaries."
+      },
+      {
+        "type": "oversized_team",
+        "team": "TEAM-0030",
+        "size": 42,
+        "efficiency": 0.333,
+        "recommendation": "Split into 2-3 smaller teams with clear domain boundaries."
+      }
+    ],
+    "blocker_frequency": {
+      "orphan files": 1,
+      "no SQLite": 1,
+      "no API key": 1,
+      "wikidata-403": 1,
+      "tag mismatch": 1,
+      "rate limiter": 1,
+      "rate limiter bugs": 1,
+      "bug fixes": 1,
+      "api doc gaps": 1,
+      "8 remaining bugs": 1,
+      "naming violations": 1
+    },
+    "infrastructure_weak_links": [
+      {
+        "component": "rate_limiter",
+        "severity": "critical",
+        "detail": "Proto A rate limiter caused 64.6% denial rate, 79.1% throughput collapse.",
+        "status": "known_issue"
+      },
+      {
+        "component": "zombie_work_items",
+        "severity": "high",
+        "detail": "No automatic cleanup of in_progress work items stuck forever.",
+        "status": "bug_identified"
+      },
+      {
+        "component": "bus_compaction",
+        "severity": "medium",
+        "detail": "JSONL bus files grow without compaction. Risk at 50+ agents.",
+        "status": "needs_fix"
+      },
+      {
+        "component": "read_offset_persistence",
+        "severity": "medium",
+        "detail": "Bus read offsets are in-memory only. Lost on restart.",
+        "status": "bug_identified"
+      },
+      {
+        "component": "scratchpad_ttl",
+        "severity": "low",
+        "detail": "Scratchpad entries accumulate without automatic TTL cleanup.",
+        "status": "needs_fix"
+      },
+      {
+        "component": "sqlite_busy_at_scale",
+        "severity": "high",
+        "detail": "5-retry limit with exponential backoff may bottleneck at 50+ concurrent agents.",
+        "status": "risk"
+      }
+    ],
+    "critical_findings": [
+      "Rate limiter is the #1 weak link. Must be fixed before scaling past 10 agents.",
+      "Zombie work items can silently block pipelines. Need timeout-based reclaim.",
+      "SQLite contention becomes measurable at 16+ concurrent writers.",
+      "Bus file growth is unbounded. Need compaction or rotation."
+    ]
+  },
+  "recommendations": {
+    "optimal_configurations": {
+      "research_operation": {
+        "description": "Pure research across multiple domains",
+        "team_structure": "3-5 solo researchers + 1 coordinator",
+        "total_agents": "4-6",
+        "cooperation": "hub-and-spoke with solo execution",
+        "expected_efficiency": "3-5 artifacts/agent",
+        "rationale": "Solo researchers have 4-7x efficiency. Coordinator handles dedup and convergence."
+      },
+      "tool_building": {
+        "description": "Building 4-8 related tools",
+        "team_structure": "2 teams of 3-4 with shared work queue",
+        "total_agents": "6-8",
+        "cooperation": "parallel-build with work stealing",
+        "expected_efficiency": "0.8-1.2 artifacts/agent",
+        "rationale": "Small teams minimize overhead. Work stealing prevents idle time."
+      },
+      "testing_operation": {
+        "description": "Comprehensive testing/auditing",
+        "team_structure": "1 team of 5-8 with partitioned test suites",
+        "total_agents": "5-8",
+        "cooperation": "parallel-test with progress broadcasting",
+        "expected_efficiency": "5-12 artifacts/agent (tests)",
+        "rationale": "Testing parallelizes perfectly. Progress broadcasting catches bottlenecks."
+      },
+      "multi_domain": {
+        "description": "Cross-domain operation (research + build + test)",
+        "team_structure": "3 specialized teams: research(3), build(5), test(5) + 1 coordinator",
+        "total_agents": "14",
+        "cooperation": "pipeline with help protocol",
+        "expected_efficiency": "0.5-1.0 artifacts/agent",
+        "rationale": "Specialized teams avoid context-switching. Pipeline ensures correct ordering."
+      },
+      "quick_fix": {
+        "description": "Bug fixes, small improvements",
+        "team_structure": "1 solo agent",
+        "total_agents": "1",
+        "cooperation": "none",
+        "expected_efficiency": "4+ artifacts/agent",
+        "rationale": "Zero coordination overhead. Maximum focus."
+      }
+    },
+    "anti_patterns": [
+      "Never use 15+ agents without unique capability justification (89% efficiency loss).",
+      "Never use competitive teams for engineering (high duplication).",
+      "Never pipeline tasks that could be parallelized (unnecessary sequencing).",
+      "Never skip progress broadcasting with 5+ agents (bottlenecks discovered too late).",
+      "Never use a single shared DB with 50+ concurrent writers (SQLite contention)."
+    ],
+    "prerequisites": [
+      "Fix rate limiter before scaling past 10 agents.",
+      "Implement zombie work item cleanup before using pipelines.",
+      "Add bus file compaction before running 20+ agent operations.",
+      "Persist bus read offsets before long-running multi-phase operations."
+    ]
+  }
+}
