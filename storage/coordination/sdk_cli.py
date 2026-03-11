@@ -196,7 +196,12 @@ def _read_bus_messages(channel: str | None = None,
                 continue
             try:
                 msg = json.loads(line)
-                if msg.get("ts", 0) + msg.get("ttl", 300) >= now:
+                try:
+                    ts_val = float(msg.get("ts", 0))
+                    ttl_val = float(msg.get("ttl", 300))
+                except (ValueError, TypeError):
+                    continue
+                if ts_val + ttl_val >= now:
                     messages.append(msg)
             except json.JSONDecodeError:
                 continue
