@@ -1,0 +1,514 @@
+{
+  "metadata": {
+    "title": "Comprehensive TOCTOU and Concurrency Bug Catalog",
+    "author": "Data Archiver 3",
+    "date": "2026-03-11",
+    "scope": "storage/coordination/*, storage/scripts/data-gathering/methods/ddg_utils.py, prototype/agent_comm/state.py",
+    "methodology": "Line-by-line audit of all check-then-act, SELECT-then-UPDATE, and non-atomic read-modify-write patterns"
+  },
+  "bugs": [
+    {
+      "id": "TOCTOU-DC-001",
+      "file": "storage/coordination/direct_channels.py",
+      "lines": "370-389",
+      "function": "join_channel",
+      "code": "row = self._conn.execute(\n    \"SELECT participants FROM channels WHERE channel_name = ? AND status = 'active'\",\n    (channel_name,),\n).fetchone()\n...\ncurrent = json.loads(row[\"participants\"])\nif self.team not in current:\n    current.append(self.team)\n    current.sort()\nself._conn.execute(\n    \"UPDATE channels SET participants = ?, last_activity = ? WHERE channel_name = ?\",\n    (json.dumps(current), time.time(), channel_name),\n)",
+      "race_scenario": [
+        "1. Process A (team-alpha) calls join_channel('topic-X'). SELECT returns participants = [\"team-beta\"].",
+        "2. Process B (team-gamma) calls join_channel('topic-X'). SELECT also returns participants = [\"team-beta\"].",
+        "3. Process A computes new list = [\"team-alpha\", \"team-beta\"], UPDATEs the row.",
+        "4. Process B computes new list = [\"team-beta\", \"team-gamma\"], UPDATEs the row.",
+        "5. Final state: [\"team-beta\", \"team-gamma\"]. team-alpha's join is silently lost."
+      ],
+      "severity": "High",
+      "note": "The threading.Lock protects against in-process races but NOT cross-process races. Two DirectChannels instances in different processes sharing the same SQLite DB will race. No BEGIN IMMEDIATE is used.",
+      "related_bugs": ["TOCTOU-DC-002"]
+    },
+    {
+      "id": "TOCTOU-DC-002",
+      "file": "storage/coordination/direct_channels.py",
+      "lines": "397-415",
+      "function": "leave_channel",
+      "code": "row = self._conn.execute(\n    \"SELECT participants FROM channels WHERE channel_name = ?\",\n    (channel_name,),\n).fetchone()\n...\ncurrent = json.loads(row[\"participants\"])\nif self.team in current:\n    current.remove(self.team)\nself._conn.execute(\n    \"UPDATE channels SET participants = ?, last_activity = ? WHERE channel_name = ?\",\n    (json.dumps(current), time.time(), channel_name),\n)",
+      "race_scenario": [
+        "1. Process A (team-alpha) calls leave_channel('topic-X'). SELECT returns participants = [\"team-alpha\", \"team-beta\", \"team-gamma\"].",
+        "2. Process B (team-beta) calls leave_channel('topic-X'). SELECT also returns [\"team-alpha\", \"team-beta\", \"team-gamma\"].",
+        "3. Process A removes itself, UPDATEs to [\"team-beta\", \"team-gamma\"].",
+        "4. Process B removes itself, UPDATEs to [\"team-alpha\", \"team-gamma\"].",
+        "5. Final state: [\"team-alpha\", \"team-gamma\"]. team-alpha's leave was reversed by Process B's stale write."
+      ],
+      "severity": "High",
+      "note": "Same pattern as join_channel. No BEGIN IMMEDIATE wrapping the read-modify-write cycle.",
+      "related_bugs": ["TOCTOU-DC-001"]
+    },
+    {
+      "id": "TOCTOU-DC-003",
+      "file": "storage/coordination/direct_channels.py",
+      "lines": "716-735",
+      "function": "_save_read_offset",
+      "code": "# Check if the offset actually changed from what's persisted (INEFF-PERF-013)\nif self._persisted_offsets.get(channel) == offset:\n    return\nwith self._lock:\n    self._conn.execute(...)\n    self._conn.commit()\nself._persisted_offsets[channel] = offset",
+      "race_scenario": [
+        "1. Thread A reads _persisted_offsets[channel] = 100, sees offset=200 (different), proceeds.",
+        "2. Thread B also reads _persisted_offsets[channel] = 100, sees offset=300 (different), proceeds.",
+        "3. Thread A acquires lock, writes offset=200, releases lock, sets _persisted_offsets=200.",
+        "4. Thread B acquires lock, writes offset=300, releases lock, sets _persisted_offsets=300.",
+        "5. Both writes succeed, but the check-outside-lock means neither thread can skip a redundant write based on the other's update."
+      ],
+      "severity": "Medium",
+      "note": "The _persisted_offsets check on line 723 is outside the lock. This is a minor optimization bug -- both writes succeed, no data corruption, but the optimization (skip redundant writes) can be defeated. Additionally, _persisted_offsets[channel] = offset on line 735 is outside the lock, creating a read-after-write hazard.",
+      "related_bugs": []
+    },
+    {
+      "id": "TOCTOU-WS-001",
+      "file": "storage/coordination/work_stealing.py",
+      "lines": "294-318",
+      "function": "complete_work",
+      "code": "row = self._conn.execute(\n    \"SELECT claimed_by, owner_team FROM work_queue WHERE id = ?\",\n    (work_id,),\n).fetchone()\nif row is None:\n    raise ValueError(f\"Work item {work_id} not found\")\nif row[\"claimed_by\"] != self.team and row[\"owner_team\"] != self.team:\n    raise ValueError(...)\nself._conn.execute(\n    \"UPDATE work_queue SET status = 'completed', result = ?, completed_at = ? WHERE id = ?\",\n    (json.dumps(result), now, work_id),\n)\nself._conn.commit()",
+      "race_scenario": [
+        "1. Team-A calls complete_work(42). SELECT shows claimed_by='team-A'. Authorization passes.",
+        "2. Concurrently, reclaim_abandoned_work() fires (from another process) and resets item 42 to 'queued', setting claimed_by=NULL.",
+        "3. Team-B steals item 42 and sets claimed_by='team-B'.",
+        "4. Team-A's UPDATE executes, marking item 42 as 'completed' -- even though Team-B now owns it.",
+        "5. Team-B's work is silently marked completed with Team-A's result. Team-B's actual work is lost."
+      ],
+      "severity": "Critical",
+      "note": "No BEGIN IMMEDIATE transaction wraps the SELECT + UPDATE. The authorization check is on stale data. The UPDATE has no WHERE clause verifying claimed_by or status, so it succeeds unconditionally once the id matches.",
+      "related_bugs": ["TOCTOU-WS-002"]
+    },
+    {
+      "id": "TOCTOU-WS-002",
+      "file": "storage/coordination/work_stealing.py",
+      "lines": "570-592",
+      "function": "start_stage (PipelineManager)",
+      "code": "row = self._conn.execute(\n    \"SELECT status FROM pipeline_stages WHERE pipeline_id = ? AND stage_name = ?\",\n    (pipeline_id, stage_name),\n).fetchone()\nif row is None:\n    raise ValueError(...)\nif row[\"status\"] != \"ready\":\n    raise ValueError(...)\nself._conn.execute(\n    \"UPDATE pipeline_stages SET status = 'in_progress', started_at = ? WHERE pipeline_id = ? AND stage_name = ?\",\n    (now, pipeline_id, stage_name),\n)\nself._conn.commit()",
+      "race_scenario": [
+        "1. Agent-A calls start_stage(pipeline=1, stage='build'). SELECT shows status='ready'.",
+        "2. Agent-B calls start_stage(pipeline=1, stage='build'). SELECT also shows status='ready'.",
+        "3. Agent-A's UPDATE sets status='in_progress'.",
+        "4. Agent-B's UPDATE also sets status='in_progress', overwriting started_at with a different timestamp.",
+        "5. Two agents both believe they are running the same stage. Duplicate work and potential result conflicts."
+      ],
+      "severity": "High",
+      "note": "No BEGIN IMMEDIATE. The check (status='ready') and the update are not atomic. The UPDATE lacks a WHERE status='ready' guard.",
+      "related_bugs": ["TOCTOU-WS-003"]
+    },
+    {
+      "id": "TOCTOU-WS-003",
+      "file": "storage/coordination/work_stealing.py",
+      "lines": "600-611",
+      "function": "complete_stage (PipelineManager)",
+      "code": "self._conn.execute(\n    \"\"\"UPDATE pipeline_stages\n       SET status = 'completed', output_data = ?, completed_at = ?\n       WHERE pipeline_id = ? AND stage_name = ?\"\"\",\n    (json.dumps(output_data), now, pipeline_id, stage_name),\n)\nself._conn.commit()",
+      "race_scenario": [
+        "1. Agent-A completes stage 'build' and calls complete_stage with output_data={'artifact': 'v1'}.",
+        "2. Meanwhile, fail_stage is called for stage 'build' due to a timeout, setting status='failed'.",
+        "3. complete_stage's UPDATE fires, overwriting status='failed' with status='completed'.",
+        "4. Pipeline continues as if the stage succeeded, but the output may be partial or incorrect.",
+        "5. Downstream stages receive corrupted input_data."
+      ],
+      "severity": "High",
+      "note": "No status check before UPDATE. A stage in any state (waiting, ready, failed) can be marked completed. No BEGIN IMMEDIATE.",
+      "related_bugs": ["TOCTOU-WS-002"]
+    },
+    {
+      "id": "TOCTOU-HP-001",
+      "file": "storage/coordination/help_protocol.py",
+      "lines": "573-613",
+      "function": "fulfill_help",
+      "code": "row = self._conn.execute(\n    \"SELECT work_item_id, accepted_by_team, status FROM help_requests WHERE id = ?\",\n    (request_id,),\n).fetchone()\n...\nif row[\"status\"] != \"accepted\":\n    raise ValueError(...)\nif row[\"accepted_by_team\"] != self.team:\n    raise ValueError(...)\nself._conn.execute(\n    \"UPDATE help_requests SET status = 'fulfilled', resolved_at = ? WHERE id = ?\",\n    (now, request_id),\n)\nif row and row[\"work_item_id\"] is not None:\n    self._conn.execute(\n        \"UPDATE work_items SET status = 'completed', updated_at = ? WHERE id = ?\",\n        (now, row[\"work_item_id\"]),\n    )\nself._conn.commit()",
+      "race_scenario": [
+        "1. Helper team-A calls fulfill_help(request_id=5). SELECT shows status='accepted', accepted_by_team='team-A'.",
+        "2. Between the SELECT and the UPDATEs, an admin process resets the help request status to 'open' (e.g., because team-A appeared stuck).",
+        "3. Another team-B accepts the request (offer_help atomically sets status='accepted', accepted_by_team='team-B').",
+        "4. Team-A's UPDATE fires: sets help_requests status='fulfilled' and work_items status='completed'.",
+        "5. Team-B is now the accepted helper for a request that was already 'fulfilled' with potentially wrong results."
+      ],
+      "severity": "Critical",
+      "note": "Two separate UPDATEs (help_requests + work_items) without BEGIN IMMEDIATE. A crash between them leaves inconsistent state: request fulfilled but work item not completed, or vice versa.",
+      "related_bugs": ["TOCTOU-HP-002"]
+    },
+    {
+      "id": "TOCTOU-HP-002",
+      "file": "storage/coordination/help_protocol.py",
+      "lines": "422-457",
+      "function": "request_help",
+      "code": "row = self._conn.execute(\n    \"SELECT required_capabilities, estimated_minutes FROM work_items WHERE id = ?\",\n    (work_item_id,),\n).fetchone()\nif row is None:\n    raise ValueError(...)\n...\nself._conn.execute(\n    \"UPDATE work_items SET status = 'available_for_help', updated_at = ? WHERE id = ?\",\n    (now, work_item_id),\n)\ncur = self._conn.execute(\n    \"INSERT INTO help_requests ...\",\n    (self.team, self.agent_id, work_item_id, description, caps, now),\n)\nself._conn.commit()",
+      "race_scenario": [
+        "1. Team-A calls request_help(work_item_id=10). SELECT finds the work item, gets capabilities.",
+        "2. Concurrently, the work item is deleted or completed by another process.",
+        "3. Team-A's UPDATE sets status='available_for_help' on a now-completed item (resurrecting it).",
+        "4. INSERT creates a help request pointing to an item that should not need help.",
+        "5. An idle team accepts the help request and does redundant or conflicting work."
+      ],
+      "severity": "High",
+      "note": "No BEGIN IMMEDIATE. SELECT, UPDATE, and INSERT are three separate operations without transactional guarantee. Also does not verify the work item belongs to the requesting team (see bug report BUG-HELP-002).",
+      "related_bugs": ["TOCTOU-HP-001", "TOCTOU-HP-003"]
+    },
+    {
+      "id": "TOCTOU-HP-003",
+      "file": "storage/coordination/help_protocol.py",
+      "lines": "767-931",
+      "function": "auto_assign_idle_teams",
+      "code": "open_requests = self.get_open_help_requests()\n...\nall_idle_teams = self.get_idle_teams()\n...\nfor req in open_requests:\n    ...\n    for helper in helpers:\n        ...\n        conn.execute(\"BEGIN IMMEDIATE\")\n        row = conn.execute(\"SELECT status, work_item_id FROM help_requests WHERE id = ?\", ...)\n        if row is None or row[\"status\"] != \"open\":\n            conn.execute(\"ROLLBACK\")\n            break\n        ...\n        conn.execute(\"COMMIT\")",
+      "race_scenario": [
+        "1. auto_assign_idle_teams() fetches open requests and idle teams as two separate queries.",
+        "2. Between get_idle_teams() and the assignment loop, team-X transitions from 'idle' to 'working'.",
+        "3. The assignment loop selects team-X as a helper. The BEGIN IMMEDIATE block checks help_requests.status but does NOT re-check team_status.status.",
+        "4. team-X is assigned to help, even though it is now busy working on its own task.",
+        "5. team-X receives conflicting assignments: its own work and the help request."
+      ],
+      "severity": "High",
+      "note": "The atomic section (BEGIN IMMEDIATE) only validates help_requests.status='open'. It never re-validates the helper team's status. The stale idle_teams list drives assignment decisions based on outdated information.",
+      "related_bugs": ["TOCTOU-HP-001", "TOCTOU-HP-002"]
+    },
+    {
+      "id": "TOCTOU-HP-004",
+      "file": "storage/coordination/help_protocol.py",
+      "lines": "247-310",
+      "function": "update_status",
+      "code": "row = self._conn.execute(\n    \"SELECT COUNT(*) as total FROM work_items WHERE team = ?\",\n    (self.team,),\n).fetchone()\ntotal = row[\"total\"] if row else 0\nrow = self._conn.execute(\n    \"SELECT COUNT(*) as done FROM work_items WHERE team = ? AND status = 'completed'\",\n    (self.team,),\n).fetchone()\ndone = row[\"done\"] if row else 0\nself._conn.execute(\n    \"INSERT INTO team_status ... VALUES (?, ?, ?, ?, ?, ?, ?, ?)\n    ON CONFLICT(team) DO UPDATE SET ...\",\n    (self.team, status, progress_pct, est_completion, current_task, total, done, now),\n)\nself._conn.commit()",
+      "race_scenario": [
+        "1. update_status reads COUNT of total work_items = 5.",
+        "2. Between the two COUNT queries, another process adds 2 more work items.",
+        "3. update_status reads COUNT of completed work_items = 3.",
+        "4. team_status is updated with total=5, done=3 (60%), but actual state is total=7, done=3 (43%).",
+        "5. Dashboard shows inflated progress percentage."
+      ],
+      "severity": "Medium",
+      "note": "Two separate COUNT queries are not atomic. No BEGIN IMMEDIATE. The inconsistency is transient (next update_status call will correct it) but could mislead monitoring during the gap.",
+      "related_bugs": []
+    },
+    {
+      "id": "TOCTOU-CH-001",
+      "file": "storage/coordination/coordinator_hub.py",
+      "lines": "548-599",
+      "function": "send_instruction (CoordinatorDashboard)",
+      "code": "with self._lock:\n    if verify_exists:\n        row = self._conn.execute(\n            \"SELECT 1 FROM agent_status WHERE agent_id = ?\",\n            (target_agent,),\n        ).fetchone()\n        if row is None:\n            raise ValueError(...)\n    cur = self._conn.execute(\n        \"INSERT INTO coordinator_instructions ...\",\n        (target_agent, instruction_type, payload, now),\n    )\n    instruction_id = cur.lastrowid\n    self._conn.commit()",
+      "race_scenario": [
+        "1. Coordinator calls send_instruction(agent_id='worker-3', verify_exists=True).",
+        "2. SELECT confirms worker-3 exists in agent_status.",
+        "3. Between SELECT and INSERT (or in another process bypassing the threading lock), worker-3 is removed from agent_status (e.g., deregistered or cleaned up).",
+        "4. INSERT succeeds -- instruction is created for a nonexistent agent.",
+        "5. The instruction sits in coordinator_instructions forever, never picked up."
+      ],
+      "severity": "Medium",
+      "note": "No BEGIN IMMEDIATE. The threading lock protects in-process concurrency but not cross-process races. The verify_exists SELECT and the INSERT are not in the same transaction.",
+      "related_bugs": ["TOCTOU-CH-002"]
+    },
+    {
+      "id": "TOCTOU-CH-002",
+      "file": "storage/coordination/coordinator_hub.py",
+      "lines": "601-694",
+      "function": "get_stale_agents (CoordinatorDashboard)",
+      "code": "rows = self._conn.execute(\n    \"\"\"SELECT * FROM agent_status\n       WHERE status NOT IN ('complete', 'error')\n         AND (strftime('%s', 'now') - last_updated) > ?\n       ORDER BY last_updated ASC\"\"\",\n    (timeout_seconds,),\n).fetchall()",
+      "race_scenario": [
+        "1. get_stale_agents() returns agent-X as stale (last_updated is old).",
+        "2. Between the query and the caller acting on the result, agent-X sends a heartbeat updating last_updated.",
+        "3. Caller takes corrective action (e.g., sends 'redirect' instruction or marks agent dead) based on stale query result.",
+        "4. Agent-X receives an unnecessary redirect while it was actually healthy."
+      ],
+      "severity": "Medium",
+      "note": "This is inherent to any read-then-act pattern. The query itself is atomic, but the caller's action based on the result is not. The strftime('s','now') approach uses SQLite's time which could differ from Python's time.time() if the system clock changes.",
+      "related_bugs": ["TOCTOU-CH-001"]
+    },
+    {
+      "id": "TOCTOU-MTR-001",
+      "file": "storage/coordination/multi_team_runner.py",
+      "lines": "261-267",
+      "function": "_init_db",
+      "code": "def _init_db() -> None:\n    conn = _get_connection()\n    with _shared_conn_lock:\n        conn.executescript(_SCHEMA)\n        conn.commit()",
+      "race_scenario": [
+        "1. Thread A calls _init_db(), calls _get_connection() which acquires _shared_conn_lock, creates the connection, releases the lock.",
+        "2. Thread B calls _get_connection() before Thread A re-acquires _shared_conn_lock. Thread B gets the connection.",
+        "3. Thread B calls conn.execute() on the connection before the schema has been created.",
+        "4. Thread B's query fails with 'no such table' because _init_db() hasn't run executescript yet.",
+        "5. Thread A finally acquires _shared_conn_lock and runs executescript, but Thread B already failed."
+      ],
+      "severity": "Medium",
+      "note": "The gap between _get_connection() returning and _init_db() re-acquiring the lock allows other threads to use the uninitialized connection. In practice, _init_db() is called during startup before threads are created, but the design is fragile.",
+      "related_bugs": ["TOCTOU-MTR-002"]
+    },
+    {
+      "id": "TOCTOU-MTR-002",
+      "file": "storage/coordination/multi_team_runner.py",
+      "lines": "300-309",
+      "function": "_get_dead_agents",
+      "code": "cutoff = time.time() - timeout\nconn = _get_connection()\nwith _shared_conn_lock:\n    rows = conn.execute(\n        \"SELECT * FROM agents WHERE last_heartbeat < ? AND status = 'alive'\",\n        (cutoff,),\n    ).fetchall()\nreturn [dict(r) for r in rows]",
+      "race_scenario": [
+        "1. cutoff is computed as time.time() - 120 = T-120.",
+        "2. Between computing cutoff and executing the query, significant time passes (e.g., lock contention).",
+        "3. An agent that heartbeated at T-119 (alive) has its heartbeat age to T-119 vs a new cutoff that would be T+delta-120.",
+        "4. The query uses the stale cutoff, potentially missing agents that became dead during the delay or including agents that heartbeated in the gap."
+      ],
+      "severity": "Low",
+      "note": "Minor timing issue. The cutoff is computed before lock acquisition. Under heavy lock contention, the cutoff could be noticeably stale. In practice, the 120-second timeout makes a few seconds of drift irrelevant.",
+      "related_bugs": ["TOCTOU-MTR-001"]
+    },
+    {
+      "id": "TOCTOU-MTR-003",
+      "file": "storage/coordination/multi_team_runner.py",
+      "lines": "553-570",
+      "function": "_run_cleanup",
+      "code": "now = time.time()\nconn = _get_connection()\nwith _shared_conn_lock:\n    cur1 = conn.execute(\n        \"DELETE FROM rate_limits WHERE called_at < ?\",\n        (now - 3600,),\n    )\n    cur2 = conn.execute(\n        \"DELETE FROM messages WHERE expires_at IS NOT NULL AND expires_at < ?\",\n        (now,),\n    )\n    total = cur1.rowcount + cur2.rowcount\n    conn.commit()",
+      "race_scenario": [
+        "1. Cleanup computes now=T. Deletes rate_limits older than T-3600.",
+        "2. Between the two DELETE statements (still under lock, so same process only), a new rate_limit record is inserted by another process (different connection, not blocked by threading lock).",
+        "3. The two DELETEs are not in an explicit transaction (relying on autocommit). If autocommit is on, each DELETE commits separately.",
+        "4. If process crashes between DELETE 1 and DELETE 2, rate_limits are cleaned but messages are not."
+      ],
+      "severity": "Medium",
+      "note": "No BEGIN IMMEDIATE. The two DELETEs are not wrapped in an explicit transaction. The threading lock does not protect against cross-process races. If another process is inserting rate_limit records concurrently (different connection), those insertions are not blocked.",
+      "related_bugs": ["TOCTOU-MTR-001"]
+    },
+    {
+      "id": "TOCTOU-MTR-004",
+      "file": "storage/coordination/multi_team_runner.py",
+      "lines": "491-508",
+      "function": "MultiTeamRunner.stop",
+      "code": "def stop(self) -> None:\n    log.info(\"Shutting down multi-team runner...\")\n    self._phase = \"shutdown\"\n    self._stop_event.set()\n    ...\n    _bus_write(...)\n    _set_runner_state(\"status\", \"stopped\")\n    _close_connection()",
+      "race_scenario": [
+        "1. SIGTERM arrives, _signal_handler calls runner.stop().",
+        "2. Simultaneously, main thread's KeyboardInterrupt handler also calls runner.stop().",
+        "3. Both calls execute concurrently: both set _phase='shutdown', both try to join threads.",
+        "4. _bus_write is called twice (two shutdown messages). _close_connection is called twice.",
+        "5. Second _close_connection call tries to close an already-closed connection (handled by the None check, but _set_runner_state called after _close_connection in the first call would fail for the second call)."
+      ],
+      "severity": "High",
+      "note": "stop() has no guard against double invocation. The _signal_handler and the main thread's finally block can both call stop() concurrently. No lock or atomic flag protects the shutdown sequence.",
+      "related_bugs": []
+    },
+    {
+      "id": "TOCTOU-MTR-005",
+      "file": "storage/coordination/multi_team_runner.py",
+      "lines": "67-83",
+      "function": "_setup_logging",
+      "code": "_logging_configured = False\n\ndef _setup_logging() -> None:\n    global _logging_configured\n    if _logging_configured:\n        return\n    _logging_configured = True\n    logging.basicConfig(...)",
+      "race_scenario": [
+        "1. Thread A checks _logging_configured = False.",
+        "2. Thread B also checks _logging_configured = False (before A sets it True).",
+        "3. Both threads set _logging_configured = True and call logging.basicConfig().",
+        "4. logging.basicConfig may be called twice, potentially duplicating handlers."
+      ],
+      "severity": "Low",
+      "note": "No lock protects the check-and-set of _logging_configured. In practice, _setup_logging is called once in main() before threads start, so this race is unlikely. logging.basicConfig itself is somewhat idempotent (only configures root logger if it has no handlers).",
+      "related_bugs": []
+    },
+    {
+      "id": "TOCTOU-DDG-001",
+      "file": "storage/scripts/data-gathering/methods/ddg_utils.py",
+      "lines": "112-120",
+      "function": "_enforce_rate_limit",
+      "code": "def _enforce_rate_limit():\n    global _last_request_time\n    with _rate_limit_lock:\n        now = time.monotonic()\n        elapsed = now - _last_request_time\n        if _last_request_time > 0 and elapsed < RATE_LIMIT_SECONDS:\n            time.sleep(RATE_LIMIT_SECONDS - elapsed)\n        _last_request_time = time.monotonic()",
+      "race_scenario": [
+        "1. Thread A acquires _rate_limit_lock, checks elapsed time, sleeps if needed, updates _last_request_time, releases lock.",
+        "2. Thread A proceeds to make the HTTP request (outside the lock).",
+        "3. Thread B immediately acquires the lock, sees enough time has passed (since Thread A updated _last_request_time before its sleep ended), proceeds without sleeping.",
+        "4. WAIT - actually, looking more carefully, the lock IS held during the sleep. This means all other threads block during the sleep."
+      ],
+      "severity": "Low",
+      "note": "REVISED: The rate limiter holds the lock during time.sleep(), which means it IS thread-safe for the check-and-sleep. However, it reads RATE_LIMIT_SECONDS without _config_lock, so a concurrent set_rate_limit() call could cause a torn read of the float value. On CPython with the GIL this is safe but not guaranteed on other implementations. The actual TOCTOU here is between _enforce_rate_limit reading RATE_LIMIT_SECONDS and search_duckduckgo reading DEFAULT_USER_AGENT/DEFAULT_TIMEOUT -- these reads are unsynchronized with set_user_agent/set_rate_limit.",
+      "related_bugs": ["TOCTOU-DDG-002"]
+    },
+    {
+      "id": "TOCTOU-DDG-002",
+      "file": "storage/scripts/data-gathering/methods/ddg_utils.py",
+      "lines": "42-58",
+      "function": "set_user_agent / set_rate_limit vs search_duckduckgo",
+      "code": "# Module globals:\n_last_request_time = 0.0\n_rate_limit_lock = threading.Lock()\n_config_lock = threading.Lock()\n\ndef set_user_agent(ua: str):\n    global DEFAULT_USER_AGENT\n    with _config_lock:\n        DEFAULT_USER_AGENT = ua\n\ndef set_rate_limit(seconds: float):\n    global RATE_LIMIT_SECONDS\n    with _config_lock:\n        RATE_LIMIT_SECONDS = seconds\n\n# In search_duckduckgo (line 145):\n_ua = user_agent if user_agent is not None else DEFAULT_USER_AGENT",
+      "race_scenario": [
+        "1. Thread A is in search_duckduckgo, reads DEFAULT_USER_AGENT = 'Mozilla/...' (line 145, no lock held).",
+        "2. Thread B calls set_user_agent('NewAgent') under _config_lock, updates DEFAULT_USER_AGENT.",
+        "3. Thread A's _enforce_rate_limit reads RATE_LIMIT_SECONDS (no _config_lock held, line 118).",
+        "4. Thread A uses stale user agent and potentially stale rate limit.",
+        "5. Configuration changes are not atomically visible to in-flight requests."
+      ],
+      "severity": "Low",
+      "note": "set_user_agent/set_rate_limit use _config_lock for writes, but search_duckduckgo and _enforce_rate_limit read the globals without acquiring _config_lock. The locks only protect writers from each other, not readers from writers.",
+      "related_bugs": ["TOCTOU-DDG-001"]
+    },
+    {
+      "id": "TOCTOU-WS-004",
+      "file": "storage/coordination/work_stealing.py",
+      "lines": "326-334",
+      "function": "fail_work (WorkStealing)",
+      "code": "def fail_work(self, work_id: int, reason: str) -> None:\n    now = time.time()\n    with self._lock:\n        self._conn.execute(\n            \"UPDATE work_queue SET status = 'failed', result = ?, completed_at = ? WHERE id = ?\",\n            (json.dumps({\"error\": reason}), now, work_id),\n        )\n        self._conn.commit()",
+      "race_scenario": [
+        "1. Team-A is working on item 42. Team-B (erroneously or maliciously) calls fail_work(42, 'timeout').",
+        "2. No authorization check -- any team can fail any work item.",
+        "3. Team-A completes its work and calls complete_work(42). The SELECT in complete_work shows claimed_by='team-A', authorization passes.",
+        "4. If fail_work runs between complete_work's SELECT and UPDATE, the status flip-flops between 'failed' and 'completed' depending on timing.",
+        "5. Even without the race, the lack of authorization means any team can sabotage another's work."
+      ],
+      "severity": "Medium",
+      "note": "No authorization check (unlike complete_work). Any team can fail any work item. Combined with the TOCTOU in complete_work, creates inconsistent final states.",
+      "related_bugs": ["TOCTOU-WS-001"]
+    },
+    {
+      "id": "TOCTOU-HP-005",
+      "file": "storage/coordination/help_protocol.py",
+      "lines": "224-245",
+      "function": "register_capabilities",
+      "code": "with self._lock:\n    for cap in capabilities:\n        self._conn.execute(\n            \"INSERT INTO team_capabilities (team, capability, proficiency) ...\",\n            (self.team, cap),\n        )\n    self._conn.commit()",
+      "race_scenario": [
+        "1. register_capabilities(['coding', 'testing', 'research']) starts executing INSERTs.",
+        "2. After inserting 'coding' and 'testing', the process crashes.",
+        "3. No explicit transaction (no BEGIN IMMEDIATE), so SQLite autocommit may have committed the first two INSERTs individually.",
+        "4. On restart, the team has capabilities=['coding', 'testing'] but is missing 'research'.",
+        "5. Capability matching in find_compatible_helpers returns incorrect results."
+      ],
+      "severity": "Low",
+      "note": "Multiple INSERTs without BEGIN IMMEDIATE. If autocommit is on, each INSERT is its own transaction. A crash mid-loop leaves partial capabilities. The threading lock does not protect against cross-process issues.",
+      "related_bugs": []
+    },
+    {
+      "id": "TOCTOU-WS-005",
+      "file": "storage/coordination/work_stealing.py",
+      "lines": "639-675",
+      "function": "get_ready_stages (PipelineManager)",
+      "code": "self._conn.execute(\"BEGIN IMMEDIATE\")\ntry:\n    all_stages = self._conn.execute(\"SELECT * FROM pipeline_stages WHERE pipeline_id = ?\", ...).fetchall()\n    completed = {s[\"stage_name\"] for s in all_stages if s[\"status\"] == \"completed\"}\n    ready = []\n    for stage in all_stages:\n        if stage[\"status\"] in (\"completed\", \"in_progress\"):\n            continue\n        deps = json.loads(stage[\"depends_on\"])\n        if all(d in completed for d in deps):\n            ready.append(dict(stage))\n    for r in ready:\n        if r[\"status\"] == \"waiting\":\n            self._conn.execute(\"UPDATE pipeline_stages SET status = 'ready' WHERE id = ?\", (r[\"id\"],))\n    self._conn.execute(\"COMMIT\")",
+      "race_scenario": [
+        "1. get_ready_stages correctly uses BEGIN IMMEDIATE (this is atomic within the DB).",
+        "2. However, the returned `ready` list contains dicts where status is still 'waiting' (built from the pre-UPDATE snapshot).",
+        "3. Caller receives ready=[{..., 'status': 'waiting'}] even though the DB now has status='ready'.",
+        "4. If caller checks stage['status'] == 'ready', the check fails even though the stage IS ready.",
+        "5. Caller skips the stage, delaying pipeline progress."
+      ],
+      "severity": "Medium",
+      "note": "This is documented in the existing bug report as BUG-WS-007. The race is within the function's return value vs DB state. The BEGIN IMMEDIATE makes the DB operations atomic, but the returned Python dicts are stale.",
+      "related_bugs": ["TOCTOU-WS-002", "TOCTOU-WS-003"]
+    },
+    {
+      "id": "TOCTOU-HP-006",
+      "file": "storage/coordination/help_protocol.py",
+      "lines": "712-764",
+      "function": "find_compatible_helpers",
+      "code": "with self._lock:\n    row = self._conn.execute(\n        \"SELECT required_capabilities FROM help_requests WHERE id = ?\",\n        (request_id,),\n    ).fetchone()\n\nif row is None:\n    return []\nrequired = json.loads(row[\"required_capabilities\"]) if row[\"required_capabilities\"] else []\nidle_teams = self.get_idle_teams()",
+      "race_scenario": [
+        "1. find_compatible_helpers fetches required_capabilities for request_id=5 under the lock.",
+        "2. Lock is released. The help request is accepted by another team (status changes to 'accepted').",
+        "3. get_idle_teams() is called -- returns teams that are currently idle.",
+        "4. Caller receives a list of compatible helpers for a request that is already accepted.",
+        "5. Caller tries to assign one of these helpers, which either fails (if they use offer_help) or corrupts state."
+      ],
+      "severity": "Medium",
+      "note": "The docstring explicitly acknowledges this: 'This method releases the lock between querying the help request and querying idle teams.' The design is intentionally eventually consistent, but callers must be aware.",
+      "related_bugs": ["TOCTOU-HP-003"]
+    }
+  ],
+  "total_count": 22,
+  "severity_summary": {
+    "critical": 2,
+    "high": 5,
+    "medium": 9,
+    "low": 6
+  },
+  "pattern_groups": [
+    {
+      "pattern": "SELECT-then-UPDATE without BEGIN IMMEDIATE",
+      "description": "A SELECT reads state, Python code makes a decision, then an UPDATE writes based on that decision. Without BEGIN IMMEDIATE, another process can modify the row between the SELECT and UPDATE.",
+      "bugs": ["TOCTOU-DC-001", "TOCTOU-DC-002", "TOCTOU-WS-001", "TOCTOU-WS-002", "TOCTOU-WS-003", "TOCTOU-HP-001", "TOCTOU-HP-002", "TOCTOU-CH-001"]
+    },
+    {
+      "pattern": "Read-modify-write on JSON-encoded column",
+      "description": "A JSON array or object is read from a TEXT column, modified in Python, then written back. Concurrent modifications are lost because the entire value is overwritten.",
+      "bugs": ["TOCTOU-DC-001", "TOCTOU-DC-002"]
+    },
+    {
+      "pattern": "Stale snapshot driving subsequent decisions",
+      "description": "A query returns a snapshot of system state. The caller iterates over results and takes actions, but the state may have changed since the snapshot was taken.",
+      "bugs": ["TOCTOU-HP-003", "TOCTOU-HP-004", "TOCTOU-HP-006", "TOCTOU-CH-002", "TOCTOU-WS-005"]
+    },
+    {
+      "pattern": "Multiple non-transactional writes (crash consistency)",
+      "description": "Two or more UPDATEs/INSERTs that must succeed together are not wrapped in a transaction. A crash between them leaves inconsistent state.",
+      "bugs": ["TOCTOU-HP-001", "TOCTOU-HP-002", "TOCTOU-HP-005", "TOCTOU-MTR-003"]
+    },
+    {
+      "pattern": "Threading lock does not protect cross-process races",
+      "description": "A threading.Lock serializes in-process access to a shared SQLite connection, but multiple processes with separate connections can still race on the same database rows.",
+      "bugs": ["TOCTOU-DC-001", "TOCTOU-DC-002", "TOCTOU-WS-001", "TOCTOU-CH-001", "TOCTOU-MTR-003"]
+    },
+    {
+      "pattern": "Double-invocation / re-entrancy hazard",
+      "description": "A function can be called concurrently from multiple code paths (e.g., signal handler + main thread) without guard against double execution.",
+      "bugs": ["TOCTOU-MTR-004", "TOCTOU-MTR-005"]
+    },
+    {
+      "pattern": "Config read without synchronization",
+      "description": "Module-level configuration globals are read without acquiring the same lock used by the setter functions.",
+      "bugs": ["TOCTOU-DDG-001", "TOCTOU-DDG-002"]
+    }
+  ],
+  "already_fixed": [
+    {
+      "id": "RC-4",
+      "file": "prototype/agent_comm/state.py",
+      "function": "reserve_api_call",
+      "description": "Rate limit TOCTOU race -- FIXED. reserve_api_call() uses BEGIN IMMEDIATE for atomic check+reserve. Lines 183-234.",
+      "fix_verified": true
+    },
+    {
+      "id": "BUG-PROTO-001",
+      "file": "prototype/agent_comm_b/bus.py",
+      "description": "Spillover drain TOCTOU race -- FIXED. Uses os.rename() for atomic move before reading.",
+      "fix_verified": true
+    },
+    {
+      "id": "BUG-PROTO-003",
+      "file": "prototype/agent_comm_b/state.py",
+      "description": "SharedStateMap._open() TOCTOU race on file creation -- FIXED. Uses O_EXCL for atomic creation.",
+      "fix_verified": true
+    },
+    {
+      "id": "BUG-PROTO-007",
+      "file": "prototype/agent_comm/bus.py",
+      "description": "BusReader.poll() text/binary mode offset mismatch -- FIXED. File now opened in 'rb' mode.",
+      "fix_verified": true
+    },
+    {
+      "id": "BUG-PROTO-009",
+      "file": "prototype/agent_comm/coordinator.py",
+      "description": "Coordinator.get_status() bypassing SharedState lock via raw SQL -- FIXED. Now uses proper public API.",
+      "fix_verified": true
+    },
+    {
+      "id": "BUG-DC-002",
+      "file": "storage/coordination/direct_channels.py",
+      "description": "Bus write atomicity for large messages -- FIXED. Uses PIPE_BUF check and temp file + rename for large writes. Lines 36-42, 151-177.",
+      "fix_verified": true
+    },
+    {
+      "id": "BUG-DC-004",
+      "file": "storage/coordination/direct_channels.py",
+      "description": "Self-channel creation prevention -- FIXED. Lines 305-307.",
+      "fix_verified": true
+    },
+    {
+      "id": "BUG-HP-005",
+      "file": "storage/coordination/help_protocol.py",
+      "description": "fulfill_help authorization check -- FIXED. Only the assigned team can fulfill. Lines 595-600.",
+      "fix_verified": true
+    },
+    {
+      "id": "BUG-HP-007",
+      "file": "storage/coordination/help_protocol.py",
+      "description": "Self-help prevention in offer_help -- FIXED. Lines 521-526.",
+      "fix_verified": true
+    },
+    {
+      "id": "BUG-HP-010",
+      "file": "storage/coordination/help_protocol.py",
+      "description": "Work item existence validation in request_help -- FIXED. Lines 432-438.",
+      "fix_verified": true
+    },
+    {
+      "id": "BUG-HP-011",
+      "file": "storage/coordination/help_protocol.py",
+      "description": "Team ownership check in complete_work_item -- FIXED. Lines 385-386.",
+      "fix_verified": true
+    }
+  ],
+  "cross_references": {
+    "bug_report_coordination_md": "storage/coordination/bug_report_coordination.md -- Contains 32 bugs. TOCTOU-relevant ones: BUG-HUB-001, BUG-HELP-001, BUG-HELP-003, BUG-HELP-004, BUG-DC-003, BUG-DC-004, BUG-WS-001, BUG-WS-006, BUG-WS-007. All cataloged here with additional race scenario detail.",
+    "infrastructure_bugs_json": "storage/coordination/hub/infrastructure-bugs-prototypes.json -- Contains 26 active bugs. TOCTOU-relevant: NEW-PROTO-007 (ddg_utils rate limiter), NEW-PROTO-006 (request_cache TOCTOU), NEW-PROTO-014 (repair_bus_file race), BUG-PROTO-012 (mkfifo TOCTOU). Prototypes bugs cataloged in already_fixed where applicable."
+  }
+}
