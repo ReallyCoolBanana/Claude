@@ -710,7 +710,7 @@ class TestInitDbStress(unittest.TestCase):
         self.assertEqual(sanitize_channel("under_score"), "under_score")
 
         # Path traversal attempts
-        self.assertEqual(sanitize_channel("../../../etc/passwd"), "______etc_passwd")
+        self.assertEqual(sanitize_channel("../../../etc/passwd"), "_________etc_passwd")
         self.assertEqual(sanitize_channel("team/global"), "team_global")
         self.assertEqual(sanitize_channel(".."), "__")
 

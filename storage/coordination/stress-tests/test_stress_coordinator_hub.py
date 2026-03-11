@@ -409,11 +409,13 @@ class TestRegisterDeregisterCycles(_StressBase):
             r.update_status("working", float(i), f"cycle-{i}")
             r.close()
 
-        # Final state should reflect the last cycle
+        # Final state should reflect the last update_status call
         dash = self._make_dashboard()
         agent = dash.get_agent_status("recycled-agent")
-        # After close + re-register, status resets to 'initializing'
-        self.assertEqual(agent["status"], "initializing")
+        self.assertIsNotNone(agent)
+        # The agent was updated to "working" in the last cycle
+        self.assertEqual(agent["status"], "working")
+        self.assertEqual(agent["current_task"], "cycle-49")
         dash.close()
 
     def test_concurrent_register_deregister_different_agents(self):
