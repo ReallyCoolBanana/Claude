@@ -117,33 +117,37 @@ class BusReader:
         now = time.time()
 
         try:
-            with open(self.filepath, "r", encoding="utf-8") as f:
+            with open(self.filepath, "rb") as f:
                 f.seek(self._offset)
-                data = f.read()
+                raw = f.read()
         except OSError as e:
             logger.warning("Failed to read bus file %s: %s", self.filepath, e)
             return []
 
-        if not data:
+        if not raw:
             return []
 
         # Only process complete lines (ending with \n).
         # If the last chunk doesn't end with \n, keep it for next poll.
-        if data.endswith("\n"):
-            lines = data.split("\n")
-            lines.pop()  # remove trailing empty string from split
-            self._offset += len(data.encode("utf-8"))
+        if raw.endswith(b"\n"):
+            line_bytes_list = raw.split(b"\n")
+            line_bytes_list.pop()  # remove trailing empty bytes from split
+            self._offset += len(raw)
         else:
-            parts = data.rsplit("\n", 1)
+            parts = raw.rsplit(b"\n", 1)
             if len(parts) == 1:
                 # No complete line yet
                 return []
-            complete_part = parts[0] + "\n"
-            lines = parts[0].split("\n")
-            self._offset += len(complete_part.encode("utf-8"))
+            complete_part = parts[0] + b"\n"
+            line_bytes_list = parts[0].split(b"\n")
+            self._offset += len(complete_part)
 
-        for line in lines:
-            line = line.strip()
+        for line_raw in line_bytes_list:
+            try:
+                line = line_raw.decode("utf-8").strip()
+            except UnicodeDecodeError as e:
+                logger.warning("Skipping line with invalid UTF-8: %s", e)
+                continue
             if not line:
                 continue
             try:

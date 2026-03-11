@@ -1,0 +1,381 @@
+{
+  "metadata": {
+    "proposal_id": "FP-CMD-001",
+    "title": "Command, Control, and Datastream Feature Proposals for Hub-and-Spoke Monitoring",
+    "author": "feature-tt-1",
+    "team": "feature-think-tank",
+    "date": "2026-03-11",
+    "scope": "Extensions to coordinator_hub.py's instruction and data flow capabilities",
+    "current_system_summary": {
+      "coordinator_instructions_table": "Simple table with target_agent, instruction_type (free text), payload (JSON string), status (pending/read), created_at, read_at",
+      "send_instruction": "Single instruction to single agent, fire-and-forget with no acknowledgment tracking",
+      "broadcast_instruction": "Same instruction to all active agents, optionally filtered by team",
+      "agent_polling": "Agent calls check_instructions() to pull pending instructions, marks them read",
+      "gaps_identified": [
+        "No priority on instructions - all treated equally",
+        "No instruction sequencing or chaining",
+        "No conditional/dependent instructions",
+        "No instruction templates or reuse",
+        "No data flow between agents through the hub",
+        "No subscription model for agent outputs",
+        "No aggregated views beyond basic summary stats",
+        "No event-driven triggers",
+        "broadcast_instruction has no urgency differentiation",
+        "No instruction acknowledgment or completion tracking (only read status)"
+      ]
+    }
+  },
+
+  "command_features": [
+    {
+      "id": "CMD-001",
+      "name": "Priority-Based Instruction Queuing",
+      "description": "Add a priority field (P0-P3) to coordinator_instructions so agents process critical instructions first. P0 (emergency) instructions skip the normal queue and are returned first by check_instructions(). Includes a new check_urgent_instructions() method for tight polling loops.",
+      "use_case": "Coordinator detects a resource conflict (TRIG-07 in SOP-012) and needs an agent to immediately stop writing to a contested file. With priority queuing, the 'stop-write' instruction is P0 and the agent sees it before any lower-priority redirects or info messages that may have accumulated.",
+      "complexity": "low",
+      "priority": "P0",
+      "implementation_sketch": {
+        "schema_change": "ALTER TABLE coordinator_instructions ADD COLUMN priority TEXT DEFAULT 'P2' CHECK(priority IN ('P0','P1','P2','P3'))",
+        "api_changes": [
+          "send_instruction() gains optional priority='P2' parameter",
+          "broadcast_instruction() gains optional priority parameter",
+          "check_instructions() ORDER BY changes to: priority ASC, created_at ASC (P0 first)",
+          "New method: check_urgent_instructions() - returns only P0/P1, for tight-loop polling"
+        ],
+        "priority_semantics": {
+          "P0": "Emergency - agent should check immediately, interrupt current work",
+          "P1": "High - process before resuming normal work",
+          "P2": "Normal - default, process at next natural checkpoint",
+          "P3": "Low - informational, process when convenient"
+        },
+        "lines_of_code": "~30 lines changed in coordinator_hub.py"
+      }
+    },
+    {
+      "id": "CMD-002",
+      "name": "Conditional Instructions (Trigger-on-Event)",
+      "description": "Allow the coordinator to create instructions that are held in 'pending_trigger' status and only become 'pending' (visible to the target agent) when a specified condition is met. Conditions reference other agents' status changes. The CoordinatorDashboard evaluates conditions during its polling loop via a new evaluate_pending_triggers() method.",
+      "use_case": "Coordinator wants coding-team-1 to start implementation as soon as think-tank-1 reaches 'complete' status. Instead of manually polling and sending the instruction, the coordinator creates a conditional instruction: 'When think-tank-1.status == complete, send redirect to coding-team-1 with payload containing think-tank-1's output_files'. This eliminates the sequential wave pattern identified in the design doc (SEQ-005).",
+      "complexity": "med",
+      "priority": "P0",
+      "implementation_sketch": {
+        "schema_change": "ALTER TABLE coordinator_instructions ADD COLUMN trigger_condition TEXT; -- JSON: {\"agent_id\": \"...\", \"field\": \"status\", \"operator\": \"==\", \"value\": \"complete\"}",
+        "new_status": "Add 'pending_trigger' to valid instruction statuses. Instructions with trigger_condition start in this state.",
+        "api_changes": [
+          "send_instruction() gains optional trigger_condition dict parameter",
+          "New method: evaluate_pending_triggers() - scans pending_trigger instructions, checks conditions against agent_status table, promotes matching ones to 'pending'",
+          "New method: send_conditional(target, instruction_type, payload, trigger_condition) - convenience wrapper"
+        ],
+        "condition_schema": {
+          "agent_id": "ID of agent whose status to watch",
+          "field": "status | progress_pct | findings_count",
+          "operator": "== | >= | <= | != | contains",
+          "value": "Value to compare against"
+        },
+        "coordinator_integration": "evaluate_pending_triggers() should be called at the start of each coordinator polling cycle, before reading instructions. This ensures newly-triggered instructions are immediately available.",
+        "lines_of_code": "~60 lines new code"
+      }
+    },
+    {
+      "id": "CMD-003",
+      "name": "Batch Instructions for Teams",
+      "description": "A dedicated method to send a coordinated set of instructions to all agents in a team with a single call, where each agent can receive role-specific payloads. Unlike broadcast_instruction() which sends identical instructions, batch_team_instruction() accepts a role-to-payload mapping. Includes a batch_id for tracking the group as a unit.",
+      "use_case": "Coordinator needs to redirect an entire coding team: the lead gets a new design doc reference, workers get specific file assignments, and the reviewer gets updated acceptance criteria. Currently requires 3+ individual send_instruction() calls with no way to track them as a coordinated group.",
+      "complexity": "low",
+      "priority": "P1",
+      "implementation_sketch": {
+        "schema_change": "ALTER TABLE coordinator_instructions ADD COLUMN batch_id TEXT;",
+        "api_changes": [
+          "New method: batch_team_instruction(team, instruction_type, role_payloads: dict[str, str], default_payload=None) -> list[int]",
+          "role_payloads maps role names to JSON payloads; agents without a matching role get default_payload",
+          "Returns list of instruction IDs, all sharing the same batch_id (UUID)",
+          "New method: get_batch_status(batch_id) -> dict with per-agent read/unread status"
+        ],
+        "example_usage": "dashboard.batch_team_instruction('coding-team-1', 'redirect', role_payloads={'coordinator': '{\"new_design\": \"path/to/design.json\"}', 'worker': '{\"files\": [\"module_a.py\", \"module_b.py\"]}'}, default_payload='{\"message\": \"Team redirect in progress\"}')",
+        "lines_of_code": "~40 lines new code"
+      }
+    },
+    {
+      "id": "CMD-004",
+      "name": "Instruction Templates / Macros",
+      "description": "A registry of pre-defined instruction templates stored in a new SQLite table. Templates have named placeholders that are filled at send-time. Common coordinator actions (redirect to new task, share output from agent X, emergency pause) become one-liners. Templates can be created, listed, and instantiated.",
+      "use_case": "The monitoring SOP (SOP-012) defines 6 intervention types (INTERVENTION-01 through -06). Each requires specific payload structures. Templates encode these patterns so the coordinator can invoke 'share_output' template with {producer: 'think-tank-1', consumer: 'coding-team-2'} instead of manually constructing the JSON payload each time. Reduces coordinator cognitive load during real-time monitoring.",
+      "complexity": "med",
+      "priority": "P2",
+      "implementation_sketch": {
+        "schema_change": "CREATE TABLE IF NOT EXISTS instruction_templates (template_id TEXT PRIMARY KEY, name TEXT NOT NULL, instruction_type TEXT NOT NULL, payload_template TEXT NOT NULL, description TEXT, created_at REAL NOT NULL);",
+        "api_changes": [
+          "New method: register_template(template_id, name, instruction_type, payload_template, description)",
+          "New method: list_templates() -> list[dict]",
+          "New method: send_from_template(template_id, target_agent, substitutions: dict) -> int",
+          "payload_template uses {placeholder} syntax, substitutions fill them in"
+        ],
+        "built_in_templates": [
+          {"id": "tpl-share-output", "type": "info", "payload": "{\"event\": \"data-available\", \"producer\": \"{producer}\", \"output_files\": \"{output_files}\", \"summary\": \"{summary}\"}"},
+          {"id": "tpl-redirect-task", "type": "redirect", "payload": "{\"new_task\": \"{new_task}\", \"reason\": \"{reason}\", \"stop_current\": {stop_current}}"},
+          {"id": "tpl-emergency-pause", "type": "pause", "payload": "{\"reason\": \"{reason}\", \"resume_condition\": \"{resume_condition}\"}"}
+        ],
+        "lines_of_code": "~80 lines new code"
+      }
+    },
+    {
+      "id": "CMD-005",
+      "name": "Instruction Chaining (Sequential Multi-Step)",
+      "description": "Allow the coordinator to define a chain of instructions that execute sequentially for a single agent. Each step in the chain triggers only after the agent acknowledges the previous step. Chains are stored as a linked list in the instructions table using a chain_id and sequence number. The hub auto-promotes the next instruction in the chain when the current one is marked 'read'.",
+      "use_case": "Coordinator needs an agent to: (1) pause current work, (2) read a new design doc, (3) resume with updated approach. Currently requires the coordinator to manually send step 2 after observing step 1 was read, then step 3 after step 2. Chaining automates this three-step intervention as a single coordinator action.",
+      "complexity": "med",
+      "priority": "P1",
+      "implementation_sketch": {
+        "schema_change": "ALTER TABLE coordinator_instructions ADD COLUMN chain_id TEXT; ALTER TABLE coordinator_instructions ADD COLUMN chain_seq INTEGER DEFAULT 0;",
+        "new_statuses": "Add 'chained_waiting' to instruction statuses. Steps 2+ start in this state.",
+        "api_changes": [
+          "New method: send_chain(target_agent, steps: list[dict]) -> str (returns chain_id)",
+          "Each step dict: {instruction_type: str, payload: str, priority: str}",
+          "Step 1 starts as 'pending', steps 2+ start as 'chained_waiting'",
+          "New method: advance_chain(chain_id) - called internally when check_instructions() marks a chained instruction as read; promotes next step to 'pending'",
+          "New method: get_chain_status(chain_id) -> dict with per-step status"
+        ],
+        "auto_advance_logic": "In check_instructions(), after marking instructions as 'read', check if any have a chain_id. If so, find the next chained_waiting instruction with chain_seq = current_seq + 1 and promote it to 'pending'.",
+        "lines_of_code": "~70 lines new code"
+      }
+    },
+    {
+      "id": "CMD-006",
+      "name": "Emergency Broadcast with Acknowledgment Tracking",
+      "description": "Extends broadcast_instruction() with an emergency mode that: (1) sets priority P0, (2) assigns a broadcast_id for group tracking, (3) adds an 'acknowledged' status that agents must explicitly set (beyond just 'read'), and (4) provides a method to check which agents have acknowledged. This closes the feedback loop that the current system lacks.",
+      "use_case": "Coordinator detects that the shared database is corrupted and needs ALL agents to immediately stop writes. Sends an emergency broadcast. The coordinator then monitors acknowledgments to verify every agent received and acted on the instruction. Any agent that fails to acknowledge within 60 seconds is flagged for manual intervention (INTERVENTION-04 in SOP-012).",
+      "complexity": "low",
+      "priority": "P0",
+      "implementation_sketch": {
+        "schema_change": "ALTER TABLE coordinator_instructions ADD COLUMN broadcast_id TEXT; -- also reuses the new 'acknowledged' status value",
+        "new_statuses": "Add 'acknowledged' to valid instruction statuses (beyond 'pending' and 'read')",
+        "api_changes": [
+          "New method: emergency_broadcast(instruction_type, payload, team=None) -> str (returns broadcast_id)",
+          "Internally calls broadcast_instruction with priority='P0' and assigns broadcast_id",
+          "AgentReporter gets new method: acknowledge_instruction(instruction_id) - sets status to 'acknowledged'",
+          "New method: get_broadcast_status(broadcast_id) -> {total: N, read: N, acknowledged: N, pending: N, agents: [...]}",
+          "New method: get_unacknowledged_agents(broadcast_id, timeout_seconds) -> list of agents that haven't acked"
+        ],
+        "timeout_workflow": "Coordinator calls emergency_broadcast(), waits, then calls get_unacknowledged_agents(broadcast_id, 60). Any returned agents are candidates for INTERVENTION-04 (kill and relaunch).",
+        "lines_of_code": "~50 lines new code"
+      }
+    },
+    {
+      "id": "CMD-007",
+      "name": "Instruction Acknowledgment and Completion Protocol",
+      "description": "Extends the instruction lifecycle from two states (pending -> read) to four states (pending -> read -> acknowledged -> completed). 'Acknowledged' means the agent received and understood the instruction. 'Completed' means the agent finished acting on it. Adds methods on both AgentReporter and CoordinatorDashboard sides to manage this lifecycle.",
+      "use_case": "Coordinator sends a redirect instruction to an agent. Currently, once the agent reads it, the coordinator has no way to know if the agent actually changed course. With acknowledgment/completion tracking, the coordinator can distinguish between 'agent saw the instruction' (acknowledged), 'agent finished the redirected task' (completed), and 'agent never responded' (still pending after timeout).",
+      "complexity": "low",
+      "priority": "P1",
+      "implementation_sketch": {
+        "schema_change": "ALTER TABLE coordinator_instructions ADD COLUMN acknowledged_at REAL; ALTER TABLE coordinator_instructions ADD COLUMN completed_at REAL;",
+        "api_changes": [
+          "AgentReporter.acknowledge_instruction(instruction_id) - sets status='acknowledged', acknowledged_at=now",
+          "AgentReporter.complete_instruction(instruction_id) - sets status='completed', completed_at=now",
+          "CoordinatorDashboard.get_instruction_status(instruction_id) -> full lifecycle dict",
+          "CoordinatorDashboard.get_pending_instructions(target_agent=None) -> list of unread instructions",
+          "CoordinatorDashboard.get_unacknowledged_instructions(timeout_seconds=120) -> instructions read but not acknowledged"
+        ],
+        "backward_compatible": "Existing check_instructions() continues to work. New methods are additive.",
+        "lines_of_code": "~45 lines new code"
+      }
+    }
+  ],
+
+  "datastream_features": [
+    {
+      "id": "DS-001",
+      "name": "Streaming Partial Results via Hub",
+      "description": "Add an agent_results table where agents post key-value partial results as they work. Unlike the agent_status table (one row per agent), agent_results is append-only and allows multiple entries. The coordinator can read partial results without waiting for completion. Results have a category and sequence number for ordering.",
+      "use_case": "Think-tank-1 has analyzed 3 of 5 components. It posts each component's analysis as a partial result. Coding-team-1, which depends on component A's analysis, can begin work as soon as that partial result is available -- without waiting for think-tank-1 to complete all 5 components. This directly addresses the 'partial results are valuable' insight from the design doc and breaks the sequential wave pattern (SEQ-006).",
+      "complexity": "med",
+      "priority": "P0",
+      "implementation_sketch": {
+        "schema_change": "CREATE TABLE IF NOT EXISTS agent_results (id INTEGER PRIMARY KEY AUTOINCREMENT, agent_id TEXT NOT NULL, team TEXT NOT NULL, category TEXT NOT NULL, result_key TEXT NOT NULL, result_value TEXT NOT NULL, sequence_num INTEGER DEFAULT 0, created_at REAL NOT NULL); CREATE INDEX IF NOT EXISTS idx_agent_results_agent ON agent_results(agent_id); CREATE INDEX IF NOT EXISTS idx_agent_results_category ON agent_results(category);",
+        "api_changes": [
+          "AgentReporter.post_result(category, result_key, result_value, sequence_num=0) - appends a result row",
+          "CoordinatorDashboard.get_results(agent_id=None, category=None, since_ts=None) -> list[dict]",
+          "CoordinatorDashboard.get_latest_results(agent_id=None, category=None) -> dict keyed by result_key with latest values",
+          "CoordinatorDashboard.get_result_count(agent_id=None, category=None) -> int"
+        ],
+        "categories_convention": {
+          "finding": "A discovered insight or analysis result",
+          "artifact": "A produced file path or code snippet",
+          "checkpoint": "A progress milestone with associated data",
+          "metric": "A measurement or statistic"
+        },
+        "lines_of_code": "~60 lines new code"
+      }
+    },
+    {
+      "id": "DS-002",
+      "name": "Data Subscription Model",
+      "description": "Allow agents to subscribe to another agent's results through the hub. Subscriptions are stored in a new table. When a producing agent posts a result matching a subscription's filter, the hub automatically creates a P2 instruction to the subscribing agent with the result data as payload. The coordinator mediates all subscriptions (agents never see each other directly).",
+      "use_case": "Coding-team-1 subscribes to think-tank-1's results with category='finding'. As think-tank-1 posts each finding, coding-team-1 automatically receives it as an instruction without the coordinator manually relaying data. This implements the 'adapts when findings arrive' pattern from the design doc while preserving the hub-spoke topology (no direct agent-to-agent communication).",
+      "complexity": "high",
+      "priority": "P1",
+      "implementation_sketch": {
+        "schema_change": "CREATE TABLE IF NOT EXISTS subscriptions (id INTEGER PRIMARY KEY AUTOINCREMENT, subscriber_agent TEXT NOT NULL, producer_agent TEXT NOT NULL, category_filter TEXT, key_filter TEXT, auto_instruction_type TEXT DEFAULT 'info', priority TEXT DEFAULT 'P2', active INTEGER DEFAULT 1, created_at REAL NOT NULL); CREATE INDEX IF NOT EXISTS idx_subscriptions_producer ON subscriptions(producer_agent, active);",
+        "api_changes": [
+          "AgentReporter.subscribe_to(producer_agent_id, category_filter=None, key_filter=None) - creates subscription",
+          "AgentReporter.unsubscribe(subscription_id) - deactivates subscription",
+          "CoordinatorDashboard.get_subscriptions(agent_id=None) -> list of active subscriptions",
+          "CoordinatorDashboard.process_subscriptions() - called after each poll: finds new results since last check, matches against subscriptions, creates instructions for matches"
+        ],
+        "delivery_mechanism": "process_subscriptions() scans agent_results for rows created since last processing timestamp. For each new result, matches against active subscriptions. For each match, calls send_instruction(subscriber, 'info', result_payload, priority=subscription.priority).",
+        "coordinator_role": "The coordinator MUST call process_subscriptions() in its polling loop. Subscriptions do not fire automatically -- the coordinator is always in the loop and can disable subscriptions if needed.",
+        "lines_of_code": "~90 lines new code"
+      }
+    },
+    {
+      "id": "DS-003",
+      "name": "Aggregated Data Views",
+      "description": "Extend CoordinatorDashboard with rich aggregation methods that combine agent_status and agent_results data into actionable views. Goes beyond the current get_summary() which only counts statuses. Provides team-level rollups, dependency graphs (based on subscriptions and needs_input_from), bottleneck detection, and timeline projections.",
+      "use_case": "Coordinator needs to make a quick decision: which team needs help? Current get_summary() says '3 active, 1 blocked'. The new get_team_health() returns: team-alpha is at 72% avg progress with 0 blockers (healthy), team-beta is at 31% avg with 2 blockers and declining velocity (needs help). This enables the SOP's mid-session checkpoint (CP-3) decisions with data rather than guesswork.",
+      "complexity": "med",
+      "priority": "P1",
+      "implementation_sketch": {
+        "api_changes": [
+          "get_team_health(team) -> {avg_progress, min_progress, max_progress, blocked_count, error_count, active_count, result_count, estimated_completion_ts, velocity_trend}",
+          "get_dependency_graph() -> {nodes: [{agent_id, status, progress}], edges: [{from, to, type, satisfied}]} -- built from subscriptions and conditional instructions",
+          "get_bottlenecks() -> list of agents that are (a) blocked with dependents waiting, (b) lowest progress in their team, or (c) stale",
+          "get_timeline() -> ordered list of {agent_id, estimated_completion, confidence} based on progress velocity",
+          "get_cross_team_summary() -> per-team health rolled up into one dashboard dict"
+        ],
+        "velocity_calculation": "Track progress_pct changes over time by storing the last N status updates. Velocity = delta_progress / delta_time. Extrapolate to estimate completion. Flag agents with zero or negative velocity.",
+        "lines_of_code": "~100 lines new code"
+      }
+    },
+    {
+      "id": "DS-004",
+      "name": "Event-Driven Triggers Based on Data Changes",
+      "description": "A trigger engine that watches for specific data patterns and automatically executes coordinator actions. Triggers are defined as rules: {watch: 'agent_status|agent_results', condition: {...}, action: 'send_instruction|broadcast|log'}. The coordinator evaluates triggers during its polling loop. This is the natural extension of CMD-002 (conditional instructions) to cover all hub data, not just status changes.",
+      "use_case": "Trigger rule: 'When any agent posts a result with category=critical_bug, automatically broadcast a P1 info instruction to all agents in the same team with the bug details.' This automates the coordinator's INTERVENTION-05 (cross-agent data sharing) for high-priority findings. Another example: 'When team average progress exceeds 80%, automatically send a phase-advance signal.'",
+      "complexity": "high",
+      "priority": "P2",
+      "implementation_sketch": {
+        "schema_change": "CREATE TABLE IF NOT EXISTS triggers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, watch_table TEXT NOT NULL CHECK(watch_table IN ('agent_status', 'agent_results')), condition TEXT NOT NULL, action_type TEXT NOT NULL CHECK(action_type IN ('send_instruction', 'broadcast', 'log', 'advance_phase')), action_config TEXT NOT NULL, enabled INTEGER DEFAULT 1, fire_count INTEGER DEFAULT 0, max_fires INTEGER DEFAULT -1, last_fired_at REAL, created_at REAL NOT NULL);",
+        "api_changes": [
+          "CoordinatorDashboard.register_trigger(name, watch_table, condition, action_type, action_config, max_fires=-1) -> trigger_id",
+          "CoordinatorDashboard.evaluate_triggers() - called in polling loop, checks all enabled triggers",
+          "CoordinatorDashboard.list_triggers(enabled_only=True) -> list[dict]",
+          "CoordinatorDashboard.disable_trigger(trigger_id)",
+          "CoordinatorDashboard.get_trigger_history(trigger_id) -> list of fire events"
+        ],
+        "condition_examples": [
+          {"watch": "agent_status", "condition": {"field": "status", "op": "==", "value": "blocked", "min_duration_seconds": 120}, "action": "log", "description": "Log warning when any agent is blocked for >2 min"},
+          {"watch": "agent_results", "condition": {"category": "critical_bug", "any_agent": true}, "action": "broadcast", "description": "Broadcast critical bugs to the team"},
+          {"watch": "agent_status", "condition": {"field": "progress_pct", "op": ">=", "value": 80, "aggregate": "team_avg", "team": "*"}, "action": "advance_phase", "description": "Auto-advance phase when team is 80%+ done"}
+        ],
+        "safety": "Triggers have max_fires to prevent infinite loops. Default -1 means unlimited. Coordinator can disable triggers at any time. All trigger fires are logged.",
+        "lines_of_code": "~120 lines new code"
+      }
+    },
+    {
+      "id": "DS-005",
+      "name": "Agent Status History / Audit Trail",
+      "description": "Record every agent status change in a separate history table (agent_status_history) with full snapshots. Currently, agent_status is an upsert -- only the latest state is preserved. The history table enables velocity calculations, post-mortem analysis, and timeline reconstruction. Also supports the datastream features that need to detect changes (triggers, subscriptions).",
+      "use_case": "After a session, the coordinator needs to understand why coding-team-2 took 3x longer than expected. The status history shows: agent was working until minute 5, then blocked for 8 minutes (blocker: 'waiting for design doc'), then working again, then blocked again at minute 18 (blocker: 'file conflict with coding-team-3'). Total blocked time: 12 minutes. This data is currently lost because agent_status only keeps the latest row.",
+      "complexity": "low",
+      "priority": "P0",
+      "implementation_sketch": {
+        "schema_change": "CREATE TABLE IF NOT EXISTS agent_status_history (id INTEGER PRIMARY KEY AUTOINCREMENT, agent_id TEXT NOT NULL, team TEXT NOT NULL, status TEXT NOT NULL, progress_pct REAL, current_task TEXT, blockers TEXT, findings_count INTEGER, recorded_at REAL NOT NULL); CREATE INDEX IF NOT EXISTS idx_status_history_agent ON agent_status_history(agent_id, recorded_at);",
+        "api_changes": [
+          "AgentReporter.update_status() -- internally appends to history table after each upsert (2 extra lines in existing method)",
+          "CoordinatorDashboard.get_agent_history(agent_id, since_ts=None) -> list[dict] ordered by recorded_at",
+          "CoordinatorDashboard.get_agent_velocity(agent_id) -> float (progress points per minute)",
+          "CoordinatorDashboard.get_blocked_time(agent_id) -> float (total seconds in blocked state)"
+        ],
+        "storage_impact": "Assuming ~20 updates per agent per session with ~10 agents = 200 rows. Negligible at ~50KB.",
+        "lines_of_code": "~35 lines new code"
+      }
+    },
+    {
+      "id": "DS-006",
+      "name": "Shared Data Namespace (Key-Value Store in Hub)",
+      "description": "A simple key-value store in the hub SQLite database where agents can publish named data entries and the coordinator (or subscribed agents via the hub) can read them. Unlike agent_results (which are per-agent append-only), the shared namespace is a global key-value space where keys can be updated. Useful for shared configuration, feature flags, and coordinator-set parameters that all agents need.",
+      "use_case": "Coordinator determines that the output format should be JSON-with-comments instead of plain JSON. Sets shared_data['output_format'] = 'jsonc'. All agents check this key at startup and adapt. Another use: coordinator sets shared_data['deadline_ts'] = 1741705200, agents adjust their thoroughness vs. speed tradeoff based on remaining time.",
+      "complexity": "low",
+      "priority": "P2",
+      "implementation_sketch": {
+        "schema_change": "CREATE TABLE IF NOT EXISTS shared_data (key TEXT PRIMARY KEY, value TEXT NOT NULL, set_by TEXT NOT NULL, updated_at REAL NOT NULL, ttl_seconds INTEGER DEFAULT -1);",
+        "api_changes": [
+          "CoordinatorDashboard.set_shared(key, value, ttl_seconds=-1) - coordinator sets a shared value",
+          "AgentReporter.read_shared(key) -> value or None - agent reads a shared value",
+          "AgentReporter.read_all_shared() -> dict of all non-expired shared data",
+          "CoordinatorDashboard.get_all_shared() -> dict of all shared data with metadata"
+        ],
+        "access_control": "Only the coordinator can write to shared_data (via CoordinatorDashboard). Agents have read-only access. This preserves the hub-spoke topology.",
+        "lines_of_code": "~40 lines new code"
+      }
+    }
+  ],
+
+  "implementation_roadmap": {
+    "phase_1_foundations": {
+      "description": "Core infrastructure that other features depend on. Ship first.",
+      "features": ["DS-005 (Status History)", "CMD-001 (Priority Queuing)", "CMD-006 (Emergency Broadcast)", "CMD-007 (Acknowledgment Protocol)"],
+      "rationale": "Status history is needed by velocity calculations and triggers. Priority queuing is trivial and immediately impactful. Emergency broadcast and acknowledgment close the feedback loop that the current system critically lacks.",
+      "estimated_effort": "~160 lines, one coding session"
+    },
+    "phase_2_data_flow": {
+      "description": "Enable data to flow through the hub, breaking the sequential wave pattern.",
+      "features": ["DS-001 (Partial Results)", "CMD-002 (Conditional Instructions)", "CMD-005 (Instruction Chaining)"],
+      "rationale": "Partial results + conditional instructions together enable the 'adapts when findings arrive' pattern. Instruction chaining reduces coordinator cognitive load for multi-step interventions.",
+      "estimated_effort": "~190 lines, one coding session"
+    },
+    "phase_3_automation": {
+      "description": "Automate coordinator actions and add richer views.",
+      "features": ["DS-002 (Subscriptions)", "DS-003 (Aggregated Views)", "CMD-003 (Batch Instructions)"],
+      "rationale": "Subscriptions automate data relay. Aggregated views improve decision quality. Batch instructions reduce coordinator overhead for team-wide operations.",
+      "estimated_effort": "~230 lines, one coding session"
+    },
+    "phase_4_advanced": {
+      "description": "Power features for mature deployments.",
+      "features": ["DS-004 (Event Triggers)", "CMD-004 (Instruction Templates)", "DS-006 (Shared Namespace)"],
+      "rationale": "Triggers automate SOP responses. Templates encode best practices. Shared namespace is a convenience feature.",
+      "estimated_effort": "~240 lines, one coding session"
+    }
+  },
+
+  "design_principles": [
+    {
+      "principle": "Hub topology preserved",
+      "description": "Every feature routes through the coordinator. Agents never see each other's data directly. Subscriptions and triggers are mediated by the coordinator's polling loop. This maintains the core architectural advantage: maximum coordinator visibility and control."
+    },
+    {
+      "principle": "Stdlib only",
+      "description": "All features use only Python standard library (sqlite3, json, time, threading). No external dependencies. Matches the existing codebase constraint."
+    },
+    {
+      "principle": "Backward compatible",
+      "description": "All schema changes use ALTER TABLE ADD COLUMN or new tables. Existing code continues to work without modification. New features are additive, not breaking."
+    },
+    {
+      "principle": "Coordinator is always in the loop",
+      "description": "Even automated features (triggers, subscriptions, conditional instructions) are evaluated in the coordinator's polling loop. The coordinator can disable any automation at any time. No autonomous behavior that bypasses coordinator oversight."
+    },
+    {
+      "principle": "Append-only where possible",
+      "description": "History tables and results tables are append-only. Status table remains upsert for current-state queries. This separation of concerns (current state vs. historical data) prevents data loss and enables rich analytics."
+    }
+  ],
+
+  "cross_references": {
+    "sop_012_integration": {
+      "TRIG-01_blocker": "CMD-001 (priority P0) + CMD-006 (emergency broadcast) for immediate intervention",
+      "TRIG-02_stale": "DS-005 (status history) enables velocity-based staleness detection beyond simple timestamp",
+      "TRIG-04_cross_agent": "DS-002 (subscriptions) automates INTERVENTION-05 data relay",
+      "TRIG-05_duplicate": "DS-003 (aggregated views) with current_task comparison detects duplicates",
+      "INTERVENTION-01_clarify": "CMD-005 (chaining) for multi-step clarifications",
+      "INTERVENTION-03_redirect": "CMD-003 (batch) for team-wide redirects, CMD-004 (templates) for standard redirect payloads",
+      "INTERVENTION-05_share_data": "DS-001 (partial results) + DS-002 (subscriptions) automate this entirely"
+    },
+    "design_doc_integration": {
+      "SEQ-005_wave_pattern": "CMD-002 (conditional instructions) breaks waves by auto-triggering dependent work",
+      "SEQ-006_partial_results": "DS-001 (partial results) enables incremental consumption of think-tank output",
+      "ADV-003_dynamic_reallocation": "DS-003 (aggregated views) provides data for reallocation decisions",
+      "PREV-002_incremental_output": "DS-001 (partial results) is the implementation of this prevention strategy"
+    }
+  }
+}

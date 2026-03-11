@@ -21,6 +21,7 @@ import os
 import select
 import threading
 import time
+from dataclasses import asdict
 from typing import Callable
 
 from agent_comm_b.bus import Message, PipeBusReader, PipeBusWriter
@@ -401,7 +402,7 @@ class Coordinator:
             "phase": self._current_phase,
             "uptime": round(uptime, 2),
             "started_at": self._started_at,
-            "agents": agents,
+            "agents": [asdict(a) for a in agents],
             "spill_bytes": self._cleaner.get_spill_size(),
         }
 

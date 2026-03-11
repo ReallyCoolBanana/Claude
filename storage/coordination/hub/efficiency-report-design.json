@@ -1,0 +1,282 @@
+{
+  "agent_id": "efficiency-2",
+  "scope": "system design and redundancy",
+  "timestamp": "2026-03-11",
+  "redundancies": [
+    {
+      "id": "R-01",
+      "title": "Bus write function duplicated 6+ times",
+      "severity": "high",
+      "description": "The JSONL atomic-append bus write pattern (os.open O_WRONLY|O_APPEND|O_CREAT, os.write, os.close) is copy-pasted in: coordinator_hub._bus_notify(), help_protocol.HelpProtocol._publish_bus(), direct_channels._bus_publish(), bus_cli.write_msg(), multi_team_runner._bus_write(), and prototype/agent_comm/bus.BusWriter.publish(). All share the same message schema {id, type, channel, team, agent_id, ts, ttl, body} and the same channel-name sanitization logic. This is the single largest source of code duplication across the entire system.",
+      "files": [
+        "storage/coordination/coordinator_hub.py",
+        "storage/coordination/help_protocol.py",
+        "storage/coordination/direct_channels.py",
+        "storage/coordination/bus_cli.py",
+        "storage/coordination/multi_team_runner.py",
+        "prototype/agent_comm/bus.py"
+      ]
+    },
+    {
+      "id": "R-02",
+      "title": "Bus read function duplicated 3 times",
+      "severity": "medium",
+      "description": "Bus reading with offset tracking is implemented in direct_channels._bus_read(), bus_cli.read_msgs(), and prototype/agent_comm/bus.BusReader.poll(). Each has slightly different edge-case handling (partial lines, encoding) but the core logic is identical.",
+      "files": [
+        "storage/coordination/direct_channels.py",
+        "storage/coordination/bus_cli.py",
+        "prototype/agent_comm/bus.py"
+      ]
+    },
+    {
+      "id": "R-03",
+      "title": "_retry_on_busy decorator duplicated 3 times",
+      "severity": "medium",
+      "description": "The SQLite BUSY retry decorator is independently defined in coordinator_hub.py, help_protocol.py, and direct_channels.py. All three use the same constants (_MAX_RETRIES=5, _RETRY_BACKOFF=0.1) and the same exponential backoff pattern. help_protocol has a slightly enhanced version that checks sqlite_errorcode, while the other two only do string matching.",
+      "files": [
+        "storage/coordination/coordinator_hub.py",
+        "storage/coordination/help_protocol.py",
+        "storage/coordination/direct_channels.py"
+      ]
+    },
+    {
+      "id": "R-04",
+      "title": "SQLite database initialization duplicated across modules",
+      "severity": "medium",
+      "description": "Database setup (PRAGMA journal_mode=WAL, PRAGMA busy_timeout, schema creation, os.makedirs) is independently implemented in coordinator_hub._open_db(), help_protocol.__init__(), direct_channels.__init__(), bus_cli.init_db(), and multi_team_runner._get_db()/_init_db(). Each creates connections with the same WAL mode and busy timeout settings.",
+      "files": [
+        "storage/coordination/coordinator_hub.py",
+        "storage/coordination/help_protocol.py",
+        "storage/coordination/direct_channels.py",
+        "storage/coordination/bus_cli.py",
+        "storage/coordination/multi_team_runner.py"
+      ]
+    },
+    {
+      "id": "R-05",
+      "title": "Three separate status/progress tracking systems",
+      "severity": "high",
+      "description": "There are three independent status-tracking mechanisms: (1) coordinator_hub.agent_status table tracks individual agent status/progress, (2) help_protocol.team_status table tracks team-level status/progress, (3) direct_channels.progress table tracks team phase/progress with bottleneck info. All three store progress_pct, current_task/phase, and last_updated timestamps. They serve overlapping purposes and would confuse any agent trying to report status.",
+      "tables": {
+        "coordinator_hub": "agent_status (agent_id, status, progress_pct, current_task, last_updated)",
+        "help_protocol": "team_status (team, status, progress_pct, current_task, work_items_total, last_updated)",
+        "direct_channels": "progress (team, phase, progress_pct, items_total, items_done, last_updated)"
+      }
+    },
+    {
+      "id": "R-06",
+      "title": "Two separate presence/liveness systems",
+      "severity": "medium",
+      "description": "Agent liveness is tracked in two places: (1) multi_team_runner/bus_cli agents table (agent_id, status, last_heartbeat) with dead-agent detection, (2) direct_channels.presence table (team, status, last_seen) with available/busy/helping/away states. The coordinator_hub.agent_status table also effectively tracks presence via its status field. These serve the same fundamental purpose of knowing who is alive and available.",
+      "files": [
+        "storage/coordination/multi_team_runner.py",
+        "storage/coordination/direct_channels.py",
+        "storage/coordination/coordinator_hub.py"
+      ]
+    },
+    {
+      "id": "R-07",
+      "title": "Schema duplication between bus_cli and multi_team_runner",
+      "severity": "high",
+      "description": "The exact same SQLite schema (agents, rate_limits, rate_limit_config, phase_signals, messages, team_findings, think_tank tables) is defined verbatim in both bus_cli.init_db() and multi_team_runner._SCHEMA. The multi_team_runner adds only one extra table (runner_state). This is a pure copy-paste.",
+      "files": [
+        "storage/coordination/bus_cli.py",
+        "storage/coordination/multi_team_runner.py"
+      ]
+    },
+    {
+      "id": "R-08",
+      "title": "Channel name sanitization duplicated everywhere",
+      "severity": "low",
+      "description": "The pattern channel.replace('/', '_').replace('..', '_') appears in coordinator_hub._bus_notify(), help_protocol._publish_bus(), direct_channels._safe_channel(), bus_cli.write_msg(), multi_team_runner._bus_write(), and both prototype bus modules. A trivial one-liner, but symptomatic of the broader duplication problem."
+    }
+  ],
+  "simplification_opportunities": [
+    {
+      "id": "S-01",
+      "title": "Extract a shared bus_core module",
+      "impact": "high",
+      "description": "Create a single bus_core.py with: Message dataclass, bus_write() function, bus_read() function, channel sanitization, and the _retry_on_busy decorator. All 6+ modules that duplicate this logic can import from one place. This alone would eliminate ~300 lines of duplicated code.",
+      "estimated_lines_saved": 300
+    },
+    {
+      "id": "S-02",
+      "title": "Unify status tracking into coordinator_hub only",
+      "impact": "high",
+      "description": "The coordinator_hub's agent_status table is the most complete and well-designed status system. The team_status table in help_protocol and the progress table in direct_channels should be eliminated. Instead, coordinator_hub should be extended with an optional team-level aggregation view. Agents report to one place; the coordinator reads from one place.",
+      "estimated_lines_saved": 150
+    },
+    {
+      "id": "S-03",
+      "title": "Merge help_protocol into coordinator_hub",
+      "impact": "medium",
+      "description": "help_protocol.py is architecturally a coordinator-level feature (it manages cross-team work assignment). Its work_items and help_requests tables belong in the coordinator's domain. It should be methods on CoordinatorDashboard rather than a standalone class, since the coordinator is the only entity that should mediate cross-team communication (per coordinator_hub's own design philosophy).",
+      "estimated_lines_saved": 200
+    },
+    {
+      "id": "S-04",
+      "title": "direct_channels is overengineered",
+      "impact": "medium",
+      "description": "direct_channels.py provides IRC-style channel management (create, join, leave, archive, topic channels), presence tracking, and progress broadcasting. For an agent coordination system where agents are ephemeral and the coordinator mediates all cross-agent communication, this is substantial overengineering. The bus already supports channel-based messaging. The SQLite channel registry, read_offsets table, and presence table add complexity without clear value. Direct file-based bus channels already work without registration.",
+      "estimated_lines_saved": 400
+    },
+    {
+      "id": "S-05",
+      "title": "dashboard.py queries the wrong database schema",
+      "impact": "medium",
+      "description": "dashboard.py queries from the bus_cli/multi_team_runner schema (agents, phase_signals, team_findings, runner_state tables) but the coordinator_hub uses a completely different schema (agent_status, coordinator_instructions). These two systems are architecturally disconnected. The dashboard should be updated to read from coordinator_hub's schema, or the schemas should be unified.",
+      "estimated_lines_saved": 0,
+      "note": "Not lines saved but architectural confusion eliminated"
+    },
+    {
+      "id": "S-06",
+      "title": "think_tank.py is self-contained and well-designed but disconnected",
+      "impact": "low",
+      "description": "think_tank.py reads from team_findings (multi_team_runner schema) and JSON output files. It does not interact with coordinator_hub at all. It is a standalone post-processing script that could work as-is, but it represents yet another data path that fragments the system."
+    },
+    {
+      "id": "S-07",
+      "title": "bus_cli.py mixes concerns",
+      "impact": "medium",
+      "description": "bus_cli.py is both a CLI tool and a library (write_msg, read_msgs, register_agent, post_finding are used as functions). It also duplicates the full database schema. It should be split: the reusable functions go into bus_core, and the CLI remains as a thin wrapper."
+    },
+    {
+      "id": "S-08",
+      "title": "Dead code: messages table in SQLite",
+      "impact": "low",
+      "description": "The 'messages' table in the bus_cli/multi_team_runner schema is never written to or read from by any module. Messages go to JSONL bus files, not SQLite. The table definition is dead schema."
+    },
+    {
+      "id": "S-09",
+      "title": "Dead code: rate_limits and rate_limit_config tables",
+      "impact": "low",
+      "description": "The rate_limits and rate_limit_config tables in the bus_cli/multi_team_runner schema are only cleaned up by multi_team_runner._run_cleanup() but are never populated by any module. They are dead schema."
+    }
+  ],
+  "coordination_overhead": {
+    "communication_paths": {
+      "count": 5,
+      "paths": [
+        "JSONL bus files (global channel + topic channels) - used by all modules",
+        "coordinator_hub SQLite agent_status table - agents write, coordinator reads",
+        "coordinator_hub SQLite coordinator_instructions table - coordinator writes, agents read",
+        "help_protocol SQLite tables (work_items, help_requests, team_status) - shared read/write",
+        "direct_channels SQLite tables (channels, presence, progress) + per-channel JSONL files"
+      ],
+      "assessment": "Five distinct communication paths is excessive. An agent must potentially interact with 3 different SQLite schemas and the JSONL bus to fully participate. The coordinator_hub was designed as the single point of mediation, but help_protocol and direct_channels bypass this by allowing direct agent-to-agent and team-to-team communication."
+    },
+    "overhead_per_status_update": {
+      "description": "A single agent status update currently requires: (1) SQLite INSERT OR REPLACE into agent_status with retry logic and threading lock, (2) optional JSONL bus notification to global channel. If the agent also reports team-level status, it additionally needs: (3) SQLite UPSERT into team_status via help_protocol, (4) another bus notification, (5) SQLite UPSERT into progress via direct_channels, (6) another bus notification. That is up to 3 SQLite writes and 3 bus writes for a conceptually single update.",
+      "recommendation": "Consolidate to a single SQLite write + single optional bus notification per status update."
+    },
+    "unnecessary_intermediaries": [
+      "direct_channels.channels table acts as a registry for something the filesystem already tracks (JSONL files exist = channel exists)",
+      "direct_channels.read_offsets table persists state that BusReader already tracks in memory",
+      "coordinator_instructions table is a polling-based message queue when the JSONL bus already provides message delivery"
+    ]
+  },
+  "proto_comparison": {
+    "proto_a": {
+      "location": "prototype/agent_comm/",
+      "bus_type": "JSONL append-only files",
+      "state_type": "SQLite (SharedState)",
+      "coordinator_loop": "threading.Event.wait() polling",
+      "cleanup_strategy": "EpochRotator (hourly JSONL file rotation)",
+      "strengths": [
+        "Simple and proven file-append model",
+        "Messages persist on disk for debugging/replay",
+        "SQLite WAL mode handles concurrent access well",
+        "EpochRotator prevents unbounded file growth"
+      ],
+      "weaknesses": [
+        "Polling-based: heartbeat_interval determines latency",
+        "JSONL files grow until rotation (up to 1 hour)",
+        "No backpressure on writers",
+        "BusReader tracks offsets in memory only (lost on restart)"
+      ]
+    },
+    "proto_b": {
+      "location": "prototype/agent_comm_b/",
+      "bus_type": "Named pipes (FIFO) with spillover files",
+      "state_type": "mmap-based SharedStateMap",
+      "coordinator_loop": "select.select() event-driven",
+      "cleanup_strategy": "SpilloverCleaner (delete old .spill files)",
+      "strengths": [
+        "Event-driven: select() reacts instantly to messages (sub-millisecond latency)",
+        "Natural backpressure via FIFO blocking semantics",
+        "Data consumed on read (no unbounded growth)",
+        "mmap state avoids SQLite overhead for simple key-value lookups",
+        "Zero-copy reads from shared memory"
+      ],
+      "weaknesses": [
+        "Named pipes are Linux/Unix only (not Windows-compatible)",
+        "Spillover files needed when no reader attached - adds complexity",
+        "Messages consumed on read (no replay/debugging capability)",
+        "FIFO requires reader to be running or messages spill to disk",
+        "select() on FIFOs has edge cases (closed writers, EOF handling)"
+      ]
+    },
+    "efficiency_verdict": "Proto B is more efficient for real-time coordination (event-driven vs polling, mmap vs SQLite for heartbeats). Proto A is more practical and debuggable (persistent messages, SQLite for complex queries). For the actual use case of CLI agent coordination (not a high-frequency trading system), Proto A's simplicity wins. The latency difference (30s polling vs sub-ms events) does not matter when agents are Claude Code sessions that take seconds to minutes per action.",
+    "can_they_be_unified": "Yes, but the value is low. They are deliberate experiments with different architectures. The production system (storage/coordination/) already chose Proto A's JSONL approach. Proto B should remain as a reference implementation for event-driven patterns. No merging needed.",
+    "lessons_to_keep": {
+      "from_proto_a": "JSONL bus, SQLite WAL mode, EpochRotator, BusReader offset tracking, Message dataclass",
+      "from_proto_b": "select()-based event loop pattern (useful if real-time coordination is ever needed), SpilloverCleaner concept, mmap for hot-path state"
+    }
+  },
+  "consolidation_plan": [
+    {
+      "phase": 1,
+      "title": "Extract bus_core.py",
+      "effort": "small",
+      "description": "Create storage/coordination/bus_core.py with: Message dataclass, bus_write(), bus_read(), _sanitize_channel(), _retry_on_busy(). Update all 6+ modules to import from it. This is the highest-ROI change.",
+      "files_affected": ["coordinator_hub.py", "help_protocol.py", "direct_channels.py", "bus_cli.py", "multi_team_runner.py"]
+    },
+    {
+      "phase": 2,
+      "title": "Unify SQLite schema and db_open",
+      "effort": "small",
+      "description": "Create a single db_utils.py with open_db() function and the canonical schema. Eliminate the duplicated schema definitions in bus_cli.py and multi_team_runner.py. Merge the bus_cli/runner schema with coordinator_hub schema into one coherent database.",
+      "files_affected": ["coordinator_hub.py", "bus_cli.py", "multi_team_runner.py", "dashboard.py"]
+    },
+    {
+      "phase": 3,
+      "title": "Consolidate status tracking",
+      "effort": "medium",
+      "description": "Remove team_status from help_protocol and progress from direct_channels. Extend coordinator_hub.agent_status with optional team-level fields. Update dashboard.py to read from the unified schema.",
+      "files_affected": ["coordinator_hub.py", "help_protocol.py", "direct_channels.py", "dashboard.py"]
+    },
+    {
+      "phase": 4,
+      "title": "Simplify direct_channels",
+      "effort": "medium",
+      "description": "Remove the SQLite channel registry, presence table, and read_offsets table. Keep only the send_direct/read_direct methods using the bus_core functions. Channels do not need to be registered in SQLite to work.",
+      "files_affected": ["direct_channels.py"]
+    },
+    {
+      "phase": 5,
+      "title": "Fold help_protocol into coordinator_hub",
+      "effort": "medium",
+      "description": "Move work_items, help_requests, and team_capabilities tables into coordinator_hub's schema. Add help management methods to CoordinatorDashboard. Remove help_protocol.py as a standalone module. Update bus_cli.py help commands to use coordinator_hub.",
+      "files_affected": ["coordinator_hub.py", "help_protocol.py", "bus_cli.py"]
+    },
+    {
+      "phase": 6,
+      "title": "Remove dead schema",
+      "effort": "trivial",
+      "description": "Remove the 'messages', 'rate_limits', and 'rate_limit_config' table definitions that are never used.",
+      "files_affected": ["bus_cli.py", "multi_team_runner.py"]
+    }
+  ],
+  "summary_statistics": {
+    "total_modules_analyzed": 11,
+    "total_lines_across_modules": 3850,
+    "estimated_redundant_lines": 900,
+    "redundancy_percentage": 23.4,
+    "distinct_bus_write_implementations": 6,
+    "distinct_status_tracking_systems": 3,
+    "distinct_sqlite_schemas": 3,
+    "distinct_retry_decorators": 3,
+    "communication_paths": 5,
+    "dead_schema_tables": 3
+  }
+}

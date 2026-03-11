@@ -286,16 +286,32 @@ class PipeBusReader:
     # -- internal -----------------------------------------------------------
 
     def _drain_spillover(self, now: float) -> list[Message]:
-        """Read and delete the spillover file atomically-ish."""
+        """Read and delete the spillover file atomically-ish.
+
+        To avoid a TOCTOU race where a writer appends between our read
+        and unlink, we rename the spill file to a temporary name first,
+        then read from the renamed copy and delete it.
+        """
         if not os.path.exists(self._spill_path):
             return []
 
+        # Rename to a temp name so writers create a fresh spill file
+        # instead of appending to the one we are about to read.
+        tmp_spill = self._spill_path + f".drain.{os.getpid()}.{id(self)}"
         messages: list[Message] = []
         try:
-            with open(self._spill_path, "r", encoding="utf-8") as f:
+            os.rename(self._spill_path, tmp_spill)
+        except FileNotFoundError:
+            # Another reader drained it first.
+            return []
+        except OSError as exc:
+            log.debug("Spillover rename failed: %s", exc)
+            return []
+
+        try:
+            with open(tmp_spill, "r", encoding="utf-8") as f:
                 data = f.read()
-            # Truncate / remove after reading.
-            os.unlink(self._spill_path)
+            os.unlink(tmp_spill)
         except OSError as exc:
             log.debug("Spillover drain failed: %s", exc)
             return []

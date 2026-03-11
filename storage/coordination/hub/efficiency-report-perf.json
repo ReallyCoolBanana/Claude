@@ -1,0 +1,301 @@
+{
+  "agent_id": "efficiency-1",
+  "scope": "performance and I/O efficiency",
+  "analysis_timestamp": "2026-03-11",
+  "files_analyzed": [
+    "storage/coordination/coordinator_hub.py",
+    "storage/coordination/help_protocol.py",
+    "storage/coordination/direct_channels.py",
+    "storage/coordination/multi_team_runner.py",
+    "prototype/agent_comm_b/bus.py",
+    "prototype/agent_comm_b/core.py"
+  ],
+  "inefficiencies": [
+    {
+      "id": "INEFF-PERF-001",
+      "file": "storage/coordination/multi_team_runner.py",
+      "line_range": "L195-L268",
+      "category": "database",
+      "severity": "high",
+      "description": "Every database helper function (_get_db, _register_agent, _heartbeat, _get_dead_agents, _set_runner_state, _get_runner_state) opens a new SQLite connection, executes one query, then closes it. No connection reuse or pooling.",
+      "impact": "Each heartbeat cycle (every 30s) opens and closes at least 3 connections (_heartbeat + _get_dead_agents + potential _bus_write). Connection setup includes WAL pragma, busy_timeout pragma, and row_factory assignment each time. Under load with many agents, this creates significant overhead from repeated connection negotiation and WAL header reads.",
+      "suggested_optimization": "Use a single persistent connection (or a lightweight connection pool) shared across the MultiTeamRunner instance, similar to how AgentReporter and HelpProtocol do it. Pass the connection object to helper functions instead of re-creating it.",
+      "effort": "medium"
+    },
+    {
+      "id": "INEFF-PERF-002",
+      "file": "storage/coordination/multi_team_runner.py",
+      "line_range": "L256-L267",
+      "category": "database",
+      "severity": "medium",
+      "description": "_set_runner_state calls conn.executescript(_SCHEMA) on every invocation to ensure the table exists, re-running the entire schema creation (8 CREATE TABLE IF NOT EXISTS statements) just to set one key-value pair.",
+      "impact": "Each call to _set_runner_state parses and executes 8+ DDL statements unnecessarily. During runner.start() alone, _set_runner_state is called 4 times, meaning the full schema is executed 4 extra times. This is pure waste after the first call.",
+      "suggested_optimization": "Remove the executescript(_SCHEMA) call from _set_runner_state. The schema is already initialized by _init_db() during init_environment(). If safety is needed, use a module-level flag to track whether schema has been applied.",
+      "effort": "low"
+    },
+    {
+      "id": "INEFF-PERF-003",
+      "file": "storage/coordination/multi_team_runner.py",
+      "line_range": "L270-L285",
+      "category": "database",
+      "severity": "medium",
+      "description": "_get_runner_state also redundantly creates the runner_state table via executescript on every call, duplicating the schema check already done by _init_db and _set_runner_state.",
+      "impact": "Same as INEFF-PERF-002. The _print_status function calls _get_runner_state 4 times, each time running a CREATE TABLE IF NOT EXISTS.",
+      "suggested_optimization": "Remove the inline CREATE TABLE. Rely on _init_db() having been called. If defensive coding is needed, do it once at module load.",
+      "effort": "low"
+    },
+    {
+      "id": "INEFF-PERF-004",
+      "file": "storage/coordination/help_protocol.py",
+      "line_range": "L266-L277",
+      "category": "database",
+      "severity": "medium",
+      "description": "update_status executes two separate COUNT(*) queries against work_items (one for total, one for completed) on every status update. These are two full table scans of work_items filtered by team.",
+      "impact": "Every team status update requires two sequential scans of the work_items table. With many work items per team, this becomes expensive. Status updates are frequent operations.",
+      "suggested_optimization": "Combine into a single query: SELECT COUNT(*) as total, SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as done FROM work_items WHERE team = ?. Also add an index on work_items(team, status) for fast filtering.",
+      "effort": "low"
+    },
+    {
+      "id": "INEFF-PERF-005",
+      "file": "storage/coordination/help_protocol.py",
+      "line_range": "L646-L690",
+      "category": "database",
+      "severity": "high",
+      "description": "find_compatible_helpers calls self.get_idle_teams() which executes a GROUP BY + LEFT JOIN query. Then auto_assign_idle_teams (L693-L804) calls find_compatible_helpers for EACH open request, and find_compatible_helpers itself may call get_idle_teams a second time (fallback on L718). This is an N+1 query pattern.",
+      "impact": "For R open requests and T idle teams, auto_assign_idle_teams executes O(R) database queries minimum, potentially O(2R) if no compatible helpers found. Each query involves a JOIN and GROUP BY. The idle teams list is re-fetched from the DB on every iteration even though it rarely changes between iterations.",
+      "suggested_optimization": "Fetch idle teams once at the top of auto_assign_idle_teams and pass the list to find_compatible_helpers as a parameter. Remove the redundant second get_idle_teams() fallback call by tracking which teams have already been assigned in the same loop.",
+      "effort": "medium"
+    },
+    {
+      "id": "INEFF-PERF-006",
+      "file": "storage/coordination/help_protocol.py",
+      "line_range": "L29-L76",
+      "category": "database",
+      "severity": "medium",
+      "description": "Missing indexes on work_items and help_requests tables. work_items is queried by team (L267-L277), by status+updated_at (L616-L623), and by id (L385-L388). help_requests is queried by status (L426-L442), by id (L462-L465), and by status+created_at (L632-L639). None of these columns are indexed.",
+      "impact": "All queries on work_items and help_requests perform full table scans. As these tables grow (work items accumulate over time), query performance degrades linearly.",
+      "suggested_optimization": "Add indexes: CREATE INDEX idx_work_items_team_status ON work_items(team, status); CREATE INDEX idx_help_requests_status ON help_requests(status); CREATE INDEX idx_work_items_status_updated ON work_items(status, updated_at); CREATE INDEX idx_help_requests_status_created ON help_requests(status, created_at);",
+      "effort": "low"
+    },
+    {
+      "id": "INEFF-PERF-007",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line_range": "L267-L279",
+      "category": "database",
+      "severity": "medium",
+      "description": "update_status uses INSERT OR REPLACE which deletes and re-inserts the entire row. It also contains a correlated subquery (SELECT started_at FROM agent_status WHERE agent_id = ?) executed inside the INSERT, doubling the row lookup cost.",
+      "impact": "Every status update deletes the old row and inserts a new one (triggering index rebuilds on all 3 indexes) instead of just updating changed columns. The correlated subquery is an additional seek. For frequently-updating agents this is wasteful.",
+      "suggested_optimization": "Use UPDATE ... SET for existing agents (which is the common case after initial registration). Use INSERT OR REPLACE only for the initial registration path, or use an UPSERT pattern that does not require the correlated subquery (store started_at in the Python object).",
+      "effort": "medium"
+    },
+    {
+      "id": "INEFF-PERF-008",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line_range": "L687-L725",
+      "category": "database",
+      "severity": "low",
+      "description": "get_summary fetches all rows from agent_status (SELECT status, progress_pct FROM agent_status), then iterates over them 4 times in Python to count active, blocked, complete, and error statuses.",
+      "impact": "Minor: 4 passes over the result set in Python. Could be a single SQL aggregate query. Only matters with very large numbers of agents.",
+      "suggested_optimization": "Use SQL aggregation: SELECT COUNT(*) as total, SUM(CASE WHEN status NOT IN ('complete','error') THEN 1 ELSE 0 END) as active, SUM(CASE WHEN status='blocked' THEN 1 ELSE 0 END) as blocked, SUM(CASE WHEN status='complete' THEN 1 ELSE 0 END) as complete, SUM(CASE WHEN status='error' THEN 1 ELSE 0 END) as error, AVG(progress_pct) as avg_progress FROM agent_status",
+      "effort": "low"
+    },
+    {
+      "id": "INEFF-PERF-009",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line_range": "L125-L157",
+      "category": "io",
+      "severity": "medium",
+      "description": "JSONL bus files (global.jsonl etc.) grow unbounded. _bus_notify appends to the file with every status update, registration, error, and completion event. There is no compaction, rotation, or TTL-based cleanup.",
+      "impact": "Over a long coordination session, global.jsonl can grow very large. Readers (like _bus_read in direct_channels.py) must open and seek through this file. The file will also consume disk space indefinitely. With many agents updating frequently, this grows fast.",
+      "suggested_optimization": "Implement periodic compaction: remove messages older than TTL. Or rotate files when they exceed a size threshold (e.g. 1MB). The multi_team_runner cleanup loop already handles DB cleanup but ignores bus files.",
+      "effort": "medium"
+    },
+    {
+      "id": "INEFF-PERF-010",
+      "file": "storage/coordination/direct_channels.py",
+      "line_range": "L154-L199",
+      "category": "io",
+      "severity": "medium",
+      "description": "_bus_read reads the entire remaining file content from the offset to EOF into memory (f.read()), then splits by newline and parses each line. For large channel files this loads potentially megabytes into memory.",
+      "impact": "Memory spike proportional to unread bus data. If a reader falls behind or reconnects after a long pause, it may read very large chunks. The string splitting creates additional memory copies.",
+      "suggested_optimization": "Read in fixed-size chunks (e.g. 64KB) and process line-by-line. Or use readline() iteration. Also implement a maximum read size per poll to bound memory usage.",
+      "effort": "medium"
+    },
+    {
+      "id": "INEFF-PERF-011",
+      "file": "storage/coordination/direct_channels.py",
+      "line_range": "L370-L385",
+      "category": "database",
+      "severity": "medium",
+      "description": "list_active_channels fetches ALL active channels from the database, then filters in Python to find ones this team participates in by deserializing JSON participants for each row.",
+      "impact": "Full table scan of channels + JSON deserialization for every channel, even those the team is not in. With many channels, most results are fetched and discarded.",
+      "suggested_optimization": "Use SQL LIKE or a normalized participants table. For the JSON approach: WHERE participants LIKE '%\"' || ? || '\"%' to pre-filter in SQL. Better: normalize into a channel_participants junction table for proper indexed queries.",
+      "effort": "medium"
+    },
+    {
+      "id": "INEFF-PERF-012",
+      "file": "storage/coordination/direct_channels.py",
+      "line_range": "L442-L478",
+      "category": "database",
+      "severity": "medium",
+      "description": "set_presence fetches ALL active channels and deserializes JSON participants for each one, just to build a list of channels this team is in. This duplicates the same inefficiency as list_active_channels, and is called on every presence update.",
+      "impact": "Every presence update (a frequent operation) triggers a full table scan of channels plus JSON parsing of every channel's participant list. This work is done solely to populate the current_channels field in the presence table.",
+      "suggested_optimization": "Cache the team's channel list and invalidate on join/leave. Or query only channels where participants LIKE '%team_name%'. Or maintain a denormalized current_channels list updated on join/leave instead of recomputing it every time.",
+      "effort": "medium"
+    },
+    {
+      "id": "INEFF-PERF-013",
+      "file": "storage/coordination/direct_channels.py",
+      "line_range": "L643-L655",
+      "category": "database",
+      "severity": "medium",
+      "description": "_save_read_offset commits to the database on every single message read. read_direct calls _save_read_offset which does an UPSERT + commit for every poll, even if the offset hasn't changed.",
+      "impact": "Each direct message read triggers a database write+commit cycle, even when no new messages were received (offset unchanged). With multiple channels being polled frequently, this creates unnecessary write amplification and WAL growth.",
+      "suggested_optimization": "Only save the offset when it has actually changed. Batch offset saves by deferring them (e.g., save every N polls or every T seconds). Compare new_offset with the stored offset before writing.",
+      "effort": "low"
+    },
+    {
+      "id": "INEFF-PERF-014",
+      "file": "storage/coordination/direct_channels.py",
+      "line_range": "L402-L436",
+      "category": "database",
+      "severity": "low",
+      "description": "send_direct calls _ensure_direct_channel (which does a DB UPSERT + commit) and _touch_channel (another DB UPDATE + commit) on EVERY message send, even if the channel was just created or already exists.",
+      "impact": "Every direct message send triggers 2 unnecessary database writes. The channel creation UPSERT updates last_activity, making the subsequent _touch_channel redundant. For high-frequency messaging this doubles write load.",
+      "suggested_optimization": "Remove _touch_channel when _ensure_direct_channel already updates last_activity. Cache known channels in a set to skip the UPSERT when the channel is already known to exist.",
+      "effort": "low"
+    },
+    {
+      "id": "INEFF-PERF-015",
+      "file": "storage/coordination/help_protocol.py",
+      "line_range": "L177-L209",
+      "category": "code",
+      "severity": "low",
+      "description": "_publish_bus imports os and uuid on every call (inside the method body). Python's import system caches modules so this is not a module-load cost, but it is unnecessary overhead from the import lookup machinery on every bus message.",
+      "impact": "Minor overhead per call from sys.modules lookup. These imports are already available at module scope in every other file.",
+      "suggested_optimization": "Move 'import os' and 'import uuid' to the top of the file where they belong. They are already used at module scope in other files.",
+      "effort": "low"
+    },
+    {
+      "id": "INEFF-PERF-016",
+      "file": "storage/coordination/direct_channels.py",
+      "line_range": "L154-L199",
+      "category": "code",
+      "severity": "low",
+      "description": "_bus_read encodes each line to UTF-8 bytes (line.encode('utf-8')) to track byte offsets, even though the file was opened in text mode. This double-encoding (decode on read, re-encode for offset) is wasteful.",
+      "impact": "For every line read from the bus, an extra UTF-8 encode operation is performed solely to compute byte lengths. With many messages per poll, this adds up.",
+      "suggested_optimization": "Open the file in binary mode ('rb') and work with bytes throughout, avoiding the decode+re-encode cycle. Or track character offsets instead of byte offsets (using f.tell()).",
+      "effort": "medium"
+    },
+    {
+      "id": "INEFF-PERF-017",
+      "file": "storage/coordination/multi_team_runner.py",
+      "line_range": "L377-L396",
+      "category": "database",
+      "severity": "medium",
+      "description": "register_all_agents calls _register_agent for each agent individually, and each call opens a new connection, does one INSERT, commits, and closes. For N agents across M teams, this is N separate connection cycles.",
+      "impact": "With 3 teams x 2 agents = 6 connection open/insert/commit/close cycles. With larger deployments (e.g., 10 teams x 5 agents = 50 cycles), startup time grows linearly with unnecessary connection overhead.",
+      "suggested_optimization": "Open one connection, batch all INSERT statements within a single transaction, then commit once and close. This reduces N connection cycles to 1.",
+      "effort": "low"
+    },
+    {
+      "id": "INEFF-PERF-018",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line_range": "L78-L98",
+      "category": "code",
+      "severity": "low",
+      "description": "The _retry_on_busy decorator uses string matching ('locked' in str(e).lower() or 'busy' in str(e).lower()) to detect SQLITE_BUSY errors. The help_protocol.py version (L83-L98) uses the superior sqlite_errorcode attribute approach. The coordinator_hub and direct_channels versions use the inferior string-matching approach.",
+      "impact": "String conversion and .lower() on every SQLite error is marginally slower than integer comparison. More importantly, string matching is fragile and could miss or misidentify error types.",
+      "suggested_optimization": "Adopt the help_protocol.py approach (checking sqlite_errorcode with fallback to string matching) across all modules. This is both more correct and marginally faster.",
+      "effort": "low"
+    },
+    {
+      "id": "INEFF-PERF-019",
+      "file": "storage/coordination/coordinator_hub.py",
+      "line_range": "L125-L157",
+      "category": "io",
+      "severity": "low",
+      "description": "_bus_notify calls os.makedirs(bus_dir, exist_ok=True) on every single notification. This results in a stat syscall on every status update, error report, and completion event.",
+      "impact": "Unnecessary filesystem syscall on every bus notification. With high-frequency status updates from many agents, this adds up to many redundant stat calls.",
+      "suggested_optimization": "Check once at initialization (or use a module-level flag) and skip subsequent os.makedirs calls. The same pattern appears in help_protocol._publish_bus and direct_channels._bus_publish.",
+      "effort": "low"
+    },
+    {
+      "id": "INEFF-PERF-020",
+      "file": "prototype/agent_comm_b/bus.py",
+      "line_range": "L88-L95",
+      "category": "io",
+      "severity": "low",
+      "description": "_ensure_fifo calls os.path.exists() followed by os.stat() on every publish call. These are two separate syscalls to check the same file. Additionally, PipeBusWriter.publish calls _ensure_fifo on every message.",
+      "impact": "Two redundant filesystem syscalls per message publish. For high-throughput channels this adds latency.",
+      "suggested_optimization": "Cache known FIFOs in a set on the PipeBusWriter instance. Only call _ensure_fifo for channels not yet seen. Use try/except os.mkfifo with EEXIST handling instead of exists+stat check (EAFP pattern).",
+      "effort": "low"
+    },
+    {
+      "id": "INEFF-PERF-021",
+      "file": "prototype/agent_comm_b/bus.py",
+      "line_range": "L288-L311",
+      "category": "io",
+      "severity": "medium",
+      "description": "PipeBusReader._drain_spillover reads the entire spillover file into memory, then deletes it. Between the read and the unlink, a writer could append new messages that would be lost (race condition). This is also an unbounded memory read.",
+      "impact": "Data loss risk under concurrent write+drain. Spillover files can grow large if no reader is attached for an extended period, causing memory spikes on drain.",
+      "suggested_optimization": "Use os.rename to atomically move the spillover file to a temp name, then read from the renamed file. This prevents data loss from concurrent writes. Also consider chunked reading for large spillover files.",
+      "effort": "medium"
+    }
+  ],
+  "architectural_recommendations": [
+    {
+      "id": "ARCH-001",
+      "title": "Duplicated retry/bus infrastructure across modules",
+      "description": "The _retry_on_busy decorator is copy-pasted across coordinator_hub.py, help_protocol.py, and direct_channels.py with slight variations (string matching vs errorcode checking). Similarly, JSONL bus write logic (_bus_notify, _publish_bus, _bus_write, _bus_publish) is duplicated 4 times across files with minor differences. This violates DRY and makes it hard to fix bugs or improve performance consistently.",
+      "recommendation": "Extract a shared module (e.g., storage/coordination/_common.py) containing: (1) a canonical _retry_on_busy using the best implementation (help_protocol's errorcode approach), (2) a single bus_publish function, (3) a single _open_db function. All modules should import from this shared module.",
+      "affected_files": [
+        "storage/coordination/coordinator_hub.py",
+        "storage/coordination/help_protocol.py",
+        "storage/coordination/direct_channels.py",
+        "storage/coordination/multi_team_runner.py"
+      ]
+    },
+    {
+      "id": "ARCH-002",
+      "title": "Three overlapping status/progress tracking systems",
+      "description": "Agent status is tracked in three separate places: (1) coordinator_hub.agent_status table, (2) help_protocol.team_status table, (3) direct_channels.progress table. All three store progress percentages, current tasks, and status values with slightly different schemas. The coordinator_hub also has a separate concept from multi_team_runner's agents table. This creates data inconsistency risks and redundant writes.",
+      "recommendation": "Consolidate into a single status system. The coordinator_hub.agent_status table should be the single source of truth for agent-level status. Team-level aggregation (help_protocol.team_status) should be a view or computed from agent_status. The direct_channels.progress table should be removed in favor of coordinator_hub's agent_status or a standardized team_progress view.",
+      "affected_files": [
+        "storage/coordination/coordinator_hub.py",
+        "storage/coordination/help_protocol.py",
+        "storage/coordination/direct_channels.py"
+      ]
+    },
+    {
+      "id": "ARCH-003",
+      "title": "Polling-based architecture where event-driven is possible",
+      "description": "The system relies on polling for several operations: (1) agents poll check_instructions() for coordinator messages, (2) _bus_read polls JSONL files, (3) the heartbeat loop polls on a timer, (4) auto_assign_idle_teams polls for open requests. SQLite WAL mode does not support NOTIFY/LISTEN, but the bus system could enable event-driven patterns.",
+      "recommendation": "For the JSONL bus: use inotify (Linux) or kqueue (macOS) to watch for file changes instead of polling. For the named-pipe (Proto B) approach: this is already event-driven via FIFO reads, which is an advantage. For SQLite polling: consider using the bus to notify agents of new instructions rather than having them poll the DB.",
+      "affected_files": [
+        "storage/coordination/coordinator_hub.py",
+        "storage/coordination/multi_team_runner.py",
+        "storage/coordination/direct_channels.py"
+      ]
+    },
+    {
+      "id": "ARCH-004",
+      "title": "No connection reuse in multi_team_runner",
+      "description": "multi_team_runner.py uses a function-level pattern (_get_db) that creates a new connection per call, while coordinator_hub.py and help_protocol.py use instance-level persistent connections. This inconsistency means multi_team_runner pays a much higher overhead for the same operations, especially in the heartbeat loop that runs every 30 seconds.",
+      "recommendation": "Refactor multi_team_runner to use instance-level connections like the other modules. Store the connection on the MultiTeamRunner instance and pass it to helper methods. This also enables batching multiple operations into single transactions.",
+      "affected_files": [
+        "storage/coordination/multi_team_runner.py"
+      ]
+    },
+    {
+      "id": "ARCH-005",
+      "title": "Missing JSONL bus compaction lifecycle",
+      "description": "JSONL bus files grow indefinitely. Messages have TTL fields but nothing ever removes expired messages from the files. The multi_team_runner._run_cleanup handles SQLite cleanup (rate_limits, messages tables) but completely ignores bus file cleanup. Over long sessions, bus files become bloated with expired data.",
+      "recommendation": "Add a bus compaction routine to the cleanup loop: read JSONL files, filter out expired messages (ts + ttl < now), rewrite the file. Use atomic rename (write to .tmp, rename to .jsonl) to avoid corruption. Add configurable size thresholds for triggering compaction.",
+      "affected_files": [
+        "storage/coordination/multi_team_runner.py",
+        "storage/coordination/direct_channels.py"
+      ]
+    }
+  ]
+}

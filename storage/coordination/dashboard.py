@@ -59,7 +59,8 @@ _MAX_FINDINGS = 15       # findings to show in summary
 
 def _clear_screen() -> None:
     """Clear terminal screen (cross-platform)."""
-    os.system("cls" if os.name == "nt" else "clear")
+    sys.stdout.write('\033[2J\033[H')
+    sys.stdout.flush()
 
 
 def _header(title: str) -> str:
@@ -103,6 +104,8 @@ def _age_fmt(ts: float) -> str:
 def _status_indicator(status: str, last_hb: float) -> str:
     """Return a text status indicator for an agent."""
     age = time.time() - last_hb if last_hb else float("inf")
+    if status in ("complete", "stopped"):
+        return "[DONE]"
     if status != "alive":
         return "[DEAD]"
     if age > _DEAD_THRESHOLD:

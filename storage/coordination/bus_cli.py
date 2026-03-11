@@ -20,6 +20,7 @@ Usage:
 
 import json
 import os
+import re
 import sys
 import time
 import uuid
@@ -32,6 +33,8 @@ VALID_MSG_TYPES = {"info", "blocker", "phase-signal", "heartbeat", "request", "r
 
 def write_msg(channel, agent_id, team, msg_type, body):
     """Write a message to a bus channel."""
+    if msg_type not in VALID_MSG_TYPES:
+        raise ValueError(f"Invalid msg_type '{msg_type}'. Must be one of: {VALID_MSG_TYPES}")
     os.makedirs(BUS_DIR, exist_ok=True)
     msg = {
         "id": str(uuid.uuid4()),
@@ -44,7 +47,7 @@ def write_msg(channel, agent_id, team, msg_type, body):
         "body": body,
     }
     raw = json.dumps(msg, separators=(",", ":")).encode("utf-8") + b"\n"
-    safe_ch = channel.replace("/", "_").replace("..", "_")
+    safe_ch = re.sub(r'[^a-zA-Z0-9_-]', '_', channel)
     filepath = os.path.join(BUS_DIR, f"{safe_ch}.jsonl")
     fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
     try:
@@ -56,11 +59,11 @@ def write_msg(channel, agent_id, team, msg_type, body):
 
 def read_msgs(channel, since_offset=0):
     """Read messages from a bus channel."""
-    safe_ch = channel.replace("/", "_").replace("..", "_")
+    safe_ch = re.sub(r'[^a-zA-Z0-9_-]', '_', channel)
     filepath = os.path.join(BUS_DIR, f"{safe_ch}.jsonl")
     if not os.path.exists(filepath):
         return [], 0
-    with open(filepath, "r") as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         f.seek(since_offset)
         data = f.read()
     new_offset = since_offset + len(data.encode("utf-8"))
@@ -190,6 +193,8 @@ def get_all_findings():
     """Get all findings from all teams."""
     import sqlite3
     db_path = os.path.join(DB_DIR, "state.db")
+    if not os.path.exists(db_path):
+        return []
     conn = sqlite3.connect(db_path, timeout=30)
     conn.row_factory = sqlite3.Row
     rows = conn.execute("SELECT * FROM team_findings ORDER BY ts").fetchall()

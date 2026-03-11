@@ -1,0 +1,334 @@
+{
+  "agent_id": "bug-tt-2",
+  "scope": "prototype and work stealing modules",
+  "generated_at": "2026-03-11",
+  "bugs": [
+    {
+      "id": "BUG-PROTO-001",
+      "file": "prototype/agent_comm_b/bus.py",
+      "line_range": "L288-L311",
+      "severity": "high",
+      "category": "race-condition",
+      "description": "Spillover drain in PipeBusReader._drain_spillover() has a TOCTOU race between read and unlink. A writer can append to the spillover file between the reader's open()/read() at L295-L296 and the os.unlink() at L298. Messages written in that window are lost because the file is deleted before they can be read.",
+      "reproduction": "Thread 1 (reader): opens spill file, reads contents. Thread 2 (writer): appends new message to spill file. Thread 1: calls os.unlink() on spill file, deleting the message written by Thread 2.",
+      "suggested_fix": "Use atomic rename: rename spill file to a temp name first, then read from the renamed copy, then delete it. This prevents writers from appending to a file that is about to be read and deleted. Alternatively, use os.rename(spill, spill + '.draining'), read from the renamed file, then unlink it.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-002",
+      "file": "prototype/agent_comm_b/bus.py",
+      "line_range": "L163-L193",
+      "severity": "medium",
+      "category": "message-loss",
+      "description": "PipeBusWriter.publish() has a gap between FIFO write failure (EAGAIN = pipe full) and spillover fallback. When the FIFO is full (EAGAIN), the message spills to a file. However, if a reader drains the FIFO between the failed write and the spill write, the message ends up in both the spillover AND is never read from the FIFO (no message loss per se), BUT the spillover ordering relative to FIFO messages is broken. Messages that arrive on the FIFO after the spilled message will be read before the spill is drained, causing out-of-order delivery.",
+      "reproduction": "Fill the FIFO pipe. Writer gets EAGAIN, spills message N to file. Reader drains FIFO (reads messages 1..N-1). Writer sends message N+1 to FIFO (now has space). Reader polls: reads message N+1 from FIFO first, then drains spillover getting message N. Message N arrives after N+1.",
+      "suggested_fix": "Document that cross-FIFO/spillover ordering is not guaranteed, or always spill when EAGAIN rather than attempting FIFO first on the next write. Alternatively, have the reader always drain spillover before FIFO (already done at L259, which mitigates this for the common case but not for messages spilled mid-session).",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-003",
+      "file": "prototype/agent_comm_b/state.py",
+      "line_range": "L140-L163",
+      "severity": "high",
+      "category": "race-condition",
+      "description": "SharedStateMap._open() has a TOCTOU race on file creation. It checks os.path.exists() at L142, then opens/creates the file at L144-L148, then checks file_size at L151. Between the exists check and the open, another process could create and initialize the file. The 'created' flag would be wrong, and the subsequent _init_header() call at L158 could overwrite a valid header written by the other process, zeroing out registered agents.",
+      "reproduction": "Two processes simultaneously instantiate SharedStateMap on the same shm_dir. Both see the file doesn't exist. Both open with O_CREAT. Both set created=True. Both call _init_header(). The second one zeros out agents registered by the first.",
+      "suggested_fix": "Use O_EXCL flag to atomically detect creation: try os.open with O_CREAT|O_EXCL first; if it fails with EEXIST, the file already existed. Only init header when O_EXCL succeeds. Also check magic bytes under the flock to handle the race where the file exists but isn't initialized yet.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-004",
+      "file": "prototype/agent_comm_b/state.py",
+      "line_range": "L200-L241",
+      "severity": "critical",
+      "category": "race-condition",
+      "description": "The _lock inner class and _flock() method provide both threading.Lock and fcntl.flock(). However, fcntl.flock() is per-fd, per-process. Within a single process, multiple threads sharing the same SharedStateMap instance will be serialized by the threading.Lock, but if two SharedStateMap instances are opened on the same file within the same process (which happens in tests and in Worker which opens its own + CoordinatorWatchdog opens another), the flock() calls are on DIFFERENT file descriptors and DO provide inter-instance locking. BUT: the threading.Lock is per-instance, so the two instances don't share it. If two threads in the same process use different SharedStateMap instances on the same file, they are serialized by flock but NOT by threading.Lock. Since flock IS effective across different fds in the same process, this is actually correct. The REAL bug is that flock on the SAME fd from different threads is a no-op (all threads share the same process-level lock). The code relies on threading.Lock to handle this case, which works for the _combined_lock pattern. However, the _lock inner class (used nowhere in current code but available) does NOT acquire threading.Lock.",
+      "reproduction": "Covered by test_flock_ineffective_for_threads in test_proto_b.py - the test documents the concern. The _combined_lock pattern in _flock() actually mitigates this because it acquires threading.Lock first.",
+      "suggested_fix": "Remove the unused _lock inner class to avoid confusion. Document that _flock() (which uses _combined_lock) is the ONLY correct locking mechanism for all SharedStateMap operations.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-PROTO-005",
+      "file": "prototype/agent_comm_b/state.py",
+      "line_range": "L345-L381",
+      "severity": "medium",
+      "category": "logic-error",
+      "description": "SharedStateMap.register_agent() increments agent_count in the header every time a NEW agent is registered (L370-L371), but _find_empty_slot() scans all 32 slots regardless of agent_count. The agent_count field can drift from reality: if register_agent + unregister_agent are called in cycles, agent_count decrements correctly in unregister_agent (L452-L454), but if an agent slot is zeroed out by external corruption or the count overflows, the system does not self-correct. More importantly, agent_count is never actually USED anywhere except in _find_slot_by_agent_id (L315) which reads it but doesn't use it for anything (it always scans all _MAX_AGENTS slots). This is dead code that could mislead developers.",
+      "reproduction": "Register 5 agents, unregister 3. agent_count = 2. Register 3 more. agent_count = 5. The count is correct but meaningless since no code path uses it for optimization.",
+      "suggested_fix": "Either use agent_count to limit slot scanning (for i in range(agent_count) instead of range(_MAX_AGENTS)) or remove it from the header to avoid confusion. If keeping it, add a self-healing check in get_all_agents that reconciles the count.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-006",
+      "file": "prototype/agent_comm_b/coordinator.py",
+      "line_range": "L282-L304",
+      "severity": "medium",
+      "category": "logic-error",
+      "description": "Coordinator.check_agents() calls self._state.get_dead_agents() which returns a list of AgentSlotView dataclass instances. The code then accesses agent.agent_id and agent.last_heartbeat using attribute access (L293-L294), which is correct for dataclass instances. However, the equivalent method in Prototype A's coordinator.py (L264-L278) accesses them as agent['agent_id'] (dict access), creating an API inconsistency. If someone copies patterns between prototypes, this will break. The Coordinator.get_status() at L393-L406 returns agents from get_all_agents() which are also AgentSlotView instances, but these are returned in the status dict without serialization - they won't JSON-serialize cleanly.",
+      "reproduction": "Call coord.get_status() and try to json.dumps() the result. AgentSlotView instances in the 'agents' list are not JSON-serializable, causing TypeError.",
+      "suggested_fix": "Convert AgentSlotView instances to dicts in get_status(): agents = [{'agent_id': a.agent_id, 'team': a.team, 'role': a.role, 'status': a.status, 'last_heartbeat': a.last_heartbeat} for a in self._state.get_all_agents()]",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-007",
+      "file": "prototype/agent_comm/bus.py",
+      "line_range": "L111-L161",
+      "severity": "high",
+      "category": "race-condition",
+      "description": "BusReader.poll() uses byte-based offset tracking (self._offset) with text-mode file reading. At L120, the file is opened in text mode ('r', encoding='utf-8'), and at L121 f.seek(self._offset) seeks to a BYTE position in a text-mode file. On systems where text and byte positions differ (Windows CRLF or multi-byte UTF-8 sequences in channel names embedded in the JSON), the seek position can be wrong. Additionally, the offset is updated at L135 using len(data.encode('utf-8')), converting text back to bytes. If the file contains multi-byte UTF-8 characters, the text-mode read may normalize them differently than the raw bytes, causing offset drift. Over many polls, offset tracking diverges from actual file position, causing duplicate or skipped messages.",
+      "reproduction": "Write messages containing multi-byte UTF-8 characters (e.g., emoji in body). After several poll() cycles, the offset drifts and messages are re-read or skipped.",
+      "suggested_fix": "Open the file in binary mode ('rb') and decode lines manually, or use f.tell() after reading to get the correct byte offset instead of computing it from text length. Example: open in 'rb' mode, seek to self._offset, read bytes, split on b'\\n', decode each line.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-008",
+      "file": "prototype/agent_comm/bus.py",
+      "line_range": "L130-L143",
+      "severity": "medium",
+      "category": "message-loss",
+      "description": "BusReader.poll() partial line handling at L137-L143 has an edge case: if the data read consists entirely of a partial line (no newline at all), it returns [] and does NOT advance the offset (correct). But if a subsequent write completes that line AND adds more lines, the next poll reads from the old offset, re-reading the previously partial data plus the new completion. The re-read is harmless since the line now has its newline, BUT the offset calculation at L143 uses len(complete_part.encode('utf-8')) where complete_part = parts[0] + '\\n'. If parts[0] contained the joined partial from BEFORE, the offset advances correctly. This is actually correct but brittle - any text/byte encoding mismatch (see BUG-PROTO-007) breaks it.",
+      "reproduction": "Write a partial message (no newline). Poll returns []. Write the rest of the message plus another full message. Poll should return both messages correctly. This works but depends on exact byte/text encoding consistency.",
+      "suggested_fix": "Same as BUG-PROTO-007: use binary mode for reliable offset tracking.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-PROTO-009",
+      "file": "prototype/agent_comm/coordinator.py",
+      "line_range": "L355-L376",
+      "severity": "medium",
+      "category": "logic-error",
+      "description": "Coordinator.get_status() at L363-L366 directly accesses self._state._conn (private attribute) to execute a raw SQL query. This bypasses the threading lock in SharedState, creating a potential race condition if get_status() is called from a different thread than the heartbeat loop. Additionally, it tightly couples Coordinator to SharedState's internal implementation.",
+      "reproduction": "Call coord.get_status() from the main thread while the heartbeat_loop is running on a background thread. Both access self._state._conn without the lock. SQLite with check_same_thread=False allows this but concurrent cursor operations can cause 'database is locked' errors or corrupt results.",
+      "suggested_fix": "Add a get_all_agents() method to SharedState that properly acquires the lock, similar to what Prototype B's SharedStateMap has. Replace the raw SQL in get_status() with a call to that method.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-010",
+      "file": "prototype/agent_comm/coordinator.py",
+      "line_range": "L469-L479",
+      "severity": "medium",
+      "category": "logic-error",
+      "description": "CoordinatorWatchdog._monitor_loop() starts with coordinator_was_alive = False. On the first check, if the coordinator IS alive, it sets coordinator_was_alive = True without firing callbacks (correct). But if the coordinator was never alive (never started), the watchdog never fires callbacks. If a coordinator starts, heartbeats, then dies, the watchdog correctly detects the transition. However, if the coordinator crashes during startup BEFORE its first heartbeat, the watchdog never detects this because coordinator_was_alive never transitions from True to False.",
+      "reproduction": "Start a worker with watchdog. Coordinator registers but crashes before its first heartbeat write. Watchdog polls: is_coordinator_alive() returns False (no heartbeat). coordinator_was_alive is False. Transition check: False AND NOT False = False. Callbacks never fire. Worker waits forever for a coordinator that already crashed.",
+      "suggested_fix": "Add an option to fire callbacks if the coordinator hasn't appeared within a configurable startup grace period. Or have wait_for_coordinator() handle this case by returning False, which the caller can act on.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-011",
+      "file": "prototype/agent_comm_b/coordinator.py",
+      "line_range": "L214-L260",
+      "severity": "medium",
+      "category": "logic-error",
+      "description": "Coordinator.event_loop() accesses private _fifo_fd attributes of PipeBusReader directly at L217-L219. This violates encapsulation and is fragile - if PipeBusReader's internal representation changes, the event loop breaks. More importantly, if the reader's fd is closed and reopened (e.g., after FIFO recreation), the cached fd in the select() call becomes stale, causing select() to error with EBADF.",
+      "reproduction": "Start the coordinator. Delete and recreate the FIFO files externally (e.g., cleanup script). The event loop calls select() with stale file descriptors. select() raises OSError (EBADF). The error handler at L236-L241 catches this and sleeps 0.5s, but the fd is never refreshed - the loop retries with the same bad fd indefinitely.",
+      "suggested_fix": "Add a method to PipeBusReader that returns its current fd (or None if closed), and have the event loop detect EBADF by trying to reopen the readers. Alternatively, expose a fileno() method on PipeBusReader.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-012",
+      "file": "prototype/agent_comm_b/bus.py",
+      "line_range": "L88-L95",
+      "severity": "medium",
+      "category": "race-condition",
+      "description": "_ensure_fifo() has a TOCTOU race: it checks os.path.exists() at L90, then checks stat at L91, then potentially unlinks at L94 and mkfifo at L95. Between the exists check and mkfifo, another process could create the FIFO or a regular file at the same path. Two concurrent calls to _ensure_fifo can race: both see the path doesn't exist, both call os.mkfifo(), the second one gets FileExistsError.",
+      "reproduction": "Two PipeBusWriter instances simultaneously publish to the same channel for the first time. Both call _ensure_fifo. Both see the path doesn't exist. Both call os.mkfifo(). Second call raises FileExistsError, which is uncaught.",
+      "suggested_fix": "Wrap os.mkfifo() in a try/except for FileExistsError and re-verify the path is a FIFO after creation failure: try: os.mkfifo(path, 0o644) except FileExistsError: if not stat.S_ISFIFO(os.stat(path).st_mode): raise",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-013",
+      "file": "prototype/agent_comm_b/coordinator.py",
+      "line_range": "L569-L611",
+      "severity": "low",
+      "category": "resource-leak",
+      "description": "Worker.stop() closes readers and state but does NOT close the PipeBusWriter. The writer itself doesn't hold any open file descriptors (it opens/closes per publish), so this is not a leak per se. However, it also doesn't close the CoordinatorWatchdog's internal SharedStateMap properly in all error paths. If Worker.start() succeeds but the watchdog's start_monitoring() fails, the state registered agent is not cleaned up.",
+      "reproduction": "Create a Worker, call start(). The watchdog's start_monitoring() throws (e.g., threading error). Worker._watchdog is set but monitoring thread never started. Worker.stop() calls watchdog.stop_monitoring() which tries to join a None thread (handled). But the agent remains registered in SharedStateMap with no heartbeat updates.",
+      "suggested_fix": "Add error handling in Worker.start() that calls stop() on failure to clean up partially initialized state. Also add unregister_agent in Worker.stop().",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-014",
+      "file": "prototype/agent_comm/state.py",
+      "line_range": "L70-L90",
+      "severity": "medium",
+      "category": "logic-error",
+      "description": "The _retry_on_busy decorator uses a closure-captured 'delay' variable that resets on each call to the decorated function (correct). However, the decorator does not use functools.wraps(), so the decorated function's __name__, __doc__, etc. are lost. This breaks introspection and logging that references func.__name__. The same issue exists in work_stealing.py's copy of this decorator.",
+      "reproduction": "SharedState.register_agent.__name__ returns 'wrapper' instead of 'register_agent'. Logging inside _retry_on_busy references func.__name__ at L83, which works because it captures the original func, but any external code inspecting the method name sees 'wrapper'.",
+      "suggested_fix": "Add @functools.wraps(func) to the wrapper function in both _retry_on_busy implementations.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-PROTO-015",
+      "file": "prototype/agent_comm_b/core.py",
+      "line_range": "L120-L135",
+      "severity": "low",
+      "category": "logic-error",
+      "description": "CommDir._check_no_tmp() in Prototype B only checks self._path.startswith('/tmp') at L122, but Prototype A's version at agent_comm/core.py L133 checks BOTH self._requested and self._path. This means Prototype B fails to reject a case where the requested path is under /tmp but the canonical path is not (e.g., /tmp/symlink -> /home/user/real). While this specific scenario would be caught by _check_canonical_match(), the inconsistency could cause confusion.",
+      "reproduction": "In Prototype B: CommDir(requested_path='/tmp/link-to-safe-dir') where /tmp/link-to-safe-dir -> /safe/dir. _check_no_tmp sees self._path='/safe/dir' which doesn't start with /tmp, so it passes. In Prototype A, the requested path check would catch it.",
+      "suggested_fix": "Add self._requested.startswith('/tmp') check to Prototype B's _check_no_tmp(), matching Prototype A's behavior.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-PROTO-016",
+      "file": "storage/coordination/work_stealing.py",
+      "line_range": "L498-L522",
+      "severity": "high",
+      "category": "race-condition",
+      "description": "PipelineManager.check_stage_ready() acquires the lock twice in a non-atomic pattern: first at L501-L506 to read depends_on, releases lock, then re-acquires at L514-L522 to check each dependency status one by one. Between the two lock acquisitions, stage statuses can change. Additionally, the second lock section queries each dependency individually in a loop, which is inefficient and extends the time under lock.",
+      "reproduction": "Thread 1: check_stage_ready() reads deps=[A,B], releases lock. Thread 2: resets stage A from completed to waiting (via some pipeline reset). Thread 1: re-acquires lock, checks A -> still sees completed (if Thread 2 hasn't committed), returns True incorrectly.",
+      "suggested_fix": "Use a single lock acquisition with a batch query: query all dependencies in one SQL statement using IN clause.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-017",
+      "file": "storage/coordination/work_stealing.py",
+      "line_range": "L594-L623",
+      "severity": "high",
+      "category": "race-condition",
+      "description": "PipelineManager.get_ready_stages() reads all stages under lock (L598-L602), releases lock, computes ready stages (L604-L611), then re-acquires lock to update statuses (L614-L621). The UPDATE at L617-L619 uses WHERE id = ? without a status guard. Between the read and the update, another thread calling start_stage() could change a stage from 'waiting' to 'in_progress'. get_ready_stages() then overwrites it back to 'ready', reverting the start.",
+      "reproduction": "Thread 1: get_ready_stages() reads stage X as 'waiting' with deps met. Thread 2: start_stage(pid, X) sets X to 'in_progress'. Thread 1: UPDATE pipeline_stages SET status='ready' WHERE id=X. Stage X reverts from 'in_progress' to 'ready'.",
+      "suggested_fix": "Add a status guard: UPDATE pipeline_stages SET status = 'ready' WHERE id = ? AND status = 'waiting'. This prevents overwriting stages that were already transitioned.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-018",
+      "file": "storage/coordination/work_stealing.py",
+      "line_range": "L660-L700",
+      "severity": "high",
+      "category": "race-condition",
+      "description": "PipelineManager.trigger_downstream() has the same non-atomic read-compute-update pattern as get_ready_stages(). It reads stages under lock (L666-L670), releases, computes newly_ready (L675-L680), then re-acquires lock to update (L683-L689). Concurrent calls to trigger_downstream (from different threads completing different upstream stages of a fan-in) can both compute the same downstream stage as newly_ready and both update it to 'ready'. The bus notification is then sent twice for the same stage becoming ready.",
+      "reproduction": "Fan-in: stages A,B -> C. Thread 1 completes A, calls trigger_downstream('A'). Thread 2 completes B, calls trigger_downstream('B'). Both read all stages; both see A and B completed, C waiting. Both mark C as newly_ready. Both update C to 'ready'. Both send bus notifications. The stress test test_concurrent_stage_completions checks for this and may flake.",
+      "suggested_fix": "Use conditional UPDATE: UPDATE pipeline_stages SET status = 'ready' WHERE pipeline_id = ? AND stage_name = ? AND status = 'waiting'. Check rowcount to determine if this thread actually triggered the transition. Only send bus notification and include in return list if rowcount > 0.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-PROTO-019",
+      "file": "storage/coordination/work_stealing.py",
+      "line_range": "L291-L331",
+      "severity": "medium",
+      "category": "logic-error",
+      "description": "WorkStealing.complete_work() checks claimed_by and owner_team at L306, allowing the owner team to complete work claimed by another team. While this is documented behavior, it creates a subtle issue: the owner team can overwrite the result of work that the claiming team may still be processing. There is no status check - complete_work can be called on an item that is already 'completed' or 'failed', overwriting the previous result.",
+      "reproduction": "Team A enqueues and team B steals work item. Team B starts processing. Team A calls complete_work() with a different result while team B is still working. Item gets marked completed with team A's result. Team B finishes and calls complete_work() again, overwriting with team B's result. No error raised.",
+      "suggested_fix": "Add a status check: only allow completing items in 'claimed' status. Also add WHERE status = 'claimed' to the UPDATE statement.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-020",
+      "file": "prototype/agent_comm_b/bus.py",
+      "line_range": "L262-L271",
+      "severity": "low",
+      "category": "logic-error",
+      "description": "PipeBusReader.poll() reads from the FIFO at L266 with a fixed 65536-byte buffer. If there is more data available than 65536 bytes (e.g., many messages accumulated), only the first 65536 bytes are read. The rest remains in the pipe buffer and will be read on the next poll(). This is correct behavior but means a single poll() may not return all available messages. The caller must call poll() in a loop until it returns an empty list to drain all messages. This is not documented.",
+      "reproduction": "Write 200 messages of ~500 bytes each (100KB total) to a FIFO before the reader polls. First poll() reads 65536 bytes (~130 messages). Remaining ~70 messages are left in the pipe. Caller processes 130 messages, thinking that's all.",
+      "suggested_fix": "Either loop the read inside poll() until EAGAIN to drain everything, or document that poll() may return partial results and callers should loop.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-021",
+      "file": "prototype/agent_comm_b/state.py",
+      "line_range": "L484-L601",
+      "severity": "medium",
+      "category": "logic-error",
+      "description": "Rate limiting in SharedStateMap uses a single counter per endpoint stored in the mmap rate-limit slot. The counter tracks total calls within a window. When the window expires (L584), the counter resets to 0 and window_start resets to now. However, unlike Prototype A's SQL-based approach which stores individual call records, this counter-based approach cannot handle partial window expiration. If 5 calls happen in the first second of a 60-second window, and we check at second 59, all 5 are still counted even though they could be considered 'old'. This is a design choice (simpler but less precise), not strictly a bug.",
+      "reproduction": "Configure rate limit: 5 calls per 60 seconds. Make 5 calls at t=0. At t=59, all 5 are counted, 6th is rejected. At t=60, window resets, all 5 slots available again. In Prototype A, the calls at t=0 would expire individually at t=60, and a call at t=30 would only count calls from t=0 onward.",
+      "suggested_fix": "Document the behavioral difference between Prototype A (per-call tracking with sliding window) and Prototype B (fixed window with reset). If sliding window is needed, use a ring buffer in the mmap slot to store individual call timestamps.",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-PROTO-022",
+      "file": "prototype/agent_comm_b/coordinator.py",
+      "line_range": "L543-L563",
+      "severity": "low",
+      "category": "resource-leak",
+      "description": "Worker creates a CoordinatorWatchdog at L586 which internally creates its own SharedStateMap instance. The Worker also has its own SharedStateMap at L558. This means each Worker holds TWO mmap handles to the same file. While this works (both use flock for cross-fd synchronization), it wastes a file descriptor and mmap allocation. If many workers run in the same process (e.g., in tests), this doubles the fd usage.",
+      "reproduction": "Create 16 Workers in the same process. Each opens 2 SharedStateMap instances = 32 file descriptors to the same mmap file, plus 32 mmap allocations.",
+      "suggested_fix": "Pass the existing SharedStateMap instance to CoordinatorWatchdog instead of having it create its own. This requires a constructor change: CoordinatorWatchdog(state_map=self._state, ...) instead of CoordinatorWatchdog(comm_dir, ...).",
+      "test_gap": false
+    },
+    {
+      "id": "BUG-PROTO-023",
+      "file": "storage/coordination/work_stealing.py",
+      "line_range": "L237-L289",
+      "severity": "critical",
+      "category": "logic-error",
+      "description": "WorkStealing.steal_work() has no mechanism to recover abandoned work items. If a team steals work (status changes to 'claimed') and then crashes without calling complete_work() or fail_work(), the item is permanently stuck in 'claimed' status. steal_work() only selects WHERE status = 'queued', so the item is invisible to other stealers. The claimed_at timestamp is recorded but never used for timeout-based recovery.",
+      "reproduction": "ws.enqueue_work('task'). ws.steal_work() sets status='claimed'. Process crashes. New process calls ws.steal_work() - returns None even though uncompleted work exists.",
+      "suggested_fix": "Add a recover_abandoned() method that re-queues items claimed longer than a configurable timeout. Optionally integrate it into steal_work() to auto-recover before each steal attempt.",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-024",
+      "file": "prototype/agent_comm/state.py",
+      "line_range": "L96-L104",
+      "severity": "low",
+      "category": "resource-leak",
+      "description": "SharedState.__init__() calls self._conn.execute('PRAGMA journal_mode=WAL') and self._conn.execute('PRAGMA busy_timeout=...') as separate statements. The journal_mode PRAGMA returns a result row ('wal') that is never checked. If WAL mode fails to enable (e.g., read-only filesystem), the code silently proceeds with the default journal mode (DELETE), which has different concurrency semantics (no concurrent readers during writes).",
+      "reproduction": "Open SharedState on a filesystem that doesn't support WAL (some older NFS implementations). PRAGMA journal_mode=WAL silently falls back to DELETE mode. Concurrent readers get SQLITE_BUSY errors that wouldn't occur with WAL.",
+      "suggested_fix": "Check the return value of PRAGMA journal_mode=WAL: result = self._conn.execute('PRAGMA journal_mode=WAL').fetchone(); if result[0] != 'wal': log.warning('WAL mode not enabled, using %s', result[0])",
+      "test_gap": true
+    },
+    {
+      "id": "BUG-PROTO-025",
+      "file": "prototype/agent_comm_b/bus.py",
+      "line_range": "L71-L75",
+      "severity": "low",
+      "category": "logic-error",
+      "description": "Message.from_json_line() uses cls(**d) to construct a Message from a deserialized dict. If the JSON line contains extra keys not in the Message dataclass, this raises TypeError. Unlike a schema with explicit field mapping, this pattern fails on forward-compatible messages (e.g., if a newer version adds a field and an older reader encounters it).",
+      "reproduction": "Write a message JSON with an extra field: {\"id\":\"x\",\"type\":\"info\",...,\"priority\":1}. Reader calls Message.from_json_line() which does cls(**d) including priority=1. TypeError: __init__() got an unexpected keyword argument 'priority'.",
+      "suggested_fix": "Filter the dict to only known fields: known = {f.name for f in dataclasses.fields(cls)}; d = {k: v for k, v in d.items() if k in known}; return cls(**d). Or use a try/except that logs and skips unknown fields.",
+      "test_gap": true
+    }
+  ],
+  "test_coverage_gaps": [
+    {
+      "description": "No test for spillover drain race condition in PipeBusReader._drain_spillover() - concurrent writer during drain",
+      "files": ["prototype/agent_comm_b/bus.py"],
+      "suggested_test": "Write to spillover, start drain in one thread, write another message in second thread, verify no message loss"
+    },
+    {
+      "description": "No test for BusReader offset tracking with multi-byte UTF-8 characters in Prototype A",
+      "files": ["prototype/agent_comm/bus.py"],
+      "suggested_test": "Write messages with emoji/CJK characters in body, poll multiple times, verify no messages lost or duplicated"
+    },
+    {
+      "description": "No test for _ensure_fifo race condition when two writers create FIFO simultaneously",
+      "files": ["prototype/agent_comm_b/bus.py"],
+      "suggested_test": "Use threading.Barrier to have two writers call _ensure_fifo on same path simultaneously, verify no crash"
+    },
+    {
+      "description": "No test for SharedStateMap._open() race when two processes create the mmap file simultaneously",
+      "files": ["prototype/agent_comm_b/state.py"],
+      "suggested_test": "Use multiprocessing to create two SharedStateMap instances on the same new file simultaneously"
+    },
+    {
+      "description": "No test for Coordinator.get_status() JSON serializability (AgentSlotView not serializable)",
+      "files": ["prototype/agent_comm_b/coordinator.py"],
+      "suggested_test": "Call coord.get_status() and pass to json.dumps(), verify no TypeError"
+    },
+    {
+      "description": "No test for Worker cleanup on partial start failure",
+      "files": ["prototype/agent_comm_b/coordinator.py"],
+      "suggested_test": "Mock watchdog.start_monitoring() to raise, verify Worker state is cleaned up"
+    },
+    {
+      "description": "No test for abandoned work recovery in WorkStealing",
+      "files": ["storage/coordination/work_stealing.py"],
+      "suggested_test": "Steal work, don't complete it, verify it can be recovered after timeout"
+    },
+    {
+      "description": "No test for get_ready_stages() reverting an in_progress stage to ready under concurrency",
+      "files": ["storage/coordination/work_stealing.py"],
+      "suggested_test": "Barrier-synchronized test: get_ready_stages + start_stage on same pipeline, verify no revert"
+    },
+    {
+      "description": "No test for Message.from_json_line() with extra/unknown fields",
+      "files": ["prototype/agent_comm_b/bus.py", "prototype/agent_comm/bus.py"],
+      "suggested_test": "Construct a JSON line with extra fields, verify from_json_line handles gracefully"
+    },
+    {
+      "description": "No test for PipeBusReader.poll() returning partial results when pipe buffer > 65536 bytes",
+      "files": ["prototype/agent_comm_b/bus.py"],
+      "suggested_test": "Write many large messages, verify multiple poll() calls drain all of them"
+    }
+  ]
+}
