@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "last_updated": "2026-03-11",
-  "session_count": 15,
+  "session_count": 17,
   "sessions": [
     {
       "team_id": "TEAM-0001",
@@ -249,16 +249,63 @@
     },
     {
       "team_id": "TEAM-0018",
-      "filename": "../TEAM-0018.md",
+      "filename": "TEAM-0018.md",
       "date": "2026-03-11",
-      "objective": "Effectiveness analysis of proposed JSONL Bus + SQLite WAL system against documented operational gaps",
+      "objective": "Build and test two competing multi-agent communication prototypes (JSONL+SQLite vs mmap+FIFO), fix bugs through iterative test-fix cycles",
       "builds_on_knowledge": [
-        "KB-0009",
         "KB-0015",
-        "KB-0016"
+        "KB-0016",
+        "KB-0017"
       ],
       "members": [
-        "analyst"
+        "coordinator",
+        "subagent-a",
+        "subagent-b",
+        "subagent-c",
+        "subagent-d",
+        "subagent-e",
+        "subagent-f",
+        "subagent-g"
+      ]
+    },
+    {
+      "team_id": "TEAM-0019",
+      "filename": "TEAM-0019.md",
+      "date": "2026-03-11",
+      "objective": "Architecture and integration analysis for live inter-agent communication system",
+      "builds_on_knowledge": [
+        "KB-0015",
+        "KB-0016",
+        "KB-0009"
+      ],
+      "members": [
+        "architecture-analysis-agent"
+      ]
+    },
+    {
+      "team_id": "TEAM-0020",
+      "filename": "TEAM-0020.md",
+      "date": "2026-03-11",
+      "objective": "Live prototype testing: 3 think tank teams + 3 data gathering teams + automated benchmark comparing Proto A, Proto B, and baseline",
+      "builds_on_knowledge": [
+        "KB-0018",
+        "KB-0019"
+      ],
+      "members": [
+        "coordinator",
+        "think-alpha-lead",
+        "think-beta-lead",
+        "think-gamma-lead",
+        "data-a-coordinator",
+        "data-a-sub-1",
+        "data-a-sub-2",
+        "data-b-coordinator",
+        "data-b-sub-1",
+        "data-b-sub-2",
+        "data-c-lead",
+        "data-c-sub-1",
+        "data-c-sub-2",
+        "bench-runner"
       ]
     }
   ]
