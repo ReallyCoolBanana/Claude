@@ -1,0 +1,362 @@
+{
+  "team": "think-tank-gamma",
+  "generated_at": "2026-03-11",
+  "context_read": [
+    "CLAUDE.md",
+    "storage/coordination/sops/future_team_data_strategy.json",
+    "storage/coordination/sops/sop_016_cross_team_data_flow_v2.json",
+    "knowledge-base/entries/KB-0009.md",
+    "knowledge-base/entries/KB-0031.md",
+    "knowledge-base/TEMPLATE.md",
+    "knowledge-base/index.json"
+  ],
+  "perspectives": [
+    {
+      "name": "Database Architecture",
+      "ideas_for_a1": [
+        {
+          "id": "A1-DA-001",
+          "title": "SQLite-Backed Canonical Registry",
+          "description": "Replace all index.json files (knowledge-base, scripts, sources, api-tools, market-research) with a single SQLite database (registry.db) that stores file metadata. Each directory gets a virtual table or view. The DB is the single source of truth for 'what files exist and where,' eliminating the dual-store drift problem documented in KB-0031. A generate_indexes.py script can still emit JSON for backward compatibility, but the DB is authoritative.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-DA-002",
+          "title": "FTS5 Virtual Table for Knowledge Discovery",
+          "description": "Create an FTS5 full-text search index over all KB entries, team logs, and SOP documents. This replaces the current TF-IDF kb_search.py (100ms) with sub-millisecond SQLite FTS5 queries. Agents can search by content, tags, category, or any combination. The FTS5 index auto-updates when rows are inserted into the registry, eliminating the stale-index problem entirely.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-DA-003",
+          "title": "Graph Relationship Table for builds_on Chains",
+          "description": "Create a dedicated 'relationships' table in the registry DB: (source_id, target_id, relationship_type, metadata). Populate it from YAML frontmatter builds_on fields and SOP builds_on arrays. Enable recursive CTE queries like 'give me the full ancestry chain of KB-0031' or 'what entries build on KB-0009?' This makes the implicit knowledge graph explicit and queryable without reading every file.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "A1-DA-004",
+          "title": "Auto-Assigned Sequential IDs via SQLite",
+          "description": "Use SQLite's AUTOINCREMENT for KB, SOP, SRC, and SCR IDs instead of requiring agents to manually check index.json for the next available number. A simple INSERT returns the next ID. This eliminates the race condition when multiple agents create entries simultaneously and removes the 'check index, compute next, write entry' multi-step pattern.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "A1-DA-005",
+          "title": "SQLite Views as Virtual Indexes",
+          "description": "Create SQL views that replicate each current index.json structure: v_kb_index, v_scripts_index, v_sources_index, v_sops_index. These views join the file registry with tags, relationships, and metadata tables. They are always consistent by definition since they query the underlying data directly. A simple 'SELECT * FROM v_kb_index' replaces reading and parsing index.json.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "A1-DA-006",
+          "title": "Naming Convention Enforcement via CHECK Constraints",
+          "description": "Define SQLite CHECK constraints that enforce naming patterns: KB entries must match KB-XXXX.md, scripts must be snake_case.py, team logs must match TEAM-XXXX-session.md. Attempting to register a badly-named file fails at the DB level, providing immediate feedback. This codifies the naming SOPs from future_team_data_strategy.json into enforceable rules rather than documentation that agents may ignore.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "A1-DA-007",
+          "title": "Materialized Tag Index with Trigger-Based Updates",
+          "description": "Create a tags table (entry_id, tag) with INSERT/DELETE triggers that automatically maintain a tag frequency count table. This enables instant 'what are the top tags?' and 'what entries share tag X?' queries. The current approach requires reading every index.json and aggregating tags in-memory, which scales poorly as entry count grows.",
+          "impact": "medium",
+          "effort": "low"
+        }
+      ],
+      "ideas_for_b2": [
+        {
+          "id": "B2-DA-001",
+          "title": "Projection Queries: Return Only Requested Fields",
+          "description": "Instead of agents reading entire KB markdown files (500-2000 tokens each), use SQLite to store structured metadata separately from content. An agent querying 'give me titles and tags for entries in category optimization' reads ~50 tokens instead of ~5000. Content is only fetched when explicitly requested. This is the single highest-impact token reduction possible.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-DA-002",
+          "title": "Pre-Computed Summary Column",
+          "description": "Add a 'summary' column (max 200 chars) to every registry entry, auto-generated from the first paragraph or ## Result section of KB entries. Agents doing orientation reads get summaries instead of full documents. A 30-entry KB scan drops from ~30,000 tokens to ~1,500 tokens. The summary is generated once at registration time.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "B2-DA-003",
+          "title": "Aggregate State Snapshot View",
+          "description": "Create a v_system_state view that returns a single JSON object with: total KB entries, latest 5 entries, open action items from handoff_tracker, staleness score, and unresolved warnings. This replaces the 5-10 file reads for agent orientation (KB-0031 finding #4) with a single query returning ~500 tokens.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-DA-004",
+          "title": "Incremental Change Log (WAL-Inspired)",
+          "description": "Maintain a changes table: (timestamp, entry_id, change_type, changed_fields, summary). When a returning team asks 'what changed since my last session?' they get a compact diff log instead of re-reading everything. A session that produced 3 new KB entries and updated 2 scripts generates ~300 tokens of change log vs ~10,000 tokens of full file reads.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-DA-005",
+          "title": "Parameterized Batch Queries",
+          "description": "Enable compound queries like 'SELECT id, title, summary FROM kb WHERE category=? AND confidence IN (?,?) AND date > ? ORDER BY date DESC LIMIT 5'. One query replaces a sequence of: read index.json, parse, filter in-context, re-read matching files. Reduces both token count and tool-call round trips.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "B2-DA-006",
+          "title": "Binary Content Hash Dedup in DB",
+          "description": "Store SHA-256 hashes of file contents in the registry. Before an agent reads a file, check if the hash matches a previously-read version (tracked in the session scratchpad). If unchanged, skip the read entirely. For a typical session where 80% of files are unchanged, this eliminates 80% of redundant file reads.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "B2-DA-007",
+          "title": "SQLite JSON1 Extension for Structured Queries",
+          "description": "Use SQLite's JSON1 extension to store and query complex metadata (tags arrays, builds_on lists, quality scores) without serializing/deserializing. Queries like json_each(tags) JOIN enable tag-based filtering at the DB level instead of in agent context. This avoids sending raw JSON to the agent for parsing.",
+          "impact": "medium",
+          "effort": "low"
+        }
+      ]
+    },
+    {
+      "name": "Compression & Deduplication",
+      "ideas_for_a1": [
+        {
+          "id": "A1-CD-001",
+          "title": "Template Inheritance for KB Entries",
+          "description": "Define base templates per category (methodology, optimization, tool-usage, etc.) that pre-fill standard sections. A new KB entry for category=optimization only stores the diff from the optimization template. The template provides Context/Method/Result/Lessons/Recommendations structure; the entry provides content. This standardizes structure while reducing boilerplate. When rendered, the template is merged with the entry data.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-CD-002",
+          "title": "Shared Tag Dictionary with Controlled Vocabulary",
+          "description": "Create a canonical tags.json that defines allowed tags with descriptions, aliases, and parent-child relationships. Instead of free-text tags (which have drifted: 'multi-team-orchestration' vs 'multi-team' vs 'orchestration'), entries reference tag IDs. A validation step rejects undefined tags. This reduces tag entropy from 150+ unique strings to a controlled vocabulary of ~40 canonical tags.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "A1-CD-003",
+          "title": "Content-Addressable Blob Storage for Large Content",
+          "description": "Store large content blocks (Go source code, benchmark results, detailed analysis tables) in a content-addressable store (storage/blobs/{sha256}.blob). KB entries reference blobs by hash. If two entries include the same benchmark table or code snippet, it is stored once. This is especially valuable for the Go tool source code referenced in KB-0009 and similar entries that embed substantial code.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-CD-004",
+          "title": "Canonical File Path Registry with Collision Detection",
+          "description": "Enforce that every file in the repository has a single canonical path registered in the DB. Detect and prevent: duplicate team logs (KB-0031 found 5 duplicates across 2 directories), orphan scripts (KB-0009 found 5 unregistered scripts), and naming collisions. Registration is atomic — attempt to register a conflicting path and get an immediate error with the conflicting entry.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "A1-CD-005",
+          "title": "Hierarchical Directory Conventions with .dirconfig.json",
+          "description": "Place a .dirconfig.json in each major directory (knowledge-base/, storage/scripts/, etc.) that declares: allowed file patterns, required metadata fields, naming regex, max file count, and auto-archive rules. Agents creating files in a directory read its .dirconfig.json first to know exactly what is expected. This replaces scattered documentation across CLAUDE.md, SOPs, and templates with machine-readable per-directory rules.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "A1-CD-006",
+          "title": "Delta-Encoded Entry Chains for builds_on Sequences",
+          "description": "When a KB entry builds_on a prior entry, store only the new/changed sections rather than repeating context. For example, KB-0031 builds on KB-0026 and KB-0030 — the shared context about repository structure could be stored once and referenced. A rendering step reconstructs the full document. This reduces redundancy in long knowledge chains where each entry restates prior context.",
+          "impact": "medium",
+          "effort": "high"
+        },
+        {
+          "id": "A1-CD-007",
+          "title": "Frontmatter-Body Separation with Normalized Schemas",
+          "description": "Split KB entries into two storage layers: structured metadata (in SQLite or JSON) and body content (markdown). The metadata layer uses a strict, validated schema with no redundancy. The body layer is free-form markdown. This eliminates the dual-store drift problem (KB-0031 finding #2) because metadata lives in exactly one place, and the markdown file is purely content.",
+          "impact": "high",
+          "effort": "medium"
+        }
+      ],
+      "ideas_for_b2": [
+        {
+          "id": "B2-CD-001",
+          "title": "Structured Summaries as First-Class Artifacts",
+          "description": "For every KB entry, generate and store a structured summary: {id, title, one_line_summary, key_findings: [string], recommendations: [string], tags, confidence}. This is ~100 tokens vs ~800 tokens for a full entry. Agents browsing the knowledge base read summaries first; 70% of the time, the summary contains enough information. Only drill into full content when needed.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "B2-CD-002",
+          "title": "Token-Budgeted Response Truncation",
+          "description": "When an agent requests KB content, specify a token budget. The retrieval layer returns content truncated to fit: first the summary, then key findings, then full sections in priority order (Result > Recommendations > Lessons > Method > Context). This ensures the most valuable information fits within the agent's context budget without wasting tokens on lower-priority sections.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-CD-003",
+          "title": "Deduplication of Cross-Entry Repeated Content",
+          "description": "Analyze the 31 KB entries for repeated paragraphs and boilerplate. Common patterns: re-stating the team structure, re-explaining the coordination system, re-listing the same tools. Extract these into reusable blocks (storage/blocks/) and reference by ID. Estimated 15-25% token reduction across the full KB when read sequentially, as seen in the repeated team structure descriptions across KB-0006 through KB-0009.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-CD-004",
+          "title": "Compressed Index Representation",
+          "description": "The current index.json for 31 KB entries is ~300 lines. Replace with a compact NDJSON format where each entry is one line with only essential fields (id, title, tags, date, status). This reduces the index from ~5000 tokens to ~1000 tokens. Agents reading the index to decide which entries to explore consume 80% fewer tokens on the orientation step.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "B2-CD-005",
+          "title": "Shared Vocabulary Encoding for Tags and Categories",
+          "description": "Define a tag-to-integer mapping (optimization=1, methodology=2, etc.). Store tags as integer arrays in the DB. When transmitting to agents, use the compact form only in machine-to-machine protocols; expand to human-readable strings only in final presentation. This reduces tag storage and query overhead by ~60% for the 150+ tags currently in use across entries.",
+          "impact": "low",
+          "effort": "low"
+        },
+        {
+          "id": "B2-CD-006",
+          "title": "Session-Aware Differential Reads",
+          "description": "Track which files each agent has already read in the current session (via scratchpad or session table). When an agent requests 'all KB entries tagged optimization,' exclude entries already in their context. If 5 of 8 matching entries were already read, return only the 3 new ones. This prevents the common pattern of re-reading the same files multiple times in a multi-step task.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-CD-007",
+          "title": "Zlib-Compressed Content Storage with Lazy Decompression",
+          "description": "Store full KB entry content as zlib-compressed blobs in SQLite. The compressed size is typically 40-60% of the original. Decompression only happens when an agent explicitly requests full content. Metadata queries (title, tags, summary) never touch the compressed blob. This reduces DB size and I/O for the common case where full content is not needed.",
+          "impact": "low",
+          "effort": "low"
+        }
+      ]
+    },
+    {
+      "name": "Agent I/O Protocols",
+      "ideas_for_a1": [
+        {
+          "id": "A1-IO-001",
+          "title": "File Registration API with Validation",
+          "description": "Create a register_file.py CLI tool that agents call instead of manually creating files and updating indexes. Usage: register_file.py --type kb --category optimization --tags 'tag1,tag2' --content file.md. The tool: assigns the next sequential ID, validates naming conventions, checks for duplicates, updates the registry DB, and returns the canonical path. This is the single entry point for all file creation, replacing the error-prone manual workflow.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-IO-002",
+          "title": "Pre-Flight Validation Protocol",
+          "description": "Before any file is written to the repository, a validate_entry.py tool checks: naming convention compliance, required metadata fields present, no duplicate IDs or paths, tags from controlled vocabulary, builds_on references exist, and content minimum quality (non-empty sections, minimum length). Returns a pass/fail with specific error messages. Can be wired as a pre-commit hook (following KB-0009's recommendation for fast_validate).",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-IO-003",
+          "title": "Convention Discovery Endpoint",
+          "description": "An agent entering a new directory can call conventions.py --dir knowledge-base/entries/ and get back: allowed file patterns, naming regex, required fields, example entry, next available ID, and current entry count. This replaces the current pattern of reading CLAUDE.md + TEMPLATE.md + index.json + future_team_data_strategy.json (4 file reads, ~3000 tokens) with one tool call returning ~200 tokens of actionable rules.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "A1-IO-004",
+          "title": "Atomic Multi-File Creation Transactions",
+          "description": "When creating a KB entry, an agent must: write the .md file, update index.json, and optionally update related entries' cross-references. If any step fails, partial state is left behind. Wrap this in a transaction: create_kb_entry.py that atomically writes the file, updates the DB, and generates the index — or rolls back everything on failure. Eliminates orphan files and inconsistent indexes.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-IO-005",
+          "title": "Directory Health Dashboard Endpoint",
+          "description": "An agent can call repo_health.py and get: orphan files (not in any index), stale entries (not updated in N sessions), broken cross-references, naming violations, and missing required files (like index.json). This formalizes the staleness_detector.py from KB-0009 into a standard protocol that any agent can invoke. Results are cached (via fast_cache) and invalidated on file changes.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "A1-IO-006",
+          "title": "Scaffolding Command for Each Entry Type",
+          "description": "Provide scaffold.py --type {kb|sop|script|source|team-log|pick} that generates a correctly-named, correctly-structured empty file with all required fields pre-populated (next ID, today's date, team name from environment, template sections). Agents fill in content rather than constructing structure. This eliminates the most common file creation errors: wrong ID, missing fields, incorrect naming.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "A1-IO-007",
+          "title": "Event-Driven Index Regeneration",
+          "description": "Instead of requiring agents to manually update index.json after creating files, use a filesystem watcher or post-write hook that automatically regenerates indexes when files change. The index is a derived artifact, never manually edited. This implements KB-0031's key insight that 'source files are truth, indexes are generated artifacts' as an operational protocol.",
+          "impact": "high",
+          "effort": "medium"
+        }
+      ],
+      "ideas_for_b2": [
+        {
+          "id": "B2-IO-001",
+          "title": "Structured Query Protocol for KB Retrieval",
+          "description": "Replace file reads with a query tool: kb_query.py --tags optimization --confidence high --fields id,title,summary --limit 5 --sort date:desc. Returns exactly the requested fields for matching entries. An agent needing to find relevant prior work issues one query (~50 tokens of output) instead of reading index.json (~5000 tokens) and then reading individual files (~800 tokens each). Estimated 90% token reduction for discovery tasks.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-IO-002",
+          "title": "Progressive Detail Loading (Summary -> Sections -> Full)",
+          "description": "Implement a three-tier retrieval protocol. Tier 1: kb_query returns id, title, one-line summary (~20 tokens/entry). Tier 2: kb_detail --id KB-0009 --sections result,recommendations returns specific sections (~200 tokens). Tier 3: read the full file only when deep analysis is needed (~800 tokens). Most agent tasks complete at Tier 1 or 2, saving 75-90% of tokens compared to always reading full files.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-IO-003",
+          "title": "Session Onboarding Digest",
+          "description": "A single tool call onboarding_digest.py returns a compact JSON with: system health score, count of entries per category, last 5 KB entries (title + summary only), open action items, known issues, and recommended readings based on the current team's assigned mission. This replaces the current 5-10 file read orientation pattern (KB-0031 finding #4) with ~400 tokens of curated context.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "B2-IO-004",
+          "title": "Streaming Paginated Results",
+          "description": "For large result sets, return results in pages: kb_query --page 1 --per-page 5. The agent processes page 1, decides if it needs more, and requests page 2 only if needed. Currently, reading index.json returns all 31 entries regardless of how many the agent actually needs. With pagination, an agent looking for 'the most recent optimization entry' reads 5 entries (~250 tokens) instead of 31 (~5000 tokens).",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "B2-IO-005",
+          "title": "Subscription-Based Change Notifications",
+          "description": "Instead of polling for changes (reading files repeatedly), agents subscribe to topics: subscribe.py --topics kb:optimization,sop:*. When relevant changes occur, a notification is pushed to the agent's bus channel with a compact diff summary. This eliminates periodic re-reads of unchanged files. In a multi-agent session where 5 agents each poll the KB every 10 minutes, this could save ~50,000 tokens per hour.",
+          "impact": "medium",
+          "effort": "high"
+        },
+        {
+          "id": "B2-IO-006",
+          "title": "Batch Multi-Resource Queries",
+          "description": "Allow compound queries across resource types: multi_query.py --kb 'tags:optimization limit:3' --sops 'builds_on:SOP-016' --scripts 'category:search'. Returns results from all three resource types in a single response. This replaces three separate tool calls with one, reducing round-trip overhead and the per-call token cost of tool invocation framing.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-IO-007",
+          "title": "Context-Aware Response Formatting",
+          "description": "The query layer adapts output format to the agent's role. A coordinator gets high-level summaries with cross-team references. A programmer gets code paths, tool names, and API signatures. A researcher gets methodology details and confidence scores. Same data, different projections — each optimized for the consuming agent's actual needs, reducing irrelevant tokens by an estimated 30-40%.",
+          "impact": "medium",
+          "effort": "high"
+        }
+      ]
+    }
+  ],
+  "cross_cutting_ideas": [
+    {
+      "id": "CC-001",
+      "title": "Unified Registry DB as Foundation Layer",
+      "description": "The single most impactful change is replacing all index.json files with a SQLite registry.db that serves as the canonical source for file metadata, tags, relationships, and summaries. This DB enables: FTS5 search (DA), dedup via content hashes (CD), projection queries (IO), auto-generated indexes (all three). Nearly every other idea in this document becomes simpler or possible only with this foundation. Build this first."
+    },
+    {
+      "id": "CC-002",
+      "title": "Source Files Remain Truth, Everything Else is Derived",
+      "description": "KB-0031's key insight must be the architectural principle: markdown files and source code are the source of truth. The registry DB, indexes, summaries, tag dictionaries, and FTS indexes are all generated artifacts. This means: never require agents to update derived artifacts manually, always regenerate from source, and validate source files at write time (not index files at read time)."
+    },
+    {
+      "id": "CC-003",
+      "title": "Three-Command Agent Workflow: Discover, Query, Create",
+      "description": "Combine the file creation SOPs (A1) and token-efficient I/O (B2) into a minimal agent workflow: (1) discover.py — returns conventions, health, and onboarding digest; (2) query.py — structured search with projection, pagination, and progressive detail; (3) create.py — atomic validated file creation with auto-indexing. Three tool calls replace the current 10-15 file read/write operations per task cycle."
+    },
+    {
+      "id": "CC-004",
+      "title": "Validation at Write Time, Not Read Time",
+      "description": "Currently, data quality problems (broken indexes, naming violations, orphan files) are discovered when agents read data — after the damage is done. Shift validation to write time: every file creation goes through a validation gate (A1-IO-002) backed by DB constraints (A1-DA-006) and content-hash dedup (A1-CD-003). This prevents bad data from entering the system rather than detecting it after the fact."
+    },
+    {
+      "id": "CC-005",
+      "title": "Token Budget as First-Class System Metric",
+      "description": "Track tokens consumed per agent per task type. Use this data to: identify the most expensive operations (likely orientation reads and full KB scans), measure the impact of compression and query optimizations, and set token budgets for different task types. The coordination dashboard already tracks agent activity — add a token_estimate column to the progress table based on file sizes read/written."
+    },
+    {
+      "id": "CC-006",
+      "title": "Migration Path: Parallel Operation Then Cutover",
+      "description": "All ideas should be implementable alongside the existing system. Phase 1: build registry.db and populate it from existing index.json files (read compatibility). Phase 2: new file creation goes through the registry API while still generating index.json (write compatibility). Phase 3: retire manual index.json editing once all agents use the new tools. This follows KB-0031's phased migration recommendation."
+    }
+  ]
+}
