@@ -1,0 +1,294 @@
+{
+  "id": "SOP-029",
+  "version": "1.0",
+  "created": "2026-03-11",
+  "team": "A1-Gamma",
+  "title": "File Creation & Naming Standards",
+  "purpose": "Establishes mandatory naming patterns, directory placement rules, and file size budgets for all repository resources. Addresses the naming inconsistencies found by A1-Alpha audit: mixed case in storage/scripts/ (50/50 snake/kebab split), SOP filename/ID mismatches (SOP-026 through SOP-028), and same-concept-different-names across index files.",
+  "builds_on": ["SOP-024", "SOP-023"],
+
+  "section_1_creation_decision": {
+    "title": "When to Create a New File vs Extend Existing",
+    "rules": [
+      {
+        "id": "FC-01",
+        "rule": "Check for duplicates before creating any file",
+        "action": "Search index.json for the resource type. Grep for key terms. If a file covers >50% of the same topic, extend it instead.",
+        "evidence": "A1-Alpha found KB-0012 and KB-0013 with identical titles, SRC-0018 and SRC-0039 both describing FRED API."
+      },
+      {
+        "id": "FC-02",
+        "rule": "One concept per file",
+        "action": "If a file covers two distinct topics, split it. If two files cover the same topic, merge them.",
+        "exception": "Index files aggregate multiple entries by design."
+      },
+      {
+        "id": "FC-03",
+        "rule": "Prefer updating over creating",
+        "action": "If an existing file is outdated, update it with a _v2 suffix rather than creating a new file with a different name. Mark the old version as superseded in the index."
+      }
+    ],
+    "pre_creation_checklist": [
+      "Search the relevant index.json for duplicate or overlapping entries",
+      "Verify the next available sequential ID for the resource type",
+      "Confirm the correct target directory per section_3",
+      "Verify the filename matches the pattern in section_2",
+      "Check that the file fits within its token budget per section_4"
+    ]
+  },
+
+  "section_2_naming_patterns": {
+    "title": "Mandatory Naming Patterns by Resource Type",
+    "description": "Every file must match its resource type pattern exactly. No exceptions.",
+    "patterns": [
+      {
+        "resource_type": "knowledge_base_entry",
+        "pattern": "KB-NNNN.md",
+        "id_format": "KB-NNNN (4-digit zero-padded)",
+        "case": "UPPER prefix, numeric ID",
+        "example": "KB-0032.md",
+        "notes": "Title is in YAML frontmatter, not filename. Sequential IDs, no gaps."
+      },
+      {
+        "resource_type": "team_session_log",
+        "pattern": "TEAM-NNNN.md",
+        "id_format": "TEAM-NNNN (4-digit zero-padded)",
+        "case": "UPPER prefix, numeric ID",
+        "example": "TEAM-0030.md",
+        "notes": "Title is in YAML frontmatter. One log per team session."
+      },
+      {
+        "resource_type": "sop",
+        "pattern": "sop_NNN_short_descriptor.json",
+        "id_format": "SOP-NNN (3-digit in ID, 3-digit in filename)",
+        "case": "snake_case filename, UPPER prefix in ID field",
+        "example": "sop_029_file_naming.json",
+        "notes": "Descriptor is 2-5 words in snake_case. Versioned files add _v2 suffix: sop_012_monitoring_intervention_v2.json"
+      },
+      {
+        "resource_type": "data_source",
+        "pattern": "SRC-NNNN-descriptor.json",
+        "id_format": "SRC-NNNN (4-digit zero-padded)",
+        "case": "UPPER prefix, kebab-case descriptor",
+        "example": "SRC-0045-world-bank.json",
+        "notes": "Descriptor is the API/service name in kebab-case, 1-3 words."
+      },
+      {
+        "resource_type": "script",
+        "pattern": "snake_case.py",
+        "id_format": "SCR-NNNN in index only (not in filename)",
+        "case": "snake_case",
+        "example": "validate_storage.py",
+        "notes": "All scripts use snake_case regardless of language. No kebab-case scripts. Reports use kebab-case .md extension."
+      },
+      {
+        "resource_type": "api_tool",
+        "pattern": "snake_case.py or kebab-case/ directory",
+        "id_format": "TOOL-NNNN in index only",
+        "case": "snake_case for .py files, kebab-case for directories",
+        "example": "doc_parser.py, sonnet-research-api/",
+        "notes": "Python files follow PEP 8 snake_case. Tool directories use kebab-case."
+      },
+      {
+        "resource_type": "market_pick",
+        "pattern": "PICK-NNNN.md",
+        "id_format": "PICK-NNNN (4-digit zero-padded)",
+        "case": "UPPER prefix, numeric ID",
+        "example": "PICK-0001.md",
+        "notes": "Uses YAML frontmatter per market-research/picks/TEMPLATE.md."
+      },
+      {
+        "resource_type": "template",
+        "pattern": "TEMPLATE.md or TEMPLATE.json",
+        "case": "UPPER_CASE",
+        "example": "TEMPLATE.md",
+        "notes": "Always at directory root alongside index.json. Extension matches the format of entries in that directory."
+      },
+      {
+        "resource_type": "index",
+        "pattern": "index.json",
+        "case": "lowercase",
+        "example": "index.json",
+        "notes": "One per directory containing indexed resources. Schema per SOP-030."
+      },
+      {
+        "resource_type": "coordination_module",
+        "pattern": "snake_case.py",
+        "case": "snake_case (PEP 8)",
+        "example": "coordinator_hub.py",
+        "notes": "Standard Python module naming. Prefix grouping allowed (sdk_*, bus_*)."
+      },
+      {
+        "resource_type": "team_output",
+        "pattern": "snake_case.json",
+        "case": "snake_case",
+        "example": "file_pattern_audit.json",
+        "notes": "All team output files in */output/ directories use snake_case consistently."
+      }
+    ]
+  },
+
+  "section_3_directory_placement": {
+    "title": "Directory Placement Rules",
+    "description": "Every resource type has exactly one correct directory. Do not place files elsewhere.",
+    "placements": [
+      {"resource_type": "knowledge_base_entry", "directory": "knowledge-base/entries/"},
+      {"resource_type": "team_session_log", "directory": "teams/sessions/"},
+      {"resource_type": "sop", "directory": "storage/coordination/sops/"},
+      {"resource_type": "data_source", "directory": "storage/sources/"},
+      {"resource_type": "script", "directory": "storage/scripts/"},
+      {"resource_type": "api_tool", "directory": "storage/api-tools/"},
+      {"resource_type": "market_pick", "directory": "market-research/picks/"},
+      {"resource_type": "market_method", "directory": "market-research/methods/"},
+      {"resource_type": "coordination_module", "directory": "storage/coordination/"},
+      {"resource_type": "team_output", "directory": "storage/coordination/teams/<team-name>/output/"}
+    ],
+    "directory_naming_rules": [
+      {
+        "id": "DIR-01",
+        "rule": "All directories use kebab-case",
+        "exception": "Python package directories with __init__.py may use snake_case per PEP 8."
+      },
+      {
+        "id": "DIR-02",
+        "rule": "Maximum 4 levels of nesting from repo root",
+        "rationale": "Deeper nesting increases token cost per path reference. Current deepest paths are 5-6 levels (storage/coordination/teams/*/output/) which is at the limit."
+      },
+      {
+        "id": "DIR-03",
+        "rule": "Do not create new top-level directories without coordinator approval",
+        "rationale": "Current top-level structure (knowledge-base, market-research, prototype, storage, teams) is stable."
+      }
+    ]
+  },
+
+  "section_4_file_size_budgets": {
+    "title": "Token Budget Categories",
+    "description": "Every file has a target token budget based on its category. Files exceeding their budget should be split.",
+    "categories": [
+      {
+        "name": "micro",
+        "max_tokens": 500,
+        "max_bytes_approx": 2000,
+        "examples": ["pointer files", "config fragments", "single-entry indexes"],
+        "use_case": "Navigation aids, metadata-only files, small configs"
+      },
+      {
+        "name": "small",
+        "max_tokens": 2000,
+        "max_bytes_approx": 8000,
+        "examples": ["KB entry summaries", "simple SOPs", "source definitions", "team outputs"],
+        "use_case": "Standard entries with focused content"
+      },
+      {
+        "name": "medium",
+        "max_tokens": 5000,
+        "max_bytes_approx": 20000,
+        "examples": ["detailed SOPs", "comprehensive KB entries", "index files"],
+        "use_case": "Entries requiring structured procedures or multi-section analysis"
+      },
+      {
+        "name": "large",
+        "max_tokens": 15000,
+        "max_bytes_approx": 60000,
+        "examples": ["detailed analysis reports", "comprehensive audit results"],
+        "use_case": "Rare. Only for entries that cannot be meaningfully split. Must include a summary in the first 500 bytes."
+      }
+    ],
+    "mandatory_summary_rule": {
+      "id": "SIZE-01",
+      "rule": "Any file exceeding 2000 tokens MUST have a summary field or section in the first 500 bytes",
+      "rationale": "Agents reading the first 500 bytes should be able to decide whether to read the rest. Saves 80% of wasted reads on irrelevant large files.",
+      "format_json": "Top-level \"summary\" field before any arrays or detailed content",
+      "format_markdown": "A ## Summary section immediately after frontmatter, before ## Context",
+      "evidence": "Think-tank-beta A1-TC03: Five KB entries exceed 25KB (167KB total, ~42,000 tokens). A mandatory summary enables selective reading."
+    },
+    "split_guidance": {
+      "id": "SIZE-02",
+      "rule": "Files exceeding their budget should be split into summary + detail",
+      "pattern": "KB-0015.md (summary, <5000 tokens) + KB-0015-detail.json (full data)",
+      "rationale": "The summary covers 80% of use cases at 10% of the token cost."
+    }
+  },
+
+  "section_5_case_conventions": {
+    "title": "Case Convention by File Type",
+    "rules": [
+      {"extension": ".py", "case": "snake_case", "example": "validate_storage.py"},
+      {"extension": ".md", "case": "kebab-case for data files, UPPER_CASE for templates/docs", "example": "cross-ref-report.md, TEMPLATE.md, README.md"},
+      {"extension": ".json", "case": "snake_case for SOPs/configs, kebab-case for data, lowercase for index", "example": "sop_029_file_naming.json, SRC-0001-openalex.json, index.json"},
+      {"extension": ".js", "case": "snake_case", "example": "viz_data_flow.js"},
+      {"extension": ".go", "case": "lowercase single word", "example": "main.go"},
+      {"extension": ".sh", "case": "kebab-case", "example": "pre-commit.sh"},
+      {"extension": ".yaml/.yml", "case": "snake_case", "example": "team_templates.yaml"},
+      {"extension": ".jsonl", "case": "kebab-case", "example": "global-bus.jsonl"}
+    ]
+  },
+
+  "section_6_common_mistakes": {
+    "title": "Common Mistakes to Avoid",
+    "description": "Based on the A1-Alpha file pattern audit findings.",
+    "mistakes": [
+      {
+        "id": "MISTAKE-01",
+        "mistake": "Mixing kebab-case and snake_case in the same directory",
+        "evidence": "storage/scripts/ has 18 snake_case and 15 kebab-case files for the same type of resource",
+        "fix": "All scripts use snake_case. Rename kebab-case scripts."
+      },
+      {
+        "id": "MISTAKE-02",
+        "mistake": "SOP files without the sop_NNN_ prefix",
+        "evidence": "efficiency_guide.json, future_team_data_strategy.json, tool_sops.json lack prefix",
+        "fix": "Rename to sop_026_efficiency_patterns.json, sop_027_future_data_strategy.json, sop_028_tool_sops.json"
+      },
+      {
+        "id": "MISTAKE-03",
+        "mistake": "Placing files in the wrong directory",
+        "evidence": "TEAM-0022-config.json and TEAM-0022-pipeline.py at teams/ root instead of teams/sessions/. Team comm dirs at /teams/ instead of storage/coordination/teams/.",
+        "fix": "Follow section_3 placement rules strictly."
+      },
+      {
+        "id": "MISTAKE-04",
+        "mistake": "Creating duplicate entries for the same concept",
+        "evidence": "KB-0012 and KB-0013 identical titles. SRC-0018 and SRC-0039 both describe FRED API.",
+        "fix": "Always search before creating. Use pre_creation_checklist."
+      },
+      {
+        "id": "MISTAKE-05",
+        "mistake": "Using different field names for the same concept across indexes",
+        "evidence": "'team' vs 'added_by_team' vs 'populated_by'. 'path' vs 'filename' vs 'file'. 'version' vs 'schema'.",
+        "fix": "Follow SOP-030 universal index schema."
+      },
+      {
+        "id": "MISTAKE-06",
+        "mistake": "Committing __pycache__ directories",
+        "evidence": "Found in prototype/, storage/api-tools/, storage/coordination/, storage/scripts/",
+        "fix": "Add __pycache__/ to .gitignore. Never commit compiled artifacts."
+      },
+      {
+        "id": "MISTAKE-07",
+        "mistake": "Storing derived data in index files",
+        "evidence": "tag_index, categories, by_data_type, by_access_type, language_index are all derivable from entries array",
+        "fix": "Per SOP-030, indexes contain only canonical data. Derived views computed on demand."
+      }
+    ]
+  },
+
+  "checklists": {
+    "before_creating_any_file": [
+      "Searched index.json for duplicates or overlapping entries",
+      "Identified the correct resource type from section_2",
+      "Verified the next sequential ID is correct",
+      "Filename matches the mandatory pattern for its type",
+      "Target directory matches section_3 placement rules",
+      "File will fit within its token budget category from section_4",
+      "Case convention matches section_5 rules for the file extension"
+    ],
+    "after_creating_a_file": [
+      "File passes the naming pattern regex for its type",
+      "File is in the correct directory",
+      "Index.json has been regenerated (per SOP-030)",
+      "If >2000 tokens, summary field/section is present in first 500 bytes"
+    ]
+  }
+}
