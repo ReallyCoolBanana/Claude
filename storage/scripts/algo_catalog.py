@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 """Algorithm Catalog Builder
 
-A tool that maintains a structured catalog of algorithms with support for
-search by category, complexity class, or keyword. Designed for use by
-DATA-GATHER-ALGO teams to organize algorithmic knowledge.
+A tool that maintains a structured catalog of algorithms with search,
+add, update, and export capabilities. Designed for use by DATA-GATHER-ALGO
+teams to collect and organize algorithmic knowledge.
 
 Usage:
     # Add an algorithm
-    python algo_catalog.py add --name "Binary Search" \
-        --category "searching" \
-        --time-complexity "O(log n)" \
-        --space-complexity "O(1)" \
-        --description "Efficient search on sorted arrays" \
-        --references '["CLRS Ch.2", "https://en.wikipedia.org/wiki/Binary_search"]' \
-        --code 'def binary_search(arr, target):\n    lo, hi = 0, len(arr)-1\n    while lo <= hi:\n        mid = (lo+hi)//2\n        if arr[mid] == target: return mid\n        elif arr[mid] < target: lo = mid+1\n        else: hi = mid-1\n    return -1'
+    python algo_catalog.py add --name "Binary Search" --category "searching" \
+        --time-complexity "O(log n)" --space-complexity "O(1)" \
+        --description "Efficiently finds target in sorted array" \
+        --references "CLRS Ch.2" --code 'def binary_search(arr, t): ...'
 
     # Search by category
     python algo_catalog.py search --category "sorting"
@@ -27,17 +24,20 @@ Usage:
     # List all categories
     python algo_catalog.py categories
 
-    # Export catalog as markdown
-    python algo_catalog.py export --format markdown
+    # Export catalog to markdown
+    python algo_catalog.py export --format markdown --output catalog.md
 
-    # Export catalog as JSON
-    python algo_catalog.py export --format json
+    # Export catalog to JSON
+    python algo_catalog.py export --format json --output catalog.json
 
     # Import algorithms from a JSON file
     python algo_catalog.py import --file algorithms.json
 
-    # Show catalog stats
+    # Show catalog statistics
     python algo_catalog.py stats
+
+    # Remove an algorithm by ID
+    python algo_catalog.py remove --id "algo-0001"
 """
 
 import argparse
@@ -47,335 +47,369 @@ import re
 import sys
 import hashlib
 from datetime import datetime
-from typing import Any
-
-DEFAULT_CATALOG_PATH = os.path.join(os.path.dirname(__file__), "algorithm_catalog.json")
+from typing import Any, Dict, List, Optional
 
 
-def _load_catalog(path: str) -> dict:
-    """Load the catalog from disk, or return empty structure."""
-    if os.path.exists(path):
-        with open(path, "r") as f:
+DEFAULT_CATALOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "algo_catalog.json")
+
+COMPLEXITY_CLASSES = [
+    "O(1)", "O(log n)", "O(sqrt(n))", "O(n)", "O(n log n)",
+    "O(n^2)", "O(n^3)", "O(2^n)", "O(n!)", "O(n^k)"
+]
+
+STANDARD_CATEGORIES = [
+    "sorting", "searching", "graph", "dynamic-programming",
+    "greedy", "divide-and-conquer", "string", "tree",
+    "hashing", "math", "geometry", "backtracking",
+    "bit-manipulation", "network-flow", "linear-algebra",
+    "optimization", "randomized", "approximation",
+    "data-structure", "concurrency", "machine-learning",
+    "cryptography", "compression", "numerical"
+]
+
+
+def _generate_id(name: str) -> str:
+    """Generate a deterministic ID from algorithm name."""
+    slug = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
+    short_hash = hashlib.md5(name.encode()).hexdigest()[:6]
+    return f"algo-{slug}-{short_hash}"
+
+
+def load_catalog(catalog_path: str) -> Dict[str, Any]:
+    """Load the algorithm catalog from disk."""
+    if os.path.exists(catalog_path):
+        with open(catalog_path, 'r') as f:
             return json.load(f)
     return {
         "version": "1.0",
         "last_updated": datetime.now().strftime("%Y-%m-%d"),
         "algorithms": [],
         "category_index": {},
-        "complexity_index": {},
+        "complexity_index": {}
     }
 
 
-def _save_catalog(catalog: dict, path: str) -> None:
-    """Save the catalog to disk."""
+def save_catalog(catalog: Dict[str, Any], catalog_path: str) -> None:
+    """Save the algorithm catalog to disk."""
     catalog["last_updated"] = datetime.now().strftime("%Y-%m-%d")
-    os.makedirs(os.path.dirname(path) if os.path.dirname(path) else ".", exist_ok=True)
-    with open(path, "w") as f:
+    _rebuild_indexes(catalog)
+    with open(catalog_path, 'w') as f:
         json.dump(catalog, f, indent=2)
 
 
-def _generate_id(name: str) -> str:
-    """Generate a deterministic short ID from the algorithm name."""
-    h = hashlib.sha256(name.lower().strip().encode()).hexdigest()[:8]
-    return f"ALGO-{h}"
-
-
-def _rebuild_indexes(catalog: dict) -> None:
-    """Rebuild category and complexity indexes from the algorithms list."""
-    catalog["category_index"] = {}
-    catalog["complexity_index"] = {}
+def _rebuild_indexes(catalog: Dict[str, Any]) -> None:
+    """Rebuild category and complexity indexes."""
+    cat_index: Dict[str, List[str]] = {}
+    comp_index: Dict[str, List[str]] = {}
     for algo in catalog["algorithms"]:
         aid = algo["id"]
         cat = algo.get("category", "uncategorized")
-        catalog["category_index"].setdefault(cat, [])
-        if aid not in catalog["category_index"][cat]:
-            catalog["category_index"][cat].append(aid)
-
-        for ctype in ("time_complexity", "space_complexity"):
-            comp = algo.get(ctype, "")
-            if comp:
-                catalog["complexity_index"].setdefault(comp, [])
-                if aid not in catalog["complexity_index"][comp]:
-                    catalog["complexity_index"][comp].append(aid)
-
-
-def _normalize_complexity(c: str) -> str:
-    """Normalize a complexity string for comparison."""
-    c = c.strip().upper().replace(" ", "")
-    # Standardize O(...) notation
-    c = re.sub(r"^O\(", "O(", c)
-    return c
+        cat_index.setdefault(cat, [])
+        if aid not in cat_index[cat]:
+            cat_index[cat].append(aid)
+        tc = algo.get("time_complexity", "unknown")
+        comp_index.setdefault(tc, [])
+        if aid not in comp_index[tc]:
+            comp_index[tc].append(aid)
+    catalog["category_index"] = cat_index
+    catalog["complexity_index"] = comp_index
 
 
-def add_algorithm(
-    catalog: dict,
-    name: str,
-    category: str,
-    time_complexity: str = "",
-    space_complexity: str = "",
-    description: str = "",
-    references: list | None = None,
-    code_snippet: str = "",
-    tags: list | None = None,
-) -> dict:
-    """Add an algorithm to the catalog. Returns the new entry."""
-    aid = _generate_id(name)
+def add_algorithm(catalog: Dict[str, Any], name: str, category: str,
+                  time_complexity: str = "unknown",
+                  space_complexity: str = "unknown",
+                  description: str = "",
+                  references: Optional[List[str]] = None,
+                  code_snippet: str = "",
+                  tags: Optional[List[str]] = None,
+                  related: Optional[List[str]] = None) -> Dict[str, Any]:
+    """Add a new algorithm to the catalog. Returns the new entry."""
+    algo_id = _generate_id(name)
 
     # Check for duplicates
-    for algo in catalog["algorithms"]:
-        if algo["id"] == aid:
-            print(f"Algorithm '{name}' already exists with ID {aid}. Updating.", file=sys.stderr)
-            algo.update({
-                "name": name,
-                "category": category.lower().strip(),
-                "time_complexity": time_complexity,
-                "space_complexity": space_complexity,
-                "description": description,
-                "references": references or [],
-                "code_snippet": code_snippet,
-                "tags": tags or [],
-                "updated": datetime.now().strftime("%Y-%m-%d"),
-            })
-            _rebuild_indexes(catalog)
-            return algo
+    for existing in catalog["algorithms"]:
+        if existing["id"] == algo_id:
+            raise ValueError(f"Algorithm '{name}' already exists with ID {algo_id}")
 
     entry = {
-        "id": aid,
+        "id": algo_id,
         "name": name,
-        "category": category.lower().strip(),
+        "category": category.lower(),
         "time_complexity": time_complexity,
         "space_complexity": space_complexity,
         "description": description,
         "references": references or [],
         "code_snippet": code_snippet,
         "tags": tags or [],
+        "related_algorithms": related or [],
         "added": datetime.now().strftime("%Y-%m-%d"),
+        "last_modified": datetime.now().strftime("%Y-%m-%d")
     }
+
     catalog["algorithms"].append(entry)
-    _rebuild_indexes(catalog)
     return entry
 
 
-def search_catalog(
-    catalog: dict,
-    category: str | None = None,
-    complexity: str | None = None,
-    keyword: str | None = None,
-    tags: list | None = None,
-) -> list[dict]:
-    """Search the catalog with multiple filters (AND logic)."""
-    results = list(catalog["algorithms"])
+def remove_algorithm(catalog: Dict[str, Any], algo_id: str) -> bool:
+    """Remove an algorithm by ID. Returns True if found and removed."""
+    initial_len = len(catalog["algorithms"])
+    catalog["algorithms"] = [a for a in catalog["algorithms"] if a["id"] != algo_id]
+    return len(catalog["algorithms"]) < initial_len
+
+
+def search_catalog(catalog: Dict[str, Any],
+                   category: Optional[str] = None,
+                   complexity: Optional[str] = None,
+                   keyword: Optional[str] = None,
+                   tags: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    """Search the catalog with multiple filter criteria."""
+    results = catalog["algorithms"]
 
     if category:
-        cat = category.lower().strip()
-        results = [a for a in results if a.get("category", "") == cat]
+        category_lower = category.lower()
+        results = [a for a in results if a.get("category", "").lower() == category_lower]
 
     if complexity:
-        norm = _normalize_complexity(complexity)
-        results = [
-            a for a in results
-            if _normalize_complexity(a.get("time_complexity", "")) == norm
-            or _normalize_complexity(a.get("space_complexity", "")) == norm
-        ]
+        results = [a for a in results if a.get("time_complexity", "") == complexity]
 
     if keyword:
-        kw = keyword.lower()
-        def _matches(algo: dict) -> bool:
-            searchable = " ".join([
-                algo.get("name", ""),
-                algo.get("description", ""),
-                algo.get("category", ""),
-                " ".join(algo.get("tags", [])),
-                algo.get("code_snippet", ""),
-            ]).lower()
-            return kw in searchable
-        results = [a for a in results if _matches(a)]
+        keyword_lower = keyword.lower()
+        results = [a for a in results if (
+            keyword_lower in a.get("name", "").lower() or
+            keyword_lower in a.get("description", "").lower() or
+            keyword_lower in a.get("code_snippet", "").lower() or
+            any(keyword_lower in ref.lower() for ref in a.get("references", [])) or
+            any(keyword_lower in tag.lower() for tag in a.get("tags", []))
+        )]
 
     if tags:
-        tag_set = {t.lower() for t in tags}
-        results = [
-            a for a in results
-            if tag_set.intersection({t.lower() for t in a.get("tags", [])})
-        ]
+        tags_lower = {t.lower() for t in tags}
+        results = [a for a in results if
+                   tags_lower.intersection({t.lower() for t in a.get("tags", [])})]
 
     return results
 
 
-def list_categories(catalog: dict) -> dict[str, int]:
-    """Return categories with counts."""
-    counts: dict[str, int] = {}
+def get_stats(catalog: Dict[str, Any]) -> Dict[str, Any]:
+    """Get catalog statistics."""
+    algos = catalog["algorithms"]
+    categories = {}
+    complexities = {}
+    for a in algos:
+        cat = a.get("category", "uncategorized")
+        categories[cat] = categories.get(cat, 0) + 1
+        tc = a.get("time_complexity", "unknown")
+        complexities[tc] = complexities.get(tc, 0) + 1
+
+    return {
+        "total_algorithms": len(algos),
+        "categories": categories,
+        "complexity_distribution": complexities,
+        "with_code_snippets": sum(1 for a in algos if a.get("code_snippet")),
+        "with_references": sum(1 for a in algos if a.get("references")),
+        "last_updated": catalog.get("last_updated", "unknown")
+    }
+
+
+def export_markdown(catalog: Dict[str, Any]) -> str:
+    """Export the catalog as structured Markdown."""
+    lines = ["# Algorithm Catalog\n"]
+    lines.append(f"Last updated: {catalog.get('last_updated', 'unknown')}\n")
+
+    stats = get_stats(catalog)
+    lines.append(f"Total algorithms: {stats['total_algorithms']}\n")
+
+    # Group by category
+    by_category: Dict[str, List[Dict]] = {}
     for algo in catalog["algorithms"]:
         cat = algo.get("category", "uncategorized")
-        counts[cat] = counts.get(cat, 0) + 1
-    return counts
+        by_category.setdefault(cat, []).append(algo)
 
-
-def export_catalog(catalog: dict, fmt: str = "json") -> str:
-    """Export the catalog in the specified format."""
-    if fmt == "json":
-        return json.dumps(catalog, indent=2)
-
-    if fmt == "markdown":
-        lines = ["# Algorithm Catalog", ""]
-        lines.append(f"**Last updated:** {catalog.get('last_updated', 'N/A')}")
-        lines.append(f"**Total algorithms:** {len(catalog['algorithms'])}")
-        lines.append("")
-
-        # Group by category
-        by_cat: dict[str, list] = {}
-        for algo in catalog["algorithms"]:
-            cat = algo.get("category", "uncategorized")
-            by_cat.setdefault(cat, []).append(algo)
-
-        for cat in sorted(by_cat.keys()):
-            lines.append(f"## {cat.title()}")
+    for cat in sorted(by_category.keys()):
+        lines.append(f"\n## {cat.replace('-', ' ').title()}\n")
+        for algo in sorted(by_category[cat], key=lambda a: a["name"]):
+            lines.append(f"### {algo['name']}\n")
+            lines.append(f"- **ID**: `{algo['id']}`")
+            lines.append(f"- **Time Complexity**: {algo['time_complexity']}")
+            lines.append(f"- **Space Complexity**: {algo['space_complexity']}")
+            if algo.get("description"):
+                lines.append(f"- **Description**: {algo['description']}")
+            if algo.get("tags"):
+                lines.append(f"- **Tags**: {', '.join(algo['tags'])}")
+            if algo.get("references"):
+                lines.append(f"- **References**: {', '.join(algo['references'])}")
+            if algo.get("related_algorithms"):
+                lines.append(f"- **Related**: {', '.join(algo['related_algorithms'])}")
+            if algo.get("code_snippet"):
+                lines.append(f"\n```python\n{algo['code_snippet']}\n```\n")
             lines.append("")
-            for algo in sorted(by_cat[cat], key=lambda a: a["name"]):
-                lines.append(f"### {algo['name']}")
-                lines.append(f"**ID:** `{algo['id']}`")
-                if algo.get("time_complexity"):
-                    lines.append(f"**Time:** {algo['time_complexity']}")
-                if algo.get("space_complexity"):
-                    lines.append(f"**Space:** {algo['space_complexity']}")
-                if algo.get("description"):
-                    lines.append(f"\n{algo['description']}")
-                if algo.get("tags"):
-                    lines.append(f"\n**Tags:** {', '.join(algo['tags'])}")
-                if algo.get("references"):
-                    lines.append("\n**References:**")
-                    for ref in algo["references"]:
-                        lines.append(f"- {ref}")
-                if algo.get("code_snippet"):
-                    lines.append("\n```python")
-                    lines.append(algo["code_snippet"])
-                    lines.append("```")
-                lines.append("")
-        return "\n".join(lines)
 
-    raise ValueError(f"Unknown format: {fmt}")
+    return "\n".join(lines)
 
 
-def import_algorithms(catalog: dict, data: list[dict]) -> int:
+def export_json(catalog: Dict[str, Any]) -> str:
+    """Export the catalog as formatted JSON."""
+    return json.dumps(catalog, indent=2)
+
+
+def import_algorithms(catalog: Dict[str, Any], data: List[Dict[str, Any]]) -> int:
     """Import algorithms from a list of dicts. Returns count of imported."""
     count = 0
     for item in data:
         name = item.get("name")
-        category = item.get("category", "uncategorized")
         if not name:
             continue
-        add_algorithm(
-            catalog,
-            name=name,
-            category=category,
-            time_complexity=item.get("time_complexity", ""),
-            space_complexity=item.get("space_complexity", ""),
-            description=item.get("description", ""),
-            references=item.get("references", []),
-            code_snippet=item.get("code_snippet", ""),
-            tags=item.get("tags", []),
-        )
-        count += 1
+        try:
+            add_algorithm(
+                catalog,
+                name=name,
+                category=item.get("category", "uncategorized"),
+                time_complexity=item.get("time_complexity", "unknown"),
+                space_complexity=item.get("space_complexity", "unknown"),
+                description=item.get("description", ""),
+                references=item.get("references", []),
+                code_snippet=item.get("code_snippet", ""),
+                tags=item.get("tags", []),
+                related=item.get("related_algorithms", [])
+            )
+            count += 1
+        except ValueError:
+            pass  # skip duplicates
     return count
 
 
-def get_stats(catalog: dict) -> dict:
-    """Return catalog statistics."""
-    cats = list_categories(catalog)
-    complexities: dict[str, int] = {}
-    for algo in catalog["algorithms"]:
-        tc = algo.get("time_complexity", "")
-        if tc:
-            complexities[tc] = complexities.get(tc, 0) + 1
-    return {
-        "total_algorithms": len(catalog["algorithms"]),
-        "categories": cats,
-        "complexity_distribution": complexities,
-        "last_updated": catalog.get("last_updated", "N/A"),
-    }
-
-
 def main():
-    parser = argparse.ArgumentParser(description="Algorithm Catalog Builder")
-    parser.add_argument("--catalog", default=DEFAULT_CATALOG_PATH, help="Path to catalog JSON file")
-    sub = parser.add_subparsers(dest="command")
+    parser = argparse.ArgumentParser(
+        description="Algorithm Catalog Builder - maintain a structured algorithm catalog",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("--catalog", default=DEFAULT_CATALOG_PATH,
+                        help="Path to catalog JSON file")
+
+    subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
     # add
-    p_add = sub.add_parser("add", help="Add an algorithm")
-    p_add.add_argument("--name", required=True)
-    p_add.add_argument("--category", required=True)
-    p_add.add_argument("--time-complexity", default="")
-    p_add.add_argument("--space-complexity", default="")
-    p_add.add_argument("--description", default="")
-    p_add.add_argument("--references", default="[]", help="JSON array of references")
-    p_add.add_argument("--code", default="", help="Code snippet")
-    p_add.add_argument("--tags", default="[]", help="JSON array of tags")
+    add_p = subparsers.add_parser("add", help="Add an algorithm to the catalog")
+    add_p.add_argument("--name", required=True, help="Algorithm name")
+    add_p.add_argument("--category", required=True, help="Category (e.g., sorting, graph)")
+    add_p.add_argument("--time-complexity", default="unknown", help="Time complexity (e.g., O(n log n))")
+    add_p.add_argument("--space-complexity", default="unknown", help="Space complexity")
+    add_p.add_argument("--description", default="", help="Algorithm description")
+    add_p.add_argument("--references", nargs="*", default=[], help="Reference sources")
+    add_p.add_argument("--code", default="", help="Code snippet")
+    add_p.add_argument("--tags", nargs="*", default=[], help="Tags")
+    add_p.add_argument("--related", nargs="*", default=[], help="Related algorithm IDs")
 
     # search
-    p_search = sub.add_parser("search", help="Search algorithms")
-    p_search.add_argument("--category", default=None)
-    p_search.add_argument("--complexity", default=None)
-    p_search.add_argument("--keyword", default=None)
-    p_search.add_argument("--tags", default=None, help="Comma-separated tags")
+    search_p = subparsers.add_parser("search", help="Search the catalog")
+    search_p.add_argument("--category", help="Filter by category")
+    search_p.add_argument("--complexity", help="Filter by time complexity")
+    search_p.add_argument("--keyword", help="Search by keyword")
+    search_p.add_argument("--tags", nargs="*", help="Filter by tags")
+    search_p.add_argument("--json", action="store_true", help="Output as JSON")
 
     # categories
-    sub.add_parser("categories", help="List categories")
+    subparsers.add_parser("categories", help="List all categories")
 
     # export
-    p_export = sub.add_parser("export", help="Export catalog")
-    p_export.add_argument("--format", choices=["json", "markdown"], default="json")
+    export_p = subparsers.add_parser("export", help="Export the catalog")
+    export_p.add_argument("--format", choices=["json", "markdown"], default="json",
+                          help="Export format")
+    export_p.add_argument("--output", help="Output file (stdout if omitted)")
 
     # import
-    p_import = sub.add_parser("import", help="Import algorithms from JSON file")
-    p_import.add_argument("--file", required=True)
+    import_p = subparsers.add_parser("import", help="Import algorithms from JSON file")
+    import_p.add_argument("--file", required=True, help="JSON file to import")
 
     # stats
-    sub.add_parser("stats", help="Show catalog statistics")
+    subparsers.add_parser("stats", help="Show catalog statistics")
+
+    # remove
+    remove_p = subparsers.add_parser("remove", help="Remove an algorithm by ID")
+    remove_p.add_argument("--id", required=True, help="Algorithm ID to remove")
 
     args = parser.parse_args()
-    if not args.command:
-        parser.print_help()
-        return
-
-    catalog = _load_catalog(args.catalog)
+    catalog = load_catalog(args.catalog)
 
     if args.command == "add":
-        refs = json.loads(args.references) if args.references else []
-        tags = json.loads(args.tags) if args.tags else []
-        entry = add_algorithm(
-            catalog, args.name, args.category,
-            time_complexity=args.time_complexity,
-            space_complexity=args.space_complexity,
-            description=args.description,
-            references=refs,
-            code_snippet=args.code,
-            tags=tags,
-        )
-        _save_catalog(catalog, args.catalog)
-        print(json.dumps(entry, indent=2))
+        try:
+            entry = add_algorithm(
+                catalog, name=args.name, category=args.category,
+                time_complexity=args.time_complexity,
+                space_complexity=args.space_complexity,
+                description=args.description,
+                references=args.references,
+                code_snippet=args.code,
+                tags=args.tags,
+                related=args.related
+            )
+            save_catalog(catalog, args.catalog)
+            print(json.dumps({"status": "added", "entry": entry}, indent=2))
+        except ValueError as e:
+            print(json.dumps({"status": "error", "message": str(e)}), file=sys.stderr)
+            sys.exit(1)
 
     elif args.command == "search":
-        tag_list = [t.strip() for t in args.tags.split(",")] if args.tags else None
-        results = search_catalog(catalog, args.category, args.complexity, args.keyword, tag_list)
-        print(json.dumps(results, indent=2))
+        results = search_catalog(catalog, category=args.category,
+                                 complexity=args.complexity,
+                                 keyword=args.keyword, tags=args.tags)
+        if args.json:
+            print(json.dumps(results, indent=2))
+        else:
+            if not results:
+                print("No algorithms found matching criteria.")
+            for algo in results:
+                print(f"  [{algo['id']}] {algo['name']} ({algo['category']})")
+                print(f"    Time: {algo['time_complexity']}  Space: {algo['space_complexity']}")
+                if algo.get("description"):
+                    print(f"    {algo['description'][:100]}")
+                print()
 
     elif args.command == "categories":
-        cats = list_categories(catalog)
-        print(json.dumps(cats, indent=2))
+        cats = catalog.get("category_index", {})
+        if not cats:
+            _rebuild_indexes(catalog)
+            cats = catalog.get("category_index", {})
+        print("Categories:")
+        for cat, ids in sorted(cats.items()):
+            print(f"  {cat}: {len(ids)} algorithms")
+        print(f"\nStandard categories: {', '.join(STANDARD_CATEGORIES)}")
 
     elif args.command == "export":
-        print(export_catalog(catalog, args.format))
+        if args.format == "markdown":
+            output = export_markdown(catalog)
+        else:
+            output = export_json(catalog)
+        if args.output:
+            with open(args.output, 'w') as f:
+                f.write(output)
+            print(f"Exported to {args.output}")
+        else:
+            print(output)
 
     elif args.command == "import":
-        with open(args.file, "r") as f:
+        with open(args.file, 'r') as f:
             data = json.load(f)
         if isinstance(data, dict) and "algorithms" in data:
             data = data["algorithms"]
         count = import_algorithms(catalog, data)
-        _save_catalog(catalog, args.catalog)
-        print(f"Imported {count} algorithms")
+        save_catalog(catalog, args.catalog)
+        print(f"Imported {count} algorithms.")
 
     elif args.command == "stats":
-        print(json.dumps(get_stats(catalog), indent=2))
+        stats = get_stats(catalog)
+        print(json.dumps(stats, indent=2))
+
+    elif args.command == "remove":
+        if remove_algorithm(catalog, args.id):
+            save_catalog(catalog, args.catalog)
+            print(f"Removed algorithm {args.id}")
+        else:
+            print(f"Algorithm {args.id} not found", file=sys.stderr)
+            sys.exit(1)
+
+    else:
+        parser.print_help()
 
 
 if __name__ == "__main__":
