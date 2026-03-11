@@ -5,9 +5,17 @@ Usage:
     python bus_cli.py write <channel> <agent_id> <team> <msg_type> <body_json>
     python bus_cli.py read <channel> [--since <offset>]
     python bus_cli.py init <db_path>
-    python bus_cli.py register <db_path> <agent_id> <team> <role>
+    python bus_cli.py register <agent_id> <team> <role>
     python bus_cli.py heartbeat <db_path> <agent_id>
-    python bus_cli.py status <db_path>
+    python bus_cli.py status
+
+    Help Protocol commands:
+    python bus_cli.py help-request <team> <agent> <description> [--capabilities cap1,cap2] [--priority high]
+    python bus_cli.py help-offer <team> <agent> <request_id>
+    python bus_cli.py status-update <team> <agent> <status> <progress_pct> [--task "current task"]
+    python bus_cli.py work-add <team> <agent> <title> [--description "..."] [--priority medium] [--est-minutes 10]
+    python bus_cli.py idle-teams
+    python bus_cli.py help-needed
 """
 
 import json
@@ -226,6 +234,18 @@ def get_status():
     return status
 
 
+def _get_help_protocol(team, agent_id):
+    """Create a HelpProtocol instance using the standard DB and bus paths."""
+    # Import from same directory
+    _this_dir = os.path.dirname(os.path.abspath(__file__))
+    if _this_dir not in sys.path:
+        sys.path.insert(0, _this_dir)
+    from help_protocol import HelpProtocol
+    os.makedirs(DB_DIR, exist_ok=True)
+    db_path = os.path.join(DB_DIR, "state.db")
+    return HelpProtocol(db_path, BUS_DIR, team, agent_id)
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(__doc__)
@@ -254,6 +274,107 @@ if __name__ == "__main__":
         register_agent(sys.argv[2], sys.argv[3], sys.argv[4])
     elif cmd == "status":
         get_status()
+    elif cmd == "help-request":
+        if len(sys.argv) < 5:
+            print("Usage: bus_cli.py help-request <team> <agent> <description> [--capabilities cap1,cap2] [--priority high]")
+            sys.exit(1)
+        team, agent, desc = sys.argv[2], sys.argv[3], sys.argv[4]
+        caps = []
+        priority = "medium"
+        i = 5
+        while i < len(sys.argv):
+            if sys.argv[i] == "--capabilities" and i + 1 < len(sys.argv):
+                caps = sys.argv[i + 1].split(",")
+                i += 2
+            elif sys.argv[i] == "--priority" and i + 1 < len(sys.argv):
+                priority = sys.argv[i + 1]
+                i += 2
+            else:
+                i += 1
+        hp = _get_help_protocol(team, agent)
+        # Create a work item first, then request help
+        wid = hp.add_work_item(desc, description=desc, priority=priority, required_caps=caps)
+        rid = hp.request_help(wid, desc)
+        hp.close()
+        print(json.dumps({"request_id": rid, "work_item_id": wid}))
+
+    elif cmd == "help-offer":
+        if len(sys.argv) < 5:
+            print("Usage: bus_cli.py help-offer <team> <agent> <request_id>")
+            sys.exit(1)
+        team, agent, request_id = sys.argv[2], sys.argv[3], int(sys.argv[4])
+        hp = _get_help_protocol(team, agent)
+        won = hp.offer_help(request_id)
+        hp.close()
+        print(json.dumps({"accepted": won, "request_id": request_id}))
+
+    elif cmd == "status-update":
+        if len(sys.argv) < 6:
+            print("Usage: bus_cli.py status-update <team> <agent> <status> <progress_pct> [--task 'current task']")
+            sys.exit(1)
+        team, agent = sys.argv[2], sys.argv[3]
+        st, pct = sys.argv[4], float(sys.argv[5])
+        task = ""
+        i = 6
+        while i < len(sys.argv):
+            if sys.argv[i] == "--task" and i + 1 < len(sys.argv):
+                task = sys.argv[i + 1]
+                i += 2
+            else:
+                i += 1
+        hp = _get_help_protocol(team, agent)
+        hp.update_status(st, pct, task)
+        hp.close()
+        print(f"Updated {team} status: {st} ({pct}%)")
+
+    elif cmd == "work-add":
+        if len(sys.argv) < 5:
+            print("Usage: bus_cli.py work-add <team> <agent> <title> [--description '...'] [--priority medium] [--est-minutes 10]")
+            sys.exit(1)
+        team, agent, title = sys.argv[2], sys.argv[3], sys.argv[4]
+        desc = ""
+        priority = "medium"
+        est_min = 0.0
+        i = 5
+        while i < len(sys.argv):
+            if sys.argv[i] == "--description" and i + 1 < len(sys.argv):
+                desc = sys.argv[i + 1]
+                i += 2
+            elif sys.argv[i] == "--priority" and i + 1 < len(sys.argv):
+                priority = sys.argv[i + 1]
+                i += 2
+            elif sys.argv[i] == "--est-minutes" and i + 1 < len(sys.argv):
+                est_min = float(sys.argv[i + 1])
+                i += 2
+            else:
+                i += 1
+        hp = _get_help_protocol(team, agent)
+        wid = hp.add_work_item(title, description=desc, priority=priority, est_minutes=est_min)
+        hp.close()
+        print(json.dumps({"work_item_id": wid}))
+
+    elif cmd == "idle-teams":
+        hp = _get_help_protocol("_system", "_cli")
+        teams = hp.get_idle_teams()
+        hp.close()
+        print(json.dumps({"idle_teams": teams}, indent=2, default=str))
+
+    elif cmd == "help-needed":
+        hp = _get_help_protocol("_system", "_cli")
+        needed = hp.get_teams_needing_help()
+        open_reqs = hp.get_open_help_requests()
+        hp.close()
+        print(json.dumps({
+            "teams_needing_help": needed,
+            "open_requests": open_reqs,
+        }, indent=2, default=str))
+
+    elif cmd == "auto-assign":
+        hp = _get_help_protocol("_system", "_cli")
+        assignments = hp.auto_assign_idle_teams()
+        hp.close()
+        print(json.dumps({"assignments": assignments}, indent=2, default=str))
+
     else:
         print(f"Unknown command: {cmd}")
         sys.exit(1)

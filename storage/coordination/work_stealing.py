@@ -1,0 +1,676 @@
+"""Work Stealing, Pipeline Chaining, and Shared Scratchpad for Proto A.
+
+Provides three coordination primitives on top of SQLite WAL:
+
+- **WorkStealing**: A shared work queue where any team can enqueue tasks
+  and idle teams can atomically steal unclaimed work items.
+- **PipelineManager**: Multi-stage pipelines with dependency tracking.
+  Stages auto-trigger via bus notifications when upstream stages complete.
+- **Scratchpad**: Namespaced key-value store with TTL expiration for
+  sharing intermediate results between agents.
+
+All writes use BEGIN IMMEDIATE for atomicity and the _retry_on_busy
+decorator from Proto A's state.py pattern for SQLITE_BUSY resilience.
+Only uses the Python standard library.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import os
+import sqlite3
+import threading
+import time
+import uuid
+from typing import Any, Optional
+
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Retry helper (mirrors prototype/agent_comm/state.py pattern)
+# ---------------------------------------------------------------------------
+
+_MAX_RETRIES = 5
+_RETRY_BACKOFF = 0.1
+
+
+def _retry_on_busy(func):
+    """Decorator: retry a method on sqlite3.OperationalError (SQLITE_BUSY)."""
+    def wrapper(*args, **kwargs):
+        delay = _RETRY_BACKOFF
+        last_err = None
+        for attempt in range(_MAX_RETRIES):
+            try:
+                return func(*args, **kwargs)
+            except sqlite3.OperationalError as e:
+                if "locked" in str(e).lower() or "busy" in str(e).lower():
+                    last_err = e
+                    logger.debug(
+                        "SQLITE_BUSY on %s (attempt %d/%d), retrying in %.2fs",
+                        func.__name__, attempt + 1, _MAX_RETRIES, delay,
+                    )
+                    time.sleep(delay)
+                    delay *= 2
+                else:
+                    raise
+        raise last_err  # type: ignore[misc]
+    return wrapper
+
+
+# ---------------------------------------------------------------------------
+# Schema
+# ---------------------------------------------------------------------------
+
+_SCHEMA = """
+CREATE TABLE IF NOT EXISTS work_queue (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner_team TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    priority INTEGER DEFAULT 5,
+    status TEXT DEFAULT 'queued',
+    claimed_by TEXT,
+    claimed_at REAL,
+    completed_at REAL,
+    result TEXT,
+    created_at REAL NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS pipelines (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    stages TEXT NOT NULL,
+    status TEXT DEFAULT 'active',
+    created_at REAL NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS pipeline_stages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pipeline_id INTEGER REFERENCES pipelines(id),
+    stage_name TEXT NOT NULL,
+    assigned_team TEXT,
+    depends_on TEXT,
+    status TEXT DEFAULT 'waiting',
+    input_data TEXT,
+    output_data TEXT,
+    started_at REAL,
+    completed_at REAL
+);
+
+CREATE TABLE IF NOT EXISTS scratchpad (
+    key TEXT NOT NULL,
+    namespace TEXT NOT NULL,
+    value TEXT NOT NULL,
+    written_by TEXT NOT NULL,
+    ttl_seconds INTEGER DEFAULT 3600,
+    created_at REAL NOT NULL,
+    expires_at REAL NOT NULL,
+    PRIMARY KEY (key, namespace)
+);
+"""
+
+
+def _open_db(db_path: str, busy_timeout_ms: int = 30000) -> sqlite3.Connection:
+    """Open a WAL-mode SQLite connection and ensure schema exists."""
+    os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
+    conn = sqlite3.connect(db_path, timeout=busy_timeout_ms / 1000, check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute(f"PRAGMA busy_timeout={busy_timeout_ms}")
+    conn.executescript(_SCHEMA)
+    conn.commit()
+    return conn
+
+
+# ---------------------------------------------------------------------------
+# Bus notification helper
+# ---------------------------------------------------------------------------
+
+def _bus_notify(bus_dir: str, channel: str, agent_id: str, team: str, body: dict) -> None:
+    """Fire-and-forget bus notification (JSONL atomic append)."""
+    if bus_dir is None:
+        return
+    os.makedirs(bus_dir, exist_ok=True)
+    msg = {
+        "id": str(uuid.uuid4()),
+        "type": "info",
+        "channel": channel,
+        "team": team,
+        "agent_id": agent_id,
+        "ts": time.time(),
+        "ttl": 3600,
+        "body": body,
+    }
+    raw = json.dumps(msg, separators=(",", ":")).encode("utf-8") + b"\n"
+    safe_ch = channel.replace("/", "_").replace("..", "_")
+    filepath = os.path.join(bus_dir, f"{safe_ch}.jsonl")
+    fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+    try:
+        os.write(fd, raw)
+    finally:
+        os.close(fd)
+
+
+# ===================================================================
+# WorkStealing
+# ===================================================================
+
+
+class WorkStealing:
+    """Shared work queue with atomic steal semantics.
+
+    Any team can enqueue work items.  Idle teams call ``steal_work()``
+    to atomically claim the highest-priority unclaimed item.  The claim
+    uses ``BEGIN IMMEDIATE`` to prevent double-steal races.
+
+    Parameters
+    ----------
+    db_path:
+        Path to the SQLite database file.
+    bus_dir:
+        Path to the JSONL bus directory for notifications (or None to skip).
+    team:
+        Team label for this instance (used as owner_team on enqueue).
+    agent_id:
+        Agent identifier for bus messages.
+    """
+
+    def __init__(self, db_path: str, bus_dir: Optional[str], team: str, agent_id: str) -> None:
+        self.db_path = db_path
+        self.bus_dir = bus_dir
+        self.team = team
+        self.agent_id = agent_id
+        self._lock = threading.Lock()
+        self._conn = _open_db(db_path)
+
+    def close(self) -> None:
+        with self._lock:
+            self._conn.close()
+
+    @_retry_on_busy
+    def enqueue_work(self, title: str, description: str = "", priority: int = 5) -> int:
+        """Add a work item to the shared queue. Returns the work item id."""
+        now = time.time()
+        with self._lock:
+            cur = self._conn.execute(
+                """INSERT INTO work_queue (owner_team, title, description, priority, status, created_at)
+                   VALUES (?, ?, ?, ?, 'queued', ?)""",
+                (self.team, title, description, priority, now),
+            )
+            self._conn.commit()
+            work_id = cur.lastrowid
+
+        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+            "event": "work-enqueued",
+            "work_id": work_id,
+            "title": title,
+            "priority": priority,
+        })
+        return work_id
+
+    @_retry_on_busy
+    def steal_work(self) -> Optional[dict]:
+        """Atomically claim the highest-priority unclaimed work item.
+
+        Uses BEGIN IMMEDIATE to prevent double-steal.  Returns a dict
+        with the work item fields, or None if nothing is available.
+        """
+        conn = self._conn
+        now = time.time()
+        with self._lock:
+            try:
+                conn.execute("BEGIN IMMEDIATE")
+            except sqlite3.OperationalError:
+                raise  # let _retry_on_busy handle SQLITE_BUSY
+
+            try:
+                row = conn.execute(
+                    """SELECT id, owner_team, title, description, priority, created_at
+                       FROM work_queue
+                       WHERE status = 'queued'
+                       ORDER BY priority ASC, created_at ASC
+                       LIMIT 1""",
+                ).fetchone()
+
+                if row is None:
+                    conn.execute("ROLLBACK")
+                    return None
+
+                work_id = row["id"]
+                conn.execute(
+                    "UPDATE work_queue SET status = 'claimed', claimed_by = ?, claimed_at = ? WHERE id = ?",
+                    (self.team, now, work_id),
+                )
+                conn.execute("COMMIT")
+                result = dict(row)
+                result["claimed_by"] = self.team
+                result["claimed_at"] = now
+                result["status"] = "claimed"
+
+            except Exception:
+                try:
+                    conn.execute("ROLLBACK")
+                except sqlite3.OperationalError:
+                    pass
+                raise
+
+        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+            "event": "work-stolen",
+            "work_id": result["id"],
+            "title": result["title"],
+            "stolen_by": self.team,
+        })
+        return result
+
+    @_retry_on_busy
+    def complete_work(self, work_id: int, result: dict) -> None:
+        """Mark a work item as completed with a JSON result."""
+        now = time.time()
+        with self._lock:
+            self._conn.execute(
+                "UPDATE work_queue SET status = 'completed', result = ?, completed_at = ? WHERE id = ?",
+                (json.dumps(result), now, work_id),
+            )
+            self._conn.commit()
+
+        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+            "event": "work-completed",
+            "work_id": work_id,
+        })
+
+    @_retry_on_busy
+    def fail_work(self, work_id: int, reason: str) -> None:
+        """Mark a work item as failed."""
+        now = time.time()
+        with self._lock:
+            self._conn.execute(
+                "UPDATE work_queue SET status = 'failed', result = ?, completed_at = ? WHERE id = ?",
+                (json.dumps({"error": reason}), now, work_id),
+            )
+            self._conn.commit()
+
+    @_retry_on_busy
+    def get_queue_depth(self, team: Optional[str] = None) -> int:
+        """Return number of queued (unclaimed) items, optionally filtered by owner team."""
+        with self._lock:
+            if team:
+                row = self._conn.execute(
+                    "SELECT COUNT(*) FROM work_queue WHERE status = 'queued' AND owner_team = ?",
+                    (team,),
+                ).fetchone()
+            else:
+                row = self._conn.execute(
+                    "SELECT COUNT(*) FROM work_queue WHERE status = 'queued'",
+                ).fetchone()
+        return row[0]
+
+    @_retry_on_busy
+    def get_stealable_work(self) -> list[dict]:
+        """Return all unclaimed work items sorted by priority (ascending)."""
+        with self._lock:
+            rows = self._conn.execute(
+                """SELECT id, owner_team, title, description, priority, status, created_at
+                   FROM work_queue
+                   WHERE status = 'queued'
+                   ORDER BY priority ASC, created_at ASC""",
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+
+# ===================================================================
+# PipelineManager
+# ===================================================================
+
+
+class PipelineManager:
+    """Multi-stage pipeline with dependency tracking.
+
+    Stages are defined with optional ``depends_on`` lists.  When a stage
+    completes, downstream stages whose dependencies are all met become
+    ready.  Bus notifications are sent on stage transitions.
+
+    Parameters
+    ----------
+    db_path:
+        Path to the SQLite database file.
+    bus_dir:
+        Path to the JSONL bus directory for notifications (or None to skip).
+    team:
+        Team label for this instance.
+    agent_id:
+        Agent identifier for bus messages.
+    """
+
+    def __init__(self, db_path: str, bus_dir: Optional[str], team: str, agent_id: str) -> None:
+        self.db_path = db_path
+        self.bus_dir = bus_dir
+        self.team = team
+        self.agent_id = agent_id
+        self._lock = threading.Lock()
+        self._conn = _open_db(db_path)
+
+    def close(self) -> None:
+        with self._lock:
+            self._conn.close()
+
+    @_retry_on_busy
+    def create_pipeline(self, name: str, stages: list[dict]) -> int:
+        """Create a pipeline with the given stages.
+
+        Parameters
+        ----------
+        name:
+            Unique pipeline name.
+        stages:
+            List of dicts, each with ``name`` (str), optional ``team`` (str),
+            optional ``depends_on`` (list[str]).
+
+        Returns
+        -------
+        int
+            The pipeline id.
+        """
+        now = time.time()
+        with self._lock:
+            cur = self._conn.execute(
+                "INSERT INTO pipelines (name, stages, status, created_at) VALUES (?, ?, 'active', ?)",
+                (name, json.dumps(stages), now),
+            )
+            pipeline_id = cur.lastrowid
+
+            for stage in stages:
+                deps = json.dumps(stage.get("depends_on", []))
+                # If a stage has no dependencies, it starts as 'ready'
+                initial_status = "ready" if not stage.get("depends_on") else "waiting"
+                self._conn.execute(
+                    """INSERT INTO pipeline_stages
+                       (pipeline_id, stage_name, assigned_team, depends_on, status)
+                       VALUES (?, ?, ?, ?, ?)""",
+                    (pipeline_id, stage["name"], stage.get("team"), deps, initial_status),
+                )
+            self._conn.commit()
+
+        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+            "event": "pipeline-created",
+            "pipeline_id": pipeline_id,
+            "name": name,
+            "stage_count": len(stages),
+        })
+        return pipeline_id
+
+    @_retry_on_busy
+    def check_stage_ready(self, pipeline_id: int, stage_name: str) -> bool:
+        """Check whether all dependencies for a stage are completed."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT depends_on FROM pipeline_stages WHERE pipeline_id = ? AND stage_name = ?",
+                (pipeline_id, stage_name),
+            ).fetchone()
+
+        if row is None:
+            return False
+
+        deps = json.loads(row["depends_on"])
+        if not deps:
+            return True
+
+        with self._lock:
+            for dep in deps:
+                dep_row = self._conn.execute(
+                    "SELECT status FROM pipeline_stages WHERE pipeline_id = ? AND stage_name = ?",
+                    (pipeline_id, dep),
+                ).fetchone()
+                if dep_row is None or dep_row["status"] != "completed":
+                    return False
+        return True
+
+    @_retry_on_busy
+    def start_stage(self, pipeline_id: int, stage_name: str) -> None:
+        """Mark a stage as in_progress."""
+        now = time.time()
+        with self._lock:
+            self._conn.execute(
+                "UPDATE pipeline_stages SET status = 'in_progress', started_at = ? WHERE pipeline_id = ? AND stage_name = ?",
+                (now, pipeline_id, stage_name),
+            )
+            self._conn.commit()
+
+        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+            "event": "pipeline-stage-started",
+            "pipeline_id": pipeline_id,
+            "stage_name": stage_name,
+        })
+
+    @_retry_on_busy
+    def complete_stage(self, pipeline_id: int, stage_name: str, output_data: dict) -> None:
+        """Mark a stage as completed and store its output data."""
+        now = time.time()
+        with self._lock:
+            self._conn.execute(
+                """UPDATE pipeline_stages
+                   SET status = 'completed', output_data = ?, completed_at = ?
+                   WHERE pipeline_id = ? AND stage_name = ?""",
+                (json.dumps(output_data), now, pipeline_id, stage_name),
+            )
+            self._conn.commit()
+
+        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+            "event": "pipeline-stage-completed",
+            "pipeline_id": pipeline_id,
+            "stage_name": stage_name,
+        })
+
+    @_retry_on_busy
+    def get_ready_stages(self, pipeline_id: int) -> list[dict]:
+        """Return stages whose dependencies are all met (status = 'ready' or newly ready)."""
+        with self._lock:
+            # First get all stages for this pipeline
+            all_stages = self._conn.execute(
+                "SELECT * FROM pipeline_stages WHERE pipeline_id = ?",
+                (pipeline_id,),
+            ).fetchall()
+
+        completed = {s["stage_name"] for s in all_stages if s["status"] == "completed"}
+        ready = []
+        for stage in all_stages:
+            if stage["status"] in ("completed", "in_progress"):
+                continue
+            deps = json.loads(stage["depends_on"])
+            if all(d in completed for d in deps):
+                ready.append(dict(stage))
+
+        # Update any 'waiting' stages to 'ready' if their deps are met
+        with self._lock:
+            for r in ready:
+                if r["status"] == "waiting":
+                    self._conn.execute(
+                        "UPDATE pipeline_stages SET status = 'ready' WHERE id = ?",
+                        (r["id"],),
+                    )
+            self._conn.commit()
+
+        return ready
+
+    @_retry_on_busy
+    def get_pipeline_status(self, pipeline_id: int) -> dict:
+        """Return full pipeline status including all stages."""
+        with self._lock:
+            pipeline_row = self._conn.execute(
+                "SELECT * FROM pipelines WHERE id = ?",
+                (pipeline_id,),
+            ).fetchone()
+            if pipeline_row is None:
+                return {}
+
+            stage_rows = self._conn.execute(
+                "SELECT * FROM pipeline_stages WHERE pipeline_id = ? ORDER BY id",
+                (pipeline_id,),
+            ).fetchall()
+
+        stages = [dict(s) for s in stage_rows]
+        all_completed = all(s["status"] == "completed" for s in stages)
+        any_failed = False  # no failure state for stages currently
+
+        return {
+            "id": pipeline_row["id"],
+            "name": pipeline_row["name"],
+            "status": "completed" if all_completed else pipeline_row["status"],
+            "created_at": pipeline_row["created_at"],
+            "stages": stages,
+        }
+
+    @_retry_on_busy
+    def trigger_downstream(self, pipeline_id: int, completed_stage: str) -> list[str]:
+        """After a stage completes, find and mark newly-ready downstream stages.
+
+        Returns the names of stages that became ready.
+        """
+        with self._lock:
+            all_stages = self._conn.execute(
+                "SELECT * FROM pipeline_stages WHERE pipeline_id = ?",
+                (pipeline_id,),
+            ).fetchall()
+
+        completed = {s["stage_name"] for s in all_stages if s["status"] == "completed"}
+        newly_ready: list[str] = []
+
+        for stage in all_stages:
+            if stage["status"] != "waiting":
+                continue
+            deps = json.loads(stage["depends_on"])
+            if completed_stage in deps and all(d in completed for d in deps):
+                newly_ready.append(stage["stage_name"])
+
+        # Update status to ready
+        with self._lock:
+            for name in newly_ready:
+                self._conn.execute(
+                    "UPDATE pipeline_stages SET status = 'ready' WHERE pipeline_id = ? AND stage_name = ?",
+                    (pipeline_id, name),
+                )
+            self._conn.commit()
+
+        # Bus notification for each newly-ready stage
+        for name in newly_ready:
+            _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+                "event": "pipeline-stage-ready",
+                "pipeline_id": pipeline_id,
+                "stage_name": name,
+                "triggered_by": completed_stage,
+            })
+
+        return newly_ready
+
+
+# ===================================================================
+# Scratchpad
+# ===================================================================
+
+
+class Scratchpad:
+    """Namespaced key-value scratchpad with TTL expiration.
+
+    Values are stored as JSON strings.  Each key is scoped to a namespace
+    (defaults to the team name; use ``"global"`` for cross-team sharing).
+
+    Parameters
+    ----------
+    db_path:
+        Path to the SQLite database file.
+    team:
+        Team label (used as default namespace).
+    agent_id:
+        Agent identifier (recorded as ``written_by``).
+    """
+
+    def __init__(self, db_path: str, team: str, agent_id: str) -> None:
+        self.db_path = db_path
+        self.team = team
+        self.agent_id = agent_id
+        self._lock = threading.Lock()
+        self._conn = _open_db(db_path)
+
+    def close(self) -> None:
+        with self._lock:
+            self._conn.close()
+
+    @_retry_on_busy
+    def write(self, key: str, value: Any, namespace: Optional[str] = None, ttl: int = 3600) -> None:
+        """Write a key-value pair. Overwrites if key+namespace already exists."""
+        ns = namespace or self.team
+        now = time.time()
+        expires_at = now + ttl
+        with self._lock:
+            self._conn.execute(
+                """INSERT INTO scratchpad (key, namespace, value, written_by, ttl_seconds, created_at, expires_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)
+                   ON CONFLICT(key, namespace) DO UPDATE SET
+                       value=excluded.value, written_by=excluded.written_by,
+                       ttl_seconds=excluded.ttl_seconds, created_at=excluded.created_at,
+                       expires_at=excluded.expires_at""",
+                (key, ns, json.dumps(value), self.agent_id, ttl, now, expires_at),
+            )
+            self._conn.commit()
+
+    @_retry_on_busy
+    def read(self, key: str, namespace: Optional[str] = None) -> Optional[Any]:
+        """Read a value by key. Returns None if not found or expired."""
+        ns = namespace or self.team
+        now = time.time()
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT value FROM scratchpad WHERE key = ? AND namespace = ? AND expires_at > ?",
+                (key, ns, now),
+            ).fetchone()
+        if row is None:
+            return None
+        return json.loads(row["value"])
+
+    @_retry_on_busy
+    def read_all(self, namespace: Optional[str] = None) -> dict:
+        """Read all non-expired entries in a namespace. Returns {key: value}."""
+        ns = namespace or self.team
+        now = time.time()
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT key, value FROM scratchpad WHERE namespace = ? AND expires_at > ?",
+                (ns, now),
+            ).fetchall()
+        return {r["key"]: json.loads(r["value"]) for r in rows}
+
+    @_retry_on_busy
+    def delete(self, key: str, namespace: Optional[str] = None) -> None:
+        """Delete a key from the scratchpad."""
+        ns = namespace or self.team
+        with self._lock:
+            self._conn.execute(
+                "DELETE FROM scratchpad WHERE key = ? AND namespace = ?",
+                (key, ns),
+            )
+            self._conn.commit()
+
+    @_retry_on_busy
+    def cleanup_expired(self) -> int:
+        """Delete all expired entries. Returns count of deleted rows."""
+        now = time.time()
+        with self._lock:
+            cur = self._conn.execute(
+                "DELETE FROM scratchpad WHERE expires_at <= ?",
+                (now,),
+            )
+            count = cur.rowcount
+            self._conn.commit()
+        return count
+
+    @_retry_on_busy
+    def list_keys(self, namespace: Optional[str] = None) -> list[str]:
+        """List all non-expired keys in a namespace."""
+        ns = namespace or self.team
+        now = time.time()
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT key FROM scratchpad WHERE namespace = ? AND expires_at > ?",
+                (ns, now),
+            ).fetchall()
+        return [r["key"] for r in rows]

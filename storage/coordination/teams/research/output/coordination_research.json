@@ -1,0 +1,390 @@
+{
+  "metadata": {
+    "generated": "2026-03-11",
+    "team": "research",
+    "agents": ["research-lead", "research-academic", "research-industry", "research-patterns"],
+    "purpose": "External research to inform Proto A coordination system coding teams"
+  },
+  "topics": {
+    "work_stealing_algorithms": {
+      "summary": "Work stealing is a decentralized scheduling strategy where idle processors steal tasks from busy ones. Each processor maintains a double-ended queue (deque). Tasks are pushed/popped from the bottom (LIFO) by the owner, and stolen from the top (FIFO) by thieves. This asymmetry minimizes contention.",
+      "key_algorithms": [
+        {
+          "name": "Chase-Lev Deque",
+          "description": "Lock-free single-producer multi-consumer deque using a circular array with bottom/top indices. The array grows dynamically on overflow. Only steal() modifies top, so top never decrements — eliminating tag fields needed in earlier algorithms.",
+          "complexity": "Push: O(1) amortized, Pop: O(1), Steal: O(1)",
+          "implementation_notes": "Use atomic CAS on top index. Bottom index only modified by owner. Array indexed modulo size. Modern implementations use C11/C++11 atomics per 'Correct and Efficient Work-Stealing for Weak Memory Models'.",
+          "reference_implementations": [
+            {"language": "C++17", "repo": "https://github.com/ConorWilliams/ConcurrentDeque"},
+            {"language": "Rust", "repo": "crossbeam crate (crossbeam::sync::chase_lev)"},
+            {"language": "C++", "repo": "https://github.com/ssbl/concurrent-deque"},
+            {"language": "Haskell", "repo": "hackage.haskell.org/package/chaselev-deque"}
+          ]
+        },
+        {
+          "name": "Cilk Work-Stealing",
+          "description": "Continuation stealing: when a function spawns, the continuation (parent) can be stolen while the child executes locally. Each processor has a ready deque. Idle processors select a random victim and steal from the top of its deque.",
+          "theoretical_bound": "Expected time T1/P + O(T_inf) where T1=total work, P=processors, T_inf=critical path",
+          "key_paper": "Blumofe & Leiserson, 'Scheduling Multithreaded Computations by Work Stealing', JACM 1999"
+        },
+        {
+          "name": "Java ForkJoinPool",
+          "description": "Java's implementation uses work-stealing with configurable LIFO (ForkJoinPool.commonPool) or FIFO (Executors.newWorkStealingPool) modes. FIFO mode better for tasks producing subtasks that are best processed breadth-first.",
+          "reference": "https://www.baeldung.com/java-work-stealing"
+        }
+      ],
+      "optimal_granularity": {
+        "summary": "Task granularity is the critical tuning parameter. Too fine = overhead dominates; too coarse = load imbalance.",
+        "findings": [
+          {
+            "approach": "Lazy Binary Splitting (LBS)",
+            "description": "Adapts splitting threshold at runtime. Unlike Eager Binary Splitting which requires manual stop-splitting-threshold tuning, LBS dynamically adapts. Outperforms static thresholds by 19.5% average, 56.7% over naive sst=1.",
+            "paper": "Tzannes et al., PPoPP 2010"
+          },
+          {
+            "approach": "Minimum Effective Task Granularity (METG)",
+            "description": "Tasks smaller than ~100 microseconds lead to substantial efficiency loss. This is the practical lower bound for task size.",
+            "paper": "Task Bench framework"
+          },
+          {
+            "approach": "Probabilistic Guards",
+            "description": "Prevent thieves from stealing small tasks probabilistically, reducing division cost without losing potential concurrency.",
+            "paper": "ScienceDirect, 'Probabilistic guards for work-stealing programs'"
+          },
+          {
+            "approach": "Adaptive Asynchronous Work-Stealing (A2WS)",
+            "description": "Uses locally collected information to optimally adjust number of tasks to steal. Critical insight: transferring too few tasks increases steal frequency overhead; too many causes escalation.",
+            "paper": "arXiv:2401.04494v2"
+          },
+          {
+            "approach": "PackStealLB",
+            "description": "Groups tasks into packs to amortize communication costs. Up to 41% improvement on molecular dynamics benchmarks.",
+            "paper": "Granularity characterization study, arXiv:2602.20561"
+          }
+        ],
+        "recommendation_for_proto_a": "Start with METG threshold of 100us minimum task size. Implement adaptive granularity: begin breadth-first until all workers busy, then switch to coarser tasks. Pack multiple small tasks into single steal operations to amortize overhead."
+      },
+      "references": [
+        {"title": "Scheduling Multithreaded Computations by Work Stealing", "authors": "Blumofe, Leiserson", "year": 1999, "url": "https://www.csd.uwo.ca/~mmorenom/CS433-CS9624/Resources/Scheduling_multithreaded_computations_by_work_stealing.pdf"},
+        {"title": "Dynamic Circular Work-Stealing Deque", "authors": "Chase, Lev", "year": 2005, "url": "https://www.dre.vanderbilt.edu/~schmidt/PDF/work-stealing-dequeue.pdf"},
+        {"title": "The Implementation of the Cilk-5 Multithreaded Language", "authors": "Frigo, Leiserson, Randall", "year": 1998},
+        {"title": "Correct and Efficient Work-Stealing for Weak Memory Models", "url": "Referenced by crossbeam and concurrent-deque implementations"},
+        {"title": "Lazy Binary-Splitting", "authors": "Tzannes et al.", "year": 2010, "url": "https://user.eng.umd.edu/~barua/ppopp164.pdf"},
+        {"title": "Scheduling Parallel Computations by Work Stealing: A Survey", "url": "https://dl.acm.org/doi/10.1007/s10766-016-0484-8"},
+        {"title": "Efficient Work-Stealing Scheduler for Task Dependency Graph", "authors": "Lin et al.", "url": "https://tsung-wei-huang.github.io/papers/icpads20.pdf"}
+      ]
+    },
+    "multi_agent_load_balancing": {
+      "summary": "Load balancing in multi-agent systems requires choosing between centralized and decentralized approaches, selecting appropriate metrics, and determining rebalancing frequency. Modern research strongly favors decentralized, event-driven approaches.",
+      "strategies": [
+        {
+          "name": "Local Voting Protocol (LVP)",
+          "description": "Distributed consensus protocol requiring only neighbor-to-neighbor exchanges of load estimates. Converges to balanced load distribution under mild connectivity assumptions. No central coordinator needed.",
+          "variant": "Accelerated LVP (ALVP) achieves faster convergence rates with adaptively tuned step-sizes.",
+          "suitability": "HIGH - directly applicable to Proto A bus-based architecture"
+        },
+        {
+          "name": "Event-Driven Rebalancing (DRAMA)",
+          "description": "Triggers reallocation only on significant events: agent failure, new agent arrival, abnormal task progress. Reduces unnecessary resource consumption vs polling. Uses Success Rate and Average Steps as key metrics.",
+          "paper": "DRAMA: Dynamic and Robust Allocation-based Multi-Agent System, arXiv:2508.04332v1",
+          "suitability": "HIGH - matches Proto A event bus pattern"
+        },
+        {
+          "name": "Cooperative Task Reallocation (MapReduce-style)",
+          "description": "Agents identify imbalances and trigger concurrent one-to-many negotiations to locally reallocate tasks. Proven: unstable allocation always converges to stable one via finite socially rational delegations.",
+          "paper": "Adaptive multi-agent system for task reallocation in MapReduce, ScienceDirect",
+          "suitability": "MEDIUM - good theoretical foundation, complex to implement"
+        },
+        {
+          "name": "RL-Based Dynamic Scheduling (RL-MOTS)",
+          "description": "Uses Deep Q-Network to dynamically allocate tasks. Achieves 27% energy reduction and 18% cost improvement. Best for systems with complex optimization objectives.",
+          "suitability": "LOW for Proto A - overkill for current scope"
+        },
+        {
+          "name": "Decentralized Two-Layer Architecture",
+          "description": "Layer 1: Adaptive controllers predict task parameters via recursive regression with forgetting. Layer 2: Selective broadcast of tasks to agents based on relevance and availability. Works under partial observability and noisy feedback.",
+          "paper": "Nature Scientific Reports, Nov 2025",
+          "suitability": "MEDIUM - interesting for future Proto A evolution"
+        }
+      ],
+      "recommended_metrics": [
+        {"metric": "Queue Depth", "description": "Number of pending tasks per worker. Simple, immediate signal.", "priority": "PRIMARY"},
+        {"metric": "Degree of Imbalance (DI)", "description": "Ratio of max-to-average load across workers. Trigger rebalancing when DI > threshold.", "priority": "PRIMARY"},
+        {"metric": "Makespan", "description": "Total time to complete all tasks. Ultimate performance measure.", "priority": "SECONDARY"},
+        {"metric": "Success Rate", "description": "Proportion of tasks completed successfully.", "priority": "SECONDARY"},
+        {"metric": "Average Steps / Latency", "description": "Mean steps to complete final task. Measures overall responsiveness.", "priority": "SECONDARY"},
+        {"metric": "Resource Utilization Rate", "description": "Percentage of time workers are productively busy.", "priority": "MONITORING"}
+      ],
+      "rebalancing_frequency": {
+        "recommendation": "Use event-driven triggers rather than polling. Trigger on: (1) worker idle for >N seconds, (2) degree of imbalance exceeds threshold, (3) agent failure/join events, (4) task completion with remaining work check.",
+        "anti_pattern": "Centralized polling-based rebalancing. Increases network traffic, introduces single point of failure, and scales poorly."
+      },
+      "recommendation_for_proto_a": "Implement hybrid approach: (1) Work stealing as primary mechanism - idle agents pull from busiest agent's queue. (2) Event-driven rebalancing on the bus for structural changes (agent join/leave/failure). (3) Use queue depth + degree of imbalance as primary metrics. (4) LVP-style neighbor exchange for load awareness without central coordinator."
+    },
+    "team_communication_protocols": {
+      "summary": "Agent communication has evolved from KQML/FIPA-ACL academic standards through proprietary framework protocols to Google's A2A standard. The key insight: standardized message types and interaction protocols enable interoperability.",
+      "standards": [
+        {
+          "name": "FIPA ACL",
+          "description": "IEEE standard for agent communication based on speech act theory. Messages have a performative (required) plus optional fields: sender, receiver, content, conversation-id, ontology, content-language.",
+          "key_performatives": [
+            {"name": "REQUEST", "use": "Ask agent to perform action"},
+            {"name": "INFORM", "use": "Provide information/results"},
+            {"name": "QUERY-REF", "use": "Ask for information"},
+            {"name": "CFP", "use": "Call for proposals (auction/negotiation start)"},
+            {"name": "PROPOSE", "use": "Submit proposal in response to CFP"},
+            {"name": "ACCEPT-PROPOSAL", "use": "Accept a proposal"},
+            {"name": "REJECT-PROPOSAL", "use": "Reject a proposal"},
+            {"name": "AGREE", "use": "Agree to perform requested action"},
+            {"name": "REFUSE", "use": "Decline to perform action"},
+            {"name": "FAILURE", "use": "Report action failed"},
+            {"name": "CANCEL", "use": "Cancel previously requested action"},
+            {"name": "NOT-UNDERSTOOD", "use": "Signal message not parseable"},
+            {"name": "SUBSCRIBE", "use": "Request ongoing notifications"}
+          ],
+          "interaction_protocols": [
+            {"name": "Request Protocol", "flow": "Initiator->REQUEST->Participant; Participant->AGREE|REFUSE; if AGREE: Participant->INFORM-DONE|FAILURE"},
+            {"name": "Contract-Net Protocol", "flow": "Initiator->CFP->Responders; Responders->PROPOSE|REFUSE; Initiator->ACCEPT-PROPOSAL|REJECT-PROPOSAL; Winner->INFORM-DONE|FAILURE"},
+            {"name": "Subscribe Protocol", "flow": "Subscriber->SUBSCRIBE->Provider; Provider->AGREE; Provider->INFORM (repeated on events)"}
+          ],
+          "suitability": "MEDIUM - well-designed message types, but heavyweight for our use case"
+        },
+        {
+          "name": "Google A2A (Agent2Agent) Protocol",
+          "description": "Open protocol launched April 2025 by Google, now under Linux Foundation. Uses HTTP, SSE, JSON-RPC. 150+ supporting organizations. Complementary to MCP (which handles agent-to-tool).",
+          "key_concepts": [
+            {"name": "Agent Card", "description": "JSON capability advertisement. Agents publish what they can do for discovery."},
+            {"name": "Task-Oriented Communication", "description": "All interaction oriented around task completion, not free-form messaging."},
+            {"name": "Modality Agnostic", "description": "Supports text, audio, video streaming between agents."},
+            {"name": "Built-in Security", "description": "JWT + OIDC authentication, encryption, fine-grained authorization."}
+          ],
+          "version": "0.3 (latest, with gRPC support)",
+          "suitability": "LOW for internal Proto A (designed for cross-organization), but GOOD design patterns to borrow"
+        },
+        {
+          "name": "KQML (Knowledge Query and Manipulation Language)",
+          "description": "Predecessor to FIPA ACL. Defines permissible speech acts and uses communication facilitators for routing. Simpler but less formally specified than FIPA ACL.",
+          "paper": "Finin et al., 'KQML as an agent communication language', 1994",
+          "suitability": "LOW - superseded by FIPA ACL"
+        }
+      ],
+      "recommendation_for_proto_a": "Adopt a simplified FIPA-inspired message protocol: (1) Use performative-based message types: REQUEST, INFORM, QUERY, SUBSCRIBE, FAILURE, CANCEL. (2) Every message has: sender, receiver/channel, performative, content, conversation-id, timestamp. (3) Implement Request and Contract-Net interaction protocols for task delegation. (4) Borrow A2A's Agent Card concept for capability advertisement on the bus. (5) Keep it JSON-based and lightweight - avoid FIPA's XML overhead.",
+      "references": [
+        {"title": "FIPA ACL Specification", "url": "http://www.fipa.org/specs/fipa00061/"},
+        {"title": "Agent Communication Protocols Explained", "url": "https://www.digitalocean.com/community/tutorials/agent-communication-protocols-explained"},
+        {"title": "A2A Protocol", "url": "https://a2a-protocol.org/latest/"},
+        {"title": "Google A2A Announcement", "url": "https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/"},
+        {"title": "KQML as an agent communication language", "authors": "Finin et al.", "year": 1994},
+        {"title": "Developing Multi-Agent Systems with JADE", "authors": "Bellifemine et al.", "year": 2007},
+        {"title": "Commitment-based protocols", "authors": "Fornara, Colombetti", "year": 2003}
+      ]
+    },
+    "pipeline_orchestration_patterns": {
+      "summary": "Modern pipeline orchestration has evolved from static DAG definitions (Airflow) through dynamic flows (Prefect) to stateful workflow functions (Temporal). The trend is toward code-first, event-driven, and AI-native orchestration.",
+      "frameworks_compared": [
+        {
+          "name": "Apache Airflow",
+          "model": "Static DAGs defined in Python",
+          "dependency_definition": "Explicit operator chaining: task1 >> task2 >> task3, or set_upstream/set_downstream",
+          "state_management": "Stateless tasks, XComs for inter-task data passing",
+          "notification": "Callbacks, SLA monitoring, email alerts, webhooks",
+          "strengths": "Massive ecosystem (80K+ orgs), DAG versioning in v3.0 (April 2025), event-driven scheduling with Data Assets",
+          "weaknesses": "Heavyweight, static DAG structure limits dynamic workflows"
+        },
+        {
+          "name": "Prefect",
+          "model": "Python decorators (@flow, @task) with dynamic DAG construction",
+          "dependency_definition": "Natural Python function calls within flows. Tasks are function calls, subflows via flow-calling-flow.",
+          "state_management": "Flow-level state, task results cached/persisted",
+          "notification": "Automations with metrics-based triggers, Incidents for disruption management",
+          "strengths": "Developer-friendly, dynamic DAGs, clean Python API, ControlFlow for AI workflows",
+          "weaknesses": "Less suited for complex guaranteed-delivery patterns"
+        },
+        {
+          "name": "Temporal",
+          "model": "Stateful workflow functions with event sourcing",
+          "dependency_definition": "Code-level sequencing — workflows are regular functions. Activities called via SDK. Signals for external input.",
+          "state_management": "Full history replay — every step recorded, workflow resumes from any point after crash",
+          "notification": "Signals, queries, search attributes. Workflows can wait/sleep for arbitrary durations durably.",
+          "strengths": "Mission-critical reliability, multi-agent workflow support, arbitrarily long workflows",
+          "weaknesses": "Steeper learning curve, heavier infrastructure"
+        }
+      ],
+      "key_patterns": [
+        {
+          "name": "Fan-Out/Fan-In",
+          "description": "Single task spawns N parallel subtasks, then a join task aggregates results. Supported natively by all three frameworks.",
+          "implementation": "In Airflow: TaskGroup. In Prefect: task.map(). In Temporal: Promise.all() on activity futures."
+        },
+        {
+          "name": "Dynamic DAG Construction",
+          "description": "DAG shape determined at runtime based on input data or intermediate results. Prefect excels here; Airflow supports via dynamic task mapping since v2.3.",
+          "implementation": "Generate task list dynamically, map over inputs."
+        },
+        {
+          "name": "Event-Driven Triggering",
+          "description": "Workflows triggered by external events rather than schedules. Airflow 3.0 Data Assets, Prefect automations, Temporal signals.",
+          "implementation": "Subscribe to event bus, trigger workflow on matching event."
+        },
+        {
+          "name": "Checkpoint/Resume",
+          "description": "Save workflow state at key points; resume from last checkpoint on failure. Temporal does this automatically via event sourcing.",
+          "implementation": "Log state transitions, replay on recovery."
+        },
+        {
+          "name": "Priority Queue with Backpressure",
+          "description": "Tasks have priorities; workers pull highest-priority first. System applies backpressure when queue exceeds threshold.",
+          "implementation": "Priority field on tasks, sorted queue, admission control."
+        }
+      ],
+      "relevant_repos": [
+        {"name": "team-tasks", "stars": 393, "url": "https://github.com/win4r/team-tasks", "description": "Multi-agent pipeline coordination: Linear, DAG, and Debate modes"},
+        {"name": "lyra", "url": "https://github.com/sourabh-kumar2/lyra", "description": "Type-safe DAG task orchestration for Go with automatic concurrency"},
+        {"name": "attractor", "url": "https://github.com/coreydaley/attractor", "description": "DOT-graph AI pipeline runner with LLM tasks, human gates, conditional branching"}
+      ],
+      "recommendation_for_proto_a": "Adopt Prefect's decorator-based simplicity with Temporal's durability concepts: (1) Define tasks as decorated functions with explicit input/output types. (2) Build DAG dynamically from task dependencies at runtime. (3) Implement event-driven triggering via bus subscriptions. (4) Add checkpoint/resume for long-running workflows. (5) Use fan-out/fan-in for parallel work distribution. (6) Priority queue with backpressure for task scheduling."
+    },
+    "real_world_multi_agent_frameworks": {
+      "summary": "Three dominant patterns have emerged in production multi-agent systems: role-based simulation (MetaGPT), structured team execution (CrewAI), and conversational/event-driven messaging (AutoGen). Each excels in different scenarios.",
+      "frameworks": [
+        {
+          "name": "MetaGPT",
+          "architecture": "Role-based message passing simulating a software company",
+          "communication": "Shared message pool with structured inputs/outputs per role. Agents publish to pool, consume based on role subscriptions.",
+          "core_philosophy": "Code = SOP(Team). Standardized Operating Procedures define agent interactions.",
+          "github": "https://github.com/FoundationAgents/MetaGPT",
+          "key_pattern": "Each role has defined input/output schemas. Messages flow through a publish-subscribe pool. Agents filter by relevance to their role.",
+          "applicable_insights": "SOP-driven coordination reduces ambiguity. Structured message schemas prevent miscommunication."
+        },
+        {
+          "name": "CrewAI",
+          "architecture": "Role-driven team orchestration with sequential or hierarchical processing",
+          "communication": "Tasks processed sequentially by default. Each agent has specific responsibilities. Focus on task-specific data over conversation history to reduce token costs.",
+          "strengths": "Lean architecture, no LangChain dependency, both high-level simplicity and low-level control.",
+          "key_pattern": "Crew defines agents + tasks + process (sequential/hierarchical). Manager agent can delegate in hierarchical mode.",
+          "applicable_insights": "Sequential processing prevents resource contention. Clear role boundaries reduce coordination overhead."
+        },
+        {
+          "name": "AutoGen (Microsoft)",
+          "architecture": "Event-driven asynchronous multi-agent conversations",
+          "communication": "Agents exchange messages with defined dialogue policies. Supports fan-out/fan-in, event-driven triggers, human checkpoints.",
+          "strengths": "Complex topologies, real-time agent updates, message flow visualization.",
+          "key_pattern": "GroupChat with agents having different capabilities. Conversation manager routes messages. Supports nested conversations.",
+          "applicable_insights": "Event-driven architecture scales better than sequential. Explicit dialogue policies prevent confusion."
+        },
+        {
+          "name": "LangGraph (LangChain)",
+          "architecture": "Graph-based state machine for agent workflows",
+          "communication": "Nodes are agents/tools, edges define transitions, shared state passed through graph.",
+          "strengths": "Most widely used in 2025. Fine-grained control over agent transitions.",
+          "key_pattern": "State graph with conditional edges. Checkpointing built-in. Human-in-the-loop via interrupt nodes.",
+          "applicable_insights": "Graph-based state machines provide clear visualization and debugging of agent flows."
+        }
+      ],
+      "emerging_protocols": [
+        {
+          "name": "A2A (Google Agent2Agent)",
+          "description": "Cross-organization agent interoperability. Agent Cards for discovery, task-oriented communication, HTTP/SSE/JSON-RPC transport.",
+          "url": "https://a2a-protocol.org/latest/"
+        },
+        {
+          "name": "MCP (Model Context Protocol)",
+          "description": "Agent-to-tool communication standard. Provides structured access to tools, APIs, and resources.",
+          "relationship": "Complementary to A2A — MCP for tools, A2A for agent-to-agent."
+        },
+        {
+          "name": "ACP, ANP, Agora",
+          "description": "Emerging agent communication protocols examined in recent arxiv survey (arxiv:2508.10146v1). Still maturing.",
+          "url": "https://arxiv.org/html/2508.10146v1"
+        }
+      ],
+      "winning_patterns": [
+        "Role-based agent design with clear responsibilities (all frameworks converge on this)",
+        "Structured message schemas over free-form text (MetaGPT, A2A)",
+        "Event-driven async communication over synchronous request-response (AutoGen, A2A)",
+        "Capability advertisement/discovery (A2A Agent Cards, FIPA Directory Facilitator)",
+        "Hierarchical delegation with manager agents (CrewAI hierarchical mode)",
+        "Shared state with controlled access (LangGraph state graph)"
+      ],
+      "recommendation_for_proto_a": "Combine winning patterns: (1) Role-based agents with capability cards (MetaGPT + A2A). (2) Event-driven bus communication (AutoGen pattern) — already implemented via Proto A bus. (3) Structured JSON message schemas with performative types (FIPA-inspired). (4) Hierarchical delegation: lead agents can delegate to workers (CrewAI hierarchical). (5) Shared state via bus with conversation IDs for threading. (6) SOP-driven workflows defining expected agent interactions (MetaGPT).",
+      "references": [
+        {"title": "MetaGPT GitHub", "url": "https://github.com/FoundationAgents/MetaGPT"},
+        {"title": "CrewAI Guide", "url": "https://mem0.ai/blog/crewai-guide-multi-agent-ai-teams"},
+        {"title": "Agentic AI Frameworks Survey", "url": "https://arxiv.org/html/2508.10146v1"},
+        {"title": "AI Agent Frameworks Compared 2026", "url": "https://arsum.com/blog/posts/ai-agent-frameworks/"},
+        {"title": "LangGraph vs AutoGen vs CrewAI Comparison", "url": "https://latenode.com/blog/platform-comparisons-alternatives/automation-platform-comparisons/langgraph-vs-autogen-vs-crewai-complete-ai-agent-framework-comparison-architecture-analysis-2025"},
+        {"title": "NeuralGPT - Hierarchical multi-agent via websockets", "url": "https://github.com/CognitiveCodes/NeuralGPT"}
+      ]
+    }
+  },
+  "synthesis": {
+    "recommended_algorithms_ranked": [
+      {
+        "rank": 1,
+        "name": "Event-Driven Work Stealing with Chase-Lev Deques",
+        "description": "Each agent maintains a local task deque. Idle agents steal from the busiest agent's deque (random victim selection with bias toward heavily loaded agents). Steal events posted to bus for monitoring. Task packing for small tasks.",
+        "suitability": "HIGH",
+        "complexity": "MEDIUM",
+        "rationale": "Proven in Go scheduler, Cilk, Java ForkJoinPool. Well-understood theoretical bounds. Lock-free implementations available."
+      },
+      {
+        "rank": 2,
+        "name": "FIPA-Inspired Message Protocol on Event Bus",
+        "description": "Standardized message types (REQUEST, INFORM, QUERY, SUBSCRIBE, FAILURE, CANCEL) with conversation IDs. Every message is a JSON object with performative, sender, receiver, content, timestamp, conversation-id fields.",
+        "suitability": "HIGH",
+        "complexity": "LOW",
+        "rationale": "FIPA ACL is battle-tested standard. Simplified version maps directly to Proto A bus events. Conversation IDs enable request-response threading."
+      },
+      {
+        "rank": 3,
+        "name": "Capability-Based Agent Discovery (A2A Agent Cards)",
+        "description": "Each agent publishes a JSON capability card to the bus on registration: what tasks it can handle, current load, specializations. Task allocator matches tasks to agents based on capabilities.",
+        "suitability": "HIGH",
+        "complexity": "LOW",
+        "rationale": "Borrowed from Google A2A and FIPA Directory Facilitator. Enables dynamic team composition and intelligent task routing."
+      },
+      {
+        "rank": 4,
+        "name": "LVP-Based Load Awareness",
+        "description": "Agents periodically exchange load estimates with neighbors on the bus. Uses Local Voting Protocol to converge on balanced load distribution without central coordinator.",
+        "suitability": "MEDIUM-HIGH",
+        "complexity": "MEDIUM",
+        "rationale": "Proven distributed consensus approach. Lightweight neighbor-to-neighbor exchanges. Works with Proto A bus."
+      },
+      {
+        "rank": 5,
+        "name": "Dynamic DAG Task Orchestration",
+        "description": "Tasks define dependencies as a DAG built at runtime. Scheduler topologically sorts and dispatches ready tasks to available agents. Fan-out/fan-in for parallel subtasks. Event-driven triggering.",
+        "suitability": "MEDIUM-HIGH",
+        "complexity": "MEDIUM-HIGH",
+        "rationale": "Standard pattern in Airflow/Prefect/Temporal. Enables complex multi-step workflows with proper ordering."
+      },
+      {
+        "rank": 6,
+        "name": "Contract-Net Task Negotiation",
+        "description": "For complex task allocation: coordinator broadcasts CFP, agents respond with proposals (including estimated completion time, current load), coordinator selects best proposal.",
+        "suitability": "MEDIUM",
+        "complexity": "MEDIUM",
+        "rationale": "FIPA Contract-Net is the standard multi-agent negotiation protocol. Good for heterogeneous agent capabilities."
+      }
+    ],
+    "implementation_priorities": [
+      "IMMEDIATE: Add performative-based message types to bus protocol (REQUEST, INFORM, FAILURE, etc.)",
+      "IMMEDIATE: Add conversation-id field to all bus messages for request-response threading",
+      "SHORT-TERM: Implement agent capability cards published on registration",
+      "SHORT-TERM: Add queue depth tracking per agent for load monitoring",
+      "MEDIUM-TERM: Implement work-stealing: idle agents pull tasks from busiest agent",
+      "MEDIUM-TERM: Build DAG-based task orchestration for multi-step workflows",
+      "LONG-TERM: Add Contract-Net negotiation for complex task allocation",
+      "LONG-TERM: LVP-based distributed load consensus"
+    ],
+    "key_design_principles": [
+      "Decentralized over centralized: no single point of failure, scales naturally",
+      "Event-driven over polling: reduces overhead, faster response to changes",
+      "Structured messages over free-form: enables automation, reduces ambiguity",
+      "Adaptive granularity: start coarse, split on demand, minimum 100us task size",
+      "Role-based agents with clear boundaries: reduces coordination overhead",
+      "Capability advertisement: enables intelligent task routing without central registry"
+    ]
+  }
+}

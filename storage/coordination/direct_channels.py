@@ -1,0 +1,588 @@
+"""
+Direct team-to-team channels, presence tracking, and work progress broadcasting.
+
+Extends the Proto A communication system with:
+- Named channels (direct, topic, team, broadcast)
+- Team presence indicators
+- Progress broadcasting with bottleneck detection
+
+Uses SQLite WAL mode for concurrent access and the existing JSONL bus for
+real-time message delivery.  Stdlib only.
+"""
+
+import json
+import logging
+import os
+import sqlite3
+import threading
+import time
+import uuid
+from typing import Optional
+
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+VALID_MSG_TYPES = frozenset({
+    "info", "blocker", "phase-signal", "heartbeat", "request", "response",
+})
+
+MAX_MESSAGE_BYTES = 4096
+
+_MAX_RETRIES = 5
+_RETRY_BACKOFF = 0.1
+
+_SCHEMA = """
+CREATE TABLE IF NOT EXISTS channels (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    channel_name TEXT UNIQUE NOT NULL,
+    channel_type TEXT NOT NULL,
+    created_by TEXT NOT NULL,
+    participants TEXT NOT NULL,
+    status TEXT DEFAULT 'active',
+    created_at REAL NOT NULL,
+    last_activity REAL
+);
+
+CREATE TABLE IF NOT EXISTS presence (
+    team TEXT PRIMARY KEY,
+    status TEXT DEFAULT 'available',
+    current_channels TEXT,
+    last_seen REAL NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS progress (
+    team TEXT PRIMARY KEY,
+    phase TEXT NOT NULL,
+    progress_pct REAL DEFAULT 0,
+    items_total INTEGER DEFAULT 0,
+    items_done INTEGER DEFAULT 0,
+    estimated_completion_ts REAL,
+    current_bottleneck TEXT,
+    last_updated REAL NOT NULL
+);
+"""
+
+VALID_PRESENCE = frozenset({"available", "busy", "helping", "away"})
+VALID_CHANNEL_TYPES = frozenset({"direct", "team", "topic", "broadcast"})
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _retry_on_busy(func):
+    """Decorator: retry a method on sqlite3.OperationalError (SQLITE_BUSY)."""
+    def wrapper(*args, **kwargs):
+        delay = _RETRY_BACKOFF
+        last_err = None
+        for attempt in range(_MAX_RETRIES):
+            try:
+                return func(*args, **kwargs)
+            except sqlite3.OperationalError as e:
+                if "locked" in str(e).lower() or "busy" in str(e).lower():
+                    last_err = e
+                    logger.debug(
+                        "SQLITE_BUSY on %s (attempt %d/%d), retrying in %.2fs",
+                        func.__name__, attempt + 1, _MAX_RETRIES, delay,
+                    )
+                    time.sleep(delay)
+                    delay *= 2
+                else:
+                    raise
+        raise last_err  # type: ignore[misc]
+    return wrapper
+
+
+def _direct_channel_name(team_a: str, team_b: str) -> str:
+    """Build a deterministic direct channel name (alphabetical order)."""
+    a, b = sorted([team_a, team_b])
+    return f"direct-{a}-{b}"
+
+
+def _safe_channel(name: str) -> str:
+    """Sanitize a channel name for filesystem use."""
+    return name.replace("/", "_").replace("..", "_")
+
+
+def _bus_publish(bus_dir: str, channel: str, agent_id: str, team: str,
+                 msg_type: str, body: dict, ttl: int = 3600) -> str:
+    """Append a message to a JSONL bus channel file.  Returns the message id."""
+    os.makedirs(bus_dir, exist_ok=True)
+    msg = {
+        "id": str(uuid.uuid4()),
+        "type": msg_type,
+        "channel": channel,
+        "team": team,
+        "agent_id": agent_id,
+        "ts": time.time(),
+        "ttl": ttl,
+        "body": body,
+    }
+    raw = json.dumps(msg, separators=(",", ":")).encode("utf-8") + b"\n"
+    if len(raw) > MAX_MESSAGE_BYTES:
+        raise ValueError(
+            f"Serialized message is {len(raw)} bytes, exceeds {MAX_MESSAGE_BYTES} byte limit"
+        )
+    safe = _safe_channel(channel)
+    filepath = os.path.join(bus_dir, f"{safe}.jsonl")
+    fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+    try:
+        os.write(fd, raw)
+    finally:
+        os.close(fd)
+    return msg["id"]
+
+
+def _bus_read(bus_dir: str, channel: str, since_offset: int = 0):
+    """Read messages from a JSONL bus channel file.  Returns (msgs, new_offset)."""
+    safe = _safe_channel(channel)
+    filepath = os.path.join(bus_dir, f"{safe}.jsonl")
+    if not os.path.exists(filepath):
+        return [], 0
+    with open(filepath, "r", encoding="utf-8") as f:
+        f.seek(since_offset)
+        data = f.read()
+    new_offset = since_offset + len(data.encode("utf-8"))
+    msgs = []
+    now = time.time()
+    for line in data.strip().split("\n"):
+        if not line.strip():
+            continue
+        try:
+            m = json.loads(line)
+            if m.get("ts", 0) + m.get("ttl", 300) > now:
+                msgs.append(m)
+        except json.JSONDecodeError:
+            continue
+    return msgs, new_offset
+
+
+# ===========================================================================
+# DirectChannels
+# ===========================================================================
+
+
+class DirectChannels:
+    """Manages direct team-to-team channels, presence, and progress broadcasting.
+
+    Parameters
+    ----------
+    db_path:
+        Path to the SQLite database (will be created if missing).
+    bus_dir:
+        Path to the JSONL bus directory for real-time message delivery.
+    team:
+        The team identifier for this instance.
+    agent_id:
+        The agent identifier for this instance.
+    """
+
+    def __init__(self, db_path: str, bus_dir: str, team: str, agent_id: str) -> None:
+        self.db_path = db_path
+        self.bus_dir = bus_dir
+        self.team = team
+        self.agent_id = agent_id
+
+        self._lock = threading.Lock()
+        os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
+        self._conn = sqlite3.connect(db_path, timeout=30, check_same_thread=False)
+        self._conn.row_factory = sqlite3.Row
+        self._conn.execute("PRAGMA journal_mode=WAL")
+        self._conn.execute("PRAGMA busy_timeout=30000")
+        self._conn.executescript(_SCHEMA)
+        self._conn.commit()
+
+        # Track read offsets per channel for bus polling
+        self._read_offsets: dict[str, int] = {}
+
+    def close(self) -> None:
+        """Close the database connection."""
+        with self._lock:
+            self._conn.close()
+
+    # ------------------------------------------------------------------
+    # Channel management
+    # ------------------------------------------------------------------
+
+    @_retry_on_busy
+    def create_direct_channel(self, target_team: str) -> str:
+        """Create (or reactivate) a direct channel between this team and *target_team*.
+
+        Returns the channel name.
+        """
+        channel_name = _direct_channel_name(self.team, target_team)
+        participants = json.dumps(sorted([self.team, target_team]))
+        now = time.time()
+
+        with self._lock:
+            self._conn.execute(
+                """
+                INSERT INTO channels (channel_name, channel_type, created_by, participants,
+                                      status, created_at, last_activity)
+                VALUES (?, 'direct', ?, ?, 'active', ?, ?)
+                ON CONFLICT(channel_name) DO UPDATE SET
+                    status='active', last_activity=excluded.last_activity
+                """,
+                (channel_name, self.team, participants, now, now),
+            )
+            self._conn.commit()
+
+        # Announce on bus
+        _bus_publish(
+            self.bus_dir, "global", self.agent_id, self.team, "info",
+            {"event": "channel-created", "channel": channel_name,
+             "type": "direct", "participants": sorted([self.team, target_team])},
+        )
+        logger.info("Direct channel created: %s", channel_name)
+        return channel_name
+
+    @_retry_on_busy
+    def create_topic_channel(self, topic: str, participants: list[str]) -> str:
+        """Create a topic-based channel with the given participants.
+
+        Returns the channel name.
+        """
+        channel_name = f"topic-{topic}"
+        # Ensure creator's team is in participants
+        all_participants = sorted(set(participants) | {self.team})
+        participants_json = json.dumps(all_participants)
+        now = time.time()
+
+        with self._lock:
+            self._conn.execute(
+                """
+                INSERT INTO channels (channel_name, channel_type, created_by, participants,
+                                      status, created_at, last_activity)
+                VALUES (?, 'topic', ?, ?, 'active', ?, ?)
+                ON CONFLICT(channel_name) DO UPDATE SET
+                    participants=excluded.participants,
+                    status='active', last_activity=excluded.last_activity
+                """,
+                (channel_name, self.team, participants_json, now, now),
+            )
+            self._conn.commit()
+
+        _bus_publish(
+            self.bus_dir, "global", self.agent_id, self.team, "info",
+            {"event": "channel-created", "channel": channel_name,
+             "type": "topic", "participants": all_participants},
+        )
+        logger.info("Topic channel created: %s", channel_name)
+        return channel_name
+
+    @_retry_on_busy
+    def join_channel(self, channel_name: str) -> None:
+        """Add this team to an existing channel's participant list."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT participants FROM channels WHERE channel_name = ? AND status = 'active'",
+                (channel_name,),
+            ).fetchone()
+            if row is None:
+                raise ValueError(f"Channel {channel_name!r} does not exist or is archived")
+
+            current = json.loads(row["participants"])
+            if self.team not in current:
+                current.append(self.team)
+                current.sort()
+            self._conn.execute(
+                "UPDATE channels SET participants = ?, last_activity = ? WHERE channel_name = ?",
+                (json.dumps(current), time.time(), channel_name),
+            )
+            self._conn.commit()
+
+        _bus_publish(
+            self.bus_dir, "global", self.agent_id, self.team, "info",
+            {"event": "channel-joined", "channel": channel_name, "team": self.team},
+        )
+
+    @_retry_on_busy
+    def leave_channel(self, channel_name: str) -> None:
+        """Remove this team from a channel's participant list."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT participants FROM channels WHERE channel_name = ?",
+                (channel_name,),
+            ).fetchone()
+            if row is None:
+                return
+
+            current = json.loads(row["participants"])
+            if self.team in current:
+                current.remove(self.team)
+            self._conn.execute(
+                "UPDATE channels SET participants = ?, last_activity = ? WHERE channel_name = ?",
+                (json.dumps(current), time.time(), channel_name),
+            )
+            self._conn.commit()
+
+    @_retry_on_busy
+    def list_active_channels(self) -> list[dict]:
+        """Return all active channels this team participates in."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM channels WHERE status = 'active'"
+            ).fetchall()
+
+        results = []
+        for row in rows:
+            d = dict(row)
+            participants = json.loads(d["participants"])
+            if self.team in participants:
+                d["participants"] = participants
+                results.append(d)
+        return results
+
+    @_retry_on_busy
+    def archive_channel(self, channel_name: str) -> None:
+        """Mark a channel as archived."""
+        with self._lock:
+            self._conn.execute(
+                "UPDATE channels SET status = 'archived', last_activity = ? WHERE channel_name = ?",
+                (time.time(), channel_name),
+            )
+            self._conn.commit()
+
+    # ------------------------------------------------------------------
+    # Direct messaging
+    # ------------------------------------------------------------------
+
+    def send_direct(self, target_team: str, msg_type: str, body: dict) -> str:
+        """Send a message on the direct channel to *target_team*.
+
+        Creates the direct channel if it does not yet exist.
+        Returns the message id.
+        """
+        channel_name = _direct_channel_name(self.team, target_team)
+
+        # Ensure channel exists in the registry
+        self._ensure_direct_channel(target_team)
+
+        # Update last_activity
+        self._touch_channel(channel_name)
+
+        # Publish to the channel-specific bus file
+        if msg_type not in VALID_MSG_TYPES:
+            raise ValueError(f"Invalid message type {msg_type!r}")
+
+        return _bus_publish(
+            self.bus_dir, channel_name, self.agent_id, self.team, msg_type, body,
+        )
+
+    def read_direct(self, from_team: str) -> list[dict]:
+        """Read new messages from the direct channel with *from_team*.
+
+        Returns messages since the last read (tracked internally).
+        """
+        channel_name = _direct_channel_name(self.team, from_team)
+        offset = self._read_offsets.get(channel_name, 0)
+        msgs, new_offset = _bus_read(self.bus_dir, channel_name, offset)
+        self._read_offsets[channel_name] = new_offset
+        return msgs
+
+    # ------------------------------------------------------------------
+    # Presence
+    # ------------------------------------------------------------------
+
+    @_retry_on_busy
+    def set_presence(self, status: str) -> None:
+        """Set this team's presence status.
+
+        Valid statuses: available, busy, helping, away.
+        """
+        if status not in VALID_PRESENCE:
+            raise ValueError(f"Invalid presence status {status!r}; must be one of {VALID_PRESENCE}")
+
+        now = time.time()
+        # Gather current channels
+        channels = [ch["channel_name"] for ch in self.list_active_channels()]
+        channels_json = json.dumps(channels)
+
+        with self._lock:
+            self._conn.execute(
+                """
+                INSERT INTO presence (team, status, current_channels, last_seen)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(team) DO UPDATE SET
+                    status=excluded.status,
+                    current_channels=excluded.current_channels,
+                    last_seen=excluded.last_seen
+                """,
+                (self.team, status, channels_json, now),
+            )
+            self._conn.commit()
+
+        _bus_publish(
+            self.bus_dir, "global", self.agent_id, self.team, "info",
+            {"event": "presence-update", "team": self.team, "status": status},
+        )
+
+    @_retry_on_busy
+    def get_presence(self, team: str = None) -> dict | list[dict]:
+        """Get presence info for one team or all teams.
+
+        If *team* is given, returns a single dict.  Otherwise returns a list.
+        """
+        with self._lock:
+            if team is not None:
+                row = self._conn.execute(
+                    "SELECT * FROM presence WHERE team = ?", (team,),
+                ).fetchone()
+                if row is None:
+                    return {"team": team, "status": "unknown", "current_channels": [], "last_seen": None}
+                d = dict(row)
+                d["current_channels"] = json.loads(d["current_channels"]) if d["current_channels"] else []
+                return d
+            else:
+                rows = self._conn.execute("SELECT * FROM presence").fetchall()
+                results = []
+                for row in rows:
+                    d = dict(row)
+                    d["current_channels"] = json.loads(d["current_channels"]) if d["current_channels"] else []
+                    results.append(d)
+                return results
+
+    @_retry_on_busy
+    def get_available_teams(self) -> list[dict]:
+        """Return all teams with 'available' presence status."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM presence WHERE status = 'available'"
+            ).fetchall()
+        results = []
+        for row in rows:
+            d = dict(row)
+            d["current_channels"] = json.loads(d["current_channels"]) if d["current_channels"] else []
+            results.append(d)
+        return results
+
+    # ------------------------------------------------------------------
+    # Progress broadcasting
+    # ------------------------------------------------------------------
+
+    @_retry_on_busy
+    def update_progress(self, phase: str, progress_pct: float,
+                        items_total: int, items_done: int,
+                        est_completion_ts: float = None,
+                        bottleneck: str = None) -> None:
+        """Update this team's progress and broadcast it."""
+        now = time.time()
+        with self._lock:
+            self._conn.execute(
+                """
+                INSERT INTO progress (team, phase, progress_pct, items_total, items_done,
+                                      estimated_completion_ts, current_bottleneck, last_updated)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(team) DO UPDATE SET
+                    phase=excluded.phase,
+                    progress_pct=excluded.progress_pct,
+                    items_total=excluded.items_total,
+                    items_done=excluded.items_done,
+                    estimated_completion_ts=excluded.estimated_completion_ts,
+                    current_bottleneck=excluded.current_bottleneck,
+                    last_updated=excluded.last_updated
+                """,
+                (self.team, phase, progress_pct, items_total, items_done,
+                 est_completion_ts, bottleneck, now),
+            )
+            self._conn.commit()
+
+        body = {
+            "event": "progress-update",
+            "team": self.team,
+            "phase": phase,
+            "progress_pct": progress_pct,
+            "items_total": items_total,
+            "items_done": items_done,
+        }
+        if bottleneck:
+            body["bottleneck"] = bottleneck
+        if est_completion_ts:
+            body["estimated_completion_ts"] = est_completion_ts
+
+        _bus_publish(
+            self.bus_dir, "global", self.agent_id, self.team, "info", body,
+        )
+
+    @_retry_on_busy
+    def get_all_progress(self) -> list[dict]:
+        """Return progress records for all teams."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM progress ORDER BY progress_pct ASC"
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    @_retry_on_busy
+    def get_team_progress(self, team: str) -> dict:
+        """Return progress for a specific team."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM progress WHERE team = ?", (team,),
+            ).fetchone()
+        if row is None:
+            return {"team": team, "phase": "unknown", "progress_pct": 0,
+                    "items_total": 0, "items_done": 0}
+        return dict(row)
+
+    @_retry_on_busy
+    def get_slowest_team(self) -> dict:
+        """Identify the team with the lowest progress percentage.
+
+        Useful for identifying the overall bottleneck.
+        """
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM progress ORDER BY progress_pct ASC LIMIT 1"
+            ).fetchone()
+        if row is None:
+            return {}
+        return dict(row)
+
+    @_retry_on_busy
+    def get_teams_below_progress(self, threshold_pct: float) -> list[dict]:
+        """Return all teams with progress below the given threshold."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM progress WHERE progress_pct < ? ORDER BY progress_pct ASC",
+                (threshold_pct,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    @_retry_on_busy
+    def _ensure_direct_channel(self, target_team: str) -> str:
+        """Ensure a direct channel exists between this team and *target_team*."""
+        channel_name = _direct_channel_name(self.team, target_team)
+        participants = json.dumps(sorted([self.team, target_team]))
+        now = time.time()
+
+        with self._lock:
+            self._conn.execute(
+                """
+                INSERT INTO channels (channel_name, channel_type, created_by, participants,
+                                      status, created_at, last_activity)
+                VALUES (?, 'direct', ?, ?, 'active', ?, ?)
+                ON CONFLICT(channel_name) DO UPDATE SET
+                    status='active', last_activity=excluded.last_activity
+                """,
+                (channel_name, self.team, participants, now, now),
+            )
+            self._conn.commit()
+        return channel_name
+
+    @_retry_on_busy
+    def _touch_channel(self, channel_name: str) -> None:
+        """Update last_activity timestamp on a channel."""
+        with self._lock:
+            self._conn.execute(
+                "UPDATE channels SET last_activity = ? WHERE channel_name = ?",
+                (time.time(), channel_name),
+            )
+            self._conn.commit()
