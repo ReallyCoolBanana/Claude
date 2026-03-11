@@ -1,0 +1,273 @@
+{
+  "team": "think-tank",
+  "date": "2026-03-11",
+  "knowledge_gaps": [
+    {
+      "area": "Security & Access Control for Multi-Agent Systems",
+      "importance": "critical",
+      "description": "KB-0028 touches security tangentially (one tag), but there is no dedicated entry on agent authentication, authorization, sandboxing, or preventing malicious prompt injection between agents. The coordination system allows any agent to write to any bus or steal any work item. A rogue or confused agent could corrupt shared state, exfiltrate data via bus messages, or escalate privileges through the help protocol. With 2 high-severity bugs already identified (authorization bypass risk, non-transactional fulfill_help), this gap is actively dangerous.",
+      "recommended_action": "Create KB entry on multi-agent security model: agent identity verification, message signing, write-scope restrictions per role (coordinator vs worker), bus message validation, and sandboxed execution boundaries. Implement at minimum: agent role-based write permissions on SQLite tables."
+    },
+    {
+      "area": "Agent Memory & Context Management",
+      "importance": "critical",
+      "description": "Despite the 90% token savings from smart_read (KB-0032), there is no KB entry on how agents should manage their context window across a multi-step session. No guidance on: when to summarize and compact working memory, how to prioritize which context to retain vs discard, how to hand off context between agents in a pipeline, or how to reconstruct context after a crash/restart. The read_offset_persistence bug (weak link #5) is a symptom of this gap.",
+      "recommended_action": "Create KB entry covering: context budget allocation strategies, progressive summarization patterns, inter-agent context handoff protocols, and crash-recovery context reconstruction. Build a context_budget_tracker tool that warns agents when they are approaching context limits."
+    },
+    {
+      "area": "Monitoring, Observability & Debugging Distributed Agents",
+      "importance": "high",
+      "description": "SOP-012 covers reactive monitoring, but there is no structured observability system. No distributed tracing across agents, no centralized log aggregation, no metrics dashboards beyond the coordinator hub's basic status view. When TEAM-0022 found a cross-team bug, it was discovered through friction, not through monitoring. The dashboard (dashboard.py) shows agent status but not message flow, work item lifecycle, or performance degradation trends. Debugging a 14-agent mixed-ops session requires reading raw JSONL files.",
+      "recommended_action": "Create KB entry on agent observability architecture. Build: (1) a trace-id propagation system through bus messages for distributed tracing, (2) a log aggregator that merges per-agent logs with timestamps, (3) performance trend detection that alerts on degradation before it becomes critical."
+    },
+    {
+      "area": "Cost Optimization for API-Heavy Workflows",
+      "importance": "high",
+      "description": "The system has extensive API tool integrations (KB-0010, KB-0012, KB-0013, KB-0014) but zero guidance on managing API costs. No rate budget allocation across agents, no cost-per-query tracking, no caching strategy for repeated queries. The rate limiter is the #1 weak link precisely because it was configured without understanding actual usage patterns. The data gathering benchmarks show 400% improvement in iteration 2 (KB-0005) but do not track cost per data point.",
+      "recommended_action": "Create KB entry on API cost management: per-source cost models, shared cache layer for deduplication of API calls across agents, budget allocation per team, and cost-quality tradeoff guidance. Instrument all API tools to log cost metrics."
+    },
+    {
+      "area": "User Experience Patterns for Agent Interactions",
+      "importance": "high",
+      "description": "The entire system is designed for agent-to-agent interaction. There is no KB entry on how a human operator should interact with the system during or after multi-agent sessions. SOP-011 covers launch but not real-time human intervention patterns. SOP-012 covers monitoring but not how to interpret what is being monitored. The dashboard exists but there is no guidance on what actions to take based on dashboard state. This matters because the system's value ultimately flows through human decisions.",
+      "recommended_action": "Create KB entry on human-agent interaction patterns: dashboard interpretation guide, when and how to intervene in running sessions, how to consume and act on session outputs, and feedback loops from human review back into agent behavior."
+    },
+    {
+      "area": "Testing Strategies for Agent Systems",
+      "importance": "high",
+      "description": "KB-0024 covers stress testing of coordination primitives, but there is no guidance on testing agent behavior, prompt quality, or end-to-end workflow correctness. The failure injection system is non-functional (weak link #6). There are 45 tool regression tests but zero integration tests that verify a complete multi-agent workflow produces correct domain output. The 155 stress tests validate infrastructure latency but not correctness of agent decisions.",
+      "recommended_action": "Create KB entry on agent testing pyramid: unit tests for tools (done), integration tests for agent workflows (missing), chaos/fault injection tests (broken), and acceptance tests that verify domain output quality. Fix the failure injection system as prerequisite."
+    },
+    {
+      "area": "Ethical Considerations & Safety Guardrails",
+      "importance": "medium",
+      "description": "The system coordinates autonomous agents that can read/write files, make API calls, and execute code. There are no documented guardrails on: what agents should NOT do, how to prevent cascading harmful actions, how to audit agent decisions post-hoc, or how to implement emergency shutdown beyond the heartbeat timeout. The anti-recursion SOP (SOP-023) is the closest thing to a safety guardrail and it only addresses resource waste, not harm prevention.",
+      "recommended_action": "Create KB entry on agent safety: action allowlists per role, irreversible action confirmation protocol, emergency halt mechanism, post-hoc audit trail requirements, and escalation procedures for unexpected agent behavior."
+    },
+    {
+      "area": "Error Recovery & State Reconciliation",
+      "importance": "high",
+      "description": "SOP-021 (failure recovery runbook) has never been stress-tested in production. Zombie work items have no timeout-based reclaim. Bus read offsets are lost on restart. There is no documented procedure for reconciling state after a partial failure mid-session (e.g., 3 of 8 agents crash, leaving work items in inconsistent states). The TOCTOU bug in complete_work means state can become inconsistent even without crashes.",
+      "recommended_action": "Create KB entry on state reconciliation: checkpoint/restore patterns, orphaned work item detection and recovery, bus message replay with idempotency, and partial-failure recovery procedures. Implement zombie reclaim as the highest-priority fix."
+    },
+    {
+      "area": "Domain Knowledge Management (Market Research)",
+      "importance": "medium",
+      "description": "Only 1 of 33 KB entries (3%) is about market research despite it being a stated primary use case. SOP-018 has never been executed. Zero picks have been logged. The market research methods directory exists but the pipeline from research to picks to performance tracking has never been exercised end-to-end. The system has built extensive data gathering tools but never used them for their intended purpose.",
+      "recommended_action": "Execute the market research pipeline end-to-end: use existing API tools to gather data, apply analysis methods, log picks, and track performance. Create KB entries documenting the actual experience of running the pipeline, not just the infrastructure."
+    },
+    {
+      "area": "Capacity Planning & Resource Estimation",
+      "importance": "medium",
+      "description": "The system has detailed benchmarks on coordination overhead but no model for predicting total session cost (time, API calls, context tokens) given a task description and team configuration. Teams are configured by intuition despite having empirical data. The power law E=4.0*N^(-0.75) predicts efficiency but there is no tool that takes a task specification and recommends a concrete team plan.",
+      "recommended_action": "Build a session planner tool that takes task type, estimated complexity, and available budget, then recommends team size, composition, connection pattern, and expected output. Encode the empirical findings from final_analysis.json into this tool."
+    }
+  ],
+  "patterns_observed": [
+    {
+      "pattern": "Infrastructure Gravity Well",
+      "type": "negative",
+      "evidence": "7 consecutive teams (T22-T28) focused on coordination infrastructure. 68% of KB entries are integration or methodology about the system itself. Zero market research picks logged. Zero data gathering ops since T14. The system is recursively self-improving its own coordination without producing domain output.",
+      "recommendation": "Hard cap: next 5 sessions must produce domain artifacts. Infrastructure work bug-fix only. Apply SOP-023 anti-recursion check before every session."
+    },
+    {
+      "pattern": "Solo Agent Supremacy for Research",
+      "type": "positive",
+      "evidence": "Solo agents achieve 4.0-7.0 artifacts/agent (T05: 4.0, T10-T13: focused catalogs). Medium teams achieve 0.375-1.0. Large teams achieve 0.125-0.667. Solo is 5-10x more efficient for research tasks. Infrastructure overhead is <1% at all sizes, confirming the bottleneck is cognitive, not mechanical.",
+      "recommendation": "Default to solo agents for all research and analysis tasks. Only use teams when the task requires concurrent execution of independent modules or competitive verification."
+    },
+    {
+      "pattern": "Pattern Selection >> Team Size",
+      "type": "positive",
+      "evidence": "Pattern selection causes 96x variance (parallel-test 12.0 vs pipeline 0.125). Team size causes 17x variance (solo 5.5 vs xlarge 0.32). Choosing parallel-test over 8-team-pipeline is worth 5.6x more than any team size optimization. Yet no automated pattern selector exists.",
+      "recommendation": "Build an automated pattern selector. Until then, encode a decision tree in a new SOP: parallel-test for testing, parallel-build with work-stealing for builds, solo for research, never sequential pipeline."
+    },
+    {
+      "pattern": "Duplicate Work Across Teams",
+      "type": "negative",
+      "evidence": "T13 duplicated T11's objective (government APIs). KB-0012 and KB-0013 have identical titles. Two versions of SOP-012 and SOP-016 exist without clear supersession. SOP-022 and SOP-032 both cover team sizing. This waste compounds: each duplicate consumes agent time AND adds noise for future teams reading context.",
+      "recommendation": "Implement deduplication check at session start: before assigning work, search existing KB and session logs for overlap. Add a 'supersedes' field to SOPs so old versions are clearly deprecated."
+    },
+    {
+      "pattern": "Iteration Yields Massive Gains",
+      "type": "positive",
+      "evidence": "Data gathering iteration 1 to 2 showed 371% more data points, 67% quality improvement, 400% more functional methods. T25's systematic bug hunting (0.93 bugs/agent) vs T14's ad-hoc detection (0.06 bugs/agent) is a 15x improvement in the same activity. Second attempts consistently outperform first attempts by 3-15x.",
+      "recommendation": "Institutionalize iteration: every domain task should have a planned second pass. Budget 30% of session time for refinement of first-pass outputs rather than producing more first-pass work."
+    },
+    {
+      "pattern": "Think Tank Convergence Produces Unique Insights",
+      "type": "positive",
+      "evidence": "T28's think tank analysis discovered the rate limiter misconfiguration (synthetic vs live test discrepancy), the 96x pattern variance insight, and the cognitive-not-mechanical bottleneck finding. None of these were visible to individual teams. Cross-analysis of the full dataset yielded findings no single team could produce.",
+      "recommendation": "Run think tank convergence after every phase (research/build/test), not just at session end. The 10% time allocation for convergence in the mixed-ops blueprint is correct."
+    },
+    {
+      "pattern": "SOP Proliferation Without Execution",
+      "type": "negative",
+      "evidence": "26 SOP files exist. SOP-018 (market research) has never been executed. SOP-021 (failure recovery) has never been stress-tested. Multiple SOPs overlap (012/012v2, 016/016v2, 022/032). SOP-024 (lifecycle) was created to manage SOP proliferation but itself adds to the count. Reading 26 SOPs at session start would consume significant context budget.",
+      "recommendation": "Consolidate to 10 core SOPs. Archive or merge overlapping SOPs. Create a one-page SOP quick reference that fits in a single agent context read. Only create new SOPs through SOP-024 CREATE gates."
+    },
+    {
+      "pattern": "Benchmarks Drive Good Decisions",
+      "type": "positive",
+      "evidence": "Every major architectural decision backed by benchmarks (Proto A vs B, hub vs channels, team sizing) has been validated. The 3247-datapoint cross-analysis provides high-confidence recommendations. Teams that measured before deciding (T24, T27, T28) produced higher-quality outcomes than teams that decided first.",
+      "recommendation": "Make benchmarking a required first step for any architectural decision. The benchmark infrastructure is mature (45 tests, empirical + synthetic). Use it."
+    },
+    {
+      "pattern": "Session Startup Overhead",
+      "type": "negative",
+      "evidence": "Procedure 6 requires reading 3 session logs, cross-team analysis, improvement procedures, and relevant SOPs before starting work. At current KB size (33 entries), even with smart_read's 91% token savings, context loading is substantial. T27 achieved zero idle time by having work pre-loaded, suggesting startup friction is a real bottleneck.",
+      "recommendation": "Create a single-file session briefing that is auto-generated and contains only what the next team needs. Replace the multi-file reading requirement with one optimized briefing document. The query_kb tool (41ms, 14.8MB) is lightweight enough to generate this on demand."
+    },
+    {
+      "pattern": "Tools Built But Not Used",
+      "type": "negative",
+      "evidence": "62 scripts exist in storage/scripts/. API tools built in T14 for OpenAlex, Semantic Scholar, HackerNews, Guardian, Wikidata, and GitHub. Market research methods cataloged. Yet zero market research picks logged, zero data gathering operations since T14, and the API tools have not been exercised in production. The system has more tools than it has uses for them.",
+      "recommendation": "Freeze tool development. Assign the next 3 sessions to actually using the existing tools for domain work. Track tool utilization rates. Deprecate tools that remain unused after 5 sessions."
+    }
+  ],
+  "strategic_roadmap": [
+    {
+      "priority": 1,
+      "initiative": "Execute Market Research Pipeline End-to-End",
+      "description": "Use existing API tools (OpenAlex, Semantic Scholar, HackerNews, Guardian) to gather market data. Apply the analysis methods already cataloged. Log at least 5 stock picks using the existing TEMPLATE.md. Track performance. This is the single highest-value activity because it exercises the entire system for its stated purpose and produces the only externally-valuable output the system is designed to create.",
+      "expected_impact": "Transforms the system from self-referential infrastructure to a functioning research platform. Validates or invalidates the entire tool chain. Produces the first domain artifacts in 16+ sessions.",
+      "dependencies": []
+    },
+    {
+      "priority": 2,
+      "initiative": "Fix the Top 3 Weak Links",
+      "description": "Fix rate limiter misconfiguration (5x too aggressive, #1 blocker). Implement zombie work item reclaim (30min timeout, prevents pipeline deadlocks). Add bus file rotation at >1MB (prevents read amplification). These are bug fixes, not new features, and they unblock production use at scale.",
+      "expected_impact": "Removes the scaling ceiling from 3 agents to 8+ agents for concurrent operations. Eliminates the 64.6% denial rate. Prevents silent pipeline deadlocks.",
+      "dependencies": []
+    },
+    {
+      "priority": 3,
+      "initiative": "Build Automated Session Planner",
+      "description": "Create a tool that takes a task description and outputs a recommended team configuration: size, composition (solo/parallel-build/parallel-test), connection pattern (hub/channels/hybrid), SQLite partitioning strategy, and expected efficiency. Encode the power law E=4.0*N^(-0.75), the pattern selection 96x variance data, and the SQLite contention cliff into a decision engine.",
+      "expected_impact": "Eliminates ad-hoc team sizing (which caused 89% efficiency loss at T03/T09). Captures the institutional knowledge in final_analysis.json as an executable tool rather than a document to read.",
+      "dependencies": ["Priority 2 fixes for accurate scaling predictions"]
+    },
+    {
+      "priority": 4,
+      "initiative": "Implement Agent Observability Stack",
+      "description": "Add trace-id propagation through bus messages. Build a log aggregator that merges per-agent logs. Create a performance trend dashboard that shows not just current status but historical patterns. This transforms debugging from reading raw JSONL to structured queries.",
+      "expected_impact": "Reduces debugging time for multi-agent sessions by estimated 5-10x. Enables proactive detection of issues that currently require think-tank retrospective analysis to discover.",
+      "dependencies": ["Bus rotation (Priority 2) to prevent log growth issues"]
+    },
+    {
+      "priority": 5,
+      "initiative": "Consolidate SOPs and Create Auto-Briefing",
+      "description": "Merge 26 SOPs into 10 core SOPs. Archive overlapping versions. Build an auto-briefing generator that produces a single-file session startup document containing: relevant recent session summaries, applicable SOPs for the planned work type, known risks, and pre-loaded work queue. Replace the manual 5-file reading requirement with one tool call.",
+      "expected_impact": "Reduces session startup time from 3-5 minutes to under 1 minute. Reduces context budget consumed by onboarding from ~3000 tokens to ~500 tokens. Eliminates the risk of teams missing relevant context.",
+      "dependencies": []
+    }
+  ],
+  "tool_gaps": [
+    {
+      "tool": "session_planner",
+      "purpose": "Takes task description, outputs recommended team size, composition, pattern, and expected efficiency using empirical data from final_analysis.json. Encodes the power law, pattern variance, and contention cliff into executable decisions.",
+      "complexity": "medium",
+      "value": "high"
+    },
+    {
+      "tool": "auto_briefing",
+      "purpose": "Generates a single-file session startup document by querying KB, recent session logs, applicable SOPs, and known risks. Replaces the manual 5-file onboarding process.",
+      "complexity": "medium",
+      "value": "high"
+    },
+    {
+      "tool": "cost_tracker",
+      "purpose": "Instruments API tool calls to log cost metrics (calls per source, tokens consumed, cache hit rate). Provides per-session and per-agent cost summaries. Enables cost-quality tradeoff analysis.",
+      "complexity": "low",
+      "value": "high"
+    },
+    {
+      "tool": "context_budget_monitor",
+      "purpose": "Tracks estimated token usage per agent during a session. Warns when approaching context limits. Suggests summarization or context offloading when budget is >70% consumed.",
+      "complexity": "medium",
+      "value": "high"
+    },
+    {
+      "tool": "dedup_checker",
+      "purpose": "Pre-session tool that checks proposed work against existing KB entries, session logs, and SOP titles to flag potential duplicates before agents start. Would have prevented T13 duplicating T11.",
+      "complexity": "low",
+      "value": "medium"
+    },
+    {
+      "tool": "sop_consolidator",
+      "purpose": "Analyzes all SOPs for overlap, identifies superseded versions, and generates a consolidated SOP set with clear deprecation notices. Also produces the one-page quick reference card.",
+      "complexity": "low",
+      "value": "medium"
+    },
+    {
+      "tool": "trace_propagator",
+      "purpose": "Middleware that adds trace-id to all bus messages and SQLite operations. Enables distributed tracing across agents for debugging multi-agent workflows.",
+      "complexity": "medium",
+      "value": "medium"
+    },
+    {
+      "tool": "zombie_reclaimer",
+      "purpose": "Background process that scans for work items stuck in 'in_progress' beyond a configurable timeout (default 30min). Resets them to 'available'. Prevents silent pipeline deadlocks.",
+      "complexity": "low",
+      "value": "high"
+    },
+    {
+      "tool": "pick_logger",
+      "purpose": "Streamlined tool for logging market research picks from agent output directly into the picks/index.json format. Validates against TEMPLATE.md schema. Currently this is a fully manual process with zero picks logged.",
+      "complexity": "low",
+      "value": "high"
+    }
+  ],
+  "integration_opportunities": [
+    {
+      "system": "Financial data APIs (Alpha Vantage, Yahoo Finance, FRED)",
+      "benefit": "Direct access to real-time and historical stock/economic data. Currently the market research pipeline has methods but no data feed. These APIs are free-tier available and would immediately enable the market research pipeline (Priority 1 initiative).",
+      "effort": "low"
+    },
+    {
+      "system": "Prometheus/Grafana (or lightweight equivalent)",
+      "benefit": "Time-series metrics collection and visualization for agent performance, coordination overhead, and API usage. Would replace the current snapshot-only dashboard with historical trend analysis. Could be a simple SQLite time-series table with a web dashboard.",
+      "effort": "medium"
+    },
+    {
+      "system": "Git hooks for pre-commit validation",
+      "benefit": "Automatic KB template validation, index.json consistency checks, and SOP schema validation before any commit. Currently these checks run manually or via tool_tester.py. Automating them prevents the schema violations that currently number 30+ in the bus system.",
+      "effort": "low"
+    },
+    {
+      "system": "RSS/Atom feed aggregation",
+      "benefit": "Continuous monitoring of news sources, research publications, and market events. Currently all data gathering is batch/on-demand. A feed aggregator would enable event-driven research triggers, allowing agents to react to breaking information rather than polling.",
+      "effort": "medium"
+    },
+    {
+      "system": "Embedding-based semantic search (local, e.g., sentence-transformers)",
+      "benefit": "The KB currently uses FTS5 keyword search (KB-0032). Semantic search would find conceptually related entries even when terminology differs. With 33 KB entries growing, keyword search will miss relevant connections. KB-0008 already researched vector databases and RAG patterns.",
+      "effort": "medium"
+    },
+    {
+      "system": "Webhook/notification system (e.g., ntfy.sh)",
+      "benefit": "Asynchronous notifications when multi-agent sessions complete, when critical errors occur, or when market research picks hit price targets. Currently there is no way for the system to notify a human operator except through log files.",
+      "effort": "low"
+    }
+  ],
+  "cross_team_notes": [
+    "The rate limiter fix (weak link #1) should be a 30-minute task for a single agent. It is blocking all scaling work. Do not form a team for this - assign one agent and move on.",
+    "Any team doing market research should use Hybrid v2 method (DG-0004) for quality-critical queries and OpenAlex (0.5s) for speed-critical academic lookups. These were benchmarked in iteration 2 and are the proven winners.",
+    "When forming teams of 5-8 agents that share a SQLite database, MUST partition into 2 write groups of 3-4 to stay under the contention cliff. Use the single-writer coordinator pattern or 2 sub-coordinators.",
+    "The smart_read/query_kb/smart_write tools provide 90% token savings. Any agent doing raw file I/O is wasting context budget. This is not optional - it is the difference between 16 and 190 index reads per context window.",
+    "SOP-018 (market research) has never been executed. The first team to execute it will likely find gaps and needed modifications. Budget extra time for SOP refinement during first execution.",
+    "The think tank convergence pattern is the highest-value meta-activity. Run it after every phase, not just at session end. Budget 10% of session time for convergence.",
+    "Do not create new SOPs without passing SOP-024 CREATE gates. The system already has 26 SOPs and the cognitive overhead of reading them is becoming a liability."
+  ],
+  "meta_insights": [
+    "The system exhibits a classic 'second system effect': having built a working coordination infrastructure, teams invested disproportionately in making it perfect rather than using it. The coordination system is now more sophisticated than any task it has been used to coordinate. The cure is forced domain work - use the system as-is, accept its imperfections, and let real usage drive targeted improvements.",
+    "The most important number in the entire dataset is not a latency or throughput figure - it is zero. Zero market research picks logged. Zero data gathering operations since T14. Zero execution of SOP-018. The system's value proposition is entirely theoretical until it produces domain output. All the benchmarks, SOPs, and KB entries are means to an end that has not yet been pursued.",
+    "There is a deep tension between the system's optimization for agent efficiency (small teams, solo research, parallel patterns) and its coordination infrastructure (designed for large multi-agent operations). The data says solo agents are 5-10x more efficient, but the system spent 7 teams building multi-agent coordination. This suggests the coordination system's primary value is not efficiency but capability - enabling tasks that a solo agent CANNOT do (competitive verification, parallel multi-language development, cross-team bug detection). The roadmap should focus on tasks that require coordination, not tasks that are merely made slightly easier by it.",
+    "The knowledge base has a blind spot that mirrors the team focus: 68% integration/methodology (how to build), 3% market research (what to build for). This is the informational equivalent of the infrastructure gravity well. Future KB entries should be 80%+ domain knowledge.",
+    "The 96x efficiency variance from pattern selection is the single most actionable finding in 3247 data points. It means choosing the right cooperation pattern is worth more than any other optimization combined. Yet there is no tool or decision tree that helps teams make this choice. This is the highest-leverage tool gap.",
+    "The system has unconsciously implemented a form of organizational learning: each team reads previous logs, creates KB entries, and builds on prior work. But the learning is biased toward infrastructure because that is what teams measured and documented. Domain outcomes were not measured (zero picks, zero quality scores on domain output). You optimize what you measure. To shift focus to domain work, start measuring domain output quality, not just coordination latency.",
+    "The empirical finding that infrastructure overhead is <1% at ALL team sizes, while cognitive overhead causes 89% efficiency loss, implies that the next major breakthrough is not faster coordination but better task decomposition. The system needs a 'task architect' role that breaks domain problems into agent-sized pieces with minimal inter-agent dependencies. This is a human-in-the-loop role that no amount of infrastructure can replace.",
+    "Proto A was chosen over Proto B based on a 2.5% live test advantage. The rate limiter misconfiguration masked a 79% synthetic test deficit. This near-miss should inform future architectural decisions: always validate synthetic benchmarks with live tests, and treat large discrepancies between synthetic and live as bugs, not noise.",
+    "The bus compaction problem (weak link #4) and read offset persistence problem (weak link #5) are symptoms of a deeper pattern: the system was designed for single-session use but is being used across sessions. State management across sessions (persistence, cleanup, compaction) was an afterthought. Future features should be designed session-aware from the start."
+  ]
+}
