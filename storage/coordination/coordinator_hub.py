@@ -615,15 +615,16 @@ class CoordinatorDashboard:
         list[dict]
             Stale agent status records, sorted by last_updated ascending.
         """
+        # BUG-CH-002: Push staleness check into SQL using strftime for
+        # correct server-side time comparison instead of Python-side cutoff.
         self._check_closed()
-        cutoff = time.time() - timeout_seconds
         with self._lock:
             rows = self._conn.execute(
                 """SELECT * FROM agent_status
                    WHERE status NOT IN ('complete', 'error')
-                     AND last_updated < ?
+                     AND (strftime('%s', 'now') - last_updated) > ?
                    ORDER BY last_updated ASC""",
-                (cutoff,),
+                (timeout_seconds,),
             ).fetchall()
         return [dict(r) for r in rows]
 

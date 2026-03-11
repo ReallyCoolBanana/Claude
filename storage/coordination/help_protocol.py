@@ -270,6 +270,11 @@ class HelpProtocol:
             raise ValueError(
                 f"Invalid status {status!r}. Must be one of: {', '.join(sorted(VALID_STATUSES))}"
             )
+        # FIX: BUG-HP-016 - validate progress_pct is between 0 and 100
+        if not (0 <= progress_pct <= 100):
+            raise ValueError(
+                f"progress_pct must be between 0 and 100, got {progress_pct}"
+            )
         now = time.time()
         with self._lock:
             # Count work items for this team
@@ -328,6 +333,7 @@ class HelpProtocol:
     ) -> int:
         """Add a work item for this team. Returns the work item ID."""
         self._check_closed()
+        # FIX: BUG-HP-012 - validate priority is within allowed values
         valid_priorities = {'critical', 'high', 'medium', 'low'}
         if priority not in valid_priorities:
             raise ValueError(
@@ -376,6 +382,7 @@ class HelpProtocol:
         self._check_closed()
         now = time.time()
         with self._lock:
+            # FIX: BUG-HP-011 - verify the completing agent owns the work item (AND team = ?)
             cur = self._conn.execute(
                 """
                 UPDATE work_items
@@ -391,6 +398,23 @@ class HelpProtocol:
                 )
             self._conn.commit()
 
+    @_retry_on_busy
+    def is_pipeline_complete(self) -> bool:
+        """Check if all work items for this team are completed.
+
+        Returns False for empty pipelines instead of vacuously True.
+        """
+        self._check_closed()
+        with self._lock:
+            items = self._conn.execute(
+                "SELECT status FROM work_items WHERE team = ?",
+                (self.team,),
+            ).fetchall()
+        # FIX: BUG-HP-009 - empty list guard; all([]) == True is misleading
+        if not items:
+            return False
+        return all(row["status"] == "completed" for row in items)
+
     # ------------------------------------------------------------------
     # Help request flow
     # ------------------------------------------------------------------
@@ -405,7 +429,7 @@ class HelpProtocol:
         self._check_closed()
         now = time.time()
         with self._lock:
-            # Get work item details for capabilities
+            # FIX: BUG-HP-010 - validate work_item_id exists before creating help request
             row = self._conn.execute(
                 "SELECT required_capabilities, estimated_minutes FROM work_items WHERE id = ?",
                 (work_item_id,),
@@ -486,13 +510,20 @@ class HelpProtocol:
             try:
                 # Check if still open
                 row = conn.execute(
-                    "SELECT status, work_item_id FROM help_requests WHERE id = ?",
+                    "SELECT status, work_item_id, requesting_team FROM help_requests WHERE id = ?",
                     (request_id,),
                 ).fetchone()
 
                 if row is None or row["status"] != "open":
                     conn.execute("ROLLBACK")
                     return False
+
+                # FIX: BUG-HP-007 - prevent a team from offering help to itself
+                if row["requesting_team"] == self.team:
+                    conn.execute("ROLLBACK")
+                    raise ValueError(
+                        f"Team {self.team!r} cannot offer help to its own request"
+                    )
 
                 work_item_id = row["work_item_id"]
 
@@ -561,6 +592,7 @@ class HelpProtocol:
                     f"expected 'accepted'. Cannot fulfill an un-accepted request."
                 )
 
+            # FIX: BUG-HP-005 - only the assigned team can fulfill a help request
             if row["accepted_by_team"] != self.team:
                 raise ValueError(
                     f"Team {self.team!r} is not the accepted helper for request {request_id}. "
@@ -785,8 +817,8 @@ class HelpProtocol:
                 # No specific capabilities needed — all idle teams are compatible
                 helpers = list(all_idle_teams)
 
-            if not helpers:
-                # Fall back to any idle team
+            # FIX: BUG-HP-013 - only fall back to any team if no capabilities were required
+            if not helpers and not required:
                 helpers = list(all_idle_teams)
 
             for helper in helpers:

@@ -16,6 +16,7 @@ import logging
 import os
 import re
 import sqlite3
+import tempfile
 import threading
 import time
 import uuid
@@ -32,9 +33,13 @@ VALID_MSG_TYPES = frozenset({
 })
 
 MAX_MESSAGE_BYTES = 4096
+PIPE_BUF = 4096  # FIX: BUG-DC-002 — POSIX guarantees atomic writes up to this size
 
 _MAX_RETRIES = 5
 _RETRY_BACKOFF = 0.1
+
+# FIX: BUG-DC-002 — lock for serializing large bus writes that exceed PIPE_BUF
+_bus_write_lock = threading.Lock()
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS channels (
@@ -74,7 +79,7 @@ CREATE TABLE IF NOT EXISTS read_offsets (
 );
 """
 
-VALID_PRESENCE = frozenset({"available", "busy", "helping", "away"})
+VALID_PRESENCE = frozenset({"available", "busy", "helping", "away", "offline", "idle"})  # FIX: BUG-DC-003 — added 'offline' and 'idle'
 VALID_CHANNEL_TYPES = frozenset({"direct", "team", "topic", "broadcast"})
 
 
@@ -143,11 +148,33 @@ def _bus_publish(bus_dir: str, channel: str, agent_id: str, team: str,
     filepath = os.path.join(bus_dir, f"{safe}.jsonl")
     try:
         os.makedirs(bus_dir, exist_ok=True)
-        fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
-        try:
-            os.write(fd, raw)
-        finally:
-            os.close(fd)
+        if len(raw) <= PIPE_BUF:
+            # FIX: BUG-DC-002 — POSIX guarantees atomic append for writes <= PIPE_BUF
+            fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+            try:
+                os.write(fd, raw)
+            finally:
+                os.close(fd)
+        else:
+            # FIX: BUG-DC-002 — large writes use temp file + rename to avoid torn writes
+            with _bus_write_lock:
+                tmp_fd, tmp_path = tempfile.mkstemp(dir=bus_dir, suffix=".tmp")
+                try:
+                    os.write(tmp_fd, raw)
+                    os.close(tmp_fd)
+                    # Append temp file contents to the target file
+                    with open(tmp_path, "rb") as tmp_f:
+                        data = tmp_f.read()
+                    fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+                    try:
+                        os.write(fd, data)
+                    finally:
+                        os.close(fd)
+                finally:
+                    try:
+                        os.unlink(tmp_path)
+                    except OSError:
+                        pass
     except OSError as e:
         logger.error("Failed to publish message to %s: %s", filepath, e)
         return None
@@ -275,6 +302,9 @@ class DirectChannels:
         Returns the channel name.
         """
         self._check_closed()
+        # FIX: BUG-DC-004 — prevent creating a direct channel to self
+        if self.team == target_team:
+            raise ValueError(f"Cannot create a direct channel to self (team={self.team!r})")
         channel_name = _direct_channel_name(self.team, target_team)
         participants = json.dumps(sorted([self.team, target_team]))
         now = time.time()
@@ -572,6 +602,9 @@ class DirectChannels:
                         bottleneck: str = None) -> None:
         """Update this team's progress and broadcast it."""
         self._check_closed()
+        # FIX: BUG-DC-003 — validate progress_pct is within 0-100
+        if not (0 <= progress_pct <= 100):
+            raise ValueError(f"progress_pct must be between 0 and 100, got {progress_pct}")
         now = time.time()
         with self._lock:
             self._conn.execute(

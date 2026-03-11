@@ -349,6 +349,49 @@ class WorkStealing:
         return row[0]
 
     @_retry_on_busy
+    def reclaim_abandoned_work(self, timeout_seconds: int = 1800) -> list[int]:
+        """BUG-WS-003: Reclaim work items stuck in 'claimed' status past timeout.
+
+        Finds work items in 'claimed' status where claimed_at is older than
+        *timeout_seconds* ago, and resets them to 'queued' status so they can
+        be stolen again.
+
+        Returns a list of reclaimed work item IDs.
+        """
+        cutoff = time.time() - timeout_seconds
+        with self._lock:
+            self._conn.execute("BEGIN IMMEDIATE")
+            try:
+                rows = self._conn.execute(
+                    """SELECT id FROM work_queue
+                       WHERE status = 'claimed' AND claimed_at < ?""",
+                    (cutoff,),
+                ).fetchall()
+                reclaimed_ids = [r["id"] for r in rows]
+                if reclaimed_ids:
+                    placeholders = ",".join("?" for _ in reclaimed_ids)
+                    self._conn.execute(
+                        f"""UPDATE work_queue
+                            SET status = 'queued', claimed_by = NULL, claimed_at = NULL
+                            WHERE id IN ({placeholders})""",
+                        reclaimed_ids,
+                    )
+                self._conn.execute("COMMIT")
+            except Exception:
+                try:
+                    self._conn.execute("ROLLBACK")
+                except sqlite3.OperationalError:
+                    pass
+                raise
+
+        for wid in reclaimed_ids:
+            _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+                "event": "work-reclaimed",
+                "work_id": wid,
+            })
+        return reclaimed_ids
+
+    @_retry_on_busy
     def get_stealable_work(self) -> list[dict]:
         """Return all unclaimed work items sorted by priority (ascending)."""
         with self._lock:
