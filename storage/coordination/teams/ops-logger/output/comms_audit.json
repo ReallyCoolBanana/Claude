@@ -1,0 +1,385 @@
+{
+  "team": "ops-logger",
+  "created": "2026-03-11",
+  "communication_audit": {
+    "tools_analyzed": ["bus", "scratchpad", "direct_channels", "help_protocol", "work_stealing"],
+    "usage_by_team": [
+      {
+        "team_id": "TEAM-0001",
+        "tools_used": ["git_worktrees", "file_outputs"],
+        "primary_pattern": "Isolated worktree parallelism with file-based consolidation. No inter-agent communication during execution. Coordinator merged results post-hoc from worktree outputs."
+      },
+      {
+        "team_id": "TEAM-0004",
+        "tools_used": ["file_outputs"],
+        "primary_pattern": "Phase-gated sequential handoff. Research teams wrote files consumed by software team in next phase. Coordinator routed findings manually between teams."
+      },
+      {
+        "team_id": "TEAM-0005",
+        "tools_used": ["file_outputs"],
+        "primary_pattern": "Solo agent with no communication needs. Single software engineer iterating on code."
+      },
+      {
+        "team_id": "TEAM-0009",
+        "tools_used": ["file_outputs", "coordinator_report"],
+        "primary_pattern": "Coordinator-mediated file exchange. 12 agents + 8 subagents across 8 teams. Coordinator had read-only access to all outputs and produced a cross-team synergy report. No live messaging."
+      },
+      {
+        "team_id": "TEAM-0010",
+        "tools_used": ["file_outputs"],
+        "primary_pattern": "Solo research agent. No inter-agent communication needed."
+      },
+      {
+        "team_id": "TEAM-0013",
+        "tools_used": ["file_outputs"],
+        "primary_pattern": "Solo research agent cataloging APIs. No communication."
+      },
+      {
+        "team_id": "TEAM-0014",
+        "tools_used": ["file_outputs"],
+        "primary_pattern": "Two-phase parallel with file handoff. 9 agents across research and software teams. No live communication -- phase boundary was the synchronization point."
+      },
+      {
+        "team_id": "TEAM-0015",
+        "tools_used": [],
+        "primary_pattern": "Solo research agent designing JSONL bus. Produced KB-0015 as the bus specification. No communication used or needed."
+      },
+      {
+        "team_id": "TEAM-0016",
+        "tools_used": [],
+        "primary_pattern": "Solo research agent designing SQLite WAL state. Produced KB-0016. No communication."
+      },
+      {
+        "team_id": "TEAM-0017",
+        "tools_used": [],
+        "primary_pattern": "Solo failure mode analyst. Produced KB-0017. No communication."
+      },
+      {
+        "team_id": "TEAM-0018",
+        "tools_used": ["file_outputs"],
+        "primary_pattern": "Build-test-fix loop across 7 subagents. Communication was sequential handoff: build team writes code, test team runs tests, fix team patches bugs. 4 iterations. File-based coordination."
+      },
+      {
+        "team_id": "TEAM-0019",
+        "tools_used": [],
+        "primary_pattern": "Solo architecture analyst. No communication needed."
+      },
+      {
+        "team_id": "TEAM-0020",
+        "tools_used": ["file_outputs"],
+        "primary_pattern": "Hub-coordinated parallel teams. 8+ teams (3 programming, 3 research, 2 think tanks). Coordinator mediated via file outputs. Built SDK launcher system but did not use Proto A for own coordination."
+      },
+      {
+        "team_id": "TEAM-0021",
+        "tools_used": ["bus"],
+        "primary_pattern": "First Proto A dogfooding. 3 think tanks communicated via JSONL bus: 31 messages across 3 channels (global, topic-think-tank, topic-insights). Active cross-referencing of findings in real-time."
+      },
+      {
+        "team_id": "TEAM-0022_original",
+        "tools_used": ["bus"],
+        "primary_pattern": "First production Proto A deployment. 18 agents, 6 teams. 47 messages across 3 channels. bus_cli.py as primary interface. File-based outputs for persistence (157KB). No help_protocol, direct_channels, or work_stealing (not yet built)."
+      },
+      {
+        "team_id": "TEAM-0023",
+        "tools_used": ["bus", "file_outputs"],
+        "primary_pattern": "Design-to-implementation pipeline. 7 teams (~20 agents). Think tanks designed features, coding teams implemented them. Bus used for coordination. Created help_protocol, direct_channels, and work_stealing modules."
+      },
+      {
+        "team_id": "TEAM-0024",
+        "tools_used": ["bus", "file_outputs"],
+        "primary_pattern": "Simultaneous stress testing. 7 teams all parallel. Think tanks analyzed code, coding teams wrote stress tests, research team studied best practices. Bus for coordination, file outputs for results. 96 stress tests produced."
+      },
+      {
+        "team_id": "TEAM-0025",
+        "tools_used": ["bus", "help_protocol", "direct_channels", "work_stealing", "scratchpad", "coordinator_hub"],
+        "primary_pattern": "Most comprehensive Proto A usage. 15 teams in 3 batches. Used help_protocol for idle team reassignment (user directive), coordinator_hub for monitoring. Bug fixes applied to all 3 coordination modules. Anti-sequential enforcement."
+      },
+      {
+        "team_id": "TEAM-0026",
+        "tools_used": ["file_outputs"],
+        "primary_pattern": "Solo coding team doing data quality fixes. No communication needed."
+      },
+      {
+        "team_id": "TEAM-0027",
+        "tools_used": ["file_outputs"],
+        "primary_pattern": "4 parallel audit teams with coordinator. Completed in ~90 seconds. No Proto A used -- pure file-based parallel execution. Demonstrates that simple parallel tasks do not need the coordination stack."
+      },
+      {
+        "team_id": "TEAM-0028",
+        "tools_used": ["bus", "direct_channels"],
+        "primary_pattern": "7 teams with Proto A bus: 12 dedicated channels (3 per TT-RT pair plus global/bug). Researchers published to bus channels, think tanks consumed paired channels. Bug monitor checked bus integrity. Most structured channel usage observed."
+      },
+      {
+        "team_id": "TEAM-0022_pipeline",
+        "tools_used": ["bus", "direct_channels", "work_stealing", "scratchpad", "help_protocol"],
+        "primary_pattern": "Full pipeline execution using all Proto A primitives. 8 teams through 5-stage pipeline with PipelineManager. WorkStealing for task distribution. Scratchpad for cross-stage data. DirectChannels for progress. 2 complete iterations. Most complete Proto A integration."
+      },
+      {
+        "team_id": "TEAM-0029",
+        "tools_used": ["file_outputs"],
+        "primary_pattern": "4-phase analysis pipeline. 8 teams across phases. File-based outputs between phases. No Proto A coordination despite being a late session. Phase boundaries used as sync points."
+      }
+    ],
+    "most_used": "bus (JSONL message bus) - Used by 7 of 28 sessions. The bus was the first Proto A feature available and the primary coordination mechanism. bus_cli.py became the standard interface after TEAM-0022. Total tracked messages: 47 (T-0022) + 31 (T-0021) + 12+ channels (T-0028) + messages across T-0023/0024/0025.",
+    "least_used": "help_protocol - Only 2 sessions actively used help_protocol (TEAM-0025 with user-directed reassignment, TEAM-0022_pipeline). Despite being designed to solve the idle-team problem identified in the original TEAM-0022, auto_assign_idle_teams() was never integrated into multi_team_runner.py's monitoring loop. work_stealing was similarly underutilized in practice -- only TEAM-0022_pipeline used it for actual work distribution.",
+    "tool_adoption_timeline": {
+      "phase_1_pre_proto_a": {
+        "teams": "TEAM-0001 through TEAM-0020",
+        "pattern": "File-based coordination. Git worktrees for isolation. Coordinator as manual router. Phase-gated sequential handoffs.",
+        "communication": "Zero live inter-agent messaging. All coordination through file outputs and sequential phase boundaries."
+      },
+      "phase_2_bus_only": {
+        "teams": "TEAM-0021, TEAM-0022_original, TEAM-0023, TEAM-0024",
+        "pattern": "JSONL bus for messages, file outputs for persistence. bus_cli.py as CLI wrapper.",
+        "communication": "Live messaging via bus channels. 31-47 messages per session. Topic-based channel organization."
+      },
+      "phase_3_full_stack": {
+        "teams": "TEAM-0025, TEAM-0022_pipeline, TEAM-0028",
+        "pattern": "Bus + help_protocol + direct_channels + work_stealing + scratchpad + coordinator_hub.",
+        "communication": "Full coordination stack available. Named channels, progress broadcasting, work queue, pipeline DAGs."
+      },
+      "phase_4_regression": {
+        "teams": "TEAM-0026, TEAM-0027, TEAM-0029",
+        "pattern": "Reverted to file-based coordination despite full stack being available.",
+        "communication": "No Proto A used. Simpler tasks did not justify coordination overhead, or teams were unaware of available tools."
+      }
+    }
+  },
+  "efficiency_patterns": [
+    {
+      "id": "EP-001",
+      "pattern": "Cross-team finding cross-referencing via bus channels",
+      "evidence": "TEAM-0021: 31 bus messages enabled Think Tank Gamma to integrate Alpha's overhead analysis and Beta's throughput data in real-time. TEAM-0022_original: Alpha-1 and Alpha-2 cross-referenced to discover the benchmark vs live test contradiction -- Alpha-1 alone would have concluded Proto A is broken, but Alpha-2's context revealed the benchmark config bug.",
+      "impact": "HIGH - Catches contradictions and produces insights no single team could achieve. The benchmark bug discovery (rate limiter denying 64.6% of requests) is the strongest evidence of multi-team communication value across the entire repository history."
+    },
+    {
+      "id": "EP-002",
+      "pattern": "bus_cli.py as universal CLI interface (CLI-first pattern)",
+      "evidence": "TEAM-0022_original validated bus_cli.py as the primary communication pattern for 18 agents across 6 teams. Decoupled agents from Python import paths. Any agent that can execute bash can participate. Extended in TEAM-0023 with 7 new commands. Documented in efficiency_guide.json as EFF-006.",
+      "impact": "HIGH - Eliminated import path issues. Made coordination accessible to all agent types regardless of Python environment. Became the standard interface for all subsequent Proto A usage."
+    },
+    {
+      "id": "EP-003",
+      "pattern": "Anti-sequential parallel execution with visibility",
+      "evidence": "TEAM-0025: User corrected coordinator's initial sequential plan, enforcing all teams within each batch to run simultaneously. TEAM-0027: Full repo audit completed in 90 seconds with 4 parallel teams (impossible sequentially). SOP-011 formalized 10 Anti-Sequential Rules (ASR-001 through ASR-010).",
+      "impact": "HIGH - TEAM-0027's 90-second audit is the clearest efficiency demonstration. Hard Dependency Test from SOP-011: 'Does Task B require a specific computed artifact that only Task A can produce?' If no, run in parallel."
+    },
+    {
+      "id": "EP-004",
+      "pattern": "Paired channel architecture (dedicated RT-TT channels)",
+      "evidence": "TEAM-0028: Created 12 dedicated channels (3 per think-tank/researcher pair plus global/bug channels). Researchers published structured findings to paired channels. Think tanks consumed only their paired channel, reducing noise. Most structured channel usage observed.",
+      "impact": "MEDIUM - Reduced global bus noise. Each think tank received only relevant findings from its paired researcher. Better signal-to-noise than broadcasting everything to global channel."
+    },
+    {
+      "id": "EP-005",
+      "pattern": "Pipeline-gated stage execution with PipelineManager",
+      "evidence": "TEAM-0022_pipeline: 8 teams through 5-stage pipeline (research_and_plan -> programming -> testing -> bug_fixing -> convergence_and_archive). PipelineManager enforced stage ordering, preventing premature advancement. 2 complete iterations with proper dependency enforcement.",
+      "impact": "MEDIUM - Replaced ad-hoc phase gating with formal DAG-based dependency tracking. Auto-trigger of downstream stages eliminated manual coordination. Required explicit get_ready_stages() call to promote stages (a gotcha that was documented for future teams)."
+    },
+    {
+      "id": "EP-006",
+      "pattern": "Scratchpad for cross-stage data (not bus messages)",
+      "evidence": "TEAM-0022_pipeline: Used scratchpad for sharing implementations from Stage 2 (programming) to Stage 3 (testing) without bus message size limits. Documented in efficiency_guide.json as EFF-004. Bus messages capped at 4096 bytes; scratchpad has no practical limit (1MB values tested in stress tests).",
+      "impact": "MEDIUM - Eliminated message splitting for large payloads. Reliable key-based lookup instead of ad-hoc file discovery. JSON-serializable with configurable TTL."
+    },
+    {
+      "id": "EP-007",
+      "pattern": "Findings-first incremental output",
+      "evidence": "TEAM-0022_original produced 157KB of structured JSON output across 5 team files. Think tank convergence (think_tank.py) could aggregate at any time. Documented in efficiency_guide.json as EFF-008. Contrast with pre-Proto-A teams where findings were only written at session end.",
+      "impact": "MEDIUM - Zero data loss from team crashes. Enables mid-session convergence analysis. Other teams see findings in real-time."
+    },
+    {
+      "id": "EP-008",
+      "pattern": "Solo agents for focused research tasks",
+      "evidence": "TEAM-0015 (bus design), TEAM-0016 (SQLite WAL design), TEAM-0017 (failure analysis), TEAM-0019 (architecture analysis) all completed high-quality KB entries as solo agents. KB-0030 confirmed solo agents are most efficient at 4.0 artifacts/agent vs 0.44 for 27-agent teams.",
+      "impact": "HIGH - 89% per-agent efficiency drop in large teams. Solo agents produce the highest quality-per-resource for independent research tasks that have no data dependencies."
+    }
+  ],
+  "inefficiency_patterns": [
+    {
+      "id": "IP-001",
+      "pattern": "Idle team waste -- teams finishing early with no reassignment mechanism",
+      "evidence": "TEAM-0022_original: 5 teams sat idle while Beta-1 was still processing all KB entries and session logs. Beta-1 became the bottleneck for the entire session. This directly motivated TEAM-0023's creation of help_protocol.py. Even after help_protocol existed, auto_assign_idle_teams() was never integrated into multi_team_runner.py.",
+      "cost": "HIGH - Wasted capacity proportional to the gap between fastest and slowest team. In an 18-agent deployment, potentially 14+ agents sat idle waiting for 4 agents on Beta-1. Estimated 40-60% of total agent-time wasted."
+    },
+    {
+      "id": "IP-002",
+      "pattern": "Coordination tools built but never fully deployed (build-not-use gap)",
+      "evidence": "help_protocol.py (698 lines), direct_channels.py (589 lines), work_stealing.py (677 lines), coordinator_hub.py (612 lines), sdk_launcher.py (~500 lines), sdk_config.py (~400 lines), sdk_cli.py (~600 lines), sdk_dashboard.py (~500 lines) -- totaling 4,500+ lines of coordination code. Yet TEAM-0026, TEAM-0027, and TEAM-0029 reverted to file-based coordination. bus_cli.py only covers help_protocol commands; direct_channels and work_stealing still lack CLI commands as of TEAM-0024 handoff.",
+      "cost": "HIGH - 7 consecutive inward-facing teams (T22-T28) spent the majority of their time building coordination infrastructure that was rarely used in production. KB-0030 flagged this as a critical recursion risk. Zero market research picks logged despite SOP-018 existing."
+    },
+    {
+      "id": "IP-003",
+      "pattern": "Sequential execution defaulting (coordinator anti-pattern)",
+      "evidence": "TEAM-0025: User had to correct the coordinator's initial wave-based sequential plan. SOP-011 documented 6 root causes of sequential defaulting: risk aversion without visibility (SEQ-001), causal dependency assumption (SEQ-002), simpler mental model (SEQ-003), past merge conflicts (SEQ-004), completion dependency illusion (SEQ-005), no partial result consumption (SEQ-006).",
+      "cost": "MEDIUM - Sequential execution of independent tasks wastes time linearly with the number of teams. The Hard Dependency Test is rarely applied -- coordinators default to sequences unless explicitly corrected."
+    },
+    {
+      "id": "IP-004",
+      "pattern": "API documentation mismatch causing integration friction",
+      "evidence": "TEAM-0022_pipeline found 5 API mismatches: Scratchpad(key, value, namespace, ttl) vs documented (namespace, key, value, ttl_seconds), DirectChannels.set_presence vs documented update_presence, DirectChannels.update_progress vs documented broadcast_progress, PipelineManager requires team+agent_id not documented, get_ready_stages() required before start_stage() not documented.",
+      "cost": "MEDIUM - Each mismatch costs debugging time. With 5 mismatches across 3 modules, teams waste significant effort discovering actual API signatures. KB entries and SOPs become unreliable references."
+    },
+    {
+      "id": "IP-005",
+      "pattern": "Bus integrity issues from non-BusWriter usage",
+      "evidence": "TEAM-0028 bug monitor found 95 issues: 30 schema violations (agents bypassing BusWriter), 58 invalid message types (non-Proto A code writing to bus files), 7 source code bugs. Messages written by non-BusWriter code are invisible to BusReader, causing silent data loss.",
+      "cost": "MEDIUM - 30 messages effectively lost. Bus reliability degrades when agents write directly to JSONL files instead of using BusWriter.publish(). No enforcement mechanism prevents direct writes."
+    },
+    {
+      "id": "IP-006",
+      "pattern": "No SharedState DB initialization in deployments",
+      "evidence": "TEAM-0028 bug monitor: 'No SharedState DB initialized -- heartbeats, rate limiting, phase signals non-functional.' 53 expired messages uncleaned (no EpochRotator running). Deployments used the bus but skipped initializing the full state layer.",
+      "cost": "MEDIUM - Heartbeat monitoring, rate limiting, and phase signals were all non-functional. The coordination system was partially deployed, missing its state management layer. Dead agent detection could not function."
+    },
+    {
+      "id": "IP-007",
+      "pattern": "Monolithic task assignment creating bottlenecks",
+      "evidence": "TEAM-0022_original: Beta-1 was assigned to 'index all 20 KB entries + 17 team session logs' as a single monolithic task. Other idle teams could not help because the work was not decomposed. Documented as anti-pattern AP-002 in efficiency_guide.json.",
+      "cost": "MEDIUM - Single team becomes critical path. No opportunity for work redistribution. Direct cause of the idle-team waste in IP-001."
+    },
+    {
+      "id": "IP-008",
+      "pattern": "Knowledge loss from missing session logs and handoff artifacts",
+      "evidence": "4 team session logs missing (TEAM-0011, -0015 root copies in wrong location, -0016, -0017). KB-0011 lost content (replaced with placeholder). KB-0012 content duplicates KB-0013. TEAM-0015/0016/0017 session logs existed only in teams/ root, not in teams/sessions/ as expected. Documented as anti-pattern AP-010.",
+      "cost": "MEDIUM - Future teams cannot build on lost knowledge. The prime directive ('every AI team builds on the knowledge of the last team') is violated. 4 sessions worth of context permanently unavailable."
+    },
+    {
+      "id": "IP-009",
+      "pattern": "Overproduction of SOPs and coordination infrastructure (recursion trap)",
+      "evidence": "KB-0030: 7 consecutive inward-facing teams (T22-T28). 13 SOPs approaching saturation. SOP-018 (Market Research) never executed. SOP-023 anti-recursion rule proposed 60/30/10 domain/infra/overhead ratio. Zero market research picks logged despite elaborate picks system and 47 AI-quant techniques documented.",
+      "cost": "HIGH - The coordination system became its own purpose rather than serving domain work. Teams spent more time improving coordination than doing domain work. The infrastructure is feature-complete but under-exercised in real operations."
+    }
+  ],
+  "recommendations": [
+    {
+      "id": "R-001",
+      "recommendation": "Integrate auto_assign_idle_teams() into multi_team_runner.py monitoring loop immediately",
+      "priority": "high",
+      "rationale": "The single highest-cost inefficiency (IP-001) was idle teams, which motivated creating help_protocol.py. But the integration into the actual runner was never done. The function exists, is tested (80/80 + 96 stress tests pass), but is not called during real operations. This is a 1-line integration that could recover 40-60% of wasted agent-time."
+    },
+    {
+      "id": "R-002",
+      "recommendation": "Add bus_cli.py commands for direct_channels and work_stealing modules",
+      "priority": "high",
+      "rationale": "bus_cli.py is the validated CLI-first interface (EP-002). But it only covers help_protocol. Direct_channels and work_stealing lack CLI commands, forcing Python imports. This was flagged in TEAM-0023 handoff, TEAM-0024 handoff, and TEAM-0025 handoff -- 3 consecutive teams noted this gap without fixing it. Until CLI commands exist, these modules will remain underutilized."
+    },
+    {
+      "id": "R-003",
+      "recommendation": "Enforce 60/30/10 domain/infrastructure/overhead ratio per SOP-023",
+      "priority": "high",
+      "rationale": "7 consecutive inward-facing teams is the most concerning pattern in the repository. The coordination system is feature-complete. No new SOPs or coordination modules should be created until at least 3 consecutive domain-work sessions are completed (market research, data gathering, or other external-facing work)."
+    },
+    {
+      "id": "R-004",
+      "recommendation": "Mandate SharedState DB initialization in all Proto A deployments",
+      "priority": "high",
+      "rationale": "TEAM-0028 found heartbeats, rate limiting, and phase signals were non-functional because SharedState DB was never initialized. Add a pre-flight check to multi_team_runner.py that verifies DB initialization before launching any teams. Without this, the coordination system is running at partial capability."
+    },
+    {
+      "id": "R-005",
+      "recommendation": "Adopt paired channel architecture as default for research-analysis workflows",
+      "priority": "medium",
+      "rationale": "TEAM-0028's 12-channel paired architecture (researcher -> think tank) produced the most structured and lowest-noise communication pattern observed. Should be the default template for any workflow with data-gathering and analysis teams. Document as SOP addendum to SOP-013."
+    },
+    {
+      "id": "R-006",
+      "recommendation": "Fix all 5 documented API mismatches between KB entries and actual module signatures",
+      "priority": "medium",
+      "rationale": "TEAM-0022_pipeline discovered 5 API documentation mismatches that cause integration friction. KB entries and SOPs that reference incorrect signatures mislead new teams. Update KB-0023, KB-0024, and tool_sops.json with correct signatures."
+    },
+    {
+      "id": "R-007",
+      "recommendation": "Apply Hard Dependency Test (SOP-011) before any multi-team operation planning",
+      "priority": "medium",
+      "rationale": "Sequential defaulting (IP-003) was observed even in TEAM-0025 despite extensive anti-sequential documentation. The Hard Dependency Test should be a mandatory pre-planning step: 'Does Task B require a specific computed artifact that only Task A can produce, AND that artifact does not exist yet?' If no, run in parallel."
+    },
+    {
+      "id": "R-008",
+      "recommendation": "Use solo agents for independent research tasks, teams of 5-8 for integrated operations",
+      "priority": "medium",
+      "rationale": "Three independent analyses (KB-0030, TEAM-0028 TT-1, TEAM-0028 TT-3) all converged on 5-10 agent optimal team size. Solo agents produce 4.0 artifacts/agent. Teams of 20+ lose 89% per-agent efficiency. SOP-022 provides the detailed team sizing rules."
+    },
+    {
+      "id": "R-009",
+      "recommendation": "Enforce BusWriter.publish() as the only way to write to bus channels",
+      "priority": "medium",
+      "rationale": "30 schema-violating messages found by TEAM-0028 bug monitor from agents bypassing BusWriter. These messages are invisible to BusReader, causing silent data loss. Consider making bus files read-only at the filesystem level and providing BusWriter as the sole write path."
+    },
+    {
+      "id": "R-010",
+      "recommendation": "Decompose large tasks into WorkStealing queue items before assigning to teams",
+      "priority": "medium",
+      "rationale": "The monolithic task assignment pattern (IP-007) directly causes idle-team waste. When Beta-1 was assigned all 20 KB entries as one task, no redistribution was possible. If each KB entry had been a separate WorkStealing item, idle teams could have helped process them in parallel."
+    }
+  ],
+  "metrics_framework": [
+    {
+      "metric": "Agent Utilization Rate",
+      "formula": "(total_agent_active_time / total_agent_available_time) * 100",
+      "target": ">= 80%",
+      "why": "The #1 inefficiency observed was idle teams (IP-001). In TEAM-0022_original, estimated utilization was ~40% due to 14+ agents waiting for Beta-1. This metric directly measures the cost of the idle-team problem."
+    },
+    {
+      "metric": "Messages Per Finding",
+      "formula": "total_bus_messages / total_unique_findings",
+      "target": "<= 3.0 messages per finding",
+      "why": "Measures communication efficiency. TEAM-0021 had 31 messages for ~10 findings (3.1 msg/finding). TEAM-0022_original had 47 messages for 30 findings (1.6 msg/finding). Lower is better -- indicates teams are producing findings rather than generating coordination noise."
+    },
+    {
+      "metric": "Time to First Cross-Team Finding",
+      "formula": "timestamp_of_first_finding_referencing_another_teams_work - session_start_timestamp",
+      "target": "<= 5 minutes",
+      "why": "Measures how quickly the communication system enables cross-pollination. TEAM-0021's think tanks began cross-referencing within the first few minutes. The benchmark bug discovery in TEAM-0022 was the highest-value cross-team finding."
+    },
+    {
+      "metric": "Coordination Overhead Percentage",
+      "formula": "(time_spent_on_coordination_messages + setup_time) / total_session_time * 100",
+      "target": "<= 5%",
+      "why": "TEAM-0021 measured I/O overhead at 0.047% of runtime. But TEAM-0028 TT-1 measured broader coordination overhead at 15-30% (orphan files, unresolved items). The gap between I/O cost and total coordination cost is the real overhead to track."
+    },
+    {
+      "metric": "Domain Work Ratio",
+      "formula": "teams_doing_domain_work / total_teams * 100",
+      "target": ">= 60% (per SOP-023)",
+      "why": "7 consecutive inward-facing teams (T22-T28) is the clearest sign of recursion trap. This metric enforces the 60/30/10 ratio. Zero market research picks despite 47 documented techniques shows the imbalance."
+    },
+    {
+      "metric": "Help Protocol Resolution Rate",
+      "formula": "help_requests_fulfilled / help_requests_created * 100",
+      "target": ">= 90%",
+      "why": "Measures whether the help protocol actually resolves idle-team waste. Currently unmeasurable because help_protocol is almost never used in production (IP-002). Once integrated, this tracks whether idle teams are successfully reassigned."
+    },
+    {
+      "metric": "Work Stealing Throughput",
+      "formula": "work_items_completed / work_items_enqueued * 100",
+      "target": ">= 95%",
+      "why": "Measures whether decomposed work actually gets completed. TEAM-0024 stress tests found zombie work items (claimed but never completed) as a failure mode. This metric catches work items falling through the cracks."
+    },
+    {
+      "metric": "Bus Message Compliance Rate",
+      "formula": "(total_bus_messages - schema_violations) / total_bus_messages * 100",
+      "target": ">= 99%",
+      "why": "TEAM-0028 found 30 schema violations from agents bypassing BusWriter. Non-compliant messages are invisible to BusReader, causing silent data loss. This metric tracks whether all agents are using the standard write path."
+    },
+    {
+      "metric": "Session Log Completion Rate",
+      "formula": "sessions_with_complete_logs / total_sessions * 100",
+      "target": "100%",
+      "why": "4 missing session logs out of 28 (86% completion). Knowledge loss from missing logs violates the prime directive. This metric ensures future teams leave proper documentation."
+    },
+    {
+      "metric": "Per-Agent Artifact Output",
+      "formula": "total_artifacts_produced / total_agents_deployed",
+      "target": ">= 1.0 artifacts per agent",
+      "why": "Tracks whether adding more agents actually produces more output. KB-0030 showed solo agents at 4.0 artifacts/agent vs 0.44 for 27-agent teams. If this metric drops below 1.0, the team is too large."
+    }
+  ],
+  "summary": {
+    "total_sessions_analyzed": 28,
+    "total_agents_historically": "132+",
+    "sessions_using_proto_a": 7,
+    "sessions_using_file_only": 21,
+    "key_finding": "The coordination system is technically sound (80/80 unit tests + 96 stress tests pass, <1% I/O overhead) but operationally underdeployed. Only 25% of sessions used Proto A. Of the 4,500+ lines of coordination code built, only the JSONL bus is regularly used. help_protocol, work_stealing, and scratchpad are almost never used in production despite being the solutions to the most observed inefficiency (idle team waste). The biggest risk is not a technical failure but an organizational one: 7 consecutive teams spent time building coordination infrastructure instead of using it for domain work."
+  }
+}
