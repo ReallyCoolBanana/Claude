@@ -1,0 +1,634 @@
+{
+  "collected_at": "2026-03-11",
+  "total_sources": 17,
+  "categories": {
+    "prototype_benchmarks": {
+      "description": "Synthetic and live benchmark results comparing Proto A (JSONL+SQLite WAL), Proto B (FIFO+mmap), and baseline (no communication)",
+      "synthetic_benchmarks": {
+        "source": "prototype/tests/benchmark_results.json",
+        "test_date": "2026-03-11",
+        "total_runs": 36,
+        "scenarios": ["S1", "S2", "S3", "S4"],
+        "scenario_configs": {
+          "S1": {"num_teams": 1, "agents_per_team": 3, "duration_seconds": 15, "data_sources": 1, "inject_failure": false},
+          "S2": {"num_teams": 3, "agents_per_team": 3, "duration_seconds": 20, "data_sources": 3, "inject_failure": false},
+          "S3": {"num_teams": 3, "agents_per_team": 3, "duration_seconds": 25, "data_sources": 3, "inject_failure": false},
+          "S4": {"num_teams": 2, "agents_per_team": 3, "duration_seconds": 20, "data_sources": 2, "inject_failure": true}
+        },
+        "per_prototype_summary": {
+          "baseline": {
+            "runs": 12,
+            "avg_duration_ms": 17040.5,
+            "avg_throughput_dp_per_sec": 157.38,
+            "total_data_points": 32181,
+            "total_errors": 0,
+            "avg_latency_ms": 0.113,
+            "p95_latency_ms": 0.285,
+            "total_bus_bytes": 0,
+            "total_rate_limit_denials": 0,
+            "peak_memory_kb_mean": 96
+          },
+          "proto_a": {
+            "runs": 12,
+            "avg_duration_ms": 17111.4,
+            "avg_throughput_dp_per_sec": 31.78,
+            "total_data_points": 6526,
+            "total_errors": 0,
+            "avg_latency_ms": 0.268,
+            "p95_latency_ms": 0.436,
+            "total_bus_bytes": 2080457,
+            "total_rate_limit_checks": 18442,
+            "total_rate_limit_denials": 11916,
+            "denial_rate": 0.6461,
+            "peak_memory_kb_mean": 322
+          },
+          "proto_b": {
+            "runs": 12,
+            "avg_duration_ms": 17068.9,
+            "avg_throughput_dp_per_sec": 156.52,
+            "total_data_points": 32060,
+            "total_errors": 0,
+            "avg_latency_ms": 0.232,
+            "p95_latency_ms": 0.599,
+            "total_bus_bytes": 0,
+            "total_rate_limit_denials": 0,
+            "peak_memory_kb_mean": 75
+          }
+        },
+        "critical_anomalies": [
+          "Proto A throughput is only 20.9% of baseline (79.1% reduction) due to 64.6% rate limit denial rate",
+          "Proto A receives 7.5x more messages than sent (bus read amplification)",
+          "Proto B achieves 99.4% of baseline throughput with coordination features",
+          "Failure injection (S4) appears non-functional - zero errors across all prototypes"
+        ]
+      },
+      "live_tests": {
+        "baseline": {
+          "source": "prototype/tests/live_test_baseline_results.json",
+          "test_id": "LIVE-TEST-BASELINE-001",
+          "duration_ms": 30003,
+          "agents": 3,
+          "data_points_collected": 60,
+          "throughput_dp_per_sec": 2.0,
+          "api_calls": 12,
+          "errors": 0,
+          "messages_sent": 0
+        },
+        "proto_a": {
+          "source": "prototype/tests/live_test_proto_a_results.json",
+          "test_id": "LIVE-TEST-PROTO-A-001",
+          "duration_ms": 34146,
+          "agents": 3,
+          "data_points_collected": 70,
+          "throughput_dp_per_sec": 2.05,
+          "api_calls": 14,
+          "messages_sent": 53,
+          "messages_received": 51,
+          "message_delivery_rate": 0.9623,
+          "heartbeats_sent": 20,
+          "rate_limit_checks": 14,
+          "rate_limit_denials": 0,
+          "bus_file_bytes": 15148,
+          "errors": 0
+        },
+        "proto_b": {
+          "source": "prototype/tests/live_test_proto_b_results.json",
+          "test_id": "LIVE-TEST-PROTO-B-001",
+          "duration_ms": 36660,
+          "agents": 3,
+          "data_points_collected": 60,
+          "throughput_dp_per_sec": 1.64,
+          "api_calls": 12,
+          "messages_sent": 49,
+          "messages_received": 49,
+          "message_delivery_rate": 1.0,
+          "heartbeats_sent": 33,
+          "rate_limit_checks": 12,
+          "rate_limit_denials": 0,
+          "fifo_writes": 49,
+          "fifo_reads": 49,
+          "mmap_operations": 412,
+          "fifo_throughput_ops_per_sec": 2.67,
+          "errors": 0
+        },
+        "live_comparison": {
+          "proto_a_vs_baseline_throughput_ratio": 1.025,
+          "proto_b_vs_baseline_throughput_ratio": 0.82,
+          "proto_a_extra_data_points": 10,
+          "proto_a_extra_api_calls": 2,
+          "communication_overhead_ms": 15.9,
+          "communication_pct_of_runtime": 0.047
+        }
+      }
+    },
+    "data_gathering_benchmarks": {
+      "description": "Benchmarks of data-gathering methods (WebSearch, Wikipedia, arXiv, Hybrid, Iterative, OpenAlex, Wikidata)",
+      "iteration_1_benchmark": {
+        "source": "storage/scripts/data-gathering/benchmarks/20260310_210031_benchmark.json",
+        "benchmark_id": "BM-20260310_210031",
+        "query": "machine learning stock trading",
+        "methods_tested": 5,
+        "successful": 5,
+        "failed": 0,
+        "rankings": [
+          {"method": "Multi-query Web Search (DG-0001)", "wall_time_s": 6.45, "results": 30, "quality_score": 100},
+          {"method": "Hybrid Multi-Source v2 (DG-0004)", "wall_time_s": 5.65, "results": 72, "quality_score": 100},
+          {"method": "Iterative Deepening (DG-0005)", "wall_time_s": 8.77, "results": 46, "quality_score": 100},
+          {"method": "Wikipedia API (DG-0002)", "wall_time_s": 2.17, "results": 10, "quality_score": 75},
+          {"method": "arXiv Academic (DG-0003)", "wall_time_s": 2.12, "results": 9, "quality_score": 71.5}
+        ],
+        "best_method": "Multi-query Web Search",
+        "fastest_method": "arXiv Academic Paper Search (2.12s)",
+        "most_results": "Hybrid Multi-Source v2 (72)"
+      },
+      "iteration_2_benchmark": {
+        "source": "storage/scripts/data-gathering/benchmarks/iteration2_results.json",
+        "query": "artificial intelligence trading strategies",
+        "methods_tested": 7,
+        "methods_succeeded": 6,
+        "avg_speed_seconds": 3.23,
+        "total_data_points": 146,
+        "avg_quality_score": 52.4,
+        "best_quality_score": 92,
+        "highest_quality_method": "Hybrid v2 (DG-0004)",
+        "fastest_method": "Wikidata (0.16s, but 0 results - API blocked)",
+        "fastest_functional_method": "OpenAlex (0.5s)",
+        "methods": [
+          {"id": "DG-0001", "name": "WebSearch", "speed_s": 4.86, "data_points": 32, "quality": 75},
+          {"id": "DG-0002", "name": "Wikipedia", "speed_s": 1.47, "data_points": 1, "quality": 10},
+          {"id": "DG-0003", "name": "arXiv", "speed_s": 2.66, "data_points": 9, "quality": 50},
+          {"id": "DG-0004", "name": "Hybrid v2", "speed_s": 5.11, "data_points": 46, "quality": 92},
+          {"id": "DG-0005", "name": "Iterative", "speed_s": 7.88, "data_points": 43, "quality": 75},
+          {"id": "DG-0006", "name": "OpenAlex", "speed_s": 0.5, "data_points": 15, "quality": 65},
+          {"id": "DG-0007", "name": "Wikidata", "speed_s": 0.16, "data_points": 0, "quality": 0}
+        ]
+      },
+      "iteration_comparison": {
+        "source": "storage/scripts/data-gathering/benchmarks/results.json",
+        "iteration_1_to_2_improvements": {
+          "data_points_increase": "371% (31 to 146)",
+          "quality_increase": "67% (55 to 92)",
+          "methods_functional_increase": "400% (1 to 5)",
+          "hybrid_speed_improvement": "12% faster (5.81s to 5.11s) despite 5 sources vs 3"
+        }
+      }
+    },
+    "storage_stress_tests": {
+      "description": "Micro-benchmarks for storage index lookup operations (linear scan vs hash/indexed)",
+      "id_lookups": {
+        "source": "storage/scripts/stress-test-reads-id-results.json",
+        "scripts": {
+          "linear_avg_us": 1.42, "linear_p99_us": 3.13,
+          "hash_avg_us": 0.11, "hash_p99_us": 0.17,
+          "speedup": 12.9, "breakeven_lookups": 7.4,
+          "miss_speedup": 16.5
+        },
+        "tools": {
+          "linear_avg_us": 0.72, "linear_p99_us": 1.19,
+          "hash_avg_us": 0.11, "hash_p99_us": 0.16,
+          "speedup": 6.5, "breakeven_lookups": 9.6,
+          "miss_speedup": 10.7
+        },
+        "sources": {
+          "linear_avg_us": 0.92, "linear_p99_us": 2.12,
+          "hash_avg_us": 0.11, "hash_p99_us": 0.16,
+          "speedup": 8.4, "breakeven_lookups": 7.8,
+          "miss_speedup": 13.0
+        }
+      },
+      "category_lookups": {
+        "source": "storage/scripts/stress-test-reads-category-results.json",
+        "scripts_by_category": {"linear_avg_us": 2.45, "indexed_avg_us": 1.12},
+        "scripts_by_language": {"linear_avg_us": 2.51, "indexed_avg_us": 0.92},
+        "tools_by_category": {"linear_avg_us": 1.66, "indexed_avg_us": 0.81},
+        "tools_by_auth_type": {"linear_avg_us": 1.59, "indexed_avg_us": 0.69},
+        "sources_by_data_type": {"linear_avg_us": 1.98, "indexed_avg_us": 0.68},
+        "sources_by_access_type": {"linear_avg_us": 2.03, "indexed_avg_us": 0.92},
+        "nonexistent_lookups": {"scripts_avg_us": 2.37, "tools_avg_us": 1.54, "sources_avg_us": 1.80}
+      },
+      "cross_reference_lookups": {
+        "source": "storage/scripts/stress-test-reads-cross-results.json",
+        "cross_ref": {"linear_avg_us": 1.92, "indexed_avg_us": 0.29, "speedup_ratio": 6.6},
+        "compound_3field": {"linear_avg_us": 2.44, "prefilter_avg_us": 0.64, "speedup_ratio": 3.8},
+        "cross_subsystem_team_avg_us": 5.19,
+        "tag_search_all_avg_us": 10.22
+      }
+    },
+    "coordination_benchmarks": {
+      "description": "Benchmarks for the multi-agent coordination system primitives (hub, help, channels, work stealing, pipelines)",
+      "source": "storage/scripts/coord_bench_results.json",
+      "hub_operations": {
+        "registration": {"count": 50, "mean_ms": 0.91, "p95_ms": 1.022, "total_ms": 45.5},
+        "status_update": {"count": 50, "mean_ms": 0.393, "p95_ms": 0.525, "total_ms": 19.662},
+        "dashboard_reads": {"count": 4, "mean_ms": 0.086, "p95_ms": 0.152},
+        "instruction_throughput": {"count": 100, "mean_ms": 0.336, "p95_ms": 0.487},
+        "concurrent_updates_10_threads": {"count": 10, "mean_ms": 44.166, "p95_ms": 130.361}
+      },
+      "help_protocol": {
+        "work_item_throughput": {"count": 100, "mean_ms": 0.331, "p95_ms": 0.387},
+        "request_throughput": {"count": 20, "mean_ms": 0.503, "p95_ms": 0.728},
+        "offer_race_5_threads": {"count": 25, "mean_ms": 2.142, "p95_ms": 8.373},
+        "idle_detection": {"count": 50, "mean_ms": 0.045, "p95_ms": 0.058},
+        "auto_assignment": {"count": 1, "mean_ms": 5.691}
+      },
+      "channels": {
+        "creation": {"count": 9, "mean_ms": 0.494, "p95_ms": 0.59},
+        "message_throughput": {"count": 100, "mean_ms": 0.645, "p95_ms": 1.088},
+        "message_read": {"count": 9, "mean_ms": 0.417, "p95_ms": 0.51},
+        "progress_broadcast": {"count": 10, "mean_ms": 0.35, "p95_ms": 0.407},
+        "bottleneck_detection": {"count": 50, "mean_ms": 0.011, "p95_ms": 0.016},
+        "concurrent_messaging_8_threads": {"count": 80, "mean_ms": 6.145, "p95_ms": 55.411}
+      },
+      "work_stealing": {
+        "enqueue": {"count": 200, "mean_ms": 0.347, "p95_ms": 0.482},
+        "steal_single": {"count": 200, "mean_ms": 0.289, "p95_ms": 0.463},
+        "thundering_herd_10_threads": {"count": 100, "mean_ms": 5.293, "p95_ms": 54.096}
+      },
+      "pipelines": {
+        "3_stages": {"mean_ms": 0.691, "p95_ms": 1.245},
+        "5_stages": {"mean_ms": 0.897, "p95_ms": 1.54},
+        "10_stages": {"mean_ms": 1.024, "p95_ms": 2.122},
+        "20_stages": {"mean_ms": 1.015, "p95_ms": 1.309}
+      },
+      "scratchpad": {
+        "throughput_200_ops": {"mean_ms": 0.105, "p95_ms": 0.249}
+      },
+      "sqlite_contention_scaling": {
+        "1_thread": {"ops_per_sec": 3230, "mean_ms": 0.268, "p95_ms": 0.336},
+        "2_threads": {"ops_per_sec": 2016, "mean_ms": 0.496, "p95_ms": 0.498},
+        "4_threads": {"ops_per_sec": 1901, "mean_ms": 1.051, "p95_ms": 0.432},
+        "8_threads": {"ops_per_sec": 570, "mean_ms": 1.754, "p95_ms": 0.372},
+        "16_threads": {"ops_per_sec": 137, "mean_ms": 7.309, "p95_ms": 0.461},
+        "32_threads": {"ops_per_sec": 95, "mean_ms": 10.502, "p95_ms": 0.437}
+      },
+      "team_size_scaling": {
+        "1_agent": {"mean_ms": 1.612},
+        "5_agents": {"mean_ms": 5.445},
+        "10_agents": {"mean_ms": 7.717},
+        "20_agents": {"mean_ms": 12.853},
+        "50_agents": {"mean_ms": 29.468}
+      }
+    },
+    "token_efficiency": {
+      "description": "Token cost benchmarks for knowledge base read/write operations comparing raw file reads vs smart tools",
+      "source": "storage/coordination/teams/b2-epsilon/output/benchmark_results.json",
+      "aggregate": {
+        "avg_reduction_pct": 90.2,
+        "total_old_tokens": 64285,
+        "total_new_tokens": 5512,
+        "overall_speedup": 11.7,
+        "best_benchmark_speedup": 91.0,
+        "worst_benchmark_speedup": 3.8
+      },
+      "benchmark_highlights": [
+        {"operation": "Read: full KB entry vs smart_read", "old_tokens": 945, "new_tokens": 113, "reduction_pct": 88.0, "speedup": 8.4},
+        {"operation": "Search: full index.json vs smart_search", "old_tokens": 6093, "new_tokens": 313, "reduction_pct": 94.9, "speedup": 19.5},
+        {"operation": "Search: full index.json vs query_kb", "old_tokens": 6093, "new_tokens": 123, "reduction_pct": 98.0, "speedup": 49.5},
+        {"operation": "List: full index.json vs SUMMARY.json", "old_tokens": 6093, "new_tokens": 79, "reduction_pct": 98.7, "speedup": 77.1},
+        {"operation": "Write: template+content+index vs smart_write", "old_tokens": 14561, "new_tokens": 160, "reduction_pct": 98.9, "speedup": 91.0}
+      ],
+      "bugs_found": 2,
+      "production_ready": true,
+      "impact": "Agent can do ~190 index reads per context window vs ~16 previously"
+    },
+    "team_performance": {
+      "description": "Performance metrics across 28+ teams, 132+ agent instances, covering team sizing, cooperation patterns, and efficiency",
+      "team_metrics_archive": {
+        "source": "storage/analysis/team-metrics-archive.json",
+        "total_teams": 28,
+        "total_agent_instances": 132,
+        "total_kb_entries": 29,
+        "total_sops": 13,
+        "phases": {
+          "phase_1_foundation": {"teams": 8, "agents": 88, "key_finding": "T05 solo agent: 4.0 artifacts/agent (peak efficiency)"},
+          "phase_2_coordinator": {"teams": 6, "agents": 33, "key_finding": "T13 duplicated T11 objective - coordination gap"},
+          "phase_3_bus_communication": {"teams": 8, "agents": 48, "key_finding": "Proto A 79% below baseline in synthetic, 102.5% in live"},
+          "phase_4_full_stack": {"teams": 6, "agents": 57, "key_finding": "T27: full repo audit in 90s with 5 agents, zero idle"}
+        },
+        "optimal_team_sizes": {
+          "independent_research": 1,
+          "tool_building": 3,
+          "integrated_builds": 7,
+          "research_operations": 9,
+          "full_operations": "8-10 max",
+          "avoid": "20+ (89% efficiency loss)"
+        },
+        "infrastructure_issues": {
+          "total_bus_issues": 95,
+          "schema_violations": 30,
+          "type_violations": 58,
+          "expired_messages": 53,
+          "high_severity_bugs": 2,
+          "medium_severity_bugs": 15
+        },
+        "critical_risks": ["inward_facing_gravity (7 consecutive infra teams)", "sop_saturation (13 SOPs approaching overhead)", "unfixed_high_severity_bugs"]
+      },
+      "team_analysis": {
+        "source": "storage/scripts/team_analysis_results.json",
+        "efficiency_by_team_size": {
+          "solo_1": {"mean_efficiency": 5.5, "range": "4.0-7.0", "teams": 2},
+          "small_2_3": {"mean_efficiency": 1.0, "teams": 1},
+          "medium_4_8": {"mean_efficiency": 2.711, "range": "0.375-12.0", "teams": 6},
+          "large_9_15": {"mean_efficiency": 0.361, "range": "0.111-0.667", "teams": 4},
+          "xlarge_16_plus": {"mean_efficiency": 0.321, "range": "0.125-0.471", "teams": 7}
+        },
+        "power_law": "E = 4.0 * N^(-0.75). Every doubling reduces per-agent output 40-50%.",
+        "top_5_teams": [
+          {"team": "TEAM-0024", "size": 8, "efficiency": 12.0, "pattern": "parallel-test"},
+          {"team": "TEAM-0010", "size": 1, "efficiency": 7.0, "pattern": "solo"},
+          {"team": "TEAM-0005", "size": 1, "efficiency": 4.0, "pattern": "solo"},
+          {"team": "TEAM-0002", "size": 7, "efficiency": 1.143, "pattern": "lead-sub"},
+          {"team": "TEAM-0006", "size": 3, "efficiency": 1.0, "pattern": "small-parallel"}
+        ],
+        "ranked_cooperation_patterns": [
+          {"pattern": "parallel-test", "efficiency": 12.0},
+          {"pattern": "solo", "efficiency": 5.5},
+          {"pattern": "small-parallel", "efficiency": 1.0},
+          {"pattern": "parallel-audit", "efficiency": 1.0},
+          {"pattern": "parallel-build", "efficiency": 0.7},
+          {"pattern": "lead-sub", "efficiency": 0.668},
+          {"pattern": "wave-sequential", "efficiency": 0.176},
+          {"pattern": "8-team-pipeline", "efficiency": 0.125}
+        ],
+        "infrastructure_weak_links": [
+          {"rank": 1, "component": "rate_limiter", "severity": "critical", "detail": "64.6% denial rate"},
+          {"rank": 2, "component": "sqlite_contention", "severity": "high", "detail": "p99 >100ms at 16+ threads"},
+          {"rank": 3, "component": "zombie_work_items", "severity": "high", "detail": "No timeout-based reclaim"},
+          {"rank": 4, "component": "bus_compaction", "severity": "medium", "detail": "JSONL grows unbounded"},
+          {"rank": 5, "component": "read_offset_persistence", "severity": "medium", "detail": "Lost on restart"}
+        ]
+      }
+    },
+    "think_tank_findings": {
+      "description": "Cross-team think tank analysis on Proto A efficiency and optimal team operations",
+      "efficiency_report": {
+        "source": "prototype/tests/think-tank-efficiency-report.json",
+        "question": "Does Proto A lead to efficiency gains over no communication?",
+        "unanimous_verdict": "YES - Proto A provides clear efficiency gains",
+        "confidence": "VERY HIGH (unanimous across 3 think tanks)",
+        "key_evidence": [
+          "Communication overhead <1% across all scenarios",
+          "16.7% more data points collected with coordinated API utilization",
+          "Sublinear scaling - larger teams benefit MORE",
+          "Failure detection saves 20-27% of operation time per incident",
+          "Breakeven after 1 coordinated action (>99% probability)",
+          "Communication cost (0.3ms/msg) is 1/3900th of average API call"
+        ],
+        "per_tank_verdicts": {
+          "alpha": "YES - Theoretical: +16.7% data yield at +13.8% wall-clock, sublinear scaling",
+          "beta": "YES - Empirical: 2.05 dp/s vs 2.00 dp/s baseline, comm overhead 0.047% of runtime",
+          "gamma": "YES - Scenario: all realistic scenarios show gains, breakeven >99% probability"
+        }
+      },
+      "convergence_report": {
+        "source": "storage/coordination/teams/think-tank-convergence.json",
+        "methodology": "Cross-analysis of 30 team logs, 155 stress tests, 50 agents, 32 threads",
+        "team_sizing_verdict": "5-8 agents is the sweet spot. Solo for research. Never 15+ without justification.",
+        "cooperation_pattern_verdict": "parallel-test > solo > small-parallel > lead-sub. Pipeline and wave-sequential are worst.",
+        "infrastructure_verdict": "SQLite contention is primary scaling bottleneck. Rate limiter is broken. Bus needs compaction.",
+        "sqlite_scaling": {
+          "1_thread_ops_per_sec": 3230,
+          "8_threads_ops_per_sec": 568,
+          "16_threads_ops_per_sec": 205,
+          "32_threads_ops_per_sec": 126,
+          "degradation_1_to_32": "96% reduction"
+        },
+        "token_efficiency_verdict": "90.2% average token reduction enables 11.7x more operations per context window",
+        "recommended_total_agents": "14-21",
+        "recommended_team_tiers": {
+          "solo_researchers": "2-4 agents, 4-7 artifacts/agent",
+          "build_teams": "2 teams of 3-4, 0.8-1.2 artifacts/agent",
+          "test_team": "5-8 agents, 5-12 test artifacts/agent",
+          "coordinator": "1 agent"
+        },
+        "prerequisites_before_scaling": [
+          "Fix rate limiter (64.6% denial rate)",
+          "Add zombie work item reclaim",
+          "Implement bus file rotation (>1MB trigger)",
+          "Persist bus read offsets to SQLite",
+          "Increase _MAX_RETRIES from 5 to 10 for >16 concurrent writers"
+        ]
+      }
+    }
+  },
+  "raw_sources": [
+    {
+      "path": "prototype/tests/benchmark_results.json",
+      "size_bytes": 2306867,
+      "key_metrics": {
+        "type": "synthetic_benchmark",
+        "runs": 36,
+        "prototypes": ["baseline", "A", "B"],
+        "scenarios": ["S1", "S2", "S3", "S4"],
+        "baseline_throughput_dp_per_sec": 157.38,
+        "proto_a_throughput_dp_per_sec": 31.78,
+        "proto_b_throughput_dp_per_sec": 156.52,
+        "proto_a_denial_rate": 0.6461,
+        "all_errors": 0
+      }
+    },
+    {
+      "path": "prototype/tests/live_test_baseline_results.json",
+      "size_bytes": 2867,
+      "key_metrics": {
+        "type": "live_test",
+        "prototype": "baseline",
+        "duration_ms": 30003,
+        "data_points": 60,
+        "throughput_dp_per_sec": 2.0,
+        "api_calls": 12,
+        "errors": 0
+      }
+    },
+    {
+      "path": "prototype/tests/live_test_proto_a_results.json",
+      "size_bytes": 5325,
+      "key_metrics": {
+        "type": "live_test",
+        "prototype": "A",
+        "duration_ms": 34146,
+        "data_points": 70,
+        "throughput_dp_per_sec": 2.05,
+        "messages_sent": 53,
+        "messages_received": 51,
+        "errors": 0
+      }
+    },
+    {
+      "path": "prototype/tests/live_test_proto_b_results.json",
+      "size_bytes": 3686,
+      "key_metrics": {
+        "type": "live_test",
+        "prototype": "B",
+        "duration_ms": 36660,
+        "data_points": 60,
+        "throughput_dp_per_sec": 1.64,
+        "fifo_throughput_ops_per_sec": 2.67,
+        "mmap_operations": 412,
+        "errors": 0
+      }
+    },
+    {
+      "path": "storage/scripts/data-gathering/benchmarks/20260310_210031_benchmark.json",
+      "size_bytes": 4915,
+      "key_metrics": {
+        "type": "data_gathering_benchmark",
+        "iteration": 1,
+        "methods_tested": 5,
+        "best_method": "Multi-query Web Search",
+        "best_score": 100,
+        "fastest_time_s": 2.12,
+        "most_results": 72
+      }
+    },
+    {
+      "path": "storage/scripts/data-gathering/benchmarks/iteration2_results.json",
+      "size_bytes": 3788,
+      "key_metrics": {
+        "type": "data_gathering_benchmark",
+        "iteration": 2,
+        "methods_tested": 7,
+        "methods_succeeded": 6,
+        "total_data_points": 146,
+        "best_quality": 92,
+        "highest_quality_method": "Hybrid v2"
+      }
+    },
+    {
+      "path": "storage/scripts/data-gathering/benchmarks/results.json",
+      "size_bytes": 5836,
+      "key_metrics": {
+        "type": "data_gathering_comparison",
+        "iterations": 2,
+        "data_points_increase_pct": 371,
+        "quality_increase_pct": 67,
+        "methods_functional_increase_pct": 400
+      }
+    },
+    {
+      "path": "storage/scripts/stress-test-reads-id-results.json",
+      "size_bytes": 3277,
+      "key_metrics": {
+        "type": "storage_lookup_benchmark",
+        "lookup_type": "by_id",
+        "hash_speedup_scripts": 12.9,
+        "hash_speedup_tools": 6.5,
+        "hash_speedup_sources": 8.4,
+        "hash_avg_ns": 111
+      }
+    },
+    {
+      "path": "storage/scripts/stress-test-reads-category-results.json",
+      "size_bytes": 2458,
+      "key_metrics": {
+        "type": "storage_lookup_benchmark",
+        "lookup_type": "by_category",
+        "indexed_speedup_range": "1.6x-2.9x",
+        "fastest_indexed_avg_us": 0.68
+      }
+    },
+    {
+      "path": "storage/scripts/stress-test-reads-cross-results.json",
+      "size_bytes": 1331,
+      "key_metrics": {
+        "type": "storage_lookup_benchmark",
+        "lookup_type": "cross_reference",
+        "cross_ref_speedup": 6.6,
+        "compound_3field_speedup": 3.8,
+        "tag_search_all_avg_us": 10.22
+      }
+    },
+    {
+      "path": "storage/coordination/teams/alpha-1/output/benchmark_analysis.json",
+      "size_bytes": 22528,
+      "key_metrics": {
+        "type": "benchmark_analysis",
+        "team": "alpha-1",
+        "datasets_analyzed": 4,
+        "anomalies_found": 8,
+        "key_findings": 10,
+        "recommendations": 7,
+        "critical_finding": "Proto A throughput collapse 79.1% below baseline"
+      }
+    },
+    {
+      "path": "storage/coordination/teams/b2-epsilon/output/benchmark_results.json",
+      "size_bytes": 9318,
+      "key_metrics": {
+        "type": "token_efficiency_benchmark",
+        "benchmarks_run": 11,
+        "avg_token_reduction_pct": 90.2,
+        "overall_speedup": 11.7,
+        "best_speedup": 91.0,
+        "bugs_found": 2
+      }
+    },
+    {
+      "path": "prototype/tests/think-tank-efficiency-report.json",
+      "size_bytes": 13312,
+      "key_metrics": {
+        "type": "think_tank_analysis",
+        "question": "Proto A efficiency gains",
+        "unanimous_verdict": "YES",
+        "confidence": "VERY HIGH",
+        "think_tanks": 3,
+        "total_findings": 11,
+        "communication_overhead_pct": 0.047
+      }
+    },
+    {
+      "path": "storage/analysis/team-metrics-archive.json",
+      "size_bytes": 4915,
+      "key_metrics": {
+        "type": "team_metrics",
+        "total_teams": 28,
+        "total_agents": 132,
+        "total_kb_entries": 29,
+        "total_sops": 13,
+        "high_severity_bugs": 2,
+        "critical_risks": 3
+      }
+    },
+    {
+      "path": "storage/scripts/coord_bench_results.json",
+      "size_bytes": 492544,
+      "key_metrics": {
+        "type": "coordination_benchmark",
+        "benchmark_categories": 40,
+        "total_measurements": 2880,
+        "hub_reg_mean_ms": 0.91,
+        "hub_status_mean_ms": 0.393,
+        "help_work_item_mean_ms": 0.331,
+        "channel_msg_mean_ms": 0.645,
+        "steal_mean_ms": 0.289,
+        "sqlite_contention_32t_ops_per_sec": 95
+      }
+    },
+    {
+      "path": "storage/scripts/team_analysis_results.json",
+      "size_bytes": 15360,
+      "key_metrics": {
+        "type": "team_analysis",
+        "teams_analyzed": 20,
+        "patterns_ranked": 15,
+        "best_pattern": "parallel-test (12.0 eff)",
+        "worst_pattern": "8-team-pipeline (0.125 eff)",
+        "power_law": "E = 4.0 * N^(-0.75)",
+        "critical_findings": 4
+      }
+    },
+    {
+      "path": "storage/coordination/teams/think-tank-convergence.json",
+      "size_bytes": 11264,
+      "key_metrics": {
+        "type": "think_tank_convergence",
+        "data_sources_analyzed": 7,
+        "findings": 5,
+        "team_sizing_sweet_spot": "5-8 agents",
+        "best_cooperation": "parallel-test",
+        "sqlite_scale_limit": "15 concurrent writers",
+        "recommended_total_agents": "14-21"
+      }
+    }
+  ]
+}
