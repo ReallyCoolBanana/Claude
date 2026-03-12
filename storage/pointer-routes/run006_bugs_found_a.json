@@ -1,0 +1,249 @@
+{
+  "report_id": "run006_bugs_found_a",
+  "generated_at": "2026-03-12",
+  "division": "3A",
+  "agents": [
+    "BF-1",
+    "BF-2",
+    "BF-3",
+    "BF-4"
+  ],
+  "scan_target": "storage/pointer-network.json",
+  "audit_target": "storage/pointer-routes/*.json",
+  "network_snapshot": {
+    "total_nodes": 310,
+    "total_edges": 4809,
+    "schema_version": "1.1",
+    "naming_violations": 140,
+    "self_loops": 0,
+    "orphaned_nodes": 0,
+    "bad_weights": 0,
+    "bad_strengths": 0,
+    "missing_targets": 0,
+    "duplicate_edges": 0
+  },
+  "cross_report_summary": {
+    "distinct_edge_counts_claimed": [
+      4535,
+      4580,
+      4809,
+      4820,
+      6859
+    ],
+    "actual_edge_count": 4809,
+    "reports_with_stale_edge_count": 13,
+    "success_rate_scale_inconsistency": true,
+    "success_rate_scales_found": [
+      "0-1 decimal",
+      "0-100 numeric",
+      "string percentage",
+      "formula string",
+      "dict"
+    ]
+  },
+  "total_bugs": 27,
+  "bugs_by_severity": {
+    "critical": 1,
+    "high": 9,
+    "medium": 9,
+    "low": 7,
+    "info": 1
+  },
+  "bugs_by_agent": {
+    "BF-1": 4,
+    "BF-2": 1,
+    "BF-3": 16,
+    "BF-4": 6
+  },
+  "bugs": [
+    {
+      "bug_id": "BF6-0001",
+      "severity": "medium",
+      "file": "storage/pointer-network.json",
+      "description": "114 wiki-* nodes violate naming convention (expected SOP-XXX|KB-XXXX|SCR-XXXX|SRC-XXXX|TEAM-XXX). Examples: wiki-ai:Neural_scaling_law, wiki-ai:AI_safety",
+      "agent": "BF-1"
+    },
+    {
+      "bug_id": "BF6-0002",
+      "severity": "medium",
+      "file": "storage/pointer-network.json",
+      "description": "3 SOP-GXX nodes violate naming convention (SOP-G01, SOP-G02, SOP-G03 should be SOP-001 format)",
+      "agent": "BF-1"
+    },
+    {
+      "bug_id": "BF6-0003",
+      "severity": "medium",
+      "file": "storage/pointer-network.json",
+      "description": "22 TEAM-XXXX nodes use 4-digit format instead of 3-digit (e.g., TEAM-0001 should be TEAM-001)",
+      "agent": "BF-1"
+    },
+    {
+      "bug_id": "BF6-0004",
+      "severity": "low",
+      "file": "storage/pointer-network.json",
+      "description": "1 TOOL-0001 node violates naming convention (TOOL prefix not in allowed set)",
+      "agent": "BF-1"
+    },
+    {
+      "bug_id": "BF6-0005",
+      "severity": "high",
+      "file": "storage/pointer-network.json",
+      "description": "stats.edge_type_counts sum (6266) does not match actual edge count (4809). Breakdown: shared_tags=4426, explicit_reference=1093, category_affinity=708, backlink=33, tag_upgrade=6. The sum counts overlapping reasons per edge, not unique edges.",
+      "agent": "BF-2"
+    },
+    {
+      "bug_id": "BF6-0006",
+      "severity": "high",
+      "file": "storage/pointer-routes/benchmark_a1_report.json",
+      "description": "Reports total_edges=4580 but current network has 4809 edges. Stale data.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0007",
+      "severity": "high",
+      "file": "storage/pointer-routes/benchmark_a2_report.json",
+      "description": "Reports total_edges=4580 but current network has 4809 edges. Stale data.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0008",
+      "severity": "high",
+      "file": "storage/pointer-routes/benchmark_beta_report.json",
+      "description": "Reports total_edges=4535 but current network has 4809 edges. Stale data.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0009",
+      "severity": "high",
+      "file": "storage/pointer-routes/benchmark_c2_report.json",
+      "description": "Reports total_edges=4580 but current network has 4809 edges. Stale data.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0010",
+      "severity": "high",
+      "file": "storage/pointer-routes/benchmark_d2_report.json",
+      "description": "Reports total_edges=4580 but current network has 4809 edges. Stale data.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0011",
+      "severity": "high",
+      "file": "storage/pointer-routes/benchmark_gamma_report.json",
+      "description": "Reports total_edges=6859 but current network has 4809 edges. Stale data.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0012",
+      "severity": "high",
+      "file": "storage/pointer-routes/benchmark_master_report.json",
+      "description": "Reports total_edges=4535 but current network has 4809 edges. Stale data.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0013",
+      "severity": "critical",
+      "file": "storage/pointer-routes/benchmark_gamma_report.json",
+      "description": "benchmark_gamma_report.json claims total_edges=6859 which is 2050 more than actual (4809). This is the largest discrepancy across all reports.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0014",
+      "severity": "medium",
+      "file": "storage/pointer-routes/benchmark_master_report.json",
+      "description": "benchmark_master_report.json and benchmark_beta_report.json both report total_edges=4535, which does not match current 4809 or any other report's 4580. Multiple stale baselines coexist.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0015",
+      "severity": "high",
+      "file": "storage/pointer-routes/",
+      "description": "Success rates use inconsistent scales across reports: analysis_a6_monitoring uses 0-1 (0.988), pathfind_p7_reliability uses 0-1 (1.0/0.0), stress_s6_report uses 0-100 (80.0, 45.0), benchmark_delta uses strings ('85.7%'). No standard scale.",
+      "agent": "BF-4"
+    },
+    {
+      "bug_id": "BF6-0016",
+      "severity": "medium",
+      "file": "storage/pointer-routes/benchmark_d1_report.json",
+      "description": "benchmark_d1_report.json contains contradictory success_rates: both 0.0 and 100.0 in the same report.",
+      "agent": "BF-4"
+    },
+    {
+      "bug_id": "BF6-0017",
+      "severity": "medium",
+      "file": "storage/pointer-routes/analysis_a4_algorithms.json",
+      "description": "analysis_a4_algorithms.json stores success_rate as a formula string 'success_count / use_count' instead of a computed value.",
+      "agent": "BF-4"
+    },
+    {
+      "bug_id": "BF6-0018",
+      "severity": "medium",
+      "file": "storage/pointer-routes/analysis_a8_versioning.json",
+      "description": "analysis_a8_versioning.json stores success_rate as a dict with run comparisons instead of a single numeric value, making cross-report comparison impossible.",
+      "agent": "BF-4"
+    },
+    {
+      "bug_id": "BF6-0019",
+      "severity": "medium",
+      "file": "storage/pointer-routes/pathfind_p5_goal.json",
+      "description": "pathfind_p5_goal.json reports total_edges=4820 but current network has 4809. Slightly stale after recent edge removals/repairs.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0020",
+      "severity": "medium",
+      "file": "storage/pointer-routes/bugs_b2_data_integrity.json",
+      "description": "bugs_b2_data_integrity.json reports total_edges=4820 but current network has 4809. Stale post-repair.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0021",
+      "severity": "low",
+      "file": "storage/pointer-routes/analysis_a3_usecases.json",
+      "description": "analysis_a3_usecases.json reports total_edges=4820 but current network has 4809. Stale post-repair.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0022",
+      "severity": "low",
+      "file": "storage/pointer-routes/analysis_a6_monitoring.json",
+      "description": "analysis_a6_monitoring.json reports total_edges=4820 but current network has 4809. Stale post-repair.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0023",
+      "severity": "low",
+      "file": "storage/pointer-routes/analysis_a7_autoclassify.json",
+      "description": "analysis_a7_autoclassify.json reports total_edges=4820 but current network has 4809. Stale post-repair.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0024",
+      "severity": "low",
+      "file": "storage/pointer-routes/analysis_a8_versioning.json",
+      "description": "analysis_a8_versioning.json reports total_edges=4820 but current network has 4809. Stale post-repair.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0025",
+      "severity": "low",
+      "file": "storage/pointer-routes/benchmark_master_report_v2.json",
+      "description": "benchmark_master_report_v2.json reports total_edges=4820 but current network has 4809.",
+      "agent": "BF-3"
+    },
+    {
+      "bug_id": "BF6-0026",
+      "severity": "low",
+      "file": "storage/pointer-routes/pathfind_p7_reliability.json",
+      "description": "pathfind_p7_reliability.json reports per-cluster total_edges (450, 20, 818, 1120, 440, 918, 1054) summing to 4820, not current 4809.",
+      "agent": "BF-4"
+    },
+    {
+      "bug_id": "BF6-0027",
+      "severity": "info",
+      "file": "storage/pointer-routes/",
+      "description": "All report timestamps are 2026-03-12. No future or past-date anomalies detected, but this means all reports are from the same day and none have been updated post-repairs.",
+      "agent": "BF-4"
+    }
+  ]
+}

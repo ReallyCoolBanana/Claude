@@ -2,7 +2,7 @@
   "schema_version": "2.0",
   "domain": "scripts",
   "last_updated": "2026-03-12",
-  "entry_count": 57,
+  "entry_count": 68,
   "entries": [
     {
       "id": "SCR-0001",
@@ -2064,34 +2064,287 @@
       "path": "storage/coordination/route_tracker.py",
       "language": "python",
       "description": "Agent route tracker for pointer network traversals. Logs which paths agents follow through the pointer network, analyzes route patterns, computes strength effectiveness, and recommends optimal routes for task types."
+    },
+    {
+      "id": "SCR-0058",
+      "title": "s6-routing-benchmark",
+      "date": "2026-03-12",
+      "category": "analysis",
+      "tags": [
+        "benchmark",
+        "stress-test",
+        "python",
+        "coordination"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "s6_routing_benchmark.py",
+      "language": "python",
+      "description": "Stress Team S6 routing strategy benchmark. Compares weight-based, tag-based, and hybrid routing strategies across 60 journeys through the pointer network.",
+      "added_by_team": "TEAM-0026"
+    },
+    {
+      "id": "SCR-0059",
+      "title": "upgrade-indexes-v2",
+      "date": "2026-03-12",
+      "category": "indexing",
+      "tags": [
+        "indexing",
+        "automation",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "upgrade_indexes_v2.py",
+      "language": "python",
+      "description": "Upgrades knowledge-base/index.json and teams/sessions/index.json to schema v2.0 with secondary indexes, cross-references, and related_to links.",
+      "added_by_team": "TEAM-0026"
+    },
+    {
+      "id": "SCR-0060",
+      "title": "rebuild-unified-index",
+      "date": "2026-03-12",
+      "category": "indexing",
+      "tags": [
+        "indexing",
+        "search",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "rebuild_unified_index.py",
+      "language": "python",
+      "description": "Rebuilds the unified search index from all 5 domain index.json files (knowledge-base, scripts, sources, api-tools, team sessions) into a single storage/unified_index.json with inverted tag index.",
+      "added_by_team": "TEAM-0026"
+    },
+    {
+      "id": "SCR-0061",
+      "title": "viz-data-flow",
+      "date": "2026-03-12",
+      "category": "analysis",
+      "tags": [
+        "analysis",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "viz_data_flow.js",
+      "language": "javascript",
+      "description": "D3.js v7 visualization of script-to-source data flow. Renders a left-to-right flow diagram showing how scripts connect to data sources with dependency chains, interactive hover/click highlighting.",
+      "added_by_team": "TEAM-0026"
+    },
+    {
+      "id": "SCR-0062",
+      "title": "unified-search",
+      "date": "2026-03-12",
+      "category": "search",
+      "tags": [
+        "search",
+        "indexing",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "unified_search.py",
+      "language": "python",
+      "description": "Unified search tool across all repository domains (knowledge-base, scripts, sources, api-tools, team sessions). Supports keyword search, tag filtering, domain filtering, date ranges, and related entry lookup.",
+      "added_by_team": "TEAM-0026"
+    },
+    {
+      "id": "SCR-0063",
+      "title": "viz-kb-graph",
+      "date": "2026-03-12",
+      "category": "analysis",
+      "tags": [
+        "analysis",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "viz_kb_graph.js",
+      "language": "javascript",
+      "description": "D3.js v7 visualization rendering a top-down layered DAG of Knowledge Base entry dependencies. Shows builds_on relationships with interactive click-to-highlight dependency chains.",
+      "added_by_team": "TEAM-0026"
+    },
+    {
+      "id": "SCR-0064",
+      "title": "repair-pointer-network",
+      "date": "2026-03-12",
+      "category": "automation",
+      "tags": [
+        "automation",
+        "indexing",
+        "python",
+        "coordination"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "repair_pointer_network.py",
+      "language": "python",
+      "description": "Repair tool for the pointer network. Fixes orphan nodes, adds missing backlinks for high-weight edges, connects unreachable scripts to SOPs, and updates network statistics.",
+      "added_by_team": "TEAM-0026"
+    },
+    {
+      "id": "SCR-0065",
+      "title": "viz-team-hierarchy",
+      "date": "2026-03-12",
+      "category": "analysis",
+      "tags": [
+        "analysis",
+        "multi-agent",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "viz_team_hierarchy.js",
+      "language": "javascript",
+      "description": "D3.js v7 force-directed graph visualization of team hierarchy showing agent membership, knowledge dependencies, and parent-child team relationships with expandable/collapsible team nodes.",
+      "added_by_team": "TEAM-0026"
+    },
+    {
+      "id": "SCR-0066",
+      "title": "graph-query",
+      "date": "2026-03-12",
+      "category": "search",
+      "tags": [
+        "search",
+        "indexing",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "graph_query.py",
+      "language": "python",
+      "description": "Cross-reference relationship graph query tool. Supports node inspection, orphan detection, hub finding, shortest path computation, and graph statistics including connected components and density.",
+      "added_by_team": "TEAM-0026"
+    },
+    {
+      "id": "SCR-0067",
+      "title": "s2-fanout-stress",
+      "date": "2026-03-12",
+      "category": "analysis",
+      "tags": [
+        "benchmark",
+        "stress-test",
+        "python",
+        "coordination"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "s2_fanout_stress.py",
+      "language": "python",
+      "description": "Stress Team S2 script node fan-out analysis. Computes direct, 2-hop, and 3-hop reach for all SCR nodes, identifies hub and dead-end scripts, and simulates 15 journeys from top hub scripts.",
+      "added_by_team": "TEAM-0026"
+    },
+    {
+      "id": "SCR-0068",
+      "title": "data-pipeline",
+      "date": "2026-03-12",
+      "category": "automation",
+      "tags": [
+        "automation",
+        "indexing",
+        "validation",
+        "search",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "data_pipeline.py",
+      "language": "python",
+      "description": "Data pipeline automation for the research-to-storage workflow. Supports KB ingestion from JSON, validation with taxonomy checks, unified search delegation, and repository health checks across all domains.",
+      "added_by_team": "TEAM-0026"
     }
   ],
   "secondary_indexes": {
     "by_category": {
-      "validation": [
-        "SCR-0001",
-        "SCR-0002",
-        "SCR-0012",
-        "SCR-0014",
-        "SCR-0016",
-        "SCR-0020",
-        "SCR-0036",
-        "SCR-0037",
-        "SCR-0038",
-        "SCR-0039",
-        "SCR-0040",
-        "SCR-0041",
-        "SCR-0042"
-      ],
-      "automation": [
-        "SCR-0003",
-        "SCR-0047"
-      ],
       "analysis": [
         "SCR-0004",
         "SCR-0005",
         "SCR-0011",
-        "SCR-0031"
+        "SCR-0031",
+        "SCR-0058",
+        "SCR-0061",
+        "SCR-0063",
+        "SCR-0065",
+        "SCR-0067"
+      ],
+      "automation": [
+        "SCR-0003",
+        "SCR-0047",
+        "SCR-0064",
+        "SCR-0068"
+      ],
+      "caching": [
+        "SCR-0017"
+      ],
+      "coordination": [
+        "SCR-0019",
+        "SCR-0029",
+        "SCR-0030",
+        "SCR-0032",
+        "SCR-0033",
+        "SCR-0052",
+        "SCR-0053",
+        "SCR-0054",
+        "SCR-0055",
+        "SCR-0056",
+        "SCR-0057"
       ],
       "data-collection": [
         "SCR-0006",
@@ -2116,22 +2369,77 @@
         "SCR-0013",
         "SCR-0034",
         "SCR-0049",
-        "SCR-0051"
+        "SCR-0051",
+        "SCR-0059",
+        "SCR-0060"
       ],
       "search": [
         "SCR-0015",
         "SCR-0018",
         "SCR-0035",
         "SCR-0048",
-        "SCR-0050"
+        "SCR-0050",
+        "SCR-0062",
+        "SCR-0066"
+      ],
+      "validation": [
+        "SCR-0001",
+        "SCR-0002",
+        "SCR-0012",
+        "SCR-0014",
+        "SCR-0016",
+        "SCR-0020",
+        "SCR-0036",
+        "SCR-0037",
+        "SCR-0038",
+        "SCR-0039",
+        "SCR-0040",
+        "SCR-0041",
+        "SCR-0042"
+      ]
+    },
+    "by_tag": {
+      "analysis": [
+        "SCR-0048",
+        "SCR-0061",
+        "SCR-0063",
+        "SCR-0065"
+      ],
+      "arxiv": [
+        "SCR-0008"
+      ],
+      "automation": [
+        "SCR-0003",
+        "SCR-0013",
+        "SCR-0047",
+        "SCR-0049",
+        "SCR-0051",
+        "SCR-0059",
+        "SCR-0064",
+        "SCR-0068"
+      ],
+      "benchmark": [
+        "SCR-0011",
+        "SCR-0058",
+        "SCR-0067"
       ],
       "caching": [
-        "SCR-0017"
+        "SCR-0017",
+        "SCR-0022"
+      ],
+      "communication": [
+        "SCR-0029",
+        "SCR-0054",
+        "SCR-0055"
+      ],
+      "concurrency": [
+        "SCR-0040",
+        "SCR-0041"
       ],
       "coordination": [
         "SCR-0019",
-        "SCR-0029",
         "SCR-0030",
+        "SCR-0031",
         "SCR-0032",
         "SCR-0033",
         "SCR-0052",
@@ -2139,117 +2447,10 @@
         "SCR-0054",
         "SCR-0055",
         "SCR-0056",
-        "SCR-0057"
-      ]
-    },
-    "by_tag": {
-      "validation": [
-        "SCR-0001",
-        "SCR-0002",
-        "SCR-0003",
-        "SCR-0004",
-        "SCR-0012",
-        "SCR-0014",
-        "SCR-0016",
-        "SCR-0020",
-        "SCR-0034",
-        "SCR-0041",
-        "SCR-0042",
-        "SCR-0047"
-      ],
-      "storage": [
-        "SCR-0001",
-        "SCR-0002",
-        "SCR-0003",
-        "SCR-0017",
-        "SCR-0035",
-        "SCR-0036",
-        "SCR-0037",
-        "SCR-0038",
-        "SCR-0039",
-        "SCR-0040"
-      ],
-      "python": [
-        "SCR-0001",
-        "SCR-0002",
-        "SCR-0003",
-        "SCR-0004",
-        "SCR-0005",
-        "SCR-0006",
-        "SCR-0007",
-        "SCR-0008",
-        "SCR-0009",
-        "SCR-0010",
-        "SCR-0011",
-        "SCR-0012",
-        "SCR-0013",
-        "SCR-0014",
-        "SCR-0018",
-        "SCR-0019",
-        "SCR-0020",
-        "SCR-0021",
-        "SCR-0022",
-        "SCR-0023",
-        "SCR-0024",
-        "SCR-0025",
-        "SCR-0026",
-        "SCR-0027",
-        "SCR-0028",
-        "SCR-0029",
-        "SCR-0030",
-        "SCR-0031",
-        "SCR-0032",
-        "SCR-0033",
-        "SCR-0034",
-        "SCR-0035",
-        "SCR-0036",
-        "SCR-0037",
-        "SCR-0038",
-        "SCR-0039",
-        "SCR-0040",
-        "SCR-0041",
-        "SCR-0042",
-        "SCR-0043",
-        "SCR-0044",
-        "SCR-0045",
-        "SCR-0046",
-        "SCR-0047",
-        "SCR-0048",
-        "SCR-0049",
-        "SCR-0050",
-        "SCR-0051",
-        "SCR-0052",
-        "SCR-0053",
-        "SCR-0054",
-        "SCR-0055",
-        "SCR-0056"
-      ],
-      "automation": [
-        "SCR-0003",
-        "SCR-0013",
-        "SCR-0047",
-        "SCR-0049",
-        "SCR-0051"
-      ],
-      "stock-analysis": [
-        "SCR-0004"
-      ],
-      "deduplication": [
-        "SCR-0005",
-        "SCR-0009",
-        "SCR-0031",
-        "SCR-0045"
-      ],
-      "multi-agent": [
-        "SCR-0005",
-        "SCR-0019",
-        "SCR-0030",
-        "SCR-0031",
-        "SCR-0032",
-        "SCR-0033",
-        "SCR-0054",
-        "SCR-0055",
-        "SCR-0056"
+        "SCR-0057",
+        "SCR-0058",
+        "SCR-0064",
+        "SCR-0067"
       ],
       "data-gathering": [
         "SCR-0006",
@@ -2272,37 +2473,32 @@
         "SCR-0045",
         "SCR-0046"
       ],
-      "search": [
-        "SCR-0006",
-        "SCR-0007",
-        "SCR-0008",
+      "dbpedia": [
+        "SCR-0043",
+        "SCR-0044"
+      ],
+      "deduplication": [
+        "SCR-0005",
         "SCR-0009",
-        "SCR-0010",
+        "SCR-0031",
+        "SCR-0045"
+      ],
+      "github-api": [
+        "SCR-0028"
+      ],
+      "go": [
         "SCR-0015",
-        "SCR-0018",
-        "SCR-0021",
-        "SCR-0023",
-        "SCR-0024",
-        "SCR-0025",
-        "SCR-0026",
-        "SCR-0027",
-        "SCR-0028",
-        "SCR-0035",
-        "SCR-0046",
-        "SCR-0047",
-        "SCR-0048",
-        "SCR-0049",
-        "SCR-0050"
+        "SCR-0016",
+        "SCR-0017"
       ],
-      "public-api": [
-        "SCR-0007",
-        "SCR-0046"
+      "guardian": [
+        "SCR-0025"
       ],
-      "arxiv": [
-        "SCR-0008"
+      "hacker-news": [
+        "SCR-0024"
       ],
-      "benchmark": [
-        "SCR-0011"
+      "hub-spoke": [
+        "SCR-0033"
       ],
       "indexing": [
         "SCR-0012",
@@ -2317,116 +2513,51 @@
         "SCR-0049",
         "SCR-0050",
         "SCR-0051",
-        "SCR-0057"
-      ],
-      "go": [
-        "SCR-0015",
-        "SCR-0016",
-        "SCR-0017"
-      ],
-      "caching": [
-        "SCR-0017",
-        "SCR-0022"
-      ],
-      "nlp": [
-        "SCR-0018",
-        "SCR-0045"
-      ],
-      "coordination": [
-        "SCR-0019",
-        "SCR-0030",
-        "SCR-0031",
-        "SCR-0032",
-        "SCR-0033",
-        "SCR-0052",
-        "SCR-0053",
-        "SCR-0054",
-        "SCR-0055",
-        "SCR-0056",
-        "SCR-0057"
-      ],
-      "monitoring": [
-        "SCR-0019",
         "SCR-0057",
-        "SCR-0020",
-        "SCR-0030",
-        "SCR-0032"
+        "SCR-0059",
+        "SCR-0060",
+        "SCR-0062",
+        "SCR-0064",
+        "SCR-0066",
+        "SCR-0068"
       ],
-      "openalex": [
-        "SCR-0023"
-      ],
-      "hacker-news": [
-        "SCR-0024"
-      ],
-      "guardian": [
-        "SCR-0025"
-      ],
-      "semantic-scholar": [
-        "SCR-0026"
-      ],
-      "wikidata": [
-        "SCR-0027"
-      ],
-      "github-api": [
-        "SCR-0028"
+      "jsonl": [
+        "SCR-0029"
       ],
       "message-bus": [
         "SCR-0029",
         "SCR-0052"
       ],
-      "communication": [
-        "SCR-0029",
-        "SCR-0054",
-        "SCR-0055"
+      "monitoring": [
+        "SCR-0019",
+        "SCR-0020",
+        "SCR-0030",
+        "SCR-0032",
+        "SCR-0057"
       ],
-      "jsonl": [
-        "SCR-0029"
-      ],
-      "hub-spoke": [
-        "SCR-0033"
-      ],
-      "sqlite": [
+      "multi-agent": [
+        "SCR-0005",
+        "SCR-0019",
+        "SCR-0030",
+        "SCR-0031",
+        "SCR-0032",
         "SCR-0033",
-        "SCR-0052",
-        "SCR-0053",
         "SCR-0054",
         "SCR-0055",
-        "SCR-0056"
+        "SCR-0056",
+        "SCR-0065"
       ],
-      "stress-test": [
-        "SCR-0036",
-        "SCR-0037",
-        "SCR-0038",
-        "SCR-0039",
-        "SCR-0040"
+      "nlp": [
+        "SCR-0018",
+        "SCR-0045"
       ],
-      "concurrency": [
-        "SCR-0040",
-        "SCR-0041"
+      "openalex": [
+        "SCR-0023"
       ],
-      "wikipedia": [
-        "SCR-0043",
-        "SCR-0044"
+      "public-api": [
+        "SCR-0007",
+        "SCR-0046"
       ],
-      "dbpedia": [
-        "SCR-0043",
-        "SCR-0044"
-      ],
-      "sparql": [
-        "SCR-0043"
-      ],
-      "research": [
-        "SCR-0043",
-        "SCR-0044"
-      ],
-      "text-extraction": [
-        "SCR-0044"
-      ],
-      "analysis": [
-        "SCR-0048"
-      ]
-    },
-    "by_language": {
       "python": [
         "SCR-0001",
         "SCR-0002",
@@ -2468,12 +2599,124 @@
         "SCR-0041",
         "SCR-0042",
         "SCR-0043",
+        "SCR-0044",
+        "SCR-0045",
+        "SCR-0046",
+        "SCR-0047",
+        "SCR-0048",
+        "SCR-0049",
+        "SCR-0050",
+        "SCR-0051",
+        "SCR-0052",
+        "SCR-0053",
+        "SCR-0054",
+        "SCR-0055",
+        "SCR-0056",
+        "SCR-0057",
+        "SCR-0058",
+        "SCR-0059",
+        "SCR-0060",
+        "SCR-0061",
+        "SCR-0062",
+        "SCR-0063",
+        "SCR-0064",
+        "SCR-0065",
+        "SCR-0066",
+        "SCR-0067",
+        "SCR-0068"
+      ],
+      "research": [
+        "SCR-0043",
         "SCR-0044"
       ],
-      "go": [
+      "search": [
+        "SCR-0006",
+        "SCR-0007",
+        "SCR-0008",
+        "SCR-0009",
+        "SCR-0010",
         "SCR-0015",
+        "SCR-0018",
+        "SCR-0021",
+        "SCR-0023",
+        "SCR-0024",
+        "SCR-0025",
+        "SCR-0026",
+        "SCR-0027",
+        "SCR-0028",
+        "SCR-0035",
+        "SCR-0046",
+        "SCR-0047",
+        "SCR-0048",
+        "SCR-0049",
+        "SCR-0050",
+        "SCR-0060",
+        "SCR-0062",
+        "SCR-0066",
+        "SCR-0068"
+      ],
+      "semantic-scholar": [
+        "SCR-0026"
+      ],
+      "sparql": [
+        "SCR-0043"
+      ],
+      "sqlite": [
+        "SCR-0033",
+        "SCR-0052",
+        "SCR-0053",
+        "SCR-0054",
+        "SCR-0055",
+        "SCR-0056"
+      ],
+      "stock-analysis": [
+        "SCR-0004"
+      ],
+      "storage": [
+        "SCR-0001",
+        "SCR-0002",
+        "SCR-0003",
+        "SCR-0017",
+        "SCR-0035",
+        "SCR-0036",
+        "SCR-0037",
+        "SCR-0038",
+        "SCR-0039",
+        "SCR-0040"
+      ],
+      "stress-test": [
+        "SCR-0036",
+        "SCR-0037",
+        "SCR-0038",
+        "SCR-0039",
+        "SCR-0040",
+        "SCR-0058",
+        "SCR-0067"
+      ],
+      "text-extraction": [
+        "SCR-0044"
+      ],
+      "validation": [
+        "SCR-0001",
+        "SCR-0002",
+        "SCR-0003",
+        "SCR-0004",
+        "SCR-0012",
+        "SCR-0014",
         "SCR-0016",
-        "SCR-0017"
+        "SCR-0020",
+        "SCR-0034",
+        "SCR-0041",
+        "SCR-0042",
+        "SCR-0047",
+        "SCR-0068"
+      ],
+      "wikidata": [
+        "SCR-0027"
+      ],
+      "wikipedia": [
+        "SCR-0043",
+        "SCR-0044"
       ]
     }
   }
