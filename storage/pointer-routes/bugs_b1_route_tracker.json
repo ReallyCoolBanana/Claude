@@ -1,0 +1,201 @@
+{
+  "report": "Bug Hunt Report: storage/coordination/route_tracker.py",
+  "hunter": "Bug Hunter B1",
+  "date": "2026-03-12",
+  "target_file": "storage/coordination/route_tracker.py",
+  "total_bugs_found": 11,
+  "bugs": [
+    {
+      "id": "BUG-B1-001",
+      "location": "storage/coordination/route_tracker.py:129",
+      "severity": "critical",
+      "category": "crash",
+      "title": "KeyError crash in analyze_routes with non-standard outcome values",
+      "description": "edge_outcomes defaultdict initializes with only 'success', 'failure', 'partial' keys. If a route has any other outcome value (e.g., 'timeout', 'unknown', or any string passed via the Python API), line 151 crashes with KeyError. The CLI restricts outcomes via argparse choices, but the log_route() function API accepts any string, and manually edited JSONL files could contain arbitrary values.",
+      "reproduction_steps": [
+        "import route_tracker",
+        "route_tracker.log_route('test', 'test', ['A', 'B'], 'timeout')",
+        "route_tracker.analyze_routes()  # KeyError: 'timeout'"
+      ],
+      "actual_behavior": "KeyError: 'timeout' at line 151",
+      "expected_behavior": "Should handle any outcome string gracefully",
+      "suggested_fix": "Change defaultdict factory to: defaultdict(lambda: defaultdict(int)) or use Counter instead. This way any outcome key auto-initializes to 0."
+    },
+    {
+      "id": "BUG-B1-002",
+      "location": "storage/coordination/route_tracker.py:110-114",
+      "severity": "critical",
+      "category": "crash",
+      "title": "load_routes crashes on corrupt JSONL lines with no error handling",
+      "description": "If any line in route_log.jsonl contains invalid JSON (from concurrent write corruption, manual editing, or disk errors), load_routes() raises JSONDecodeError and returns nothing. This makes ALL downstream functions (analyze_routes, extract_patterns, get_top_routes, recommend_route) completely non-functional even if only 1 line out of thousands is corrupt.",
+      "reproduction_steps": [
+        "Write a valid JSONL file with one corrupt line in the middle",
+        "Call load_routes() -- raises JSONDecodeError",
+        "All analysis functions become unusable"
+      ],
+      "actual_behavior": "JSONDecodeError crashes the entire load, losing all valid records",
+      "expected_behavior": "Should skip corrupt lines with a warning and continue loading valid records",
+      "suggested_fix": "Wrap json.loads(line) in try/except, log a warning for corrupt lines, and continue processing remaining lines."
+    },
+    {
+      "id": "BUG-B1-003",
+      "location": "storage/coordination/route_tracker.py:283",
+      "severity": "high",
+      "category": "crash",
+      "title": "get_top_routes crashes if a record is missing the 'route' key",
+      "description": "Line 283 does r['route'] without .get() or validation. If any record in the log lacks a 'route' key (possible with manually written records or schema changes), get_top_routes crashes with KeyError for all users, even those whose routes are valid.",
+      "reproduction_steps": [
+        "Write a record to route_log.jsonl without a 'route' key",
+        "Call get_top_routes('X') -- KeyError: 'route'"
+      ],
+      "actual_behavior": "KeyError: 'route'",
+      "expected_behavior": "Should skip malformed records or use a default",
+      "suggested_fix": "Use r.get('route', []) and skip records where route is empty or missing."
+    },
+    {
+      "id": "BUG-B1-004",
+      "location": "storage/coordination/route_tracker.py:46,81-96",
+      "severity": "high",
+      "category": "missing_validation",
+      "title": "No input validation on log_route parameters",
+      "description": "log_route() accepts empty strings for agent_id and task, empty lists for route, and any arbitrary string for outcome. Empty agent_id/task creates records that pollute analysis. Empty route creates records with entry_node=None and exit_node=None, which causes 'None -> None' entries in route_signatures.",
+      "reproduction_steps": [
+        "route_tracker.log_route('', '', [], 'success')",
+        "Creates record with entry_node=None, exit_node=None",
+        "route_tracker.log_route('', '', ['A', 'B'], 'success')",
+        "Creates record with empty agent_id and task"
+      ],
+      "actual_behavior": "Silently logs invalid records that corrupt analysis data",
+      "expected_behavior": "Should validate that agent_id, task are non-empty strings, route has at least 1 element, and outcome is a recognized value",
+      "suggested_fix": "Add validation at the top of log_route(): if not agent_id or not task: raise ValueError('agent_id and task are required'); if not route: raise ValueError('route must have at least one node')"
+    },
+    {
+      "id": "BUG-B1-005",
+      "location": "storage/coordination/route_tracker.py:424",
+      "severity": "high",
+      "category": "input_parsing",
+      "title": "Route string parser produces empty-string nodes from malformed input",
+      "description": "The CLI splits route strings by '->' which can produce empty string nodes. Examples: 'A -> -> B' produces ['A', '', 'B']; '-> A' produces ['', 'A']; 'A ->' produces ['A', '']; '' produces ['']. These empty-string nodes are then passed to log_route and create bogus records with empty-string hops.",
+      "reproduction_steps": [
+        "python3 route_tracker.py log --agent t --task t --route 'A -> -> B' --outcome success",
+        "Results in route=['A', '', 'B'] with empty-string node"
+      ],
+      "actual_behavior": "Empty string nodes are silently included in the route",
+      "expected_behavior": "Should filter out empty strings and/or validate node names",
+      "suggested_fix": "After splitting, filter empty strings: route = [x.strip() for x in args.route.split('->') if x.strip()]"
+    },
+    {
+      "id": "BUG-B1-006",
+      "location": "storage/coordination/route_tracker.py:239-241",
+      "severity": "high",
+      "category": "performance",
+      "title": "O(n^2) complexity in extract_patterns with many unique routes per task",
+      "description": "For each unique route string (line 240 loop), line 241 scans ALL task_records to find matching routes via string comparison. With U unique routes and N total records per task, this is O(U * N). In worst case where all routes are unique, U = N making it O(n^2). Confirmed by testing: 5K unique routes = 2.2s, 10K = 8.6s (ratio 3.9x, close to theoretical 4x for O(n^2)).",
+      "reproduction_steps": [
+        "Generate 10,000 routes all with the same task but unique route paths",
+        "Call extract_patterns()",
+        "Takes 8.6 seconds; doubles in time quadratically with data size"
+      ],
+      "actual_behavior": "8.6 seconds for 10K unique routes; would be ~86s for 100K",
+      "expected_behavior": "Should be O(n) using groupby or dict-based grouping",
+      "suggested_fix": "Build a dict mapping route_str -> list of records in a single pass, then iterate the dict instead of re-scanning all records for each route string."
+    },
+    {
+      "id": "BUG-B1-007",
+      "location": "storage/coordination/route_tracker.py:180-193",
+      "severity": "medium",
+      "category": "performance",
+      "title": "strength_effectiveness scans all routes 4 times redundantly",
+      "description": "The strength_effectiveness calculation iterates all routes and all hops once per strength level (4 iterations). This is O(4 * R * H) where R is routes and H is hops per route. While linear in R, it does 4 full passes when a single pass collecting stats per strength level would suffice.",
+      "reproduction_steps": [
+        "Generate 50K routes with 5 hops each (250K total hops)",
+        "analyze_routes() spends significant time in this loop"
+      ],
+      "actual_behavior": "4 full passes over all routes/hops",
+      "expected_behavior": "Single pass collecting per-strength-level stats",
+      "suggested_fix": "Replace the 4-iteration loop with a single pass using a dict to accumulate success/total counts per strength level."
+    },
+    {
+      "id": "BUG-B1-008",
+      "location": "storage/coordination/route_tracker.py:98-99",
+      "severity": "medium",
+      "category": "concurrency",
+      "title": "No file locking on route_log.jsonl writes",
+      "description": "Multiple agents writing to route_log.jsonl simultaneously use simple file append with no locking mechanism (no fcntl.flock, no lockfile, no atomic write). While CPython's GIL protects threading and Linux typically provides atomic appends for small writes (<4KB), this is NOT guaranteed for: (1) multi-process writes, (2) large records, (3) NFS or non-local filesystems, (4) non-Linux platforms. Under high concurrency with large records, writes could interleave and corrupt the JSONL file.",
+      "reproduction_steps": [
+        "Launch 10 processes writing large records simultaneously",
+        "On most Linux systems with small records, this works due to OS-level atomic append",
+        "With records >4KB or on NFS, corruption is possible"
+      ],
+      "actual_behavior": "No file locking; relies on OS-level atomic append guarantees",
+      "expected_behavior": "Should use fcntl.flock() or a similar locking mechanism",
+      "suggested_fix": "Add file locking with fcntl.flock(f, fcntl.LOCK_EX) before writing and fcntl.LOCK_UN after. Or use a write-ahead approach with individual files merged periodically."
+    },
+    {
+      "id": "BUG-B1-009",
+      "location": "storage/coordination/route_tracker.py:105-115",
+      "severity": "medium",
+      "category": "memory",
+      "title": "load_routes loads entire log file into memory at once",
+      "description": "load_routes() reads every line and builds a list of all parsed records in memory. With 100K+ routes (each potentially having large hop data, reasons arrays, etc.), this could consume significant memory. All downstream functions call load_routes() to get the full list, meaning every analyze/patterns/top/recommend call loads everything.",
+      "reproduction_steps": [
+        "Accumulate 100K+ routes over time",
+        "Every call to analyze, patterns, top, or recommend loads ALL records into memory",
+        "Memory usage grows unbounded with log file size"
+      ],
+      "actual_behavior": "Full file loaded into memory every time",
+      "expected_behavior": "For large files, should support streaming/incremental processing or pagination",
+      "suggested_fix": "For get_top_routes and recommend, consider reading and filtering in a streaming fashion. For analyze/patterns, consider incremental analysis with cached intermediate state."
+    },
+    {
+      "id": "BUG-B1-010",
+      "location": "storage/coordination/route_tracker.py:83",
+      "severity": "low",
+      "category": "deprecation",
+      "title": "datetime.utcnow() deprecated since Python 3.12",
+      "description": "datetime.utcnow() is used on lines 83, 159, and 222. This method was deprecated in Python 3.12 and will be removed in a future version. While currently running Python 3.11 where it works, this is a forward-compatibility issue.",
+      "reproduction_steps": [
+        "Run on Python 3.12+",
+        "DeprecationWarning is emitted for each datetime.utcnow() call"
+      ],
+      "actual_behavior": "Works on Python 3.11; emits DeprecationWarning on 3.12+",
+      "expected_behavior": "Use datetime.now(datetime.timezone.utc) instead",
+      "suggested_fix": "Replace datetime.utcnow().isoformat() + 'Z' with datetime.now(timezone.utc).isoformat() using from datetime import datetime, timezone."
+    },
+    {
+      "id": "BUG-B1-011",
+      "location": "storage/coordination/route_tracker.py:258",
+      "severity": "low",
+      "category": "logic",
+      "title": "recommend_route suggests a route with 0% success rate as 'recommended'",
+      "description": "In extract_patterns, scored_routes are sorted by score (count * success_rate). If ALL routes for a task have 0% success rate, score=0 for all routes, but the first one (arbitrary) is still set as recommended_route. recommend_route then happily suggests this always-failing route.",
+      "reproduction_steps": [
+        "Log 5 routes for task 'failing-task' all with outcome='failure'",
+        "Call extract_patterns() -- recommended_route is set to 'A -> B -> C'",
+        "Call recommend_route('failing-task') -- recommends a route that has NEVER succeeded"
+      ],
+      "actual_behavior": "Recommends a route with 0% success rate",
+      "expected_behavior": "Should indicate no reliable route exists, or at minimum warn about low success rate",
+      "suggested_fix": "In extract_patterns, set recommended_route to None if the best score is 0. In recommend_route, add a warning or return None if the recommended route has a very low success rate."
+    }
+  ],
+  "summary": {
+    "critical": 2,
+    "high": 4,
+    "medium": 3,
+    "low": 2,
+    "categories": {
+      "crash": 3,
+      "missing_validation": 1,
+      "input_parsing": 1,
+      "performance": 2,
+      "concurrency": 1,
+      "memory": 1,
+      "deprecation": 1,
+      "logic": 1
+    }
+  },
+  "security_notes": "No command injection risks found in argparse handling -- argparse does not invoke shells. No file path traversal risks -- all paths are hardcoded relative to __file__. The pointer-network.json path is fixed and not user-controllable. Notes field accepts arbitrary strings but is safely serialized via json.dumps, preventing JSON injection.",
+  "concurrency_notes": "Tested with 10 threads (100 writes each) and 10 processes (200 writes each). No corruption observed in testing due to Linux atomic append guarantees for small writes and CPython GIL for threads. However, the lack of explicit file locking (BUG-B1-008) means corruption is theoretically possible with large records or non-local filesystems.",
+  "performance_notes": "analyze_routes: O(n*h) where n=routes and h=hops, with a 4x constant factor from the strength_effectiveness loop. Acceptable for moderate data. extract_patterns: O(n^2) per task in worst case, confirmed by benchmark (3.9x slowdown for 2x data). This is the primary scaling bottleneck."
+}

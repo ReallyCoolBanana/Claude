@@ -1,0 +1,763 @@
+{
+  "experiment": "pathfinder-p5-goal-directed",
+  "description": "A*-style goal-directed pathfinding with domain heuristics vs BFS baseline",
+  "network_stats": {
+    "total_nodes": 310,
+    "total_edges": 4820
+  },
+  "heuristics_used": {
+    "type": "domain-distance",
+    "values": {
+      "SOP->SCR": 1,
+      "SOP->SRC": 2,
+      "SOP->KB": 1,
+      "SOP->TEAM": 1,
+      "SOP->WIKI": 3,
+      "SOP->SOP": 2,
+      "SOP->TOOL": 2,
+      "SCR->SRC": 1,
+      "SCR->SOP": 1,
+      "SCR->KB": 1,
+      "SCR->TEAM": 1,
+      "SCR->WIKI": 2,
+      "SCR->SCR": 2,
+      "SCR->TOOL": 2,
+      "KB->SCR": 1,
+      "KB->SRC": 2,
+      "KB->SOP": 2,
+      "KB->TEAM": 1,
+      "KB->WIKI": 2,
+      "KB->KB": 1,
+      "KB->TOOL": 2,
+      "TEAM->SCR": 1,
+      "TEAM->SRC": 2,
+      "TEAM->SOP": 2,
+      "TEAM->KB": 1,
+      "TEAM->WIKI": 3,
+      "TEAM->TEAM": 2,
+      "TEAM->TOOL": 2,
+      "SRC->SCR": 1,
+      "SRC->SOP": 2,
+      "SRC->KB": 1,
+      "SRC->TEAM": 2,
+      "SRC->WIKI": 3,
+      "SRC->SRC": 2,
+      "SRC->TOOL": 2,
+      "WIKI->SCR": 2,
+      "WIKI->SOP": 3,
+      "WIKI->KB": 2,
+      "WIKI->TEAM": 3,
+      "WIKI->SRC": 3,
+      "WIKI->WIKI": 1,
+      "WIKI->TOOL": 3,
+      "TOOL->SCR": 1,
+      "TOOL->SOP": 2,
+      "TOOL->KB": 1,
+      "TOOL->TEAM": 2,
+      "TOOL->SRC": 2,
+      "TOOL->WIKI": 3,
+      "TOOL->TOOL": 2
+    }
+  },
+  "goal_types": [
+    {
+      "name": "find-data-source",
+      "target_domain": "SRC",
+      "count": 5
+    },
+    {
+      "name": "find-monitoring-tool",
+      "target_domain": "SCR",
+      "filter": "tags contain 'monitoring'",
+      "count": 5
+    },
+    {
+      "name": "find-knowledge",
+      "target_domain": "KB",
+      "filter": "tags overlap with query",
+      "count": 5
+    },
+    {
+      "name": "find-related-sop",
+      "target_domain": "SOP",
+      "filter": "shared tags with start SOP",
+      "count": 5
+    }
+  ],
+  "summary": {
+    "total_searches": 20,
+    "astar_success_rate": 20,
+    "bfs_success_rate": 20,
+    "total_astar_nodes_explored": 230,
+    "total_bfs_nodes_explored": 447,
+    "avg_astar_explored": 11.5,
+    "avg_bfs_explored": 22.4,
+    "overall_node_savings": 217,
+    "overall_savings_pct": 48.5,
+    "avg_astar_path_length": 1.5,
+    "avg_bfs_path_length": 1.45,
+    "path_quality_equal_count": 19,
+    "both_found_count": 20
+  },
+  "searches": [
+    {
+      "search_id": 1,
+      "start": "SOP-011",
+      "goal_type": "find-data-source",
+      "goal_domain": "SRC",
+      "agent": "p5-1",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-011",
+          "SCR-0019",
+          "SRC-0050"
+        ],
+        "path_length": 2,
+        "nodes_explored": 33,
+        "goal_reached": "SRC-0050"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-011",
+          "SCR-0019",
+          "SRC-0050"
+        ],
+        "path_length": 2,
+        "nodes_explored": 51,
+        "goal_reached": "SRC-0050"
+      },
+      "comparison": {
+        "nodes_saved": 18,
+        "savings_pct": 35.3,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 2,
+      "start": "SOP-017",
+      "goal_type": "find-data-source",
+      "goal_domain": "SRC",
+      "agent": "p5-1",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-017",
+          "SCR-0023",
+          "SRC-0001"
+        ],
+        "path_length": 2,
+        "nodes_explored": 3,
+        "goal_reached": "SRC-0001"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-017",
+          "SCR-0023",
+          "SRC-0001"
+        ],
+        "path_length": 2,
+        "nodes_explored": 23,
+        "goal_reached": "SRC-0001"
+      },
+      "comparison": {
+        "nodes_saved": 20,
+        "savings_pct": 87.0,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 3,
+      "start": "SOP-023",
+      "goal_type": "find-data-source",
+      "goal_domain": "SRC",
+      "agent": "p5-1",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-023",
+          "SCR-0023",
+          "SRC-0001"
+        ],
+        "path_length": 2,
+        "nodes_explored": 3,
+        "goal_reached": "SRC-0001"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-023",
+          "SCR-0023",
+          "SRC-0001"
+        ],
+        "path_length": 2,
+        "nodes_explored": 29,
+        "goal_reached": "SRC-0001"
+      },
+      "comparison": {
+        "nodes_saved": 26,
+        "savings_pct": 89.7,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 4,
+      "start": "SOP-028",
+      "goal_type": "find-data-source",
+      "goal_domain": "SRC",
+      "agent": "p5-1",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-028",
+          "SOP-027",
+          "SCR-0043",
+          "SRC-0006"
+        ],
+        "path_length": 3,
+        "nodes_explored": 9,
+        "goal_reached": "SRC-0006"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-028",
+          "SCR-0051",
+          "SRC-0006"
+        ],
+        "path_length": 2,
+        "nodes_explored": 89,
+        "goal_reached": "SRC-0006"
+      },
+      "comparison": {
+        "nodes_saved": 80,
+        "savings_pct": 89.9,
+        "path_quality_equal": false
+      }
+    },
+    {
+      "search_id": 5,
+      "start": "SOP-G01",
+      "goal_type": "find-data-source",
+      "goal_domain": "SRC",
+      "agent": "p5-1",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-G01",
+          "SCR-0019",
+          "SRC-0050"
+        ],
+        "path_length": 2,
+        "nodes_explored": 40,
+        "goal_reached": "SRC-0050"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-G01",
+          "SCR-0019",
+          "SRC-0050"
+        ],
+        "path_length": 2,
+        "nodes_explored": 47,
+        "goal_reached": "SRC-0050"
+      },
+      "comparison": {
+        "nodes_saved": 7,
+        "savings_pct": 14.9,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 6,
+      "start": "SOP-012",
+      "goal_type": "find-monitoring-tool",
+      "goal_domain": "SCR",
+      "agent": "p5-2",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-012",
+          "SCR-0019"
+        ],
+        "path_length": 1,
+        "nodes_explored": 6,
+        "goal_reached": "SCR-0019"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-012",
+          "SCR-0019"
+        ],
+        "path_length": 1,
+        "nodes_explored": 6,
+        "goal_reached": "SCR-0019"
+      },
+      "comparison": {
+        "nodes_saved": 0,
+        "savings_pct": 0.0,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 7,
+      "start": "SOP-015",
+      "goal_type": "find-monitoring-tool",
+      "goal_domain": "SCR",
+      "agent": "p5-2",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-015",
+          "SCR-0020"
+        ],
+        "path_length": 1,
+        "nodes_explored": 12,
+        "goal_reached": "SCR-0020"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-015",
+          "SCR-0020"
+        ],
+        "path_length": 1,
+        "nodes_explored": 12,
+        "goal_reached": "SCR-0020"
+      },
+      "comparison": {
+        "nodes_saved": 0,
+        "savings_pct": 0.0,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 8,
+      "start": "SOP-016",
+      "goal_type": "find-monitoring-tool",
+      "goal_domain": "SCR",
+      "agent": "p5-2",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-016",
+          "SCR-0019"
+        ],
+        "path_length": 1,
+        "nodes_explored": 10,
+        "goal_reached": "SCR-0019"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-016",
+          "SCR-0019"
+        ],
+        "path_length": 1,
+        "nodes_explored": 15,
+        "goal_reached": "SCR-0019"
+      },
+      "comparison": {
+        "nodes_saved": 5,
+        "savings_pct": 33.3,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 9,
+      "start": "SOP-021",
+      "goal_type": "find-monitoring-tool",
+      "goal_domain": "SCR",
+      "agent": "p5-2",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-021",
+          "SCR-0019"
+        ],
+        "path_length": 1,
+        "nodes_explored": 6,
+        "goal_reached": "SCR-0019"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-021",
+          "SCR-0019"
+        ],
+        "path_length": 1,
+        "nodes_explored": 11,
+        "goal_reached": "SCR-0019"
+      },
+      "comparison": {
+        "nodes_saved": 5,
+        "savings_pct": 45.5,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 10,
+      "start": "SOP-029",
+      "goal_type": "find-monitoring-tool",
+      "goal_domain": "SCR",
+      "agent": "p5-2",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-029",
+          "SCR-0057"
+        ],
+        "path_length": 1,
+        "nodes_explored": 3,
+        "goal_reached": "SCR-0057"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-029",
+          "SCR-0057"
+        ],
+        "path_length": 1,
+        "nodes_explored": 4,
+        "goal_reached": "SCR-0057"
+      },
+      "comparison": {
+        "nodes_saved": 1,
+        "savings_pct": 25.0,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 11,
+      "start": "SOP-013",
+      "goal_type": "find-knowledge(coordination,pipeline)",
+      "goal_domain": "KB",
+      "agent": "p5-3",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-013",
+          "KB-0025"
+        ],
+        "path_length": 1,
+        "nodes_explored": 6,
+        "goal_reached": "KB-0025"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-013",
+          "KB-0025"
+        ],
+        "path_length": 1,
+        "nodes_explored": 6,
+        "goal_reached": "KB-0025"
+      },
+      "comparison": {
+        "nodes_saved": 0,
+        "savings_pct": 0.0,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 12,
+      "start": "SOP-014",
+      "goal_type": "find-knowledge(infrastructure,automation)",
+      "goal_domain": "KB",
+      "agent": "p5-3",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-014",
+          "KB-0009"
+        ],
+        "path_length": 1,
+        "nodes_explored": 16,
+        "goal_reached": "KB-0009"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-014",
+          "KB-0009"
+        ],
+        "path_length": 1,
+        "nodes_explored": 16,
+        "goal_reached": "KB-0009"
+      },
+      "comparison": {
+        "nodes_saved": 0,
+        "savings_pct": 0.0,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 13,
+      "start": "SOP-019",
+      "goal_type": "find-knowledge(python,sqlite)",
+      "goal_domain": "KB",
+      "agent": "p5-3",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-019",
+          "KB-0016"
+        ],
+        "path_length": 1,
+        "nodes_explored": 12,
+        "goal_reached": "KB-0016"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-019",
+          "KB-0016"
+        ],
+        "path_length": 1,
+        "nodes_explored": 12,
+        "goal_reached": "KB-0016"
+      },
+      "comparison": {
+        "nodes_saved": 0,
+        "savings_pct": 0.0,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 14,
+      "start": "SOP-020",
+      "goal_type": "find-knowledge(validation,bug-fix)",
+      "goal_domain": "KB",
+      "agent": "p5-3",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-020",
+          "KB-0025"
+        ],
+        "path_length": 1,
+        "nodes_explored": 2,
+        "goal_reached": "KB-0025"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-020",
+          "KB-0025"
+        ],
+        "path_length": 1,
+        "nodes_explored": 2,
+        "goal_reached": "KB-0025"
+      },
+      "comparison": {
+        "nodes_saved": 0,
+        "savings_pct": 0.0,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 15,
+      "start": "SOP-025",
+      "goal_type": "find-knowledge(wikipedia,enrichment)",
+      "goal_domain": "KB",
+      "agent": "p5-3",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-025",
+          "SCR-0043",
+          "KB-0045"
+        ],
+        "path_length": 2,
+        "nodes_explored": 3,
+        "goal_reached": "KB-0045"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-025",
+          "SCR-0043",
+          "KB-0045"
+        ],
+        "path_length": 2,
+        "nodes_explored": 23,
+        "goal_reached": "KB-0045"
+      },
+      "comparison": {
+        "nodes_saved": 20,
+        "savings_pct": 87.0,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 16,
+      "start": "SOP-011",
+      "goal_type": "find-related-sop(from=SOP-011)",
+      "goal_domain": "SOP",
+      "agent": "p5-4",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-011",
+          "SOP-014"
+        ],
+        "path_length": 1,
+        "nodes_explored": 2,
+        "goal_reached": "SOP-014"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-011",
+          "SOP-014"
+        ],
+        "path_length": 1,
+        "nodes_explored": 2,
+        "goal_reached": "SOP-014"
+      },
+      "comparison": {
+        "nodes_saved": 0,
+        "savings_pct": 0.0,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 17,
+      "start": "SOP-017",
+      "goal_type": "find-related-sop(from=SOP-017)",
+      "goal_domain": "SOP",
+      "agent": "p5-4",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-017",
+          "SCR-0023",
+          "SOP-023"
+        ],
+        "path_length": 2,
+        "nodes_explored": 3,
+        "goal_reached": "SOP-023"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-017",
+          "SCR-0023",
+          "SOP-023"
+        ],
+        "path_length": 2,
+        "nodes_explored": 24,
+        "goal_reached": "SOP-023"
+      },
+      "comparison": {
+        "nodes_saved": 21,
+        "savings_pct": 87.5,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 18,
+      "start": "SOP-022",
+      "goal_type": "find-related-sop(from=SOP-022)",
+      "goal_domain": "SOP",
+      "agent": "p5-4",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-022",
+          "TEAM-0025",
+          "SOP-014"
+        ],
+        "path_length": 2,
+        "nodes_explored": 34,
+        "goal_reached": "SOP-014"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-022",
+          "TEAM-0025",
+          "SOP-014"
+        ],
+        "path_length": 2,
+        "nodes_explored": 49,
+        "goal_reached": "SOP-014"
+      },
+      "comparison": {
+        "nodes_saved": 15,
+        "savings_pct": 30.6,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 19,
+      "start": "SOP-024",
+      "goal_type": "find-related-sop(from=SOP-024)",
+      "goal_domain": "SOP",
+      "agent": "p5-4",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-024",
+          "SOP-023"
+        ],
+        "path_length": 1,
+        "nodes_explored": 2,
+        "goal_reached": "SOP-023"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-024",
+          "SOP-023"
+        ],
+        "path_length": 1,
+        "nodes_explored": 2,
+        "goal_reached": "SOP-023"
+      },
+      "comparison": {
+        "nodes_saved": 0,
+        "savings_pct": 0.0,
+        "path_quality_equal": true
+      }
+    },
+    {
+      "search_id": 20,
+      "start": "SOP-G03",
+      "goal_type": "find-related-sop(from=SOP-G03)",
+      "goal_domain": "SOP",
+      "agent": "p5-4",
+      "astar": {
+        "found": true,
+        "path": [
+          "SOP-G03",
+          "TEAM-0025",
+          "SOP-014"
+        ],
+        "path_length": 2,
+        "nodes_explored": 25,
+        "goal_reached": "SOP-014"
+      },
+      "bfs": {
+        "found": true,
+        "path": [
+          "SOP-G03",
+          "TEAM-0025",
+          "SOP-014"
+        ],
+        "path_length": 2,
+        "nodes_explored": 24,
+        "goal_reached": "SOP-014"
+      },
+      "comparison": {
+        "nodes_saved": -1,
+        "savings_pct": -4.2,
+        "path_quality_equal": true
+      }
+    }
+  ]
+}

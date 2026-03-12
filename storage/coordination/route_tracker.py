@@ -126,7 +126,7 @@ def analyze_routes():
 
     # Edge frequency: how often each edge is traversed
     edge_freq = Counter()
-    edge_outcomes = defaultdict(lambda: {"success": 0, "failure": 0, "partial": 0})
+    edge_outcomes = defaultdict(lambda: defaultdict(int))
     node_entry_freq = Counter()
     node_exit_freq = Counter()
     strength_usage = Counter()

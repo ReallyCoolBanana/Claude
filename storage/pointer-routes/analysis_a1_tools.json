@@ -1,0 +1,540 @@
+{
+  "report": "Analysis A1: External Tools and Libraries for the Pointer Network",
+  "agent": "analysis-1",
+  "date": "2026-03-12",
+  "network_profile": {
+    "nodes": 310,
+    "edges": 4820,
+    "domains": ["api-tools", "knowledge-base", "scripts", "sops", "sources", "teams", "wikipedia"],
+    "node_prefixes": ["KB", "SCR", "SOP", "SRC", "TEAM", "TOOL", "wiki"],
+    "edge_types": {
+      "shared_tags": 4377,
+      "explicit_reference": 1093,
+      "category_affinity": 708,
+      "backlink": 33
+    },
+    "strength_distribution": {
+      "none/unclassified": 3931,
+      "related": 412,
+      "primary": 230,
+      "supporting": 133,
+      "tangential": 114
+    },
+    "unique_tags": 51,
+    "format": "Single JSON file, nodes keyed by ID, each with domain + pointers array containing to/weight/reasons/strength"
+  },
+
+  "section_1_visualization": {
+    "title": "Graph Visualization Tools",
+    "summary": "310 nodes and 4820 edges is a medium-sized graph. All tools below can handle it, but interactive web-based tools offer the best fit for agent-driven exploration.",
+
+    "tools": [
+      {
+        "name": "D3.js (force-directed)",
+        "type": "web/javascript",
+        "compatibility": 8,
+        "effort": "medium",
+        "effort_hours": "8-16",
+        "strengths": [
+          "Fully customizable: can encode weight as edge thickness, strength as color, domain as node color",
+          "Interactive: zoom, pan, click-to-explore neighbors, hover tooltips",
+          "Web-native: could be served alongside the repo or embedded in dashboards",
+          "Force layout naturally clusters connected nodes, revealing communities"
+        ],
+        "weaknesses": [
+          "Requires manual HTML/JS scaffolding; no out-of-box ingestion of our JSON schema",
+          "4820 edges will need filtering or bundling to avoid visual clutter",
+          "No built-in graph algorithms (shortest path, PageRank)"
+        ],
+        "adaptation_needed": "Write a transformer script (Python or JS) to convert our nodes/pointers format into D3 {nodes: [{id, group}], links: [{source, target, value}]} format. Filter to edges with weight >= threshold or specific strength levels for readable layouts.",
+        "recommended_use": "Primary visualization for interactive web exploration. Filter to primary+supporting edges (~363) for clean layout, or let users toggle strength levels."
+      },
+      {
+        "name": "Cytoscape.js",
+        "type": "web/javascript",
+        "compatibility": 9,
+        "effort": "low-medium",
+        "effort_hours": "4-10",
+        "strengths": [
+          "Purpose-built for network/graph visualization with rich layout algorithms",
+          "Built-in support for directed weighted graphs with style mapping",
+          "Extensions for compound nodes (could group by domain), edge bundling, context menus",
+          "Supports JSON import natively; closer to our format than D3",
+          "Has graph analysis extensions (PageRank, betweenness centrality, shortest path)"
+        ],
+        "weaknesses": [
+          "Less visually customizable than raw D3 for non-standard visualizations",
+          "Heavier library payload than D3"
+        ],
+        "adaptation_needed": "Convert our format to Cytoscape elements array: [{data: {id, domain}}, {data: {source, target, weight, strength}}]. Straightforward 20-line Python script.",
+        "recommended_use": "Best all-around choice for web-based visualization. Compound node grouping by domain would show inter-domain vs intra-domain connectivity clearly."
+      },
+      {
+        "name": "vis.js / vis-network",
+        "type": "web/javascript",
+        "compatibility": 7,
+        "effort": "low",
+        "effort_hours": "3-6",
+        "strengths": [
+          "Easiest setup of all web libraries; minimal boilerplate",
+          "Good physics-based layouts that handle ~5000 edges",
+          "Built-in clustering, edge smoothing, hierarchical layouts"
+        ],
+        "weaknesses": [
+          "Less actively maintained than Cytoscape.js",
+          "Fewer graph algorithm extensions",
+          "Clustering by domain would require manual configuration"
+        ],
+        "adaptation_needed": "Convert to vis.js DataSet format: nodes [{id, label, group}], edges [{from, to, value, color}]. Trivial conversion.",
+        "recommended_use": "Quick prototype visualization. Good for rapid iteration but Cytoscape.js is better long-term."
+      },
+      {
+        "name": "Gephi",
+        "type": "desktop/java",
+        "compatibility": 7,
+        "effort": "low",
+        "effort_hours": "2-4",
+        "strengths": [
+          "Best-in-class for static publication-quality graph renderings",
+          "Built-in community detection (modularity), PageRank, betweenness centrality",
+          "Handles 4820 edges easily with OpenGL rendering",
+          "Excellent for one-off analysis: find clusters, identify bridge nodes"
+        ],
+        "weaknesses": [
+          "Desktop-only; not embeddable in agent workflows",
+          "No programmatic API from Python (would need GEXF/GraphML export)",
+          "Manual process; not automatable for continuous updates"
+        ],
+        "adaptation_needed": "Write a Python script to export pointer-network.json to GEXF or GraphML format. NetworkX can do this in ~10 lines.",
+        "recommended_use": "One-time structural analysis and high-quality renders for documentation. Not for ongoing agent use."
+      },
+      {
+        "name": "NetworkX + matplotlib",
+        "type": "python",
+        "compatibility": 9,
+        "effort": "low",
+        "effort_hours": "2-4",
+        "strengths": [
+          "Pure Python; integrates directly with route_tracker.py and existing tooling",
+          "Full graph algorithm library: shortest path, PageRank, community detection, centrality",
+          "Can generate static PNG/SVG renders or interactive plots with plotly",
+          "No format conversion needed; load JSON and build graph programmatically",
+          "Already available in standard Python environments"
+        ],
+        "weaknesses": [
+          "matplotlib renders are static and ugly at 310 nodes / 4820 edges",
+          "Not web-embeddable without extra tooling (plotly or pyvis bridges)",
+          "Layout algorithms are slower than native JS/Java implementations"
+        ],
+        "adaptation_needed": "Minimal. Load JSON, iterate nodes/pointers, call G.add_edge(src, dst, weight=w, strength=s). ~15 lines of code.",
+        "recommended_use": "Primary analysis backend. Use for all graph algorithms (PageRank, community detection, shortest path). Pair with Cytoscape.js for visualization."
+      },
+      {
+        "name": "Graphviz (dot/neato)",
+        "type": "native/cli",
+        "compatibility": 6,
+        "effort": "low",
+        "effort_hours": "2-3",
+        "strengths": [
+          "Deterministic hierarchical layouts (dot) excellent for DAG-like subgraphs",
+          "CLI-driven; can be called from Python scripts or shell",
+          "SVG output embeddable in HTML"
+        ],
+        "weaknesses": [
+          "4820 edges will produce an unreadable diagram unless heavily filtered",
+          "No interactive exploration",
+          "Poor for dense, cyclic graphs (our network has bidirectional links)"
+        ],
+        "adaptation_needed": "Write DOT format exporter. Filter to a subgraph (e.g., single domain or high-weight edges only) for usable output.",
+        "recommended_use": "Niche use only: render subgraphs (e.g., all SOP -> SCR primary edges) for documentation. Not suitable for full network."
+      }
+    ],
+
+    "recommendation": "Use NetworkX as the analysis engine (algorithms, metrics) and Cytoscape.js as the visualization frontend. Write a single Python converter that outputs Cytoscape JSON from pointer-network.json. Total effort: ~1 day."
+  },
+
+  "section_2_graph_databases": {
+    "title": "Graph Database Integration",
+    "summary": "At 310 nodes and 4820 edges, a graph database is not strictly needed for performance. However, it would unlock powerful query patterns that are cumbersome with flat JSON. The break-even point for value is when agents need real-time multi-hop queries.",
+
+    "databases": [
+      {
+        "name": "Neo4j",
+        "compatibility": 9,
+        "effort": "medium",
+        "effort_hours": "8-16",
+        "license": "Community Edition is GPLv3; AuraDB free tier available",
+        "strengths": [
+          "Cypher query language is purpose-built for graph traversal",
+          "Built-in shortest path, PageRank, community detection (GDS library)",
+          "Mature Python driver (neo4j package)",
+          "Visualization built into Neo4j Browser"
+        ],
+        "queries_enabled": [
+          {
+            "name": "Multi-hop shortest path with strength constraints",
+            "cypher": "MATCH path = shortestPath((a:Node {id:'SOP-029'})-[*..5]->(b:Node {id:'SCR-0057'})) WHERE ALL(r IN relationships(path) WHERE r.strength IN ['primary','supporting']) RETURN path",
+            "current_difficulty": "Requires custom BFS in Python; route_tracker.py recommend_route only does 1-hop"
+          },
+          {
+            "name": "Community detection",
+            "cypher": "CALL gds.louvain.stream('pointer-network') YIELD nodeId, communityId RETURN gds.util.asNode(nodeId).id AS node, communityId ORDER BY communityId",
+            "current_difficulty": "Not possible with current tooling; would reveal natural clusters beyond domain boundaries"
+          },
+          {
+            "name": "PageRank / influence scoring",
+            "cypher": "CALL gds.pageRank.stream('pointer-network', {relationshipWeightProperty: 'weight'}) YIELD nodeId, score RETURN gds.util.asNode(nodeId).id AS node, score ORDER BY score DESC LIMIT 20",
+            "current_difficulty": "Would identify the most important hub nodes; currently no way to know which nodes are most central"
+          },
+          {
+            "name": "Path similarity between agents",
+            "cypher": "MATCH (a:Agent)-[:TRAVERSED]->(r:Route)-[:USES]->(n:Node) WITH a, collect(n.id) AS nodes RETURN a.id, gds.similarity.jaccard(nodes, $referenceNodes) AS similarity",
+            "current_difficulty": "route_tracker.py stores routes as JSONL; comparing agent behaviors requires custom Python"
+          },
+          {
+            "name": "Bridge node detection",
+            "cypher": "CALL gds.betweennessCentrality.stream('pointer-network') YIELD nodeId, score RETURN gds.util.asNode(nodeId).id, score ORDER BY score DESC LIMIT 10",
+            "current_difficulty": "Not possible; would reveal which nodes connect otherwise-disconnected clusters"
+          }
+        ],
+        "import_approach": "Python script: read pointer-network.json, iterate nodes, CREATE (:Node {id, domain, tags}), iterate pointers, CREATE (a)-[:POINTS_TO {weight, strength, reasons}]->(b). ~30 lines.",
+        "recommended_use": "Best option if multi-hop queries become frequent. The GDS library alone justifies adoption for PageRank and community detection."
+      },
+      {
+        "name": "ArangoDB",
+        "compatibility": 7,
+        "effort": "medium-high",
+        "effort_hours": "12-20",
+        "strengths": [
+          "Multi-model: document + graph in one database",
+          "AQL supports graph traversal natively",
+          "Could store both pointer-network AND route logs in same DB",
+          "Kubernetes-friendly deployment"
+        ],
+        "weaknesses": [
+          "Smaller community than Neo4j for graph-specific use cases",
+          "Graph analytics (PageRank, community detection) less mature than Neo4j GDS",
+          "Heavier operational overhead for a 310-node graph"
+        ],
+        "recommended_use": "Only if there is a broader need for a multi-model database. Neo4j is better for pure graph workloads."
+      },
+      {
+        "name": "SQLite + JSON (current approach, enhanced)",
+        "compatibility": 10,
+        "effort": "low",
+        "effort_hours": "4-8",
+        "strengths": [
+          "Zero additional dependencies",
+          "Already used by coordinator_hub.py (SQLite WAL)",
+          "Could add a graph_queries.py module using NetworkX for algorithms on the JSON data",
+          "No deployment or server management"
+        ],
+        "weaknesses": [
+          "No native graph query language",
+          "Multi-hop queries must be hand-coded",
+          "Performance ceiling (irrelevant at this scale)"
+        ],
+        "recommended_use": "Best near-term option. Add a NetworkX wrapper that loads pointer-network.json and exposes shortest_path(), pagerank(), communities() functions. Graduate to Neo4j only when query complexity demands it."
+      }
+    ],
+
+    "recommendation": "Short-term: Build a NetworkX-based graph_queries.py module (4-8 hours). Medium-term: If agents frequently need complex multi-hop queries, deploy Neo4j Community Edition with a sync script from pointer-network.json."
+  },
+
+  "section_3_graph_ml": {
+    "title": "Graph Machine Learning Tools",
+    "summary": "Graph ML could learn latent structure in the pointer network to improve routing recommendations beyond the current frequency-based approach. However, 310 nodes is very small for deep learning methods. Classical embedding methods are more appropriate.",
+
+    "tools": [
+      {
+        "name": "node2vec",
+        "type": "node embedding",
+        "compatibility": 8,
+        "effort": "medium",
+        "effort_hours": "8-12",
+        "description": "Generates dense vector embeddings for each node by performing biased random walks on the graph, then training a Skip-gram model.",
+        "strengths": [
+          "Produces 64-128 dimensional embeddings that capture structural similarity",
+          "Works well on small graphs (310 nodes is fine)",
+          "Pure Python implementation available (node2vec, pecanpy)",
+          "Embeddings enable: nearest-neighbor node lookup, clustering, link prediction"
+        ],
+        "routing_applications": [
+          "Similarity search: Given a task node, find the most similar tool/SOP nodes by embedding distance",
+          "Link prediction: Predict missing edges (i.e., pointers that should exist but don't)",
+          "Route quality scoring: Score a proposed route by summing embedding similarities along the path",
+          "Cold-start routing: When no route history exists, use embedding similarity instead of pointer strength"
+        ],
+        "limitations": [
+          "310 nodes may not provide enough signal for nuanced embeddings",
+          "Embeddings must be recomputed when the network changes",
+          "Adds complexity vs. the current strength-based heuristic"
+        ],
+        "implementation": "pip install node2vec; load graph via NetworkX; fit node2vec model; save embeddings as {node_id: [float]} JSON. Use cosine similarity for nearest-neighbor queries.",
+        "recommended": true
+      },
+      {
+        "name": "GraphSAGE",
+        "type": "inductive node embedding (GNN)",
+        "compatibility": 4,
+        "effort": "high",
+        "effort_hours": "20-40",
+        "description": "Graph Neural Network that learns to generate embeddings by sampling and aggregating features from node neighborhoods.",
+        "strengths": [
+          "Can incorporate node features (domain, tags) into embeddings",
+          "Inductive: can embed new nodes without retraining",
+          "State-of-the-art for large-scale graph representation learning"
+        ],
+        "limitations": [
+          "Massively overengineered for 310 nodes",
+          "Requires PyTorch Geometric or DGL (heavy dependencies)",
+          "Needs labeled training data for supervised mode; unsupervised mode needs large graphs",
+          "Training infrastructure overkill for this use case"
+        ],
+        "recommended": false,
+        "reason_not_recommended": "The graph is too small. node2vec achieves comparable results with 1/10th the complexity."
+      },
+      {
+        "name": "Spectral Clustering (sklearn)",
+        "type": "graph clustering",
+        "compatibility": 9,
+        "effort": "low",
+        "effort_hours": "2-4",
+        "description": "Uses the graph Laplacian eigenvectors to partition nodes into clusters.",
+        "strengths": [
+          "Already available in scikit-learn",
+          "Works perfectly at this scale",
+          "Reveals natural communities that may cross domain boundaries",
+          "Could identify groups of related SOPs/tools/knowledge entries"
+        ],
+        "routing_applications": [
+          "Cluster-aware routing: prefer routes that stay within a relevant cluster",
+          "Discovery: find nodes in the same cluster as a known-good resource",
+          "Validation: check if domain boundaries align with structural clusters"
+        ],
+        "recommended": true
+      },
+      {
+        "name": "Link Prediction (NetworkX + heuristics)",
+        "type": "edge prediction",
+        "compatibility": 9,
+        "effort": "low",
+        "effort_hours": "2-4",
+        "description": "Use classical link prediction heuristics (Adamic-Adar, Jaccard coefficient, preferential attachment) to find missing edges.",
+        "strengths": [
+          "Zero additional dependencies beyond NetworkX",
+          "Can identify pointer connections that should exist but were missed by the tag-based builder",
+          "Simple to interpret: 'KB-0042 and SCR-0057 share 5 common neighbors but have no direct pointer'"
+        ],
+        "routing_applications": [
+          "Network maintenance: periodically suggest new pointers to add",
+          "Route discovery: suggest shortcuts that bypass low-weight intermediate nodes"
+        ],
+        "recommended": true
+      }
+    ],
+
+    "recommendation": "Implement node2vec embeddings and spectral clustering as a graph_ml.py module. Use link prediction heuristics to suggest missing pointers. Skip GraphSAGE and other deep learning methods -- the graph is too small to benefit."
+  },
+
+  "section_4_mcp_integration": {
+    "title": "MCP Server Integration",
+    "summary": "The pointer network is an excellent candidate for an MCP (Model Context Protocol) server backend. This would let Claude Code query the network live during sessions, replacing manual route_tracker.py CLI calls with natural tool invocations.",
+
+    "design": {
+      "server_type": "stdio MCP server (Python, using mcp Python SDK)",
+      "effort": "medium",
+      "effort_hours": "12-20",
+
+      "tools_to_expose": [
+        {
+          "name": "query_pointers",
+          "description": "Get all pointers from a given node, optionally filtered by strength or weight threshold",
+          "parameters": {
+            "node_id": "string (required)",
+            "min_weight": "integer (optional, default 0)",
+            "strength_filter": "array of strings (optional, e.g., ['primary', 'supporting'])"
+          },
+          "returns": "Array of pointer objects with to, weight, strength, reasons"
+        },
+        {
+          "name": "find_path",
+          "description": "Find shortest or highest-weight path between two nodes",
+          "parameters": {
+            "from_node": "string (required)",
+            "to_node": "string (required)",
+            "strategy": "string (optional: 'shortest', 'highest_weight', 'primary_only')"
+          },
+          "returns": "Ordered array of node IDs forming the path, with total weight and hop details"
+        },
+        {
+          "name": "recommend_route",
+          "description": "Get a recommended route for a given task, using route history and pointer strength",
+          "parameters": {
+            "task": "string (required)",
+            "entry_node": "string (optional)"
+          },
+          "returns": "Recommended route with confidence score and supporting evidence"
+        },
+        {
+          "name": "search_nodes",
+          "description": "Search for nodes by domain, tags, or text pattern in node ID",
+          "parameters": {
+            "domain": "string (optional)",
+            "tags": "array of strings (optional)",
+            "pattern": "string (optional, regex on node ID)"
+          },
+          "returns": "Array of matching node objects with their pointers summary"
+        },
+        {
+          "name": "log_route",
+          "description": "Record a route traversal (wraps route_tracker.py log)",
+          "parameters": {
+            "agent_id": "string (required)",
+            "task": "string (required)",
+            "route": "array of node IDs (required)",
+            "outcome": "string (required: 'success', 'failure', 'partial')",
+            "notes": "string (optional)"
+          },
+          "returns": "Confirmation with hop details and total weight"
+        },
+        {
+          "name": "network_stats",
+          "description": "Get summary statistics: node count, edge count, top hubs, domain breakdown",
+          "parameters": {},
+          "returns": "Statistics object with counts, distributions, and top-10 highest-degree nodes"
+        },
+        {
+          "name": "find_similar",
+          "description": "Find nodes most similar to a given node (by shared neighbors, tag overlap, or embedding distance)",
+          "parameters": {
+            "node_id": "string (required)",
+            "method": "string (optional: 'neighbors', 'tags', 'embedding')",
+            "limit": "integer (optional, default 10)"
+          },
+          "returns": "Array of {node_id, similarity_score, shared_reasons}"
+        }
+      ],
+
+      "resources_to_expose": [
+        {
+          "uri": "pointer-network://stats",
+          "description": "Current network statistics",
+          "mime_type": "application/json"
+        },
+        {
+          "uri": "pointer-network://node/{node_id}",
+          "description": "Full node data including all pointers",
+          "mime_type": "application/json"
+        },
+        {
+          "uri": "pointer-network://routes/recent",
+          "description": "Recent route log entries",
+          "mime_type": "application/json"
+        }
+      ],
+
+      "implementation_notes": [
+        "Use the mcp Python SDK (pip install mcp) for stdio-based server",
+        "Load pointer-network.json into memory at startup; reload on SIGHUP or file-watch",
+        "Build NetworkX graph at startup for path-finding queries",
+        "Integrate route_tracker.py functions directly (import, don't subprocess)",
+        "Add to .claude/mcp.json for automatic availability in Claude Code sessions",
+        "Consider caching PageRank and centrality scores at startup (sub-second for 310 nodes)"
+      ],
+
+      "agent_workflow_improvement": {
+        "before": "Agent reads CLAUDE.md, manually searches for SOPs/tools, runs route_tracker.py via CLI",
+        "after": "Agent calls query_pointers('SOP-029') to get related tools, calls find_path('SOP-029', 'SCR-0057') to get optimal route, calls log_route() to record traversal -- all without leaving the conversation"
+      }
+    },
+
+    "recommendation": "High-value, medium-effort integration. An MCP server would make the pointer network a live, queryable resource during every Claude Code session. Implement as a Python stdio server with 7 tools and 3 resources. Estimated: 12-20 hours."
+  },
+
+  "section_5_implementation_roadmap": {
+    "title": "Prioritized Implementation Roadmap",
+    "phases": [
+      {
+        "phase": 1,
+        "name": "Analysis Foundation",
+        "effort_hours": "4-8",
+        "priority": "immediate",
+        "deliverables": [
+          "graph_queries.py: NetworkX wrapper loading pointer-network.json with shortest_path, pagerank, communities, centrality functions",
+          "Cytoscape.js JSON converter script for visualization"
+        ],
+        "value": "Unlocks all graph algorithms without any new infrastructure"
+      },
+      {
+        "phase": 2,
+        "name": "Visualization",
+        "effort_hours": "6-10",
+        "priority": "high",
+        "deliverables": [
+          "Interactive Cytoscape.js dashboard (single HTML file with embedded data)",
+          "Domain-colored nodes, strength-colored edges, weight-scaled edge thickness",
+          "Filter controls for domain, strength, minimum weight"
+        ],
+        "value": "Makes the network visible and explorable for human understanding"
+      },
+      {
+        "phase": 3,
+        "name": "MCP Server",
+        "effort_hours": "12-20",
+        "priority": "high",
+        "deliverables": [
+          "Python MCP server with 7 tools and 3 resources",
+          "Integration with route_tracker.py",
+          ".claude/mcp.json configuration"
+        ],
+        "value": "Transforms the pointer network from a passive data file into a live queryable service for agents"
+      },
+      {
+        "phase": 4,
+        "name": "Graph ML Enhancements",
+        "effort_hours": "8-12",
+        "priority": "medium",
+        "deliverables": [
+          "node2vec embeddings for all 310 nodes",
+          "Spectral clustering analysis",
+          "Link prediction for missing pointers",
+          "Embedding-based similarity search in MCP server"
+        ],
+        "value": "Improves routing recommendations beyond frequency-based heuristics"
+      },
+      {
+        "phase": 5,
+        "name": "Graph Database (conditional)",
+        "effort_hours": "12-20",
+        "priority": "low (only if query complexity demands it)",
+        "deliverables": [
+          "Neo4j import script",
+          "Cypher query templates for common operations",
+          "Sync mechanism from pointer-network.json to Neo4j"
+        ],
+        "value": "Native graph query language; only justified if multi-hop queries become frequent and complex"
+      }
+    ],
+    "total_estimated_effort": "42-70 hours across all phases",
+    "minimum_viable_integration": "Phase 1 alone (4-8 hours) provides 80% of the analytical value"
+  },
+
+  "compatibility_matrix": {
+    "description": "Compatibility rating (1-10) of each tool with our JSON format, Python ecosystem, and agent workflow",
+    "ratings": {
+      "cytoscape_js": {"format_compat": 9, "ecosystem_fit": 8, "agent_workflow": 7, "overall": 8},
+      "d3_js": {"format_compat": 7, "ecosystem_fit": 7, "agent_workflow": 6, "overall": 7},
+      "vis_js": {"format_compat": 7, "ecosystem_fit": 7, "agent_workflow": 6, "overall": 7},
+      "gephi": {"format_compat": 6, "ecosystem_fit": 4, "agent_workflow": 2, "overall": 4},
+      "networkx": {"format_compat": 10, "ecosystem_fit": 10, "agent_workflow": 9, "overall": 10},
+      "graphviz": {"format_compat": 5, "ecosystem_fit": 7, "agent_workflow": 5, "overall": 6},
+      "neo4j": {"format_compat": 8, "ecosystem_fit": 8, "agent_workflow": 7, "overall": 8},
+      "arangodb": {"format_compat": 7, "ecosystem_fit": 6, "agent_workflow": 5, "overall": 6},
+      "node2vec": {"format_compat": 9, "ecosystem_fit": 9, "agent_workflow": 8, "overall": 9},
+      "graphsage": {"format_compat": 6, "ecosystem_fit": 5, "agent_workflow": 3, "overall": 4},
+      "spectral_clustering": {"format_compat": 9, "ecosystem_fit": 10, "agent_workflow": 8, "overall": 9},
+      "mcp_server": {"format_compat": 10, "ecosystem_fit": 10, "agent_workflow": 10, "overall": 10}
+    }
+  }
+}

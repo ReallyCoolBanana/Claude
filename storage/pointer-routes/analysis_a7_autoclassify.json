@@ -1,0 +1,153 @@
+{
+  "agent": "analysis-7",
+  "task": "auto-classify-design",
+  "timestamp": "2026-03-12",
+  "summary": {
+    "before": {
+      "total_edges": 4820,
+      "classified": 889,
+      "unclassified": 3931,
+      "coverage_pct": 18.4
+    },
+    "after": {
+      "total_edges": 4820,
+      "classified": 4820,
+      "unclassified": 0,
+      "coverage_pct": 100.0
+    },
+    "newly_classified": 3931
+  },
+  "classification_rules": {
+    "weight_based": {
+      "weight>=7": "primary",
+      "weight==6": "supporting",
+      "weight==5": "supporting",
+      "weight==4_with_category+tags": "supporting",
+      "weight==4_other": "related",
+      "weight==3": "related",
+      "weight==2": "related",
+      "weight==1": "tangential"
+    },
+    "domain_pair_upgrades": [
+      "KB<->KB with explicit_reference: +1 tier",
+      "KB<->SCR with explicit_reference: +1 tier",
+      "SCR<->SRC with explicit_reference: +1 tier",
+      "TEAM<->SOP with explicit_reference: +1 tier"
+    ],
+    "weight_1_overrides": [
+      "weight 1 + tag_bridge reason: related (SRC<->SCR pattern)",
+      "weight 1 + explicit_reference: related (strong signal overrides low weight)",
+      "weight 1 + SOP<->SCR domain pair: related (SOPs referencing scripts)"
+    ],
+    "special_cases": [
+      "backlink with weight>=7: primary"
+    ]
+  },
+  "projected_distribution": {
+    "tangential": 2391,
+    "related": 1705,
+    "supporting": 298,
+    "primary": 426
+  },
+  "by_domain_pair": {
+    "KB-KB": {
+      "primary": 196
+    },
+    "KB-SCR": {
+      "related": 219,
+      "tangential": 379
+    },
+    "KB-SOP": {
+      "tangential": 100,
+      "related": 188
+    },
+    "KB-SRC": {
+      "related": 118,
+      "tangential": 267
+    },
+    "KB-TEAM": {
+      "supporting": 34,
+      "related": 176,
+      "tangential": 70
+    },
+    "KB-TOOL": {
+      "related": 8,
+      "tangential": 7
+    },
+    "KB-wiki": {
+      "tangential": 226
+    },
+    "SCR-SCR": {
+      "supporting": 75,
+      "related": 66
+    },
+    "SCR-SOP": {
+      "related": 14,
+      "supporting": 5
+    },
+    "SCR-SRC": {
+      "tangential": 263,
+      "related": 33
+    },
+    "SCR-TEAM": {
+      "supporting": 30,
+      "related": 194,
+      "tangential": 36
+    },
+    "SCR-wiki": {
+      "related": 36,
+      "tangential": 515
+    },
+    "SOP-SOP": {
+      "supporting": 3,
+      "related": 14
+    },
+    "SOP-SRC": {
+      "related": 4,
+      "tangential": 4
+    },
+    "SOP-TEAM": {
+      "supporting": 18,
+      "related": 106
+    },
+    "SOP-wiki": {
+      "tangential": 20
+    },
+    "SRC-TEAM": {
+      "related": 78,
+      "tangential": 126
+    },
+    "SRC-wiki": {
+      "tangential": 136,
+      "related": 34
+    },
+    "TEAM-TOOL": {
+      "related": 5
+    },
+    "TEAM-wiki": {
+      "tangential": 128
+    }
+  },
+  "by_weight": {
+    "1": {
+      "tangential": 2277
+    },
+    "2": {
+      "related": 981
+    },
+    "3": {
+      "related": 267
+    },
+    "4": {
+      "related": 45,
+      "supporting": 49
+    },
+    "5": {
+      "supporting": 18
+    },
+    "6": {
+      "primary": 196,
+      "supporting": 98
+    }
+  }
+}

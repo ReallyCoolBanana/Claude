@@ -1,0 +1,689 @@
+{
+  "report": "pathfind_p6_multistop",
+  "timestamp": "2026-03-12T23:07:20.751517",
+  "algorithm": "Multi-stop TSP planner (brute-force exact for <=7 stops, nearest-neighbor heuristic otherwise)",
+  "description": "Plans optimal visitation order for multiple stops on the pointer network, comparing with naive ordering",
+  "summary": {
+    "total_routes_planned": 15,
+    "total_naive_hops": 89,
+    "total_optimized_hops": 72,
+    "total_hops_saved": 17,
+    "avg_savings_pct": 17.7,
+    "routes_with_savings": 11,
+    "routes_no_change": 4,
+    "max_savings": 40.0,
+    "avg_stops_per_route": 4.3,
+    "avg_full_route_length": 5.8
+  },
+  "routes": [
+    {
+      "name": "Research workflow",
+      "stops": [
+        "SOP-027",
+        "SCR-0043",
+        "SCR-0044",
+        "SRC-0001"
+      ],
+      "naive_order": [
+        "SOP-027",
+        "SCR-0043",
+        "SCR-0044",
+        "SRC-0001"
+      ],
+      "naive_hops": 5,
+      "naive_weight": 32,
+      "optimal_order": [
+        "SCR-0043",
+        "SOP-027",
+        "SCR-0044",
+        "SRC-0001"
+      ],
+      "optimal_hops": 4,
+      "optimal_weight": 20,
+      "full_route": [
+        "SCR-0043",
+        "SOP-027",
+        "SCR-0044",
+        "TEAM-0014",
+        "SRC-0001"
+      ],
+      "full_route_length": 5,
+      "hop_savings": 1,
+      "hop_savings_pct": 20.0,
+      "method": "brute-force",
+      "domain_sequence": [
+        "scripts",
+        "sops",
+        "scripts",
+        "sources"
+      ]
+    },
+    {
+      "name": "Monitoring setup",
+      "stops": [
+        "SOP-012",
+        "SCR-0032",
+        "SCR-0019",
+        "SCR-0057"
+      ],
+      "naive_order": [
+        "SOP-012",
+        "SCR-0032",
+        "SCR-0019",
+        "SCR-0057"
+      ],
+      "naive_hops": 5,
+      "naive_weight": 25,
+      "optimal_order": [
+        "SCR-0057",
+        "SCR-0032",
+        "SOP-012",
+        "SCR-0019"
+      ],
+      "optimal_hops": 3,
+      "optimal_weight": 15,
+      "full_route": [
+        "SCR-0057",
+        "SCR-0032",
+        "SOP-012",
+        "SCR-0019"
+      ],
+      "full_route_length": 4,
+      "hop_savings": 2,
+      "hop_savings_pct": 40.0,
+      "method": "brute-force",
+      "domain_sequence": [
+        "scripts",
+        "scripts",
+        "sops",
+        "scripts"
+      ]
+    },
+    {
+      "name": "Full audit",
+      "stops": [
+        "SOP-011",
+        "SOP-012",
+        "SOP-015",
+        "SOP-028",
+        "SOP-029"
+      ],
+      "naive_order": [
+        "SOP-011",
+        "SOP-012",
+        "SOP-015",
+        "SOP-028",
+        "SOP-029"
+      ],
+      "naive_hops": 5,
+      "naive_weight": 34,
+      "optimal_order": [
+        "SOP-011",
+        "SOP-015",
+        "SOP-028",
+        "SOP-029",
+        "SOP-012"
+      ],
+      "optimal_hops": 4,
+      "optimal_weight": 29,
+      "full_route": [
+        "SOP-011",
+        "SOP-015",
+        "SOP-028",
+        "SOP-029",
+        "SOP-012"
+      ],
+      "full_route_length": 5,
+      "hop_savings": 1,
+      "hop_savings_pct": 20.0,
+      "method": "brute-force",
+      "domain_sequence": [
+        "sops",
+        "sops",
+        "sops",
+        "sops",
+        "sops"
+      ]
+    },
+    {
+      "name": "Data pipeline",
+      "stops": [
+        "SOP-017",
+        "SCR-0023",
+        "SRC-0001",
+        "KB-0001"
+      ],
+      "naive_order": [
+        "SOP-017",
+        "SCR-0023",
+        "SRC-0001",
+        "KB-0001"
+      ],
+      "naive_hops": 4,
+      "naive_weight": 26,
+      "optimal_order": [
+        "SRC-0001",
+        "SCR-0023",
+        "SOP-017",
+        "KB-0001"
+      ],
+      "optimal_hops": 4,
+      "optimal_weight": 28,
+      "full_route": [
+        "SRC-0001",
+        "SCR-0023",
+        "SOP-017",
+        "TEAM-0002",
+        "KB-0001"
+      ],
+      "full_route_length": 5,
+      "hop_savings": 0,
+      "hop_savings_pct": 0.0,
+      "method": "brute-force",
+      "domain_sequence": [
+        "sources",
+        "scripts",
+        "sops",
+        "knowledge-base"
+      ]
+    },
+    {
+      "name": "Cross-domain (one per type)",
+      "stops": [
+        "SOP-011",
+        "SCR-0001",
+        "SRC-0001",
+        "KB-0001",
+        "TEAM-0001",
+        "TOOL-0001"
+      ],
+      "naive_order": [
+        "SOP-011",
+        "SCR-0001",
+        "SRC-0001",
+        "KB-0001",
+        "TEAM-0001",
+        "TOOL-0001"
+      ],
+      "naive_hops": 10,
+      "naive_weight": 38,
+      "optimal_order": [
+        "TOOL-0001",
+        "SOP-011",
+        "KB-0001",
+        "TEAM-0001",
+        "SCR-0001",
+        "SRC-0001"
+      ],
+      "optimal_hops": 7,
+      "optimal_weight": 26,
+      "full_route": [
+        "TOOL-0001",
+        "KB-0025",
+        "SOP-011",
+        "SOP-015",
+        "KB-0001",
+        "TEAM-0001",
+        "SCR-0001",
+        "SRC-0001"
+      ],
+      "full_route_length": 8,
+      "hop_savings": 3,
+      "hop_savings_pct": 30.0,
+      "method": "brute-force",
+      "domain_sequence": [
+        "api-tools",
+        "sops",
+        "knowledge-base",
+        "teams",
+        "scripts",
+        "sources"
+      ]
+    },
+    {
+      "name": "Wiki integration",
+      "stops": [
+        "SOP-027",
+        "wiki-ai:AIOps",
+        "SCR-0043",
+        "KB-0042"
+      ],
+      "naive_order": [
+        "SOP-027",
+        "wiki-ai:AIOps",
+        "SCR-0043",
+        "KB-0042"
+      ],
+      "naive_hops": 8,
+      "naive_weight": 28,
+      "optimal_order": [
+        "wiki-ai:AIOps",
+        "SOP-027",
+        "SCR-0043",
+        "KB-0042"
+      ],
+      "optimal_hops": 5,
+      "optimal_weight": 22,
+      "full_route": [
+        "wiki-ai:AIOps",
+        "SOP-025",
+        "SOP-027",
+        "SCR-0043",
+        "KB-0020",
+        "KB-0042"
+      ],
+      "full_route_length": 6,
+      "hop_savings": 3,
+      "hop_savings_pct": 37.5,
+      "method": "brute-force",
+      "domain_sequence": [
+        "wikipedia",
+        "sops",
+        "scripts",
+        "knowledge-base"
+      ]
+    },
+    {
+      "name": "Script chain",
+      "stops": [
+        "SCR-0001",
+        "SCR-0019",
+        "SCR-0032",
+        "SCR-0057"
+      ],
+      "naive_order": [
+        "SCR-0001",
+        "SCR-0019",
+        "SCR-0032",
+        "SCR-0057"
+      ],
+      "naive_hops": 5,
+      "naive_weight": 25,
+      "optimal_order": [
+        "SCR-0032",
+        "SCR-0057",
+        "SCR-0019",
+        "SCR-0001"
+      ],
+      "optimal_hops": 4,
+      "optimal_weight": 17,
+      "full_route": [
+        "SCR-0032",
+        "SCR-0057",
+        "SCR-0019",
+        "TEAM-0008",
+        "SCR-0001"
+      ],
+      "full_route_length": 5,
+      "hop_savings": 1,
+      "hop_savings_pct": 20.0,
+      "method": "brute-force",
+      "domain_sequence": [
+        "scripts",
+        "scripts",
+        "scripts",
+        "scripts"
+      ]
+    },
+    {
+      "name": "Source survey",
+      "stops": [
+        "SRC-0001",
+        "SRC-0005",
+        "SRC-0020",
+        "SRC-0030"
+      ],
+      "naive_order": [
+        "SRC-0001",
+        "SRC-0005",
+        "SRC-0020",
+        "SRC-0030"
+      ],
+      "naive_hops": 6,
+      "naive_weight": 16,
+      "optimal_order": [
+        "SRC-0005",
+        "SRC-0001",
+        "SRC-0030",
+        "SRC-0020"
+      ],
+      "optimal_hops": 6,
+      "optimal_weight": 29,
+      "full_route": [
+        "SRC-0005",
+        "SCR-0023",
+        "SRC-0001",
+        "SCR-0024",
+        "SRC-0030",
+        "KB-0013",
+        "SRC-0020"
+      ],
+      "full_route_length": 7,
+      "hop_savings": 0,
+      "hop_savings_pct": 0.0,
+      "method": "brute-force",
+      "domain_sequence": [
+        "sources",
+        "sources",
+        "sources",
+        "sources"
+      ]
+    },
+    {
+      "name": "Knowledge sweep",
+      "stops": [
+        "KB-0001",
+        "KB-0010",
+        "KB-0020",
+        "KB-0030"
+      ],
+      "naive_order": [
+        "KB-0001",
+        "KB-0010",
+        "KB-0020",
+        "KB-0030"
+      ],
+      "naive_hops": 8,
+      "naive_weight": 38,
+      "optimal_order": [
+        "KB-0030",
+        "KB-0020",
+        "KB-0001",
+        "KB-0010"
+      ],
+      "optimal_hops": 7,
+      "optimal_weight": 32,
+      "full_route": [
+        "KB-0030",
+        "KB-0029",
+        "TEAM-0018",
+        "KB-0020",
+        "TEAM-0021",
+        "KB-0001",
+        "KB-0008",
+        "KB-0010"
+      ],
+      "full_route_length": 8,
+      "hop_savings": 1,
+      "hop_savings_pct": 12.5,
+      "method": "brute-force",
+      "domain_sequence": [
+        "knowledge-base",
+        "knowledge-base",
+        "knowledge-base",
+        "knowledge-base"
+      ]
+    },
+    {
+      "name": "SOP coverage",
+      "stops": [
+        "SOP-013",
+        "SOP-016",
+        "SOP-020",
+        "SOP-025"
+      ],
+      "naive_order": [
+        "SOP-013",
+        "SOP-016",
+        "SOP-020",
+        "SOP-025"
+      ],
+      "naive_hops": 5,
+      "naive_weight": 13,
+      "optimal_order": [
+        "SOP-025",
+        "SOP-016",
+        "SOP-013",
+        "SOP-020"
+      ],
+      "optimal_hops": 5,
+      "optimal_weight": 18,
+      "full_route": [
+        "SOP-025",
+        "SOP-028",
+        "SOP-016",
+        "SOP-013",
+        "KB-0025",
+        "SOP-020"
+      ],
+      "full_route_length": 6,
+      "hop_savings": 0,
+      "hop_savings_pct": 0.0,
+      "method": "brute-force",
+      "domain_sequence": [
+        "sops",
+        "sops",
+        "sops",
+        "sops"
+      ]
+    },
+    {
+      "name": "Cross-team analysis",
+      "stops": [
+        "TEAM-0001",
+        "TEAM-0010",
+        "TEAM-0020",
+        "KB-0001"
+      ],
+      "naive_order": [
+        "TEAM-0001",
+        "TEAM-0010",
+        "TEAM-0020",
+        "KB-0001"
+      ],
+      "naive_hops": 6,
+      "naive_weight": 22,
+      "optimal_order": [
+        "TEAM-0001",
+        "KB-0001",
+        "TEAM-0020",
+        "TEAM-0010"
+      ],
+      "optimal_hops": 5,
+      "optimal_weight": 22,
+      "full_route": [
+        "TEAM-0001",
+        "KB-0001",
+        "KB-0002",
+        "TEAM-0020",
+        "KB-0004",
+        "TEAM-0010"
+      ],
+      "full_route_length": 6,
+      "hop_savings": 1,
+      "hop_savings_pct": 16.7,
+      "method": "brute-force",
+      "domain_sequence": [
+        "teams",
+        "knowledge-base",
+        "teams",
+        "teams"
+      ]
+    },
+    {
+      "name": "Audit + monitor",
+      "stops": [
+        "SOP-011",
+        "SOP-012",
+        "SCR-0032",
+        "SCR-0057",
+        "SOP-015"
+      ],
+      "naive_order": [
+        "SOP-011",
+        "SOP-012",
+        "SCR-0032",
+        "SCR-0057",
+        "SOP-015"
+      ],
+      "naive_hops": 5,
+      "naive_weight": 24,
+      "optimal_order": [
+        "SCR-0057",
+        "SCR-0032",
+        "SOP-012",
+        "SOP-015",
+        "SOP-011"
+      ],
+      "optimal_hops": 4,
+      "optimal_weight": 23,
+      "full_route": [
+        "SCR-0057",
+        "SCR-0032",
+        "SOP-012",
+        "SOP-015",
+        "SOP-011"
+      ],
+      "full_route_length": 5,
+      "hop_savings": 1,
+      "hop_savings_pct": 20.0,
+      "method": "brute-force",
+      "domain_sequence": [
+        "scripts",
+        "scripts",
+        "sops",
+        "sops",
+        "sops"
+      ]
+    },
+    {
+      "name": "Full stack trace",
+      "stops": [
+        "SOP-017",
+        "SCR-0023",
+        "SRC-0001",
+        "KB-0001",
+        "TEAM-0008"
+      ],
+      "naive_order": [
+        "SOP-017",
+        "SCR-0023",
+        "SRC-0001",
+        "KB-0001",
+        "TEAM-0008"
+      ],
+      "naive_hops": 5,
+      "naive_weight": 35,
+      "optimal_order": [
+        "KB-0001",
+        "TEAM-0008",
+        "SRC-0001",
+        "SCR-0023",
+        "SOP-017"
+      ],
+      "optimal_hops": 5,
+      "optimal_weight": 42,
+      "full_route": [
+        "KB-0001",
+        "TEAM-0008",
+        "SCR-0016",
+        "SRC-0001",
+        "SCR-0023",
+        "SOP-017"
+      ],
+      "full_route_length": 6,
+      "hop_savings": 0,
+      "hop_savings_pct": 0.0,
+      "method": "brute-force",
+      "domain_sequence": [
+        "knowledge-base",
+        "teams",
+        "sources",
+        "scripts",
+        "sops"
+      ]
+    },
+    {
+      "name": "Stress test prep",
+      "stops": [
+        "SOP-015",
+        "SCR-0036",
+        "SCR-0037",
+        "KB-0042"
+      ],
+      "naive_order": [
+        "SOP-015",
+        "SCR-0036",
+        "SCR-0037",
+        "KB-0042"
+      ],
+      "naive_hops": 5,
+      "naive_weight": 24,
+      "optimal_order": [
+        "SOP-015",
+        "SCR-0036",
+        "KB-0042",
+        "SCR-0037"
+      ],
+      "optimal_hops": 4,
+      "optimal_weight": 8,
+      "full_route": [
+        "SOP-015",
+        "KB-0001",
+        "SCR-0036",
+        "KB-0042",
+        "SCR-0037"
+      ],
+      "full_route_length": 5,
+      "hop_savings": 1,
+      "hop_savings_pct": 20.0,
+      "method": "brute-force",
+      "domain_sequence": [
+        "sops",
+        "scripts",
+        "knowledge-base",
+        "scripts"
+      ]
+    },
+    {
+      "name": "Data + wiki",
+      "stops": [
+        "SOP-023",
+        "SRC-0001",
+        "wiki-ai:AIOps",
+        "KB-0001"
+      ],
+      "naive_order": [
+        "SOP-023",
+        "SRC-0001",
+        "wiki-ai:AIOps",
+        "KB-0001"
+      ],
+      "naive_hops": 7,
+      "naive_weight": 32,
+      "optimal_order": [
+        "wiki-ai:AIOps",
+        "SOP-023",
+        "KB-0001",
+        "SRC-0001"
+      ],
+      "optimal_hops": 5,
+      "optimal_weight": 12,
+      "full_route": [
+        "wiki-ai:AIOps",
+        "KB-0006",
+        "SOP-023",
+        "KB-0001",
+        "SCR-0001",
+        "SRC-0001"
+      ],
+      "full_route_length": 6,
+      "hop_savings": 2,
+      "hop_savings_pct": 28.6,
+      "method": "brute-force",
+      "domain_sequence": [
+        "wikipedia",
+        "sops",
+        "knowledge-base",
+        "sources"
+      ]
+    }
+  ],
+  "observations": [
+    "Planned 15 multi-stop routes across the pointer network",
+    "Average hop savings from optimization: 17.7%",
+    "Total hops saved: 17 (from 89 naive to 72 optimized)",
+    "11/15 routes benefited from reordering",
+    "Average route visits 4.3 stops with 5.8 total nodes traversed"
+  ]
+}

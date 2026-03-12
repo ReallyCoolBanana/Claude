@@ -1,0 +1,335 @@
+{
+  "report_id": "analysis_a2_workflow",
+  "agent": "analysis-2",
+  "created": "2026-03-12",
+  "title": "Pointer Network Integration into Agent Workflows",
+  "summary": "Five integration designs for embedding the pointer network into pre-task routing, live navigation, post-task learning, coordinator task assignment, and help-protocol resource matching.",
+
+  "research_tasks": {
+
+    "1_pre_task_routing": {
+      "title": "Pre-Task Routing: Consult the Pointer Network Before Starting Work",
+      "problem": "Agents currently start tasks without systematically discovering which SOPs, scripts, and sources are most relevant. They rely on manual knowledge or ad-hoc searching.",
+      "design": {
+        "workflow_name": "PointerGuidedTaskInit",
+        "trigger": "Agent receives a new task assignment (via coordinator_instructions or work_items table)",
+        "steps": [
+          {
+            "step": 1,
+            "action": "Classify the task type",
+            "detail": "Map the task description to a known task category (e.g., 'data-gathering', 'stress-test', 'monitoring', 'wikipedia-enrichment'). Use keyword matching against pointer network node tags for ambiguous tasks.",
+            "implementation": "Parse current_task from agent_status or work_items.title. Normalize to a canonical task type string."
+          },
+          {
+            "step": 2,
+            "action": "Query route_tracker.py recommend",
+            "detail": "Call recommend_route(task, entry_node) to get historically best route if pattern data exists, or strength-based fallback from the pointer network.",
+            "command": "python3 storage/coordination/route_tracker.py recommend --task '{task_type}' --entry '{starting_sop}'",
+            "fallback": "If no entry_node is known, the recommend function searches all SOP nodes for the best-connected one using tag overlap scoring (Fix #3/#4 in route_tracker.py)."
+          },
+          {
+            "step": 3,
+            "action": "Build a ranked resource list from strength tiers",
+            "detail": "From the recommended route or entry node, collect all reachable nodes grouped by strength: primary (use first), supporting (use for orchestration), related (consider for scope extension). Ignore tangential unless exploring broadly.",
+            "data_structure": {
+              "primary_tools": ["SCR-XXXX", "SCR-YYYY"],
+              "supporting_tools": ["SCR-ZZZZ"],
+              "related_resources": ["KB-XXXX", "SRC-XXXX"],
+              "recommended_route": "SOP-XXX -> SCR-XXXX -> SCR-YYYY"
+            }
+          },
+          {
+            "step": 4,
+            "action": "Validate resource availability",
+            "detail": "Check that the recommended scripts/tools actually exist on disk. If a node in the pointer network references a file that has been moved or deleted, log a warning and fall back to the next-best strength tier.",
+            "implementation": "For each SCR/TOOL node, resolve its file_path from the scripts index.json. Verify existence with os.path.exists()."
+          },
+          {
+            "step": 5,
+            "action": "Initialize route tracking",
+            "detail": "Begin recording the traversal path. Store the starting node and recommended route in the agent's session context so the post-task log captures the full journey."
+          }
+        ],
+        "integration_point_in_coordinator_hub": "Add a 'route_plan' field to the coordinator_instructions payload. When the coordinator sends a task assignment, it includes the pre-computed recommended route as guidance.",
+        "integration_point_in_agent_reporter": "Add an optional 'planned_route' parameter to AgentReporter.update_status() so agents can report which route they intend to follow. This enables the coordinator to detect deviations."
+      }
+    },
+
+    "2_live_navigation": {
+      "title": "Live Navigation: Use the Network During Task Execution",
+      "problem": "During execution, agents may hit blockers or discover that additional tools/data sources are needed. Currently there is no systematic way to dynamically discover related resources mid-task.",
+      "design": {
+        "workflow_name": "DynamicPointerNavigation",
+        "trigger": "Agent encounters a blocker, needs additional data, or completes a sub-step and needs the next tool",
+        "mechanisms": [
+          {
+            "mechanism": "Adjacency Lookup",
+            "description": "Given the current node the agent is working with, query the pointer network for all outgoing edges. Filter by strength >= 'supporting' (weight >= 4). Present results sorted by weight descending.",
+            "use_case": "Agent is using SCR-0036 and needs to find what other scripts work alongside it.",
+            "implementation": "Load pointer-network.json, look up nodes[current_node].pointers, filter by strength in ('primary', 'supporting'), sort by weight desc.",
+            "pseudo_code": "def get_adjacent(node_id, min_strength='supporting'): return sorted([p for p in pn['nodes'][node_id]['pointers'] if p['strength'] in allowed], key=lambda p: -p['weight'])"
+          },
+          {
+            "mechanism": "Reverse Lookup (Backlinks)",
+            "description": "Find all nodes that point TO the current node. This answers: 'What SOPs or tools consider this resource important?'",
+            "use_case": "Agent has a script but doesn't know which SOP governs its usage. Reverse lookup finds the parent SOP.",
+            "implementation": "Scan all nodes for pointers where ptr['to'] == current_node. The pointer network already has 33 explicit backlink edges, but a full reverse index should be built at load time for O(1) lookups.",
+            "enhancement": "Build a reverse_index dict at pointer network load time: {target_node: [{from: source_node, weight, strength}]}. Cache in memory for the session."
+          },
+          {
+            "mechanism": "Tag-Based Discovery",
+            "description": "When the agent's current context doesn't match any known node, search the pointer network by tags. Each node has a 'tags' field (if populated) that enables fuzzy matching.",
+            "use_case": "Agent needs 'wikipedia API' resources but doesn't know which node IDs are relevant. Search tags for 'wikipedia' or 'api' to find matching SRC/SCR nodes.",
+            "implementation": "Build a tag_index at load time: {tag: [node_id, ...]}. Query with task keywords."
+          },
+          {
+            "mechanism": "Multi-Hop Pathfinding",
+            "description": "When the direct adjacency doesn't yield useful results, perform a 2-hop or 3-hop breadth-first search from the current node. Weight-based pruning keeps the search tractable: only follow edges with weight >= 3.",
+            "use_case": "Agent needs to get from an SOP to a data source, but the SOP only points to scripts, which in turn point to sources. The 2-hop BFS discovers the transitive connection.",
+            "implementation": "BFS with max_depth=3 and min_edge_weight=3. Return all reachable nodes with cumulative path weight.",
+            "complexity": "With 310 nodes and avg ~15 pointers per node, a 3-hop BFS visits at most ~3375 paths (pruned). This is fast enough for real-time use."
+          }
+        ],
+        "session_context": {
+          "description": "Agents should maintain a lightweight navigation context during task execution.",
+          "fields": {
+            "current_node": "The pointer network node currently being used",
+            "visited_nodes": "Ordered list of all nodes visited so far (becomes the route log)",
+            "planned_route": "The pre-task recommended route (from step 1)",
+            "deviation_notes": "Why the agent deviated from the planned route, if applicable"
+          }
+        }
+      }
+    },
+
+    "3_post_task_learning": {
+      "title": "Post-Task Learning: Feed Results Back to Improve the Network",
+      "problem": "The pointer network is static. Route tracker logs usage, but there is no automated feedback loop that adjusts weights, adds new edges, or reclassifies strengths based on real-world outcomes.",
+      "design": {
+        "workflow_name": "PointerNetworkFeedbackLoop",
+        "trigger": "Agent completes a task (outcome logged via route_tracker.py log)",
+        "feedback_mechanisms": [
+          {
+            "mechanism": "Weight Adjustment Based on Outcome",
+            "description": "After accumulating route data, adjust edge weights based on success/failure correlation.",
+            "rules": [
+              {
+                "rule": "Reinforce successful edges",
+                "detail": "If an edge appears in 5+ successful routes with a success rate > 80%, increase its weight by 1 (cap at 10).",
+                "formula": "new_weight = min(10, current_weight + 1) if success_rate > 0.8 and traversals >= 5"
+              },
+              {
+                "rule": "Penalize failing edges",
+                "detail": "If an edge appears in 5+ routes with a success rate < 40%, decrease its weight by 1 (floor at 1).",
+                "formula": "new_weight = max(1, current_weight - 1) if success_rate < 0.4 and traversals >= 5"
+              },
+              {
+                "rule": "Decay unused edges",
+                "detail": "If an edge has 0 traversals across the last 50 logged routes, decrease its weight by 1. This surfaces dead connections that may need removal.",
+                "formula": "new_weight = max(1, current_weight - 1) if traversals_in_last_50 == 0"
+              }
+            ],
+            "implementation": "Run as a batch process: python3 route_tracker.py export, then a new 'optimize' command that applies weight adjustments to pointer-network.json."
+          },
+          {
+            "mechanism": "Strength Reclassification",
+            "description": "Reclassify edge strength when weight crosses a tier boundary.",
+            "rules": {
+              "promote_to_primary": "weight >= 7 AND success_rate > 70% AND traversals >= 10",
+              "demote_from_primary": "weight < 7 OR success_rate < 50% after 10+ traversals",
+              "promote_to_supporting": "weight >= 4 AND traversals >= 5",
+              "demote_to_tangential": "weight <= 1 AND traversals < 3 in last 50 routes"
+            },
+            "safety": "Never auto-delete edges. Only reclassify. Human review (or coordinator review) needed for deletion."
+          },
+          {
+            "mechanism": "New Edge Discovery",
+            "description": "When agents traverse node pairs that have no direct pointer, this is a 'discovered shortcut'. The system should propose new edges.",
+            "detection": "In route logs, find consecutive hops (A -> B) where no direct pointer exists in the network from A to B. These are implicit multi-hop traversals that agents shortcutted.",
+            "action": "Create a 'proposed_edges' list in route_analysis.json. Each proposed edge includes: source, target, traversal_count, success_rate, suggested_weight, suggested_strength. A coordinator or SOP-028 operator reviews and adds them.",
+            "auto_add_threshold": "If a proposed edge has 10+ traversals with > 80% success rate, auto-add it with strength='related' and weight=3. This is conservative; human review can promote it."
+          },
+          {
+            "mechanism": "Route Pattern Codification",
+            "description": "When a task type consistently uses the same route with high success, codify it as a 'golden route' in route_patterns.json.",
+            "criteria": "Same route used 10+ times, success_rate > 90%.",
+            "benefit": "Golden routes become the default recommendation for that task type, bypassing the strength-based fallback entirely."
+          }
+        ],
+        "batch_schedule": "Run the feedback loop after every multi-agent session, or when route_log.jsonl reaches 50+ new entries since last analysis.",
+        "new_cli_command": "python3 route_tracker.py optimize --apply  (applies weight adjustments and strength reclassifications to pointer-network.json)"
+      }
+    },
+
+    "4_coordinator_integration": {
+      "title": "Coordinator Hub Integration: Pointer-Guided Task Assignment",
+      "problem": "The coordinator_hub.py assigns tasks to agents without knowledge of which SOPs/scripts those agents will need. This can lead to suboptimal assignments where an agent is given a task far from its current pointer network context.",
+      "design": {
+        "workflow_name": "PointerAwareTaskAssignment",
+        "changes_to_coordinator_hub": [
+          {
+            "change": "Add a 'pointer_context' field to agent_status table",
+            "schema_addition": "ALTER TABLE agent_status ADD COLUMN pointer_context TEXT",
+            "description": "Stores JSON: {current_node, recent_nodes: [...], route_history_count}. Agents update this via AgentReporter when they traverse the pointer network.",
+            "purpose": "Lets the coordinator know which part of the pointer network an agent is currently working in."
+          },
+          {
+            "change": "Add a pointer-aware task routing method to CoordinatorDashboard",
+            "method_name": "assign_task_by_proximity",
+            "description": "Given a task that maps to a known SOP entry node, find the agent whose pointer_context.current_node is closest to that SOP in the pointer network (fewest hops, highest cumulative weight).",
+            "algorithm": [
+              "1. Map the new task to its SOP entry node using route_tracker.recommend_route(task).",
+              "2. For each active agent, parse their pointer_context.current_node.",
+              "3. Compute graph distance from each agent's current_node to the task's SOP entry node using BFS on the pointer network (max 4 hops, weight >= 2).",
+              "4. Rank agents by: (a) shortest hop distance, (b) highest cumulative edge weight on the path, (c) agent's historical success rate for this task type (from route_patterns.json).",
+              "5. Assign to the top-ranked agent via send_instruction()."
+            ],
+            "fallback": "If no agent has pointer_context set, or all agents are equidistant, fall back to current round-robin or load-based assignment."
+          },
+          {
+            "change": "Enrich coordinator_instructions payload with route guidance",
+            "description": "When the coordinator sends a task instruction, include a 'recommended_route' field in the payload JSON.",
+            "payload_example": {
+              "instruction_type": "new_task",
+              "payload": {
+                "task": "wikipedia-enrichment",
+                "recommended_route": "SOP-027 -> SCR-0043 -> SCR-0044",
+                "entry_node": "SOP-027",
+                "primary_tools": ["SCR-0043", "SCR-0044"],
+                "supporting_tools": ["SCR-0036"],
+                "estimated_hops": 2,
+                "confidence": "pattern-based"
+              }
+            }
+          },
+          {
+            "change": "Add deviation detection to CoordinatorDashboard",
+            "method_name": "detect_route_deviations",
+            "description": "Compare agents' actual pointer_context.recent_nodes against the recommended_route from their task instruction. Flag significant deviations (agent skipped primary tools or used tangential edges).",
+            "action_on_deviation": "Log a warning. Optionally send a 'route_suggestion' instruction to nudge the agent back to the recommended path. Never force — agents may have good reasons to deviate."
+          }
+        ],
+        "benefits": [
+          "Agents are assigned tasks close to their current pointer network context, reducing ramp-up time.",
+          "Coordinators can proactively provide route guidance, reducing the agent's need for live navigation.",
+          "Deviation detection enables early intervention when an agent is struggling to find the right tools."
+        ]
+      }
+    },
+
+    "5_help_protocol_integration": {
+      "title": "Help Protocol Integration: Pointer-Based Resource and Agent Matching",
+      "problem": "When an agent requests help via help_protocol.py, matching is based solely on team_capabilities (string tags like 'coding', 'research'). The pointer network contains much richer information about which tools and SOPs are related, enabling more precise matching.",
+      "design": {
+        "workflow_name": "PointerAwareHelpMatching",
+        "changes_to_help_protocol": [
+          {
+            "change": "Enrich help requests with pointer context",
+            "description": "When request_help() is called, auto-attach the requesting agent's current pointer_context (current_node, recent_nodes). This tells potential helpers exactly where in the pointer network the requesting agent is stuck.",
+            "field_addition": "Add 'pointer_context' column to help_requests table, storing JSON."
+          },
+          {
+            "change": "Pointer-proximity-based helper ranking",
+            "method_name": "find_compatible_helpers_v2",
+            "description": "Extend find_compatible_helpers() to score idle teams not just by capability match, but also by pointer network proximity.",
+            "algorithm": [
+              "1. Get the requesting agent's current_node from the help request's pointer_context.",
+              "2. For each idle team, get their agents' pointer_context.current_node from agent_status.",
+              "3. Compute pointer network distance from helper's current_node to requester's current_node (BFS, max 3 hops).",
+              "4. Compute a combined score: score = (capability_match * 0.4) + (pointer_proximity * 0.3) + (historical_success * 0.3)",
+              "5. Return helpers sorted by combined score descending."
+            ],
+            "pointer_proximity_scoring": {
+              "same_node": 1.0,
+              "1_hop_primary": 0.9,
+              "1_hop_supporting": 0.7,
+              "2_hops": 0.4,
+              "3_hops": 0.2,
+              "unreachable": 0.0
+            }
+          },
+          {
+            "change": "Suggest resources alongside helpers",
+            "description": "When a help request is created, the system also queries the pointer network for resources that might resolve the blocker without needing another team's help.",
+            "method_name": "suggest_resources_for_blocker",
+            "algorithm": [
+              "1. From the requester's current_node, get all adjacent nodes with strength >= 'supporting'.",
+              "2. Filter to nodes the agent has NOT yet visited (from recent_nodes).",
+              "3. If any unvisited primary or supporting nodes exist, suggest them as 'self-help' resources before escalating to team help.",
+              "4. Include in help request response: {suggested_resources: [...], requires_team_help: true/false}"
+            ],
+            "benefit": "Many help requests may be resolvable by pointing the agent to an adjacent resource they missed. This reduces unnecessary cross-team coordination."
+          },
+          {
+            "change": "Route knowledge transfer in help acceptance",
+            "description": "When a helper team accepts a help request, include the requester's route history in the handoff. The helper can see which nodes the requester already tried and failed with, avoiding redundant work.",
+            "implementation": "When offer_help() succeeds, query route_log.jsonl for the requesting agent's recent routes for this task type. Include as 'prior_routes' in the work item assignment."
+          }
+        ],
+        "auto_assign_enhancement": {
+          "description": "Extend auto_assign_idle_teams() to use pointer proximity as a tiebreaker when multiple idle teams have equal capability match.",
+          "implementation": "After capability scoring, if two teams have equal match_score, prefer the team whose pointer_context.current_node is closer to the requester's current_node in the pointer network."
+        }
+      }
+    }
+  },
+
+  "cross_cutting_concerns": {
+    "performance": {
+      "pointer_network_caching": "The pointer-network.json file is 854KB. Agents should load it once at session start and cache in memory. A file-modification-time check can trigger reloads if the network is updated mid-session.",
+      "reverse_index": "Build a reverse adjacency index at load time for O(1) backlink lookups. Current backlink count is only 33 explicit edges, but the reverse index covers all 4820 edges.",
+      "tag_index": "Build a tag-to-node-list index at load time for fast tag-based discovery."
+    },
+    "consistency": {
+      "write_locking": "Pointer network weight adjustments (post-task learning) must use file-level locking or go through a single coordinator process to prevent concurrent write corruption.",
+      "eventual_consistency": "Route recommendations are eventually consistent. An agent may get a recommendation based on slightly stale pattern data. This is acceptable since routes are guidance, not commands."
+    },
+    "observability": {
+      "route_deviation_metric": "Track how often agents deviate from recommended routes. High deviation suggests the recommendations are poor or the pointer network is stale.",
+      "self_help_success_rate": "Track how often the 'suggest_resources_for_blocker' mechanism resolves help requests without team escalation. Target: > 30% self-resolution.",
+      "feedback_loop_health": "Monitor that the post-task learning loop is running. If route_log.jsonl grows by 50+ entries without an analyze/optimize cycle, alert."
+    }
+  },
+
+  "implementation_priority": [
+    {
+      "phase": 1,
+      "items": [
+        "Pre-task routing (already partially implemented via route_tracker.py recommend)",
+        "Route logging discipline (SOP-029 OP-01, already defined)",
+        "Pointer network caching utility"
+      ],
+      "effort": "Low — mostly process/discipline, minimal new code"
+    },
+    {
+      "phase": 2,
+      "items": [
+        "Live navigation adjacency/reverse lookup helpers",
+        "Coordinator instruction payload enrichment with recommended_route",
+        "Help request pointer_context field"
+      ],
+      "effort": "Medium — new utility functions, schema additions"
+    },
+    {
+      "phase": 3,
+      "items": [
+        "Post-task learning: weight adjustment and strength reclassification",
+        "Coordinator assign_task_by_proximity method",
+        "Help protocol find_compatible_helpers_v2 with pointer proximity scoring"
+      ],
+      "effort": "High — algorithmic work, requires accumulated route data to be effective"
+    },
+    {
+      "phase": 4,
+      "items": [
+        "Auto edge discovery and golden route codification",
+        "Self-help resource suggestion before team escalation",
+        "Deviation detection and nudging"
+      ],
+      "effort": "High — requires Phase 3 to be operational and generating data"
+    }
+  ],
+
+  "route_taken": "SOP-029 -> SOP-012 -> SOP-028",
+  "outcome": "success"
+}

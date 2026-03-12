@@ -1,0 +1,1448 @@
+{
+  "generated": "2026-03-12T23:09:11.354022Z",
+  "agent": "Pathfinder P7",
+  "task": "failure-aware-pathfinding",
+  "summary": {
+    "network_nodes": 310,
+    "network_edges": 4820,
+    "total_routes_analyzed": 430,
+    "benchmark_routes_generated": 348,
+    "existing_routes": 82,
+    "edges_with_traversal_data": 1180,
+    "always_succeed_edges": 598,
+    "edges_with_failures": 582,
+    "high_failure_edges": 579
+  },
+  "edge_success_model": {
+    "description": "Per-edge success rates computed from route traversal history",
+    "total_edges_modeled": 1180,
+    "top_failed_edges": [
+      {
+        "edge": "wiki-ai:Commonsense_knowledge_(artificial_intelligence) -> KB-0005",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "KB-0005 -> KB-0012",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "KB-0012 -> TEAM-0013",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "TEAM-0002 -> KB-0020",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "KB-0020 -> TEAM-0004",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "SOP-029 -> SOP-022",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "TEAM-0025 -> SCR-0019",
+        "failure_rate": 1.0,
+        "traversals": 2,
+        "failures": 2
+      },
+      {
+        "edge": "KB-0041 -> TEAM-0022",
+        "failure_rate": 1.0,
+        "traversals": 2,
+        "failures": 2
+      },
+      {
+        "edge": "TEAM-0022 -> SCR-0033",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "SCR-0033 -> KB-0022",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "KB-0022 -> KB-0023",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "SRC-0019 -> TEAM-0012",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "TEAM-0012 -> SRC-0036",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "SRC-0036 -> TEAM-0012",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "SRC-0042 -> KB-0012",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "KB-0012 -> TEAM-0010",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "SCR-0027 -> KB-0014",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "SCR-0012 -> KB-0011",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      },
+      {
+        "edge": "KB-0011 -> SCR-0014",
+        "failure_rate": 1.0,
+        "traversals": 2,
+        "failures": 2
+      },
+      {
+        "edge": "SCR-0014 -> KB-0022",
+        "failure_rate": 1.0,
+        "traversals": 1,
+        "failures": 1
+      }
+    ],
+    "top_reliable_edges": [
+      {
+        "edge": "SOP-011 -> SOP-015",
+        "success_rate": 1.0,
+        "traversals": 5
+      },
+      {
+        "edge": "SCR-0057 -> SCR-0032",
+        "success_rate": 1.0,
+        "traversals": 5
+      },
+      {
+        "edge": "SCR-0001 -> SRC-0001",
+        "success_rate": 1.0,
+        "traversals": 5
+      },
+      {
+        "edge": "SOP-016 -> SOP-013",
+        "success_rate": 1.0,
+        "traversals": 4
+      },
+      {
+        "edge": "SOP-015 -> SOP-011",
+        "success_rate": 1.0,
+        "traversals": 4
+      },
+      {
+        "edge": "SCR-0023 -> SRC-0001",
+        "success_rate": 1.0,
+        "traversals": 4
+      },
+      {
+        "edge": "SOP-027 -> SCR-0043",
+        "success_rate": 1.0,
+        "traversals": 4
+      },
+      {
+        "edge": "SCR-0032 -> SOP-012",
+        "success_rate": 1.0,
+        "traversals": 4
+      },
+      {
+        "edge": "SRC-0001 -> SCR-0023",
+        "success_rate": 1.0,
+        "traversals": 4
+      },
+      {
+        "edge": "SCR-0023 -> SOP-017",
+        "success_rate": 1.0,
+        "traversals": 4
+      },
+      {
+        "edge": "SOP-015 -> KB-0001",
+        "success_rate": 1.0,
+        "traversals": 4
+      },
+      {
+        "edge": "SOP-029 -> SCR-0057",
+        "success_rate": 1.0,
+        "traversals": 3
+      },
+      {
+        "edge": "SOP-029 -> SOP-012",
+        "success_rate": 1.0,
+        "traversals": 3
+      },
+      {
+        "edge": "TEAM-0024 -> KB-0022",
+        "success_rate": 1.0,
+        "traversals": 3
+      },
+      {
+        "edge": "SOP-012 -> SOP-015",
+        "success_rate": 1.0,
+        "traversals": 3
+      },
+      {
+        "edge": "TEAM-0025 -> SCR-0033",
+        "success_rate": 1.0,
+        "traversals": 3
+      },
+      {
+        "edge": "SOP-017 -> SCR-0023",
+        "success_rate": 1.0,
+        "traversals": 3
+      },
+      {
+        "edge": "TEAM-0020 -> KB-0020",
+        "success_rate": 1.0,
+        "traversals": 3
+      },
+      {
+        "edge": "SCR-0009 -> SRC-0003",
+        "success_rate": 1.0,
+        "traversals": 3
+      },
+      {
+        "edge": "SOP-025 -> SCR-0043",
+        "success_rate": 1.0,
+        "traversals": 3
+      }
+    ]
+  },
+  "pathfinding_algorithm": {
+    "name": "Failure-Aware Dijkstra",
+    "cost_function": "cost = (1/weight) * (1/success_rate)",
+    "description": "Modified Dijkstra that penalizes edges with historical failures. Higher weight edges (stronger connections) and edges with higher success rates are preferred.",
+    "default_success_rate": 0.8
+  },
+  "comparison": {
+    "test_pairs": 20,
+    "different_paths_chosen": 9,
+    "different_path_percentage": 45.0,
+    "fa_more_reliable_when_different": 9,
+    "conclusion": "Failure-aware routing chose different paths 9/20 times (45%). When paths differed, the FA path was more reliable 9/9 times.",
+    "test_results": [
+      {
+        "test_id": 1,
+        "start": "KB-0039",
+        "end": "KB-0021",
+        "naive_path": [
+          "KB-0039",
+          "KB-0018",
+          "KB-0021"
+        ],
+        "naive_hops": 2,
+        "naive_cost": 0.3333,
+        "naive_weight": 12,
+        "naive_reliability": 0.64,
+        "naive_risk_edges": 0,
+        "fa_path": [
+          "KB-0039",
+          "KB-0018",
+          "KB-0021"
+        ],
+        "fa_hops": 2,
+        "fa_cost": 0.4167,
+        "fa_weight": 12,
+        "fa_reliability": 0.64,
+        "fa_risk_edges": 0,
+        "paths_differ": false,
+        "fa_more_reliable": false
+      },
+      {
+        "test_id": 2,
+        "start": "KB-0034",
+        "end": "KB-0009",
+        "naive_path": [
+          "KB-0034",
+          "KB-0033",
+          "SCR-0041",
+          "TEAM-0026",
+          "KB-0009"
+        ],
+        "naive_hops": 4,
+        "naive_cost": 0.9524,
+        "naive_weight": 22,
+        "naive_reliability": 0.64,
+        "naive_risk_edges": 0,
+        "fa_path": [
+          "KB-0034",
+          "KB-0033",
+          "SCR-0041",
+          "TEAM-0026",
+          "KB-0009"
+        ],
+        "fa_hops": 4,
+        "fa_cost": 1.119,
+        "fa_weight": 22,
+        "fa_reliability": 0.64,
+        "fa_risk_edges": 0,
+        "paths_differ": false,
+        "fa_more_reliable": false
+      },
+      {
+        "test_id": 3,
+        "start": "wiki-ai:Cognitive_computing",
+        "end": "TEAM-0005",
+        "naive_path": [
+          "wiki-ai:Cognitive_computing",
+          "SRC-0033",
+          "SCR-0005",
+          "TEAM-0005"
+        ],
+        "naive_hops": 3,
+        "naive_cost": 0.9167,
+        "naive_weight": 12,
+        "naive_reliability": 0.8,
+        "naive_risk_edges": 0,
+        "fa_path": [
+          "wiki-ai:Cognitive_computing",
+          "SRC-0033",
+          "SCR-0005",
+          "TEAM-0005"
+        ],
+        "fa_hops": 3,
+        "fa_cost": 1.0417,
+        "fa_weight": 12,
+        "fa_reliability": 0.8,
+        "fa_risk_edges": 0,
+        "paths_differ": false,
+        "fa_more_reliable": false
+      },
+      {
+        "test_id": 4,
+        "start": "SCR-0002",
+        "end": "TEAM-0025",
+        "naive_path": [
+          "SCR-0002",
+          "SRC-0001",
+          "SCR-0023",
+          "SOP-023",
+          "SOP-022",
+          "TEAM-0025"
+        ],
+        "naive_hops": 5,
+        "naive_cost": 0.8111,
+        "naive_weight": 36,
+        "naive_reliability": 0.4,
+        "naive_risk_edges": 1,
+        "fa_path": [
+          "SCR-0002",
+          "SRC-0003",
+          "SCR-0009",
+          "SRC-0006",
+          "SCR-0057",
+          "SCR-0032",
+          "TEAM-0025"
+        ],
+        "fa_hops": 6,
+        "fa_cost": 1.0437,
+        "fa_weight": 47,
+        "fa_reliability": 0.4096,
+        "fa_risk_edges": 0,
+        "paths_differ": true,
+        "fa_more_reliable": true
+      },
+      {
+        "test_id": 5,
+        "start": "SCR-0017",
+        "end": "SCR-0014",
+        "naive_path": [
+          "SCR-0017",
+          "TEAM-0008",
+          "SCR-0020",
+          "SCR-0014"
+        ],
+        "naive_hops": 3,
+        "naive_cost": 0.4524,
+        "naive_weight": 20,
+        "naive_reliability": 0.0,
+        "naive_risk_edges": 1,
+        "fa_path": [
+          "SCR-0017",
+          "SRC-0001",
+          "SCR-0014"
+        ],
+        "fa_hops": 2,
+        "fa_cost": 0.7292,
+        "fa_weight": 7,
+        "fa_reliability": 0.64,
+        "fa_risk_edges": 0,
+        "paths_differ": true,
+        "fa_more_reliable": true
+      },
+      {
+        "test_id": 6,
+        "start": "wiki-ai:Denodo",
+        "end": "TEAM-0008",
+        "naive_path": [
+          "wiki-ai:Denodo",
+          "KB-0007",
+          "TEAM-0008"
+        ],
+        "naive_hops": 2,
+        "naive_cost": 1.1429,
+        "naive_weight": 8,
+        "naive_reliability": 0.64,
+        "naive_risk_edges": 0,
+        "fa_path": [
+          "wiki-ai:Denodo",
+          "KB-0007",
+          "TEAM-0008"
+        ],
+        "fa_hops": 2,
+        "fa_cost": 1.4286,
+        "fa_weight": 8,
+        "fa_reliability": 0.64,
+        "fa_risk_edges": 0,
+        "paths_differ": false,
+        "fa_more_reliable": false
+      },
+      {
+        "test_id": 7,
+        "start": "SCR-0041",
+        "end": "SRC-0032",
+        "naive_path": [
+          "SCR-0041",
+          "TEAM-0026",
+          "KB-0001",
+          "KB-0008",
+          "TEAM-0012",
+          "SRC-0032"
+        ],
+        "naive_hops": 5,
+        "naive_cost": 1.0774,
+        "naive_weight": 30,
+        "naive_reliability": 0.0,
+        "naive_risk_edges": 1,
+        "fa_path": [
+          "SCR-0041",
+          "SCR-0022",
+          "SCR-0023",
+          "SOP-023",
+          "SCR-0045",
+          "SRC-0032"
+        ],
+        "fa_hops": 5,
+        "fa_cost": 1.5694,
+        "fa_weight": 26,
+        "fa_reliability": 0.4096,
+        "fa_risk_edges": 0,
+        "paths_differ": true,
+        "fa_more_reliable": true
+      },
+      {
+        "test_id": 8,
+        "start": "wiki-ai:Behavior_informatics",
+        "end": "SOP-029",
+        "naive_path": [
+          "wiki-ai:Behavior_informatics",
+          "SCR-0007",
+          "SRC-0006",
+          "SCR-0057",
+          "SOP-029"
+        ],
+        "naive_hops": 4,
+        "naive_cost": 1.5333,
+        "naive_weight": 22,
+        "naive_reliability": 0.512,
+        "naive_risk_edges": 0,
+        "fa_path": [
+          "wiki-ai:Behavior_informatics",
+          "SCR-0007",
+          "SRC-0006",
+          "SCR-0057",
+          "SOP-029"
+        ],
+        "fa_hops": 4,
+        "fa_cost": 1.8667,
+        "fa_weight": 22,
+        "fa_reliability": 0.512,
+        "fa_risk_edges": 0,
+        "paths_differ": false,
+        "fa_more_reliable": false
+      },
+      {
+        "test_id": 9,
+        "start": "wiki-ai:AI_safety",
+        "end": "SRC-0023",
+        "naive_path": [
+          "wiki-ai:AI_safety",
+          "SCR-0024",
+          "TEAM-0010",
+          "KB-0004",
+          "TEAM-0013",
+          "SRC-0023"
+        ],
+        "naive_hops": 5,
+        "naive_cost": 1.744,
+        "naive_weight": 26,
+        "naive_reliability": 0.0,
+        "naive_risk_edges": 2,
+        "fa_path": [
+          "wiki-ai:AI_safety",
+          "SCR-0023",
+          "TEAM-0005",
+          "KB-0004",
+          "KB-0013",
+          "SRC-0023"
+        ],
+        "fa_hops": 5,
+        "fa_cost": 2.3869,
+        "fa_weight": 20,
+        "fa_reliability": 0.4096,
+        "fa_risk_edges": 0,
+        "paths_differ": true,
+        "fa_more_reliable": true
+      },
+      {
+        "test_id": 10,
+        "start": "KB-0016",
+        "end": "KB-0040",
+        "naive_path": [
+          "KB-0016",
+          "KB-0018",
+          "KB-0022",
+          "KB-0038",
+          "KB-0040"
+        ],
+        "naive_hops": 4,
+        "naive_cost": 0.6667,
+        "naive_weight": 24,
+        "naive_reliability": 0.0,
+        "naive_risk_edges": 1,
+        "fa_path": [
+          "KB-0016",
+          "KB-0009",
+          "TEAM-0026",
+          "KB-0040"
+        ],
+        "fa_hops": 3,
+        "fa_cost": 1.0119,
+        "fa_weight": 15,
+        "fa_reliability": 0.512,
+        "fa_risk_edges": 0,
+        "paths_differ": true,
+        "fa_more_reliable": true
+      },
+      {
+        "test_id": 11,
+        "start": "wiki-ai:Automated_machine_learning",
+        "end": "SCR-0012",
+        "naive_path": [
+          "wiki-ai:Automated_machine_learning",
+          "SCR-0018",
+          "TEAM-0008",
+          "SCR-0020",
+          "SCR-0012"
+        ],
+        "naive_hops": 4,
+        "naive_cost": 0.9762,
+        "naive_weight": 21,
+        "naive_reliability": 0.4096,
+        "naive_risk_edges": 0,
+        "fa_path": [
+          "wiki-ai:Automated_machine_learning",
+          "SCR-0018",
+          "TEAM-0008",
+          "KB-0001",
+          "TEAM-0006",
+          "SCR-0012"
+        ],
+        "fa_hops": 5,
+        "fa_cost": 1.1944,
+        "fa_weight": 33,
+        "fa_reliability": 0.64,
+        "fa_risk_edges": 0,
+        "paths_differ": true,
+        "fa_more_reliable": true
+      },
+      {
+        "test_id": 12,
+        "start": "TEAM-0012",
+        "end": "wiki-ai:Data_Science_and_Predictive_Analytics",
+        "naive_path": [
+          "TEAM-0012",
+          "SRC-0033",
+          "wiki-ai:Data_Science_and_Predictive_Analytics"
+        ],
+        "naive_hops": 2,
+        "naive_cost": 1.0,
+        "naive_weight": 4,
+        "naive_reliability": 0.8,
+        "naive_risk_edges": 0,
+        "fa_path": [
+          "TEAM-0012",
+          "SRC-0033",
+          "wiki-ai:Data_Science_and_Predictive_Analytics"
+        ],
+        "fa_hops": 2,
+        "fa_cost": 1.125,
+        "fa_weight": 4,
+        "fa_reliability": 0.8,
+        "fa_risk_edges": 0,
+        "paths_differ": false,
+        "fa_more_reliable": false
+      },
+      {
+        "test_id": 13,
+        "start": "SCR-0050",
+        "end": "SCR-0021",
+        "naive_path": [
+          "SCR-0050",
+          "SOP-023",
+          "SCR-0021"
+        ],
+        "naive_hops": 2,
+        "naive_cost": 0.6667,
+        "naive_weight": 6,
+        "naive_reliability": 0.8,
+        "naive_risk_edges": 0,
+        "fa_path": [
+          "SCR-0050",
+          "SOP-023",
+          "SCR-0021"
+        ],
+        "fa_hops": 2,
+        "fa_cost": 0.75,
+        "fa_weight": 6,
+        "fa_reliability": 0.8,
+        "fa_risk_edges": 0,
+        "paths_differ": false,
+        "fa_more_reliable": false
+      },
+      {
+        "test_id": 14,
+        "start": "SRC-0024",
+        "end": "SCR-0031",
+        "naive_path": [
+          "SRC-0024",
+          "TEAM-0013",
+          "KB-0004",
+          "KB-0003",
+          "SCR-0031"
+        ],
+        "naive_hops": 4,
+        "naive_cost": 1.1429,
+        "naive_weight": 18,
+        "naive_reliability": 0.32,
+        "naive_risk_edges": 1,
+        "fa_path": [
+          "SRC-0024",
+          "TEAM-0013",
+          "KB-0004",
+          "TEAM-0005",
+          "SCR-0005",
+          "SRC-0051",
+          "SCR-0031"
+        ],
+        "fa_hops": 6,
+        "fa_cost": 1.3548,
+        "fa_weight": 32,
+        "fa_reliability": 0.64,
+        "fa_risk_edges": 0,
+        "paths_differ": true,
+        "fa_more_reliable": true
+      },
+      {
+        "test_id": 15,
+        "start": "SCR-0031",
+        "end": "KB-0007",
+        "naive_path": [
+          "SCR-0031",
+          "TEAM-0025",
+          "KB-0007"
+        ],
+        "naive_hops": 2,
+        "naive_cost": 0.625,
+        "naive_weight": 10,
+        "naive_reliability": 0.64,
+        "naive_risk_edges": 0,
+        "fa_path": [
+          "SCR-0031",
+          "TEAM-0025",
+          "KB-0007"
+        ],
+        "fa_hops": 2,
+        "fa_cost": 0.7812,
+        "fa_weight": 10,
+        "fa_reliability": 0.64,
+        "fa_risk_edges": 0,
+        "paths_differ": false,
+        "fa_more_reliable": false
+      },
+      {
+        "test_id": 16,
+        "start": "SRC-0003",
+        "end": "SCR-0054",
+        "naive_path": [
+          "SRC-0003",
+          "SCR-0009",
+          "SRC-0006",
+          "SCR-0057",
+          "SCR-0054"
+        ],
+        "naive_hops": 4,
+        "naive_cost": 0.7652,
+        "naive_weight": 29,
+        "naive_reliability": 0.4096,
+        "naive_risk_edges": 0,
+        "fa_path": [
+          "SRC-0003",
+          "SCR-0009",
+          "SRC-0006",
+          "SCR-0057",
+          "SCR-0054"
+        ],
+        "fa_hops": 4,
+        "fa_cost": 0.9564,
+        "fa_weight": 29,
+        "fa_reliability": 0.4096,
+        "fa_risk_edges": 0,
+        "paths_differ": false,
+        "fa_more_reliable": false
+      },
+      {
+        "test_id": 17,
+        "start": "SRC-0032",
+        "end": "SCR-0055",
+        "naive_path": [
+          "SRC-0032",
+          "KB-0010",
+          "SRC-0035",
+          "SCR-0055"
+        ],
+        "naive_hops": 3,
+        "naive_cost": 1.25,
+        "naive_weight": 8,
+        "naive_reliability": 0.512,
+        "naive_risk_edges": 0,
+        "fa_path": [
+          "SRC-0032",
+          "KB-0010",
+          "SRC-0035",
+          "SCR-0055"
+        ],
+        "fa_hops": 3,
+        "fa_cost": 1.5625,
+        "fa_weight": 8,
+        "fa_reliability": 0.512,
+        "fa_risk_edges": 0,
+        "paths_differ": false,
+        "fa_more_reliable": false
+      },
+      {
+        "test_id": 18,
+        "start": "wiki-ai:Artificial_intelligence",
+        "end": "KB-0046",
+        "naive_path": [
+          "wiki-ai:Artificial_intelligence",
+          "TEAM-0005",
+          "SCR-0044",
+          "KB-0046"
+        ],
+        "naive_hops": 3,
+        "naive_cost": 1.5769,
+        "naive_weight": 16,
+        "naive_reliability": 0.0,
+        "naive_risk_edges": 1,
+        "fa_path": [
+          "wiki-ai:Artificial_intelligence",
+          "KB-0005",
+          "SOP-027",
+          "SCR-0044",
+          "KB-0046"
+        ],
+        "fa_hops": 4,
+        "fa_cost": 1.9519,
+        "fa_weight": 24,
+        "fa_reliability": 0.8,
+        "fa_risk_edges": 0,
+        "paths_differ": true,
+        "fa_more_reliable": true
+      },
+      {
+        "test_id": 19,
+        "start": "wiki-ai:Feedback_neural_network",
+        "end": "SCR-0005",
+        "naive_path": [
+          "wiki-ai:Feedback_neural_network",
+          "TEAM-0005",
+          "SCR-0005"
+        ],
+        "naive_hops": 2,
+        "naive_cost": 1.1667,
+        "naive_weight": 7,
+        "naive_reliability": 0.8,
+        "naive_risk_edges": 0,
+        "fa_path": [
+          "wiki-ai:Feedback_neural_network",
+          "TEAM-0005",
+          "SCR-0005"
+        ],
+        "fa_hops": 2,
+        "fa_cost": 1.4167,
+        "fa_weight": 7,
+        "fa_reliability": 0.8,
+        "fa_risk_edges": 0,
+        "paths_differ": false,
+        "fa_more_reliable": false
+      },
+      {
+        "test_id": 20,
+        "start": "KB-0045",
+        "end": "KB-0025",
+        "naive_path": [
+          "KB-0045",
+          "SCR-0043",
+          "SOP-027",
+          "SOP-028",
+          "KB-0025"
+        ],
+        "naive_hops": 4,
+        "naive_cost": 0.8167,
+        "naive_weight": 33,
+        "naive_reliability": 0.0,
+        "naive_risk_edges": 2,
+        "fa_path": [
+          "KB-0045",
+          "KB-0046",
+          "SCR-0044",
+          "SRC-0006",
+          "SCR-0057",
+          "SCR-0032",
+          "TEAM-0025",
+          "KB-0025"
+        ],
+        "fa_hops": 7,
+        "fa_cost": 1.1601,
+        "fa_weight": 54,
+        "fa_reliability": 0.64,
+        "fa_risk_edges": 0,
+        "paths_differ": true,
+        "fa_more_reliable": true
+      }
+    ]
+  },
+  "risky_edges": {
+    "description": "Edges with >30% failure rate and at least 2 traversals",
+    "count": 151,
+    "edges": [
+      {
+        "edge": "KB-0010 -> SRC-0034",
+        "from": "KB-0010",
+        "to": "SRC-0034",
+        "traversals": 3,
+        "failures": 3,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "KB-0020 -> SCR-0005",
+        "from": "KB-0020",
+        "to": "SCR-0005",
+        "traversals": 3,
+        "failures": 3,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "TEAM-0010 -> SRC-0026",
+        "from": "TEAM-0010",
+        "to": "SRC-0026",
+        "traversals": 3,
+        "failures": 3,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "TEAM-0025 -> SCR-0019",
+        "from": "TEAM-0025",
+        "to": "SCR-0019",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "KB-0041 -> TEAM-0022",
+        "from": "KB-0041",
+        "to": "TEAM-0022",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "KB-0011 -> SCR-0014",
+        "from": "KB-0011",
+        "to": "SCR-0014",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "SOP-026 -> SOP-025",
+        "from": "SOP-026",
+        "to": "SOP-025",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "SCR-0007 -> KB-0014",
+        "from": "SCR-0007",
+        "to": "KB-0014",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "KB-0027 -> SOP-011",
+        "from": "KB-0027",
+        "to": "SOP-011",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "SOP-017 -> SCR-0027",
+        "from": "SOP-017",
+        "to": "SCR-0027",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "SRC-0008 -> SCR-0010",
+        "from": "SRC-0008",
+        "to": "SCR-0010",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "TEAM-0012 -> KB-0005",
+        "from": "TEAM-0012",
+        "to": "KB-0005",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "SCR-0008 -> KB-0020",
+        "from": "SCR-0008",
+        "to": "KB-0020",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "TEAM-0002 -> SCR-0009",
+        "from": "TEAM-0002",
+        "to": "SCR-0009",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "SRC-0003 -> SCR-0026",
+        "from": "SRC-0003",
+        "to": "SCR-0026",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "wiki-ai:Commonsense_knowledge_(artificial_intelligence) -> KB-0010",
+        "from": "wiki-ai:Commonsense_knowledge_(artificial_intelligence)",
+        "to": "KB-0010",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "KB-0010 -> SRC-0032",
+        "from": "KB-0010",
+        "to": "SRC-0032",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "KB-0014 -> KB-0010",
+        "from": "KB-0014",
+        "to": "KB-0010",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "SCR-0007 -> SRC-0002",
+        "from": "SCR-0007",
+        "to": "SRC-0002",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "wiki-ai:Schema-agnostic_databases -> SCR-0006",
+        "from": "wiki-ai:Schema-agnostic_databases",
+        "to": "SCR-0006",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "KB-0019 -> TEAM-0019",
+        "from": "KB-0019",
+        "to": "TEAM-0019",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "SOP-025 -> KB-0020",
+        "from": "SOP-025",
+        "to": "KB-0020",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "wiki-ai:Data_Science_and_Predictive_Analytics -> KB-0010",
+        "from": "wiki-ai:Data_Science_and_Predictive_Analytics",
+        "to": "KB-0010",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "SCR-0009 -> SOP-027",
+        "from": "SCR-0009",
+        "to": "SOP-027",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "KB-0010 -> SRC-0050",
+        "from": "KB-0010",
+        "to": "SRC-0050",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "TEAM-0005 -> SCR-0044",
+        "from": "TEAM-0005",
+        "to": "SCR-0044",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "SCR-0034 -> SOP-024",
+        "from": "SCR-0034",
+        "to": "SOP-024",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "KB-0010 -> SCR-0007",
+        "from": "KB-0010",
+        "to": "SCR-0007",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "TEAM-0007 -> KB-0016",
+        "from": "TEAM-0007",
+        "to": "KB-0016",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      },
+      {
+        "edge": "SCR-0005 -> KB-0046",
+        "from": "SCR-0005",
+        "to": "KB-0046",
+        "traversals": 2,
+        "failures": 2,
+        "failure_rate": 1.0,
+        "success_rate": 0.0
+      }
+    ],
+    "recommendation": "These edges are reliability bottlenecks. Consider: (1) strengthening their pointer weights, (2) adding alternative routes, (3) investigating why they fail."
+  },
+  "reliability_map": {
+    "description": "Success rates overlaid on network by domain",
+    "domains": {
+      "sops": {
+        "node_count": 22,
+        "total_edges": 450,
+        "traversed_edges": 158,
+        "total_traversals": 233,
+        "avg_success_rate": 0.7296,
+        "perfect_edges": 101,
+        "risky_edges": 57,
+        "reliability_tier": "medium"
+      },
+      "api-tools": {
+        "node_count": 1,
+        "total_edges": 20,
+        "traversed_edges": 2,
+        "total_traversals": 3,
+        "avg_success_rate": 0.6667,
+        "perfect_edges": 1,
+        "risky_edges": 1,
+        "reliability_tier": "low"
+      },
+      "knowledge-base": {
+        "node_count": 46,
+        "total_edges": 818,
+        "traversed_edges": 289,
+        "total_traversals": 397,
+        "avg_success_rate": 0.6096,
+        "perfect_edges": 153,
+        "risky_edges": 134,
+        "reliability_tier": "low"
+      },
+      "scripts": {
+        "node_count": 57,
+        "total_edges": 1120,
+        "traversed_edges": 300,
+        "total_traversals": 384,
+        "avg_success_rate": 0.5625,
+        "perfect_edges": 145,
+        "risky_edges": 155,
+        "reliability_tier": "low"
+      },
+      "teams": {
+        "node_count": 22,
+        "total_edges": 440,
+        "traversed_edges": 157,
+        "total_traversals": 214,
+        "avg_success_rate": 0.5514,
+        "perfect_edges": 72,
+        "risky_edges": 84,
+        "reliability_tier": "low"
+      },
+      "sources": {
+        "node_count": 48,
+        "total_edges": 918,
+        "traversed_edges": 152,
+        "total_traversals": 177,
+        "avg_success_rate": 0.5085,
+        "perfect_edges": 71,
+        "risky_edges": 81,
+        "reliability_tier": "low"
+      },
+      "wikipedia": {
+        "node_count": 114,
+        "total_edges": 1054,
+        "traversed_edges": 118,
+        "total_traversals": 132,
+        "avg_success_rate": 0.447,
+        "perfect_edges": 50,
+        "risky_edges": 68,
+        "reliability_tier": "low"
+      }
+    },
+    "most_reliable_domain": "sops",
+    "least_reliable_domain": "wikipedia"
+  },
+  "logged_paths": [
+    {
+      "agent": "p7-1",
+      "path": [
+        "KB-0039",
+        "KB-0018",
+        "KB-0021"
+      ],
+      "reliability": 0.64,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-2",
+      "path": [
+        "KB-0034",
+        "KB-0033",
+        "SCR-0041",
+        "TEAM-0026",
+        "KB-0009"
+      ],
+      "reliability": 0.64,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-3",
+      "path": [
+        "wiki-ai:Cognitive_computing",
+        "SRC-0033",
+        "SCR-0005",
+        "TEAM-0005"
+      ],
+      "reliability": 0.8,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-4",
+      "path": [
+        "SCR-0002",
+        "SRC-0003",
+        "SCR-0009",
+        "SRC-0006",
+        "SCR-0057",
+        "SCR-0032",
+        "TEAM-0025"
+      ],
+      "reliability": 0.4096,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-1",
+      "path": [
+        "SCR-0017",
+        "SRC-0001",
+        "SCR-0014"
+      ],
+      "reliability": 0.64,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-2",
+      "path": [
+        "wiki-ai:Denodo",
+        "KB-0007",
+        "TEAM-0008"
+      ],
+      "reliability": 0.64,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-3",
+      "path": [
+        "SCR-0041",
+        "SCR-0022",
+        "SCR-0023",
+        "SOP-023",
+        "SCR-0045",
+        "SRC-0032"
+      ],
+      "reliability": 0.4096,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-4",
+      "path": [
+        "wiki-ai:Behavior_informatics",
+        "SCR-0007",
+        "SRC-0006",
+        "SCR-0057",
+        "SOP-029"
+      ],
+      "reliability": 0.512,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-1",
+      "path": [
+        "wiki-ai:AI_safety",
+        "SCR-0023",
+        "TEAM-0005",
+        "KB-0004",
+        "KB-0013",
+        "SRC-0023"
+      ],
+      "reliability": 0.4096,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-2",
+      "path": [
+        "KB-0016",
+        "KB-0009",
+        "TEAM-0026",
+        "KB-0040"
+      ],
+      "reliability": 0.512,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-3",
+      "path": [
+        "wiki-ai:Automated_machine_learning",
+        "SCR-0018",
+        "TEAM-0008",
+        "KB-0001",
+        "TEAM-0006",
+        "SCR-0012"
+      ],
+      "reliability": 0.64,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-4",
+      "path": [
+        "TEAM-0012",
+        "SRC-0033",
+        "wiki-ai:Data_Science_and_Predictive_Analytics"
+      ],
+      "reliability": 0.8,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-1",
+      "path": [
+        "SCR-0050",
+        "SOP-023",
+        "SCR-0021"
+      ],
+      "reliability": 0.8,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-2",
+      "path": [
+        "SRC-0024",
+        "TEAM-0013",
+        "KB-0004",
+        "TEAM-0005",
+        "SCR-0005",
+        "SRC-0051",
+        "SCR-0031"
+      ],
+      "reliability": 0.64,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-3",
+      "path": [
+        "SCR-0031",
+        "TEAM-0025",
+        "KB-0007"
+      ],
+      "reliability": 0.64,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-4",
+      "path": [
+        "SRC-0003",
+        "SCR-0009",
+        "SRC-0006",
+        "SCR-0057",
+        "SCR-0054"
+      ],
+      "reliability": 0.4096,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-1",
+      "path": [
+        "SRC-0032",
+        "KB-0010",
+        "SRC-0035",
+        "SCR-0055"
+      ],
+      "reliability": 0.512,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-2",
+      "path": [
+        "wiki-ai:Artificial_intelligence",
+        "KB-0005",
+        "SOP-027",
+        "SCR-0044",
+        "KB-0046"
+      ],
+      "reliability": 0.8,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-3",
+      "path": [
+        "wiki-ai:Feedback_neural_network",
+        "TEAM-0005",
+        "SCR-0005"
+      ],
+      "reliability": 0.8,
+      "risk_edges": 0
+    },
+    {
+      "agent": "p7-4",
+      "path": [
+        "KB-0045",
+        "KB-0046",
+        "SCR-0044",
+        "SRC-0006",
+        "SCR-0057",
+        "SCR-0032",
+        "TEAM-0025",
+        "KB-0025"
+      ],
+      "reliability": 0.64,
+      "risk_edges": 0
+    }
+  ]
+}

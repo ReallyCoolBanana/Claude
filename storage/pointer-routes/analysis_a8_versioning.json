@@ -1,0 +1,183 @@
+{
+  "analysis_id": "a8-versioning-design",
+  "agent": "analysis-8",
+  "timestamp": "2026-03-12T23:08:00Z",
+  "task": "Design versioning and evolution tracking system for the pointer network",
+  "status": "complete",
+
+  "current_network_state": {
+    "schema_version": "1.1",
+    "node_count": 310,
+    "edge_count": 4820,
+    "classified_edges": 889,
+    "classification_ratio": 0.1844,
+    "orphan_count": 0,
+    "domains": {
+      "knowledge-base": 46,
+      "scripts": 57,
+      "sops": 22,
+      "sources": 48,
+      "teams": 22,
+      "api-tools": 1,
+      "wikipedia": 114
+    },
+    "strength_distribution": {
+      "unclassified": 3931,
+      "related": 412,
+      "primary": 230,
+      "supporting": 133,
+      "tangential": 114
+    }
+  },
+
+  "evolution_between_runs": {
+    "run_001_to_run_002": {
+      "routes_logged": { "run_001": 95, "run_002": 98 },
+      "agents_tracked": { "run_001": 26, "run_002": 42 },
+      "avg_hops_per_route": { "run_001": 1.52, "run_002": 3.16, "interpretation": "Routes got deeper — agents following longer pointer chains" },
+      "success_rate": {
+        "run_001": 68.4,
+        "run_002": 59.2,
+        "interpretation": "Success rate dropped as routes got longer and more complex"
+      },
+      "strength_effectiveness_shift": {
+        "primary": { "run_001": 71.2, "run_002": 49.6, "interpretation": "Primary pointers less reliable in run-002 — possible misclassification or overuse" },
+        "supporting": { "run_001": 60.0, "run_002": 88.9, "interpretation": "Supporting pointers dramatically improved — better tool orchestration" }
+      },
+      "top_entry_shift": "SOP-027 dominated run-001 (19 routes), SOP-011 dominated run-002 (15 routes)",
+      "new_patterns_in_run_002": [
+        "Wikipedia nodes appeared as exit targets (wiki-ai:AI-complete, wiki-ai:Neuro-symbolic_AI)",
+        "Multi-hop chains emerged (SCR-0019 -> SCR-0020 -> SCR-0012)",
+        "pointer-network.json itself became a navigable node"
+      ]
+    }
+  },
+
+  "versioning_system_design": {
+    "overview": "A snapshot-based versioning system that captures network state at a point in time, enables structured diffs between any two snapshots, generates changelogs, and tracks schema migrations.",
+
+    "snapshot_schema": {
+      "snapshot_id": "snap-YYYYMMDD-HHMMSS[-label]",
+      "timestamp": "ISO 8601 UTC",
+      "schema_version": "Matches pointer-network.json schema_version",
+      "structure_hash": "SHA-256 of deterministic node+edge serialization",
+      "metrics": {
+        "node_count": "Total nodes",
+        "edge_count": "Total edges (outgoing pointers)",
+        "classified_count": "Edges with strength != unclassified",
+        "classification_ratio": "classified / total",
+        "orphan_count": "Nodes with no incoming or outgoing edges",
+        "strength_distribution": "Counter of strength labels",
+        "domain_distribution": "Counter of node domains",
+        "weight_stats": "avg, min, max weight",
+        "tag_cluster_count": "Number of tag clusters",
+        "edge_type_counts": "shared_tags, explicit_reference, etc."
+      },
+      "node_ids": "Sorted list of all node IDs",
+      "edges": "Full edge list with from, to, weight, strength"
+    },
+
+    "diff_output": {
+      "nodes_added": "Node IDs present in B but not A",
+      "nodes_removed": "Node IDs present in A but not B",
+      "edges_added": "Edges in B but not A (by from+to key)",
+      "edges_removed": "Edges in A but not B",
+      "edges_reweighted": "Same edge, different weight — includes delta",
+      "strength_changes": "Same edge, different strength classification",
+      "metric_deltas": "Per-metric before/after/delta for all tracked metrics",
+      "connectivity": {
+        "structure_hash_changed": "Quick check if anything structural changed",
+        "schema_version_changed": "Indicates migration may have occurred"
+      }
+    },
+
+    "changelog_format": {
+      "description": "Sequential diffs between consecutive snapshots",
+      "entry_format": {
+        "from_snapshot": "ID",
+        "to_snapshot": "ID",
+        "timestamp": "When the later snapshot was taken",
+        "summary_text": "Human-readable change summary (e.g., +5 nodes, +12 edges, ~3 reclassified)",
+        "metric_deltas": "Structured metric changes"
+      }
+    }
+  },
+
+  "schema_migration_design": {
+    "approach": "Forward-compatible versioning with compatibility matrix",
+    "compatibility_matrix": {
+      "1.0": ["1.0", "1.1"],
+      "1.1": ["1.0", "1.1", "1.2"],
+      "1.2": ["1.1", "1.2"]
+    },
+    "schema_definitions": {
+      "1.0": {
+        "required_keys": ["nodes", "stats"],
+        "optional_keys": ["description", "built"]
+      },
+      "1.1": {
+        "required_keys": ["schema_version", "nodes", "stats"],
+        "optional_keys": ["description", "built", "tag_clusters", "strength_levels"],
+        "note": "Current version. Added schema_version field, tag_clusters, and strength_levels."
+      },
+      "1.2_proposed": {
+        "required_keys": ["schema_version", "nodes", "stats", "version_metadata"],
+        "optional_keys": ["description", "built", "tag_clusters", "strength_levels", "community_structure"],
+        "new_fields": {
+          "version_metadata": "Embedded version tracking (last_snapshot_id, change_count)",
+          "community_structure": "Pre-computed community groupings for faster analysis"
+        }
+      }
+    },
+    "migration_rules": [
+      "1.0 -> 1.1: Add schema_version='1.1'. Existing data is forward-compatible.",
+      "1.1 -> 1.2: Add version_metadata from latest snapshot. Compute community_structure from tag_clusters.",
+      "Backward: 1.1 -> 1.0: Strip schema_version, tag_clusters, strength_levels. Data remains valid."
+    ],
+    "migration_safety": [
+      "Always snapshot before migrating",
+      "Diffs between compatible versions ignore missing optional fields",
+      "Unknown fields are preserved (not stripped) during diff",
+      "Schema version is validated on snapshot load"
+    ]
+  },
+
+  "implementation_delivered": {
+    "script": "storage/coordination/network_version.py",
+    "commands": {
+      "snapshot [label]": "Take a snapshot of current network state, saved to storage/pointer-routes/snapshots/",
+      "diff <snap_a> <snap_b>": "Compare two snapshots, output structured diff",
+      "changelog": "Generate changelog from all sequential snapshots",
+      "latest": "Show latest snapshot summary with diff from previous",
+      "check-schema": "Validate current schema, check migration compatibility",
+      "list": "List all snapshots with summary table"
+    },
+    "initial_snapshot": {
+      "id": "snap-20260312-230813-initial",
+      "nodes": 310,
+      "edges": 4820,
+      "classified": 889,
+      "classification_ratio": "18.4%"
+    }
+  },
+
+  "key_metrics_tracked": [
+    "node_count — growth of the knowledge graph",
+    "edge_count — density of connections",
+    "classified_count / classification_ratio — how much of the network has been audited",
+    "orphan_count — disconnected nodes needing attention",
+    "strength_distribution — balance of primary/supporting/related/tangential",
+    "domain_distribution — coverage across knowledge domains",
+    "weight_stats — edge weight trends (avg/min/max)",
+    "tag_cluster_count — semantic grouping richness",
+    "structure_hash — quick structural identity check"
+  ],
+
+  "recommendations": [
+    "Run snapshots before and after each benchmark run to track network mutations",
+    "Automate snapshots via SOP hooks — every team that modifies pointer-network.json should snapshot first",
+    "The 81.6% unclassified edge ratio is the biggest improvement opportunity — classification campaigns should be tracked via changelog",
+    "Consider adding route_analysis data (success rates, top edges) to snapshots for correlated evolution tracking",
+    "When schema 1.2 is adopted, embed version_metadata directly in pointer-network.json for self-documenting evolution"
+  ]
+}

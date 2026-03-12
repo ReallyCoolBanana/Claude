@@ -1,0 +1,234 @@
+{
+  "id": "SOP-030",
+  "version": "1.0",
+  "created": "2026-03-12",
+  "title": "Pointer Network Pathfinding: Strategy Selection and Execution",
+  "purpose": "Standard procedures for agents to select and execute optimal pathfinding strategies when navigating the pointer network. Based on empirical data from 185+ pathfinding tests across 8 strategy types.",
+
+  "strategy_catalog": {
+    "description": "Eight tested pathfinding strategies, ranked by use case.",
+    "strategies": {
+      "weight_optimal": {
+        "id": "PF-01",
+        "name": "Weight-Optimal Pathfinding",
+        "algorithm": "Modified Dijkstra maximizing total path weight",
+        "when": "Finding the strongest/most reliable route between two known nodes",
+        "success_rate": "80%",
+        "avg_hops": 1.5,
+        "strengths": ["Reliably crosses domain boundaries", "Highest success rate for general routing"],
+        "weaknesses": ["May follow semantically irrelevant high-weight edges", "Ignores tag coherence"],
+        "command": "python3 storage/coordination/pointer_query.py find_path --from {start} --to {target} --strategy weight"
+      },
+      "strength_guided": {
+        "id": "PF-02",
+        "name": "Strength-Guided Pathfinding",
+        "algorithm": "BFS prioritizing edges by strength tier (primary > supporting > related > tangential)",
+        "when": "Following intended/canonical paths through the network",
+        "strengths": ["Follows designed routing intent", "Avoids tangential noise"],
+        "weaknesses": ["Limited to classified edges (18.4% of network)", "Falls back to weight for unclassified"],
+        "command": "python3 storage/coordination/pointer_query.py find_path --from {start} --to {target} --strategy strength"
+      },
+      "tag_coherent": {
+        "id": "PF-03",
+        "name": "Tag-Coherent Pathfinding",
+        "algorithm": "BFS maximizing Jaccard tag similarity between consecutive nodes",
+        "when": "Finding semantically meaningful paths where domain relevance matters",
+        "success_rate": "45%",
+        "avg_coherence": 0.45,
+        "strengths": ["Highest semantic coherence", "Stays within relevant topic areas"],
+        "weaknesses": ["Gets trapped in tag clusters", "Low success crossing domains", "Requires nodes to have tags"],
+        "command": "python3 storage/coordination/pointer_query.py find_path --from {start} --to {target} --strategy tag"
+      },
+      "hybrid_adaptive": {
+        "id": "PF-04",
+        "name": "Hybrid Adaptive Pathfinding",
+        "algorithm": "Composite score = (weight * alpha) + (strength_bonus * beta) + (tag_coherence * gamma)",
+        "when": "General-purpose pathfinding balancing multiple signals",
+        "optimal_tuning": {
+          "balanced": [0.4, 0.3, 0.3],
+          "tag_heavy_best_composite": [0.2, 0.2, 0.6],
+          "weight_heavy_best_success": [0.6, 0.2, 0.2]
+        },
+        "strengths": ["Tunable to task requirements", "Best composite score at tag-heavy tuning"],
+        "weaknesses": ["Requires tuning per use case", "More complex to implement"],
+        "command": "python3 storage/coordination/pointer_query.py find_path --from {start} --to {target} --strategy hybrid --alpha 0.4 --beta 0.3 --gamma 0.3"
+      },
+      "goal_directed": {
+        "id": "PF-05",
+        "name": "Goal-Directed Pathfinding (A*)",
+        "algorithm": "A* with domain-distance heuristic guiding toward target domain type",
+        "when": "Searching for a node of a specific type (any SRC, any monitoring SCR, etc.)",
+        "node_savings": "48.5% fewer nodes explored vs BFS",
+        "path_quality": "Equal to BFS in 19/20 cases",
+        "strengths": ["Explores 48.5% fewer nodes than BFS", "Same path quality", "Ideal for type-based searches"],
+        "weaknesses": ["Requires pre-computed domain distances", "Heuristic may mislead in unusual topologies"],
+        "command": "python3 storage/coordination/pointer_query.py find_path --from {start} --to {target} --strategy astar --goal-domain {domain}"
+      },
+      "multi_stop": {
+        "id": "PF-06",
+        "name": "Multi-Stop Route Planning",
+        "algorithm": "Nearest-neighbor TSP heuristic with shortest-path subroutes",
+        "when": "Agent needs to visit multiple nodes in one task (audit, pipeline setup, etc.)",
+        "avg_savings": "17.7% fewer hops vs naive ordering",
+        "max_savings": "40% in best case",
+        "strengths": ["Optimizes multi-node workflows", "Reduces total traversal cost"],
+        "weaknesses": ["Greedy heuristic — not globally optimal", "Performance degrades with 10+ stops"],
+        "command": "python3 storage/coordination/pointer_query.py plan_route --stops {node1},{node2},{node3}"
+      },
+      "failure_aware": {
+        "id": "PF-07",
+        "name": "Failure-Aware Pathfinding",
+        "algorithm": "Dijkstra with edge cost = weight * historical_success_rate",
+        "when": "Route reliability is critical (production workflows, data pipelines)",
+        "risky_edges_identified": 4,
+        "strengths": ["Avoids historically unreliable edges", "Improves as more routes are logged"],
+        "weaknesses": ["Requires route history data", "Cold-start problem for new edges"],
+        "command": "python3 storage/coordination/pointer_query.py find_path --from {start} --to {target} --strategy reliable"
+      },
+      "exploration": {
+        "id": "PF-08",
+        "name": "Exploration Pathfinding",
+        "algorithm": "BFS biased toward least-visited nodes: score = weight / (visit_count + 1)",
+        "when": "Discovering under-explored parts of the network, knowledge discovery, auditing",
+        "strengths": ["Maximizes discovery of new nodes", "Reveals hidden resources"],
+        "weaknesses": ["May find less-useful nodes", "Path quality varies"],
+        "command": "python3 storage/coordination/pointer_query.py find_path --from {start} --to {target} --strategy explore"
+      }
+    }
+  },
+
+  "strategy_selection_guide": {
+    "description": "Decision tree for choosing the right pathfinding strategy based on task type.",
+    "decision_rules": [
+      {
+        "condition": "Agent knows exact start and target nodes",
+        "strategies": ["PF-01 (weight)", "PF-07 (failure-aware)"],
+        "prefer": "PF-07 if route history exists, PF-01 otherwise"
+      },
+      {
+        "condition": "Agent needs to find a node of a specific TYPE (any SRC, any monitoring SCR)",
+        "strategies": ["PF-05 (A* goal-directed)"],
+        "reason": "48.5% fewer nodes explored vs BFS with equal path quality"
+      },
+      {
+        "condition": "Agent needs to visit multiple nodes in one task",
+        "strategies": ["PF-06 (multi-stop)"],
+        "reason": "17.7% avg hop savings over naive ordering"
+      },
+      {
+        "condition": "Agent needs semantically coherent paths (knowledge enrichment, documentation)",
+        "strategies": ["PF-03 (tag-coherent)", "PF-04 (hybrid with tag-heavy tuning)"],
+        "prefer": "PF-04 with alpha=(0.2,0.2,0.6) for best composite score"
+      },
+      {
+        "condition": "Agent is exploring or auditing the network",
+        "strategies": ["PF-08 (exploration)"],
+        "reason": "Biases toward unvisited nodes, maximizes discovery"
+      },
+      {
+        "condition": "Agent needs highest reliability for production task",
+        "strategies": ["PF-07 (failure-aware)"],
+        "reason": "Uses historical success rates to avoid risky edges"
+      },
+      {
+        "condition": "Agent wants to follow designed/canonical paths",
+        "strategies": ["PF-02 (strength-guided)"],
+        "reason": "Follows primary > supporting > related strength hierarchy"
+      }
+    ]
+  },
+
+  "operations": {
+    "find_path": {
+      "id": "OP-01",
+      "title": "Find Optimal Path Between Two Nodes",
+      "steps": [
+        {"step": 1, "action": "Identify start node and target node"},
+        {"step": 2, "action": "Select strategy using the decision rules above"},
+        {"step": 3, "action": "Execute pathfinding via pointer_query.py or inline BFS"},
+        {"step": 4, "action": "Log the route via route_tracker.py"},
+        {"step": 5, "action": "If path not found, try PF-01 (weight) as fallback"}
+      ]
+    },
+    "find_resource": {
+      "id": "OP-02",
+      "title": "Find a Resource by Type or Tags",
+      "steps": [
+        {"step": 1, "action": "Determine target type (SCR, SRC, KB, wiki) or required tags"},
+        {"step": 2, "action": "Use PF-05 (A* goal-directed) with domain heuristic"},
+        {"step": 3, "action": "If tag-specific, use PF-03 (tag-coherent) or PF-04 (hybrid)"},
+        {"step": 4, "action": "Log the route and rate outcome (success/partial/failure)"}
+      ]
+    },
+    "plan_workflow": {
+      "id": "OP-03",
+      "title": "Plan Multi-Stop Workflow Route",
+      "steps": [
+        {"step": 1, "action": "List all nodes the agent needs to visit"},
+        {"step": 2, "action": "Use PF-06 (multi-stop) to optimize visit order"},
+        {"step": 3, "action": "Execute each sub-route, logging hops"},
+        {"step": 4, "action": "If a sub-route fails, use PF-01 fallback for that segment"}
+      ]
+    },
+    "explore_network": {
+      "id": "OP-04",
+      "title": "Explore Under-Visited Network Regions",
+      "steps": [
+        {"step": 1, "action": "Use PF-08 (exploration) from current SOP"},
+        {"step": 2, "action": "Record all newly discovered nodes"},
+        {"step": 3, "action": "If useful resources found, recommend new pointer edges"},
+        {"step": 4, "action": "Log exploration route with discovery metrics"}
+      ]
+    },
+    "reliable_routing": {
+      "id": "OP-05",
+      "title": "Route with Maximum Reliability",
+      "steps": [
+        {"step": 1, "action": "Check if route history exists (route_log.jsonl)"},
+        {"step": 2, "action": "Use PF-07 (failure-aware) if history available"},
+        {"step": 3, "action": "If no history, use PF-02 (strength-guided) as fallback"},
+        {"step": 4, "action": "Log outcome to build reliability data for future routing"}
+      ]
+    }
+  },
+
+  "empirical_findings": {
+    "description": "Key findings from 185+ pathfinding tests across 8 strategies",
+    "strategy_rankings": {
+      "by_success_rate": ["weight (80%)", "hybrid (75%)", "tag (45%)"],
+      "by_efficiency": ["A* (48.5% fewer nodes)", "multi-stop (17.7% hop savings)"],
+      "by_coherence": ["tag (0.45)", "hybrid (0.39)", "weight (0.37)"],
+      "by_reliability": ["failure-aware (avoids 4 risky edges)", "strength-guided"]
+    },
+    "network_characteristics": {
+      "diameter": 4,
+      "avg_path_length": 1.5,
+      "components": 1,
+      "bridge_edges": 0,
+      "primary_path_reliability": "100%",
+      "weight_1_edges": "52.4% of network"
+    },
+    "known_traps": [
+      "KB-0004 <-> SCR-0007 cycle attracts low-weight traversals",
+      "All SOP pairs have 2-hop cycles (oscillation risk)",
+      "SCR->wiki transitions fail 100% of the time",
+      "Tag routing gets trapped in high-coherence clusters"
+    ],
+    "best_practices": [
+      "Always log routes via route_tracker.py — data improves future routing",
+      "Start with PF-01 (weight) for unknown tasks — 80% baseline success",
+      "Use PF-05 (A*) when searching by type — saves 48.5% exploration effort",
+      "For multi-stop tasks, always optimize order with PF-06 — saves 17.7% hops",
+      "Avoid following weight-1 edges unless exploring — they are usually tangential",
+      "Check for network traps before deep traversals — avoid KB-0004/SCR-0007 cycle"
+    ]
+  },
+
+  "reference": {
+    "pointer_query": "storage/coordination/pointer_query.py",
+    "route_tracker": "storage/coordination/route_tracker.py",
+    "pointer_network": "storage/pointer-network.json",
+    "pathfinding_reports": "storage/pointer-routes/pathfind_p*.json",
+    "related_sops": ["SOP-028 (pointer network operations)", "SOP-029 (agent route tracking)"]
+  }
+}

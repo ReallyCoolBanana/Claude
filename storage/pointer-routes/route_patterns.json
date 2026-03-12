@@ -1,272 +1,335 @@
 {
-  "generated": "2026-03-12T22:53:33.847498Z",
-  "total_patterns": 19,
+  "generated": "2026-03-12T23:20:33.624543Z",
+  "total_patterns": 18,
   "task_patterns": {
-    "stress-test": {
-      "total_attempts": 6,
-      "success_count": 4,
-      "success_rate": 66.7,
-      "avg_weight_on_success": 9.8,
-      "common_routes": [
-        {
-          "route": "SOP-015 -> SCR-0036 -> SCR-0037 -> KB-0042",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-015 -> SOP-014 -> SCR-0019",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-027 -> SCR-0043 -> SRC-0006",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        }
-      ],
-      "recommended_route": "SOP-015 -> SCR-0036 -> SCR-0037 -> KB-0042",
-      "strengths_on_success": {
-        "unknown": 2,
-        "unclassified": 2,
-        "supporting": 1,
-        "related": 1,
-        "primary": 3
-      }
-    },
-    "code-review": {
-      "total_attempts": 5,
-      "success_count": 4,
-      "success_rate": 80.0,
-      "avg_weight_on_success": 11.8,
-      "common_routes": [
-        {
-          "route": "SOP-011 -> SCR-0019 -> KB-0025",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-011 -> SOP-014 -> SOP-012",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-025 -> SCR-0043 -> KB-0045",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        }
-      ],
-      "recommended_route": "SOP-011 -> SCR-0019 -> KB-0025",
-      "strengths_on_success": {
-        "primary": 3,
-        "unclassified": 3,
-        "supporting": 2
-      }
-    },
-    "deployment": {
-      "total_attempts": 5,
-      "success_count": 3,
-      "success_rate": 60.0,
-      "avg_weight_on_success": 15.7,
-      "common_routes": [
-        {
-          "route": "SOP-027 -> SCR-0043 -> SRC-0006",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-027 -> SCR-0044 -> SRC-0008",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-020 -> TEAM-0025 -> SCR-0030",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        }
-      ],
-      "recommended_route": "SOP-027 -> SCR-0043 -> SRC-0006",
-      "strengths_on_success": {
-        "primary": 5,
-        "unclassified": 1
-      }
-    },
-    "debugging": {
-      "total_attempts": 6,
-      "success_count": 3,
+    "task1": {
+      "total_attempts": 2,
+      "success_count": 1,
       "success_rate": 50.0,
-      "avg_weight_on_success": 10.3,
+      "avg_weight_on_success": 0.0,
       "common_routes": [
         {
-          "route": "SOP-014 -> SOP-011 -> SCR-0019",
+          "route": "",
           "count": 1,
           "score": 1.0,
           "route_success_rate": 100.0
         },
         {
-          "route": "SOP-014 -> SOP-012 -> SCR-0030",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-025 -> SOP-026 -> SOP-027",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        }
-      ],
-      "recommended_route": "SOP-014 -> SOP-011 -> SCR-0019",
-      "strengths_on_success": {
-        "supporting": 5,
-        "primary": 1
-      }
-    },
-    "data-analysis": {
-      "total_attempts": 5,
-      "success_count": 4,
-      "success_rate": 80.0,
-      "avg_weight_on_success": 15.0,
-      "common_routes": [
-        {
-          "route": "SOP-020 -> KB-0025 -> KB-0024",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-020 -> TEAM-0025 -> SCR-0033",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-025 -> SCR-0043 -> KB-0045",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        }
-      ],
-      "recommended_route": "SOP-020 -> KB-0025 -> KB-0024",
-      "strengths_on_success": {
-        "unclassified": 3,
-        "primary": 5
-      }
-    },
-    "documentation": {
-      "total_attempts": 4,
-      "success_count": 3,
-      "success_rate": 75.0,
-      "avg_weight_on_success": 12.0,
-      "common_routes": [
-        {
-          "route": "SOP-013 -> SOP-G01 -> SOP-012",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-012 -> SOP-G01 -> SOP-013",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-025 -> SOP-026 -> SOP-027",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        }
-      ],
-      "recommended_route": "SOP-013 -> SOP-G01 -> SOP-012",
-      "strengths_on_success": {
-        "supporting": 6
-      }
-    },
-    "monitoring": {
-      "total_attempts": 5,
-      "success_count": 2,
-      "success_rate": 40.0,
-      "avg_weight_on_success": 15.0,
-      "common_routes": [
-        {
-          "route": "SOP-026 -> SCR-0043 -> SRC-0006",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-026 -> SOP-025 -> SCR-0043",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-027 -> SCR-0044 -> KB-0046",
+          "route": "A -> B",
           "count": 1,
           "score": 0.0,
           "route_success_rate": 0.0
         }
       ],
-      "recommended_route": "SOP-026 -> SCR-0043 -> SRC-0006",
-      "strengths_on_success": {
-        "primary": 3,
-        "supporting": 1
-      }
+      "recommended_route": "",
+      "strengths_on_success": {}
     },
-    "coordination": {
-      "total_attempts": 4,
-      "success_count": 3,
-      "success_rate": 75.0,
-      "avg_weight_on_success": 15.0,
+    "bug-hunting": {
+      "total_attempts": 5,
+      "success_count": 5,
+      "success_rate": 100.0,
+      "avg_weight_on_success": 1.0,
       "common_routes": [
         {
-          "route": "SOP-015 -> SOP-012 -> SCR-0019",
+          "route": "pointer-network -> SOP-028",
+          "count": 2,
+          "score": 2.0,
+          "route_success_rate": 100.0
+        },
+        {
+          "route": "SCR-0057 -> SOP-029",
           "count": 1,
           "score": 1.0,
           "route_success_rate": 100.0
         },
         {
-          "route": "SOP-014 -> SOP-013 -> SOP-G02",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-027 -> SCR-0043 -> KB-0045",
+          "route": "SOP-028 -> router.json",
           "count": 1,
           "score": 1.0,
           "route_success_rate": 100.0
         }
       ],
-      "recommended_route": "SOP-015 -> SOP-012 -> SCR-0019",
+      "recommended_route": "pointer-network -> SOP-028",
       "strengths_on_success": {
-        "supporting": 3,
-        "primary": 3
+        "unknown": 4,
+        "supporting": 1
       }
     },
-    "weight-routing": {
-      "total_attempts": 20,
-      "success_count": 16,
-      "success_rate": 80.0,
-      "avg_weight_on_success": 44.9,
+    "": {
+      "total_attempts": 1,
+      "success_count": 1,
+      "success_rate": 100.0,
+      "avg_weight_on_success": 0.0,
       "common_routes": [
         {
-          "route": "SOP-011 -> SOP-014 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> SOP-028 -> SOP-029 -> SCR-0057",
+          "route": "A -> B",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        }
+      ],
+      "recommended_route": "A -> B",
+      "strengths_on_success": {
+        "unknown": 1
+      }
+    },
+    "test": {
+      "total_attempts": 2,
+      "success_count": 2,
+      "success_rate": 100.0,
+      "avg_weight_on_success": 0.0,
+      "common_routes": [
+        {
+          "route": "SINGLE-NODE",
           "count": 1,
           "score": 1.0,
           "route_success_rate": 100.0
         },
         {
-          "route": "SOP-011 -> SOP-014 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> SOP-028 -> SOP-029 -> SCR-0057 -> SCR-0032 -> TEAM-0025 -> SCR-0033 -> SRC-0050",
+          "route": "A -> B",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        }
+      ],
+      "recommended_route": "SINGLE-NODE",
+      "strengths_on_success": {
+        "unknown": 1
+      }
+    },
+    "tool-research": {
+      "total_attempts": 1,
+      "success_count": 1,
+      "success_rate": 100.0,
+      "avg_weight_on_success": 7.0,
+      "common_routes": [
+        {
+          "route": "SOP-029 -> SCR-0057 -> pointer-network",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        }
+      ],
+      "recommended_route": "SOP-029 -> SCR-0057 -> pointer-network",
+      "strengths_on_success": {
+        "primary": 1,
+        "unknown": 1
+      }
+    },
+    "workflow-research": {
+      "total_attempts": 1,
+      "success_count": 1,
+      "success_rate": 100.0,
+      "avg_weight_on_success": 7.0,
+      "common_routes": [
+        {
+          "route": "SOP-029 -> SOP-012 -> SOP-028",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        }
+      ],
+      "recommended_route": "SOP-029 -> SOP-012 -> SOP-028",
+      "strengths_on_success": {
+        "primary": 1,
+        "unknown": 1
+      }
+    },
+    "exploration-pathfinding": {
+      "total_attempts": 20,
+      "success_count": 20,
+      "success_rate": 100.0,
+      "avg_weight_on_success": 53.1,
+      "common_routes": [
+        {
+          "route": "SOP-011 -> SOP-014 -> SOP-013 -> SOP-G01 -> KB-0023 -> TEAM-0024 -> KB-0022 -> TEAM-0023 -> SOP-G03",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        },
+        {
+          "route": "SOP-012 -> SOP-015 -> SOP-016 -> SOP-013 -> SOP-G02 -> TEAM-0022 -> KB-0016 -> TEAM-0018 -> KB-0015",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        },
+        {
+          "route": "SOP-013 -> SOP-G01 -> KB-0026 -> KB-0024 -> TEAM-0025 -> SCR-0033 -> SRC-0050 -> SCR-0005 -> TEAM-0005",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        }
+      ],
+      "recommended_route": "SOP-011 -> SOP-014 -> SOP-013 -> SOP-G01 -> KB-0023 -> TEAM-0024 -> KB-0022 -> TEAM-0023 -> SOP-G03",
+      "strengths_on_success": {
+        "supporting": 31,
+        "unclassified": 54,
+        "primary": 65,
+        "related": 9
+      }
+    },
+    "multistop-pathfinding": {
+      "total_attempts": 28,
+      "success_count": 28,
+      "success_rate": 100.0,
+      "avg_weight_on_success": 22.7,
+      "common_routes": [
+        {
+          "route": "SCR-0043 -> SOP-027 -> SCR-0044 -> TEAM-0014 -> SRC-0001",
+          "count": 2,
+          "score": 2.0,
+          "route_success_rate": 100.0
+        },
+        {
+          "route": "SCR-0057 -> SCR-0032 -> SOP-012 -> SCR-0019",
+          "count": 2,
+          "score": 2.0,
+          "route_success_rate": 100.0
+        },
+        {
+          "route": "SOP-011 -> SOP-015 -> SOP-028 -> SOP-029 -> SOP-012",
+          "count": 2,
+          "score": 2.0,
+          "route_success_rate": 100.0
+        }
+      ],
+      "recommended_route": "SCR-0043 -> SOP-027 -> SCR-0044 -> TEAM-0014 -> SRC-0001",
+      "strengths_on_success": {
+        "primary": 35,
+        "unclassified": 70,
+        "supporting": 24,
+        "related": 4
+      }
+    },
+    "auto-classify-design": {
+      "total_attempts": 1,
+      "success_count": 1,
+      "success_rate": 100.0,
+      "avg_weight_on_success": 0.0,
+      "common_routes": [
+        {
+          "route": "SOP-028 -> pointer-network",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        }
+      ],
+      "recommended_route": "SOP-028 -> pointer-network",
+      "strengths_on_success": {
+        "unknown": 1
+      }
+    },
+    "algorithm-research": {
+      "total_attempts": 1,
+      "success_count": 1,
+      "success_rate": 100.0,
+      "avg_weight_on_success": 0.0,
+      "common_routes": [
+        {
+          "route": "SOP-028 -> pointer-network",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        }
+      ],
+      "recommended_route": "SOP-028 -> pointer-network",
+      "strengths_on_success": {
+        "unknown": 1
+      }
+    },
+    "goal-pathfinding": {
+      "total_attempts": 20,
+      "success_count": 20,
+      "success_rate": 100.0,
+      "avg_weight_on_success": 8.9,
+      "common_routes": [
+        {
+          "route": "SOP-011 -> SCR-0019 -> SRC-0050",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        },
+        {
+          "route": "SOP-017 -> SCR-0023 -> SRC-0001",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        },
+        {
+          "route": "SOP-023 -> SCR-0023 -> SRC-0001",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        }
+      ],
+      "recommended_route": "SOP-011 -> SCR-0019 -> SRC-0050",
+      "strengths_on_success": {
+        "primary": 15,
+        "supporting": 4,
+        "related": 3,
+        "unclassified": 8
+      }
+    },
+    "usecase-research": {
+      "total_attempts": 1,
+      "success_count": 1,
+      "success_rate": 100.0,
+      "avg_weight_on_success": 9.0,
+      "common_routes": [
+        {
+          "route": "SOP-028 -> SOP-029 -> pointer-network",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        }
+      ],
+      "recommended_route": "SOP-028 -> SOP-029 -> pointer-network",
+      "strengths_on_success": {
+        "primary": 1,
+        "unknown": 1
+      }
+    },
+    "failure-aware-pathfinding": {
+      "total_attempts": 20,
+      "success_count": 20,
+      "success_rate": 100.0,
+      "avg_weight_on_success": 19.9,
+      "common_routes": [
+        {
+          "route": "KB-0039 -> KB-0018 -> KB-0021",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        },
+        {
+          "route": "KB-0034 -> KB-0033 -> SCR-0041 -> TEAM-0026 -> KB-0009",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        },
+        {
+          "route": "wiki-ai:Cognitive_computing -> SRC-0033 -> SCR-0005 -> TEAM-0005",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        }
+      ],
+      "recommended_route": "KB-0039 -> KB-0018 -> KB-0021",
+      "strengths_on_success": {
+        "unclassified": 34,
+        "primary": 25,
+        "related": 11,
+        "supporting": 3
+      }
+    },
+    "weight-pathfinding": {
+      "total_attempts": 20,
+      "success_count": 20,
+      "success_rate": 100.0,
+      "avg_weight_on_success": 91.0,
+      "common_routes": [
+        {
+          "route": "SOP-011 -> SOP-014 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> SOP-028 -> SOP-029 -> SCR-0057 -> SCR-0032 -> TEAM-0025 -> SCR-0033 -> SRC-0050 -> SCR-0005 -> TEAM-0005 -> SCR-0043",
           "count": 1,
           "score": 1.0,
           "route_success_rate": 100.0
@@ -276,324 +339,108 @@
           "count": 1,
           "score": 1.0,
           "route_success_rate": 100.0
-        }
-      ],
-      "recommended_route": "SOP-011 -> SOP-014 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> SOP-028 -> SOP-029 -> SCR-0057",
-      "strengths_on_success": {
-        "supporting": 45,
-        "primary": 53,
-        "unclassified": 8
-      }
-    },
-    "tag-routing": {
-      "total_attempts": 20,
-      "success_count": 9,
-      "success_rate": 45.0,
-      "avg_weight_on_success": 21.9,
-      "common_routes": [
-        {
-          "route": "SOP-011 -> SCR-0019",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
         },
         {
-          "route": "SOP-012 -> SCR-0019",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-014 -> SOP-013 -> KB-0025 -> TEAM-0025 -> SOP-022 -> SCR-0033",
+          "route": "SOP-027 -> SCR-0043 -> KB-0045 -> KB-0044 -> KB-0046 -> SCR-0044 -> SRC-0006 -> SCR-0007 -> SCR-0009 -> SRC-0003 -> SCR-0008 -> SCR-0011 -> SCR-0006 -> TEAM-0003 -> SCR-0001 -> SRC-0001",
           "count": 1,
           "score": 1.0,
           "route_success_rate": 100.0
         }
       ],
-      "recommended_route": "SOP-011 -> SCR-0019",
+      "recommended_route": "SOP-011 -> SOP-014 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> SOP-028 -> SOP-029 -> SCR-0057 -> SCR-0032 -> TEAM-0025 -> SCR-0033 -> SRC-0050 -> SCR-0005 -> TEAM-0005 -> SCR-0043",
       "strengths_on_success": {
-        "primary": 7,
-        "supporting": 12,
-        "unclassified": 25,
-        "related": 8
+        "supporting": 57,
+        "primary": 135,
+        "related": 13,
+        "unclassified": 58
       }
     },
-    "hybrid-routing": {
-      "total_attempts": 20,
-      "success_count": 15,
-      "success_rate": 75.0,
-      "avg_weight_on_success": 46.9,
-      "common_routes": [
-        {
-          "route": "SOP-011 -> SOP-014 -> SOP-012 -> SOP-029 -> SOP-028 -> SOP-015 -> SOP-016 -> SOP-013 -> SOP-G01 -> TEAM-0025 -> SCR-0030",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-011 -> SOP-014 -> SOP-012 -> SOP-029 -> SOP-028 -> SOP-015 -> SOP-016 -> SOP-013 -> SOP-G01 -> TEAM-0025 -> SCR-0030 -> SOP-022 -> SOP-023 -> SCR-0023 -> SRC-0001",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-012 -> SOP-029 -> SOP-028 -> SOP-015 -> SOP-011 -> SOP-014 -> SOP-013 -> SOP-G01 -> TEAM-0025 -> SCR-0030",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        }
-      ],
-      "recommended_route": "SOP-011 -> SOP-014 -> SOP-012 -> SOP-029 -> SOP-028 -> SOP-015 -> SOP-016 -> SOP-013 -> SOP-G01 -> TEAM-0025 -> SCR-0030",
-      "strengths_on_success": {
-        "supporting": 41,
-        "unclassified": 21,
-        "primary": 43,
-        "related": 2
-      }
-    },
-    "adversarial-routing": {
-      "total_attempts": 15,
-      "success_count": 0,
-      "success_rate": 0.0,
+    "versioning-design": {
+      "total_attempts": 1,
+      "success_count": 1,
+      "success_rate": 100.0,
       "avg_weight_on_success": 0.0,
       "common_routes": [
         {
-          "route": "SOP-014 -> KB-0009 -> SCR-0003 -> KB-0004 -> SCR-0007 -> KB-0004",
+          "route": "SOP-028 -> pointer-network",
           "count": 1,
-          "score": 0.0,
-          "route_success_rate": 0.0
-        },
-        {
-          "route": "SOP-015 -> KB-0001 -> SCR-0001 -> KB-0004 -> SCR-0007 -> KB-0004",
-          "count": 1,
-          "score": 0.0,
-          "route_success_rate": 0.0
-        },
-        {
-          "route": "SOP-019 -> KB-0009 -> SCR-0003 -> KB-0004 -> SCR-0007 -> KB-0004",
-          "count": 1,
-          "score": 0.0,
-          "route_success_rate": 0.0
+          "score": 1.0,
+          "route_success_rate": 100.0
         }
       ],
-      "recommended_route": "SOP-014 -> KB-0009 -> SCR-0003 -> KB-0004 -> SCR-0007 -> KB-0004",
-      "strengths_on_success": {}
+      "recommended_route": "SOP-028 -> pointer-network",
+      "strengths_on_success": {
+        "unknown": 1
+      }
     },
-    "graph-analysis": {
+    "hybrid-pathfinding": {
       "total_attempts": 10,
       "success_count": 10,
       "success_rate": 100.0,
-      "avg_weight_on_success": 4.3,
+      "avg_weight_on_success": 8.6,
       "common_routes": [
         {
-          "route": "SRC-0044 -> SCR-0007 -> SOP-017 -> KB-0033 -> KB-0037",
+          "route": "SOP-011 -> SCR-0033",
           "count": 1,
           "score": 1.0,
           "route_success_rate": 100.0
         },
         {
-          "route": "SRC-0044 -> SCR-0007 -> SOP-017 -> KB-0033 -> KB-0034",
+          "route": "SOP-012 -> KB-0023",
           "count": 1,
           "score": 1.0,
           "route_success_rate": 100.0
         },
         {
-          "route": "SRC-0044 -> SCR-0007 -> SOP-017 -> KB-0033 -> KB-0030",
+          "route": "SOP-013 -> KB-0022 -> TEAM-0022",
           "count": 1,
           "score": 1.0,
           "route_success_rate": 100.0
         }
       ],
-      "recommended_route": "SRC-0044 -> SCR-0007 -> SOP-017 -> KB-0033 -> KB-0037",
+      "recommended_route": "SOP-011 -> SCR-0033",
       "strengths_on_success": {
-        "unclassified": 12,
-        "unknown": 10,
-        "supporting": 2
+        "related": 2,
+        "unclassified": 8,
+        "primary": 8
       }
     },
-    "data-gathering-stress": {
-      "total_attempts": 15,
-      "success_count": 8,
-      "success_rate": 53.3,
-      "avg_weight_on_success": 10.9,
-      "common_routes": [
-        {
-          "route": "SOP-011 -> SOP-015 -> SCR-0034 -> SRC-0006",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-014 -> SOP-015 -> SCR-0034 -> SRC-0006",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-025 -> KB-0002 -> SCR-0005 -> SRC-0051",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        }
-      ],
-      "recommended_route": "SOP-011 -> SOP-015 -> SCR-0034 -> SRC-0006",
-      "strengths_on_success": {
-        "supporting": 8,
-        "related": 6,
-        "unclassified": 5,
-        "primary": 3
-      }
-    },
-    "research-workflow": {
-      "total_attempts": 3,
-      "success_count": 3,
+    "query-api-design": {
+      "total_attempts": 1,
+      "success_count": 1,
       "success_rate": 100.0,
-      "avg_weight_on_success": 13.0,
-      "common_routes": [
-        {
-          "route": "SOP-011 -> KB-0025 -> SCR-0033 -> SRC-0050",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-014 -> KB-0025 -> SCR-0033 -> SRC-0050",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-017 -> KB-0004 -> SCR-0007 -> SRC-0006",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        }
-      ],
-      "recommended_route": "SOP-011 -> KB-0025 -> SCR-0033 -> SRC-0050",
-      "strengths_on_success": {
-        "unclassified": 6,
-        "supporting": 2,
-        "primary": 1
-      }
-    },
-    "build-workflow": {
-      "total_attempts": 3,
-      "success_count": 2,
-      "success_rate": 66.7,
-      "avg_weight_on_success": 11.0,
-      "common_routes": [
-        {
-          "route": "SOP-012 -> SCR-0019 -> SCR-0020 -> SOP-015",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-015 -> SCR-0012 -> SCR-0020 -> SOP-015",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "SOP-018 -> SCR-0004",
-          "count": 1,
-          "score": 0.0,
-          "route_success_rate": 0.0
-        }
-      ],
-      "recommended_route": "SOP-012 -> SCR-0019 -> SCR-0020 -> SOP-015",
-      "strengths_on_success": {
-        "primary": 2,
-        "unclassified": 2,
-        "related": 2
-      }
-    },
-    "enrichment-workflow": {
-      "total_attempts": 3,
-      "success_count": 0,
-      "success_rate": 0.0,
       "avg_weight_on_success": 0.0,
       "common_routes": [
         {
-          "route": "SOP-025 -> SCR-0043",
+          "route": "SOP-028 -> SCR-0057 -> pointer-network",
           "count": 1,
-          "score": 0.0,
-          "route_success_rate": 0.0
-        },
-        {
-          "route": "SOP-026 -> SCR-0043",
-          "count": 1,
-          "score": 0.0,
-          "route_success_rate": 0.0
-        },
-        {
-          "route": "SOP-027 -> SCR-0043",
-          "count": 1,
-          "score": 0.0,
-          "route_success_rate": 0.0
+          "score": 1.0,
+          "route_success_rate": 100.0
         }
       ],
-      "recommended_route": "SOP-025 -> SCR-0043",
-      "strengths_on_success": {}
+      "recommended_route": "SOP-028 -> SCR-0057 -> pointer-network",
+      "strengths_on_success": {
+        "unknown": 2
+      }
     },
-    "discovery-workflow": {
-      "total_attempts": 3,
-      "success_count": 3,
+    "monitoring-design": {
+      "total_attempts": 1,
+      "success_count": 1,
       "success_rate": 100.0,
       "avg_weight_on_success": 6.0,
       "common_routes": [
         {
-          "route": "TEAM-0004 -> SOP-017 -> SCR-0023",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "TEAM-0006 -> SOP-015 -> SCR-0012",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
-        {
-          "route": "TEAM-0008 -> SOP-G02 -> SCR-0019",
+          "route": "SOP-012 -> SOP-029 -> pointer-network",
           "count": 1,
           "score": 1.0,
           "route_success_rate": 100.0
         }
       ],
-      "recommended_route": "TEAM-0004 -> SOP-017 -> SCR-0023",
+      "recommended_route": "SOP-012 -> SOP-029 -> pointer-network",
       "strengths_on_success": {
-        "unclassified": 3,
-        "primary": 3
+        "unclassified": 1,
+        "unknown": 1
       }
-    },
-    "fullstack-workflow": {
-      "total_attempts": 3,
-      "success_count": 0,
-      "success_rate": 0.0,
-      "avg_weight_on_success": 0.0,
-      "common_routes": [
-        {
-          "route": "SOP-013 -> SCR-0019 -> SRC-0050 -> KB-0010 -> TEAM-0014",
-          "count": 1,
-          "score": 0.0,
-          "route_success_rate": 0.0
-        },
-        {
-          "route": "SOP-016 -> SCR-0031 -> SRC-0050 -> KB-0010 -> TEAM-0014",
-          "count": 1,
-          "score": 0.0,
-          "route_success_rate": 0.0
-        },
-        {
-          "route": "SOP-019 -> SCR-0033 -> SRC-0050 -> KB-0010 -> TEAM-0014",
-          "count": 1,
-          "score": 0.0,
-          "route_success_rate": 0.0
-        }
-      ],
-      "recommended_route": "SOP-013 -> SCR-0019 -> SRC-0050 -> KB-0010 -> TEAM-0014",
-      "strengths_on_success": {}
     }
   }
 }
