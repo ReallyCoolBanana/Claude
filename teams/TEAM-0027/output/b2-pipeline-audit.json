@@ -1,0 +1,182 @@
+{
+  "metadata": {
+    "team": "TEAM-0027",
+    "agent": "b2-pipeline-audit",
+    "task": "vulkan-error-review",
+    "date": "2026-03-12",
+    "focus_area": "Graphics pipeline state, render pass configuration",
+    "files_reviewed": [
+      "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "vulkan-orbiting-spheres/src/pipeline.h",
+      "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "vulkan-orbiting-spheres/src/vulkan_app.h",
+      "vulkan-orbiting-spheres/src/types.h",
+      "vulkan-orbiting-spheres/src/sphere.cpp",
+      "vulkan-orbiting-spheres/src/camera.cpp",
+      "vulkan-orbiting-spheres/shaders/shader.vert",
+      "vulkan-orbiting-spheres/shaders/shader.frag"
+    ],
+    "completion_status": "complete"
+  },
+  "findings": [
+    {
+      "id": "PERF-VK-001",
+      "category": "performance",
+      "severity": "low",
+      "title": "No pipeline cache used for graphics pipeline creation",
+      "file": "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "line": 163,
+      "description": "vkCreateGraphicsPipelines is called with VK_NULL_HANDLE for the pipeline cache parameter. A pipeline cache allows Vulkan to reuse compilation results across pipeline creations and even across application runs if serialized to disk, reducing startup time.",
+      "evidence": "vkCreateGraphicsPipelines(config.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &result.pipeline)",
+      "recommendation": "Create a VkPipelineCache object and pass it to vkCreateGraphicsPipelines. Optionally serialize/deserialize the cache to disk for faster startup on subsequent runs.",
+      "vulkan_spec_reference": "Chapter 10.6 - Pipeline Cache"
+    },
+    {
+      "id": "PERF-VK-002",
+      "category": "performance",
+      "severity": "low",
+      "title": "PipelineConfig.extent is passed but never used",
+      "file": "vulkan-orbiting-spheres/src/pipeline.h",
+      "line": 15,
+      "description": "The PipelineConfig struct contains an 'extent' field (VkExtent2D) that is populated in vulkan_app.cpp line 368 but never referenced inside createGraphicsPipeline(). Since viewport and scissor are dynamic state, the extent is indeed not needed, but carrying unused data in the config is dead code.",
+      "evidence": "struct PipelineConfig { ... VkExtent2D extent; }; // never read in createGraphicsPipeline()",
+      "recommendation": "Remove the 'extent' field from PipelineConfig and the assignment at vulkan_app.cpp:368 to avoid confusion.",
+      "vulkan_spec_reference": ""
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-003",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "Depth format hardcoded without physical device format support check",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.h",
+      "line": 63,
+      "description": "The depth format is hardcoded to VK_FORMAT_D32_SFLOAT without querying the physical device for format support via vkGetPhysicalDeviceFormatProperties. While D32_SFLOAT is very widely supported, the Vulkan specification does not guarantee it. The render pass uses this format for the depth attachment (vulkan_app.cpp:281), the depth image is created with it (vulkan_app.cpp:241), and the pipeline's depth/stencil state relies on it. A format support mismatch would cause image creation or render pass incompatibility failures.",
+      "evidence": "VkFormat m_depthFormat = VK_FORMAT_D32_SFLOAT;",
+      "recommendation": "Query vkGetPhysicalDeviceFormatProperties for VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, and VK_FORMAT_D24_UNORM_S8_UINT and select the first supported format with VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT.",
+      "vulkan_spec_reference": "Chapter 43.1 - Required Format Support"
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-004",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "vmaCreateImage return value not checked for depth image creation",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 252,
+      "description": "The call to vmaCreateImage for the depth image does not check its return value. If the allocation fails (out of memory, unsupported format), the application will proceed with invalid handles, likely crashing later during render pass begin or framebuffer creation.",
+      "evidence": "vmaCreateImage(m_allocator, &imgInfo, &allocInfo, &m_depthImage.image, &m_depthImage.allocation, nullptr);",
+      "recommendation": "Check the VkResult returned by vmaCreateImage and throw a descriptive error on failure.",
+      "vulkan_spec_reference": ""
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-005",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "vkCreateImageView return value not checked for depth image view",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 266,
+      "description": "The call to vkCreateImageView for the depth image view does not check its return value. Failure would leave m_depthImage.view as VK_NULL_HANDLE, causing framebuffer creation to fail silently or crash.",
+      "evidence": "vkCreateImageView(m_device, &viewInfo, nullptr, &m_depthImage.view);",
+      "recommendation": "Check the VkResult and throw on failure, consistent with other Vulkan object creation calls in this file.",
+      "vulkan_spec_reference": ""
+    },
+    {
+      "id": "DESIGN-VK-006",
+      "category": "design",
+      "severity": "medium",
+      "title": "Pipeline not recreated on swapchain recreation despite format dependency",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 662,
+      "description": "When the swapchain is recreated (recreateSwapchain), the render pass and graphics pipeline are NOT recreated. The render pass was created with m_swapchainFormat and m_depthFormat. If the new swapchain has a different image format (which vk-bootstrap may select), the existing render pass becomes incompatible with the new framebuffers. While the swapchain builder requests a specific format, it is not guaranteed to get it.",
+      "evidence": "void VulkanApp::recreateSwapchain() { ... cleanupSwapchain(); createSwapchain(); createDepthResources(); createFramebuffers(); } // No createRenderPass() or createGraphicsPipeline()",
+      "recommendation": "Either recreate the render pass and pipeline on swapchain recreation, or verify that the new swapchain format matches the old one and assert/error if it differs.",
+      "vulkan_spec_reference": "Chapter 8.1 - Render Pass Compatibility"
+    },
+    {
+      "id": "BUG-VK-007",
+      "category": "bug",
+      "severity": "low",
+      "title": "Command buffer usage flag ONE_TIME_SUBMIT used with reusable command buffers",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 578,
+      "description": "The command buffer begin info uses VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT for command buffers that are reset and re-recorded every frame. While not technically incorrect (the buffer IS only submitted once per recording), this flag is typically used for truly transient command buffers. The reset-and-rerecord pattern works correctly with this flag, but omitting it or using 0 would be more semantically appropriate and may allow driver optimizations for reusable command buffers.",
+      "evidence": "beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;",
+      "recommendation": "This is functionally correct since the buffer is reset before each re-recording. Consider using 0 for flags if the driver can optimize for the reuse pattern, though ONE_TIME_SUBMIT may also hint the driver to optimize for single submission, which is also valid here.",
+      "vulkan_spec_reference": "Chapter 6.3 - Command Buffer Recording"
+    },
+    {
+      "id": "PERF-VK-008",
+      "category": "performance",
+      "severity": "low",
+      "title": "Shader computes inverse-transpose of model matrix in vertex shader",
+      "file": "vulkan-orbiting-spheres/shaders/shader.vert",
+      "line": 27,
+      "description": "The vertex shader computes mat3(transpose(inverse(push.model))) for normal transformation on every vertex invocation. The inverse() function in GLSL is computationally expensive. For the orbiting spheres use case, the model matrices contain only rotations and translations (no non-uniform scaling), so the normal matrix equals mat3(push.model) since rotation matrices are orthogonal (inverse = transpose, so transpose(inverse) = identity transform on the rotation part).",
+      "evidence": "fragNormal = mat3(transpose(inverse(push.model))) * inNormal;",
+      "recommendation": "Since the model transforms only use rotate and translate (no scale or non-uniform scale), simplify to fragNormal = mat3(push.model) * inNormal. If non-uniform scaling is added later, precompute the normal matrix on the CPU and pass it via push constants or UBO.",
+      "vulkan_spec_reference": ""
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-009",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "Shader file read does not validate SPIR-V alignment requirement",
+      "file": "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "line": 22,
+      "description": "The shader code buffer is read into a std::vector<char> and then reinterpret_cast to uint32_t* for pCode. The Vulkan spec requires pCode to be a valid pointer to an array of uint32_t values. While std::vector typically allocates memory aligned to at least the size of the element (1 byte for char), the data pointer may not be 4-byte aligned on all platforms/allocators, violating the spec requirement.",
+      "evidence": "createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());",
+      "recommendation": "Use std::vector<uint32_t> for the shader buffer, or use a std::vector<char> with a custom allocator guaranteeing 4-byte alignment. Alternatively, read directly into a uint32_t vector (adjusting file size to be divisible by 4).",
+      "vulkan_spec_reference": "VkShaderModuleCreateInfo - pCode must be a pointer to uint32_t values"
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-010",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "No validation that SPIR-V file size is a multiple of 4 bytes",
+      "file": "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "line": 11,
+      "description": "The shader file reader does not validate that the file size is a multiple of 4 bytes. SPIR-V binaries must always have a size that is a multiple of 4 (as they are streams of 32-bit words). A corrupted or truncated shader file would pass silently and cause undefined behavior in vkCreateShaderModule.",
+      "evidence": "size_t fileSize = static_cast<size_t>(file.tellg()); std::vector<char> buffer(fileSize);",
+      "recommendation": "Add a check: if (fileSize == 0 || fileSize % 4 != 0) throw std::runtime_error(\"Invalid SPIR-V file size\");",
+      "vulkan_spec_reference": "VkShaderModuleCreateInfo - codeSize must be a multiple of 4"
+    },
+    {
+      "id": "DESIGN-VK-011",
+      "category": "design",
+      "severity": "low",
+      "title": "Push constant range only covers VERTEX stage but UBO accessed in both stages",
+      "file": "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "line": 129,
+      "description": "The push constant range stageFlags is set to VK_SHADER_STAGE_VERTEX_BIT only, and the push constant (model matrix) is indeed only used in the vertex shader. This is correct. However, there is an asymmetry worth noting: the descriptor set layout binds the UBO to VERTEX_BIT | FRAGMENT_BIT (vulkan_app.cpp:351), but the push constant is correctly vertex-only since the fragment shader does not reference it. This is purely informational - no bug.",
+      "evidence": "pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;",
+      "recommendation": "No change needed. The push constant stage flags correctly match shader usage. Documented for completeness.",
+      "vulkan_spec_reference": ""
+    }
+  ],
+  "summary": {
+    "total_findings": 11,
+    "by_severity": {
+      "critical": 0,
+      "high": 0,
+      "medium": 4,
+      "low": 7
+    },
+    "top_concerns": [
+      "Depth format hardcoded without checking physical device support (MISSING_VALIDATION-VK-003)",
+      "Pipeline and render pass not recreated on swapchain recreation - potential format mismatch (DESIGN-VK-006)",
+      "Missing error checks on depth image and depth image view creation (MISSING_VALIDATION-VK-004, VK-005)",
+      "SPIR-V buffer alignment not guaranteed when casting char* to uint32_t* (MISSING_VALIDATION-VK-009)"
+    ],
+    "audit_notes": {
+      "render_pass": "Correctly configured with CLEAR/STORE for color and CLEAR/DONT_CARE for depth. Subpass dependency correctly covers both color attachment output and early fragment tests stages. Attachment formats match between render pass, framebuffers, and depth image. Initial layouts are VK_IMAGE_LAYOUT_UNDEFINED which is correct.",
+      "vertex_input": "Binding description stride matches sizeof(Vertex). Three vec3 attributes (position, normal, color) with correct R32G32B32_SFLOAT formats and offsetof-based offsets. Matches shader input layout locations.",
+      "input_assembly": "TRIANGLE_LIST topology is correct for indexed sphere rendering with generateUVSphere producing independent triangles.",
+      "rasterization": "Back-face culling with CCW front face. The UV sphere generates CCW-wound triangles when viewed from outside (normals point outward), and the projection Y-flip (proj[1][1] *= -1) reverses winding, making the actual front face CW. However, CCW is set as front face. This appears to work because the Y-flip in the projection matrix effectively flips the winding order from the rasterizer's perspective, making originally-CCW triangles appear CW, and with frontFace=CCW the back faces (originally CW, now appearing CCW) would be culled. Empirically this is a common correct Vulkan pattern - the Y flip plus CCW front face works correctly together.",
+      "depth_stencil": "Depth test enabled, depth write enabled, LESS compare op - all correct for opaque 3D rendering.",
+      "color_blend": "Blending disabled with full RGBA write mask - correct for opaque rendering.",
+      "multisampling": "Sample count 1 (no MSAA) matches render pass attachment sample counts.",
+      "dynamic_state": "Viewport and scissor declared dynamic and correctly set before draw calls in recordCommandBuffer (lines 598-610).",
+      "shader_modules": "Correctly destroyed after pipeline creation (lines 167-168).",
+      "framebuffers": "Attachment order [color, depth] matches render pass attachment indices [0, 1]."
+    }
+  }
+}

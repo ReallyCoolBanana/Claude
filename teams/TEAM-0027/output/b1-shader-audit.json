@@ -1,0 +1,126 @@
+{
+  "metadata": {
+    "team": "TEAM-0027",
+    "agent": "b1-shader-audit",
+    "task": "vulkan-error-review",
+    "date": "2026-03-12",
+    "focus_area": "GLSL shader correctness, lighting math, layout matching",
+    "files_reviewed": [
+      "vulkan-orbiting-spheres/shaders/shader.vert",
+      "vulkan-orbiting-spheres/shaders/shader.frag",
+      "vulkan-orbiting-spheres/src/types.h",
+      "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "vulkan-orbiting-spheres/src/camera.h",
+      "vulkan-orbiting-spheres/src/camera.cpp"
+    ],
+    "completion_status": "complete"
+  },
+  "findings": [
+    {
+      "id": "LIGHTING-VK-001",
+      "category": "bug",
+      "severity": "high",
+      "title": "viewDir computed incorrectly using negated world position instead of camera-to-fragment vector",
+      "file": "vulkan-orbiting-spheres/shaders/shader.frag",
+      "line": 13,
+      "description": "The fragment shader computes viewDir as normalize(-fragWorldPos). This would only be correct if the camera were located at the world origin (0,0,0). However, the camera orbits around the scene at variable distance (default 6 units away from origin). The correct computation requires the camera/eye position in world space: viewDir = normalize(cameraPos - fragWorldPos). Since the camera position is not passed to the shader at all (not in the UBO, not in push constants), there is no way to compute this correctly. The result is that specular highlights will appear in wrong locations and shift incorrectly as the camera moves, with the error being most pronounced when the camera is far from the origin.",
+      "evidence": "Fragment shader line 13: vec3 viewDir = normalize(-fragWorldPos);\n\nCamera position in camera.cpp lines 13-15 shows the camera orbits at m_distance (default 6.0) from the target. The UBO (types.h line 41-47) contains view, proj, lightPos, and time but no camera position.",
+      "recommendation": "Add a vec4 viewPos (or vec3 + padding) to the UniformBufferObject struct. Set it to the camera's world-space position in updateUniformBuffer(). In the fragment shader, either access it from the UBO directly (would need UBO binding in fragment stage, which is already set up via VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT) or pass it as a varying from the vertex shader. Then compute: vec3 viewDir = normalize(viewPos.xyz - fragWorldPos);",
+      "vulkan_spec_reference": "N/A - this is a lighting math error, not a Vulkan API issue"
+    },
+    {
+      "id": "PERF-VK-002",
+      "category": "performance",
+      "severity": "medium",
+      "title": "inverse() of model matrix computed per-vertex in vertex shader",
+      "file": "vulkan-orbiting-spheres/shaders/shader.vert",
+      "line": 27,
+      "description": "The vertex shader computes mat3(transpose(inverse(push.model))) for every vertex. The inverse() function on a 4x4 matrix is computationally expensive (involves cofactors and determinant). For uniform scaling (which is the case here since neither the central nor orbiting sphere applies non-uniform scale), the normal matrix equals mat3(model) and the inverse-transpose is unnecessary. Even if non-uniform scaling were used, the normal matrix should be precomputed on the CPU and passed as a uniform/push constant rather than computed per-vertex on the GPU.",
+      "evidence": "shader.vert line 27: fragNormal = mat3(transpose(inverse(push.model))) * inNormal;\n\nvulkan_app.cpp lines 622,639-642 show only identity and rotation transforms (no non-uniform scaling), so mat3(push.model) would suffice.",
+      "recommendation": "For the current use case (only rotation and translation, no scaling), replace with: fragNormal = mat3(push.model) * inNormal; For a more general solution, precompute the normal matrix on the CPU and pass it in push constants.",
+      "vulkan_spec_reference": "N/A"
+    },
+    {
+      "id": "LIGHTING-VK-003",
+      "category": "design",
+      "severity": "low",
+      "title": "Light position passed as interpolated varying instead of accessed directly from UBO",
+      "file": "vulkan-orbiting-spheres/shaders/shader.vert",
+      "line": 29,
+      "description": "The light position (a uniform value constant across all vertices) is passed from the vertex shader to the fragment shader as an interpolated varying at location 3. This wastes an interpolator slot and causes unnecessary per-fragment interpolation of a constant value. The UBO is already bound with VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT (vulkan_app.cpp line 351), so the fragment shader can access it directly.",
+      "evidence": "shader.vert line 29: fragLightPos = ubo.lightPos.xyz;\nshader.frag line 6: layout(location = 3) in vec3 fragLightPos;\nvulkan_app.cpp line 351: uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;",
+      "recommendation": "Declare the UBO in the fragment shader and access ubo.lightPos.xyz directly. Remove the fragLightPos varying from both shaders. This frees up an output location and avoids redundant interpolation.",
+      "vulkan_spec_reference": "N/A"
+    },
+    {
+      "id": "LIGHTING-VK-004",
+      "category": "design",
+      "severity": "low",
+      "title": "No color clamping or tone mapping - specular can push values above 1.0",
+      "file": "vulkan-orbiting-spheres/shaders/shader.frag",
+      "line": 27,
+      "description": "The final color is computed as ambient + diffuse + specular without any clamping or tone mapping. With a specular coefficient of 0.4 and an exponent of 64.0, the specular contribution alone can reach 0.4. Combined with diffuse (up to 1.0 * fragColor) and ambient (0.15 * fragColor), the total can exceed 1.0 for bright surface colors. While the swapchain format is VK_FORMAT_B8G8R8A8_SRGB which will clamp values, and the specular exponent of 64 keeps highlights tight, this could produce subtle clipping artifacts on the brightest highlights.",
+      "evidence": "shader.frag line 27: outColor = vec4(ambient + diffuse + specular, 1.0);\nambient max = 0.15, diffuse max = 1.0, specular max = 0.4 -> total max = 1.55 per channel",
+      "recommendation": "Add a clamp or simple tone mapping: outColor = vec4(clamp(ambient + diffuse + specular, 0.0, 1.0), 1.0); or use Reinhard tone mapping for more physically plausible results.",
+      "vulkan_spec_reference": "N/A"
+    },
+    {
+      "id": "LAYOUT-VK-005",
+      "category": "design",
+      "severity": "low",
+      "title": "UBO 'time' field is unused in shaders",
+      "file": "vulkan-orbiting-spheres/shaders/shader.vert",
+      "line": 7,
+      "description": "The UBO declares a 'time' field (line 7 of shader.vert) which is populated on the C++ side (vulkan_app.cpp line 570: ubo.time = time) but is never read in either the vertex or fragment shader. This wastes 16 bytes of UBO space (4 bytes for time + 12 bytes for the _pad alignment in the C++ struct).",
+      "evidence": "shader.vert line 7: float time;\ntypes.h line 45-46: float time; float _pad[3];\nNo reference to ubo.time in shader code.",
+      "recommendation": "Either remove the time field from both the GLSL UBO and C++ struct if animation is handled entirely via push constants, or use it in the shader for effects like animated lighting.",
+      "vulkan_spec_reference": "N/A"
+    },
+    {
+      "id": "LAYOUT-VK-006",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "UBO std140 layout not explicitly declared in GLSL - relies on default behavior",
+      "file": "vulkan-orbiting-spheres/shaders/shader.vert",
+      "line": 3,
+      "description": "The UBO in the vertex shader does not explicitly specify std140 layout. In Vulkan GLSL (with #version 450), the default layout for uniform blocks is std140, so this works correctly. However, it is best practice to explicitly state the layout qualifier to make the alignment rules clear and prevent bugs during future modifications. The current layout happens to be correct: mat4 view (offset 0, size 64), mat4 proj (offset 64, size 64), vec4 lightPos (offset 128, size 16), float time (offset 144, size 4), with the C++ side having _pad[3] to fill to 16-byte boundary making the total 160 bytes.",
+      "evidence": "shader.vert line 3: layout(binding = 0) uniform UniformBufferObject {\ntypes.h line 41-47 shows the C++ struct with explicit _pad[3] for alignment.",
+      "recommendation": "Change to: layout(std140, binding = 0) uniform UniformBufferObject { ... } to make the layout requirement explicit.",
+      "vulkan_spec_reference": "GLSL 4.50 specification section 4.4.5 - Uniform and Shader Storage Block Layout Qualifiers"
+    },
+    {
+      "id": "LIGHTING-VK-007",
+      "category": "design",
+      "severity": "low",
+      "title": "Fixed light position with no attenuation creates unrealistic lighting at distance",
+      "file": "vulkan-orbiting-spheres/shaders/shader.frag",
+      "line": 12,
+      "description": "The light position is set to (5,5,5) as a point light but no distance attenuation is applied. The lighting intensity is the same regardless of distance from the light source. For a scene with objects at the origin and a light at distance ~8.66 units away, this is acceptable for a simple demo, but will produce flat-looking lighting if the scene grows.",
+      "evidence": "vulkan_app.cpp line 569: ubo.lightPos = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);\nshader.frag line 12: vec3 lightDir = normalize(fragLightPos - fragWorldPos);\nNo attenuation factor applied to diffuse or specular.",
+      "recommendation": "Consider adding distance attenuation: float distance = length(fragLightPos - fragWorldPos); float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance * distance);",
+      "vulkan_spec_reference": "N/A"
+    },
+    {
+      "id": "LAYOUT-VK-008",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "Vertex struct uses vec3 members which may have platform-dependent padding",
+      "file": "vulkan-orbiting-spheres/src/types.h",
+      "line": 7,
+      "description": "The Vertex struct uses three glm::vec3 members (position, normal, color) with sizeof(Vertex) used for stride. glm::vec3 is 12 bytes and three of them give 36 bytes. On most platforms and compilers this works correctly with no padding between members, but this relies on the compiler not inserting padding. The attribute descriptions correctly use offsetof() which handles any padding, but the stride from sizeof(Vertex) would include it. The VK_FORMAT_R32G32B32_SFLOAT format is 12 bytes per attribute, which is correct. This is technically safe on all standard platforms where glm::vec3 is tightly packed, but could be made more robust with a static_assert.",
+      "evidence": "types.h lines 8-10: glm::vec3 position; glm::vec3 normal; glm::vec3 color;\ntypes.h line 15: desc.stride = sizeof(Vertex);\nAttribute offsets use offsetof() (lines 26,31,36).",
+      "recommendation": "Add static_assert(sizeof(Vertex) == 36, \"Vertex struct has unexpected padding\"); to catch any platform where padding is inserted.",
+      "vulkan_spec_reference": "Vulkan spec 22.2 - Vertex Input Description"
+    }
+  ],
+  "summary": {
+    "total_findings": 8,
+    "by_severity": {"critical": 0, "high": 1, "medium": 2, "low": 5},
+    "top_concerns": [
+      "LIGHTING-VK-001 (HIGH): viewDir uses normalize(-fragWorldPos) which is incorrect when camera is not at world origin. The camera orbits at distance 6+ from origin, causing specular highlights to appear in wrong positions. Camera position must be passed to fragment shader.",
+      "PERF-VK-002 (MEDIUM): Per-vertex inverse() of model matrix is expensive and unnecessary since only rotations/translations are used (no non-uniform scaling).",
+      "LAYOUT-VK-006 (MEDIUM): UBO layout should explicitly specify std140 to prevent future alignment bugs."
+    ]
+  }
+}
