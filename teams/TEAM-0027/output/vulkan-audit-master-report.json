@@ -1,0 +1,314 @@
+{
+  "metadata": {
+    "team": "TEAM-0027",
+    "operation": "VULKAN-AUDIT",
+    "date": "2026-03-12",
+    "target": "vulkan-orbiting-spheres (~1,790 lines C++/GLSL/CMake)",
+    "agents": 12,
+    "teams": 4,
+    "launch_waves": 1,
+    "total_raw_findings": 127,
+    "unique_findings_after_dedup": 42,
+    "completion_status": "complete"
+  },
+
+  "executive_summary": {
+    "verdict": "The application is fundamentally sound — correct Vulkan initialization order, proper synchronization structure, correct vertex/pipeline configuration, and accurate geometry. However, it has 2 bugs that produce visible incorrect behavior, 1 bug that causes a deadlock under specific conditions, and widespread missing error checking that would cause silent crashes on allocation failures.",
+    "critical_count": 0,
+    "high_count": 6,
+    "medium_count": 16,
+    "low_count": 20,
+    "top_5_issues": [
+      "SYNC-001: Fence deadlock when vkAcquireNextImageKHR returns VK_ERROR_OUT_OF_DATE_KHR",
+      "SHADER-001: Specular highlights wrong — viewDir assumes camera at origin, but camera orbits at distance 6+",
+      "INIT-001: Exception during initVulkan() leaks all partially-created Vulkan resources",
+      "SWAP-001: Swapchain always created with hardcoded 1280x720 instead of actual framebuffer size",
+      "MEMORY-001: 10+ Vulkan/VMA calls have unchecked return values — silent failures cause crashes"
+    ]
+  },
+
+  "deduplicated_findings": {
+    "high": [
+      {
+        "id": "SYNC-001",
+        "title": "Fence deadlock on VK_ERROR_OUT_OF_DATE_KHR early return in drawFrame",
+        "category": "race_condition",
+        "file": "src/vulkan_app.cpp",
+        "line": 505,
+        "found_by": ["A2"],
+        "description": "When vkAcquireNextImageKHR returns VK_ERROR_OUT_OF_DATE_KHR, drawFrame() returns early after vkWaitForFences consumed the fence (line 502) but before vkQueueSubmit can re-signal it (line 536). The next frame's vkWaitForFences blocks forever on an unsignaled fence — permanent deadlock.",
+        "fix": "Move vkResetFences to just before vkQueueSubmit (after the acquire check). Pattern: wait fence → acquire → [early return OK, fence still signaled] → reset fence → submit.",
+        "impact": "Application hangs on window resize or any event triggering swapchain recreation."
+      },
+      {
+        "id": "SHADER-001",
+        "title": "Incorrect specular highlight — viewDir assumes camera at world origin",
+        "category": "bug",
+        "file": "shaders/shader.frag",
+        "line": 13,
+        "found_by": ["B1", "C3"],
+        "description": "Fragment shader computes viewDir = normalize(-fragWorldPos), which is only correct when camera is at (0,0,0). The orbit camera is at distance 6+ from origin. Camera position is never passed to the shader — no field in UBO or push constants for it.",
+        "fix": "Add vec4 viewPos to UBO. Set to camera world position in updateUniformBuffer(). In frag shader: viewDir = normalize(viewPos.xyz - fragWorldPos).",
+        "impact": "Specular highlights appear in wrong positions. Error worsens as camera moves away from origin."
+      },
+      {
+        "id": "INIT-001",
+        "title": "Exception during initVulkan() leaks all partially-created Vulkan resources",
+        "category": "resource_leak",
+        "file": "src/vulkan_app.cpp",
+        "line": 71,
+        "found_by": ["C2", "D2"],
+        "description": "run() calls initVulkan() then mainLoop() then cleanup(). If any step in initVulkan() throws, cleanup() is never called. All resources created before the failure are leaked. cleanup() is also not safe for partial initialization — it accesses vectors that may be empty.",
+        "fix": "Wrap initVulkan() in try-catch that calls cleanup(). Make cleanup() safe for partial init (check VK_NULL_HANDLE before destroying). Or use RAII.",
+        "impact": "Resource leak on init failure. Crash if cleanup() called with partial state."
+      },
+      {
+        "id": "MEMORY-001",
+        "title": "10+ Vulkan/VMA calls have unchecked return values",
+        "category": "missing_validation",
+        "file": "src/vulkan_app.cpp",
+        "line": "multiple",
+        "found_by": ["A1", "A2", "A3", "B2", "B3", "C1", "C2"],
+        "description": "vmaCreateImage (L252), vkCreateImageView (L266), vmaCreateBuffer (L703), vmaMapMemory (L428,L715), vkQueueSubmit (L748), vkWaitForFences (L502), vkBeginCommandBuffer (L579), vkEndCommandBuffer (L657) all have unchecked VkResult returns. Silent failures cause crashes with no diagnostic.",
+        "fix": "Check VkResult on all calls. Throw std::runtime_error with descriptive message on failure.",
+        "impact": "Any allocation failure (out of GPU memory) causes undefined behavior or crash with no useful error message."
+      },
+      {
+        "id": "INIT-002",
+        "title": "glfwInit() and glfwCreateWindow() return values not checked",
+        "category": "missing_validation",
+        "file": "src/vulkan_app.cpp",
+        "line": 61,
+        "found_by": ["A1", "D2"],
+        "description": "glfwInit() returns GLFW_FALSE on failure (e.g., headless Linux) — not checked. glfwCreateWindow() returns nullptr on failure — not checked. Subsequent GLFW/Vulkan calls crash.",
+        "fix": "if (!glfwInit()) throw. if (!m_window) { glfwTerminate(); throw; }",
+        "impact": "Crash with no error message on systems where GLFW or window creation fails."
+      },
+      {
+        "id": "LIFECYCLE-001",
+        "title": "Uniform buffer memory mapped but never unmapped before destruction",
+        "category": "resource_leak",
+        "file": "src/vulkan_app.cpp",
+        "line": 107,
+        "found_by": ["A1", "B3", "C1", "C2"],
+        "description": "vmaMapMemory called in createUniformBuffers (L428) but vmaUnmapMemory never called before vmaDestroyBuffer in cleanup (L107-109). Technically undefined behavior per Vulkan spec.",
+        "fix": "Call vmaUnmapMemory before vmaDestroyBuffer for each uniform buffer. Or use VMA_ALLOCATION_CREATE_MAPPED_BIT.",
+        "impact": "May cause issues with debug layers or future VMA versions. VMA currently handles this gracefully."
+      }
+    ],
+
+    "medium": [
+      {
+        "id": "SWAP-001",
+        "title": "Swapchain always created with hardcoded 1280x720 instead of actual framebuffer size",
+        "file": "src/vulkan_app.cpp",
+        "line": 219,
+        "found_by": ["A1", "A3", "D2", "D3"],
+        "fix": "Query glfwGetFramebufferSize() and pass actual dimensions to set_desired_extent()."
+      },
+      {
+        "id": "SWAP-002",
+        "title": "Old swapchain not passed for resource reuse during recreation",
+        "file": "src/vulkan_app.cpp",
+        "line": 670,
+        "found_by": ["A1", "A3", "C2", "C3"],
+        "fix": "Save old handle, pass to set_old_swapchain(), destroy old after new is created."
+      },
+      {
+        "id": "SWAP-003",
+        "title": "Render pass and pipeline not recreated if swapchain format changes",
+        "file": "src/vulkan_app.cpp",
+        "line": 662,
+        "found_by": ["A3", "B2"],
+        "fix": "Recreate render pass/pipeline on format change, or assert format unchanged."
+      },
+      {
+        "id": "DEPTH-001",
+        "title": "Depth format VK_FORMAT_D32_SFLOAT hardcoded without device support query",
+        "file": "src/vulkan_app.h",
+        "line": 63,
+        "found_by": ["A1", "A3", "B2"],
+        "fix": "Query vkGetPhysicalDeviceFormatProperties for D32/D32S8/D24S8 and select first supported."
+      },
+      {
+        "id": "PERF-001",
+        "title": "Per-vertex inverse(model) in vertex shader — expensive and unnecessary",
+        "file": "shaders/shader.vert",
+        "line": 27,
+        "found_by": ["B1", "B2", "B3", "C3"],
+        "fix": "Replace with mat3(push.model) * inNormal (no scaling used). Or precompute normal matrix on CPU."
+      },
+      {
+        "id": "SWAP-004",
+        "title": "Division by zero in aspect ratio if swapchain height is 0",
+        "file": "src/vulkan_app.cpp",
+        "line": 563,
+        "found_by": ["A3", "D2"],
+        "fix": "Guard: if (m_swapchainExtent.height == 0) return;"
+      },
+      {
+        "id": "VMA-001",
+        "title": "Deprecated VMA_MEMORY_USAGE enums used instead of VMA_MEMORY_USAGE_AUTO",
+        "file": "src/vulkan_app.cpp",
+        "line": 691,
+        "found_by": ["C1"],
+        "fix": "Use VMA_MEMORY_USAGE_AUTO with appropriate host access flags."
+      },
+      {
+        "id": "SYNC-002",
+        "title": "Missing pipeline barrier after staging buffer transfer",
+        "file": "src/vulkan_app.cpp",
+        "line": 739,
+        "found_by": ["C1"],
+        "fix": "Add VkBufferMemoryBarrier with TRANSFER_WRITE → VERTEX_ATTRIBUTE_READ after vkCmdCopyBuffer."
+      },
+      {
+        "id": "INIT-003",
+        "title": "PhysicalDeviceSelector constructed with temporary vkb::Instance",
+        "file": "src/vulkan_app.cpp",
+        "line": 170,
+        "found_by": ["A1"],
+        "fix": "Store vkb::Instance from createInstance() as class member and reuse."
+      },
+      {
+        "id": "INIT-004",
+        "title": "Present queue index not retrieved or validated",
+        "file": "src/vulkan_app.cpp",
+        "line": 198,
+        "found_by": ["A1", "A2"],
+        "fix": "Store present queue family index. If different from graphics, set concurrent sharing mode."
+      },
+      {
+        "id": "INIT-005",
+        "title": "No GLFW error callback registered",
+        "file": "src/vulkan_app.cpp",
+        "line": 60,
+        "found_by": ["D2"],
+        "fix": "Register glfwSetErrorCallback() before glfwInit()."
+      },
+      {
+        "id": "PIPELINE-001",
+        "title": "Pipeline creation error paths leak shader modules and pipeline layout",
+        "file": "src/pipeline.cpp",
+        "line": 142,
+        "found_by": ["C2"],
+        "fix": "Destroy shader modules and pipeline layout before throwing on failure."
+      },
+      {
+        "id": "BUILD-001",
+        "title": "No compiler warning flags configured (-Wall -Wextra)",
+        "file": "CMakeLists.txt",
+        "line": 4,
+        "found_by": ["D3"],
+        "fix": "Add target_compile_options with warning flags for MSVC/GCC/Clang."
+      },
+      {
+        "id": "BUILD-002",
+        "title": "Shader path relative to CWD, not executable location",
+        "file": "src/pipeline.cpp",
+        "line": 33,
+        "found_by": ["D3"],
+        "fix": "Resolve shader path relative to executable using std::filesystem."
+      },
+      {
+        "id": "BUILD-003",
+        "title": "Validation layers always enabled including Release builds",
+        "file": "src/vulkan_app.cpp",
+        "line": 150,
+        "found_by": ["A1", "C3", "D3"],
+        "fix": "Gate with #ifdef NDEBUG."
+      },
+      {
+        "id": "LOOP-001",
+        "title": "drawFrame() called while window is minimized (zero-size framebuffer)",
+        "file": "src/vulkan_app.cpp",
+        "line": 99,
+        "found_by": ["D2"],
+        "fix": "Check framebuffer size before drawFrame. Use glfwWaitEvents() when minimized."
+      }
+    ],
+
+    "low": [
+      {"id": "GEOM-001", "title": "Float time accumulation loses precision after ~4.66 hours", "found_by": ["D1", "D2"], "fix": "Use fmod to wrap periodic values."},
+      {"id": "GEOM-002", "title": "Degenerate zero-area triangles at sphere poles (128 per sphere)", "found_by": ["D1"], "fix": "Use triangle fans at poles."},
+      {"id": "GEOM-003", "title": "Redundant time computation in recordCommandBuffer vs updateUniformBuffer", "found_by": ["C3", "D1"], "fix": "Compute time once in drawFrame and pass to both."},
+      {"id": "GEOM-004", "title": "Static startTime initialized at load time, not mainLoop start", "found_by": ["D1", "D2"], "fix": "Make startTime a member, init in run()."},
+      {"id": "SHADER-002", "title": "UBO 'time' field set every frame but never used in shaders", "found_by": ["B1", "C3"], "fix": "Remove unused field."},
+      {"id": "SHADER-003", "title": "UBO missing explicit std140 layout qualifier", "found_by": ["B1", "B3"], "fix": "Add layout(std140, binding = 0)."},
+      {"id": "SHADER-004", "title": "Light position passed as varying instead of accessed from UBO in fragment", "found_by": ["B1", "C3"], "fix": "Access UBO directly in fragment shader."},
+      {"id": "SHADER-005", "title": "No color clamping — specular can push values above 1.0", "found_by": ["B1"], "fix": "Add clamp(color, 0.0, 1.0)."},
+      {"id": "PIPELINE-002", "title": "PipelineConfig.extent is dead code (viewport/scissor are dynamic)", "found_by": ["B2"], "fix": "Remove unused field."},
+      {"id": "PIPELINE-003", "title": "SPIR-V buffer alignment not guaranteed (char* → uint32_t* cast)", "found_by": ["B2"], "fix": "Use std::vector<uint32_t> for shader buffer."},
+      {"id": "PIPELINE-004", "title": "No pipeline cache used", "found_by": ["B2", "C3"], "fix": "Create and pass VkPipelineCache."},
+      {"id": "PERF-002", "title": "Per-vertex color attribute wastes bandwidth (color is uniform per-sphere)", "found_by": ["C3"], "fix": "Move color to push constants."},
+      {"id": "PERF-003", "title": "4 separate buffer uploads with vkQueueWaitIdle each", "found_by": ["C1", "C3"], "fix": "Batch into single command buffer."},
+      {"id": "PERF-004", "title": "Central sphere mesh overdense at 32x64 (4096 triangles)", "found_by": ["C3"], "fix": "Reduce to 24x48 or 16x32."},
+      {"id": "SYNC-003", "title": "No per-swapchain-image fence tracking", "found_by": ["A2"], "fix": "Add imagesInFlight fence array."},
+      {"id": "BUILD-004", "title": "Missing compile_shaders.sh for Linux/macOS", "found_by": ["D3"], "fix": "Create shell script equivalent."},
+      {"id": "BUILD-005", "title": "No default CMAKE_BUILD_TYPE for single-config generators", "found_by": ["D3"], "fix": "Default to Release."},
+      {"id": "BUILD-006", "title": "README build instructions Windows-only", "found_by": ["D3"], "fix": "Add Linux/macOS instructions."},
+      {"id": "BUILD-007", "title": "PLAN.md version mismatches (vk-bootstrap, Vulkan version)", "found_by": ["D3"], "fix": "Update documentation."},
+      {"id": "DESIGN-001", "title": "Camera yaw grows unbounded — precision loss over time", "found_by": ["D2"], "fix": "Wrap with fmod."}
+    ]
+  },
+
+  "cross_reference_analysis": {
+    "most_flagged_issues": [
+      {"issue": "Unchecked VMA/Vulkan return values", "agents_reporting": 7, "ids": ["A1", "A2", "A3", "B2", "B3", "C1", "C2"]},
+      {"issue": "Per-vertex inverse(model) in shader", "agents_reporting": 4, "ids": ["B1", "B2", "B3", "C3"]},
+      {"issue": "Hardcoded swapchain extent (1280x720)", "agents_reporting": 4, "ids": ["A1", "A3", "D2", "D3"]},
+      {"issue": "Old swapchain not passed during recreation", "agents_reporting": 4, "ids": ["A1", "A3", "C2", "C3"]},
+      {"issue": "Uniform buffers not unmapped before destruction", "agents_reporting": 4, "ids": ["A1", "B3", "C1", "C2"]},
+      {"issue": "Hardcoded depth format", "agents_reporting": 3, "ids": ["A1", "A3", "B2"]},
+      {"issue": "Validation layers always enabled", "agents_reporting": 3, "ids": ["A1", "C3", "D3"]}
+    ],
+    "unique_insights": [
+      {"agent": "A2", "insight": "SYNC-VK-001: Fence deadlock — most impactful bug found. Only the sync specialist caught the full causal chain."},
+      {"agent": "B1", "insight": "LIGHTING-VK-001: Incorrect viewDir — shader math expert traced through the actual camera position vs assumed origin."},
+      {"agent": "C2", "insight": "Complete 31-resource inventory with creation/destruction mapping — systematic lifecycle verification."},
+      {"agent": "D1", "insight": "GEOM-VK-003: Float time precision loss after 4.66 hours — long-running stability analysis."},
+      {"agent": "D3", "insight": "BUILD-VK-006: Shader path relative to CWD — cross-platform deployment concern unique to build audit."}
+    ]
+  },
+
+  "verified_correct": [
+    "Vulkan initialization order: instance → surface → physical device → logical device → allocator → swapchain",
+    "Destruction order: reverse of creation, VMA allocations before allocator, device before instance",
+    "UBO std140 layout: C++ struct with _pad[3] matches GLSL layout exactly at 160 bytes",
+    "Descriptor pool: exactly MAX_FRAMES_IN_FLIGHT UBO descriptors and max sets",
+    "Push constants: 64 bytes (mat4), well under 128-byte minimum guarantee",
+    "Vertex attribute formats/offsets match shader input locations (0-2)",
+    "Render pass: CLEAR/STORE for color, CLEAR/DONT_CARE for depth — correct",
+    "Rasterization: CCW front face + back cull + Y-flip is correct Vulkan pattern",
+    "Depth test: enabled, write enabled, LESS compare — correct for opaque rendering",
+    "Sphere geometry: correct vertex count, normals, index generation, no off-by-one errors",
+    "Camera: spherical-to-Cartesian conversion, lookAt, perspective with Y-flip all correct",
+    "Model matrix composition: Rorbit × Translate × Rself — correct for orbiting body",
+    "Shader modules destroyed after pipeline creation",
+    "Swapchain cleanup properly destroys old image views, framebuffers, depth resources"
+  ],
+
+  "statistics": {
+    "files_audited": 14,
+    "lines_audited": 1790,
+    "agents_used": 12,
+    "raw_findings_per_agent": {
+      "A1": 20, "A2": 10, "A3": 11,
+      "B1": 8, "B2": 11, "B3": 7,
+      "C1": 12, "C2": 14, "C3": 15,
+      "D1": 8, "D2": 16, "D3": 17
+    },
+    "total_raw_findings": 149,
+    "duplicates_removed": 107,
+    "unique_findings": 42,
+    "findings_by_category": {
+      "missing_validation": 15,
+      "bug": 4,
+      "resource_leak": 5,
+      "performance": 9,
+      "design": 7,
+      "race_condition": 1,
+      "security": 1
+    }
+  }
+}
