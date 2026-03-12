@@ -1,0 +1,212 @@
+{
+  "report_id": "benchmark_a2",
+  "team": "a2",
+  "task": "connectivity-audit-v2",
+  "generated": "2026-03-12T22:33:57.387418Z",
+  "description": "Post-repair connectivity audit of pointer-network.json. Compares to run-001 baseline (96 orphans, 4 critical).",
+  "network_stats": {
+    "total_nodes": 310,
+    "total_edges": 4580
+  },
+  "task_1_orphan_analysis": {
+    "total_orphans": 92,
+    "run_001_orphans": 96,
+    "run_001_critical": 4,
+    "delta": -4,
+    "status": "improved",
+    "critical_orphans_remaining": 0,
+    "by_type": {
+      "wiki": 92
+    },
+    "finding": "All 92 remaining orphans are wiki-type nodes (external Wikipedia references). Zero critical orphans (SOP/SCR/KB/TEAM) remain \u2014 all 4 critical orphans from run-001 have been successfully repaired."
+  },
+  "task_2_reciprocity_check": {
+    "edges_weight_gte_4": 672,
+    "non_reciprocal_count": 36,
+    "reciprocity_rate_pct": 94.6,
+    "non_reciprocal_edges": [
+      {
+        "from": "SCR-0045",
+        "to": "SCR-0009",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0046",
+        "to": "SCR-0006",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0046",
+        "to": "SCR-0008",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0046",
+        "to": "SCR-0009",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0046",
+        "to": "SCR-0010",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0046",
+        "to": "SCR-0021",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0046",
+        "to": "SCR-0023",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0046",
+        "to": "SCR-0024",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0046",
+        "to": "SCR-0025",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0047",
+        "to": "SCR-0003",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0049",
+        "to": "SCR-0047",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0050",
+        "to": "SCR-0048",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0051",
+        "to": "SCR-0049",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0052",
+        "to": "SCR-0033",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0053",
+        "to": "SCR-0033",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0054",
+        "to": "KB-0016",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0054",
+        "to": "SCR-0019",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0054",
+        "to": "SCR-0030",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0054",
+        "to": "SCR-0032",
+        "weight": 4,
+        "strength": "unclassified"
+      },
+      {
+        "from": "SCR-0054",
+        "to": "SCR-0053",
+        "weight": 4,
+        "strength": "unclassified"
+      }
+    ],
+    "finding": "36 non-reciprocal high-weight edges found, all weight=4 and unclassified strength. Concentrated in SCR-0045 through SCR-0048 (newer scripts). These nodes point to older SCR nodes but lack return edges."
+  },
+  "task_3_sop_reachability": {
+    "sop_count": 22,
+    "total_reachable_from_sops": 218,
+    "total_nodes": 310,
+    "reachability_pct": 70.3,
+    "unreachable_count": 92,
+    "unreachable_scr_count": 0,
+    "unreachable_scr": [],
+    "unreachable_by_type": {
+      "wiki": 92
+    },
+    "finding": "218 of 310 nodes (70.3%) reachable from SOPs via BFS. All 92 unreachable nodes are wiki-type (external references with no incoming edges). Zero SCR nodes are unreachable \u2014 all scripts are reachable from at least one SOP."
+  },
+  "task_4_integrity_checks": {
+    "duplicate_edges": 0,
+    "weight_zero_edges": 0,
+    "dangling_references": 0,
+    "self_loops": 0,
+    "unclassified_strength_edges": 3937,
+    "issues_found": 0,
+    "finding": "No structural issues introduced by run-001 repairs. Zero duplicates, zero weight-0 edges, zero dangling references, zero self-loops. Note: 3937 edges lack strength classification (expected for auto-generated shared_tags edges)."
+  },
+  "routes_logged": [
+    {
+      "agent": "a2-1",
+      "task": "connectivity-audit-v2",
+      "route": "SOP-001 -> SCR-0036 -> KB-0042",
+      "outcome": "success",
+      "focus": "orphan analysis"
+    },
+    {
+      "agent": "a2-2",
+      "task": "connectivity-audit-v2",
+      "route": "SOP-015 -> SCR-0045 -> SCR-0009",
+      "outcome": "success",
+      "focus": "reciprocity check"
+    },
+    {
+      "agent": "a2-3",
+      "task": "connectivity-audit-v2",
+      "route": "SOP-001 -> KB-0001 -> TEAM-0008",
+      "outcome": "success",
+      "focus": "BFS reachability"
+    },
+    {
+      "agent": "a2-4",
+      "task": "connectivity-audit-v2",
+      "route": "SOP-015 -> SCR-0036 -> SCR-0037",
+      "outcome": "success",
+      "focus": "integrity checks"
+    }
+  ],
+  "overall_verdict": {
+    "health": "good",
+    "summary": "Run-001 repairs were effective. Critical orphans eliminated (4 -> 0). Total orphans reduced (96 -> 92). All SCR nodes reachable from SOPs. No structural damage from repairs. Two minor items for future work: (1) 36 non-reciprocal edges on newer SCR nodes could benefit from backlinks, (2) 3937 edges lack strength classification.",
+    "recommendations": [
+      "Add reverse edges for the 36 non-reciprocal high-weight edges (SCR-0045 through SCR-0048)",
+      "Classify strength on the 3937 unclassified edges (low priority, cosmetic)",
+      "Wiki nodes are intentionally leaf-only; orphan status is by design and not actionable"
+    ]
+  }
+}

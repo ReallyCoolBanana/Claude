@@ -1,0 +1,1221 @@
+{
+  "test": "stress-s1",
+  "description": "High-volume traversal stress test: 3 journey types x 22 SOPs = 66 journeys",
+  "total_routes_logged": 66,
+  "avg_hops": 2.48,
+  "total_hops": 164,
+  "outcome_distribution_by_journey_type": {
+    "primary-path": {
+      "success": 22
+    },
+    "exploration": {
+      "failure": 7,
+      "partial": 5,
+      "success": 10
+    },
+    "random-walk": {
+      "failure": 3,
+      "partial": 14,
+      "success": 5
+    }
+  },
+  "overall_outcome_distribution": {
+    "success": 37,
+    "failure": 10,
+    "partial": 19
+  },
+  "most_traversed_edges": [
+    {
+      "edge": "SOP-012 -> SCR-0019",
+      "count": 4
+    },
+    {
+      "edge": "SOP-014 -> SOP-012",
+      "count": 4
+    },
+    {
+      "edge": "SOP-029 -> SOP-012",
+      "count": 4
+    },
+    {
+      "edge": "SOP-027 -> SCR-0044",
+      "count": 4
+    },
+    {
+      "edge": "SOP-012 -> SOP-014",
+      "count": 3
+    },
+    {
+      "edge": "SOP-028 -> SOP-029",
+      "count": 3
+    },
+    {
+      "edge": "TEAM-0025 -> SCR-0030",
+      "count": 3
+    },
+    {
+      "edge": "SOP-014 -> SOP-013",
+      "count": 2
+    },
+    {
+      "edge": "SOP-013 -> SOP-G02",
+      "count": 2
+    },
+    {
+      "edge": "SOP-012 -> SOP-015",
+      "count": 2
+    },
+    {
+      "edge": "SOP-015 -> SOP-011",
+      "count": 2
+    },
+    {
+      "edge": "SOP-G02 -> SOP-013",
+      "count": 2
+    },
+    {
+      "edge": "SOP-015 -> SOP-028",
+      "count": 2
+    },
+    {
+      "edge": "SOP-G02 -> KB-0022",
+      "count": 2
+    },
+    {
+      "edge": "SCR-0030 -> SRC-0051",
+      "count": 2
+    }
+  ],
+  "agent_distribution": {
+    "s1-1": 9,
+    "s1-2": 9,
+    "s1-3": 9,
+    "s1-4": 9,
+    "s1-5": 9,
+    "s1-6": 9,
+    "s1-7": 6,
+    "s1-8": 6
+  },
+  "journeys": [
+    {
+      "sop": "SOP-011",
+      "agent": "s1-1",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-011",
+        "SCR-0019"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-011",
+      "agent": "s1-1",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-011",
+        "SOP-015",
+        "SOP-012",
+        "SOP-014"
+      ],
+      "outcome": "failure",
+      "hops": 3,
+      "strengths_used": [
+        "supporting",
+        "supporting",
+        "supporting"
+      ]
+    },
+    {
+      "sop": "SOP-011",
+      "agent": "s1-1",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-011",
+        "KB-0025",
+        "KB-0024",
+        "SOP-014"
+      ],
+      "outcome": "failure",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-012",
+      "agent": "s1-2",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-012",
+        "SCR-0019"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-012",
+      "agent": "s1-2",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-012",
+        "SOP-014",
+        "SOP-013",
+        "SOP-G02"
+      ],
+      "outcome": "failure",
+      "hops": 3,
+      "strengths_used": [
+        "supporting",
+        "supporting",
+        "supporting"
+      ]
+    },
+    {
+      "sop": "SOP-012",
+      "agent": "s1-2",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-012",
+        "TEAM-0025",
+        "SOP-014",
+        "KB-0025"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-013",
+      "agent": "s1-3",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-013",
+        "SCR-0019"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-013",
+      "agent": "s1-3",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-013",
+        "SOP-G02",
+        "TEAM-0022",
+        "KB-0018"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "supporting",
+        "unclassified",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-013",
+      "agent": "s1-3",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-013",
+        "SOP-016",
+        "KB-0005",
+        "KB-0004"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "supporting",
+        "unclassified",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-014",
+      "agent": "s1-4",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-014",
+        "SCR-0033"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-014",
+      "agent": "s1-4",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-014",
+        "SOP-012",
+        "SOP-015",
+        "SOP-011"
+      ],
+      "outcome": "failure",
+      "hops": 3,
+      "strengths_used": [
+        "supporting",
+        "supporting",
+        "supporting"
+      ]
+    },
+    {
+      "sop": "SOP-014",
+      "agent": "s1-4",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-014",
+        "KB-0024",
+        "SOP-G02",
+        "SOP-013"
+      ],
+      "outcome": "failure",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "supporting"
+      ]
+    },
+    {
+      "sop": "SOP-015",
+      "agent": "s1-5",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-015",
+        "SOP-028",
+        "SOP-029",
+        "SOP-012",
+        "SCR-0019"
+      ],
+      "outcome": "success",
+      "hops": 4,
+      "strengths_used": [
+        "primary",
+        "primary",
+        "primary",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-015",
+      "agent": "s1-5",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-015",
+        "SOP-011",
+        "TEAM-0025",
+        "SCR-0030"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "supporting",
+        "unclassified",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-015",
+      "agent": "s1-5",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-015",
+        "SOP-028",
+        "SOP-G02",
+        "KB-0022"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "primary",
+        "primary",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-016",
+      "agent": "s1-6",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-016",
+        "SCR-0031"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-016",
+      "agent": "s1-6",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-016",
+        "SOP-014",
+        "SOP-012",
+        "SOP-015"
+      ],
+      "outcome": "failure",
+      "hops": 3,
+      "strengths_used": [
+        "supporting",
+        "supporting",
+        "supporting"
+      ]
+    },
+    {
+      "sop": "SOP-016",
+      "agent": "s1-6",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-016",
+        "KB-0009",
+        "TEAM-0023",
+        "KB-0022"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-017",
+      "agent": "s1-7",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-017",
+        "SCR-0023"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-017",
+      "agent": "s1-7",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-017",
+        "SCR-0022",
+        "SCR-0024",
+        "SRC-0030"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "related",
+        "unclassified",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-017",
+      "agent": "s1-7",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-017",
+        "SCR-0043",
+        "KB-0044",
+        "SCR-0041"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "related",
+        "unclassified",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-018",
+      "agent": "s1-8",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-018",
+        "SCR-0004"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-018",
+      "agent": "s1-8",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-018",
+        "KB-0003",
+        "KB-0002",
+        "TEAM-0004"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-018",
+      "agent": "s1-8",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-018",
+        "SCR-0008",
+        "SOP-024",
+        "TEAM-0004"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "tangential",
+        "related",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-019",
+      "agent": "s1-1",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-019",
+        "SCR-0033"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-019",
+      "agent": "s1-1",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-019",
+        "SCR-0019",
+        "TEAM-0008",
+        "SCR-0016"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "related",
+        "unclassified",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-019",
+      "agent": "s1-1",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-019",
+        "KB-0032",
+        "SCR-0015",
+        "TEAM-0008"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-020",
+      "agent": "s1-2",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-020",
+        "SCR-0001"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-020",
+      "agent": "s1-2",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-020",
+        "TEAM-0025",
+        "SCR-0030",
+        "SRC-0051"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "primary",
+        "supporting"
+      ]
+    },
+    {
+      "sop": "SOP-020",
+      "agent": "s1-2",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-020",
+        "KB-0007",
+        "SCR-0011",
+        "SRC-0017"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "related"
+      ]
+    },
+    {
+      "sop": "SOP-021",
+      "agent": "s1-3",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-021",
+        "SCR-0033"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-021",
+      "agent": "s1-3",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-021",
+        "KB-0024",
+        "KB-0023",
+        "KB-0022"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-021",
+      "agent": "s1-3",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-021",
+        "KB-0035",
+        "KB-0038",
+        "SCR-0019"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-022",
+      "agent": "s1-4",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-022",
+        "SCR-0019"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-022",
+      "agent": "s1-4",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-022",
+        "TEAM-0025",
+        "SCR-0030",
+        "SRC-0051"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "primary",
+        "supporting"
+      ]
+    },
+    {
+      "sop": "SOP-022",
+      "agent": "s1-4",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-022",
+        "KB-0022",
+        "KB-0019",
+        "KB-0015"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-023",
+      "agent": "s1-5",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-023",
+        "SCR-0023"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-023",
+      "agent": "s1-5",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-023",
+        "SOP-022",
+        "KB-0025",
+        "KB-0026"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "supporting",
+        "unclassified",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-023",
+      "agent": "s1-5",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-023",
+        "SCR-0024",
+        "SCR-0022",
+        "TEAM-0005"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "related",
+        "unclassified",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-024",
+      "agent": "s1-6",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-024",
+        "SCR-0009"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-024",
+      "agent": "s1-6",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-024",
+        "SCR-0009",
+        "SRC-0006",
+        "SCR-0027"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "primary",
+        "primary",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-024",
+      "agent": "s1-6",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-024",
+        "SCR-0034",
+        "SOP-025",
+        "KB-0001"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "related",
+        "tangential",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-025",
+      "agent": "s1-7",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-025",
+        "SCR-0043"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-025",
+      "agent": "s1-7",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-025",
+        "SOP-026",
+        "SOP-027",
+        "SCR-0044"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "supporting",
+        "supporting",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-025",
+      "agent": "s1-7",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-025",
+        "SOP-026",
+        "SCR-0028",
+        "KB-0044"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "supporting",
+        "related",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-026",
+      "agent": "s1-8",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-026",
+        "SCR-0043"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-026",
+      "agent": "s1-8",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-026",
+        "SOP-025",
+        "SOP-027",
+        "SCR-0044"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "supporting",
+        "supporting",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-026",
+      "agent": "s1-8",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-026",
+        "SCR-0027",
+        "TEAM-0012",
+        "KB-0008"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "related",
+        "unclassified",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-027",
+      "agent": "s1-1",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-027",
+        "SCR-0043"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-027",
+      "agent": "s1-1",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-027",
+        "SCR-0044",
+        "SRC-0006",
+        "SCR-0009"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "primary",
+        "primary",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-027",
+      "agent": "s1-1",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-027",
+        "SCR-0026",
+        "TEAM-0002",
+        "SCR-0022"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "related",
+        "unclassified",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-028",
+      "agent": "s1-2",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-028",
+        "SOP-029",
+        "SOP-012",
+        "SCR-0019"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "primary",
+        "primary",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-028",
+      "agent": "s1-2",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-028",
+        "SOP-027",
+        "SCR-0044",
+        "SRC-0006"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "primary",
+        "primary",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-028",
+      "agent": "s1-2",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-028",
+        "SCR-0050",
+        "SCR-0015",
+        "KB-0001"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-029",
+      "agent": "s1-3",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-029",
+        "SOP-028",
+        "SOP-027",
+        "SCR-0043"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "primary",
+        "primary",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-029",
+      "agent": "s1-3",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-029",
+        "SOP-012",
+        "SOP-014",
+        "SOP-013"
+      ],
+      "outcome": "failure",
+      "hops": 3,
+      "strengths_used": [
+        "primary",
+        "supporting",
+        "supporting"
+      ]
+    },
+    {
+      "sop": "SOP-029",
+      "agent": "s1-3",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-029",
+        "SOP-028",
+        "TEAM-0026",
+        "SCR-0013"
+      ],
+      "outcome": "success",
+      "hops": 3,
+      "strengths_used": [
+        "primary",
+        "unclassified",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-G01",
+      "agent": "s1-4",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-G01",
+        "SCR-0019"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-G01",
+      "agent": "s1-4",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-G01",
+        "SOP-013",
+        "SOP-014",
+        "SOP-012"
+      ],
+      "outcome": "failure",
+      "hops": 3,
+      "strengths_used": [
+        "supporting",
+        "supporting",
+        "supporting"
+      ]
+    },
+    {
+      "sop": "SOP-G01",
+      "agent": "s1-4",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-G01",
+        "SCR-0019",
+        "SRC-0050",
+        "TEAM-0010"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "primary",
+        "supporting",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-G02",
+      "agent": "s1-5",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-G02",
+        "SOP-028",
+        "SOP-029",
+        "SOP-012",
+        "SCR-0019"
+      ],
+      "outcome": "success",
+      "hops": 4,
+      "strengths_used": [
+        "primary",
+        "primary",
+        "primary",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-G02",
+      "agent": "s1-5",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-G02",
+        "SOP-013",
+        "SOP-014",
+        "SOP-012"
+      ],
+      "outcome": "failure",
+      "hops": 3,
+      "strengths_used": [
+        "supporting",
+        "supporting",
+        "supporting"
+      ]
+    },
+    {
+      "sop": "SOP-G02",
+      "agent": "s1-5",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-G02",
+        "KB-0022",
+        "KB-0019",
+        "SOP-G03"
+      ],
+      "outcome": "failure",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "unclassified"
+      ]
+    },
+    {
+      "sop": "SOP-G03",
+      "agent": "s1-6",
+      "journey_type": "primary-path",
+      "path": [
+        "SOP-G03",
+        "SCR-0033"
+      ],
+      "outcome": "success",
+      "hops": 1,
+      "strengths_used": [
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-G03",
+      "agent": "s1-6",
+      "journey_type": "exploration",
+      "path": [
+        "SOP-G03",
+        "KB-0023",
+        "KB-0022",
+        "TEAM-0024"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "primary"
+      ]
+    },
+    {
+      "sop": "SOP-G03",
+      "agent": "s1-6",
+      "journey_type": "random-walk",
+      "path": [
+        "SOP-G03",
+        "KB-0031",
+        "SOP-014",
+        "TEAM-0009"
+      ],
+      "outcome": "partial",
+      "hops": 3,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "unclassified"
+      ]
+    }
+  ]
+}

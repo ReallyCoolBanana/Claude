@@ -1,0 +1,1021 @@
+{
+  "report_id": "stress-s8-e2e-workflows",
+  "generated": "2026-03-12T22:53:02.290546Z",
+  "team": "Stress Team S8",
+  "description": "End-to-end workflow simulation testing \u2014 15 complete agent task flows with multi-hop pointer traversals",
+  "summary": {
+    "total_workflows": 15,
+    "successful": 8,
+    "partial": 7,
+    "failed": 0,
+    "total_hops_attempted": 44,
+    "avg_weight": 10.1,
+    "avg_tag_coherence": 0.0
+  },
+  "workflow_results": [
+    {
+      "workflow_num": 1,
+      "workflow_type": "research",
+      "agent": "s8-1",
+      "expected_chain": "SOP -> KB -> SCR -> SRC",
+      "start_node": "SOP-011",
+      "actual_route": "SOP-011 -> KB-0025 -> SCR-0033 -> SRC-0050",
+      "outcome": "success",
+      "hop_count": 3,
+      "total_weight": 11,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "supporting"
+      ],
+      "strength_helpful": true,
+      "tag_coherence_per_hop": [
+        0,
+        0,
+        0
+      ],
+      "avg_tag_coherence": 0.0,
+      "chain_complete": true,
+      "hops_detail": [
+        {
+          "from": "SOP-011",
+          "to": "KB-0025",
+          "weight": 3,
+          "strength": "unclassified",
+          "found": true,
+          "reasons": [
+            "shared_tags:coordination,multi-agent,sop"
+          ]
+        },
+        {
+          "from": "KB-0025",
+          "to": "SCR-0033",
+          "weight": 3,
+          "strength": "unclassified",
+          "found": true,
+          "reasons": [
+            "shared_tags:coordination,hub-spoke,multi-agent"
+          ]
+        },
+        {
+          "from": "SCR-0033",
+          "to": "SRC-0050",
+          "weight": 5,
+          "strength": "supporting",
+          "found": true,
+          "reasons": [
+            "tag_bridge:data_source"
+          ]
+        }
+      ]
+    },
+    {
+      "workflow_num": 2,
+      "workflow_type": "research",
+      "agent": "s8-2",
+      "expected_chain": "SOP -> KB -> SCR -> SRC",
+      "start_node": "SOP-014",
+      "actual_route": "SOP-014 -> KB-0025 -> SCR-0033 -> SRC-0050",
+      "outcome": "success",
+      "hop_count": 3,
+      "total_weight": 12,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "supporting"
+      ],
+      "strength_helpful": true,
+      "tag_coherence_per_hop": [
+        0,
+        0,
+        0
+      ],
+      "avg_tag_coherence": 0.0,
+      "chain_complete": true,
+      "hops_detail": [
+        {
+          "from": "SOP-014",
+          "to": "KB-0025",
+          "weight": 4,
+          "strength": "unclassified",
+          "found": true,
+          "reasons": [
+            "shared_tags:coordination,hub-spoke,multi-agent,sop"
+          ]
+        },
+        {
+          "from": "KB-0025",
+          "to": "SCR-0033",
+          "weight": 3,
+          "strength": "unclassified",
+          "found": true,
+          "reasons": [
+            "shared_tags:coordination,hub-spoke,multi-agent"
+          ]
+        },
+        {
+          "from": "SCR-0033",
+          "to": "SRC-0050",
+          "weight": 5,
+          "strength": "supporting",
+          "found": true,
+          "reasons": [
+            "tag_bridge:data_source"
+          ]
+        }
+      ]
+    },
+    {
+      "workflow_num": 3,
+      "workflow_type": "research",
+      "agent": "s8-3",
+      "expected_chain": "SOP -> KB -> SCR -> SRC",
+      "start_node": "SOP-017",
+      "actual_route": "SOP-017 -> KB-0004 -> SCR-0007 -> SRC-0006",
+      "outcome": "success",
+      "hop_count": 3,
+      "total_weight": 16,
+      "strengths_used": [
+        "unclassified",
+        "unclassified",
+        "primary"
+      ],
+      "strength_helpful": true,
+      "tag_coherence_per_hop": [
+        0,
+        0,
+        0
+      ],
+      "avg_tag_coherence": 0.0,
+      "chain_complete": true,
+      "hops_detail": [
+        {
+          "from": "SOP-017",
+          "to": "KB-0004",
+          "weight": 2,
+          "strength": "unclassified",
+          "found": true,
+          "reasons": [
+            "shared_tags:data-gathering,validation"
+          ]
+        },
+        {
+          "from": "KB-0004",
+          "to": "SCR-0007",
+          "weight": 2,
+          "strength": "unclassified",
+          "found": true,
+          "reasons": [
+            "shared_tags:data-gathering,public-api"
+          ]
+        },
+        {
+          "from": "SCR-0007",
+          "to": "SRC-0006",
+          "weight": 12,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:public-api,search",
+            "explicit_reference:uses_sources",
+            "explicit_reference:used_by",
+            "explicit_reference:uses_scripts"
+          ]
+        }
+      ]
+    },
+    {
+      "workflow_num": 4,
+      "workflow_type": "build",
+      "agent": "s8-4",
+      "expected_chain": "SOP -> SCR -> SCR -> SOP",
+      "start_node": "SOP-012",
+      "actual_route": "SOP-012 -> SCR-0019 -> SCR-0020 -> SOP-015",
+      "outcome": "success",
+      "hop_count": 3,
+      "total_weight": 12,
+      "strengths_used": [
+        "primary",
+        "unclassified",
+        "related"
+      ],
+      "strength_helpful": true,
+      "tag_coherence_per_hop": [
+        0,
+        0,
+        0
+      ],
+      "avg_tag_coherence": 0.0,
+      "chain_complete": true,
+      "hops_detail": [
+        {
+          "from": "SOP-012",
+          "to": "SCR-0019",
+          "weight": 4,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:coordination,monitoring,multi-agent",
+            "category_affinity:coordination \u2248 operations"
+          ]
+        },
+        {
+          "from": "SCR-0019",
+          "to": "SCR-0020",
+          "weight": 6,
+          "strength": "unclassified",
+          "found": true,
+          "reasons": [
+            "explicit_reference:uses_scripts",
+            "explicit_reference:used_by"
+          ]
+        },
+        {
+          "from": "SCR-0020",
+          "to": "SOP-015",
+          "weight": 2,
+          "strength": "related",
+          "found": true,
+          "reasons": [
+            "shared_tags:monitoring,validation"
+          ]
+        }
+      ]
+    },
+    {
+      "workflow_num": 5,
+      "workflow_type": "build",
+      "agent": "s8-5",
+      "expected_chain": "SOP -> SCR -> SCR -> SOP",
+      "start_node": "SOP-015",
+      "actual_route": "SOP-015 -> SCR-0012 -> SCR-0020 -> SOP-015",
+      "outcome": "success",
+      "hop_count": 3,
+      "total_weight": 10,
+      "strengths_used": [
+        "primary",
+        "unclassified",
+        "related"
+      ],
+      "strength_helpful": true,
+      "tag_coherence_per_hop": [
+        0,
+        0,
+        0
+      ],
+      "avg_tag_coherence": 0.0,
+      "chain_complete": true,
+      "hops_detail": [
+        {
+          "from": "SOP-015",
+          "to": "SCR-0012",
+          "weight": 2,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:indexing,validation"
+          ]
+        },
+        {
+          "from": "SCR-0012",
+          "to": "SCR-0020",
+          "weight": 6,
+          "strength": "unclassified",
+          "found": true,
+          "reasons": [
+            "explicit_reference:uses_scripts",
+            "explicit_reference:used_by"
+          ]
+        },
+        {
+          "from": "SCR-0020",
+          "to": "SOP-015",
+          "weight": 2,
+          "strength": "related",
+          "found": true,
+          "reasons": [
+            "shared_tags:monitoring,validation"
+          ]
+        }
+      ]
+    },
+    {
+      "workflow_num": 6,
+      "workflow_type": "build",
+      "agent": "s8-1",
+      "expected_chain": "SOP -> SCR -> SCR -> SOP",
+      "start_node": "SOP-018",
+      "actual_route": "SOP-018 -> SCR-0004",
+      "outcome": "partial",
+      "hop_count": 2,
+      "total_weight": 1,
+      "strengths_used": [
+        "primary",
+        "missing"
+      ],
+      "strength_helpful": true,
+      "tag_coherence_per_hop": [
+        0
+      ],
+      "avg_tag_coherence": 0.0,
+      "chain_complete": false,
+      "hops_detail": [
+        {
+          "from": "SOP-018",
+          "to": "SCR-0004",
+          "weight": 1,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:stock-analysis"
+          ]
+        },
+        {
+          "from": "SCR-0004",
+          "to": "[missing-SCR]",
+          "weight": 0,
+          "strength": "missing",
+          "found": false,
+          "reason": "No pointer from SCR-0004 to SCR-* domain",
+          "missing_transition": "SCR -> SCR"
+        }
+      ]
+    },
+    {
+      "workflow_num": 7,
+      "workflow_type": "enrichment",
+      "agent": "s8-2",
+      "expected_chain": "SOP -> SCR -> wiki -> SCR",
+      "start_node": "SOP-025",
+      "actual_route": "SOP-025 -> SCR-0043",
+      "outcome": "partial",
+      "hop_count": 2,
+      "total_weight": 7,
+      "strengths_used": [
+        "primary",
+        "missing"
+      ],
+      "strength_helpful": true,
+      "tag_coherence_per_hop": [
+        0
+      ],
+      "avg_tag_coherence": 0.0,
+      "chain_complete": false,
+      "hops_detail": [
+        {
+          "from": "SOP-025",
+          "to": "SCR-0043",
+          "weight": 7,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:data-gathering",
+            "explicit_reference:used_by",
+            "explicit_reference:uses_scripts"
+          ]
+        },
+        {
+          "from": "SCR-0043",
+          "to": "[missing-wiki]",
+          "weight": 0,
+          "strength": "missing",
+          "found": false,
+          "reason": "No pointer from SCR-0043 to wiki-* domain",
+          "missing_transition": "SCR -> wiki"
+        }
+      ]
+    },
+    {
+      "workflow_num": 8,
+      "workflow_type": "enrichment",
+      "agent": "s8-3",
+      "expected_chain": "SOP -> SCR -> wiki -> SCR",
+      "start_node": "SOP-026",
+      "actual_route": "SOP-026 -> SCR-0043",
+      "outcome": "partial",
+      "hop_count": 2,
+      "total_weight": 7,
+      "strengths_used": [
+        "primary",
+        "missing"
+      ],
+      "strength_helpful": true,
+      "tag_coherence_per_hop": [
+        0
+      ],
+      "avg_tag_coherence": 0.0,
+      "chain_complete": false,
+      "hops_detail": [
+        {
+          "from": "SOP-026",
+          "to": "SCR-0043",
+          "weight": 7,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:data-gathering",
+            "explicit_reference:used_by",
+            "explicit_reference:uses_scripts"
+          ]
+        },
+        {
+          "from": "SCR-0043",
+          "to": "[missing-wiki]",
+          "weight": 0,
+          "strength": "missing",
+          "found": false,
+          "reason": "No pointer from SCR-0043 to wiki-* domain",
+          "missing_transition": "SCR -> wiki"
+        }
+      ]
+    },
+    {
+      "workflow_num": 9,
+      "workflow_type": "enrichment",
+      "agent": "s8-4",
+      "expected_chain": "SOP -> SCR -> wiki -> SCR",
+      "start_node": "SOP-027",
+      "actual_route": "SOP-027 -> SCR-0043",
+      "outcome": "partial",
+      "hop_count": 2,
+      "total_weight": 8,
+      "strengths_used": [
+        "primary",
+        "missing"
+      ],
+      "strength_helpful": true,
+      "tag_coherence_per_hop": [
+        0
+      ],
+      "avg_tag_coherence": 0.0,
+      "chain_complete": false,
+      "hops_detail": [
+        {
+          "from": "SOP-027",
+          "to": "SCR-0043",
+          "weight": 8,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:data-gathering",
+            "explicit_reference:used_by",
+            "category_affinity:data-collection \u2248 data-gathering",
+            "explicit_reference:uses_scripts"
+          ]
+        },
+        {
+          "from": "SCR-0043",
+          "to": "[missing-wiki]",
+          "weight": 0,
+          "strength": "missing",
+          "found": false,
+          "reason": "No pointer from SCR-0043 to wiki-* domain",
+          "missing_transition": "SCR -> wiki"
+        }
+      ]
+    },
+    {
+      "workflow_num": 10,
+      "workflow_type": "discovery",
+      "agent": "s8-5",
+      "expected_chain": "TEAM -> SOP -> SCR",
+      "start_node": "TEAM-0004",
+      "actual_route": "TEAM-0004 -> SOP-017 -> SCR-0023",
+      "outcome": "success",
+      "hop_count": 2,
+      "total_weight": 10,
+      "strengths_used": [
+        "unclassified",
+        "primary"
+      ],
+      "strength_helpful": true,
+      "tag_coherence_per_hop": [
+        0,
+        0
+      ],
+      "avg_tag_coherence": 0.0,
+      "chain_complete": true,
+      "hops_detail": [
+        {
+          "from": "TEAM-0004",
+          "to": "SOP-017",
+          "weight": 2,
+          "strength": "unclassified",
+          "found": true,
+          "reasons": [
+            "shared_tags:data-gathering,validation"
+          ]
+        },
+        {
+          "from": "SOP-017",
+          "to": "SCR-0023",
+          "weight": 8,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:data-gathering",
+            "explicit_reference:used_by",
+            "category_affinity:data-collection \u2248 data-gathering",
+            "explicit_reference:uses_scripts"
+          ]
+        }
+      ]
+    },
+    {
+      "workflow_num": 11,
+      "workflow_type": "discovery",
+      "agent": "s8-1",
+      "expected_chain": "TEAM -> SOP -> SCR",
+      "start_node": "TEAM-0006",
+      "actual_route": "TEAM-0006 -> SOP-015 -> SCR-0012",
+      "outcome": "success",
+      "hop_count": 2,
+      "total_weight": 4,
+      "strengths_used": [
+        "unclassified",
+        "primary"
+      ],
+      "strength_helpful": true,
+      "tag_coherence_per_hop": [
+        0,
+        0
+      ],
+      "avg_tag_coherence": 0.0,
+      "chain_complete": true,
+      "hops_detail": [
+        {
+          "from": "TEAM-0006",
+          "to": "SOP-015",
+          "weight": 2,
+          "strength": "unclassified",
+          "found": true,
+          "reasons": [
+            "shared_tags:indexing,validation"
+          ]
+        },
+        {
+          "from": "SOP-015",
+          "to": "SCR-0012",
+          "weight": 2,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:indexing,validation"
+          ]
+        }
+      ]
+    },
+    {
+      "workflow_num": 12,
+      "workflow_type": "discovery",
+      "agent": "s8-2",
+      "expected_chain": "TEAM -> SOP -> SCR",
+      "start_node": "TEAM-0008",
+      "actual_route": "TEAM-0008 -> SOP-G02 -> SCR-0019",
+      "outcome": "success",
+      "hop_count": 2,
+      "total_weight": 4,
+      "strengths_used": [
+        "unclassified",
+        "primary"
+      ],
+      "strength_helpful": true,
+      "tag_coherence_per_hop": [
+        0,
+        0
+      ],
+      "avg_tag_coherence": 0.0,
+      "chain_complete": true,
+      "hops_detail": [
+        {
+          "from": "TEAM-0008",
+          "to": "SOP-G02",
+          "weight": 2,
+          "strength": "unclassified",
+          "found": true,
+          "reasons": [
+            "shared_tags:indexing,storage"
+          ]
+        },
+        {
+          "from": "SOP-G02",
+          "to": "SCR-0019",
+          "weight": 2,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:coordination",
+            "category_affinity:coordination \u2248 infrastructure"
+          ]
+        }
+      ]
+    },
+    {
+      "workflow_num": 13,
+      "workflow_type": "full-stack",
+      "agent": "s8-3",
+      "expected_chain": "SOP -> SCR -> SRC -> KB -> TEAM -> SOP",
+      "start_node": "SOP-013",
+      "actual_route": "SOP-013 -> SCR-0019 -> SRC-0050 -> KB-0010 -> TEAM-0014",
+      "outcome": "partial",
+      "hop_count": 5,
+      "total_weight": 16,
+      "strengths_used": [
+        "primary",
+        "supporting",
+        "unclassified",
+        "primary",
+        "missing"
+      ],
+      "strength_helpful": true,
+      "tag_coherence_per_hop": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "avg_tag_coherence": 0.0,
+      "chain_complete": false,
+      "hops_detail": [
+        {
+          "from": "SOP-013",
+          "to": "SCR-0019",
+          "weight": 2,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:coordination,multi-agent"
+          ]
+        },
+        {
+          "from": "SCR-0019",
+          "to": "SRC-0050",
+          "weight": 5,
+          "strength": "supporting",
+          "found": true,
+          "reasons": [
+            "tag_bridge:data_source"
+          ]
+        },
+        {
+          "from": "SRC-0050",
+          "to": "KB-0010",
+          "weight": 2,
+          "strength": "unclassified",
+          "found": true,
+          "reasons": [
+            "shared_tags:ai-ml,public-api"
+          ]
+        },
+        {
+          "from": "KB-0010",
+          "to": "TEAM-0014",
+          "weight": 7,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:public-api",
+            "explicit_reference:built_upon_by",
+            "explicit_reference:builds_on"
+          ]
+        },
+        {
+          "from": "TEAM-0014",
+          "to": "[missing-SOP]",
+          "weight": 0,
+          "strength": "missing",
+          "found": false,
+          "reason": "No pointer from TEAM-0014 to SOP-* domain",
+          "missing_transition": "TEAM -> SOP"
+        }
+      ]
+    },
+    {
+      "workflow_num": 14,
+      "workflow_type": "full-stack",
+      "agent": "s8-4",
+      "expected_chain": "SOP -> SCR -> SRC -> KB -> TEAM -> SOP",
+      "start_node": "SOP-016",
+      "actual_route": "SOP-016 -> SCR-0031 -> SRC-0050 -> KB-0010 -> TEAM-0014",
+      "outcome": "partial",
+      "hop_count": 5,
+      "total_weight": 16,
+      "strengths_used": [
+        "primary",
+        "supporting",
+        "unclassified",
+        "primary",
+        "missing"
+      ],
+      "strength_helpful": true,
+      "tag_coherence_per_hop": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "avg_tag_coherence": 0.0,
+      "chain_complete": false,
+      "hops_detail": [
+        {
+          "from": "SOP-016",
+          "to": "SCR-0031",
+          "weight": 2,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:coordination,deduplication"
+          ]
+        },
+        {
+          "from": "SCR-0031",
+          "to": "SRC-0050",
+          "weight": 5,
+          "strength": "supporting",
+          "found": true,
+          "reasons": [
+            "tag_bridge:data_source"
+          ]
+        },
+        {
+          "from": "SRC-0050",
+          "to": "KB-0010",
+          "weight": 2,
+          "strength": "unclassified",
+          "found": true,
+          "reasons": [
+            "shared_tags:ai-ml,public-api"
+          ]
+        },
+        {
+          "from": "KB-0010",
+          "to": "TEAM-0014",
+          "weight": 7,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:public-api",
+            "explicit_reference:built_upon_by",
+            "explicit_reference:builds_on"
+          ]
+        },
+        {
+          "from": "TEAM-0014",
+          "to": "[missing-SOP]",
+          "weight": 0,
+          "strength": "missing",
+          "found": false,
+          "reason": "No pointer from TEAM-0014 to SOP-* domain",
+          "missing_transition": "TEAM -> SOP"
+        }
+      ]
+    },
+    {
+      "workflow_num": 15,
+      "workflow_type": "full-stack",
+      "agent": "s8-5",
+      "expected_chain": "SOP -> SCR -> SRC -> KB -> TEAM -> SOP",
+      "start_node": "SOP-019",
+      "actual_route": "SOP-019 -> SCR-0033 -> SRC-0050 -> KB-0010 -> TEAM-0014",
+      "outcome": "partial",
+      "hop_count": 5,
+      "total_weight": 17,
+      "strengths_used": [
+        "primary",
+        "supporting",
+        "unclassified",
+        "primary",
+        "missing"
+      ],
+      "strength_helpful": true,
+      "tag_coherence_per_hop": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "avg_tag_coherence": 0.0,
+      "chain_complete": false,
+      "hops_detail": [
+        {
+          "from": "SOP-019",
+          "to": "SCR-0033",
+          "weight": 3,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:python,sqlite",
+            "category_affinity:coordination \u2248 infrastructure"
+          ]
+        },
+        {
+          "from": "SCR-0033",
+          "to": "SRC-0050",
+          "weight": 5,
+          "strength": "supporting",
+          "found": true,
+          "reasons": [
+            "tag_bridge:data_source"
+          ]
+        },
+        {
+          "from": "SRC-0050",
+          "to": "KB-0010",
+          "weight": 2,
+          "strength": "unclassified",
+          "found": true,
+          "reasons": [
+            "shared_tags:ai-ml,public-api"
+          ]
+        },
+        {
+          "from": "KB-0010",
+          "to": "TEAM-0014",
+          "weight": 7,
+          "strength": "primary",
+          "found": true,
+          "reasons": [
+            "shared_tags:public-api",
+            "explicit_reference:built_upon_by",
+            "explicit_reference:builds_on"
+          ]
+        },
+        {
+          "from": "TEAM-0014",
+          "to": "[missing-SOP]",
+          "weight": 0,
+          "strength": "missing",
+          "found": false,
+          "reason": "No pointer from TEAM-0014 to SOP-* domain",
+          "missing_transition": "TEAM -> SOP"
+        }
+      ]
+    }
+  ],
+  "workflow_success_rates": {
+    "research": {
+      "total": 3,
+      "success": 3,
+      "partial": 0,
+      "failure": 0,
+      "success_rate_pct": 100.0,
+      "completion_rate_pct": 100.0
+    },
+    "build": {
+      "total": 3,
+      "success": 2,
+      "partial": 1,
+      "failure": 0,
+      "success_rate_pct": 66.7,
+      "completion_rate_pct": 100.0
+    },
+    "enrichment": {
+      "total": 3,
+      "success": 0,
+      "partial": 3,
+      "failure": 0,
+      "success_rate_pct": 0.0,
+      "completion_rate_pct": 100.0
+    },
+    "discovery": {
+      "total": 3,
+      "success": 3,
+      "partial": 0,
+      "failure": 0,
+      "success_rate_pct": 100.0,
+      "completion_rate_pct": 100.0
+    },
+    "full-stack": {
+      "total": 3,
+      "success": 0,
+      "partial": 3,
+      "failure": 0,
+      "success_rate_pct": 0.0,
+      "completion_rate_pct": 100.0
+    }
+  },
+  "chain_completion_analysis": {
+    "KB -> SCR": {
+      "total_attempts": 3,
+      "successful": 3,
+      "failed": 0,
+      "success_rate_pct": 100.0
+    },
+    "KB -> TEAM": {
+      "total_attempts": 3,
+      "successful": 3,
+      "failed": 0,
+      "success_rate_pct": 100.0
+    },
+    "SCR -> SCR": {
+      "total_attempts": 3,
+      "successful": 2,
+      "failed": 1,
+      "success_rate_pct": 66.7
+    },
+    "SCR -> SOP": {
+      "total_attempts": 2,
+      "successful": 2,
+      "failed": 0,
+      "success_rate_pct": 100.0
+    },
+    "SCR -> SRC": {
+      "total_attempts": 6,
+      "successful": 6,
+      "failed": 0,
+      "success_rate_pct": 100.0
+    },
+    "SCR -> wiki": {
+      "total_attempts": 3,
+      "successful": 0,
+      "failed": 3,
+      "success_rate_pct": 0.0
+    },
+    "SOP -> KB": {
+      "total_attempts": 3,
+      "successful": 3,
+      "failed": 0,
+      "success_rate_pct": 100.0
+    },
+    "SOP -> SCR": {
+      "total_attempts": 12,
+      "successful": 12,
+      "failed": 0,
+      "success_rate_pct": 100.0
+    },
+    "SRC -> KB": {
+      "total_attempts": 3,
+      "successful": 3,
+      "failed": 0,
+      "success_rate_pct": 100.0
+    },
+    "TEAM -> SOP": {
+      "total_attempts": 6,
+      "successful": 3,
+      "failed": 3,
+      "success_rate_pct": 50.0
+    }
+  },
+  "bottleneck_transitions": [
+    {
+      "transition": "SCR -> wiki",
+      "failures": 3,
+      "total": 3,
+      "failure_rate_pct": 100.0
+    },
+    {
+      "transition": "TEAM -> SOP",
+      "failures": 3,
+      "total": 6,
+      "failure_rate_pct": 50.0
+    },
+    {
+      "transition": "SCR -> SCR",
+      "failures": 1,
+      "total": 3,
+      "failure_rate_pct": 33.3
+    }
+  ],
+  "strength_analysis": {
+    "distribution": {
+      "unclassified": 14,
+      "supporting": 5,
+      "primary": 16,
+      "related": 2,
+      "missing": 7
+    },
+    "on_successful_workflows": {
+      "unclassified": 11,
+      "supporting": 2,
+      "primary": 6,
+      "related": 2
+    },
+    "effectiveness": {
+      "unclassified": 78.6,
+      "supporting": 40.0,
+      "primary": 37.5,
+      "related": 100.0,
+      "missing": 0.0
+    }
+  },
+  "tag_coherence_summary": {
+    "overall_avg": 0.0,
+    "on_success": 0.0,
+    "on_partial": 0.0,
+    "observation": "Tag coherence tends to degrade in multi-hop traversals as agents move between distant domains"
+  },
+  "weight_analysis": {
+    "avg_total_weight": 10.1,
+    "avg_on_success": 9.9,
+    "min_weight": 1,
+    "max_weight": 17
+  },
+  "recommendations": [
+    "Add more SCR -> wiki pointers \u2014 100.0% failure rate (3/3 attempts failed)",
+    "Add more TEAM -> SOP pointers \u2014 50.0% failure rate (3/6 attempts failed)",
+    "Add more SCR -> SCR pointers \u2014 33.3% failure rate (1/3 attempts failed)",
+    "Classify 14 unclassified pointer strengths (31.8% of all hops) \u2014 agents cannot use strength-based routing on these edges",
+    "Improve tag coherence across multi-hop paths (current avg: 0.0) \u2014 agents traversing long chains lose topical context",
+    "No traversals tested for: wiki -> SCR \u2014 these may be undertested"
+  ]
+}

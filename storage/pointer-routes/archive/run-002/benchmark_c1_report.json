@@ -1,0 +1,1165 @@
+{
+  "benchmark": "C1 - SCR Chain Stress Test",
+  "generated": "2026-03-12T22:37:26.096885Z",
+  "run_context": "Run-002: Follow-up to Run-001 finding 25% monitoring success due to weak SCR->SCR chains",
+  "task_1_scr_to_scr_analysis": {
+    "total_scr_nodes": 57,
+    "total_scr_to_scr_edges": 167,
+    "scripts_with_companions": 44,
+    "isolated_scripts_count": 13,
+    "companion_ratio": 77.2,
+    "max_chain_length": 19,
+    "strength_distribution": {
+      "unclassified": 141,
+      "primary": 26
+    },
+    "scr_to_scr_chains": {
+      "SCR-0047": "SCR-0047 -> SCR-0013 -> SCR-0051 -> SCR-0049 -> SCR-0048 -> SCR-0035 -> SCR-0050 -> SCR-0006 -> SCR-0009 -> SCR-0008 -> SCR-0011 -> SCR-0007 -> SCR-0046 -> SCR-0045 -> SCR-0023 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0013": "SCR-0013 -> SCR-0051 -> SCR-0049 -> SCR-0047 -> SCR-0035 -> SCR-0050 -> SCR-0048 -> SCR-0006 -> SCR-0009 -> SCR-0008 -> SCR-0011 -> SCR-0007 -> SCR-0046 -> SCR-0045 -> SCR-0023 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0048": "SCR-0048 -> SCR-0035 -> SCR-0047 -> SCR-0013 -> SCR-0051 -> SCR-0049 -> SCR-0050 -> SCR-0006 -> SCR-0009 -> SCR-0008 -> SCR-0011 -> SCR-0007 -> SCR-0046 -> SCR-0045 -> SCR-0023 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0035": "SCR-0035 -> SCR-0047 -> SCR-0013 -> SCR-0051 -> SCR-0049 -> SCR-0050 -> SCR-0048 -> SCR-0006 -> SCR-0009 -> SCR-0008 -> SCR-0011 -> SCR-0007 -> SCR-0046 -> SCR-0045 -> SCR-0023 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0051": "SCR-0051 -> SCR-0013 -> SCR-0047 -> SCR-0035 -> SCR-0050 -> SCR-0049 -> SCR-0048 -> SCR-0006 -> SCR-0009 -> SCR-0008 -> SCR-0011 -> SCR-0007 -> SCR-0046 -> SCR-0045 -> SCR-0023 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0049": "SCR-0049 -> SCR-0013 -> SCR-0051 -> SCR-0047 -> SCR-0035 -> SCR-0050 -> SCR-0048 -> SCR-0006 -> SCR-0009 -> SCR-0008 -> SCR-0011 -> SCR-0007 -> SCR-0046 -> SCR-0045 -> SCR-0023 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0050": "SCR-0050 -> SCR-0035 -> SCR-0047 -> SCR-0013 -> SCR-0051 -> SCR-0049 -> SCR-0048 -> SCR-0006 -> SCR-0009 -> SCR-0008 -> SCR-0011 -> SCR-0007 -> SCR-0046 -> SCR-0045 -> SCR-0023 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0010": "SCR-0010 -> SCR-0011 -> SCR-0006 -> SCR-0009 -> SCR-0007 -> SCR-0046 -> SCR-0045 -> SCR-0023 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0008": "SCR-0008 -> SCR-0009 -> SCR-0006 -> SCR-0011 -> SCR-0007 -> SCR-0046 -> SCR-0045 -> SCR-0023 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0045": "SCR-0045 -> SCR-0006 -> SCR-0009 -> SCR-0008 -> SCR-0011 -> SCR-0007 -> SCR-0046 -> SCR-0023 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0006": "SCR-0006 -> SCR-0009 -> SCR-0008 -> SCR-0011 -> SCR-0007 -> SCR-0046 -> SCR-0045 -> SCR-0023 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0056": "SCR-0056 -> SCR-0052 -> SCR-0033 -> SCR-0054 -> SCR-0032 -> SCR-0057 -> SCR-0055 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+      "SCR-0055": "SCR-0055 -> SCR-0052 -> SCR-0033 -> SCR-0054 -> SCR-0032 -> SCR-0057 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+      "SCR-0054": "SCR-0054 -> SCR-0052 -> SCR-0033 -> SCR-0055 -> SCR-0032 -> SCR-0057 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+      "SCR-0033": "SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0032 -> SCR-0057 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+      "SCR-0053": "SCR-0053 -> SCR-0052 -> SCR-0033 -> SCR-0054 -> SCR-0032 -> SCR-0057 -> SCR-0055 -> SCR-0056 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+      "SCR-0011": "SCR-0011 -> SCR-0006 -> SCR-0009 -> SCR-0007 -> SCR-0046 -> SCR-0045 -> SCR-0023 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0009": "SCR-0009 -> SCR-0006 -> SCR-0011 -> SCR-0007 -> SCR-0046 -> SCR-0045 -> SCR-0023 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0032": "SCR-0032 -> SCR-0057 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+      "SCR-0052": "SCR-0052 -> SCR-0033 -> SCR-0054 -> SCR-0032 -> SCR-0057 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+      "SCR-0057": "SCR-0057 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+      "SCR-0007": "SCR-0007 -> SCR-0046 -> SCR-0045 -> SCR-0006 -> SCR-0009 -> SCR-0008 -> SCR-0011 -> SCR-0010",
+      "SCR-0046": "SCR-0046 -> SCR-0045 -> SCR-0006 -> SCR-0009 -> SCR-0007 -> SCR-0011 -> SCR-0008",
+      "SCR-0024": "SCR-0024 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0027": "SCR-0027 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0023": "SCR-0023 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0041": "SCR-0041 -> SCR-0021 -> SCR-0025 -> SCR-0022 -> SCR-0023",
+      "SCR-0025": "SCR-0025 -> SCR-0021 -> SCR-0041 -> SCR-0022 -> SCR-0023",
+      "SCR-0026": "SCR-0026 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041",
+      "SCR-0028": "SCR-0028 -> SCR-0022 -> SCR-0025 -> SCR-0021 -> SCR-0041"
+    },
+    "chain_length_distribution": {
+      "2": 1,
+      "3": 3,
+      "4": 2,
+      "5": 7,
+      "7": 1,
+      "8": 1,
+      "10": 1,
+      "11": 9,
+      "12": 4,
+      "19": 7
+    },
+    "isolated_scripts": [
+      "SCR-0001",
+      "SCR-0002",
+      "SCR-0004",
+      "SCR-0005",
+      "SCR-0016",
+      "SCR-0017",
+      "SCR-0036",
+      "SCR-0037",
+      "SCR-0038",
+      "SCR-0039",
+      "SCR-0040",
+      "SCR-0043",
+      "SCR-0044"
+    ]
+  },
+  "task_2_monitoring_depth": {
+    "sops_analyzed": [
+      "SOP-012",
+      "SOP-011",
+      "SOP-014",
+      "SOP-015"
+    ],
+    "max_depth_per_sop": {
+      "SOP-012": 12,
+      "SOP-011": 12,
+      "SOP-014": 12,
+      "SOP-015": 12
+    },
+    "overall_max_depth": 12,
+    "workflows": {
+      "SOP-012": {
+        "total_scr_links": 4,
+        "max_depth": 12,
+        "workflows": [
+          {
+            "path": "SOP-012 -> SCR-0032 -> SCR-0057 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+            "depth": 12,
+            "entry_strength": "supporting"
+          },
+          {
+            "path": "SOP-012 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0032 -> SCR-0057 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+            "depth": 12,
+            "entry_strength": "related"
+          },
+          {
+            "path": "SOP-012 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+            "depth": 4,
+            "entry_strength": "primary"
+          },
+          {
+            "path": "SOP-012 -> SCR-0030",
+            "depth": 2,
+            "entry_strength": "supporting"
+          }
+        ]
+      },
+      "SOP-011": {
+        "total_scr_links": 5,
+        "max_depth": 12,
+        "workflows": [
+          {
+            "path": "SOP-011 -> SCR-0032 -> SCR-0057 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+            "depth": 12,
+            "entry_strength": "related"
+          },
+          {
+            "path": "SOP-011 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0032 -> SCR-0057 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+            "depth": 12,
+            "entry_strength": "related"
+          },
+          {
+            "path": "SOP-011 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+            "depth": 4,
+            "entry_strength": "primary"
+          },
+          {
+            "path": "SOP-011 -> SCR-0030",
+            "depth": 2,
+            "entry_strength": "related"
+          },
+          {
+            "path": "SOP-011 -> SCR-0031",
+            "depth": 2,
+            "entry_strength": "related"
+          }
+        ]
+      },
+      "SOP-014": {
+        "total_scr_links": 4,
+        "max_depth": 12,
+        "workflows": [
+          {
+            "path": "SOP-014 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0032 -> SCR-0057 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+            "depth": 12,
+            "entry_strength": "primary"
+          },
+          {
+            "path": "SOP-014 -> SCR-0032 -> SCR-0057 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+            "depth": 12,
+            "entry_strength": "related"
+          },
+          {
+            "path": "SOP-014 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+            "depth": 4,
+            "entry_strength": "related"
+          },
+          {
+            "path": "SOP-014 -> SCR-0030",
+            "depth": 2,
+            "entry_strength": "related"
+          }
+        ]
+      },
+      "SOP-015": {
+        "total_scr_links": 9,
+        "max_depth": 12,
+        "workflows": [
+          {
+            "path": "SOP-015 -> SCR-0032 -> SCR-0057 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+            "depth": 12,
+            "entry_strength": "tangential"
+          },
+          {
+            "path": "SOP-015 -> SCR-0012 -> SCR-0020 -> SCR-0014",
+            "depth": 4,
+            "entry_strength": "primary"
+          },
+          {
+            "path": "SOP-015 -> SCR-0014 -> SCR-0020 -> SCR-0012",
+            "depth": 4,
+            "entry_strength": "related"
+          },
+          {
+            "path": "SOP-015 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+            "depth": 4,
+            "entry_strength": "tangential"
+          },
+          {
+            "path": "SOP-015 -> SCR-0020 -> SCR-0012",
+            "depth": 3,
+            "entry_strength": "related"
+          },
+          {
+            "path": "SOP-015 -> SCR-0016",
+            "depth": 2,
+            "entry_strength": "related"
+          },
+          {
+            "path": "SOP-015 -> SCR-0034",
+            "depth": 2,
+            "entry_strength": "related"
+          },
+          {
+            "path": "SOP-015 -> SCR-0042",
+            "depth": 2,
+            "entry_strength": "related"
+          },
+          {
+            "path": "SOP-015 -> SCR-0030",
+            "depth": 2,
+            "entry_strength": "tangential"
+          }
+        ]
+      }
+    }
+  },
+  "task_3_cross_sop_paths": {
+    "sops_analyzed": [
+      "SOP-G01",
+      "SOP-G02",
+      "SOP-G03",
+      "SOP-013"
+    ],
+    "viable_paths_per_sop": {
+      "SOP-G01": 46,
+      "SOP-G02": 48,
+      "SOP-G03": 47,
+      "SOP-013": 54
+    },
+    "unique_target_sops_per_sop": {
+      "SOP-G01": [
+        "SOP-017",
+        "SOP-012",
+        "SOP-020",
+        "SOP-013",
+        "SOP-029",
+        "SOP-021",
+        "SOP-015",
+        "SOP-014",
+        "SOP-G02",
+        "SOP-016",
+        "SOP-028",
+        "SOP-019",
+        "SOP-023",
+        "SOP-022",
+        "SOP-011",
+        "SOP-024",
+        "SOP-G03"
+      ],
+      "SOP-G02": [
+        "SOP-017",
+        "SOP-012",
+        "SOP-020",
+        "SOP-013",
+        "SOP-029",
+        "SOP-021",
+        "SOP-015",
+        "SOP-014",
+        "SOP-G01",
+        "SOP-016",
+        "SOP-028",
+        "SOP-019",
+        "SOP-023",
+        "SOP-022",
+        "SOP-011",
+        "SOP-024",
+        "SOP-G03"
+      ],
+      "SOP-G03": [
+        "SOP-017",
+        "SOP-012",
+        "SOP-020",
+        "SOP-021",
+        "SOP-029",
+        "SOP-013",
+        "SOP-015",
+        "SOP-014",
+        "SOP-024",
+        "SOP-G01",
+        "SOP-028",
+        "SOP-016",
+        "SOP-019",
+        "SOP-023",
+        "SOP-022",
+        "SOP-011",
+        "SOP-G02"
+      ],
+      "SOP-013": [
+        "SOP-017",
+        "SOP-012",
+        "SOP-020",
+        "SOP-021",
+        "SOP-029",
+        "SOP-015",
+        "SOP-014",
+        "SOP-G02",
+        "SOP-G01",
+        "SOP-016",
+        "SOP-028",
+        "SOP-019",
+        "SOP-023",
+        "SOP-022",
+        "SOP-011",
+        "SOP-024",
+        "SOP-G03"
+      ]
+    },
+    "detail": {
+      "SOP-G01": {
+        "total_paths": 46,
+        "unique_target_sops": [
+          "SOP-017",
+          "SOP-012",
+          "SOP-020",
+          "SOP-013",
+          "SOP-029",
+          "SOP-021",
+          "SOP-015",
+          "SOP-014",
+          "SOP-G02",
+          "SOP-016",
+          "SOP-028",
+          "SOP-019",
+          "SOP-023",
+          "SOP-022",
+          "SOP-011",
+          "SOP-024",
+          "SOP-G03"
+        ],
+        "paths": [
+          {
+            "path": "SOP-G01 -> SCR-0019 -> SOP-012",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-012",
+            "leg1_strength": "primary",
+            "leg2_strength": "supporting",
+            "total_weight": 7
+          },
+          {
+            "path": "SOP-G01 -> SCR-0019 -> SOP-011",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-011",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-G01 -> SCR-0019 -> SOP-014",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-014",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-G01 -> SCR-0019 -> SOP-022",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-022",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-G01 -> SCR-0019 -> SOP-G03",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-G03",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-G01 -> SCR-0019 -> SOP-013",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-013",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-G01 -> SCR-0019 -> SCR-0020 -> SOP-015",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-015",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-G01 -> SCR-0019 -> SCR-0020 -> SOP-024",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-024",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-G01 -> SCR-0019 -> SCR-0020 -> SOP-012",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-012",
+            "leg1_strength": "primary",
+            "leg2_strength": "tangential",
+            "total_weight": 4
+          },
+          {
+            "path": "SOP-G01 -> SCR-0019 -> SCR-0020 -> SOP-017",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-017",
+            "leg1_strength": "primary",
+            "leg2_strength": "tangential",
+            "total_weight": 4
+          },
+          {
+            "path": "SOP-G01 -> SCR-0019 -> SCR-0020 -> SOP-019",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-019",
+            "leg1_strength": "primary",
+            "leg2_strength": "tangential",
+            "total_weight": 4
+          },
+          {
+            "path": "SOP-G01 -> SCR-0019 -> SCR-0020 -> SOP-020",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-020",
+            "leg1_strength": "primary",
+            "leg2_strength": "tangential",
+            "total_weight": 4
+          },
+          {
+            "path": "SOP-G01 -> SCR-0019 -> SCR-0020 -> SOP-023",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-023",
+            "leg1_strength": "primary",
+            "leg2_strength": "tangential",
+            "total_weight": 4
+          },
+          {
+            "path": "SOP-G01 -> SCR-0030 -> SOP-012",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-012",
+            "leg1_strength": "related",
+            "leg2_strength": "supporting",
+            "total_weight": 7
+          },
+          {
+            "path": "SOP-G01 -> SCR-0030 -> SOP-011",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-011",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-G01 -> SCR-0030 -> SOP-014",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-014",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-G01 -> SCR-0030 -> SOP-022",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-022",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-G01 -> SCR-0030 -> SOP-G03",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-G03",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-G01 -> SCR-0030 -> SOP-013",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-013",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-G01 -> SCR-0030 -> SOP-015",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-015",
+            "leg1_strength": "related",
+            "leg2_strength": "tangential",
+            "total_weight": 5
+          }
+        ]
+      },
+      "SOP-G02": {
+        "total_paths": 48,
+        "unique_target_sops": [
+          "SOP-017",
+          "SOP-012",
+          "SOP-020",
+          "SOP-013",
+          "SOP-029",
+          "SOP-021",
+          "SOP-015",
+          "SOP-014",
+          "SOP-G01",
+          "SOP-016",
+          "SOP-028",
+          "SOP-019",
+          "SOP-023",
+          "SOP-022",
+          "SOP-011",
+          "SOP-024",
+          "SOP-G03"
+        ],
+        "paths": [
+          {
+            "path": "SOP-G02 -> SCR-0019 -> SOP-012",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-012",
+            "leg1_strength": "primary",
+            "leg2_strength": "supporting",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-G02 -> SCR-0019 -> SOP-011",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-011",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-G02 -> SCR-0019 -> SOP-014",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-014",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-G02 -> SCR-0019 -> SOP-022",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-022",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-G02 -> SCR-0019 -> SOP-G01",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-G01",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-G02 -> SCR-0019 -> SOP-G03",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-G03",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-G02 -> SCR-0019 -> SOP-013",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-013",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 4
+          },
+          {
+            "path": "SOP-G02 -> SCR-0019 -> SCR-0020 -> SOP-015",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-015",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 4
+          },
+          {
+            "path": "SOP-G02 -> SCR-0019 -> SCR-0020 -> SOP-024",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-024",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 4
+          },
+          {
+            "path": "SOP-G02 -> SCR-0019 -> SCR-0020 -> SOP-012",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-012",
+            "leg1_strength": "primary",
+            "leg2_strength": "tangential",
+            "total_weight": 3
+          },
+          {
+            "path": "SOP-G02 -> SCR-0019 -> SCR-0020 -> SOP-017",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-017",
+            "leg1_strength": "primary",
+            "leg2_strength": "tangential",
+            "total_weight": 3
+          },
+          {
+            "path": "SOP-G02 -> SCR-0019 -> SCR-0020 -> SOP-019",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-019",
+            "leg1_strength": "primary",
+            "leg2_strength": "tangential",
+            "total_weight": 3
+          },
+          {
+            "path": "SOP-G02 -> SCR-0019 -> SCR-0020 -> SOP-020",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-020",
+            "leg1_strength": "primary",
+            "leg2_strength": "tangential",
+            "total_weight": 3
+          },
+          {
+            "path": "SOP-G02 -> SCR-0019 -> SCR-0020 -> SOP-023",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-023",
+            "leg1_strength": "primary",
+            "leg2_strength": "tangential",
+            "total_weight": 3
+          },
+          {
+            "path": "SOP-G02 -> SCR-0030 -> SOP-012",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-012",
+            "leg1_strength": "tangential",
+            "leg2_strength": "supporting",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-G02 -> SCR-0030 -> SOP-011",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-011",
+            "leg1_strength": "tangential",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-G02 -> SCR-0030 -> SOP-014",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-014",
+            "leg1_strength": "tangential",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-G02 -> SCR-0030 -> SOP-022",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-022",
+            "leg1_strength": "tangential",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-G02 -> SCR-0030 -> SOP-G01",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-G01",
+            "leg1_strength": "tangential",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-G02 -> SCR-0030 -> SOP-G03",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-G03",
+            "leg1_strength": "tangential",
+            "leg2_strength": "related",
+            "total_weight": 5
+          }
+        ]
+      },
+      "SOP-G03": {
+        "total_paths": 47,
+        "unique_target_sops": [
+          "SOP-017",
+          "SOP-012",
+          "SOP-020",
+          "SOP-021",
+          "SOP-029",
+          "SOP-013",
+          "SOP-015",
+          "SOP-014",
+          "SOP-024",
+          "SOP-G01",
+          "SOP-028",
+          "SOP-016",
+          "SOP-019",
+          "SOP-023",
+          "SOP-022",
+          "SOP-011",
+          "SOP-G02"
+        ],
+        "paths": [
+          {
+            "path": "SOP-G03 -> SCR-0033 -> SOP-014",
+            "via_script": "SCR-0033",
+            "target_sop": "SOP-014",
+            "leg1_strength": "primary",
+            "leg2_strength": "supporting",
+            "total_weight": 8
+          },
+          {
+            "path": "SOP-G03 -> SCR-0033 -> SOP-011",
+            "via_script": "SCR-0033",
+            "target_sop": "SOP-011",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 7
+          },
+          {
+            "path": "SOP-G03 -> SCR-0033 -> SOP-012",
+            "via_script": "SCR-0033",
+            "target_sop": "SOP-012",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 7
+          },
+          {
+            "path": "SOP-G03 -> SCR-0033 -> SOP-019",
+            "via_script": "SCR-0033",
+            "target_sop": "SOP-019",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 7
+          },
+          {
+            "path": "SOP-G03 -> SCR-0033 -> SOP-021",
+            "via_script": "SCR-0033",
+            "target_sop": "SOP-021",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 7
+          },
+          {
+            "path": "SOP-G03 -> SCR-0033 -> SOP-022",
+            "via_script": "SCR-0033",
+            "target_sop": "SOP-022",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 7
+          },
+          {
+            "path": "SOP-G03 -> SCR-0033 -> SOP-G01",
+            "via_script": "SCR-0033",
+            "target_sop": "SOP-G01",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 7
+          },
+          {
+            "path": "SOP-G03 -> SCR-0033 -> SCR-0057 -> SOP-012",
+            "via_script": "SCR-0033 -> SCR-0057",
+            "target_sop": "SOP-012",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 7
+          },
+          {
+            "path": "SOP-G03 -> SCR-0033 -> SCR-0057 -> SOP-015",
+            "via_script": "SCR-0033 -> SCR-0057",
+            "target_sop": "SOP-015",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 7
+          },
+          {
+            "path": "SOP-G03 -> SCR-0033 -> SCR-0057 -> SOP-028",
+            "via_script": "SCR-0033 -> SCR-0057",
+            "target_sop": "SOP-028",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 7
+          },
+          {
+            "path": "SOP-G03 -> SCR-0033 -> SCR-0057 -> SOP-G02",
+            "via_script": "SCR-0033 -> SCR-0057",
+            "target_sop": "SOP-G02",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 7
+          },
+          {
+            "path": "SOP-G03 -> SCR-0033 -> SCR-0057 -> SOP-029",
+            "via_script": "SCR-0033 -> SCR-0057",
+            "target_sop": "SOP-029",
+            "leg1_strength": "primary",
+            "leg2_strength": "primary",
+            "total_weight": 9
+          },
+          {
+            "path": "SOP-G03 -> SCR-0019 -> SOP-012",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-012",
+            "leg1_strength": "related",
+            "leg2_strength": "supporting",
+            "total_weight": 7
+          },
+          {
+            "path": "SOP-G03 -> SCR-0019 -> SOP-011",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-011",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-G03 -> SCR-0019 -> SOP-014",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-014",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-G03 -> SCR-0019 -> SOP-022",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-022",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-G03 -> SCR-0019 -> SOP-G01",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-G01",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-G03 -> SCR-0019 -> SOP-013",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-013",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-G03 -> SCR-0019 -> SCR-0020 -> SOP-015",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-015",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-G03 -> SCR-0019 -> SCR-0020 -> SOP-024",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-024",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 5
+          }
+        ]
+      },
+      "SOP-013": {
+        "total_paths": 54,
+        "unique_target_sops": [
+          "SOP-017",
+          "SOP-012",
+          "SOP-020",
+          "SOP-021",
+          "SOP-029",
+          "SOP-015",
+          "SOP-014",
+          "SOP-G02",
+          "SOP-G01",
+          "SOP-016",
+          "SOP-028",
+          "SOP-019",
+          "SOP-023",
+          "SOP-022",
+          "SOP-011",
+          "SOP-024",
+          "SOP-G03"
+        ],
+        "paths": [
+          {
+            "path": "SOP-013 -> SCR-0019 -> SOP-012",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-012",
+            "leg1_strength": "primary",
+            "leg2_strength": "supporting",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-013 -> SCR-0019 -> SOP-011",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-011",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-013 -> SCR-0019 -> SOP-014",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-014",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-013 -> SCR-0019 -> SOP-022",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-022",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-013 -> SCR-0019 -> SOP-G01",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-G01",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-013 -> SCR-0019 -> SOP-G03",
+            "via_script": "SCR-0019",
+            "target_sop": "SOP-G03",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-013 -> SCR-0019 -> SCR-0020 -> SOP-015",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-015",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 4
+          },
+          {
+            "path": "SOP-013 -> SCR-0019 -> SCR-0020 -> SOP-024",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-024",
+            "leg1_strength": "primary",
+            "leg2_strength": "related",
+            "total_weight": 4
+          },
+          {
+            "path": "SOP-013 -> SCR-0019 -> SCR-0020 -> SOP-012",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-012",
+            "leg1_strength": "primary",
+            "leg2_strength": "tangential",
+            "total_weight": 3
+          },
+          {
+            "path": "SOP-013 -> SCR-0019 -> SCR-0020 -> SOP-017",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-017",
+            "leg1_strength": "primary",
+            "leg2_strength": "tangential",
+            "total_weight": 3
+          },
+          {
+            "path": "SOP-013 -> SCR-0019 -> SCR-0020 -> SOP-019",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-019",
+            "leg1_strength": "primary",
+            "leg2_strength": "tangential",
+            "total_weight": 3
+          },
+          {
+            "path": "SOP-013 -> SCR-0019 -> SCR-0020 -> SOP-020",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-020",
+            "leg1_strength": "primary",
+            "leg2_strength": "tangential",
+            "total_weight": 3
+          },
+          {
+            "path": "SOP-013 -> SCR-0019 -> SCR-0020 -> SOP-023",
+            "via_script": "SCR-0019 -> SCR-0020",
+            "target_sop": "SOP-023",
+            "leg1_strength": "primary",
+            "leg2_strength": "tangential",
+            "total_weight": 3
+          },
+          {
+            "path": "SOP-013 -> SCR-0030 -> SOP-012",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-012",
+            "leg1_strength": "related",
+            "leg2_strength": "supporting",
+            "total_weight": 6
+          },
+          {
+            "path": "SOP-013 -> SCR-0030 -> SOP-011",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-011",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-013 -> SCR-0030 -> SOP-014",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-014",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-013 -> SCR-0030 -> SOP-022",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-022",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-013 -> SCR-0030 -> SOP-G01",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-G01",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-013 -> SCR-0030 -> SOP-G03",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-G03",
+            "leg1_strength": "related",
+            "leg2_strength": "related",
+            "total_weight": 5
+          },
+          {
+            "path": "SOP-013 -> SCR-0030 -> SOP-015",
+            "via_script": "SCR-0030",
+            "target_sop": "SOP-015",
+            "leg1_strength": "related",
+            "leg2_strength": "tangential",
+            "total_weight": 4
+          }
+        ]
+      }
+    }
+  },
+  "task_4_simulated_journeys": {
+    "total_journeys": 10,
+    "outcomes": {
+      "success": 8,
+      "partial": 2,
+      "failure": 0
+    },
+    "monitoring_success_rate": 66.7,
+    "coordination_success_rate": 100.0,
+    "journeys": [
+      {
+        "agent": "c1-1",
+        "task": "monitoring",
+        "route": "SOP-012 -> SCR-0032 -> SCR-0057 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+        "outcome": "success",
+        "notes": "Deep chain (depth=12), strong SCR connectivity",
+        "tracker_stdout": "Route logged: SOP-012 -> SCR-0032 -> SCR-0057 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012 (11 hops, outcome=success)",
+        "tracker_returncode": 0
+      },
+      {
+        "agent": "c1-2",
+        "task": "monitoring",
+        "route": "SOP-011 -> SCR-0032 -> SCR-0057 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+        "outcome": "success",
+        "notes": "Deep chain (depth=12), strong SCR connectivity",
+        "tracker_stdout": "Route logged: SOP-011 -> SCR-0032 -> SCR-0057 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012 (11 hops, outcome=success)",
+        "tracker_returncode": 0
+      },
+      {
+        "agent": "c1-3",
+        "task": "monitoring",
+        "route": "SOP-014 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0032 -> SCR-0057 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+        "outcome": "success",
+        "notes": "Deep chain (depth=12), strong SCR connectivity",
+        "tracker_stdout": "Route logged: SOP-014 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0032 -> SCR-0057 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012 (11 hops, outcome=success)",
+        "tracker_returncode": 0
+      },
+      {
+        "agent": "c1-4",
+        "task": "monitoring",
+        "route": "SOP-015 -> SCR-0032 -> SCR-0057 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012",
+        "outcome": "success",
+        "notes": "Deep chain (depth=12), strong SCR connectivity",
+        "tracker_stdout": "Route logged: SOP-015 -> SCR-0032 -> SCR-0057 -> SCR-0033 -> SCR-0054 -> SCR-0052 -> SCR-0055 -> SCR-0056 -> SCR-0053 -> SCR-0019 -> SCR-0020 -> SCR-0012 (11 hops, outcome=success)",
+        "tracker_returncode": 0
+      },
+      {
+        "agent": "c1-5",
+        "task": "monitoring",
+        "route": "SOP-012 -> SCR-0030",
+        "outcome": "partial",
+        "notes": "Weak path test: depth=2, entry=supporting",
+        "tracker_stdout": "Route logged: SOP-012 -> SCR-0030 (1 hops, outcome=partial)",
+        "tracker_returncode": 0
+      },
+      {
+        "agent": "c1-1",
+        "task": "monitoring",
+        "route": "SOP-011 -> SCR-0031",
+        "outcome": "partial",
+        "notes": "Weak path test: depth=2, entry=related",
+        "tracker_stdout": "Route logged: SOP-011 -> SCR-0031 (1 hops, outcome=partial)",
+        "tracker_returncode": 0
+      },
+      {
+        "agent": "c1-2",
+        "task": "coordination",
+        "route": "SOP-G01 -> SCR-0019 -> SOP-012",
+        "outcome": "success",
+        "notes": "Cross-SOP via SCR-0019, weight=7",
+        "tracker_stdout": "Route logged: SOP-G01 -> SCR-0019 -> SOP-012 (2 hops, outcome=success)",
+        "tracker_returncode": 0
+      },
+      {
+        "agent": "c1-3",
+        "task": "coordination",
+        "route": "SOP-G02 -> SCR-0019 -> SOP-012",
+        "outcome": "success",
+        "notes": "Cross-SOP via SCR-0019, weight=6",
+        "tracker_stdout": "Route logged: SOP-G02 -> SCR-0019 -> SOP-012 (2 hops, outcome=success)",
+        "tracker_returncode": 0
+      },
+      {
+        "agent": "c1-4",
+        "task": "coordination",
+        "route": "SOP-G03 -> SCR-0033 -> SOP-014",
+        "outcome": "success",
+        "notes": "Cross-SOP via SCR-0033, weight=8",
+        "tracker_stdout": "Route logged: SOP-G03 -> SCR-0033 -> SOP-014 (2 hops, outcome=success)",
+        "tracker_returncode": 0
+      },
+      {
+        "agent": "c1-5",
+        "task": "coordination",
+        "route": "SOP-013 -> SCR-0019 -> SOP-012",
+        "outcome": "success",
+        "notes": "Cross-SOP via SCR-0019, weight=6",
+        "tracker_stdout": "Route logged: SOP-013 -> SCR-0019 -> SOP-012 (2 hops, outcome=success)",
+        "tracker_returncode": 0
+      }
+    ]
+  },
+  "findings": {
+    "scr_chain_health": "GOOD",
+    "monitoring_chain_depth": "GOOD",
+    "cross_sop_connectivity": "GOOD",
+    "run001_comparison": "See monitoring_success_rate vs Run-001's 25%"
+  }
+}

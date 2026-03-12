@@ -1,0 +1,215 @@
+{
+  "report": "Team Delta Benchmark Report - Route Recommendation System",
+  "generated": "2026-03-12T22:15:00Z",
+  "team": "delta",
+  "agents_used": ["delta-1", "delta-2", "delta-3", "delta-4"],
+
+  "recommendation_coverage": {
+    "summary": "All 7 task types with existing history return recommendations from all 6 entry points. However, the entry_node parameter is COMPLETELY IGNORED when pattern history exists - the same route is returned regardless of which entry point is specified.",
+    "tasks_with_history": {
+      "data-gathering": {
+        "returns_recommendation": true,
+        "recommended_route": "SOP-027 -> SCR-0043 -> SCR-0044",
+        "entry_node_affects_result": false,
+        "note": "Changed from SOP-023 route after synthetic data added more SOP-027 routes"
+      },
+      "knowledge-enrichment": {
+        "returns_recommendation": true,
+        "recommended_route": "SOP-029 -> SCR-0057",
+        "entry_node_affects_result": false
+      },
+      "monitoring": {
+        "returns_recommendation": true,
+        "recommended_route": "SOP-012 -> SCR-0032 -> SCR-0019",
+        "entry_node_affects_result": false
+      },
+      "coordination": {
+        "returns_recommendation": true,
+        "recommended_route": "SOP-011 -> SCR-0033 -> SCR-0052",
+        "entry_node_affects_result": false
+      },
+      "indexing": {
+        "returns_recommendation": true,
+        "recommended_route": "SOP-017 -> SCR-0023 -> SRC-0001",
+        "entry_node_affects_result": false
+      },
+      "stress-test": {
+        "returns_recommendation": true,
+        "recommended_route": "SOP-017 -> SCR-0023 -> SRC-0001",
+        "entry_node_affects_result": false
+      },
+      "wikipedia-enrichment": {
+        "returns_recommendation": true,
+        "recommended_route": "SOP-027 -> SCR-0043 -> SCR-0044",
+        "entry_node_affects_result": false
+      }
+    },
+    "coverage_rate": "7/7 task types with history return recommendations (100%)",
+    "critical_bug": "entry_node parameter is ignored when patterns exist; recommend always returns the globally most-frequent route for that task, not a route starting from the given entry_node"
+  },
+
+  "cold_start_quality": {
+    "summary": "Strength-based fallback works for nodes with primary or supporting pointers, but fails for nodes with only 'related' or unclassified pointers. Also fails completely when no entry_node is provided.",
+    "results_by_entry": {
+      "SOP-011": {
+        "fallback_works": false,
+        "reason": "Only has 'related' pointers (no primary or supporting). Fallback code only checks primary and supporting.",
+        "output": "No route recommendation available"
+      },
+      "SOP-012": {
+        "fallback_works": true,
+        "returns": "Supporting tools: ['SCR-0019', 'SCR-0030', 'SCR-0032']",
+        "quality": "Good - returns relevant monitoring/coordination scripts"
+      },
+      "SOP-017": {
+        "fallback_works": true,
+        "returns": "Primary tools: ['SCR-0023']",
+        "quality": "Good - returns the main data-gathering script"
+      },
+      "SOP-023": {
+        "fallback_works": true,
+        "returns": "Primary tools: ['SCR-0023']",
+        "quality": "Good - returns the correct primary script"
+      },
+      "SOP-027": {
+        "fallback_works": true,
+        "returns": "Primary tools: ['SCR-0043', 'SCR-0044']",
+        "quality": "Good - returns both Wikipedia data scripts"
+      },
+      "SOP-029": {
+        "fallback_works": true,
+        "returns": "Primary tools: ['SCR-0057']",
+        "quality": "Good - returns the infrastructure monitor"
+      }
+    },
+    "no_entry_behavior": "Returns None with message 'No route recommendation available' - no attempt to suggest based on task type alone",
+    "gaps": [
+      "Fallback ignores 'related' strength level, leaving SOP-011 (and similar nodes) with no recommendation",
+      "No fallback at all when entry_node is None - could search all nodes for task-relevant pointers",
+      "KB-* nodes have pointers with strength=None (not classified), so they always return no recommendation"
+    ]
+  },
+
+  "adaptation_test": {
+    "summary": "The system DOES adapt to new data after running 'patterns', but uses FREQUENCY (most common route) rather than SUCCESS RATE to pick recommendations. This means a route with many failures can be recommended over one with few attempts but high success.",
+    "test_design": {
+      "logged_routes": 19,
+      "benchmark_task_routes": {
+        "route_A_SOP023": {"count": 5, "successes": 0, "success_rate": "0%"},
+        "route_B_SOP027": {"count": 7, "successes": 6, "success_rate": "85.7%"},
+        "route_C_SOP029": {"count": 3, "successes": 2, "success_rate": "66.7%"}
+      }
+    },
+    "results": {
+      "selected_route": "SOP-027 -> SCR-0043 -> SCR-0044",
+      "selection_reason": "Most frequent (count=7), NOT because best success rate",
+      "correct_selection": true,
+      "correct_for_wrong_reason": "In this case route B was both most frequent AND most successful, so the result was correct. But if route A had count=8 (all failures), it would have been recommended despite 0% success rate."
+    },
+    "data_gathering_adaptation": {
+      "before": "SOP-023 -> SCR-0023 -> SRC-0001 (3 success / 5 total = 60%)",
+      "after": "SOP-027 -> SCR-0043 -> SCR-0044 (changed because new route had higher count)",
+      "adapted": true
+    },
+    "always_fails_behavior": {
+      "recommended_route": "SOP-011 -> SCR-0033",
+      "success_rate": "0%",
+      "problem": "System recommends a route with 0% success rate without any warning or flag"
+    }
+  },
+
+  "edge_cases": {
+    "non_existent_node": {
+      "input": {"task": "data-gathering", "entry": "FAKE-NODE-999"},
+      "behavior": "Returns pattern-based recommendation, ignoring the invalid entry_node entirely",
+      "output": "SOP-023 -> SCR-0023 -> SRC-0001",
+      "is_correct": false,
+      "issue": "Should warn that entry node does not exist in the pointer network"
+    },
+    "failure_only_task": {
+      "input": {"task": "always-fails"},
+      "behavior": "Returns the most frequent route even though ALL routes have 0% success rate",
+      "output": "SOP-011 -> SCR-0033 (0.0% success rate)",
+      "is_correct": false,
+      "issue": "Should warn that no successful routes exist, or decline to recommend"
+    },
+    "node_with_no_classified_pointers": {
+      "input": {"task": "novel-task", "entry": "KB-0001"},
+      "behavior": "Returns None because KB-0001 has 20 pointers but all have strength=None",
+      "output": "No route recommendation available",
+      "is_correct": false,
+      "issue": "Should fall back to highest-weight pointers when no strength classification exists"
+    },
+    "node_with_only_related_pointers": {
+      "input": {"task": "novel-task", "entry": "SOP-011"},
+      "behavior": "Returns None because SOP-011 has 5 'related' pointers but fallback only checks primary/supporting",
+      "output": "No route recommendation available",
+      "is_correct": false,
+      "issue": "Should include 'related' pointers in fallback hierarchy"
+    }
+  },
+
+  "accuracy_score": {
+    "score": 4,
+    "max": 10,
+    "justification": "The system provides basic recommendations and does adapt to new data, earning it base points. However, five significant issues lower the score: (1) entry_node is completely ignored when patterns exist, making it useless for context-aware routing; (2) recommendations use frequency not success rate, meaning consistently failing routes can be recommended; (3) cold-start fallback skips 'related' pointers and nodes without strength classification; (4) no validation of entry node existence; (5) 0% success routes are recommended without warning. The core architecture is sound but the recommend function needs substantial improvements to be production-useful."
+  },
+
+  "recommendations": [
+    {
+      "id": "R1",
+      "priority": "critical",
+      "title": "Use entry_node to filter recommendations",
+      "description": "When entry_node is provided, filter pattern routes to only those starting from that node. If no pattern matches, fall back to strength-based routing from that entry. Currently entry_node is completely ignored when patterns exist.",
+      "impact": "Agents asking 'what route from SOP-012 for monitoring?' get the same answer as 'what route from SOP-027 for monitoring?' - the entry context is lost."
+    },
+    {
+      "id": "R2",
+      "priority": "critical",
+      "title": "Rank by success rate, not frequency",
+      "description": "Change recommended_route selection from Counter.most_common (frequency) to highest success rate among routes with sufficient sample size. Consider a minimum attempt threshold (e.g., 2+) to avoid recommending single-attempt routes.",
+      "impact": "Prevents recommending routes with 0% success rate. Currently 'always-fails' task recommends a route with 0% success."
+    },
+    {
+      "id": "R3",
+      "priority": "high",
+      "title": "Add 'related' and weight-based fallback tiers",
+      "description": "Extend cold-start fallback to check: primary -> supporting -> related -> highest-weight (unclassified). Currently nodes with only 'related' pointers (like SOP-011) or unclassified pointers (like KB-0001) return no recommendation.",
+      "impact": "Increases cold-start coverage from ~67% to ~95% of entry nodes."
+    },
+    {
+      "id": "R4",
+      "priority": "medium",
+      "title": "Validate entry_node existence",
+      "description": "Check if entry_node exists in pointer-network.json before proceeding. Return a clear error for non-existent nodes rather than silently ignoring them.",
+      "impact": "Prevents silent failures when agents pass typos or stale node IDs."
+    },
+    {
+      "id": "R5",
+      "priority": "medium",
+      "title": "Flag low-confidence recommendations",
+      "description": "Add a confidence field to recommendations: low (<3 attempts or <50% success), medium (3-10 attempts, 50-80%), high (10+ attempts, 80%+). Warn when recommending routes with 0% success rate.",
+      "impact": "Agents can make informed decisions about whether to follow or explore alternative routes."
+    },
+    {
+      "id": "R6",
+      "priority": "low",
+      "title": "Support task-less entry-only recommendations",
+      "description": "When no task is specified but an entry_node is given, return the top primary/supporting pointers from that node. When no entry is specified but a task is given, search all nodes for task-relevant pointers by tag matching.",
+      "impact": "Makes the recommend function useful for exploratory navigation."
+    }
+  ],
+
+  "test_summary": {
+    "total_tests_run": 68,
+    "breakdown": {
+      "recommendation_coverage_tests": 42,
+      "cold_start_tests": 18,
+      "edge_case_tests": 4,
+      "adaptation_tests": 4
+    },
+    "synthetic_routes_logged": 23,
+    "agents_used": ["delta-1", "delta-2", "delta-3", "delta-4"],
+    "patterns_regenerated": true
+  }
+}

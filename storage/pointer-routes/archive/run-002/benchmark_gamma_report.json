@@ -1,0 +1,1212 @@
+{
+  "benchmark": "Team Gamma - Cross-Domain Pointer Traversal",
+  "timestamp": "2026-03-12T22:11:59.323321Z",
+  "network_stats": {
+    "total_nodes": 310,
+    "total_edges": 6859,
+    "unique_edges": 6474,
+    "edge_type_counts": {
+      "shared_tags": 5778,
+      "explicit_reference": 613,
+      "category_affinity": 611
+    }
+  },
+  "summary": {
+    "total_journeys": 20,
+    "outcomes": {
+      "partial": 8,
+      "success": 12
+    },
+    "success_rate_pct": 60.0,
+    "avg_hops": 1.65,
+    "avg_efficiency_score": 4.53,
+    "avg_tag_coherence": 0.34
+  },
+  "by_task_type": {
+    "data-gathering": {
+      "total": 4,
+      "success": 0,
+      "partial": 4,
+      "failure": 0,
+      "avg_hops": 1.0,
+      "avg_efficiency": 3.25
+    },
+    "knowledge-enrichment": {
+      "total": 4,
+      "success": 4,
+      "partial": 0,
+      "failure": 0,
+      "avg_hops": 2.0,
+      "avg_efficiency": 2.62
+    },
+    "monitoring": {
+      "total": 4,
+      "success": 1,
+      "partial": 3,
+      "failure": 0,
+      "avg_hops": 1.25,
+      "avg_efficiency": 2.88
+    },
+    "coordination": {
+      "total": 4,
+      "success": 4,
+      "partial": 0,
+      "failure": 0,
+      "avg_hops": 2.0,
+      "avg_efficiency": 6.75
+    },
+    "indexing": {
+      "total": 4,
+      "success": 3,
+      "partial": 1,
+      "failure": 0,
+      "avg_hops": 2.0,
+      "avg_efficiency": 7.12
+    }
+  },
+  "journeys": [
+    {
+      "journey_num": 1,
+      "agent": "gamma-1",
+      "task_type": "data-gathering",
+      "start_sop": "SOP-011",
+      "path": [
+        "SOP-011",
+        "SCR-0019"
+      ],
+      "path_str": "SOP-011 -> SCR-0019",
+      "hop_count": 1,
+      "outcome": "partial",
+      "notes": "Script found but no SRC connection",
+      "hops_detail": [
+        {
+          "from": "SOP-011",
+          "to": "SCR-0019",
+          "weight": 3,
+          "useful": true,
+          "note": "script found"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.4
+        ],
+        "avg": 0.4,
+        "drop_detected": false
+      },
+      "efficiency_score": 3.0
+    },
+    {
+      "journey_num": 2,
+      "agent": "gamma-1",
+      "task_type": "data-gathering",
+      "start_sop": "SOP-012",
+      "path": [
+        "SOP-012",
+        "SCR-0019"
+      ],
+      "path_str": "SOP-012 -> SCR-0019",
+      "hop_count": 1,
+      "outcome": "partial",
+      "notes": "Script found but no SRC connection",
+      "hops_detail": [
+        {
+          "from": "SOP-012",
+          "to": "SCR-0019",
+          "weight": 4,
+          "useful": true,
+          "note": "script found"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.75
+        ],
+        "avg": 0.75,
+        "drop_detected": false
+      },
+      "efficiency_score": 4.0
+    },
+    {
+      "journey_num": 3,
+      "agent": "gamma-1",
+      "task_type": "data-gathering",
+      "start_sop": "SOP-013",
+      "path": [
+        "SOP-013",
+        "SCR-0019"
+      ],
+      "path_str": "SOP-013 -> SCR-0019",
+      "hop_count": 1,
+      "outcome": "partial",
+      "notes": "Script found but no SRC connection",
+      "hops_detail": [
+        {
+          "from": "SOP-013",
+          "to": "SCR-0019",
+          "weight": 2,
+          "useful": true,
+          "note": "script found"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.5
+        ],
+        "avg": 0.5,
+        "drop_detected": false
+      },
+      "efficiency_score": 2.0
+    },
+    {
+      "journey_num": 4,
+      "agent": "gamma-1",
+      "task_type": "data-gathering",
+      "start_sop": "SOP-014",
+      "path": [
+        "SOP-014",
+        "SCR-0033"
+      ],
+      "path_str": "SOP-014 -> SCR-0033",
+      "hop_count": 1,
+      "outcome": "partial",
+      "notes": "Script found but no SRC connection",
+      "hops_detail": [
+        {
+          "from": "SOP-014",
+          "to": "SCR-0033",
+          "weight": 4,
+          "useful": true,
+          "note": "script found"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.5
+        ],
+        "avg": 0.5,
+        "drop_detected": false
+      },
+      "efficiency_score": 4.0
+    },
+    {
+      "journey_num": 5,
+      "agent": "gamma-2",
+      "task_type": "knowledge-enrichment",
+      "start_sop": "SOP-015",
+      "path": [
+        "SOP-015",
+        "SCR-0012",
+        "KB-0001"
+      ],
+      "path_str": "SOP-015 -> SCR-0012 -> KB-0001",
+      "hop_count": 2,
+      "outcome": "success",
+      "notes": "Full path SOP->SCR->KB/wiki",
+      "hops_detail": [
+        {
+          "from": "SOP-015",
+          "to": "SCR-0012",
+          "weight": 2,
+          "useful": true,
+          "note": "script found"
+        },
+        {
+          "from": "SCR-0012",
+          "to": "KB-0001",
+          "weight": 2,
+          "useful": true,
+          "note": "knowledge found (KB)"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.4,
+          0.286
+        ],
+        "avg": 0.343,
+        "drop_detected": false
+      },
+      "efficiency_score": 2.0
+    },
+    {
+      "journey_num": 6,
+      "agent": "gamma-2",
+      "task_type": "knowledge-enrichment",
+      "start_sop": "SOP-016",
+      "path": [
+        "SOP-016",
+        "SCR-0031",
+        "KB-0016"
+      ],
+      "path_str": "SOP-016 -> SCR-0031 -> KB-0016",
+      "hop_count": 2,
+      "outcome": "success",
+      "notes": "Full path SOP->SCR->KB/wiki",
+      "hops_detail": [
+        {
+          "from": "SOP-016",
+          "to": "SCR-0031",
+          "weight": 2,
+          "useful": true,
+          "note": "script found"
+        },
+        {
+          "from": "SCR-0031",
+          "to": "KB-0016",
+          "weight": 2,
+          "useful": true,
+          "note": "knowledge found (KB)"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.4,
+          0.111
+        ],
+        "avg": 0.256,
+        "drop_detected": true
+      },
+      "efficiency_score": 2.0
+    },
+    {
+      "journey_num": 7,
+      "agent": "gamma-2",
+      "task_type": "knowledge-enrichment",
+      "start_sop": "SOP-017",
+      "path": [
+        "SOP-017",
+        "SCR-0023",
+        "KB-0005"
+      ],
+      "path_str": "SOP-017 -> SCR-0023 -> KB-0005",
+      "hop_count": 2,
+      "outcome": "success",
+      "notes": "Full path SOP->SCR->KB/wiki",
+      "hops_detail": [
+        {
+          "from": "SOP-017",
+          "to": "SCR-0023",
+          "weight": 8,
+          "useful": true,
+          "note": "script found"
+        },
+        {
+          "from": "SCR-0023",
+          "to": "KB-0005",
+          "weight": 2,
+          "useful": true,
+          "note": "knowledge found (KB)"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.167,
+          0.125
+        ],
+        "avg": 0.146,
+        "drop_detected": false
+      },
+      "efficiency_score": 5.0
+    },
+    {
+      "journey_num": 8,
+      "agent": "gamma-2",
+      "task_type": "knowledge-enrichment",
+      "start_sop": "SOP-018",
+      "path": [
+        "SOP-018",
+        "SCR-0004",
+        "KB-0003"
+      ],
+      "path_str": "SOP-018 -> SCR-0004 -> KB-0003",
+      "hop_count": 2,
+      "outcome": "success",
+      "notes": "Full path SOP->SCR->KB/wiki",
+      "hops_detail": [
+        {
+          "from": "SOP-018",
+          "to": "SCR-0004",
+          "weight": 1,
+          "useful": true,
+          "note": "script found"
+        },
+        {
+          "from": "SCR-0004",
+          "to": "KB-0003",
+          "weight": 2,
+          "useful": true,
+          "note": "knowledge found (KB)"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.2,
+          0.2
+        ],
+        "avg": 0.2,
+        "drop_detected": false
+      },
+      "efficiency_score": 1.5
+    },
+    {
+      "journey_num": 9,
+      "agent": "gamma-3",
+      "task_type": "monitoring",
+      "start_sop": "SOP-019",
+      "path": [
+        "SOP-019",
+        "SCR-0033"
+      ],
+      "path_str": "SOP-019 -> SCR-0033",
+      "hop_count": 1,
+      "outcome": "partial",
+      "notes": "Script found but no companion SCR",
+      "hops_detail": [
+        {
+          "from": "SOP-019",
+          "to": "SCR-0033",
+          "weight": 3,
+          "useful": true,
+          "note": "primary script"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.286
+        ],
+        "avg": 0.286,
+        "drop_detected": false
+      },
+      "efficiency_score": 3.0
+    },
+    {
+      "journey_num": 10,
+      "agent": "gamma-3",
+      "task_type": "monitoring",
+      "start_sop": "SOP-020",
+      "path": [
+        "SOP-020",
+        "SCR-0001"
+      ],
+      "path_str": "SOP-020 -> SCR-0001",
+      "hop_count": 1,
+      "outcome": "partial",
+      "notes": "Script found but no companion SCR",
+      "hops_detail": [
+        {
+          "from": "SOP-020",
+          "to": "SCR-0001",
+          "weight": 1,
+          "useful": true,
+          "note": "primary script"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.2
+        ],
+        "avg": 0.2,
+        "drop_detected": false
+      },
+      "efficiency_score": 1.0
+    },
+    {
+      "journey_num": 11,
+      "agent": "gamma-3",
+      "task_type": "monitoring",
+      "start_sop": "SOP-021",
+      "path": [
+        "SOP-021",
+        "SCR-0033"
+      ],
+      "path_str": "SOP-021 -> SCR-0033",
+      "hop_count": 1,
+      "outcome": "partial",
+      "notes": "Script found but no companion SCR",
+      "hops_detail": [
+        {
+          "from": "SOP-021",
+          "to": "SCR-0033",
+          "weight": 3,
+          "useful": true,
+          "note": "primary script"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.286
+        ],
+        "avg": 0.286,
+        "drop_detected": false
+      },
+      "efficiency_score": 3.0
+    },
+    {
+      "journey_num": 12,
+      "agent": "gamma-3",
+      "task_type": "monitoring",
+      "start_sop": "SOP-022",
+      "path": [
+        "SOP-022",
+        "SCR-0019",
+        "SCR-0020"
+      ],
+      "path_str": "SOP-022 -> SCR-0019 -> SCR-0020",
+      "hop_count": 2,
+      "outcome": "success",
+      "notes": "Full path SOP->SCR->SCR",
+      "hops_detail": [
+        {
+          "from": "SOP-022",
+          "to": "SCR-0019",
+          "weight": 3,
+          "useful": true,
+          "note": "primary script"
+        },
+        {
+          "from": "SCR-0019",
+          "to": "SCR-0020",
+          "weight": 6,
+          "useful": true,
+          "note": "companion script found"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.5,
+          0.0
+        ],
+        "avg": 0.25,
+        "drop_detected": true
+      },
+      "efficiency_score": 4.5
+    },
+    {
+      "journey_num": 13,
+      "agent": "gamma-4",
+      "task_type": "coordination",
+      "start_sop": "SOP-023",
+      "path": [
+        "SOP-023",
+        "SCR-0023",
+        "SOP-023"
+      ],
+      "path_str": "SOP-023 -> SCR-0023 -> SOP-023",
+      "hop_count": 2,
+      "outcome": "success",
+      "notes": "Full path SOP->SCR->SOP",
+      "hops_detail": [
+        {
+          "from": "SOP-023",
+          "to": "SCR-0023",
+          "weight": 9,
+          "useful": true,
+          "note": "script found"
+        },
+        {
+          "from": "SCR-0023",
+          "to": "SOP-023",
+          "weight": 9,
+          "useful": true,
+          "note": "cross-SOP workflow link"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.333,
+          1.0
+        ],
+        "avg": 0.666,
+        "drop_detected": false
+      },
+      "efficiency_score": 9.0
+    },
+    {
+      "journey_num": 14,
+      "agent": "gamma-4",
+      "task_type": "coordination",
+      "start_sop": "SOP-024",
+      "path": [
+        "SOP-024",
+        "SCR-0009",
+        "SOP-023"
+      ],
+      "path_str": "SOP-024 -> SCR-0009 -> SOP-023",
+      "hop_count": 2,
+      "outcome": "success",
+      "notes": "Full path SOP->SCR->SOP",
+      "hops_detail": [
+        {
+          "from": "SOP-024",
+          "to": "SCR-0009",
+          "weight": 3,
+          "useful": true,
+          "note": "script found"
+        },
+        {
+          "from": "SCR-0009",
+          "to": "SOP-023",
+          "weight": 3,
+          "useful": true,
+          "note": "cross-SOP workflow link"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.333,
+          0.5
+        ],
+        "avg": 0.416,
+        "drop_detected": false
+      },
+      "efficiency_score": 3.0
+    },
+    {
+      "journey_num": 15,
+      "agent": "gamma-4",
+      "task_type": "coordination",
+      "start_sop": "SOP-025",
+      "path": [
+        "SOP-025",
+        "SCR-0043",
+        "SOP-027"
+      ],
+      "path_str": "SOP-025 -> SCR-0043 -> SOP-027",
+      "hop_count": 2,
+      "outcome": "success",
+      "notes": "Full path SOP->SCR->SOP",
+      "hops_detail": [
+        {
+          "from": "SOP-025",
+          "to": "SCR-0043",
+          "weight": 7,
+          "useful": true,
+          "note": "script found"
+        },
+        {
+          "from": "SCR-0043",
+          "to": "SOP-027",
+          "weight": 8,
+          "useful": true,
+          "note": "cross-SOP workflow link"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.143,
+          0.6
+        ],
+        "avg": 0.371,
+        "drop_detected": false
+      },
+      "efficiency_score": 7.5
+    },
+    {
+      "journey_num": 16,
+      "agent": "gamma-4",
+      "task_type": "coordination",
+      "start_sop": "SOP-026",
+      "path": [
+        "SOP-026",
+        "SCR-0043",
+        "SOP-027"
+      ],
+      "path_str": "SOP-026 -> SCR-0043 -> SOP-027",
+      "hop_count": 2,
+      "outcome": "success",
+      "notes": "Full path SOP->SCR->SOP",
+      "hops_detail": [
+        {
+          "from": "SOP-026",
+          "to": "SCR-0043",
+          "weight": 7,
+          "useful": true,
+          "note": "script found"
+        },
+        {
+          "from": "SCR-0043",
+          "to": "SOP-027",
+          "weight": 8,
+          "useful": true,
+          "note": "cross-SOP workflow link"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.167,
+          0.4
+        ],
+        "avg": 0.284,
+        "drop_detected": false
+      },
+      "efficiency_score": 7.5
+    },
+    {
+      "journey_num": 17,
+      "agent": "gamma-5",
+      "task_type": "indexing",
+      "start_sop": "SOP-027",
+      "path": [
+        "SOP-027",
+        "SCR-0043",
+        "KB-0045"
+      ],
+      "path_str": "SOP-027 -> SCR-0043 -> KB-0045",
+      "hop_count": 2,
+      "outcome": "success",
+      "notes": "Fan-out to 3 domains",
+      "hops_detail": [
+        {
+          "from": "SOP-027",
+          "to": "SCR-0043",
+          "weight": 8,
+          "useful": true,
+          "note": "script found"
+        },
+        {
+          "from": "SCR-0043",
+          "to": "KB-0045",
+          "weight": 15,
+          "useful": true,
+          "note": "fan-out: 3 domains reachable (KB,SOP,SRC)"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": false,
+        "scores": [
+          0.143,
+          0.0
+        ],
+        "avg": 0.071,
+        "drop_detected": true
+      },
+      "efficiency_score": 11.5
+    },
+    {
+      "journey_num": 18,
+      "agent": "gamma-5",
+      "task_type": "indexing",
+      "start_sop": "SOP-028",
+      "path": [
+        "SOP-028",
+        "SCR-0013",
+        "TEAM-0006"
+      ],
+      "path_str": "SOP-028 -> SCR-0013 -> TEAM-0006",
+      "hop_count": 2,
+      "outcome": "success",
+      "notes": "Fan-out to 3 domains",
+      "hops_detail": [
+        {
+          "from": "SOP-028",
+          "to": "SCR-0013",
+          "weight": 3,
+          "useful": true,
+          "note": "script found"
+        },
+        {
+          "from": "SCR-0013",
+          "to": "TEAM-0006",
+          "weight": 8,
+          "useful": true,
+          "note": "fan-out: 3 domains reachable (KB,SOP,TEAM)"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.2,
+          0.2
+        ],
+        "avg": 0.2,
+        "drop_detected": false
+      },
+      "efficiency_score": 5.5
+    },
+    {
+      "journey_num": 19,
+      "agent": "gamma-5",
+      "task_type": "indexing",
+      "start_sop": "SOP-029",
+      "path": [
+        "SOP-029",
+        "SCR-0057",
+        "SCR-0032"
+      ],
+      "path_str": "SOP-029 -> SCR-0057 -> SCR-0032",
+      "hop_count": 2,
+      "outcome": "partial",
+      "notes": "Limited fan-out reach",
+      "hops_detail": [
+        {
+          "from": "SOP-029",
+          "to": "SCR-0057",
+          "weight": 7,
+          "useful": true,
+          "note": "script found"
+        },
+        {
+          "from": "SCR-0057",
+          "to": "SCR-0032",
+          "weight": 7,
+          "useful": true,
+          "note": "limited fan-out: only SCR"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.6,
+          0.4
+        ],
+        "avg": 0.5,
+        "drop_detected": false
+      },
+      "efficiency_score": 7.0
+    },
+    {
+      "journey_num": 20,
+      "agent": "gamma-5",
+      "task_type": "indexing",
+      "start_sop": "SOP-G01",
+      "path": [
+        "SOP-G01",
+        "SCR-0019",
+        "SCR-0020"
+      ],
+      "path_str": "SOP-G01 -> SCR-0019 -> SCR-0020",
+      "hop_count": 2,
+      "outcome": "success",
+      "notes": "Fan-out to 3 domains",
+      "hops_detail": [
+        {
+          "from": "SOP-G01",
+          "to": "SCR-0019",
+          "weight": 3,
+          "useful": true,
+          "note": "script found"
+        },
+        {
+          "from": "SCR-0019",
+          "to": "SCR-0020",
+          "weight": 6,
+          "useful": true,
+          "note": "fan-out: 3 domains reachable (SCR,SOP,TEAM)"
+        }
+      ],
+      "tag_coherence": {
+        "coherent": true,
+        "scores": [
+          0.333,
+          0.0
+        ],
+        "avg": 0.167,
+        "drop_detected": true
+      },
+      "efficiency_score": 4.5
+    }
+  ],
+  "path_efficiency": {
+    "domain_pair_reachability": {
+      "SOP->SCR": {
+        "sampled_pairs": 100,
+        "reachable_in_2hops": 31,
+        "reachable_pct": 31.0,
+        "avg_hops": 1.52,
+        "direct_connections": 15,
+        "two_hop_connections": 16
+      },
+      "SOP->SRC": {
+        "sampled_pairs": 100,
+        "reachable_in_2hops": 20,
+        "reachable_pct": 20.0,
+        "avg_hops": 2.0,
+        "direct_connections": 0,
+        "two_hop_connections": 20
+      },
+      "SOP->KB": {
+        "sampled_pairs": 100,
+        "reachable_in_2hops": 72,
+        "reachable_pct": 72.0,
+        "avg_hops": 1.79,
+        "direct_connections": 15,
+        "two_hop_connections": 57
+      },
+      "SOP->wiki": {
+        "sampled_pairs": 100,
+        "reachable_in_2hops": 0,
+        "reachable_pct": 0.0,
+        "avg_hops": null,
+        "direct_connections": 0,
+        "two_hop_connections": 0
+      },
+      "SCR->SRC": {
+        "sampled_pairs": 100,
+        "reachable_in_2hops": 39,
+        "reachable_pct": 39.0,
+        "avg_hops": 1.67,
+        "direct_connections": 13,
+        "two_hop_connections": 26
+      },
+      "SCR->KB": {
+        "sampled_pairs": 100,
+        "reachable_in_2hops": 100,
+        "reachable_pct": 100.0,
+        "avg_hops": 1.65,
+        "direct_connections": 35,
+        "two_hop_connections": 65
+      },
+      "SCR->wiki": {
+        "sampled_pairs": 100,
+        "reachable_in_2hops": 0,
+        "reachable_pct": 0.0,
+        "avg_hops": null,
+        "direct_connections": 0,
+        "two_hop_connections": 0
+      },
+      "SCR->SOP": {
+        "sampled_pairs": 100,
+        "reachable_in_2hops": 55,
+        "reachable_pct": 55.0,
+        "avg_hops": 1.53,
+        "direct_connections": 26,
+        "two_hop_connections": 29
+      },
+      "SRC->KB": {
+        "sampled_pairs": 100,
+        "reachable_in_2hops": 100,
+        "reachable_pct": 100.0,
+        "avg_hops": 1.77,
+        "direct_connections": 23,
+        "two_hop_connections": 77
+      },
+      "SRC->wiki": {
+        "sampled_pairs": 100,
+        "reachable_in_2hops": 10,
+        "reachable_pct": 10.0,
+        "avg_hops": 2.0,
+        "direct_connections": 0,
+        "two_hop_connections": 10
+      }
+    },
+    "dead_end_rates": {
+      "SOP": {
+        "total_nodes": 22,
+        "zero_outgoing": 0,
+        "low_outgoing_le2": 0,
+        "dead_end_rate_pct": 0.0
+      },
+      "SCR": {
+        "total_nodes": 57,
+        "zero_outgoing": 0,
+        "low_outgoing_le2": 0,
+        "dead_end_rate_pct": 0.0
+      },
+      "SRC": {
+        "total_nodes": 48,
+        "zero_outgoing": 0,
+        "low_outgoing_le2": 0,
+        "dead_end_rate_pct": 0.0
+      },
+      "KB": {
+        "total_nodes": 46,
+        "zero_outgoing": 0,
+        "low_outgoing_le2": 1,
+        "dead_end_rate_pct": 0.0
+      },
+      "wiki": {
+        "total_nodes": 114,
+        "zero_outgoing": 0,
+        "low_outgoing_le2": 0,
+        "dead_end_rate_pct": 0.0
+      }
+    }
+  },
+  "cross_domain_gaps": {
+    "poorly_connected_pairs": {
+      "SOP->SRC": {
+        "source_count": 22,
+        "with_link": 1,
+        "coverage_pct": 4.5
+      },
+      "SOP->wiki": {
+        "source_count": 22,
+        "with_link": 0,
+        "coverage_pct": 0.0
+      },
+      "SCR->SRC": {
+        "source_count": 57,
+        "with_link": 15,
+        "coverage_pct": 26.3
+      },
+      "SCR->wiki": {
+        "source_count": 57,
+        "with_link": 1,
+        "coverage_pct": 1.8
+      },
+      "SRC->SOP": {
+        "source_count": 48,
+        "with_link": 5,
+        "coverage_pct": 10.4
+      },
+      "SRC->wiki": {
+        "source_count": 48,
+        "with_link": 3,
+        "coverage_pct": 6.2
+      },
+      "KB->SRC": {
+        "source_count": 46,
+        "with_link": 8,
+        "coverage_pct": 17.4
+      },
+      "KB->wiki": {
+        "source_count": 46,
+        "with_link": 0,
+        "coverage_pct": 0.0
+      },
+      "wiki->SOP": {
+        "source_count": 114,
+        "with_link": 20,
+        "coverage_pct": 17.5
+      },
+      "TEAM->SRC": {
+        "source_count": 22,
+        "with_link": 5,
+        "coverage_pct": 22.7
+      },
+      "TEAM->wiki": {
+        "source_count": 22,
+        "with_link": 0,
+        "coverage_pct": 0.0
+      }
+    },
+    "full_coverage_matrix": {
+      "SOP->SCR": {
+        "source_count": 22,
+        "with_link": 22,
+        "coverage_pct": 100.0
+      },
+      "SOP->SRC": {
+        "source_count": 22,
+        "with_link": 1,
+        "coverage_pct": 4.5
+      },
+      "SOP->KB": {
+        "source_count": 22,
+        "with_link": 21,
+        "coverage_pct": 95.5
+      },
+      "SOP->wiki": {
+        "source_count": 22,
+        "with_link": 0,
+        "coverage_pct": 0.0
+      },
+      "SOP->TEAM": {
+        "source_count": 22,
+        "with_link": 18,
+        "coverage_pct": 81.8
+      },
+      "SCR->SOP": {
+        "source_count": 57,
+        "with_link": 44,
+        "coverage_pct": 77.2
+      },
+      "SCR->SRC": {
+        "source_count": 57,
+        "with_link": 15,
+        "coverage_pct": 26.3
+      },
+      "SCR->KB": {
+        "source_count": 57,
+        "with_link": 53,
+        "coverage_pct": 93.0
+      },
+      "SCR->wiki": {
+        "source_count": 57,
+        "with_link": 1,
+        "coverage_pct": 1.8
+      },
+      "SCR->TEAM": {
+        "source_count": 57,
+        "with_link": 46,
+        "coverage_pct": 80.7
+      },
+      "SRC->SOP": {
+        "source_count": 48,
+        "with_link": 5,
+        "coverage_pct": 10.4
+      },
+      "SRC->SCR": {
+        "source_count": 48,
+        "with_link": 48,
+        "coverage_pct": 100.0
+      },
+      "SRC->KB": {
+        "source_count": 48,
+        "with_link": 48,
+        "coverage_pct": 100.0
+      },
+      "SRC->wiki": {
+        "source_count": 48,
+        "with_link": 3,
+        "coverage_pct": 6.2
+      },
+      "SRC->TEAM": {
+        "source_count": 48,
+        "with_link": 39,
+        "coverage_pct": 81.2
+      },
+      "KB->SOP": {
+        "source_count": 46,
+        "with_link": 29,
+        "coverage_pct": 63.0
+      },
+      "KB->SCR": {
+        "source_count": 46,
+        "with_link": 42,
+        "coverage_pct": 91.3
+      },
+      "KB->SRC": {
+        "source_count": 46,
+        "with_link": 8,
+        "coverage_pct": 17.4
+      },
+      "KB->wiki": {
+        "source_count": 46,
+        "with_link": 0,
+        "coverage_pct": 0.0
+      },
+      "KB->TEAM": {
+        "source_count": 46,
+        "with_link": 40,
+        "coverage_pct": 87.0
+      },
+      "wiki->SOP": {
+        "source_count": 114,
+        "with_link": 20,
+        "coverage_pct": 17.5
+      },
+      "wiki->SCR": {
+        "source_count": 114,
+        "with_link": 114,
+        "coverage_pct": 100.0
+      },
+      "wiki->SRC": {
+        "source_count": 114,
+        "with_link": 61,
+        "coverage_pct": 53.5
+      },
+      "wiki->KB": {
+        "source_count": 114,
+        "with_link": 82,
+        "coverage_pct": 71.9
+      },
+      "wiki->TEAM": {
+        "source_count": 114,
+        "with_link": 57,
+        "coverage_pct": 50.0
+      },
+      "TEAM->SOP": {
+        "source_count": 22,
+        "with_link": 13,
+        "coverage_pct": 59.1
+      },
+      "TEAM->SCR": {
+        "source_count": 22,
+        "with_link": 20,
+        "coverage_pct": 90.9
+      },
+      "TEAM->SRC": {
+        "source_count": 22,
+        "with_link": 5,
+        "coverage_pct": 22.7
+      },
+      "TEAM->KB": {
+        "source_count": 22,
+        "with_link": 22,
+        "coverage_pct": 100.0
+      },
+      "TEAM->wiki": {
+        "source_count": 22,
+        "with_link": 0,
+        "coverage_pct": 0.0
+      }
+    }
+  },
+  "tag_coherence_issues": [
+    {
+      "journey": 6,
+      "path": "SOP-016 -> SCR-0031 -> KB-0016",
+      "coherence_scores": [
+        0.4,
+        0.111
+      ],
+      "avg_coherence": 0.256,
+      "issue": "sharp_drop"
+    },
+    {
+      "journey": 12,
+      "path": "SOP-022 -> SCR-0019 -> SCR-0020",
+      "coherence_scores": [
+        0.5,
+        0.0
+      ],
+      "avg_coherence": 0.25,
+      "issue": "sharp_drop"
+    },
+    {
+      "journey": 17,
+      "path": "SOP-027 -> SCR-0043 -> KB-0045",
+      "coherence_scores": [
+        0.143,
+        0.0
+      ],
+      "avg_coherence": 0.071,
+      "issue": "sharp_drop"
+    },
+    {
+      "journey": 20,
+      "path": "SOP-G01 -> SCR-0019 -> SCR-0020",
+      "coherence_scores": [
+        0.333,
+        0.0
+      ],
+      "avg_coherence": 0.167,
+      "issue": "sharp_drop"
+    }
+  ],
+  "recommendations": [
+    "Improve SOP->wiki connectivity (only 0.0% of SOP nodes link to wiki)",
+    "Improve KB->wiki connectivity (only 0.0% of KB nodes link to wiki)",
+    "Improve TEAM->wiki connectivity (only 0.0% of TEAM nodes link to wiki)",
+    "Improve SCR->wiki connectivity (only 1.8% of SCR nodes link to wiki)",
+    "Improve SOP->SRC connectivity (only 4.5% of SOP nodes link to SRC)",
+    "Improve SRC->wiki connectivity (only 6.2% of SRC nodes link to wiki)",
+    "Improve SRC->SOP connectivity (only 10.4% of SRC nodes link to SOP)",
+    "Improve KB->SRC connectivity (only 17.4% of KB nodes link to SRC)",
+    "Improve wiki->SOP connectivity (only 17.5% of wiki nodes link to SOP)",
+    "Improve TEAM->SRC connectivity (only 22.7% of TEAM nodes link to SRC)",
+    "Improve SCR->SRC connectivity (only 26.3% of SCR nodes link to SRC)",
+    "Task 'data-gathering' had 4 partial results - strengthen intermediate connections",
+    "Task 'monitoring' had 3 partial results - strengthen intermediate connections",
+    "Task 'indexing' had 1 partial results - strengthen intermediate connections",
+    "Tag coherence issues detected on 4 paths - consider adding shared tags to bridge nodes"
+  ]
+}
