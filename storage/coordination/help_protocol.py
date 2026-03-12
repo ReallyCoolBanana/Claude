@@ -120,7 +120,8 @@ def _retry_on_busy(func):
                         func.__name__, attempt + 1, _MAX_RETRIES, delay,
                     )
                     time.sleep(delay)
-                    delay *= 2
+                    # P0 FIX: Cap backoff at 50ms to avoid 1.6s+ delays
+                    delay = min(delay * 2, 0.05)
                 else:
                     raise
         raise last_err  # type: ignore[misc]
@@ -172,6 +173,9 @@ class HelpProtocol:
             self._conn.execute("CREATE INDEX IF NOT EXISTS idx_help_requests_status ON help_requests(status)")
             self._conn.execute("CREATE INDEX IF NOT EXISTS idx_work_items_team ON work_items(assigned_to)")
             self._conn.execute("CREATE INDEX IF NOT EXISTS idx_help_requests_work ON help_requests(work_item_id)")
+            # P0 indexes: team-based lookups for work_items and help_requests
+            self._conn.execute("CREATE INDEX IF NOT EXISTS idx_work_items_owner_team ON work_items(team)")
+            self._conn.execute("CREATE INDEX IF NOT EXISTS idx_help_requests_requesting_team ON help_requests(requesting_team)")
             self._conn.commit()
             self._owns_conn = True
         self._closed = False
@@ -752,26 +756,43 @@ class HelpProtocol:
 
         Note
         ----
-        This method releases the lock between querying the help request and
-        querying idle teams (via ``get_idle_teams``). The result is eventually
-        consistent: a team's status may change between the two queries.
-        Callers should use atomic assignment (e.g. ``auto_assign_idle_teams``)
-        to handle races.
+        FIX: TOCTOU race — previously released the lock between querying the
+        help request and querying idle teams. Now fetches both in a single
+        transaction to ensure a consistent snapshot.
         """
         self._check_closed()
         with self._lock:
-            # Get request's required capabilities
+            # FIX: TOCTOU — fetch request capabilities AND idle teams in a
+            # single lock acquisition to avoid races where team status changes
+            # between the two queries.
             row = self._conn.execute(
                 "SELECT required_capabilities FROM help_requests WHERE id = ?",
                 (request_id,),
             ).fetchone()
 
-        if row is None:
-            return []
+            if row is None:
+                return []
 
-        required = json.loads(row["required_capabilities"]) if row["required_capabilities"] else []
+            required = json.loads(row["required_capabilities"]) if row["required_capabilities"] else []
 
-        idle_teams = self.get_idle_teams()
+            # Fetch idle teams in the same lock scope
+            idle_rows = self._conn.execute(
+                """
+                SELECT ts.*, GROUP_CONCAT(tc.capability) as capabilities
+                FROM team_status ts
+                LEFT JOIN team_capabilities tc ON ts.team = tc.team
+                WHERE ts.status IN ('idle', 'complete')
+                GROUP BY ts.team
+                ORDER BY ts.last_updated DESC
+                """,
+            ).fetchall()
+
+        idle_teams = []
+        for r in idle_rows:
+            d = dict(r)
+            caps = d.pop("capabilities", None)
+            d["capabilities"] = caps.split(",") if caps else []
+            idle_teams.append(d)
 
         if not required:
             # No specific capabilities needed — all idle teams are compatible
@@ -779,9 +800,9 @@ class HelpProtocol:
 
         # Score teams by how many required capabilities they have
         scored = []
+        required_set = set(required)
         for team_info in idle_teams:
             team_caps = set(team_info.get("capabilities", []))
-            required_set = set(required)
             match_count = len(team_caps & required_set)
             if match_count > 0:
                 team_info["match_score"] = match_count / len(required_set)
@@ -798,19 +819,68 @@ class HelpProtocol:
         Matches based on capabilities. Uses BEGIN IMMEDIATE for atomic
         assignment to prevent double-assignment races.
 
+        FIX: N+1 query eliminated — all required data (open requests, idle
+        teams, capabilities) is fetched in a SINGLE transaction before the
+        matching loop. Matching is done in pure Python without re-querying.
+
         Returns
         -------
         List of assignment dicts: {"request_id", "team", "work_item_id"}.
         """
         self._check_closed()
-        open_requests = self.get_open_help_requests()
+
+        # FIX: Fetch ALL required data in a single lock acquisition to avoid
+        # O(n) lock acquisitions and re-queries inside the loop.
+        with self._lock:
+            open_rows = self._conn.execute(
+                """
+                SELECT hr.*, wi.title as work_title, wi.priority as work_priority
+                FROM help_requests hr
+                LEFT JOIN work_items wi ON hr.work_item_id = wi.id
+                WHERE hr.status = 'open'
+                ORDER BY
+                    CASE wi.priority
+                        WHEN 'critical' THEN 0
+                        WHEN 'high' THEN 1
+                        WHEN 'medium' THEN 2
+                        WHEN 'low' THEN 3
+                        ELSE 4
+                    END,
+                    hr.created_at ASC
+                """,
+            ).fetchall()
+
+            idle_rows = self._conn.execute(
+                """
+                SELECT ts.*, GROUP_CONCAT(tc.capability) as capabilities
+                FROM team_status ts
+                LEFT JOIN team_capabilities tc ON ts.team = tc.team
+                WHERE ts.status IN ('idle', 'complete')
+                GROUP BY ts.team
+                ORDER BY ts.last_updated DESC
+                """,
+            ).fetchall()
+
+        open_requests = [dict(r) for r in open_rows]
         if not open_requests:
             return []
 
-        # Fetch idle teams ONCE to avoid N+1 query pattern (INEFF-PERF-005)
-        all_idle_teams = self.get_idle_teams()
+        all_idle_teams = []
+        for r in idle_rows:
+            d = dict(r)
+            caps = d.pop("capabilities", None)
+            d["capabilities"] = caps.split(",") if caps else []
+            all_idle_teams.append(d)
+
         if not all_idle_teams:
             return []
+
+        # Pre-parse required_capabilities from the already-fetched request data
+        # so we don't need to re-query inside the loop.
+        request_caps = {}
+        for req in open_requests:
+            rc = req.get("required_capabilities")
+            request_caps[req["id"]] = json.loads(rc) if rc else []
 
         assignments = []
         assigned_teams = set()
@@ -818,16 +888,8 @@ class HelpProtocol:
         for req in open_requests:
             request_id = req["id"]
 
-            # Get required capabilities for this request
-            with self._lock:
-                row = self._conn.execute(
-                    "SELECT required_capabilities FROM help_requests WHERE id = ?",
-                    (request_id,),
-                ).fetchone()
-
-            required = []
-            if row and row["required_capabilities"]:
-                required = json.loads(row["required_capabilities"])
+            # Use pre-fetched capabilities instead of re-querying
+            required = request_caps[request_id]
 
             if required:
                 # Score idle teams by capability match

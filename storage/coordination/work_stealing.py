@@ -55,7 +55,8 @@ def _retry_on_busy(func):
                         func.__name__, attempt + 1, _MAX_RETRIES, delay,
                     )
                     time.sleep(delay)
-                    delay *= 2
+                    # P0 FIX: Cap backoff at 50ms to avoid 1.6s+ delays
+                    delay = min(delay * 2, 0.05)
                 else:
                     raise
         raise last_err  # type: ignore[misc]
@@ -198,9 +199,19 @@ class WorkStealing:
         Team label for this instance (used as owner_team on enqueue).
     agent_id:
         Agent identifier for bus messages.
+    auto_reclaim:
+        If True, start a background daemon thread that periodically
+        reclaims abandoned (zombie) work items.
+    reclaim_interval:
+        Seconds between reclaim sweeps (default 30).
+    reclaim_timeout:
+        Seconds a work item can stay in 'claimed' before being reclaimed
+        (default 1800).
     """
 
-    def __init__(self, db_path: str, bus_dir: Optional[str], team: str, agent_id: str) -> None:
+    def __init__(self, db_path: str, bus_dir: Optional[str], team: str, agent_id: str,
+                 auto_reclaim: bool = False, reclaim_interval: int = 30,
+                 reclaim_timeout: int = 1800) -> None:
         self.db_path = db_path
         self.bus_dir = bus_dir
         self.team = team
@@ -208,13 +219,76 @@ class WorkStealing:
         self._lock = threading.Lock()
         self._conn = _open_db(db_path)
         self._closed = False
+        self._reclaim_thread: Optional[threading.Thread] = None
+        self._reclaim_stop = threading.Event()
+        # P0 FIX: Optionally start automatic zombie reclaim on construction
+        if auto_reclaim:
+            self.start_reclaim_thread(interval=reclaim_interval,
+                                     timeout_seconds=reclaim_timeout)
+
+    def start_reclaim_thread(self, interval: int = 30,
+                             timeout_seconds: int = 1800) -> None:
+        """Start a background daemon thread that periodically reclaims zombie work.
+
+        The thread calls ``reclaim_abandoned_work(timeout_seconds)`` every
+        *interval* seconds.  It is a daemon thread so it will not prevent
+        interpreter shutdown.
+
+        Parameters
+        ----------
+        interval:
+            Seconds between reclaim sweeps (default 30).
+        timeout_seconds:
+            Passed through to ``reclaim_abandoned_work()`` as the staleness
+            threshold (default 1800 = 30 minutes).
+        """
+        if self._reclaim_thread is not None and self._reclaim_thread.is_alive():
+            logger.warning("Reclaim thread already running; ignoring duplicate start")
+            return
+
+        self._reclaim_stop.clear()
+
+        def _reclaim_loop() -> None:
+            logger.info(
+                "Reclaim thread started (interval=%ds, timeout=%ds)",
+                interval, timeout_seconds,
+            )
+            while not self._reclaim_stop.wait(timeout=interval):
+                if self._closed:
+                    break
+                try:
+                    reclaimed = self.reclaim_abandoned_work(timeout_seconds)
+                    if reclaimed:
+                        logger.info(
+                            "Auto-reclaimed %d zombie work items: %s",
+                            len(reclaimed), reclaimed,
+                        )
+                except Exception:
+                    logger.warning(
+                        "Reclaim sweep failed", exc_info=True,
+                    )
+            logger.info("Reclaim thread stopped")
+
+        t = threading.Thread(target=_reclaim_loop, name="work-reclaim-daemon",
+                             daemon=True)
+        t.start()
+        self._reclaim_thread = t
+
+    def stop_reclaim_thread(self) -> None:
+        """Signal the background reclaim thread to stop and wait for it."""
+        self._reclaim_stop.set()
+        if self._reclaim_thread is not None:
+            self._reclaim_thread.join(timeout=5)
+            self._reclaim_thread = None
 
     def close(self) -> None:
         with self._lock:
             if self._closed:
                 return
             self._closed = True
-            self._conn.close()
+        # Stop the reclaim thread outside the lock to avoid deadlock
+        self.stop_reclaim_thread()
+        self._conn.close()
 
     @_retry_on_busy
     def enqueue_work(self, title: str, description: str = "", priority: int = 5) -> int:

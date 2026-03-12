@@ -3,11 +3,16 @@ JSONL Message Bus for inter-agent communication.
 
 Uses append-only JSONL files with POSIX atomic writes (< 4096 bytes per message).
 Each channel maps to a file: {comm_dir}/{channel}.jsonl
+
+Priority lanes: messages with priority >= 5 go to {channel}_urgent.jsonl
+Batching: publish_batch() writes multiple messages in a single atomic append.
+Filtering: subscribe() + poll() skip non-matching messages efficiently.
 """
 
 import json
 import logging
 import os
+import re
 import time
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -16,10 +21,11 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 VALID_MSG_TYPES = frozenset({
-    "info", "blocker", "phase-signal", "heartbeat", "request", "response",
+    "info", "blocker", "phase-signal", "heartbeat", "request", "response", "ack",
 })
 
 MAX_MESSAGE_BYTES = 4096
+URGENT_PRIORITY_THRESHOLD = 5
 
 
 @dataclass
@@ -33,6 +39,7 @@ class Message:
     ttl: int = 300
     body: dict = field(default_factory=dict)
     in_reply_to: Optional[str] = None
+    priority: int = 0
 
     def to_json_line(self) -> bytes:
         """Serialize to a single JSON line (bytes, newline-terminated)."""
@@ -40,7 +47,8 @@ class Message:
 
     # Known fields for filtering extra keys in from_json_line.
     _KNOWN_FIELDS = frozenset({
-        "id", "type", "channel", "team", "agent_id", "ts", "ttl", "body", "in_reply_to",
+        "id", "type", "channel", "team", "agent_id", "ts", "ttl",
+        "body", "in_reply_to", "priority",
     })
 
     @classmethod
@@ -55,6 +63,40 @@ class Message:
         return cls(**filtered)
 
 
+# Pre-compiled patterns for fast line-level filtering (avoid full JSON parse).
+_TYPE_RE = re.compile(rb'"type"\s*:\s*"([^"]+)"')
+_PRIORITY_RE = re.compile(rb'"priority"\s*:\s*(-?\d+)')
+_TEAM_RE = re.compile(rb'"team"\s*:\s*"([^"]+)"')
+
+
+def _quick_match(line_raw: bytes, msg_types=None, priority_min=None, team_filter=None) -> bool:
+    """Fast pre-filter using regex on raw bytes. Returns True if line MAY match.
+
+    This is a cheap check to skip lines without full JSON decode.
+    False positives are fine (will be caught after full decode); false negatives are not.
+    """
+    if msg_types is not None:
+        m = _TYPE_RE.search(line_raw)
+        if m and m.group(1).decode("utf-8") not in msg_types:
+            return False
+
+    if priority_min is not None:
+        m = _PRIORITY_RE.search(line_raw)
+        if m:
+            if int(m.group(1)) < priority_min:
+                return False
+        # If no priority field found, default is 0 — skip if min > 0
+        elif priority_min > 0:
+            return False
+
+    if team_filter is not None:
+        m = _TEAM_RE.search(line_raw)
+        if m and m.group(1).decode("utf-8") not in team_filter:
+            return False
+
+    return True
+
+
 class BusWriter:
     """Append messages to channel files with POSIX atomic writes."""
 
@@ -64,10 +106,10 @@ class BusWriter:
         self.team = team
         os.makedirs(comm_dir, exist_ok=True)
 
-    def _channel_path(self, channel: str) -> str:
-        # Sanitize channel name for filesystem safety
+    def _channel_path(self, channel: str, urgent: bool = False) -> str:
         safe = channel.replace("/", "_").replace("..", "_")
-        return os.path.join(self.comm_dir, f"{safe}.jsonl")
+        suffix = "_urgent" if urgent else ""
+        return os.path.join(self.comm_dir, f"{safe}{suffix}.jsonl")
 
     def publish(
         self,
@@ -76,6 +118,7 @@ class BusWriter:
         body: dict,
         ttl: int = 300,
         in_reply_to: Optional[str] = None,
+        priority: int = 0,
     ) -> Message:
         if msg_type not in VALID_MSG_TYPES:
             raise ValueError(f"Invalid message type {msg_type!r}; must be one of {VALID_MSG_TYPES}")
@@ -90,6 +133,7 @@ class BusWriter:
             ttl=ttl,
             body=body,
             in_reply_to=in_reply_to,
+            priority=priority,
         )
 
         raw = msg.to_json_line()
@@ -98,9 +142,8 @@ class BusWriter:
                 f"Serialized message is {len(raw)} bytes, exceeds {MAX_MESSAGE_BYTES} byte limit"
             )
 
-        filepath = self._channel_path(channel)
-        # O_WRONLY | O_APPEND | O_CREAT — POSIX guarantees atomic appends
-        # for writes <= PIPE_BUF (typically 4096 on Linux).
+        urgent = priority >= URGENT_PRIORITY_THRESHOLD
+        filepath = self._channel_path(channel, urgent=urgent)
         fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
         try:
             os.write(fd, raw)
@@ -108,6 +151,85 @@ class BusWriter:
             os.close(fd)
 
         return msg
+
+    def publish_batch(
+        self,
+        channel: str,
+        messages: list[dict],
+        default_ttl: int = 300,
+    ) -> list[Message]:
+        """Write multiple messages in atomic appends, respecting the 4096-byte POSIX limit.
+
+        Each element of `messages` is a dict with keys:
+            msg_type (str), body (dict), priority (int, optional),
+            ttl (int, optional), in_reply_to (str, optional).
+
+        Messages are grouped by lane (normal vs urgent), then batched into
+        chunks that stay under MAX_MESSAGE_BYTES for atomic writes.
+        Returns the list of created Message objects.
+        """
+        normal_lines: list[tuple[bytes, Message]] = []
+        urgent_lines: list[tuple[bytes, Message]] = []
+
+        for spec in messages:
+            msg_type = spec["msg_type"]
+            if msg_type not in VALID_MSG_TYPES:
+                raise ValueError(f"Invalid message type {msg_type!r}; must be one of {VALID_MSG_TYPES}")
+
+            priority = spec.get("priority", 0)
+            msg = Message(
+                id=str(uuid.uuid4()),
+                type=msg_type,
+                channel=channel,
+                team=self.team,
+                agent_id=self.agent_id,
+                ts=time.time(),
+                ttl=spec.get("ttl", default_ttl),
+                body=spec["body"],
+                in_reply_to=spec.get("in_reply_to"),
+                priority=priority,
+            )
+            raw = msg.to_json_line()
+            if len(raw) > MAX_MESSAGE_BYTES:
+                raise ValueError(
+                    f"Single message is {len(raw)} bytes, exceeds {MAX_MESSAGE_BYTES} byte limit"
+                )
+
+            if priority >= URGENT_PRIORITY_THRESHOLD:
+                urgent_lines.append((raw, msg))
+            else:
+                normal_lines.append((raw, msg))
+
+        result_msgs: list[Message] = []
+
+        for lane_lines, urgent in [(normal_lines, False), (urgent_lines, True)]:
+            if not lane_lines:
+                continue
+            filepath = self._channel_path(channel, urgent=urgent)
+
+            # Batch lines into chunks <= MAX_MESSAGE_BYTES
+            chunks: list[bytes] = []
+            current_chunk = b""
+            for raw, msg in lane_lines:
+                if current_chunk and len(current_chunk) + len(raw) > MAX_MESSAGE_BYTES:
+                    chunks.append(current_chunk)
+                    current_chunk = raw
+                else:
+                    current_chunk += raw
+                result_msgs.append(msg)
+
+            if current_chunk:
+                chunks.append(current_chunk)
+
+            # Write each chunk atomically
+            fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+            try:
+                for chunk in chunks:
+                    os.write(fd, chunk)
+            finally:
+                os.close(fd)
+
+        return result_msgs
 
 
 class BusReader:
@@ -119,6 +241,9 @@ class BusReader:
     - Persists the offset after each successful poll
     This eliminates the 7.5x read amplification caused by re-reading entire
     bus files after restarts.
+
+    Supports message filtering via subscribe(). When filters are set, poll()
+    skips non-matching lines using a fast regex pre-filter before JSON decode.
     """
 
     def __init__(
@@ -132,78 +257,144 @@ class BusReader:
         self.channel = channel
         safe = channel.replace("/", "_").replace("..", "_")
         self.filepath = os.path.join(comm_dir, f"{safe}.jsonl")
+        self._urgent_filepath = os.path.join(comm_dir, f"{safe}_urgent.jsonl")
         self._agent_id = agent_id
         self._offset_store = offset_store
         self._offset: int = 0
+        self._urgent_offset: int = 0
+
+        # Subscription filters (None = no filter, accept all)
+        self._filter_msg_types: Optional[set[str]] = None
+        self._filter_priority_min: Optional[int] = None
+        self._filter_team: Optional[set[str]] = None
 
         # Restore persisted offset if available
         if offset_store is not None and agent_id is not None:
-            try:
-                saved = offset_store.load_offset(agent_id, channel)
-                if saved is not None:
-                    # Validate that the saved offset is still valid
-                    # (file may have been truncated by compaction)
-                    if os.path.exists(self.filepath):
-                        file_size = os.path.getsize(self.filepath)
-                        if saved <= file_size:
-                            self._offset = saved
-                            logger.debug(
-                                "Restored offset %d for agent=%s channel=%s",
-                                saved, agent_id, channel,
-                            )
-                        else:
-                            # File was truncated past our offset -- reset
-                            logger.info(
-                                "Offset %d exceeds file size %d for agent=%s "
-                                "channel=%s; resetting to 0",
-                                saved, file_size, agent_id, channel,
-                            )
-                            self._offset = 0
-            except Exception as e:
-                logger.warning(
-                    "Failed to restore offset for agent=%s channel=%s: %s",
-                    agent_id, channel, e,
-                )
+            self._offset = self._restore_offset(channel, self.filepath)
+            self._urgent_offset = self._restore_offset(
+                f"{channel}__urgent", self._urgent_filepath
+            )
+
+    def _restore_offset(self, channel_key: str, filepath: str) -> int:
+        """Restore a persisted offset, validating against current file size."""
+        try:
+            saved = self._offset_store.load_offset(self._agent_id, channel_key)
+            if saved is not None:
+                if os.path.exists(filepath):
+                    file_size = os.path.getsize(filepath)
+                    if saved <= file_size:
+                        logger.debug(
+                            "Restored offset %d for agent=%s channel=%s",
+                            saved, self._agent_id, channel_key,
+                        )
+                        return saved
+                    else:
+                        logger.info(
+                            "Offset %d exceeds file size %d for agent=%s "
+                            "channel=%s; resetting to 0",
+                            saved, file_size, self._agent_id, channel_key,
+                        )
+        except Exception as e:
+            logger.warning(
+                "Failed to restore offset for agent=%s channel=%s: %s",
+                self._agent_id, channel_key, e,
+            )
+        return 0
+
+    def subscribe(
+        self,
+        msg_types: Optional[set[str]] = None,
+        priority_min: Optional[int] = None,
+        team_filter: Optional[set[str]] = None,
+    ) -> None:
+        """Configure message filtering. Only matching messages returned by poll().
+
+        Args:
+            msg_types: Set of message types to accept (None = all).
+            priority_min: Minimum priority to accept (None = all).
+            team_filter: Set of team names to accept (None = all).
+        """
+        self._filter_msg_types = set(msg_types) if msg_types is not None else None
+        self._filter_priority_min = priority_min
+        self._filter_team = set(team_filter) if team_filter is not None else None
 
     def poll(self) -> list[Message]:
-        """Read new complete lines since last poll, filtering expired messages.
+        """Read new messages, checking urgent lane first then normal lane.
 
-        If an OffsetStore is configured, the byte offset is persisted after
-        each successful read so it survives restarts.
+        Applies subscription filters during parsing (skips non-matching lines
+        using fast regex pre-filter before full JSON decode).
+
+        If an OffsetStore is configured, byte offsets are persisted after
+        each successful read so they survive restarts.
         """
-        if not os.path.exists(self.filepath):
-            return []
-
         messages: list[Message] = []
-        now = time.time()
+
+        # Urgent lane first (high-priority messages)
+        urgent_msgs, new_urgent_offset = self._read_lane(
+            self._urgent_filepath, self._urgent_offset
+        )
+        if new_urgent_offset != self._urgent_offset:
+            self._urgent_offset = new_urgent_offset
+            self._persist_offset(f"{self.channel}__urgent", self._urgent_offset)
+        messages.extend(urgent_msgs)
+
+        # Normal lane
+        normal_msgs, new_offset = self._read_lane(self.filepath, self._offset)
+        if new_offset != self._offset:
+            self._offset = new_offset
+            self._persist_offset(self.channel, self._offset)
+        messages.extend(normal_msgs)
+
+        return messages
+
+    def _read_lane(self, filepath: str, offset: int) -> tuple[list[Message], int]:
+        """Read messages from a single lane file starting at offset.
+
+        Returns (messages, new_offset).
+        """
+        if not os.path.exists(filepath):
+            return [], offset
 
         try:
-            with open(self.filepath, "rb") as f:
-                f.seek(self._offset)
+            with open(filepath, "rb") as f:
+                f.seek(offset)
                 raw = f.read()
         except OSError as e:
-            logger.warning("Failed to read bus file %s: %s", self.filepath, e)
-            return []
+            logger.warning("Failed to read bus file %s: %s", filepath, e)
+            return [], offset
 
         if not raw:
-            return []
+            return [], offset
+
+        now = time.time()
+        messages: list[Message] = []
 
         # Only process complete lines (ending with \n).
-        # If the last chunk doesn't end with \n, keep it for next poll.
         if raw.endswith(b"\n"):
             line_bytes_list = raw.split(b"\n")
             line_bytes_list.pop()  # remove trailing empty bytes from split
-            self._offset += len(raw)
+            new_offset = offset + len(raw)
         else:
             parts = raw.rsplit(b"\n", 1)
             if len(parts) == 1:
-                # No complete line yet
-                return []
+                return [], offset
             complete_part = parts[0] + b"\n"
             line_bytes_list = parts[0].split(b"\n")
-            self._offset += len(complete_part)
+            new_offset = offset + len(complete_part)
 
         for line_raw in line_bytes_list:
+            if not line_raw.strip():
+                continue
+
+            # Fast pre-filter: skip lines that definitely don't match
+            if not _quick_match(
+                line_raw,
+                msg_types=self._filter_msg_types,
+                priority_min=self._filter_priority_min,
+                team_filter=self._filter_team,
+            ):
+                continue
+
             try:
                 line = line_raw.decode("utf-8").strip()
             except UnicodeDecodeError as e:
@@ -221,29 +412,34 @@ class BusReader:
             if msg.ts + msg.ttl < now:
                 continue
 
+            # Post-decode filter validation (catches regex false positives)
+            if self._filter_msg_types and msg.type not in self._filter_msg_types:
+                continue
+            if self._filter_priority_min is not None and msg.priority < self._filter_priority_min:
+                continue
+            if self._filter_team and msg.team not in self._filter_team:
+                continue
+
             messages.append(msg)
 
-        # Persist the new offset
-        self._persist_offset()
+        return messages, new_offset
 
-        return messages
-
-    def _persist_offset(self) -> None:
-        """Save the current byte offset to the OffsetStore if configured."""
+    def _persist_offset(self, channel_key: str = None, offset_value: int = None) -> None:
+        """Save a byte offset to the OffsetStore if configured."""
         if self._offset_store is not None and self._agent_id is not None:
+            key = channel_key or self.channel
+            val = offset_value if offset_value is not None else self._offset
             try:
-                self._offset_store.save_offset(
-                    self._agent_id, self.channel, self._offset
-                )
+                self._offset_store.save_offset(self._agent_id, key, val)
             except Exception as e:
                 logger.warning(
                     "Failed to persist offset for agent=%s channel=%s: %s",
-                    self._agent_id, self.channel, e,
+                    self._agent_id, key, e,
                 )
 
     @property
     def offset(self) -> int:
-        """Current byte offset into the channel file."""
+        """Current byte offset into the normal channel file."""
         return self._offset
 
 
