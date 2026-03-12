@@ -1,0 +1,322 @@
+{
+  "id": "SOP-028",
+  "version": "1.0",
+  "created": "2026-03-12",
+  "title": "Pointer Network Operations: Query, Add, Remove, Rebuild",
+  "purpose": "Standard operating procedures for all interactions with the cross-domain pointer network (storage/pointer-network.json and storage/pointer-clusters/).",
+  "reference": {
+    "network_file": "storage/pointer-network.json",
+    "clusters_dir": "storage/pointer-clusters/",
+    "router": "storage/router.json",
+    "schema": "storage/INDEX_SCHEMA.md",
+    "taxonomy": "storage/taxonomy.json",
+    "related_sops": ["SOP-027 (Wikipedia category pull)", "SOP-025 (research tool integration)"]
+  },
+
+  "overview": {
+    "what_is_the_pointer_network": "A cross-domain graph linking all 295+ nodes (KB entries, scripts, sources, SOPs, teams, Wikipedia articles) via 6,184+ weighted edges. Each node has a ranked pointer list to its most related items in OTHER domains.",
+    "file_layout": {
+      "pointer-network.json": "Main graph — nodes{} with pointer lists, tag_clusters{}, stats{}",
+      "pointer-clusters/{tag}.json": "Per-tag cluster files — all nodes sharing a cross-domain tag with internal edges"
+    },
+    "edge_types": {
+      "shared_tags": "Nodes sharing 1+ tags across different domains (weight = tag count)",
+      "explicit_reference": "Direct references: builds_on, uses_scripts, uses_sources (weight = 3), reverse edges (weight = 3)",
+      "category_affinity": "Nodes with same/related categories in different domains (weight = 1)"
+    },
+    "node_id_format": {
+      "knowledge-base": "KB-NNNN",
+      "scripts": "SCR-NNNN",
+      "sources": "SRC-NNNN",
+      "api-tools": "TOOL-NNNN",
+      "teams": "TEAM-NNNN",
+      "sops": "SOP-NNN",
+      "wikipedia-ai": "wiki-ai:{Article_ID}",
+      "wikipedia-statistical-software": "wiki-ss:{Article_ID}"
+    }
+  },
+
+  "operations": {
+
+    "query_related": {
+      "id": "OP-01",
+      "title": "Find All Related Items for a Node",
+      "when": "You want to find everything related to a specific KB entry, script, SOP, etc.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Look up the node in pointer-network.json",
+          "code": "python3 -c \"\nimport json\nnet = json.load(open('storage/pointer-network.json'))\nnode = net['nodes'].get('KB-0045', {})\nfor p in node.get('pointers', []):\n    print(f\\\"  {p['to']} (weight={p['weight']}) — {', '.join(p['reasons'])}\\\")\n\""
+        },
+        {
+          "step": 2,
+          "action": "For each pointer, resolve the full entry from its domain index",
+          "detail": "Use the ID prefix to determine which index to read: KB→knowledge-base/index.json, SCR→storage/scripts/index.json, etc."
+        }
+      ],
+      "example": {
+        "input": "What is related to KB-0045 (Wikipedia crawl methodology)?",
+        "output": "SCR-0043 (weight=8), SCR-0044 (weight=6), SOP-026 (weight=4), SOP-027 (weight=4), TEAM-0019 (weight=3)"
+      }
+    },
+
+    "query_by_tag": {
+      "id": "OP-02",
+      "title": "Find All Items in a Tag Cluster",
+      "when": "You want all items related to a topic (e.g., 'multi-agent', 'data-gathering').",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Read the tag cluster file",
+          "code": "cat storage/pointer-clusters/multi-agent.json"
+        },
+        {
+          "step": 2,
+          "action": "Or query from the network's tag_clusters section",
+          "code": "python3 -c \"\nimport json\nnet = json.load(open('storage/pointer-network.json'))\ncluster = net['tag_clusters'].get('multi-agent', {})\nprint(f\\\"Nodes: {cluster.get('node_count', 0)} across {cluster.get('domains', [])}\\\")\nfor nid in cluster.get('nodes', []):\n    print(f\\\"  {nid}\\\")\n\""
+        }
+      ],
+      "available_clusters": "Run: ls storage/pointer-clusters/ to see all tag cluster files"
+    },
+
+    "query_cross_domain": {
+      "id": "OP-03",
+      "title": "Find Cross-Domain Connections for a Topic",
+      "when": "You want to see how a topic spans KB entries, scripts, SOPs, and teams.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Read the cluster file for the topic tag",
+          "detail": "Each cluster file groups nodes by domain and lists internal edges."
+        },
+        {
+          "step": 2,
+          "action": "Follow the highest-weight internal edges to trace the strongest connections",
+          "detail": "Internal edges are sorted by weight descending. The top edges show the strongest cross-domain links."
+        }
+      ]
+    },
+
+    "add_node": {
+      "id": "OP-04",
+      "title": "Add a New Node to the Pointer Network",
+      "when": "A new KB entry, script, SOP, source, or Wikipedia collection is added.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Add the entry to its domain index (must be schema v2.0)",
+          "detail": "Follow INDEX_SCHEMA.md. Include: id, title, date, category, tags, status, references."
+        },
+        {
+          "step": 2,
+          "action": "Compute edges for the new node",
+          "code": "python3 -c \"\nimport json\n\n# Load network and new entry\nnet = json.load(open('storage/pointer-network.json'))\nnew_id = 'KB-0047'  # example\nnew_tags = ['wikipedia', 'dbpedia', 'indexing']\nnew_domain = 'knowledge-base'\nnew_category = 'research'\nnew_refs = {'builds_on': ['KB-0045'], 'uses_scripts': ['SCR-0043']}\n\npointers = []\n\n# 1. Tag-based edges (scan existing nodes for shared tags)\nfor nid, node in net['nodes'].items():\n    if node['domain'] == new_domain:\n        continue  # skip same-domain for tag edges\n    # Get tags from the node's cluster memberships\n    shared = []  # would need to look up tags from domain index\n    # ... compute shared tags ...\n\n# 2. Reference-based edges (direct)\nfor ref_type, targets in new_refs.items():\n    for target in targets:\n        pointers.append({'to': target, 'weight': 3, 'reasons': [f'explicit_reference:{ref_type}']})\n\n# 3. Add to network\nnet['nodes'][new_id] = {'domain': new_domain, 'pointers': pointers}\nnet['stats']['total_nodes'] += 1\n\n# 4. Update tag clusters\nfor tag in new_tags:\n    if tag in net.get('tag_clusters', {}):\n        net['tag_clusters'][tag]['nodes'].append(new_id)\n        net['tag_clusters'][tag]['node_count'] += 1\n\nwith open('storage/pointer-network.json', 'w') as f:\n    json.dump(net, f, indent=2)\nprint(f'Added {new_id} with {len(pointers)} pointers')\n\"",
+          "note": "For full recomputation, use OP-07 (rebuild). For quick additions, this incremental approach works."
+        },
+        {
+          "step": 3,
+          "action": "Update affected cluster files",
+          "detail": "For each tag on the new node, update the corresponding storage/pointer-clusters/{tag}.json file."
+        },
+        {
+          "step": 4,
+          "action": "Update existing nodes' pointer lists",
+          "detail": "Any node that the new node points TO should also get a reverse pointer back. Add the reverse pointer to their pointers[] list."
+        },
+        {
+          "step": 5,
+          "action": "Update router.json entry_count for the domain"
+        }
+      ],
+      "when_to_use_full_rebuild_instead": "If adding 5+ nodes at once, use OP-07 (full rebuild) instead of incremental adds."
+    },
+
+    "remove_node": {
+      "id": "OP-05",
+      "title": "Remove a Node from the Pointer Network",
+      "when": "An entry is deleted or archived.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Remove from domain index",
+          "detail": "Set status='archived' or delete from the domain index. Update secondary_indexes."
+        },
+        {
+          "step": 2,
+          "action": "Remove from pointer-network.json",
+          "code": "python3 -c \"\nimport json\nnet = json.load(open('storage/pointer-network.json'))\nremove_id = 'KB-0047'\n\n# Remove the node\nif remove_id in net['nodes']:\n    del net['nodes'][remove_id]\n    net['stats']['total_nodes'] -= 1\n\n# Remove from all other nodes' pointer lists\nfor nid, node in net['nodes'].items():\n    node['pointers'] = [p for p in node['pointers'] if p['to'] != remove_id]\n\n# Remove from tag clusters\nfor tag, cluster in net.get('tag_clusters', {}).items():\n    if remove_id in cluster.get('nodes', []):\n        cluster['nodes'].remove(remove_id)\n        cluster['node_count'] -= 1\n\nwith open('storage/pointer-network.json', 'w') as f:\n    json.dump(net, f, indent=2)\nprint(f'Removed {remove_id}')\n\""
+        },
+        {
+          "step": 3,
+          "action": "Update affected cluster files in storage/pointer-clusters/",
+          "detail": "Remove the node from each cluster file it appeared in. Remove any internal edges involving it."
+        },
+        {
+          "step": 4,
+          "action": "Update router.json entry_count"
+        }
+      ]
+    },
+
+    "update_node_tags": {
+      "id": "OP-06",
+      "title": "Update Tags on an Existing Node",
+      "when": "An entry's tags change (added/removed tags).",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Update tags in the domain index"
+        },
+        {
+          "step": 2,
+          "action": "Recompute tag-based edges for this node only",
+          "detail": "Read all other nodes' tags from domain indexes. Compute new shared_tags edges. Replace the node's existing tag-based pointers with new ones. Keep explicit_reference and category_affinity pointers unchanged."
+        },
+        {
+          "step": 3,
+          "action": "Update tag_clusters in pointer-network.json",
+          "detail": "Remove node from clusters for removed tags. Add node to clusters for new tags."
+        },
+        {
+          "step": 4,
+          "action": "Regenerate affected cluster files in storage/pointer-clusters/"
+        }
+      ],
+      "when_to_use_full_rebuild_instead": "If changing tags on 10+ nodes, use OP-07."
+    },
+
+    "full_rebuild": {
+      "id": "OP-07",
+      "title": "Full Pointer Network Rebuild",
+      "when": "After bulk changes (new Wikipedia collection, major index restructuring, 5+ node additions). Also run periodically to ensure consistency.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Launch 3 edge-computing agents in parallel",
+          "agents": {
+            "tag_agent": "Compute shared_tags edges across all domains. Read all domain indexes + Wikipedia enriched files. Output to /tmp/tag_edges.json.",
+            "ref_agent": "Compute explicit_reference edges from references{} fields in all domain indexes. Include reverse edges. Output to /tmp/ref_edges.json.",
+            "category_agent": "Compute category_affinity edges using category equivalence rules. Output to /tmp/category_edges.json."
+          }
+        },
+        {
+          "step": 2,
+          "action": "Launch assembler agent after all 3 complete",
+          "detail": "Merge all edge files. Deduplicate edges (same from-to pair). Build per-node pointer lists (top 20, top 10 for wiki nodes). Build tag_clusters. Write pointer-network.json and pointer-clusters/*.json."
+        },
+        {
+          "step": 3,
+          "action": "Validate the rebuild",
+          "code": "python3 -c \"\nimport json\nnet = json.load(open('storage/pointer-network.json'))\nprint(f\\\"Nodes: {net['stats']['total_nodes']}\\\")\nprint(f\\\"Edges: {net['stats']['unique_edges']}\\\")\nprint(f\\\"Clusters: {len(net.get('tag_clusters', {}))}\\\")\n# Verify all nodes have pointers\nempty = [n for n,d in net['nodes'].items() if not d.get('pointers')]\nif empty: print(f\\\"WARNING: {len(empty)} nodes with no pointers\\\")\nelse: print('All nodes have pointers')\n\""
+        }
+      ],
+      "performance": "~5 minutes for 480 nodes with parallel agents",
+      "category_affinity_rules": {
+        "data-gathering": ["data-collection", "data-retrieval", "research"],
+        "validation": ["testing"],
+        "integration": ["automation"],
+        "coordination": ["operations", "infrastructure"],
+        "market-research": ["analysis"]
+      }
+    },
+
+    "add_new_domain": {
+      "id": "OP-08",
+      "title": "Add a New Domain to the Pointer Network",
+      "when": "A new Wikipedia collection or entirely new content type is added.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Create the domain index following INDEX_SCHEMA.md v2.0",
+          "detail": "Must have: schema_version, domain, last_updated, entry_count, entries[] with standard fields, secondary_indexes."
+        },
+        {
+          "step": 2,
+          "action": "Register the domain in storage/router.json",
+          "detail": "Add a new entry under domains{} with index_path, entry_prefix, entry_count, description, categories."
+        },
+        {
+          "step": 3,
+          "action": "Add any new tags to storage/taxonomy.json",
+          "detail": "If the new domain uses tags not yet in the taxonomy, add them with namespace, description, and aliases."
+        },
+        {
+          "step": 4,
+          "action": "Run a full rebuild (OP-07) to integrate the new domain into the pointer network",
+          "detail": "The edge-computing agents will automatically pick up the new domain if its index follows v2.0 schema."
+        }
+      ],
+      "node_id_convention": {
+        "rule": "New domains should use a unique prefix. Wikipedia collections use 'wiki-{slug}:' prefix.",
+        "examples": ["wiki-ml:Deep_learning", "PAPER-0001", "DATASET-0001"]
+      }
+    },
+
+    "query_strongest_path": {
+      "id": "OP-09",
+      "title": "Find the Strongest Connection Path Between Two Nodes",
+      "when": "You want to understand how two items are related across domains.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Check if there's a direct pointer",
+          "code": "python3 -c \"\nimport json\nnet = json.load(open('storage/pointer-network.json'))\nnode_a = 'KB-0002'\nnode_b = 'SOP-011'\npointers_a = net['nodes'].get(node_a, {}).get('pointers', [])\ndirect = [p for p in pointers_a if p['to'] == node_b]\nif direct:\n    print(f'Direct: weight={direct[0][\"weight\"]}, reasons={direct[0][\"reasons\"]}')\nelse:\n    print('No direct pointer. Checking shared clusters...')\n    clusters_a = [t for t,c in net.get('tag_clusters',{}).items() if node_a in c.get('nodes',[])]\n    clusters_b = [t for t,c in net.get('tag_clusters',{}).items() if node_b in c.get('nodes',[])]\n    shared = set(clusters_a) & set(clusters_b)\n    if shared:\n        print(f'Shared clusters: {shared}')\n    else:\n        print('No shared clusters. Check 2-hop path via mutual pointers.')\n\""
+        },
+        {
+          "step": 2,
+          "action": "If no direct pointer, find 2-hop paths",
+          "detail": "Find nodes that both A and B point to. The shared intermediate node is the bridge."
+        }
+      ]
+    },
+
+    "export_subgraph": {
+      "id": "OP-10",
+      "title": "Export a Subgraph for a Specific Topic or Domain",
+      "when": "You want a focused view of connections for a presentation, analysis, or to pass to another agent.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Identify seed nodes (by tag cluster, domain, or specific IDs)"
+        },
+        {
+          "step": 2,
+          "action": "Extract subgraph",
+          "code": "python3 -c \"\nimport json\nnet = json.load(open('storage/pointer-network.json'))\n\n# Option A: By tag\nseed_tag = 'multi-agent'\ncluster = net['tag_clusters'].get(seed_tag, {})\nseed_nodes = set(cluster.get('nodes', []))\n\n# Option B: By domain\n# seed_nodes = {n for n,d in net['nodes'].items() if d['domain']=='knowledge-base'}\n\n# Extract subgraph\nsubgraph = {}\nfor nid in seed_nodes:\n    if nid in net['nodes']:\n        node = net['nodes'][nid]\n        # Keep only pointers to other nodes in the subgraph\n        filtered = [p for p in node['pointers'] if p['to'] in seed_nodes]\n        subgraph[nid] = {'domain': node['domain'], 'pointers': filtered}\n\nprint(json.dumps({'nodes': len(subgraph), 'edges': sum(len(n['pointers']) for n in subgraph.values())}, indent=2))\n\""
+        }
+      ]
+    }
+  },
+
+  "maintenance": {
+    "consistency_check": {
+      "title": "Verify Pointer Network Consistency",
+      "when": "Run after any manual edits or if data seems stale.",
+      "code": "python3 -c \"\nimport json, os\n\nnet = json.load(open('storage/pointer-network.json'))\nrouter = json.load(open('storage/router.json'))\n\nerrors = []\n\n# 1. Check all node IDs exist in their domain indexes\nfor nid, node in net['nodes'].items():\n    domain = node['domain']\n    if domain.startswith('wikipedia'):\n        continue  # wiki nodes validated separately\n    # Find domain index\n    for d, info in router['domains'].items():\n        if info.get('entry_prefix') and nid.startswith(info['entry_prefix']):\n            idx = json.load(open(info['index_path']))\n            ids = [e['id'] for e in idx['entries']]\n            if nid not in ids:\n                errors.append(f'{nid} not found in {info[\"index_path\"]}')\n            break\n\n# 2. Check all pointers point to existing nodes\nfor nid, node in net['nodes'].items():\n    for p in node['pointers']:\n        if p['to'] not in net['nodes']:\n            errors.append(f'{nid} points to non-existent {p[\"to\"]}')\n\n# 3. Check cluster files exist\nfor tag in net.get('tag_clusters', {}):\n    cf = f'storage/pointer-clusters/{tag}.json'\n    if not os.path.exists(cf):\n        errors.append(f'Missing cluster file: {cf}')\n\nif errors:\n    print(f'{len(errors)} errors:')\n    for e in errors[:20]: print(f'  {e}')\nelse:\n    print('Pointer network is consistent')\n\""
+    },
+    "when_to_rebuild": [
+      "After adding a new Wikipedia collection (SOP-027)",
+      "After adding 5+ new entries to any domain index",
+      "After changing tags on 10+ existing entries",
+      "After any structural change to domain indexes",
+      "Weekly as a hygiene check"
+    ],
+    "rebuild_is_safe": "Full rebuild (OP-07) is non-destructive. It reads domain indexes and writes pointer-network.json + cluster files. Domain indexes are never modified by a rebuild."
+  },
+
+  "quick_reference": {
+    "title": "Quick Reference: Common Operations",
+    "operations": [
+      "Find related items:     Read storage/pointer-network.json → nodes.{ID}.pointers",
+      "Find by topic:          Read storage/pointer-clusters/{tag}.json",
+      "Add 1-4 nodes:          OP-04 (incremental add)",
+      "Add 5+ nodes:           OP-07 (full rebuild)",
+      "Remove a node:          OP-05 (remove from network + clusters + domain index)",
+      "Change tags:            OP-06 (update tags, recompute edges)",
+      "New Wikipedia category: SOP-027 (pull) → OP-08 (add domain) → OP-07 (rebuild)",
+      "New domain type:        OP-08 (add domain) → OP-07 (rebuild)",
+      "Check consistency:      Run maintenance.consistency_check",
+      "Export for analysis:    OP-10 (export subgraph)"
+    ]
+  }
+}
