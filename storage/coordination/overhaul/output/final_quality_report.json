@@ -1,0 +1,407 @@
+{
+  "title": "Final Quality Gate Report",
+  "date": "2026-03-12T02:45:56",
+  "repo_root": "/home/user/Claude",
+  "summary": {
+    "passed": 2539,
+    "failed": 41,
+    "total": 2580,
+    "pass_rate": "98.4%",
+    "status": "FAIL"
+  },
+  "subsystems": {
+    "knowledge-base": {
+      "passed": 360,
+      "failed": 0,
+      "total": 360,
+      "pass_rate": "100.0%",
+      "status": "PASS",
+      "failures": []
+    },
+    "scripts": {
+      "passed": 423,
+      "failed": 0,
+      "total": 423,
+      "pass_rate": "100.0%",
+      "status": "PASS",
+      "failures": []
+    },
+    "sources": {
+      "passed": 243,
+      "failed": 0,
+      "total": 243,
+      "pass_rate": "100.0%",
+      "status": "PASS",
+      "failures": []
+    },
+    "api-tools": {
+      "passed": 9,
+      "failed": 2,
+      "total": 11,
+      "pass_rate": "81.8%",
+      "status": "FAIL",
+      "failures": [
+        {
+          "subsystem": "api-tools",
+          "check": "no_legacy_date_field",
+          "passed": false,
+          "file": "storage/api-tools/index.json#TOOL-0001",
+          "detail": "Legacy date field 'date_added' present (should be 'date')"
+        },
+        {
+          "subsystem": "api-tools",
+          "check": "no_legacy_date_field",
+          "passed": false,
+          "file": "storage/api-tools/index.json#TOOL-0002",
+          "detail": "Legacy date field 'date_added' present (should be 'date')"
+        }
+      ]
+    },
+    "sops": {
+      "passed": 153,
+      "failed": 0,
+      "total": 153,
+      "pass_rate": "100.0%",
+      "status": "PASS",
+      "failures": []
+    },
+    "data": {
+      "passed": 183,
+      "failed": 0,
+      "total": 183,
+      "pass_rate": "100.0%",
+      "status": "PASS",
+      "failures": []
+    },
+    "teams": {
+      "passed": 201,
+      "failed": 0,
+      "total": 201,
+      "pass_rate": "100.0%",
+      "status": "PASS",
+      "failures": []
+    },
+    "market-research-picks": {
+      "passed": 115,
+      "failed": 0,
+      "total": 115,
+      "pass_rate": "100.0%",
+      "status": "PASS",
+      "failures": []
+    },
+    "cross-subsystem": {
+      "passed": 267,
+      "failed": 0,
+      "total": 267,
+      "pass_rate": "100.0%",
+      "status": "PASS",
+      "failures": []
+    },
+    "kb-frontmatter": {
+      "passed": 307,
+      "failed": 0,
+      "total": 307,
+      "pass_rate": "100.0%",
+      "status": "PASS",
+      "failures": []
+    },
+    "picks": {
+      "passed": 128,
+      "failed": 0,
+      "total": 128,
+      "pass_rate": "100.0%",
+      "status": "PASS",
+      "failures": []
+    },
+    "json-data": {
+      "passed": 29,
+      "failed": 0,
+      "total": 29,
+      "pass_rate": "100.0%",
+      "status": "PASS",
+      "failures": []
+    },
+    "source-files": {
+      "passed": 121,
+      "failed": 39,
+      "total": 160,
+      "pass_rate": "75.6%",
+      "status": "FAIL",
+      "failures": [
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0001-openalex.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0002-semantic-scholar.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0003-arxiv.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0004-crossref.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0005-wikidata.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0006-wikipedia.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0007-core.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0008-dbpedia.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0012-newsapi-org.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0013-guardian-api.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0014-gnews.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0015-gdelt.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0016-mediastack.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0017-rss2json.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0019-census.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0020-bls.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0021-nws-weather.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0022-open-meteo.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0023-world-bank.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0024-treasury-fiscal.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0025-github-api.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0026-npm-registry.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0027-pypi-api.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0028-ip-api.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0029-hn-algolia.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0030-hn-firebase.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0031-stackexchange-api.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0032-free-dictionary.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0033-datamuse.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0034-conceptnet.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0035-huggingface-inference.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0036-gemini-embeddings.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0037-roboflow.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0038-alpha-vantage.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0040-finnhub.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0041-coingecko.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0042-exchangerate-api.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0043-fawazahmed0-exchange.json",
+          "detail": "Missing 'date'"
+        },
+        {
+          "subsystem": "source-files",
+          "check": "has_date",
+          "passed": false,
+          "file": "SRC-0044-coinpaprika.json",
+          "detail": "Missing 'date'"
+        }
+      ]
+    }
+  }
+}

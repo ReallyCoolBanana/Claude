@@ -1,0 +1,58 @@
+{
+  "title": "Integration Test Results",
+  "date": "2026-03-12T02:45:48",
+  "repo_root": "/home/user/Claude",
+  "summary": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": "100.0%"
+  },
+  "tests": [
+    {
+      "test": "rate_limiter_import",
+      "passed": true,
+      "detail": "RateLimiter class found with check_and_reserve method"
+    },
+    {
+      "test": "compactor_import",
+      "passed": true,
+      "detail": "BusCompactor and OffsetStore classes found"
+    },
+    {
+      "test": "db_partition_import",
+      "passed": true,
+      "detail": "PartitionedStore class found in storage.coordination.db_partition"
+    },
+    {
+      "test": "rate_limiter_instantiate",
+      "passed": true,
+      "detail": "RateLimiter instantiated and closed cleanly"
+    },
+    {
+      "test": "bus_round_trip",
+      "passed": true,
+      "detail": "Wrote 1 message, read 1 back, content verified"
+    },
+    {
+      "test": "offset_persistence",
+      "passed": true,
+      "detail": "First read: 5, second read after resume: 3 (offset persistence works)"
+    },
+    {
+      "test": "rate_limiter_quota",
+      "passed": true,
+      "detail": "Allowed: 20/20, Denied: 0/20"
+    },
+    {
+      "test": "db_partition_instantiate",
+      "passed": true,
+      "detail": "PartitionedStore OK; partitions: ['hub', 'queue', 'comms', 'findings']"
+    },
+    {
+      "test": "compactor_instantiate",
+      "passed": true,
+      "detail": "BusCompactor instantiated with OffsetStore"
+    }
+  ]
+}
