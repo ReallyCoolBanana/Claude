@@ -595,16 +595,161 @@
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "TEAM-0030"
+    },
+    {
+      "id": "SCR-0055",
+      "name": "pick-logger",
+      "filename": "pick_logger.py",
+      "language": "python",
+      "category": "market-research",
+      "description": "CLI tool for automated stock pick creation. Generates PICK markdown files from arguments, auto-generates next PICK ID, updates picks/index.json, validates price relationships and enums. Supports --dry-run.",
+      "dependencies": [],
+      "added": "2026-03-12",
+      "added_by_team": "TEAM-0036"
+    },
+    {
+      "id": "SCR-0056",
+      "name": "method-sec-edgar",
+      "filename": "method_sec_edgar.py",
+      "language": "python",
+      "category": "data-collection",
+      "description": "SEC EDGAR filing data retrieval. Looks up CIK from ticker, fetches filings from data.sec.gov, filters by type (10-K, 10-Q, 8-K). Table and JSON output. Rate-limited for SEC compliance.",
+      "dependencies": [],
+      "added": "2026-03-12",
+      "added_by_team": "TEAM-0037"
+    },
+    {
+      "id": "SCR-0057",
+      "name": "mcp-kb-server",
+      "filename": "mcp_kb_server.py",
+      "language": "python",
+      "category": "integration",
+      "description": "MCP server for knowledge base search. Provides FTS5 full-text search, semantic search via LanceDB, and CRUD operations on KB entries via FastMCP stdio protocol.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0032"
+    },
+    {
+      "id": "SCR-0058",
+      "name": "semantic-indexer",
+      "filename": "semantic_indexer.py",
+      "language": "python",
+      "category": "integration",
+      "description": "Builds LanceDB vector index from KB entries using sentence-transformers embeddings for semantic search.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0032"
+    },
+    {
+      "id": "SCR-0059",
+      "name": "semantic-search",
+      "filename": "semantic_search.py",
+      "language": "python",
+      "category": "utility",
+      "description": "CLI for semantic search across KB entries via LanceDB vector similarity.",
+      "dependencies": ["SCR-0058"],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0032"
+    },
+    {
+      "id": "SCR-0060",
+      "name": "smart-read",
+      "filename": "smart_read.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Smart file read utility with contextual awareness for the repository structure.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0030"
+    },
+    {
+      "id": "SCR-0061",
+      "name": "smart-search",
+      "filename": "smart_search.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Smart search utility across repository with contextual ranking.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0030"
+    },
+    {
+      "id": "SCR-0062",
+      "name": "smart-write",
+      "filename": "smart_write.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Smart write utility with validation and index auto-updating.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0030"
+    },
+    {
+      "id": "SCR-0063",
+      "name": "query-kb",
+      "filename": "query_kb.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Knowledge base query interface with structured output formatting.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0030"
+    },
+    {
+      "id": "SCR-0064",
+      "name": "validate-naming",
+      "filename": "validate_naming.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Naming convention validator for repository files. Checks snake_case for .py, kebab-case for .md, ID format standards.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0030"
+    },
+    {
+      "id": "SCR-0065",
+      "name": "auto-index",
+      "filename": "auto_index.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Automated index.json generator. Scans directories and generates/updates index files.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0030"
+    },
+    {
+      "id": "SCR-0066",
+      "name": "generate-registry",
+      "filename": "generate_registry.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Registry generation tool for cataloging repository artifacts.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0030"
+    },
+    {
+      "id": "SCR-0067",
+      "name": "import-to-db",
+      "filename": "import_to_db.py",
+      "language": "python",
+      "category": "integration",
+      "description": "Database import tool. Imports KB entries and metadata into SQLite for FTS5 search.",
+      "dependencies": [],
+      "added": "2026-03-11",
+      "added_by_team": "TEAM-0032"
     }
   ],
   "categories": {
-    "data-collection": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028", "SCR-0046", "SCR-0047", "SCR-0048"],
+    "data-collection": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028", "SCR-0046", "SCR-0047", "SCR-0048", "SCR-0056"],
     "analysis": ["SCR-0004", "SCR-0005", "SCR-0011", "SCR-0031", "SCR-0041", "SCR-0042", "SCR-0050", "SCR-0054"],
     "automation": ["SCR-0029", "SCR-0030", "SCR-0033"],
-    "utility": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0015", "SCR-0016", "SCR-0017", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0032", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040", "SCR-0043", "SCR-0044", "SCR-0045", "SCR-0049", "SCR-0051", "SCR-0052", "SCR-0053"]
+    "market-research": ["SCR-0055"],
+    "integration": ["SCR-0057", "SCR-0058", "SCR-0067"],
+    "utility": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0015", "SCR-0016", "SCR-0017", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0032", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040", "SCR-0043", "SCR-0044", "SCR-0045", "SCR-0049", "SCR-0051", "SCR-0052", "SCR-0053", "SCR-0059", "SCR-0060", "SCR-0061", "SCR-0062", "SCR-0063", "SCR-0064", "SCR-0065", "SCR-0066"]
   },
   "language_index": {
-    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028", "SCR-0029", "SCR-0030", "SCR-0031", "SCR-0032", "SCR-0033", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040", "SCR-0041", "SCR-0042", "SCR-0043", "SCR-0044", "SCR-0045", "SCR-0046", "SCR-0047", "SCR-0048", "SCR-0049", "SCR-0050", "SCR-0051", "SCR-0052", "SCR-0053", "SCR-0054"],
+    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028", "SCR-0029", "SCR-0030", "SCR-0031", "SCR-0032", "SCR-0033", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040", "SCR-0041", "SCR-0042", "SCR-0043", "SCR-0044", "SCR-0045", "SCR-0046", "SCR-0047", "SCR-0048", "SCR-0049", "SCR-0050", "SCR-0051", "SCR-0052", "SCR-0053", "SCR-0054", "SCR-0055", "SCR-0056", "SCR-0057", "SCR-0058", "SCR-0059", "SCR-0060", "SCR-0061", "SCR-0062", "SCR-0063", "SCR-0064", "SCR-0065", "SCR-0066", "SCR-0067"],
     "go": ["SCR-0015", "SCR-0016", "SCR-0017"]
   }
 }
