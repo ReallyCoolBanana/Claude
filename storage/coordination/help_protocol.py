@@ -17,7 +17,10 @@ import re
 import sqlite3
 import threading
 import time
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .db_partition import PartitionedStore
 
 logger = logging.getLogger(__name__)
 
@@ -137,28 +140,41 @@ class HelpProtocol:
         Team identifier for this instance.
     agent_id:
         Agent identifier for this instance.
+    partitioned_store:
+        Optional PartitionedStore instance.  When provided, work_items,
+        help_requests, team_capabilities, and team_status are routed to
+        the findings partition instead of the monolithic database.  This
+        enables incremental migration to the partitioned database layout.
     """
 
-    def __init__(self, db_path: str, bus_dir: str, team: str, agent_id: str) -> None:
+    def __init__(self, db_path: str, bus_dir: str, team: str, agent_id: str,
+                 partitioned_store: Optional["PartitionedStore"] = None) -> None:
         self.db_path = db_path
         self.bus_dir = bus_dir
         self.team = team
         self.agent_id = agent_id
+        self._partitioned_store = partitioned_store
         self._lock = threading.Lock()
-        self._conn = sqlite3.connect(
-            db_path, timeout=30, check_same_thread=False,
-        )
-        self._conn.row_factory = sqlite3.Row
+        if partitioned_store is not None:
+            # All HelpProtocol tables live in the findings partition
+            self._conn = partitioned_store.findings.conn
+            self._owns_conn = False
+        else:
+            self._conn = sqlite3.connect(
+                db_path, timeout=30, check_same_thread=False,
+            )
+            self._conn.row_factory = sqlite3.Row
+            self._conn.execute("PRAGMA journal_mode=WAL")
+            self._conn.execute("PRAGMA busy_timeout=30000")
+            self._conn.executescript(_HELP_SCHEMA)
+            # Add performance indexes (INEFF-PERF-006)
+            self._conn.execute("CREATE INDEX IF NOT EXISTS idx_work_items_status ON work_items(status)")
+            self._conn.execute("CREATE INDEX IF NOT EXISTS idx_help_requests_status ON help_requests(status)")
+            self._conn.execute("CREATE INDEX IF NOT EXISTS idx_work_items_team ON work_items(assigned_to)")
+            self._conn.execute("CREATE INDEX IF NOT EXISTS idx_help_requests_work ON help_requests(work_item_id)")
+            self._conn.commit()
+            self._owns_conn = True
         self._closed = False
-        self._conn.execute("PRAGMA journal_mode=WAL")
-        self._conn.execute("PRAGMA busy_timeout=30000")
-        self._conn.executescript(_HELP_SCHEMA)
-        # Add performance indexes (INEFF-PERF-006)
-        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_work_items_status ON work_items(status)")
-        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_help_requests_status ON help_requests(status)")
-        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_work_items_team ON work_items(assigned_to)")
-        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_help_requests_work ON help_requests(work_item_id)")
-        self._conn.commit()
 
     def _check_closed(self) -> None:
         """Raise RuntimeError if the instance is closed."""
@@ -166,11 +182,12 @@ class HelpProtocol:
             raise RuntimeError("HelpProtocol instance is closed")
 
     def close(self) -> None:
-        """Close the database connection."""
+        """Close the database connection if we own it."""
         with self._lock:
             if not self._closed:
                 self._closed = True
-                self._conn.close()
+                if self._owns_conn:
+                    self._conn.close()
 
     def __enter__(self):
         return self

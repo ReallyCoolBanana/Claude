@@ -1,5 +1,6 @@
 ---
 pick_id: PICK-0006
+type: market-research-pick
 date: 2026-03-12
 team: TEAM-0036
 ticker: "C"

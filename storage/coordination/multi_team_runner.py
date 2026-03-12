@@ -431,6 +431,14 @@ class MultiTeamRunner:
         os.makedirs(_DB_DIR, exist_ok=True)
         os.makedirs(_TEAMS_DIR, exist_ok=True)
         _init_db()
+
+        # Initialise bus compactor if available
+        if _HAS_COMPACTOR:
+            offsets_db = os.path.join(_DB_DIR, "bus_offsets.db")
+            self._offset_store = OffsetStore(offsets_db)
+            self._compactor = BusCompactor(_BUS_DIR, self._offset_store)
+            log.info("Bus compactor initialised (offsets db: %s)", offsets_db)
+
         log.info("Coordination environment initialised")
         _bus_write("global", "runner", "system", "info", {
             "event": "environment-initialised",
@@ -486,6 +494,19 @@ class MultiTeamRunner:
         )
         self._cleanup_thread.start()
 
+        # Periodic bus compaction thread (if compactor available and interval > 0)
+        if self._compactor and self.compaction_interval > 0:
+            self._compaction_thread = threading.Thread(
+                target=self._compaction_loop,
+                name="runner-compaction",
+                daemon=True,
+            )
+            self._compaction_thread.start()
+            log.info(
+                "Periodic bus compaction enabled (interval=%.0fs)",
+                self.compaction_interval,
+            )
+
         _bus_write("global", "runner", "system", "info", {
             "event": "runner-started",
             "pid": os.getpid(),
@@ -503,7 +524,7 @@ class MultiTeamRunner:
         )
 
     def stop(self) -> None:
-        """Graceful shutdown: stop threads and broadcast shutdown message."""
+        """Graceful shutdown: stop threads, compact bus, broadcast shutdown message."""
         log.info("Shutting down multi-team runner...")
         self._phase = "shutdown"
         self._stop_event.set()
@@ -512,6 +533,29 @@ class MultiTeamRunner:
             self._hb_thread.join(timeout=self.heartbeat_interval + 2)
         if self._cleanup_thread is not None:
             self._cleanup_thread.join(timeout=5)
+        if self._compaction_thread is not None:
+            self._compaction_thread.join(timeout=5)
+
+        # Run final bus compaction during clean shutdown
+        if self._compactor is not None:
+            log.info("Running final bus compaction before shutdown...")
+            try:
+                results = self._compactor.compact_all()
+                total_before = sum(r.get("messages_before", 0) for r in results)
+                total_after = sum(r.get("messages_after", 0) for r in results)
+                log.info(
+                    "Shutdown compaction complete: %d channels, %d -> %d messages",
+                    len(results), total_before, total_after,
+                )
+            except Exception:
+                log.exception("Shutdown bus compaction failed")
+
+        # Close the offset store
+        if self._offset_store is not None:
+            try:
+                self._offset_store.close()
+            except Exception:
+                pass
 
         _bus_write("global", "runner", "system", "info", {
             "event": "runner-stopped",
@@ -582,6 +626,25 @@ class MultiTeamRunner:
             conn.commit()
         if total:
             log.info("Cleanup: removed %d expired rows", total)
+
+    def _compaction_loop(self) -> None:
+        """Periodically compact JSONL bus files to reclaim space."""
+        while not self._stop_event.is_set():
+            self._stop_event.wait(self.compaction_interval)
+            if self._stop_event.is_set():
+                break
+            if self._compactor is not None:
+                try:
+                    results = self._compactor.compact_all()
+                    total_before = sum(r.get("messages_before", 0) for r in results)
+                    total_after = sum(r.get("messages_after", 0) for r in results)
+                    if total_before > 0:
+                        log.info(
+                            "Periodic compaction: %d channels, %d -> %d messages",
+                            len(results), total_before, total_after,
+                        )
+                except Exception:
+                    log.exception("Periodic bus compaction failed")
 
     # -- phase management ---------------------------------------------------
 
@@ -754,6 +817,11 @@ def main() -> None:
         help="Run in non-foreground mode.  The caller must keep the process "
              "alive (e.g. by importing this module as a library).",
     )
+    parser.add_argument(
+        "--compaction-interval", type=float, default=0,
+        help="Interval in seconds for periodic bus compaction (0 = disabled, "
+             "default: 0).  Requires prototype.agent_comm.compactor.",
+    )
 
     args = parser.parse_args()
 
@@ -769,6 +837,9 @@ def main() -> None:
     config = _load_config(
         args.config, args.teams, args.agents_per_team,
     )
+    # Apply CLI compaction interval override
+    if args.compaction_interval > 0:
+        config["compaction_interval"] = args.compaction_interval
 
     # Create and start runner
     runner = MultiTeamRunner(config)

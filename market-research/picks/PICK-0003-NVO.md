@@ -1,5 +1,6 @@
 ---
 pick_id: PICK-0003
+type: market-research-pick
 date: 2026-03-12
 team: TEAM-0035
 ticker: NVO

@@ -1,5 +1,6 @@
 ---
 pick_id: PICK-0010
+type: market-research-pick
 date: 2026-03-12
 team: TEAM-0037
 ticker: "VST"

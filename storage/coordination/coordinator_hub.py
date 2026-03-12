@@ -21,7 +21,10 @@ import sqlite3
 import threading
 import time
 import uuid
-from typing import Any, Optional
+from typing import Any, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .db_partition import PartitionedStore
 
 logger = logging.getLogger(__name__)
 
@@ -191,17 +194,30 @@ class AgentReporter:
         Role description for this agent.
     bus_dir:
         Optional path to the JSONL bus directory for notifications.
+    partitioned_store:
+        Optional PartitionedStore instance.  When provided, the hub partition
+        is used for agent_status and coordinator_instructions tables instead
+        of opening a new connection to db_path.  This enables incremental
+        migration to the partitioned database layout.
     """
 
     def __init__(self, db_path: str, agent_id: str, team: str, role: str,
-                 bus_dir: Optional[str] = None) -> None:
+                 bus_dir: Optional[str] = None,
+                 partitioned_store: Optional["PartitionedStore"] = None) -> None:
         self.db_path = db_path
         self.agent_id = agent_id
         self.team = team
         self.role = role
         self.bus_dir = bus_dir
+        self._partitioned_store = partitioned_store
         self._lock = threading.Lock()
-        self._conn = _open_db(db_path)
+        if partitioned_store is not None:
+            # Use the hub partition for agent_status and coordinator_instructions
+            self._conn = partitioned_store.hub.conn
+            self._owns_conn = False
+        else:
+            self._conn = _open_db(db_path)
+            self._owns_conn = True
         self._closed = False
         self._register()
 
@@ -407,11 +423,12 @@ class AgentReporter:
         return instructions
 
     def close(self) -> None:
-        """Clean shutdown: close the database connection."""
+        """Clean shutdown: close the database connection if we own it."""
         with self._lock:
             if not self._closed:
                 self._closed = True
-                self._conn.close()
+                if self._owns_conn:
+                    self._conn.close()
 
     def __enter__(self):
         return self
@@ -439,13 +456,25 @@ class CoordinatorDashboard:
         Path to the shared SQLite database.
     bus_dir:
         Optional path to the JSONL bus directory for notifications.
+    partitioned_store:
+        Optional PartitionedStore instance.  When provided, the hub partition
+        is used for agent_status and coordinator_instructions tables instead
+        of opening a new connection to db_path.  This enables incremental
+        migration to the partitioned database layout.
     """
 
-    def __init__(self, db_path: str, bus_dir: Optional[str] = None) -> None:
+    def __init__(self, db_path: str, bus_dir: Optional[str] = None,
+                 partitioned_store: Optional["PartitionedStore"] = None) -> None:
         self.db_path = db_path
         self.bus_dir = bus_dir
+        self._partitioned_store = partitioned_store
         self._lock = threading.Lock()
-        self._conn = _open_db(db_path)
+        if partitioned_store is not None:
+            self._conn = partitioned_store.hub.conn
+            self._owns_conn = False
+        else:
+            self._conn = _open_db(db_path)
+            self._owns_conn = True
         self._closed = False
 
     def _check_closed(self) -> None:
@@ -778,11 +807,12 @@ class CoordinatorDashboard:
         }
 
     def close(self) -> None:
-        """Clean shutdown: close the database connection."""
+        """Clean shutdown: close the database connection if we own it."""
         with self._lock:
             if not self._closed:
                 self._closed = True
-                self._conn.close()
+                if self._owns_conn:
+                    self._conn.close()
 
     def __enter__(self):
         return self
