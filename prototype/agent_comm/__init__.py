@@ -29,6 +29,7 @@ from agent_comm.core import (
 from agent_comm.bus import BusReader, BusWriter, Message
 from agent_comm.rate_limiter import RateLimiter
 from agent_comm.compactor import BusCompactor, OffsetStore
+from agent_comm.ack_protocol import AckProtocol
 
 __all__ = [
     "CommDir",
@@ -42,4 +43,5 @@ __all__ = [
     "RateLimiter",
     "BusCompactor",
     "OffsetStore",
+    "AckProtocol",
 ]
