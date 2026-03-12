@@ -1,0 +1,60 @@
+{
+  "id": "Histogram_of_oriented_displacements",
+  "title": "Histogram of oriented displacements",
+  "url": "https://en.wikipedia.org/wiki/Histogram_of_oriented_displacements",
+  "summary": "Histogram of Oriented Displacements (HOD) is a 2D trajectory descriptor used in computer vision. The trajectory is described using a histogram of the directions between each two consecutive points.\n\nGiven a trajectory T consisting of a sequence of 2D positions over time, for each pair of consecutive positions, the direction angle is calculated. The value of the angle is between 0 and 360 degrees, and a histogram of the quantized values is created. The histogram accumulates the lengths of the consecutive moves, with each direction angle determining a specific histogram bin, and the length of the line between consecutive positions being added to that bin.\n\nHOD has a clear physical interpretation. It proposes that a simple way to describe the motion of an object is to indicate how much distance it moves in each direction. If the movement in all directions is saved accurately, the movement can be repeated from the initial position to the final destination regardless of the displacement order. The descriptor is fixed-length, scale-invariant and speed-invariant.\n\nHOD is used to describe the 3D trajectories of body joints to recognize human actions, which is a challenging machine vision task with applications in human-robot interaction, interactive entertainment, multimedia information retrieval, and surveillance. For temporal modeling, a temporal pyramid is applied that describes the trajectory as whole, halves and then quarters. The original HOD paper was presented at IJCAI 2013. Experiments on MSR-Action3D and HDM05 datasets showed that the descriptor outperforms the state-of-the-art when using off-the-shelf classification tools.",
+  "tags": [
+    "vision",
+    "robotics",
+    "applications",
+    "broad-overview",
+    "core-ai"
+  ],
+  "categories": [
+    "Natural Language & Vision",
+    "AI Agents & Robotics",
+    "AI Applications"
+  ],
+  "usefulness_score": 8.0,
+  "usefulness_rationale": "rich summary text; sparsely linked; core AI topic",
+  "research_tier": "A",
+  "data_richness": {
+    "summary_length": 1653,
+    "ext_links_count": 1,
+    "int_links_count": 10,
+    "has_categories": true,
+    "has_description": true
+  },
+  "ext_links": [
+    "http://ijcai.org/papers13/Papers/IJCAI13-203.pdf"
+  ],
+  "int_links": [
+    "2_dimensional",
+    "Angle",
+    "Category:Artificial_intelligence",
+    "Distance",
+    "Histogram",
+    "Length",
+    "Point_(geometry)",
+    "Pyramid",
+    "Time",
+    "Trajectory"
+  ],
+  "related_articles": [
+    "Knowledge-based_configuration",
+    "Non-human",
+    "Argumentation_framework",
+    "Pedagogical_agent",
+    "KAoS"
+  ],
+  "meta": {
+    "wiki_categories": [
+      "Artificial_intelligence"
+    ],
+    "see_also": [],
+    "description": "bi-dimensional trajectory descriptor",
+    "hypernym": "Descriptor"
+  },
+  "extracted": "2026-03-12",
+  "enriched": "2026-03-12"
+}

@@ -1,0 +1,40 @@
+{
+  "id": "Lifelong_Planning_A*",
+  "title": "Lifelong Planning A*",
+  "url": "https://en.wikipedia.org/wiki/Lifelong_Planning_A*",
+  "summary": "Lifelong Planning A* (LPA*) is an incremental heuristic search algorithm based on A*. It was first described by Sven Koenig and Maxim Likhachev in 2001. LPA* is an incremental version of A* that can adapt to changes in the graph without recalculating the entire graph, by updating the g-values.\n\nLPA* maintains two estimates of the start distance g*(n) for each node: g(n), the previously calculated g-value (start distance) as in A*, and rhs(n), a lookahead value based on the g-values of the node's predecessors. If rhs(n) equals g(n), then n is called locally consistent. If all nodes are locally consistent, then a shortest path can be determined as with A*. However, when edge costs change, local consistency needs to be re-established only for those nodes which are relevant for the route.\n\nLPA* combines ideas from the artificial intelligence and the algorithms literature. It repeatedly finds shortest paths from a given start vertex to a given goal vertex while the edge costs of a graph change or vertices are added or deleted. Its first search is the same as that of a version of A* that breaks ties in favor of vertices with smaller g-values, but many subsequent searches are potentially faster because it reuses those parts of the previous search tree that are identical to the new one.\n\nLPA* belongs to the class of incremental heuristic search algorithms that updates the g-values from the previous search during the current search to correct them when necessary, which can be interpreted as transforming the A* search tree from the previous search into the A* search tree for the current search. Other algorithms in this class include D* and D* Lite. Incremental heuristic search has been extensively used in robotics, where a large number of path planning systems are based on either D* or D* Lite. The formal paper by S. Koenig, M. Likhachev and D. Furcy was published in the Artificial Intelligence Journal, 155, (1-2), 93-146, 2004.",
+  "tags": [
+    "foundational",
+    "robotics",
+    "search",
+    "broad-overview",
+    "orphan",
+    "core-ai"
+  ],
+  "categories": [
+    "AI Agents & Robotics",
+    "Core AI Concepts",
+    "Search & Optimization"
+  ],
+  "usefulness_score": 5.0,
+  "usefulness_rationale": "rich summary text; no links; core AI topic",
+  "research_tier": "C",
+  "data_richness": {
+    "summary_length": 1952,
+    "ext_links_count": 0,
+    "int_links_count": 0,
+    "has_categories": false,
+    "has_description": false
+  },
+  "ext_links": [],
+  "int_links": [],
+  "related_articles": [],
+  "meta": {
+    "wiki_categories": [],
+    "see_also": [],
+    "description": "",
+    "hypernym": ""
+  },
+  "extracted": "2026-03-12",
+  "enriched": "2026-03-12"
+}
