@@ -61,7 +61,7 @@ def _retry_on_busy(func):
                         func.__name__, attempt + 1, _MAX_RETRIES, delay,
                     )
                     time.sleep(delay)
-                    delay *= 2
+                    delay = min(delay * 2, 0.05)
                 else:
                     raise
         raise last_err  # type: ignore[misc]
@@ -361,15 +361,19 @@ class CapabilityRegistry:
         self,
         work_item: dict,
         exclude_teams: Optional[list[str]] = None,
+        idle_teams: Optional[list[str]] = None,
     ) -> Optional[str]:
         """Given a work item with required_capabilities, return best team assignment.
 
         Parameters
         ----------
         work_item:
-            Dict with at least 'required_capabilities' (list of str).
+            Dict with at least 'required_capabilities' (list of str or JSON string).
         exclude_teams:
             Teams to exclude from consideration.
+        idle_teams:
+            If provided, only consider these teams. Useful for constraining
+            to teams that are actually idle/available.
 
         Returns
         -------
@@ -377,11 +381,23 @@ class CapabilityRegistry:
         """
         required = work_item.get("required_capabilities", [])
         if isinstance(required, str):
-            required = json.loads(required)
+            required = json.loads(required) if required else []
         if not required:
+            # No specific capabilities required -- return first idle team if available
+            if idle_teams:
+                exclude = set(exclude_teams or [])
+                for t in idle_teams:
+                    if t not in exclude:
+                        return t
             return None
 
         matches = self.find_best_match(required, exclude_teams=exclude_teams)
+
+        # Filter to idle teams if constraint provided
+        if idle_teams is not None:
+            idle_set = set(idle_teams)
+            matches = [m for m in matches if m["team"] in idle_set]
+
         if matches:
             return matches[0]["team"]
         return None
@@ -428,3 +444,13 @@ class CapabilityRegistry:
             }
             for r in rows
         ]
+
+    @_retry_on_busy
+    def get_all_capabilities(self) -> list[str]:
+        """Return a sorted list of all distinct capability names in the registry."""
+        self._check_closed()
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT DISTINCT capability FROM agent_capabilities ORDER BY capability",
+            ).fetchall()
+        return [r["capability"] for r in rows]
