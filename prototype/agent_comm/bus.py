@@ -111,16 +111,66 @@ class BusWriter:
 
 
 class BusReader:
-    """Read new messages from a channel file, tracking position."""
+    """Read new messages from a channel file, tracking position.
 
-    def __init__(self, comm_dir: str, channel: str) -> None:
+    Supports optional offset persistence via an OffsetStore (from compactor.py).
+    When an OffsetStore and agent_id are provided, the reader:
+    - Restores its byte offset from the database on construction
+    - Persists the offset after each successful poll
+    This eliminates the 7.5x read amplification caused by re-reading entire
+    bus files after restarts.
+    """
+
+    def __init__(
+        self,
+        comm_dir: str,
+        channel: str,
+        agent_id: Optional[str] = None,
+        offset_store: "Optional[object]" = None,
+    ) -> None:
         self.comm_dir = comm_dir
+        self.channel = channel
         safe = channel.replace("/", "_").replace("..", "_")
         self.filepath = os.path.join(comm_dir, f"{safe}.jsonl")
+        self._agent_id = agent_id
+        self._offset_store = offset_store
         self._offset: int = 0
 
+        # Restore persisted offset if available
+        if offset_store is not None and agent_id is not None:
+            try:
+                saved = offset_store.load_offset(agent_id, channel)
+                if saved is not None:
+                    # Validate that the saved offset is still valid
+                    # (file may have been truncated by compaction)
+                    if os.path.exists(self.filepath):
+                        file_size = os.path.getsize(self.filepath)
+                        if saved <= file_size:
+                            self._offset = saved
+                            logger.debug(
+                                "Restored offset %d for agent=%s channel=%s",
+                                saved, agent_id, channel,
+                            )
+                        else:
+                            # File was truncated past our offset -- reset
+                            logger.info(
+                                "Offset %d exceeds file size %d for agent=%s "
+                                "channel=%s; resetting to 0",
+                                saved, file_size, agent_id, channel,
+                            )
+                            self._offset = 0
+            except Exception as e:
+                logger.warning(
+                    "Failed to restore offset for agent=%s channel=%s: %s",
+                    agent_id, channel, e,
+                )
+
     def poll(self) -> list[Message]:
-        """Read new complete lines since last poll, filtering expired messages."""
+        """Read new complete lines since last poll, filtering expired messages.
+
+        If an OffsetStore is configured, the byte offset is persisted after
+        each successful read so it survives restarts.
+        """
         if not os.path.exists(self.filepath):
             return []
 
@@ -173,7 +223,28 @@ class BusReader:
 
             messages.append(msg)
 
+        # Persist the new offset
+        self._persist_offset()
+
         return messages
+
+    def _persist_offset(self) -> None:
+        """Save the current byte offset to the OffsetStore if configured."""
+        if self._offset_store is not None and self._agent_id is not None:
+            try:
+                self._offset_store.save_offset(
+                    self._agent_id, self.channel, self._offset
+                )
+            except Exception as e:
+                logger.warning(
+                    "Failed to persist offset for agent=%s channel=%s: %s",
+                    self._agent_id, self.channel, e,
+                )
+
+    @property
+    def offset(self) -> int:
+        """Current byte offset into the channel file."""
+        return self._offset
 
 
 def repair_bus_file(filepath: str) -> int:

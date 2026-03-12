@@ -26,6 +26,9 @@ from agent_comm.core import (
     CommDirError,
     setup_comm_environment,
 )
+from agent_comm.bus import BusReader, BusWriter, Message
+from agent_comm.rate_limiter import RateLimiter
+from agent_comm.compactor import BusCompactor, OffsetStore
 
 __all__ = [
     "CommDir",
@@ -33,4 +36,10 @@ __all__ = [
     "AgentIdentity",
     "CommConfig",
     "setup_comm_environment",
+    "BusReader",
+    "BusWriter",
+    "Message",
+    "RateLimiter",
+    "BusCompactor",
+    "OffsetStore",
 ]
