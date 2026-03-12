@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "last_updated": "2026-03-12",
-  "entry_count": 37,
+  "entry_count": 40,
   "entries": [
     {
       "id": "KB-0001",
@@ -662,6 +662,39 @@
       "status": "validated",
       "confidence": "high",
       "builds_on": ["KB-0022", "KB-0025", "KB-0026", "KB-0027", "KB-0035"]
+    },
+    {
+      "id": "KB-0039",
+      "title": "WebAssembly for AI Agent Code Sandboxing",
+      "date": "2026-03-12",
+      "team": "commander",
+      "category": "methodology",
+      "tags": ["concurrency", "ai-ml", "benchmark"],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": ["KB-0018", "KB-0029"]
+    },
+    {
+      "id": "KB-0040",
+      "title": "LLM-Powered Automated Code Review (2025-2026)",
+      "date": "2026-03-12",
+      "team": "commander",
+      "category": "methodology",
+      "tags": ["ai-ml", "automation", "validation"],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": ["KB-0038"]
+    },
+    {
+      "id": "KB-0041",
+      "title": "Distributed Agent Coordination Protocols",
+      "date": "2026-03-12",
+      "team": "commander",
+      "category": "optimization",
+      "tags": ["coordination", "multi-agent", "communication", "concurrency"],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": ["KB-0022", "KB-0023", "KB-0031", "KB-0035"]
     }
   ],
   "categories": {
@@ -674,7 +707,8 @@
       "KB-0028",
       "KB-0031",
       "KB-0032",
-      "KB-0038"
+      "KB-0038",
+      "KB-0041"
     ],
     "integration": [
       "KB-0002",
@@ -701,7 +735,9 @@
       "KB-0018",
       "KB-0020",
       "KB-0021",
-      "KB-0029"
+      "KB-0029",
+      "KB-0039",
+      "KB-0040"
     ],
     "tool-usage": [
       "KB-0006",
@@ -721,23 +757,23 @@
   "tag_index": {
     "storage": ["KB-0001", "KB-0008"],
     "stress-test": ["KB-0001", "KB-0024"],
-    "benchmark": ["KB-0001", "KB-0004", "KB-0008", "KB-0020", "KB-0021", "KB-0026", "KB-0027", "KB-0028", "KB-0038"],
+    "benchmark": ["KB-0001", "KB-0004", "KB-0008", "KB-0020", "KB-0021", "KB-0026", "KB-0027", "KB-0028", "KB-0038", "KB-0039"],
     "indexing": ["KB-0001", "KB-0006", "KB-0008", "KB-0022"],
-    "validation": ["KB-0001", "KB-0004", "KB-0006", "KB-0011", "KB-0033"],
-    "multi-agent": ["KB-0002", "KB-0003", "KB-0007", "KB-0016", "KB-0018", "KB-0020", "KB-0021", "KB-0022", "KB-0023", "KB-0025", "KB-0026", "KB-0027", "KB-0031", "KB-0038"],
+    "validation": ["KB-0001", "KB-0004", "KB-0006", "KB-0011", "KB-0033", "KB-0040"],
+    "multi-agent": ["KB-0002", "KB-0003", "KB-0007", "KB-0016", "KB-0018", "KB-0020", "KB-0021", "KB-0022", "KB-0023", "KB-0025", "KB-0026", "KB-0027", "KB-0031", "KB-0038", "KB-0041"],
     "scheduling": ["KB-0002", "KB-0031", "KB-0032"],
     "data-gathering": ["KB-0002", "KB-0004", "KB-0005", "KB-0014", "KB-0020"],
     "stock-analysis": ["KB-0003"],
-    "ai-ml": ["KB-0003", "KB-0008", "KB-0010"],
+    "ai-ml": ["KB-0003", "KB-0008", "KB-0010", "KB-0039", "KB-0040"],
     "public-api": ["KB-0004", "KB-0010", "KB-0012", "KB-0013", "KB-0014"],
     "openalex": ["KB-0005", "KB-0014"],
     "wikidata": ["KB-0005", "KB-0010"],
     "fan-out": ["KB-0005", "KB-0038"],
     "deduplication": ["KB-0005"],
     "nlp": ["KB-0005", "KB-0010"],
-    "automation": ["KB-0006", "KB-0007", "KB-0009"],
+    "automation": ["KB-0006", "KB-0007", "KB-0009", "KB-0040"],
     "bug-fix": ["KB-0007", "KB-0025"],
-    "coordination": ["KB-0009", "KB-0016", "KB-0023", "KB-0024", "KB-0025", "KB-0026", "KB-0027", "KB-0028", "KB-0031", "KB-0035", "KB-0038"],
+    "coordination": ["KB-0009", "KB-0016", "KB-0023", "KB-0024", "KB-0025", "KB-0026", "KB-0027", "KB-0028", "KB-0031", "KB-0035", "KB-0038", "KB-0041"],
     "go": ["KB-0009", "KB-0028", "KB-0032"],
     "pipeline": ["KB-0009", "KB-0023", "KB-0026"],
     "hub-spoke": ["KB-0009", "KB-0019", "KB-0025"],
@@ -752,8 +788,8 @@
     "guardian": ["KB-0014"],
     "sqlite": ["KB-0016", "KB-0017", "KB-0018", "KB-0019", "KB-0031", "KB-0035"],
     "shared-state": ["KB-0016", "KB-0023"],
-    "communication": ["KB-0015", "KB-0016", "KB-0017", "KB-0019", "KB-0020", "KB-0021", "KB-0023"],
-    "concurrency": ["KB-0015", "KB-0016", "KB-0018", "KB-0029", "KB-0032", "KB-0033", "KB-0036"],
+    "communication": ["KB-0015", "KB-0016", "KB-0017", "KB-0019", "KB-0020", "KB-0021", "KB-0023", "KB-0041"],
+    "concurrency": ["KB-0015", "KB-0016", "KB-0018", "KB-0029", "KB-0032", "KB-0033", "KB-0036", "KB-0039", "KB-0041"],
     "message-bus": ["KB-0015"],
     "jsonl": ["KB-0015", "KB-0017", "KB-0018", "KB-0019"],
     "event-driven": ["KB-0015", "KB-0035"],

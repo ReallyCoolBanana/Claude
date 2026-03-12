@@ -1,0 +1,234 @@
+{
+  "id": "SOP-024",
+  "version": "1.0",
+  "created": "2026-03-12",
+  "team": "data-ops",
+  "title": "Data Quality & Freshness Maintenance",
+  "purpose": "Keep stored data accurate, fresh, and well-organized over time. Defines periodic health checks, freshness rules, tag hygiene, deduplication, and index rebuild protocols to prevent knowledge base decay.",
+  "sections": {
+    "periodic_health_checks": {
+      "title": "Periodic Health Checks",
+      "overview": "Run automated checks on a regular cadence to detect staleness, structural issues, and disconnected entries before they accumulate.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Run staleness_detector.py weekly to identify entries that may be outdated",
+          "command": "python storage/scripts/staleness_detector.py",
+          "frequency": "weekly",
+          "output": "List of entries with staleness scores and recommended actions (review, refresh, or archive)"
+        },
+        {
+          "step": 2,
+          "action": "Run fast_validate on all indexes to check structural integrity",
+          "command": "python storage/scripts/fast_validate.py",
+          "frequency": "weekly",
+          "expected": "All indexes pass validation. Any failures should be fixed immediately before other maintenance."
+        },
+        {
+          "step": 3,
+          "action": "Run graph_query.py --orphans to find disconnected entries",
+          "command": "python storage/scripts/graph_query.py --orphans",
+          "frequency": "weekly",
+          "expected": "Zero orphans. Any orphans found should be connected via builds_on references or flagged for review.",
+          "remediation": "For each orphan, search for related entries and add appropriate builds_on links. If no related entries exist, the orphan may be a candidate for deletion or may need companion entries."
+        },
+        {
+          "step": 4,
+          "action": "Run handoff_tracker.py to find unresolved items from previous team sessions",
+          "command": "python storage/scripts/handoff_tracker.py",
+          "frequency": "weekly",
+          "expected": "All handoff items are either resolved or assigned to active teams. Stale unresolved items older than 2 weeks should be escalated."
+        }
+      ]
+    },
+    "freshness_rules": {
+      "title": "Freshness Rules",
+      "overview": "Define age-based thresholds for different content types. Stale content degrades trust in the knowledge base.",
+      "rules": [
+        {
+          "content_type": "Research entries (knowledge-base/entries/)",
+          "max_age_days": 90,
+          "action": "Flag for review. The original research question should be re-evaluated: is the answer still accurate? Have new sources emerged?",
+          "review_process": [
+            "Check if the primary sources cited are still accessible",
+            "Search for newer sources on the same topic",
+            "If findings still hold, update the last_reviewed date",
+            "If findings are outdated, trigger SOP-023 for a fresh research cycle"
+          ]
+        },
+        {
+          "content_type": "API source entries (storage/sources/)",
+          "max_age_days": 90,
+          "action": "Verify URLs still respond and API contracts have not changed",
+          "review_process": [
+            "Send a test request to each documented endpoint",
+            "Verify response format matches the documented schema",
+            "Check for deprecation notices in API documentation",
+            "Update rate limits and authentication requirements if changed"
+          ],
+          "frequency": "quarterly"
+        },
+        {
+          "content_type": "Benchmark data (knowledge-base/entries/ with benchmark tag)",
+          "trigger": "Underlying tool or system has been updated since the benchmark was recorded",
+          "action": "Re-run benchmarks using the same methodology",
+          "review_process": [
+            "Check if the benchmarked tool version matches the currently installed version",
+            "If versions differ, re-run the benchmark",
+            "Record new results alongside old results for trend analysis",
+            "Update the entry with new data and set builds_on to the previous benchmark entry"
+          ]
+        }
+      ]
+    },
+    "tag_hygiene": {
+      "title": "Tag Hygiene",
+      "overview": "Maintain a clean, consistent tag system. Poor tag hygiene makes search unreliable and creates organizational debt.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "List all tags and their usage counts monthly",
+          "command": "python storage/scripts/unified_search.py --list-tags",
+          "frequency": "monthly"
+        },
+        {
+          "step": 2,
+          "action": "Evaluate orphan tags (usage count = 1)",
+          "rules": [
+            "If the tag represents a valid concept: find or create sibling entries that should share the tag",
+            "If the tag is too specific: merge it into a broader canonical tag and update taxonomy.json",
+            "If the tag was a mistake: remove it from the entry and taxonomy.json"
+          ],
+          "goal": "No canonical tag should have fewer than 2 entries unless it was recently created"
+        },
+        {
+          "step": 3,
+          "action": "Evaluate over-broad tags (usage count > 20)",
+          "rules": [
+            "Consider splitting into more specific sub-tags",
+            "Add the new sub-tags to taxonomy.json with the broad tag listed in aliases for backwards compatibility",
+            "Re-tag affected entries with the more specific sub-tags",
+            "Update the consolidations map in taxonomy.json"
+          ]
+        },
+        {
+          "step": 4,
+          "action": "Enforce new tag policy: all tags must exist in taxonomy.json before use",
+          "gate": "kb_validator.py rejects entries with tags not found in taxonomy.json canonical names",
+          "process_for_new_tags": [
+            "Propose the new tag with name, namespace, description, and aliases",
+            "Verify it does not overlap with an existing tag (check aliases and consolidations)",
+            "Add to taxonomy.json tags array and consolidations map",
+            "Then use the tag in the entry"
+          ]
+        }
+      ]
+    },
+    "deduplication": {
+      "title": "Deduplication",
+      "overview": "Detect and merge entries with high content overlap to prevent knowledge base bloat and contradictory information.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Run cross_ref_checker.py to find entries with 90%+ content similarity",
+          "command": "python storage/scripts/cross_ref_checker.py --threshold 0.90",
+          "frequency": "monthly",
+          "output": "List of entry pairs with similarity scores above the threshold"
+        },
+        {
+          "step": 2,
+          "action": "For each duplicate pair, determine which entry to keep",
+          "criteria": [
+            "Keep the more complete entry (more content, more references, more tags)",
+            "If roughly equal, keep the more recent entry",
+            "If one entry is referenced by more builds_on links, prefer keeping that one to minimize cascading updates"
+          ]
+        },
+        {
+          "step": 3,
+          "action": "Merge the duplicate into the kept entry",
+          "process": [
+            "Copy any unique information from the removed entry into the kept entry",
+            "Merge tag sets (union of both entries' tags)",
+            "Update builds_on: the kept entry inherits all builds_on references from the removed entry",
+            "Find all entries that reference the removed entry in their builds_on and update them to point to the kept entry"
+          ]
+        },
+        {
+          "step": 4,
+          "action": "Update all indexes after merging",
+          "commands": [
+            "Remove the deleted entry from knowledge-base/index.json",
+            "Update all builds_on references across the knowledge base",
+            "Run rebuild_unified_index.py",
+            "Run fast_validate to confirm structural integrity"
+          ]
+        }
+      ]
+    },
+    "index_rebuild_protocol": {
+      "title": "Index Rebuild Protocol",
+      "overview": "After any batch of changes, rebuild indexes in the correct order to ensure consistency.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "After any batch of KB changes, rebuild the unified search index",
+          "command": "python storage/scripts/rebuild_unified_index.py",
+          "when": "After adding, removing, or modifying any knowledge base entries"
+        },
+        {
+          "step": 2,
+          "action": "After any KB changes, run validators",
+          "commands": [
+            "python storage/scripts/kb_validator.py",
+            "python storage/scripts/fast_validate.py"
+          ],
+          "when": "After every index rebuild",
+          "rule": "Do not consider the changes complete until both validators pass"
+        },
+        {
+          "step": 3,
+          "action": "After any relationship changes, regenerate the relationship graph",
+          "command": "python storage/scripts/graph_query.py --rebuild",
+          "when": "After modifying builds_on references, adding or removing entries, or merging duplicates",
+          "verification": "Run graph_query.py --stats to confirm node and edge counts are as expected"
+        }
+      ],
+      "ordering_rules": [
+        "Always rebuild indexes BEFORE running validators",
+        "Always regenerate the relationship graph AFTER index rebuild",
+        "If validators fail, fix the issue and re-run the full rebuild sequence",
+        "Never skip validators even if the change seems trivial"
+      ]
+    }
+  },
+  "checklists": {
+    "weekly_health_check": [
+      "Run staleness_detector.py and review flagged entries",
+      "Run fast_validate on all indexes",
+      "Run graph_query.py --orphans and resolve any orphans",
+      "Run handoff_tracker.py and escalate stale unresolved items"
+    ],
+    "monthly_maintenance": [
+      "Run unified_search.py --list-tags and review tag distribution",
+      "Evaluate and resolve orphan tags (count=1)",
+      "Evaluate over-broad tags (count>20) for splitting",
+      "Run cross_ref_checker.py --threshold 0.90 and merge duplicates",
+      "Rebuild all indexes after changes"
+    ],
+    "quarterly_maintenance": [
+      "Review all research entries older than 90 days",
+      "Verify all API source URLs still respond",
+      "Re-run benchmarks for any tools that have been updated",
+      "Full index rebuild and validation sweep"
+    ],
+    "after_any_batch_change": [
+      "Run rebuild_unified_index.py",
+      "Run kb_validator.py",
+      "Run fast_validate.py",
+      "Regenerate relationship_graph.json if builds_on changed",
+      "Verify no new orphans"
+    ]
+  },
+  "tags": ["sop", "validation", "data-gathering", "indexing", "deduplication", "monitoring"]
+}
