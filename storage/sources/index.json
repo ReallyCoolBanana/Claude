@@ -1,267 +1,1046 @@
 {
   "version": "1.0",
-  "last_updated": "2026-03-11",
-  "sources": [
+  "count": 40,
+  "entries": [
     {
       "id": "SRC-0001",
-      "name": "Alpha Vantage",
-      "url": "https://www.alphavantage.co/query",
-      "data_types": ["financial"],
+      "title": "OpenAlex API",
+      "file": "SRC-0001-openalex.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "academic-papers",
+        "authors",
+        "institutions",
+        "journals",
+        "citations"
+      ],
+      "status": "active",
+      "url": "https://api.openalex.org/",
+      "data_types": [
+        "academic-papers",
+        "authors",
+        "institutions",
+        "journals",
+        "citations",
+        "funding",
+        "concepts"
+      ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0002",
-      "name": "Yahoo Finance",
-      "url": "https://query1.finance.yahoo.com/v8/finance",
-      "data_types": ["financial"],
+      "title": "Semantic Scholar Academic Graph API",
+      "file": "SRC-0002-semantic-scholar.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "academic-papers",
+        "authors",
+        "citations",
+        "references",
+        "paper-embeddings"
+      ],
+      "status": "active",
+      "url": "https://api.semanticscholar.org/graph/v1/",
+      "data_types": [
+        "academic-papers",
+        "authors",
+        "citations",
+        "references",
+        "paper-embeddings",
+        "recommendations"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0003",
-      "name": "FRED",
-      "url": "https://api.stlouisfed.org/fred",
-      "data_types": ["financial", "government"],
-      "access_type": "api-key-required"
+      "title": "arXiv API",
+      "file": "SRC-0003-arxiv.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "preprints",
+        "academic-papers",
+        "paper-metadata",
+        "abstracts",
+        "full-text-pdf-links"
+      ],
+      "status": "active",
+      "url": "http://export.arxiv.org/api/query",
+      "data_types": [
+        "preprints",
+        "academic-papers",
+        "paper-metadata",
+        "abstracts",
+        "full-text-pdf-links"
+      ],
+      "access_type": "free"
     },
     {
       "id": "SRC-0004",
-      "name": "CoinGecko",
-      "url": "https://api.coingecko.com/api/v3",
-      "data_types": ["financial"],
-      "access_type": "freemium"
+      "title": "Crossref REST API",
+      "file": "SRC-0004-crossref.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "doi-metadata",
+        "journal-articles",
+        "books",
+        "citations",
+        "funding-data"
+      ],
+      "status": "active",
+      "url": "https://api.crossref.org/",
+      "data_types": [
+        "doi-metadata",
+        "journal-articles",
+        "books",
+        "citations",
+        "funding-data",
+        "license-info",
+        "orcid-ids",
+        "abstracts"
+      ],
+      "access_type": "free"
     },
     {
       "id": "SRC-0005",
-      "name": "Twelve Data",
-      "url": "https://api.twelvedata.com",
-      "data_types": ["financial"],
-      "access_type": "freemium"
+      "title": "Wikidata SPARQL Query Service",
+      "file": "SRC-0005-wikidata.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "knowledge-graph",
+        "entities",
+        "properties",
+        "relationships",
+        "scholarly-articles"
+      ],
+      "status": "active",
+      "url": "https://query.wikidata.org/sparql",
+      "data_types": [
+        "knowledge-graph",
+        "entities",
+        "properties",
+        "relationships",
+        "scholarly-articles",
+        "geographic-data",
+        "scientific-data",
+        "multilingual-labels"
+      ],
+      "access_type": "free"
     },
     {
       "id": "SRC-0006",
-      "name": "Exchange Rates",
-      "url": "https://api.exchangerate.host",
-      "data_types": ["financial"],
+      "title": "Wikipedia / MediaWiki REST API",
+      "file": "SRC-0006-wikipedia.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "encyclopedia-articles",
+        "article-summaries",
+        "article-html",
+        "page-metadata",
+        "revision-history"
+      ],
+      "status": "active",
+      "url": "https://en.wikipedia.org/api/rest_v1/",
+      "data_types": [
+        "encyclopedia-articles",
+        "article-summaries",
+        "article-html",
+        "page-metadata",
+        "revision-history",
+        "media-files",
+        "search-results"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0007",
-      "name": "Finnhub",
-      "url": "https://finnhub.io/api/v1",
-      "data_types": ["financial"],
-      "access_type": "freemium"
-    },
-    {
-      "id": "SRC-0008",
-      "name": "NewsAPI",
-      "url": "https://newsapi.org/v2",
-      "data_types": ["news"],
-      "access_type": "freemium"
-    },
-    {
-      "id": "SRC-0009",
-      "name": "GNews",
-      "url": "https://gnews.io/api/v4",
-      "data_types": ["news"],
-      "access_type": "freemium"
-    },
-    {
-      "id": "SRC-0010",
-      "name": "The Guardian",
-      "url": "https://content.guardianapis.com",
-      "data_types": ["news"],
+      "title": "CORE API",
+      "file": "SRC-0007-core.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "academic-papers",
+        "full-text-articles",
+        "paper-metadata",
+        "open-access-content",
+        "institutional-repository-data"
+      ],
+      "status": "active",
+      "url": "https://api.core.ac.uk",
+      "data_types": [
+        "academic-papers",
+        "full-text-articles",
+        "paper-metadata",
+        "open-access-content",
+        "institutional-repository-data"
+      ],
       "access_type": "api-key-required"
     },
     {
-      "id": "SRC-0011",
-      "name": "Hacker News",
-      "url": "https://hacker-news.firebaseio.com/v0",
-      "data_types": ["news", "general"],
+      "id": "SRC-0008",
+      "title": "DBpedia SPARQL Endpoint",
+      "file": "SRC-0008-dbpedia.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "knowledge-graph",
+        "structured-wikipedia-data",
+        "entities",
+        "ontology",
+        "relationships"
+      ],
+      "status": "active",
+      "url": "https://dbpedia.org/sparql",
+      "data_types": [
+        "knowledge-graph",
+        "structured-wikipedia-data",
+        "entities",
+        "ontology",
+        "relationships",
+        "geographic-data",
+        "biographical-data"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0012",
-      "name": "OpenAlex",
-      "url": "https://api.openalex.org",
-      "data_types": ["scientific"],
-      "access_type": "free"
+      "title": "NewsAPI.org",
+      "file": "SRC-0012-newsapi-org.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "news-headlines",
+        "news-articles",
+        "news-sources",
+        "search"
+      ],
+      "status": "active",
+      "url": "https://newsapi.org/v2",
+      "data_types": [
+        "news-headlines",
+        "news-articles",
+        "news-sources",
+        "search"
+      ],
+      "access_type": "freemium"
     },
     {
       "id": "SRC-0013",
-      "name": "Semantic Scholar",
-      "url": "https://api.semanticscholar.org/graph/v1",
-      "data_types": ["scientific"],
+      "title": "The Guardian Open Platform API",
+      "file": "SRC-0013-guardian-api.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "news-articles",
+        "full-text-content",
+        "tags",
+        "sections",
+        "contributors"
+      ],
+      "status": "active",
+      "url": "https://content.guardianapis.com",
+      "data_types": [
+        "news-articles",
+        "full-text-content",
+        "tags",
+        "sections",
+        "contributors",
+        "editorial-metadata"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0014",
-      "name": "Wikidata",
-      "url": "https://www.wikidata.org/w/api.php",
-      "data_types": ["scientific", "general"],
-      "access_type": "free"
+      "title": "GNews API",
+      "file": "SRC-0014-gnews.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "news-headlines",
+        "news-articles",
+        "search",
+        "top-stories"
+      ],
+      "status": "active",
+      "url": "https://gnews.io/api/v4",
+      "data_types": [
+        "news-headlines",
+        "news-articles",
+        "search",
+        "top-stories"
+      ],
+      "access_type": "freemium"
     },
     {
       "id": "SRC-0015",
-      "name": "CORE",
-      "url": "https://api.core.ac.uk/v3",
-      "data_types": ["scientific"],
-      "access_type": "api-key-required"
+      "title": "GDELT Project API",
+      "file": "SRC-0015-gdelt.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "news-articles",
+        "global-events",
+        "sentiment-analysis",
+        "geospatial-data",
+        "tv-news"
+      ],
+      "status": "active",
+      "url": "https://api.gdeltproject.org/api/v2",
+      "data_types": [
+        "news-articles",
+        "global-events",
+        "sentiment-analysis",
+        "geospatial-data",
+        "tv-news",
+        "themes",
+        "entity-extraction",
+        "timelines"
+      ],
+      "access_type": "free"
     },
     {
       "id": "SRC-0016",
-      "name": "CrossRef",
-      "url": "https://api.crossref.org",
-      "data_types": ["scientific"],
-      "access_type": "free"
+      "title": "Mediastack",
+      "file": "SRC-0016-mediastack.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "news-articles",
+        "live-headlines",
+        "historical-news",
+        "categories",
+        "sources"
+      ],
+      "status": "active",
+      "url": "https://api.mediastack.com/v1",
+      "data_types": [
+        "news-articles",
+        "live-headlines",
+        "historical-news",
+        "categories",
+        "sources",
+        "languages"
+      ],
+      "access_type": "freemium"
     },
     {
       "id": "SRC-0017",
-      "name": "DBpedia",
-      "url": "https://dbpedia.org/sparql",
-      "data_types": ["scientific", "general"],
-      "access_type": "free"
+      "title": "rss2json",
+      "file": "SRC-0017-rss2json.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "rss-feeds",
+        "atom-feeds",
+        "feed-metadata",
+        "feed-items"
+      ],
+      "status": "active",
+      "url": "https://api.rss2json.com/v1/api.json",
+      "data_types": [
+        "rss-feeds",
+        "atom-feeds",
+        "feed-metadata",
+        "feed-items"
+      ],
+      "access_type": "freemium"
     },
     {
       "id": "SRC-0018",
-      "name": "Papers With Code",
-      "url": "https://paperswithcode.com/api/v1",
-      "data_types": ["scientific"],
-      "access_type": "free"
+      "title": "FRED API (Federal Reserve Economic Data)",
+      "file": "SRC-0018-fred.json",
+      "date": "2026-03-12",
+      "team": "TEAM-0013",
+      "tags": [
+        "economic-indicators",
+        "interest-rates",
+        "employment",
+        "inflation",
+        "GDP"
+      ],
+      "status": "active",
+      "url": "https://api.stlouisfed.org/fred/",
+      "data_types": [
+        "economic-indicators",
+        "interest-rates",
+        "employment",
+        "inflation",
+        "GDP",
+        "monetary-policy",
+        "financial",
+        "time-series",
+        "gdp",
+        "inflation-cpi",
+        "unemployment-rate",
+        "money-supply",
+        "consumer-sentiment",
+        "housing-data",
+        "trade-balance",
+        "industrial-production"
+      ],
+      "access_type": "api-key-required"
     },
     {
       "id": "SRC-0019",
-      "name": "US Census Bureau",
+      "title": "US Census Bureau Data API",
+      "file": "SRC-0019-census.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0013",
+      "tags": [
+        "demographics",
+        "population",
+        "housing",
+        "economic",
+        "business"
+      ],
+      "status": "active",
       "url": "https://api.census.gov/data",
-      "data_types": ["government"],
+      "data_types": [
+        "demographics",
+        "population",
+        "housing",
+        "economic",
+        "business",
+        "income",
+        "poverty",
+        "education",
+        "government"
+      ],
       "access_type": "api-key-required"
     },
     {
       "id": "SRC-0020",
-      "name": "Data.gov CKAN",
-      "url": "https://catalog.data.gov/api/3",
-      "data_types": ["government"],
+      "title": "Bureau of Labor Statistics (BLS) Public Data API",
+      "file": "SRC-0020-bls.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0013",
+      "tags": [
+        "employment",
+        "unemployment",
+        "inflation",
+        "CPI",
+        "wages"
+      ],
+      "status": "active",
+      "url": "https://api.bls.gov/publicAPI/v2/timeseries/data/",
+      "data_types": [
+        "employment",
+        "unemployment",
+        "inflation",
+        "CPI",
+        "wages",
+        "productivity",
+        "occupational-data",
+        "labor-statistics"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0021",
-      "name": "Open-Meteo",
-      "url": "https://api.open-meteo.com/v1",
-      "data_types": ["geospatial"],
+      "title": "National Weather Service (NWS) API",
+      "file": "SRC-0021-nws-weather.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0013",
+      "tags": [
+        "weather-forecasts",
+        "weather-alerts",
+        "weather-observations",
+        "climate",
+        "geospatial"
+      ],
+      "status": "active",
+      "url": "https://api.weather.gov",
+      "data_types": [
+        "weather-forecasts",
+        "weather-alerts",
+        "weather-observations",
+        "climate",
+        "geospatial"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0022",
-      "name": "OpenWeatherMap",
-      "url": "https://api.openweathermap.org/data/2.5",
-      "data_types": ["geospatial"],
-      "access_type": "freemium"
+      "title": "Open-Meteo Weather API",
+      "file": "SRC-0022-open-meteo.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0013",
+      "tags": [
+        "weather-forecasts",
+        "historical-weather",
+        "air-quality",
+        "marine-weather",
+        "climate"
+      ],
+      "status": "active",
+      "url": "https://api.open-meteo.com/v1/forecast",
+      "data_types": [
+        "weather-forecasts",
+        "historical-weather",
+        "air-quality",
+        "marine-weather",
+        "climate",
+        "elevation",
+        "geocoding"
+      ],
+      "access_type": "free"
     },
     {
       "id": "SRC-0023",
-      "name": "BLS",
-      "url": "https://api.bls.gov/publicAPI/v2",
-      "data_types": ["government"],
+      "title": "World Bank Indicators API",
+      "file": "SRC-0023-world-bank.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0013",
+      "tags": [
+        "economic-indicators",
+        "development",
+        "demographics",
+        "health",
+        "education"
+      ],
+      "status": "active",
+      "url": "https://api.worldbank.org/v2/",
+      "data_types": [
+        "economic-indicators",
+        "development",
+        "demographics",
+        "health",
+        "education",
+        "trade",
+        "climate",
+        "poverty",
+        "international"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0024",
-      "name": "World Bank",
-      "url": "https://api.worldbank.org/v2",
-      "data_types": ["government"],
+      "title": "US Treasury Fiscal Data API",
+      "file": "SRC-0024-treasury-fiscal.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0013",
+      "tags": [
+        "federal-debt",
+        "federal-revenue",
+        "federal-spending",
+        "treasury-securities",
+        "interest-rates"
+      ],
+      "status": "active",
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/",
+      "data_types": [
+        "federal-debt",
+        "federal-revenue",
+        "federal-spending",
+        "treasury-securities",
+        "interest-rates",
+        "currency-exchange-rates",
+        "savings-bonds",
+        "financial",
+        "government"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0025",
-      "name": "GitHub REST API",
-      "url": "https://api.github.com",
-      "data_types": ["general"],
+      "title": "GitHub REST API",
+      "file": "SRC-0025-github-api.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "repositories",
+        "code-search",
+        "commits",
+        "issues",
+        "pull-requests"
+      ],
+      "status": "active",
+      "url": "https://api.github.com/",
+      "data_types": [
+        "repositories",
+        "code-search",
+        "commits",
+        "issues",
+        "pull-requests",
+        "users",
+        "organizations",
+        "gists",
+        "releases",
+        "topics",
+        "licenses"
+      ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0026",
-      "name": "PyPI",
-      "url": "https://pypi.org/pypi",
-      "data_types": ["general"],
+      "title": "npm Registry API",
+      "file": "SRC-0026-npm-registry.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "package-metadata",
+        "package-versions",
+        "download-counts",
+        "package-search",
+        "dependency-trees"
+      ],
+      "status": "active",
+      "url": "https://registry.npmjs.org/",
+      "data_types": [
+        "package-metadata",
+        "package-versions",
+        "download-counts",
+        "package-search",
+        "dependency-trees"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0027",
-      "name": "npm Registry",
-      "url": "https://registry.npmjs.org",
-      "data_types": ["general"],
+      "title": "PyPI JSON API",
+      "file": "SRC-0027-pypi-api.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "package-metadata",
+        "package-versions",
+        "download-urls",
+        "vulnerability-data",
+        "release-history"
+      ],
+      "status": "active",
+      "url": "https://pypi.org/pypi/",
+      "data_types": [
+        "package-metadata",
+        "package-versions",
+        "download-urls",
+        "vulnerability-data",
+        "release-history"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0028",
-      "name": "Reddit",
-      "url": "https://www.reddit.com",
-      "data_types": ["social-media"],
+      "title": "ip-api.com Geolocation API",
+      "file": "SRC-0028-ip-api.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "ip-geolocation",
+        "country",
+        "city",
+        "timezone",
+        "isp-data"
+      ],
+      "status": "active",
+      "url": "http://ip-api.com/json/",
+      "data_types": [
+        "ip-geolocation",
+        "country",
+        "city",
+        "timezone",
+        "isp-data",
+        "as-number"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0029",
-      "name": "Stack Exchange",
-      "url": "https://api.stackexchange.com/2.3",
-      "data_types": ["general"],
+      "title": "Hacker News Algolia Search API",
+      "file": "SRC-0029-hn-algolia.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "stories",
+        "comments",
+        "polls",
+        "users",
+        "ask-hn"
+      ],
+      "status": "active",
+      "url": "https://hn.algolia.com/api/v1/",
+      "data_types": [
+        "stories",
+        "comments",
+        "polls",
+        "users",
+        "ask-hn",
+        "show-hn",
+        "jobs"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0030",
-      "name": "Nominatim",
-      "url": "https://nominatim.openstreetmap.org",
-      "data_types": ["geospatial"],
+      "title": "Hacker News Official API (Firebase)",
+      "file": "SRC-0030-hn-firebase.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "stories",
+        "comments",
+        "polls",
+        "users",
+        "top-stories"
+      ],
+      "status": "active",
+      "url": "https://hacker-news.firebaseio.com/v0/",
+      "data_types": [
+        "stories",
+        "comments",
+        "polls",
+        "users",
+        "top-stories",
+        "new-stories",
+        "best-stories",
+        "ask-hn",
+        "show-hn",
+        "jobs"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0031",
-      "name": "Hugging Face Hub",
-      "url": "https://huggingface.co/api",
-      "data_types": ["scientific", "general"],
-      "access_type": "free"
+      "title": "Stack Exchange API",
+      "file": "SRC-0031-stackexchange-api.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0010",
+      "tags": [
+        "questions",
+        "answers",
+        "comments",
+        "users",
+        "tags"
+      ],
+      "status": "active",
+      "url": "https://api.stackexchange.com/2.3/",
+      "data_types": [
+        "questions",
+        "answers",
+        "comments",
+        "users",
+        "tags",
+        "badges",
+        "search",
+        "reputation"
+      ],
+      "access_type": "freemium"
     },
     {
       "id": "SRC-0032",
-      "name": "Free Dictionary",
-      "url": "https://api.dictionaryapi.dev/api/v2/entries",
-      "data_types": ["general"],
+      "title": "Free Dictionary API",
+      "file": "SRC-0032-free-dictionary.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0012",
+      "tags": [
+        "word-definitions",
+        "phonetics",
+        "audio-pronunciations",
+        "parts-of-speech",
+        "usage-examples"
+      ],
+      "status": "active",
+      "url": "https://api.dictionaryapi.dev/api/v2/entries/en/",
+      "data_types": [
+        "word-definitions",
+        "phonetics",
+        "audio-pronunciations",
+        "parts-of-speech",
+        "usage-examples",
+        "synonyms",
+        "antonyms"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0033",
-      "name": "Datamuse",
+      "title": "Datamuse API",
+      "file": "SRC-0033-datamuse.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0012",
+      "tags": [
+        "word-relationships",
+        "semantic-similarity",
+        "rhymes",
+        "sound-alike",
+        "spelling-suggestions"
+      ],
+      "status": "active",
       "url": "https://api.datamuse.com",
-      "data_types": ["general"],
+      "data_types": [
+        "word-relationships",
+        "semantic-similarity",
+        "rhymes",
+        "sound-alike",
+        "spelling-suggestions",
+        "word-frequency",
+        "syllable-counts",
+        "definitions",
+        "word-context"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0034",
-      "name": "ConceptNet",
-      "url": "https://api.conceptnet.io",
-      "data_types": ["scientific"],
+      "title": "ConceptNet API",
+      "file": "SRC-0034-conceptnet.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0012",
+      "tags": [
+        "commonsense-knowledge",
+        "semantic-relationships",
+        "word-embeddings",
+        "multilingual-concepts",
+        "knowledge-graph-edges"
+      ],
+      "status": "active",
+      "url": "http://api.conceptnet.io",
+      "data_types": [
+        "commonsense-knowledge",
+        "semantic-relationships",
+        "word-embeddings",
+        "multilingual-concepts",
+        "knowledge-graph-edges",
+        "word-associations",
+        "concept-relatedness"
+      ],
       "access_type": "free"
     },
     {
       "id": "SRC-0035",
-      "name": "Hugging Face Inference Providers API",
+      "title": "Hugging Face Inference Providers API",
+      "file": "SRC-0035-huggingface-inference.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0012",
+      "tags": [
+        "text-generation",
+        "text-embeddings",
+        "image-generation",
+        "image-classification",
+        "object-detection"
+      ],
+      "status": "active",
       "url": "https://router.huggingface.co/v1",
-      "data_types": ["ai-ml"],
+      "data_types": [
+        "text-generation",
+        "text-embeddings",
+        "image-generation",
+        "image-classification",
+        "object-detection",
+        "speech-to-text",
+        "text-to-speech",
+        "summarization",
+        "translation",
+        "named-entity-recognition",
+        "sentiment-analysis",
+        "question-answering",
+        "video-generation"
+      ],
       "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0036",
+      "title": "Google Gemini Embeddings API",
+      "file": "SRC-0036-gemini-embeddings.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0012",
+      "tags": [
+        "text-embeddings",
+        "multimodal-embeddings",
+        "semantic-vectors",
+        "document-embeddings"
+      ],
+      "status": "active",
+      "url": "https://generativelanguage.googleapis.com/v1beta/models/",
+      "data_types": [
+        "text-embeddings",
+        "multimodal-embeddings",
+        "semantic-vectors",
+        "document-embeddings"
+      ],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0037",
+      "title": "Roboflow Inference API",
+      "file": "SRC-0037-roboflow.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0012",
+      "tags": [
+        "object-detection",
+        "image-classification",
+        "instance-segmentation",
+        "keypoint-detection",
+        "image-embeddings"
+      ],
+      "status": "active",
+      "url": "https://detect.roboflow.com",
+      "data_types": [
+        "object-detection",
+        "image-classification",
+        "instance-segmentation",
+        "keypoint-detection",
+        "image-embeddings",
+        "computer-vision-datasets"
+      ],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0038",
+      "title": "Alpha Vantage",
+      "file": "SRC-0038-alpha-vantage.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0013",
+      "tags": [
+        "stock-prices-realtime",
+        "stock-prices-historical",
+        "forex-rates",
+        "cryptocurrency-prices",
+        "technical-indicators"
+      ],
+      "status": "active",
+      "url": "https://www.alphavantage.co/query",
+      "data_types": [
+        "stock-prices-realtime",
+        "stock-prices-historical",
+        "forex-rates",
+        "cryptocurrency-prices",
+        "technical-indicators",
+        "commodity-prices",
+        "economic-indicators"
+      ],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0040",
+      "title": "Finnhub",
+      "file": "SRC-0040-finnhub.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0013",
+      "tags": [
+        "stock-prices-realtime",
+        "stock-prices-historical",
+        "company-fundamentals",
+        "financial-statements",
+        "earnings-estimates"
+      ],
+      "status": "active",
+      "url": "https://finnhub.io/api/v1",
+      "data_types": [
+        "stock-prices-realtime",
+        "stock-prices-historical",
+        "company-fundamentals",
+        "financial-statements",
+        "earnings-estimates",
+        "forex-rates",
+        "cryptocurrency-prices",
+        "economic-calendar",
+        "news-sentiment",
+        "insider-transactions",
+        "sec-filings"
+      ],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0041",
+      "title": "CoinGecko API",
+      "file": "SRC-0041-coingecko.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0013",
+      "tags": [
+        "cryptocurrency-prices-realtime",
+        "cryptocurrency-prices-historical",
+        "market-cap",
+        "trading-volume",
+        "exchange-data"
+      ],
+      "status": "active",
+      "url": "https://api.coingecko.com/api/v3",
+      "data_types": [
+        "cryptocurrency-prices-realtime",
+        "cryptocurrency-prices-historical",
+        "market-cap",
+        "trading-volume",
+        "exchange-data",
+        "defi-data",
+        "nft-data",
+        "trending-coins",
+        "categories"
+      ],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0042",
+      "title": "ExchangeRate-API (Open Access)",
+      "file": "SRC-0042-exchangerate-api.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0013",
+      "tags": [
+        "forex-exchange-rates",
+        "currency-conversion"
+      ],
+      "status": "active",
+      "url": "https://open.er-api.com/v6/latest",
+      "data_types": [
+        "forex-exchange-rates",
+        "currency-conversion"
+      ],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0043",
+      "title": "fawazahmed0/exchange-api (Open Source Currency API)",
+      "file": "SRC-0043-fawazahmed0-exchange.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0013",
+      "tags": [
+        "forex-exchange-rates",
+        "cryptocurrency-rates",
+        "precious-metals-rates",
+        "historical-exchange-rates"
+      ],
+      "status": "active",
+      "url": "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1",
+      "data_types": [
+        "forex-exchange-rates",
+        "cryptocurrency-rates",
+        "precious-metals-rates",
+        "historical-exchange-rates"
+      ],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0044",
+      "title": "CoinPaprika API",
+      "file": "SRC-0044-coinpaprika.json",
+      "date": "2026-03-10",
+      "team": "TEAM-0013",
+      "tags": [
+        "cryptocurrency-prices-realtime",
+        "cryptocurrency-prices-historical",
+        "market-cap",
+        "trading-volume",
+        "exchange-data"
+      ],
+      "status": "active",
+      "url": "https://api.coinpaprika.com/v1",
+      "data_types": [
+        "cryptocurrency-prices-realtime",
+        "cryptocurrency-prices-historical",
+        "market-cap",
+        "trading-volume",
+        "exchange-data",
+        "ohlcv-candles",
+        "coin-events",
+        "global-market-data"
+      ],
+      "access_type": "free"
     }
   ],
-  "by_data_type": {
-    "financial": ["SRC-0001", "SRC-0002", "SRC-0003", "SRC-0004", "SRC-0005", "SRC-0006", "SRC-0007"],
-    "news": ["SRC-0008", "SRC-0009", "SRC-0010", "SRC-0011"],
-    "social-media": ["SRC-0028"],
-    "government": ["SRC-0003", "SRC-0019", "SRC-0020", "SRC-0023", "SRC-0024"],
-    "scientific": ["SRC-0012", "SRC-0013", "SRC-0014", "SRC-0015", "SRC-0016", "SRC-0017", "SRC-0018", "SRC-0031", "SRC-0034"],
-    "ai-ml": ["SRC-0035"],
-    "geospatial": ["SRC-0021", "SRC-0022", "SRC-0030"],
-    "general": ["SRC-0011", "SRC-0014", "SRC-0017", "SRC-0025", "SRC-0026", "SRC-0027", "SRC-0029", "SRC-0031", "SRC-0032", "SRC-0033"]
-  },
-  "by_access_type": {
-    "free": ["SRC-0002", "SRC-0006", "SRC-0011", "SRC-0012", "SRC-0013", "SRC-0014", "SRC-0016", "SRC-0017", "SRC-0018", "SRC-0020", "SRC-0021", "SRC-0023", "SRC-0024", "SRC-0026", "SRC-0027", "SRC-0028", "SRC-0029", "SRC-0030", "SRC-0031", "SRC-0032", "SRC-0033", "SRC-0034"],
-    "freemium": ["SRC-0001", "SRC-0004", "SRC-0005", "SRC-0007", "SRC-0008", "SRC-0009", "SRC-0022", "SRC-0025", "SRC-0035"],
-    "paid": [],
-    "api-key-required": ["SRC-0003", "SRC-0010", "SRC-0015", "SRC-0019"]
-  }
+  "date": "2026-03-12"
 }

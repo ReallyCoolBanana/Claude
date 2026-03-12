@@ -1,0 +1,200 @@
+{
+  "id": "SOP-022",
+  "version": "1.0",
+  "team": "ANALYSIS-001",
+  "title": "Evidence-Based Team Sizing and Composition",
+  "purpose": "Defines optimal team sizes and compositions based on empirical data from 28 team sessions with 132 agent instances. Prevents the recurring pattern of over-sized teams that lose 89% per-agent efficiency.",
+  "builds_on": [
+    "SOP-011",
+    "SOP-013",
+    "ANALYSIS-001"
+  ],
+  "evidence_base": "Cross-team analysis of T01-T28 (see storage/analysis/cross-team-analysis-2026-03-11.md)",
+  "section_1_sizing_rules": {
+    "title": "Team Sizing Rules",
+    "description": "Hard rules derived from empirical data. Violating these requires explicit justification.",
+    "rules": [
+      {
+        "id": "SIZE-01",
+        "rule": "Solo agent (1) for independent research tasks",
+        "evidence": "T05: 4.0 artifacts/agent — highest efficiency ever recorded. T10-T13: each solo agent produced complete API catalogs.",
+        "when_to_use": [
+          "API research and catalog creation",
+          "Architecture analysis (T19)",
+          "Data quality cleanup (T26)",
+          "Single-file code fixes"
+        ],
+        "overhead": "~0% coordination overhead"
+      },
+      {
+        "id": "SIZE-02",
+        "rule": "Small team (3) for focused tool building",
+        "evidence": "T06: 1.0 artifacts/agent — 3 agents built 3 tools with no wasted effort.",
+        "when_to_use": [
+          "Building 2-4 related tools",
+          "Implementing a single feature with tests",
+          "Writing SOPs for a specific subsystem"
+        ],
+        "overhead": "~5% coordination overhead"
+      },
+      {
+        "id": "SIZE-03",
+        "rule": "Medium team (5-8) for integrated operations",
+        "evidence": "T27: 5 agents, full repo audit in 90 seconds, zero idle time. T24: 8 agents, stress tests + SOPs. T02: 7 agents, complete research API.",
+        "when_to_use": [
+          "Multi-subsystem analysis or audit",
+          "Parallel think-tank + coding operations",
+          "Data gathering + sorting pipelines"
+        ],
+        "overhead": "15-20% coordination overhead",
+        "recommended_composition": {
+          "5_agent": "1 coordinator + 2 think tanks + 2 coding teams",
+          "7_agent": "1 coordinator + 2 think tanks + 2 coding teams + 1 research + 1 standby",
+          "8_agent": "1 coordinator + 2 think tanks + 3 coding teams + 1 research + 1 standby"
+        }
+      },
+      {
+        "id": "SIZE-04",
+        "rule": "Large team (9-12) for research operations ONLY",
+        "evidence": "T07: 9 agents (3 leads x 2 subs) optimal for research with parallel streams. T14: 9 agents for API tool building.",
+        "when_to_use": [
+          "Parallel research across 3+ independent domains",
+          "Competitive analysis with multiple independent evaluations",
+          "Large-scale data gathering requiring coverage"
+        ],
+        "overhead": "20-25% coordination overhead",
+        "required_structure": "Must use lead-sub pattern (1 lead per 2-3 sub-agents)"
+      },
+      {
+        "id": "SIZE-05",
+        "rule": "AVOID teams of 15+ agents unless unique capability required",
+        "evidence": "T03 (27 agents): 0.44 artifacts/agent, 89% efficiency loss. T09 (20 agents): 0.45 artifacts/agent. T25 (15 agents): required user correction for sequential patterns.",
+        "when_to_use": "ONLY when the task requires one of these unique multi-team capabilities that cannot be achieved with smaller teams:",
+        "unique_capabilities": [
+          "Competitive verification (independent quality scoring of same target)",
+          "Cross-team bug detection (bugs found via inter-team friction)",
+          "Parallel multi-language implementation (e.g., Python + Go simultaneously)",
+          "Configuration meta-experimentation (testing 4+ configs simultaneously)"
+        ],
+        "overhead": "25-30%+ coordination overhead",
+        "required_justification": "Coordinator must document which unique capability justifies the size before launching"
+      }
+    ]
+  },
+  "section_2_composition_patterns": {
+    "title": "Standard Team Compositions",
+    "description": "Pre-validated team compositions for common operation types.",
+    "patterns": [
+      {
+        "name": "Bug Hunt",
+        "size": 5,
+        "composition": [
+          "1 coordinator",
+          "2 think-tank-bugs (find bugs)",
+          "2 coding-fix (fix bugs)"
+        ],
+        "evidence": "T25 found 14 bugs at 0.93/agent with this pattern",
+        "workflow": "Think tanks find -> coding teams fix -> think tanks verify"
+      },
+      {
+        "name": "Feature Build",
+        "size": 7,
+        "composition": [
+          "1 coordinator",
+          "1 think-tank-design",
+          "1 research-team",
+          "3 coding-teams",
+          "1 standby"
+        ],
+        "evidence": "T02 pattern: think tank designs, research provides context, coding implements",
+        "workflow": "Research + think tank in parallel -> coding teams implement -> standby helps stragglers"
+      },
+      {
+        "name": "Audit & Analysis",
+        "size": 5,
+        "composition": [
+          "1 coordinator",
+          "3 audit-teams (partitioned by subsystem)",
+          "1 think-tank-convergence"
+        ],
+        "evidence": "T27: full repo audit in 90s with this pattern",
+        "workflow": "Audit teams scan in parallel -> think tank synthesizes findings"
+      },
+      {
+        "name": "Data Pipeline",
+        "size": 8,
+        "composition": [
+          "1 coordinator",
+          "3 data-gatherers",
+          "2 sorter-archivers",
+          "1 think-tank-quality",
+          "1 programming-support"
+        ],
+        "evidence": "Derived from TT-OBS-1 recommendations (1 sorter per 2 gatherers)",
+        "workflow": "Gatherers produce -> sorters categorize -> think tank spot-checks quality"
+      },
+      {
+        "name": "Market Research Sprint",
+        "size": 5,
+        "composition": [
+          "1 coordinator",
+          "2 research-teams (different methods)",
+          "1 analysis-team",
+          "1 coding-team (tools)"
+        ],
+        "evidence": "Extrapolated from T03 competitive research pattern, right-sized per SIZE-03",
+        "workflow": "Research teams gather independently -> analysis cross-validates -> coding builds tools if needed"
+      }
+    ]
+  },
+  "section_3_decision_flowchart": {
+    "title": "Team Size Decision Flowchart",
+    "steps": [
+      "1. Is this a single research question or code fix? → Solo (SIZE-01)",
+      "2. Is this building 2-4 related deliverables? → Small team of 3 (SIZE-02)",
+      "3. Does this need parallel streams with integration? → Medium team of 5-8 (SIZE-03)",
+      "4. Does this need 3+ independent research domains? → Large team of 9-12 (SIZE-04)",
+      "5. Does this require a unique multi-team capability? → 15+ with written justification (SIZE-05)",
+      "6. If unsure: start with 5 agents. Add more only if blocked."
+    ]
+  },
+  "section_4_anti_patterns": {
+    "title": "Team Sizing Anti-Patterns",
+    "patterns": [
+      {
+        "anti_pattern": "Default to maximum agents",
+        "symptom": "Launching 15+ agents for tasks achievable by 5-7",
+        "evidence": "T03 (27 agents), T09 (20 agents) both achieved < 0.5 artifacts/agent",
+        "fix": "Start with SIZE-03 (5-8). Only scale up with evidence of need."
+      },
+      {
+        "anti_pattern": "One agent per file",
+        "symptom": "Assigning one agent to each source file for modification",
+        "evidence": "Causes resource conflicts (SOP-012 TRIG-07). Better to assign by subsystem.",
+        "fix": "Group related files under one agent. Use subsystem boundaries, not file boundaries."
+      },
+      {
+        "anti_pattern": "Think tank proliferation",
+        "symptom": "More think tanks than coding teams",
+        "evidence": "T21 had 3 think tanks + 1 coordinator analyzing Proto A; could have been 1 think tank + data",
+        "fix": "Maximum ratio: 1 think tank per 2 coding teams. Think tanks produce plans; coding teams produce artifacts."
+      },
+      {
+        "anti_pattern": "No standby agents",
+        "symptom": "All agents assigned critical work; no slack for redistribution",
+        "evidence": "T27 zero idle time came from pre-loaded work queue, not from having zero slack",
+        "fix": "For teams of 7+, include 1 standby agent or pre-load WorkStealing queue with fallback tasks"
+      }
+    ]
+  },
+  "checklists": {
+    "before_launch": [
+      "Team size matches task complexity per SIZE-01 through SIZE-05",
+      "If 15+ agents: written justification for unique capability requirement",
+      "Composition follows a validated pattern from section 2 (or documented deviation)",
+      "Think tank to coding team ratio is ≤ 1:2",
+      "Standby agent or pre-loaded work queue for teams of 7+"
+    ]
+  },
+  "date": "2026-03-11"
+}

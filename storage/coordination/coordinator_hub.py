@@ -21,7 +21,12 @@ import sqlite3
 import threading
 import time
 import uuid
-from typing import Any, Optional
+from typing import Any, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .db_partition import PartitionedStore
+    from .circuit_breaker import CircuitBreaker
+    from .deadlock_detector import DeadlockDetector
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +99,8 @@ def _retry_on_busy(func):
                         func.__name__, attempt + 1, _MAX_RETRIES, delay,
                     )
                     time.sleep(delay)
-                    delay *= 2
+                    # P0 FIX: Cap backoff at 50ms to avoid 1.6s+ delays
+                    delay = min(delay * 2, 0.05)
                 else:
                     raise
         raise last_err  # type: ignore[misc]
@@ -191,18 +197,41 @@ class AgentReporter:
         Role description for this agent.
     bus_dir:
         Optional path to the JSONL bus directory for notifications.
+    partitioned_store:
+        Optional PartitionedStore instance.  When provided, the hub partition
+        is used for agent_status and coordinator_instructions tables instead
+        of opening a new connection to db_path.  This enables incremental
+        migration to the partitioned database layout.
+    ack_protocol:
+        Optional AckProtocol instance.  When provided, instructions received
+        via ``check_instructions()`` are automatically acknowledged on the
+        bus so the coordinator can track delivery.
     """
 
     def __init__(self, db_path: str, agent_id: str, team: str, role: str,
-                 bus_dir: Optional[str] = None) -> None:
+                 bus_dir: Optional[str] = None,
+                 partitioned_store: Optional["PartitionedStore"] = None,
+                 ack_protocol: Optional[object] = None) -> None:
         self.db_path = db_path
         self.agent_id = agent_id
         self.team = team
         self.role = role
         self.bus_dir = bus_dir
+        self._partitioned_store = partitioned_store
+        self._ack_protocol = ack_protocol
         self._lock = threading.Lock()
-        self._conn = _open_db(db_path)
+        if partitioned_store is not None:
+            # Use the hub partition for agent_status and coordinator_instructions
+            self._conn = partitioned_store.hub.conn
+            self._owns_conn = False
+        else:
+            self._conn = _open_db(db_path)
+            self._owns_conn = True
         self._closed = False
+        # P0 FIX: Status write deduplication — cache last-written status in
+        # memory, only write to DB if status actually changed. Status updates
+        # are ~60% of total coordination overhead per benchmarks.
+        self._last_status: dict[str, Any] = {}
         self._register()
 
     def _check_closed(self) -> None:
@@ -276,6 +305,22 @@ class AgentReporter:
             raise ValueError(
                 f"progress_pct must be between 0 and 100, got {progress_pct}"
             )
+
+        # P0 FIX: Status write deduplication — skip DB write if nothing changed.
+        # Status updates account for ~60% of total coordination overhead per
+        # benchmarks; deduplicating them provides an immediate large gain.
+        new_vals = {
+            "status": status,
+            "progress_pct": progress_pct,
+            "current_task": current_task,
+            "blockers": blockers,
+            "findings_count": findings_count,
+            "output_files": output_files,
+        }
+        if self._last_status == new_vals:
+            # Identical to last write — skip DB round-trip entirely
+            return
+
         now = time.time()
         with self._lock:
             self._conn.execute(
@@ -301,6 +346,9 @@ class AgentReporter:
                  now, now),
             )
             self._conn.commit()
+
+        # Cache the values we just wrote so the next identical call is skipped
+        self._last_status = new_vals
 
         _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
             "event": "agent-status-update",
@@ -404,14 +452,39 @@ class AgentReporter:
                 self._conn.execute("ROLLBACK")
                 raise
 
+        # Auto-ack instructions via ack_protocol if available
+        if self._ack_protocol is not None and instructions:
+            for inst in instructions:
+                payload = inst.get("payload")
+                if payload:
+                    try:
+                        payload_data = json.loads(payload) if isinstance(payload, str) else payload
+                        # Look for an ack-tracked message ID in the payload
+                        msg_id = payload_data.get("_ack_message_id")
+                        if msg_id:
+                            self._ack_protocol.ack(msg_id)
+                    except Exception as e:
+                        logger.debug("Auto-ack for instruction %s failed: %s", inst.get("id"), e)
+                # Also try acking by instruction_id pattern on the bus
+                try:
+                    inst_id = str(inst.get("id", ""))
+                    if inst_id:
+                        self._ack_protocol.ack(
+                            f"instruction-{inst_id}",
+                            channel="global",
+                        )
+                except Exception:
+                    pass  # Best-effort ack
+
         return instructions
 
     def close(self) -> None:
-        """Clean shutdown: close the database connection."""
+        """Clean shutdown: close the database connection if we own it."""
         with self._lock:
             if not self._closed:
                 self._closed = True
-                self._conn.close()
+                if self._owns_conn:
+                    self._conn.close()
 
     def __enter__(self):
         return self
@@ -439,14 +512,53 @@ class CoordinatorDashboard:
         Path to the shared SQLite database.
     bus_dir:
         Optional path to the JSONL bus directory for notifications.
+    partitioned_store:
+        Optional PartitionedStore instance.  When provided, the hub partition
+        is used for agent_status and coordinator_instructions tables instead
+        of opening a new connection to db_path.  This enables incremental
+        migration to the partitioned database layout.
+    circuit_breaker:
+        Optional CircuitBreaker instance.  When provided, ``run_health_checks()``
+        will include open/half-open circuit information in the health report.
+    deadlock_detector:
+        Optional DeadlockDetector instance.  When provided, ``run_health_checks()``
+        will scan for pipeline, help-request, and work-queue deadlocks.
+    health_check_interval:
+        Seconds between automatic health checks when monitoring is active.
+        Defaults to 60 seconds.  Set to 0 to disable automatic checks.
+    ack_protocol:
+        Optional AckProtocol instance.  When provided, critical instruction
+        types (redirect, reassign, shutdown) are sent via send_no_wait for
+        reliable delivery with acknowledgment tracking.
     """
 
-    def __init__(self, db_path: str, bus_dir: Optional[str] = None) -> None:
+    # Instruction types that require reliable ack-tracked delivery
+    _CRITICAL_INSTRUCTION_TYPES = frozenset({"redirect", "reassign", "shutdown"})
+
+    def __init__(self, db_path: str, bus_dir: Optional[str] = None,
+                 partitioned_store: Optional["PartitionedStore"] = None,
+                 circuit_breaker: Optional["CircuitBreaker"] = None,
+                 deadlock_detector: Optional["DeadlockDetector"] = None,
+                 health_check_interval: float = 60.0,
+                 ack_protocol: Optional[object] = None) -> None:
         self.db_path = db_path
         self.bus_dir = bus_dir
+        self._partitioned_store = partitioned_store
+        self._circuit_breaker = circuit_breaker
+        self._deadlock_detector = deadlock_detector
+        self._health_check_interval = health_check_interval
+        self._ack_protocol = ack_protocol
         self._lock = threading.Lock()
-        self._conn = _open_db(db_path)
+        if partitioned_store is not None:
+            self._conn = partitioned_store.hub.conn
+            self._owns_conn = False
+        else:
+            self._conn = _open_db(db_path)
+            self._owns_conn = True
         self._closed = False
+        self._health_thread: Optional[threading.Thread] = None
+        self._health_stop = threading.Event()
+        self._last_health_report: Optional[dict] = None
 
     def _check_closed(self) -> None:
         """Raise RuntimeError if this instance has been closed."""
@@ -589,14 +701,64 @@ class CoordinatorDashboard:
             instruction_id = cur.lastrowid
             self._conn.commit()
 
-        _bus_notify(self.bus_dir, "global", "coordinator", "coordinator", {
+        body = {
             "event": "instruction-sent",
             "target_agent": target_agent,
             "instruction_type": instruction_type,
             "instruction_id": instruction_id,
-        })
+        }
+        is_critical = instruction_type in self._CRITICAL_INSTRUCTION_TYPES
+        if is_critical and self._ack_protocol is not None:
+            try:
+                self._ack_protocol.send_no_wait(
+                    channel="global",
+                    msg_type="instruction",
+                    body=body,
+                    target_agent=target_agent,
+                    priority=8,
+                    ttl=3600,
+                )
+            except Exception as e:
+                logger.warning(
+                    "Ack-tracked instruction to %s failed: %s; falling back to bus",
+                    target_agent, e,
+                )
+                _bus_notify(self.bus_dir, "global", "coordinator", "coordinator", body)
+        else:
+            _bus_notify(self.bus_dir, "global", "coordinator", "coordinator", body)
 
         return instruction_id
+
+    def get_unacknowledged_instructions(self, older_than: float = 60.0) -> list[dict]:
+        """Check which agents haven't acknowledged critical instructions.
+
+        Requires an ack_protocol to be configured.  Returns a list of
+        unacked message dicts from the ack tracking table.  If no
+        ack_protocol is configured, returns an empty list.
+
+        Parameters
+        ----------
+        older_than:
+            Only consider messages older than this many seconds (default 60).
+
+        Returns
+        -------
+        list[dict]
+            Unacknowledged instruction messages.
+        """
+        self._check_closed()
+        if self._ack_protocol is None:
+            return []
+        try:
+            unacked = self._ack_protocol.get_unacked(older_than=older_than)
+            # Filter to only instruction-type messages
+            return [
+                msg for msg in unacked
+                if msg.get("msg_type") == "instruction"
+            ]
+        except Exception as e:
+            logger.warning("get_unacknowledged_instructions failed: %s", e)
+            return []
 
     @_retry_on_busy
     def get_stale_agents(self, timeout_seconds: int = 300) -> list[dict]:
@@ -615,15 +777,16 @@ class CoordinatorDashboard:
         list[dict]
             Stale agent status records, sorted by last_updated ascending.
         """
+        # BUG-CH-002: Push staleness check into SQL using strftime for
+        # correct server-side time comparison instead of Python-side cutoff.
         self._check_closed()
-        cutoff = time.time() - timeout_seconds
         with self._lock:
             rows = self._conn.execute(
                 """SELECT * FROM agent_status
                    WHERE status NOT IN ('complete', 'error')
-                     AND last_updated < ?
+                     AND (strftime('%s', 'now') - last_updated) > ?
                    ORDER BY last_updated ASC""",
-                (cutoff,),
+                (timeout_seconds,),
             ).fetchall()
         return [dict(r) for r in rows]
 
@@ -668,27 +831,57 @@ class CoordinatorDashboard:
                 # statements can invalidate them.
                 agent_ids = [row["agent_id"] for row in rows]
 
-                instruction_ids: list[int] = []
-                for aid in agent_ids:
-                    cur = self._conn.execute(
+                # P0 FIX: Batch insert instructions using executemany
+                # instead of one-by-one INSERT in a loop
+                if agent_ids:
+                    self._conn.executemany(
                         """INSERT INTO coordinator_instructions
                            (target_agent, instruction_type, payload, status, created_at)
                            VALUES (?, ?, ?, 'pending', ?)""",
-                        (aid, instruction_type, payload, now),
+                        [(aid, instruction_type, payload, now) for aid in agent_ids],
                     )
-                    instruction_ids.append(cur.lastrowid)
+                    # Retrieve the inserted IDs — executemany's lastrowid is the
+                    # last row; we know they are sequential autoincrement IDs
+                    last_id = self._conn.execute(
+                        "SELECT last_insert_rowid()"
+                    ).fetchone()[0]
+                    instruction_ids = list(range(
+                        last_id - len(agent_ids) + 1, last_id + 1
+                    ))
+                else:
+                    instruction_ids = []
                 self._conn.execute("COMMIT")
             except Exception:
                 self._conn.execute("ROLLBACK")
                 raise
 
+        # For critical instruction types, use ack-tracked delivery if available
+        is_critical = instruction_type in self._CRITICAL_INSTRUCTION_TYPES
         for aid, inst_id in zip(agent_ids, instruction_ids):
-            _bus_notify(self.bus_dir, "global", "coordinator", "coordinator", {
+            body = {
                 "event": "instruction-sent",
                 "target_agent": aid,
                 "instruction_type": instruction_type,
                 "instruction_id": inst_id,
-            })
+            }
+            if is_critical and self._ack_protocol is not None:
+                try:
+                    self._ack_protocol.send_no_wait(
+                        channel="global",
+                        msg_type="instruction",
+                        body=body,
+                        target_agent=aid,
+                        priority=8,
+                        ttl=3600,
+                    )
+                except Exception as e:
+                    logger.warning(
+                        "Ack-tracked broadcast to %s failed: %s; falling back to bus",
+                        aid, e,
+                    )
+                    _bus_notify(self.bus_dir, "global", "coordinator", "coordinator", body)
+            else:
+                _bus_notify(self.bus_dir, "global", "coordinator", "coordinator", body)
 
         return instruction_ids
 
@@ -776,12 +969,162 @@ class CoordinatorDashboard:
             "avg_progress": avg_progress,
         }
 
+    # ------------------------------------------------------------------
+    # Health checks (circuit breaker + deadlock detector integration)
+    # ------------------------------------------------------------------
+
+    def run_health_checks(self) -> dict:
+        """Run circuit breaker and deadlock detector health checks.
+
+        Collects data from both optional subsystems and returns a combined
+        health report.  Safe to call even when neither subsystem is wired
+        in -- the report will simply contain empty sections.
+
+        Returns
+        -------
+        dict
+            {
+                "checked_at": float,
+                "deadlocks": {...} or None,
+                "open_circuits": [...] or None,
+                "stale_agents": [...],
+                "healthy": bool,
+            }
+        """
+        self._check_closed()
+        report: dict[str, Any] = {
+            "checked_at": time.time(),
+            "deadlocks": None,
+            "open_circuits": None,
+            "stale_agents": [],
+            "healthy": True,
+        }
+
+        # Deadlock detector scan
+        if self._deadlock_detector is not None:
+            try:
+                scan = self._deadlock_detector.scan_all()
+                report["deadlocks"] = scan
+                if scan.get("total_deadlocks", 0) > 0:
+                    report["healthy"] = False
+                    logger.warning(
+                        "Health check: %d deadlock(s) detected",
+                        scan["total_deadlocks"],
+                    )
+            except Exception:
+                logger.exception("Health check: deadlock scan failed")
+                report["deadlocks"] = {"error": "scan_failed"}
+                report["healthy"] = False
+
+        # Circuit breaker scan
+        if self._circuit_breaker is not None:
+            try:
+                all_circuits = self._circuit_breaker.get_all_circuits()
+                open_circuits = [
+                    c for c in all_circuits
+                    if c.get("state") in ("open", "half_open")
+                ]
+                report["open_circuits"] = open_circuits
+                if open_circuits:
+                    report["healthy"] = False
+                    logger.warning(
+                        "Health check: %d open/half-open circuit(s)",
+                        len(open_circuits),
+                    )
+            except Exception:
+                logger.exception("Health check: circuit breaker scan failed")
+                report["open_circuits"] = [{"error": "scan_failed"}]
+                report["healthy"] = False
+
+        # Also include stale agent detection as part of health
+        try:
+            report["stale_agents"] = self.get_stale_agents()
+            if report["stale_agents"]:
+                report["healthy"] = False
+        except Exception:
+            logger.exception("Health check: stale agent check failed")
+
+        self._last_health_report = report
+
+        _bus_notify(self.bus_dir, "health-check", "coordinator", "coordinator", {
+            "event": "health-check-complete",
+            "healthy": report["healthy"],
+            "deadlock_count": (
+                report["deadlocks"].get("total_deadlocks", 0)
+                if isinstance(report.get("deadlocks"), dict) else 0
+            ),
+            "open_circuit_count": (
+                len(report["open_circuits"])
+                if isinstance(report.get("open_circuits"), list) else 0
+            ),
+            "stale_agent_count": len(report.get("stale_agents", [])),
+        })
+
+        return report
+
+    def get_last_health_report(self) -> Optional[dict]:
+        """Return the most recent health check report, or None if never run."""
+        return self._last_health_report
+
+    def start_health_monitor(self) -> Optional[threading.Thread]:
+        """Start a background thread that runs health checks periodically.
+
+        The thread calls ``run_health_checks()`` every
+        ``health_check_interval`` seconds.  Returns the thread (already
+        started), or None if the interval is zero or no subsystems are
+        configured.
+
+        Returns
+        -------
+        threading.Thread or None
+        """
+        if self._health_check_interval <= 0:
+            return None
+        if self._circuit_breaker is None and self._deadlock_detector is None:
+            return None
+        if self._health_thread is not None and self._health_thread.is_alive():
+            logger.warning("Health monitor thread already running")
+            return self._health_thread
+
+        self._health_stop.clear()
+
+        def _monitor():
+            logger.info(
+                "Health monitor started (interval=%.1fs)",
+                self._health_check_interval,
+            )
+            while not self._health_stop.is_set():
+                try:
+                    self.run_health_checks()
+                except Exception:
+                    logger.exception("Health monitor: check failed")
+                self._health_stop.wait(timeout=self._health_check_interval)
+            logger.info("Health monitor stopped")
+
+        thread = threading.Thread(
+            target=_monitor,
+            name="coordinator-health-monitor",
+            daemon=True,
+        )
+        thread.start()
+        self._health_thread = thread
+        return thread
+
+    def stop_health_monitor(self) -> None:
+        """Stop the background health monitor thread if running."""
+        self._health_stop.set()
+        if self._health_thread is not None and self._health_thread.is_alive():
+            self._health_thread.join(timeout=5.0)
+            self._health_thread = None
+
     def close(self) -> None:
-        """Clean shutdown: close the database connection."""
+        """Clean shutdown: stop health monitor and close database connection."""
+        self.stop_health_monitor()
         with self._lock:
             if not self._closed:
                 self._closed = True
-                self._conn.close()
+                if self._owns_conn:
+                    self._conn.close()
 
     def __enter__(self):
         return self

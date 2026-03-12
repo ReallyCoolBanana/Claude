@@ -1,20 +1,43 @@
 {
   "design_id": "THINK-TANK-V2-COORDINATION-FEATURES",
   "version": "1.0.0",
-  "timestamp": "2026-03-11T04:00:00Z",
   "team": "think-tank-v2",
-  "agents": ["think-lead", "think-architect", "think-ux", "think-systems"],
+  "agents": [
+    "think-lead",
+    "think-architect",
+    "think-ux",
+    "think-systems"
+  ],
   "problem_statement": "In the previous 18-agent run, Beta-1 was still processing while 5 other teams sat idle. No mechanism existed for idle teams to help busy teams, for teams to request assistance, for direct team-to-team coordination, or for dynamic work redistribution. This design addresses all of these gaps.",
-
   "architecture_constraints": {
     "bus": "JSONL append-only files, POSIX atomic writes < 4096 bytes, channels map to files",
     "state": "SQLite WAL mode, shared across all agents, retry-on-busy pattern",
-    "valid_msg_types": ["info", "blocker", "phase-signal", "heartbeat", "request", "response"],
+    "valid_msg_types": [
+      "info",
+      "blocker",
+      "phase-signal",
+      "heartbeat",
+      "request",
+      "response"
+    ],
     "max_message_bytes": 4096,
-    "existing_tables": ["agents", "rate_limits", "rate_limit_config", "phase_signals", "messages", "team_findings", "think_tank"],
-    "existing_cli_commands": ["init", "write", "read", "register", "status"]
+    "existing_tables": [
+      "agents",
+      "rate_limits",
+      "rate_limit_config",
+      "phase_signals",
+      "messages",
+      "team_findings",
+      "think_tank"
+    ],
+    "existing_cli_commands": [
+      "init",
+      "write",
+      "read",
+      "register",
+      "status"
+    ]
   },
-
   "new_msg_types_required": [
     "help-request",
     "help-offer",
@@ -26,16 +49,13 @@
     "presence"
   ],
   "note_on_msg_types": "The existing VALID_MSG_TYPES in bus.py must be extended. Alternatively, all new message subtypes can be encoded within the 'request'/'response'/'info' types using a body.subtype field to avoid modifying the bus core. We recommend the body.subtype approach for backward compatibility.",
-
   "features": {
-
     "feature_1_team_help_protocol": {
       "title": "Team Help Protocol",
       "description": "Enables busy teams to request help and idle teams to offer assistance, with structured negotiation and work assignment.",
       "priority": "must-have",
       "complexity": "medium",
       "designer": "think-lead",
-
       "message_schemas": {
         "help_request": {
           "type": "request",
@@ -45,7 +65,9 @@
             "request_id": "string (UUID)",
             "requesting_team": "string",
             "description": "string (what help is needed)",
-            "required_capabilities": ["string array (e.g. 'data-analysis', 'code-writing')"],
+            "required_capabilities": [
+              "string array (e.g. 'data-analysis', 'code-writing')"
+            ],
             "work_units": [
               {
                 "unit_id": "string (UUID)",
@@ -68,20 +90,35 @@
               "request_id": "a1b2c3d4-...",
               "requesting_team": "beta-1",
               "description": "Need help processing remaining 400 KB entries - parsing and indexing",
-              "required_capabilities": ["data-processing", "indexing"],
+              "required_capabilities": [
+                "data-processing",
+                "indexing"
+              ],
               "work_units": [
                 {
                   "unit_id": "wu-001",
                   "description": "Parse KB entries 100-200",
                   "estimated_minutes": 5,
-                  "input_data": {"file_path": "/path/to/entries", "range": [100, 200]},
+                  "input_data": {
+                    "file_path": "/path/to/entries",
+                    "range": [
+                      100,
+                      200
+                    ]
+                  },
                   "output_spec": "JSON array of parsed entries written to /path/to/output"
                 },
                 {
                   "unit_id": "wu-002",
                   "description": "Parse KB entries 200-300",
                   "estimated_minutes": 5,
-                  "input_data": {"file_path": "/path/to/entries", "range": [200, 300]},
+                  "input_data": {
+                    "file_path": "/path/to/entries",
+                    "range": [
+                      200,
+                      300
+                    ]
+                  },
                   "output_spec": "JSON array of parsed entries written to /path/to/output"
                 }
               ],
@@ -91,7 +128,6 @@
             }
           }
         },
-
         "help_offer": {
           "type": "response",
           "channel": "topic-help",
@@ -101,12 +137,15 @@
             "request_id": "string (references help-request.request_id)",
             "offering_team": "string",
             "available_agents": "number",
-            "capabilities_matched": ["string array"],
-            "can_handle_units": ["string array of unit_ids"],
+            "capabilities_matched": [
+              "string array"
+            ],
+            "can_handle_units": [
+              "string array of unit_ids"
+            ],
             "estimated_start_minutes": "number (how soon they can start)"
           }
         },
-
         "help_accept": {
           "type": "response",
           "channel": "topic-help",
@@ -114,11 +153,12 @@
             "subtype": "help-accept",
             "request_id": "string",
             "offer_id": "string",
-            "assigned_units": ["string array of unit_ids"],
+            "assigned_units": [
+              "string array of unit_ids"
+            ],
             "direct_channel": "string (channel name for direct coordination)"
           }
         },
-
         "help_reject": {
           "type": "response",
           "channel": "topic-help",
@@ -129,7 +169,6 @@
             "reason": "string"
           }
         },
-
         "work_complete": {
           "type": "info",
           "channel": "topic-help",
@@ -144,7 +183,6 @@
           }
         }
       },
-
       "sqlite_tables": {
         "help_requests": {
           "create_statement": "CREATE TABLE IF NOT EXISTS help_requests (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    request_id TEXT UNIQUE NOT NULL,\n    requesting_team TEXT NOT NULL,\n    requesting_agent TEXT NOT NULL,\n    description TEXT NOT NULL,\n    required_capabilities TEXT NOT NULL,  -- JSON array\n    urgency TEXT NOT NULL DEFAULT 'medium',\n    status TEXT NOT NULL DEFAULT 'open',  -- open, partially_fulfilled, fulfilled, cancelled\n    total_units INTEGER NOT NULL DEFAULT 0,\n    assigned_units INTEGER NOT NULL DEFAULT 0,\n    completed_units INTEGER NOT NULL DEFAULT 0,\n    created_at REAL NOT NULL,\n    updated_at REAL NOT NULL,\n    deadline_ts REAL\n);",
@@ -169,7 +207,6 @@
           ]
         }
       },
-
       "protocol_flow": [
         "1. Busy team decomposes remaining work into divisible work_units, each with clear input/output",
         "2. Busy team publishes help-request to 'topic-help' channel with all work_units listed",
@@ -190,7 +227,6 @@
         "14. Offering team UPDATEs work_unit: status='completed', output_location, completed_at",
         "15. Requesting team UPDATEs help_request: completed_units++, status='fulfilled' when all done"
       ],
-
       "bus_cli_extensions": [
         "help-request <team> <agent_id> <description> <capabilities_json> <work_units_json> <urgency>",
         "help-offer <team> <agent_id> <request_id> <capabilities_json> <unit_ids_json>",
@@ -199,14 +235,12 @@
         "help-list [--status open|fulfilled|cancelled]  -- list help requests by status"
       ]
     },
-
     "feature_2_idle_detection_auto_reassignment": {
       "title": "Idle Detection & Auto-Reassignment",
       "description": "The coordinator detects idle teams after phase completion and proactively redistributes remaining work from busy teams.",
       "priority": "must-have",
       "complexity": "medium",
       "designer": "think-systems",
-
       "message_schemas": {
         "phase_complete_with_availability": {
           "type": "phase-signal",
@@ -216,11 +250,12 @@
             "team": "string",
             "phase": "string",
             "available_agents": "number",
-            "capabilities": ["string array"],
+            "capabilities": [
+              "string array"
+            ],
             "idle_since_ts": "number"
           }
         },
-
         "work_redistribution": {
           "type": "info",
           "channel": "global",
@@ -229,11 +264,12 @@
             "redistribution_id": "string (UUID)",
             "from_team": "string",
             "to_team": "string",
-            "work_units": ["array of unit objects"],
+            "work_units": [
+              "array of unit objects"
+            ],
             "reason": "string: idle-reassignment | load-balance | priority-shift"
           }
         },
-
         "work_split_request": {
           "type": "request",
           "channel": "topic-coordination",
@@ -242,22 +278,24 @@
             "target_team": "string (team that should split its work)",
             "requesting_coordinator": "string",
             "max_units_to_split": "number",
-            "preferred_capabilities": ["string array"]
+            "preferred_capabilities": [
+              "string array"
+            ]
           }
         },
-
         "work_split_response": {
           "type": "response",
           "channel": "topic-coordination",
           "body": {
             "subtype": "work-split-response",
             "target_team": "string",
-            "splittable_units": ["array of work_unit objects that can be reassigned"],
+            "splittable_units": [
+              "array of work_unit objects that can be reassigned"
+            ],
             "unsplittable_reason": "string (if work cannot be split, explain why)"
           }
         }
       },
-
       "sqlite_tables": {
         "team_status": {
           "create_statement": "CREATE TABLE IF NOT EXISTS team_status (\n    team TEXT PRIMARY KEY,\n    status TEXT NOT NULL DEFAULT 'active',  -- active, idle, helping, completed, failed\n    current_phase TEXT,\n    available_agents INTEGER NOT NULL DEFAULT 0,\n    total_agents INTEGER NOT NULL DEFAULT 0,\n    capabilities TEXT,  -- JSON array\n    idle_since REAL,\n    last_progress_update REAL,\n    updated_at REAL NOT NULL\n);",
@@ -270,7 +308,6 @@
           "indexes": []
         }
       },
-
       "protocol_flow": [
         "1. Team completes its assigned phase/work",
         "2. Team publishes phase-complete-available to global channel with capabilities and agent count",
@@ -290,7 +327,6 @@
         "16. Helping team works on assigned units, reports completion via Feature 1 protocol",
         "17. On all-units-complete, coordinator UPDATEs redistribution: status='completed'"
       ],
-
       "coordinator_auto_reassignment_algorithm": {
         "description": "Runs in coordinator heartbeat loop after check_agents()",
         "pseudocode": [
@@ -310,21 +346,18 @@
           "                    break"
         ]
       },
-
       "bus_cli_extensions": [
         "team-status <team> <status> <available_agents> <capabilities_json>  -- update team status",
         "idle-teams  -- list all idle teams",
         "redistribute <from_team> <to_team> <unit_ids_json> <reason>  -- manually trigger redistribution"
       ]
     },
-
     "feature_3_direct_team_channels": {
       "title": "Direct Team-to-Team Channels",
       "description": "Enables any two teams to establish a private communication channel for direct coordination without going through the global bus.",
       "priority": "must-have",
       "complexity": "small",
       "designer": "think-architect",
-
       "channel_naming_convention": {
         "pattern": "direct-{team_a}-to-{team_b}",
         "rules": [
@@ -339,7 +372,6 @@
           "direct-beta-1-to-delta"
         ]
       },
-
       "message_schemas": {
         "channel_open": {
           "type": "info",
@@ -353,7 +385,6 @@
             "ttl_minutes": "number (how long the channel stays active, default 60)"
           }
         },
-
         "channel_accept": {
           "type": "info",
           "channel": "topic-channels",
@@ -363,7 +394,6 @@
             "accepting_team": "string"
           }
         },
-
         "channel_close": {
           "type": "info",
           "channel": "topic-channels",
@@ -374,7 +404,6 @@
             "reason": "string: complete | timeout | error"
           }
         },
-
         "presence_broadcast": {
           "type": "info",
           "channel": "topic-presence",
@@ -383,12 +412,15 @@
             "team": "string",
             "status": "string: available | busy | helping | offline",
             "available_agents": "number",
-            "capabilities": ["string array"],
-            "active_channels": ["string array of channel names currently open"]
+            "capabilities": [
+              "string array"
+            ],
+            "active_channels": [
+              "string array of channel names currently open"
+            ]
           }
         }
       },
-
       "sqlite_tables": {
         "direct_channels": {
           "create_statement": "CREATE TABLE IF NOT EXISTS direct_channels (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    channel_name TEXT UNIQUE NOT NULL,\n    team_a TEXT NOT NULL,\n    team_b TEXT NOT NULL,\n    purpose TEXT,\n    status TEXT NOT NULL DEFAULT 'pending',  -- pending, active, closed\n    initiated_by TEXT NOT NULL,\n    created_at REAL NOT NULL,\n    accepted_at REAL,\n    closed_at REAL,\n    ttl_minutes INTEGER NOT NULL DEFAULT 60,\n    message_count INTEGER NOT NULL DEFAULT 0\n);",
@@ -402,7 +434,6 @@
           "indexes": []
         }
       },
-
       "protocol_flow": [
         "1. Team A wants to coordinate with Team B",
         "2. Team A computes channel name: sort(['team-a', 'team-b']) -> 'direct-team-a-to-team-b'",
@@ -417,14 +448,12 @@
         "11. On close, UPDATE direct_channels: status='closed', closed_at=now()",
         "12. Expired channels (created_at + ttl_minutes * 60 < now) are auto-closed by coordinator cleanup"
       ],
-
       "presence_protocol": [
         "1. Each team broadcasts presence to 'topic-presence' every 60 seconds",
         "2. Team UPSERTs team_presence row with current status, capabilities, and active channels",
         "3. Any team can query team_presence table to discover available teams",
         "4. Coordinator monitors presence for stale entries (last_seen > 120s) and marks them offline"
       ],
-
       "bus_cli_extensions": [
         "channel-open <initiating_team> <target_team> <purpose> [--ttl <minutes>]",
         "channel-close <channel_name> <team> <reason>",
@@ -433,14 +462,12 @@
         "who  -- list all teams with their current presence status"
       ]
     },
-
     "feature_4_work_progress_broadcasting": {
       "title": "Work Progress Broadcasting",
       "description": "Each team periodically broadcasts its progress, enabling real-time monitoring and proactive help identification.",
       "priority": "must-have",
       "complexity": "small",
       "designer": "think-ux",
-
       "message_schemas": {
         "progress_update": {
           "type": "info",
@@ -480,7 +507,6 @@
             }
           }
         },
-
         "progress_summary": {
           "type": "info",
           "channel": "global",
@@ -503,7 +529,6 @@
           }
         }
       },
-
       "sqlite_tables": {
         "team_progress": {
           "create_statement": "CREATE TABLE IF NOT EXISTS team_progress (\n    team TEXT PRIMARY KEY,\n    phase TEXT NOT NULL,\n    percent_complete REAL NOT NULL DEFAULT 0,\n    estimated_remaining_minutes REAL,\n    current_task TEXT,\n    bottleneck TEXT,\n    work_units_total INTEGER NOT NULL DEFAULT 0,\n    work_units_completed INTEGER NOT NULL DEFAULT 0,\n    work_units_in_progress INTEGER NOT NULL DEFAULT 0,\n    error_count INTEGER NOT NULL DEFAULT 0,\n    needs_help INTEGER NOT NULL DEFAULT 0,\n    help_description TEXT,\n    updated_at REAL NOT NULL\n);",
@@ -520,13 +545,11 @@
           "notes": "Append-only log of progress snapshots for post-mortem analysis and velocity estimation"
         }
       },
-
       "update_frequency": {
         "team_broadcasts": "Every 60 seconds OR on significant state change (>10% progress, new bottleneck, error)",
         "coordinator_summary": "Every 120 seconds, published to global channel",
         "sqlite_updates": "On every broadcast, UPSERT to team_progress and INSERT to progress_history"
       },
-
       "dashboard_integration": {
         "description": "The existing dashboard.py can be extended to read team_progress table and render a live progress view",
         "proposed_display": [
@@ -547,7 +570,6 @@
           "└─────────────────────────────────────────────────┘"
         ]
       },
-
       "protocol_flow": [
         "1. Each team sets up a progress reporting interval (every 60s) in its main loop",
         "2. Team computes current progress: percent, ETA, bottleneck, work unit counts",
@@ -560,33 +582,61 @@
         "9. If any team has needs_help=true and idle teams exist, coordinator triggers auto-reassignment (Feature 2)",
         "10. Dashboard (if running) queries team_progress every 10s for display refresh"
       ],
-
       "bus_cli_extensions": [
         "progress <team> <phase> <percent> <eta_minutes> [--bottleneck <desc>] [--needs-help] [--help-desc <desc>]",
         "progress-all  -- show current progress for all teams (reads from SQLite)",
         "progress-history <team>  -- show progress history for velocity analysis"
       ]
     },
-
     "feature_5_capability_matching": {
       "title": "Capability Matching",
       "description": "Teams register their capabilities, and the system automatically matches idle teams with compatible help requests.",
       "priority": "should-have",
       "complexity": "small",
       "designer": "think-architect",
-
       "capability_taxonomy": {
         "description": "Standardized capability identifiers. Teams register using these tags.",
         "categories": {
-          "data": ["data-collection", "data-processing", "data-analysis", "data-indexing", "data-cleaning"],
-          "code": ["code-writing", "code-review", "code-testing", "code-refactoring", "code-debugging"],
-          "research": ["web-research", "api-research", "academic-research", "market-research"],
-          "content": ["report-writing", "documentation", "summarization", "knowledge-base"],
-          "system": ["api-integration", "database-ops", "file-processing", "coordination"],
-          "analysis": ["benchmark-analysis", "performance-analysis", "statistical-analysis", "comparative-analysis"]
+          "data": [
+            "data-collection",
+            "data-processing",
+            "data-analysis",
+            "data-indexing",
+            "data-cleaning"
+          ],
+          "code": [
+            "code-writing",
+            "code-review",
+            "code-testing",
+            "code-refactoring",
+            "code-debugging"
+          ],
+          "research": [
+            "web-research",
+            "api-research",
+            "academic-research",
+            "market-research"
+          ],
+          "content": [
+            "report-writing",
+            "documentation",
+            "summarization",
+            "knowledge-base"
+          ],
+          "system": [
+            "api-integration",
+            "database-ops",
+            "file-processing",
+            "coordination"
+          ],
+          "analysis": [
+            "benchmark-analysis",
+            "performance-analysis",
+            "statistical-analysis",
+            "comparative-analysis"
+          ]
         }
       },
-
       "message_schemas": {
         "capability_registration": {
           "type": "info",
@@ -594,7 +644,9 @@
           "body": {
             "subtype": "capability-register",
             "team": "string",
-            "capabilities": ["string array from taxonomy"],
+            "capabilities": [
+              "string array from taxonomy"
+            ],
             "proficiency": {
               "capability_name": "number 1-5 (1=basic, 5=expert)"
             }
@@ -605,7 +657,12 @@
             "body": {
               "subtype": "capability-register",
               "team": "beta-1",
-              "capabilities": ["data-processing", "data-indexing", "file-processing", "knowledge-base"],
+              "capabilities": [
+                "data-processing",
+                "data-indexing",
+                "file-processing",
+                "knowledge-base"
+              ],
               "proficiency": {
                 "data-processing": 5,
                 "data-indexing": 4,
@@ -615,18 +672,20 @@
             }
           }
         },
-
         "capability_query": {
           "type": "request",
           "channel": "topic-capabilities",
           "body": {
             "subtype": "capability-query",
-            "required": ["string array (all must match)"],
-            "preferred": ["string array (nice to have)"],
+            "required": [
+              "string array (all must match)"
+            ],
+            "preferred": [
+              "string array (nice to have)"
+            ],
             "min_proficiency": "number (minimum proficiency level, default 1)"
           }
         },
-
         "capability_match_result": {
           "type": "response",
           "channel": "topic-capabilities",
@@ -635,8 +694,12 @@
             "matches": [
               {
                 "team": "string",
-                "matched_required": ["string array"],
-                "matched_preferred": ["string array"],
+                "matched_required": [
+                  "string array"
+                ],
+                "matched_preferred": [
+                  "string array"
+                ],
                 "avg_proficiency": "number",
                 "match_score": "number (0-100)",
                 "status": "string (available, busy, etc.)"
@@ -645,7 +708,6 @@
           }
         }
       },
-
       "sqlite_tables": {
         "team_capabilities": {
           "create_statement": "CREATE TABLE IF NOT EXISTS team_capabilities (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    team TEXT NOT NULL,\n    capability TEXT NOT NULL,\n    proficiency INTEGER NOT NULL DEFAULT 3,\n    registered_at REAL NOT NULL,\n    UNIQUE(team, capability)\n);",
@@ -655,7 +717,6 @@
           ]
         }
       },
-
       "matching_algorithm": {
         "description": "Runs when a help-request arrives or when coordinator does auto-reassignment",
         "pseudocode": [
@@ -678,7 +739,6 @@
           "    return sorted(candidates, key=lambda t: t.match_score, reverse=True)"
         ]
       },
-
       "protocol_flow": [
         "1. At startup, each team registers capabilities to 'topic-capabilities' and INSERTs to team_capabilities",
         "2. When a help-request arrives, coordinator (or requesting team) calls find_matching_teams()",
@@ -687,28 +747,23 @@
         "5. Top-matching idle team is auto-notified (or coordinator sends work-split to them)",
         "6. Teams can update capabilities mid-session if they gain new ones (e.g., after receiving context from another team)"
       ],
-
       "bus_cli_extensions": [
         "register-capabilities <team> <capabilities_json> [--proficiency <prof_json>]",
         "find-match <required_caps_json> [--preferred <preferred_json>] [--min-prof <n>]",
         "list-capabilities [--team <team>]  -- show capabilities for all or a specific team"
       ]
     },
-
     "feature_6_additional_productivity": {
       "title": "Additional Productivity Features",
       "description": "Six additional features beyond the core five, designed to further optimize multi-team operations.",
       "priority": "nice-to-have (individually prioritized below)",
       "designer": "think-lead + all",
-
       "sub_features": {
-
         "6a_work_stealing": {
           "title": "Work Stealing (Proactive Help)",
           "priority": "should-have",
           "complexity": "medium",
           "description": "Idle teams proactively scan for and claim unclaimed work units without waiting for explicit help requests. Unlike reactive help offers, work stealing is initiated entirely by the idle team.",
-
           "message_schemas": {
             "work_steal_claim": {
               "type": "request",
@@ -732,9 +787,7 @@
               }
             }
           },
-
           "sqlite_additions": "Uses existing work_units table. Add column: stealable INTEGER NOT NULL DEFAULT 1. Teams mark units as stealable=0 if they require sequential processing or shared context that cannot be transferred.",
-
           "protocol_flow": [
             "1. Idle team queries: SELECT * FROM work_units WHERE status='pending' AND stealable=1 ORDER BY estimated_minutes DESC",
             "2. Idle team attempts to claim by publishing steal-claim and doing: UPDATE work_units SET assigned_to_team=? WHERE unit_id=? AND status='pending' (atomic CAS via BEGIN IMMEDIATE)",
@@ -744,13 +797,11 @@
             "6. Claiming team proceeds to work on the unit"
           ]
         },
-
         "6b_pipeline_chaining": {
           "title": "Pipeline Chaining (Team A output -> Team B input)",
           "priority": "should-have",
           "complexity": "medium",
           "description": "Enables automatic handoff of outputs from one team as inputs to the next team in a processing pipeline. Reduces manual coordination overhead.",
-
           "message_schemas": {
             "pipeline_definition": {
               "type": "info",
@@ -784,11 +835,9 @@
               }
             }
           },
-
           "sqlite_table": {
             "create_statement": "CREATE TABLE IF NOT EXISTS pipeline_stages (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    pipeline_id TEXT NOT NULL,\n    pipeline_name TEXT,\n    stage_order INTEGER NOT NULL,\n    team TEXT NOT NULL,\n    input_location TEXT,\n    output_location TEXT,\n    status TEXT NOT NULL DEFAULT 'pending',  -- pending, active, completed, failed\n    started_at REAL,\n    completed_at REAL,\n    UNIQUE(pipeline_id, stage_order)\n);"
           },
-
           "protocol_flow": [
             "1. Coordinator (or lead team) defines pipeline with ordered stages",
             "2. Pipeline definition published to 'topic-pipelines' and stored in pipeline_stages table",
@@ -800,13 +849,11 @@
             "8. If a stage fails, coordinator can reassign to another team with matching capabilities"
           ]
         },
-
         "6c_shared_scratchpad": {
           "title": "Shared Scratchpad for Intermediate Results",
           "priority": "should-have",
           "complexity": "small",
           "description": "A key-value store in SQLite where teams can publish intermediate findings, partial results, and shared context that other teams can query and build upon.",
-
           "sqlite_table": {
             "create_statement": "CREATE TABLE IF NOT EXISTS scratchpad (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    key TEXT UNIQUE NOT NULL,\n    value TEXT NOT NULL,  -- JSON\n    team TEXT NOT NULL,\n    agent_id TEXT NOT NULL,\n    category TEXT,  -- e.g. 'intermediate-result', 'shared-context', 'reference-data'\n    ttl_seconds INTEGER DEFAULT 3600,\n    created_at REAL NOT NULL,\n    updated_at REAL NOT NULL\n);",
             "indexes": [
@@ -814,14 +861,12 @@
               "CREATE INDEX IF NOT EXISTS idx_scratchpad_team ON scratchpad(team);"
             ]
           },
-
           "bus_cli_extensions": [
             "scratch-put <key> <value_json> <team> <agent_id> [--category <cat>] [--ttl <seconds>]",
             "scratch-get <key>",
             "scratch-list [--team <team>] [--category <cat>]",
             "scratch-delete <key>"
           ],
-
           "protocol_flow": [
             "1. Team writes intermediate result: INSERT INTO scratchpad (key, value, team, ...) with UPSERT",
             "2. Other teams query by key or category: SELECT * FROM scratchpad WHERE key = ? OR category = ?",
@@ -830,13 +875,11 @@
             "5. Teams can overwrite keys they own (UPSERT on key with team match)"
           ]
         },
-
         "6d_priority_escalation": {
           "title": "Priority Escalation (Urgent Tasks Jump the Queue)",
           "priority": "nice-to-have",
           "complexity": "small",
           "description": "Allows teams or the coordinator to escalate task priority, preempting lower-priority work and triggering immediate reallocation.",
-
           "message_schemas": {
             "priority_escalation": {
               "type": "info",
@@ -853,9 +896,7 @@
               }
             }
           },
-
           "sqlite_additions": "Add priority column to work_units and help_requests tables. ALTER TABLE work_units ADD COLUMN priority TEXT NOT NULL DEFAULT 'medium'; ALTER TABLE help_requests ADD COLUMN priority_override TEXT;",
-
           "protocol_flow": [
             "1. Agent or coordinator determines a task needs higher priority",
             "2. Publishes priority-escalation to global channel",
@@ -866,13 +907,11 @@
             "7. Low-priority work goes back to work_units with status='pending'"
           ]
         },
-
         "6e_team_merge_split": {
           "title": "Team Merging and Splitting Mid-Operation",
           "priority": "nice-to-have",
           "complexity": "large",
           "description": "Allows two small teams to merge into one larger team for a complex task, or a large team to split into two smaller teams for parallel work.",
-
           "message_schemas": {
             "team_merge_request": {
               "type": "request",
@@ -880,7 +919,9 @@
               "body": {
                 "subtype": "team-merge",
                 "merge_id": "string (UUID)",
-                "teams_to_merge": ["string array (2 team names)"],
+                "teams_to_merge": [
+                  "string array (2 team names)"
+                ],
                 "merged_team_name": "string",
                 "reason": "string",
                 "requested_by": "string"
@@ -894,15 +935,19 @@
                 "split_id": "string (UUID)",
                 "team_to_split": "string",
                 "new_teams": [
-                  {"name": "string", "agents": ["string array of agent_ids"], "mission": "string"}
+                  {
+                    "name": "string",
+                    "agents": [
+                      "string array of agent_ids"
+                    ],
+                    "mission": "string"
+                  }
                 ],
                 "reason": "string"
               }
             }
           },
-
           "sqlite_additions": "Add parent_team and merge_history columns to agents table. ALTER TABLE agents ADD COLUMN parent_team TEXT; CREATE TABLE IF NOT EXISTS team_operations (id INTEGER PRIMARY KEY AUTOINCREMENT, operation_type TEXT NOT NULL, operation_id TEXT UNIQUE NOT NULL, details TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', created_at REAL NOT NULL, completed_at REAL);",
-
           "protocol_flow_merge": [
             "1. Coordinator or team lead determines two teams should merge",
             "2. Publishes team-merge request to 'topic-coordination'",
@@ -912,7 +957,6 @@
             "6. Old team channels closed, new team uses new channel names",
             "7. Operation logged in team_operations table"
           ],
-
           "protocol_flow_split": [
             "1. Coordinator determines a team is too large for its current work",
             "2. Publishes team-split request specifying agent assignments per new team",
@@ -922,24 +966,20 @@
             "6. Operation logged in team_operations table"
           ]
         },
-
         "6f_load_balancing": {
           "title": "Continuous Load Balancing",
           "priority": "should-have",
           "complexity": "medium",
           "description": "Coordinator continuously monitors work distribution across teams and proactively rebalances to prevent any single team from becoming a bottleneck.",
-
           "mechanism": {
             "description": "Uses progress data (Feature 4) and capability data (Feature 5) to compute load imbalance scores and trigger rebalancing.",
             "imbalance_threshold": "If any team's ETA exceeds 2x the average ETA of active teams, trigger rebalancing",
             "rebalance_cooldown_seconds": 300,
             "max_redistribution_per_cycle": "25% of slowest team's remaining units"
           },
-
           "sqlite_table": {
             "create_statement": "CREATE TABLE IF NOT EXISTS load_balance_events (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    event_type TEXT NOT NULL,  -- imbalance-detected, rebalance-triggered, rebalance-completed\n    from_team TEXT,\n    to_team TEXT,\n    imbalance_ratio REAL,\n    units_moved INTEGER,\n    created_at REAL NOT NULL\n);"
           },
-
           "protocol_flow": [
             "1. Coordinator reads team_progress every heartbeat cycle (30s)",
             "2. Computes average ETA across active teams",
@@ -955,34 +995,47 @@
       }
     }
   },
-
   "implementation_plan": {
     "phase_1_core": {
       "title": "Core Coordination (implement first)",
       "estimated_effort": "2-3 hours",
-      "features": ["feature_4_work_progress_broadcasting", "feature_3_direct_team_channels", "feature_5_capability_matching"],
+      "features": [
+        "feature_4_work_progress_broadcasting",
+        "feature_3_direct_team_channels",
+        "feature_5_capability_matching"
+      ],
       "rationale": "Progress tracking, presence, and capability registration are prerequisites for the help protocol and auto-reassignment. They are also the simplest to implement."
     },
     "phase_2_help_system": {
       "title": "Help Request/Response System",
       "estimated_effort": "3-4 hours",
-      "features": ["feature_1_team_help_protocol", "feature_2_idle_detection_auto_reassignment"],
+      "features": [
+        "feature_1_team_help_protocol",
+        "feature_2_idle_detection_auto_reassignment"
+      ],
       "rationale": "The core help system depends on progress data, presence, and capabilities. These two features are tightly coupled and should be implemented together."
     },
     "phase_3_advanced": {
       "title": "Advanced Productivity",
       "estimated_effort": "4-6 hours",
-      "features": ["6a_work_stealing", "6b_pipeline_chaining", "6c_shared_scratchpad", "6f_load_balancing"],
+      "features": [
+        "6a_work_stealing",
+        "6b_pipeline_chaining",
+        "6c_shared_scratchpad",
+        "6f_load_balancing"
+      ],
       "rationale": "These build on the help system and add proactive optimization."
     },
     "phase_4_optional": {
       "title": "Optional Enhancements",
       "estimated_effort": "2-4 hours",
-      "features": ["6d_priority_escalation", "6e_team_merge_split"],
+      "features": [
+        "6d_priority_escalation",
+        "6e_team_merge_split"
+      ],
       "rationale": "These are nice-to-have features that add flexibility but are not required for basic multi-team coordination."
     }
   },
-
   "bus_py_modifications": {
     "description": "Modifications needed to the core bus.py module",
     "changes": [
@@ -994,7 +1047,6 @@
       }
     ]
   },
-
   "state_py_modifications": {
     "description": "New tables to add to state.py _SCHEMA",
     "all_new_tables": [
@@ -1016,7 +1068,6 @@
     "total_new_tables": 14,
     "migration_approach": "Add all CREATE TABLE IF NOT EXISTS statements to _SCHEMA in state.py. Since SQLite supports IF NOT EXISTS, this is safe to run against existing databases."
   },
-
   "bus_cli_py_modifications": {
     "description": "New CLI commands to add to bus_cli.py",
     "new_commands_summary": [
@@ -1046,22 +1097,47 @@
     ],
     "total_new_commands": 23
   },
-
   "new_bus_channels": {
     "description": "New JSONL channel files that will be created",
     "channels": [
-      {"name": "topic-help", "purpose": "Help requests, offers, accepts, rejects, and work completion"},
-      {"name": "topic-coordination", "purpose": "Work splitting, redistribution, team merge/split"},
-      {"name": "topic-progress", "purpose": "Team progress updates"},
-      {"name": "topic-channels", "purpose": "Direct channel lifecycle (open, accept, close)"},
-      {"name": "topic-presence", "purpose": "Team availability broadcasting"},
-      {"name": "topic-capabilities", "purpose": "Capability registration and queries"},
-      {"name": "topic-pipelines", "purpose": "Pipeline stage definitions and completions"},
-      {"name": "topic-work-stealing", "purpose": "Work stealing claims and grants"},
-      {"name": "direct-{team_a}-to-{team_b}", "purpose": "Dynamic direct channels between teams"}
+      {
+        "name": "topic-help",
+        "purpose": "Help requests, offers, accepts, rejects, and work completion"
+      },
+      {
+        "name": "topic-coordination",
+        "purpose": "Work splitting, redistribution, team merge/split"
+      },
+      {
+        "name": "topic-progress",
+        "purpose": "Team progress updates"
+      },
+      {
+        "name": "topic-channels",
+        "purpose": "Direct channel lifecycle (open, accept, close)"
+      },
+      {
+        "name": "topic-presence",
+        "purpose": "Team availability broadcasting"
+      },
+      {
+        "name": "topic-capabilities",
+        "purpose": "Capability registration and queries"
+      },
+      {
+        "name": "topic-pipelines",
+        "purpose": "Pipeline stage definitions and completions"
+      },
+      {
+        "name": "topic-work-stealing",
+        "purpose": "Work stealing claims and grants"
+      },
+      {
+        "name": "direct-{team_a}-to-{team_b}",
+        "purpose": "Dynamic direct channels between teams"
+      }
     ]
   },
-
   "testing_recommendations": {
     "unit_tests": [
       "Test capability matching algorithm with various overlap scenarios",
@@ -1085,7 +1161,6 @@
       "SQLite contention with 18 agents updating team_progress"
     ]
   },
-
   "risk_analysis": {
     "risks": [
       {
@@ -1109,5 +1184,6 @@
         "mitigation": "Coordinator detects stale presence (last_seen > 120s) via existing dead_agent detection. Auto-mark offline."
       }
     ]
-  }
+  },
+  "date": "2026-03-11T04:00:00"
 }

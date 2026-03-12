@@ -1,13 +1,19 @@
 {
   "version": "1.0",
-  "created": "2026-03-11",
   "team": "think-tank-sops",
   "description": "Standard Operating Procedures for all Proto A coordination tools. These SOPs are designed for AI teams who have never seen this codebase before.",
   "architecture_overview": {
     "communication_layer": "JSONL append-only message bus (files in storage/coordination/bus/). Each channel is a .jsonl file. Messages are JSON objects with id, type, channel, team, agent_id, ts, ttl, body fields. POSIX atomic writes guarantee message integrity for payloads under 4096 bytes.",
     "state_layer": "SQLite database in WAL mode (storage/coordination/db/state.db). Provides agent registry, rate limiting, phase signals, findings, and proposals. All concurrent writes use BEGIN IMMEDIATE transactions with retry-on-busy decorators.",
     "coordination_layer": "Three orthogonal modules: help_protocol.py (who needs help), direct_channels.py (how to communicate), work_stealing.py (what work to do). Each uses both the bus and SQLite.",
-    "valid_message_types": ["info", "blocker", "phase-signal", "heartbeat", "request", "response"],
+    "valid_message_types": [
+      "info",
+      "blocker",
+      "phase-signal",
+      "heartbeat",
+      "request",
+      "response"
+    ],
     "key_paths": {
       "bus_dir": "storage/coordination/bus/",
       "db_path": "storage/coordination/db/state.db",
@@ -751,5 +757,6 @@
         }
       ]
     }
-  ]
+  ],
+  "date": "2026-03-11"
 }

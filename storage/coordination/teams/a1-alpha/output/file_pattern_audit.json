@@ -1,0 +1,626 @@
+{
+  "audit_metadata": {
+    "team": "A1-Alpha",
+    "date": "2026-03-11",
+    "scope": "Full repository file naming pattern audit",
+    "repo_root": "/home/user/Claude"
+  },
+  "directory_patterns": [
+    {
+      "path": "/",
+      "convention": "UPPER_CASE for root docs, kebab-case for dirs",
+      "files_count": 6,
+      "extensions": [".md", ".json", ".html"],
+      "prefixes": ["CLAUDE", "README", "REFERENCE", "REGISTRY"],
+      "inconsistencies": ["visualizer.html is lowercase while other root files are UPPER_CASE", "REGISTRY.json duplicates data from knowledge-base/index.json"]
+    },
+    {
+      "path": "/.claude",
+      "convention": "kebab-case",
+      "files_count": 2,
+      "extensions": [".json", ".sh"],
+      "prefixes": [],
+      "inconsistencies": []
+    },
+    {
+      "path": "/knowledge-base",
+      "convention": "kebab-case dir, UPPER_CASE files",
+      "files_count": 3,
+      "extensions": [".json", ".md"],
+      "prefixes": [".pointer"],
+      "inconsistencies": ["Hidden file .pointer.json uses dot-prefix convention unlike other metadata files"]
+    },
+    {
+      "path": "/knowledge-base/entries",
+      "convention": "PREFIX-NNNN (KB-0001 through KB-0031)",
+      "files_count": 32,
+      "extensions": [".md", ".gitkeep"],
+      "prefixes": ["KB-"],
+      "inconsistencies": ["KB-0011 is a gap/placeholder entry breaking the sequential numbering from TEAM mapping"]
+    },
+    {
+      "path": "/market-research",
+      "convention": "kebab-case",
+      "files_count": 1,
+      "extensions": [".md"],
+      "prefixes": [],
+      "inconsistencies": []
+    },
+    {
+      "path": "/market-research/methods",
+      "convention": "kebab-case",
+      "files_count": 5,
+      "extensions": [".md"],
+      "prefixes": [],
+      "inconsistencies": ["Method files (fundamental.md, technical.md) are single-word while directory is kebab-case"]
+    },
+    {
+      "path": "/market-research/methods/ai-quant-techniques",
+      "convention": "kebab-case",
+      "files_count": 1,
+      "extensions": [".json"],
+      "prefixes": [],
+      "inconsistencies": []
+    },
+    {
+      "path": "/market-research/methods/ai-quant-techniques/analysis",
+      "convention": "kebab-case",
+      "files_count": 2,
+      "extensions": [".json", ".md"],
+      "prefixes": [],
+      "inconsistencies": []
+    },
+    {
+      "path": "/market-research/methods/ai-quant-techniques/categories",
+      "convention": "kebab-case",
+      "files_count": 8,
+      "extensions": [".json"],
+      "prefixes": [],
+      "inconsistencies": []
+    },
+    {
+      "path": "/market-research/picks",
+      "convention": "UPPER_CASE for template",
+      "files_count": 3,
+      "extensions": [".gitkeep", ".md", ".json"],
+      "prefixes": ["TEMPLATE"],
+      "inconsistencies": []
+    },
+    {
+      "path": "/prototype",
+      "convention": "snake_case (Python)",
+      "files_count": 1,
+      "extensions": [".py"],
+      "prefixes": ["__init__"],
+      "inconsistencies": []
+    },
+    {
+      "path": "/prototype/agent_comm",
+      "convention": "snake_case (Python), UPPER_CASE docs",
+      "files_count": 5,
+      "extensions": [".py", ".md"],
+      "prefixes": ["PRODUCTION"],
+      "inconsistencies": ["Directory name agent_comm uses snake_case but sibling agent_comm_b also uses snake_case (consistent)"]
+    },
+    {
+      "path": "/prototype/agent_comm_b",
+      "convention": "snake_case (Python), UPPER_CASE docs",
+      "files_count": 5,
+      "extensions": [".py", ".md"],
+      "prefixes": ["ARCHIVED"],
+      "inconsistencies": []
+    },
+    {
+      "path": "/prototype/tests",
+      "convention": "MIXED: snake_case for .py, kebab-case for .md, snake_case for .json",
+      "files_count": 16,
+      "extensions": [".py", ".md", ".json"],
+      "prefixes": ["test_", "live_test_", "proto_", "think-tank-", "live-test-"],
+      "inconsistencies": [
+        "live-test-team-plan.md uses kebab-case but live_test_baseline.py uses snake_case",
+        "think-tank-alpha-plan.md uses kebab-case but think_tank_efficiency.py uses snake_case",
+        "JSON files mix: benchmark_results.json (snake) vs think-tank-efficiency-report.json (kebab)",
+        "proto_b_bug_report.md uses snake_case but should be kebab for .md or consistent",
+        "stress_deep_report.md uses snake_case for a .md file"
+      ]
+    },
+    {
+      "path": "/storage",
+      "convention": "UPPER_CASE for docs, kebab-case for data",
+      "files_count": 3,
+      "extensions": [".md", ".json"],
+      "prefixes": ["CROSS_REFERENCES", "DIRECTIONS"],
+      "inconsistencies": ["CROSS_REFERENCES.md uses UPPER_SNAKE_CASE but cross-references.json uses kebab-case for the same concept"]
+    },
+    {
+      "path": "/storage/analysis",
+      "convention": "kebab-case",
+      "files_count": 3,
+      "extensions": [".md", ".json"],
+      "prefixes": ["cross-team-", "team-"],
+      "inconsistencies": []
+    },
+    {
+      "path": "/storage/api-tools",
+      "convention": "snake_case for .py, kebab-case for dirs",
+      "files_count": 3,
+      "extensions": [".gitkeep", ".md", ".json", ".py"],
+      "prefixes": [],
+      "inconsistencies": ["doc_parser.py uses snake_case but lives in kebab-case dir api-tools"]
+    },
+    {
+      "path": "/storage/api-tools/sonnet-research-api",
+      "convention": "snake_case (Python)",
+      "files_count": 7,
+      "extensions": [".py", ".md", ".gitignore"],
+      "prefixes": [],
+      "inconsistencies": ["Directory is kebab-case but all Python files are snake_case (acceptable cross-convention)"]
+    },
+    {
+      "path": "/storage/api-tools/sonnet-research-api/results",
+      "convention": "snake_case",
+      "files_count": 6,
+      "extensions": [".json", ".md", ".gitkeep"],
+      "prefixes": ["team1_", "team2_", "team3_", "team4_"],
+      "inconsistencies": ["final_report.md has no team prefix unlike other files"]
+    },
+    {
+      "path": "/storage/coordination",
+      "convention": "snake_case (Python)",
+      "files_count": 14,
+      "extensions": [".py", ".md", ".gitkeep", ".yaml", ".log"],
+      "prefixes": ["bus_", "sdk_", "coordinator_", "help_", "direct_", "work_", "think_", "multi_team_", "db_"],
+      "inconsistencies": [
+        "bug_report_coordination.md uses snake_case for .md file (should be kebab-case per repo convention)",
+        "sdk_migration_risks.md uses snake_case for .md file",
+        "team_templates.yaml uses snake_case",
+        "runner.log lacks date or version suffix"
+      ]
+    },
+    {
+      "path": "/storage/coordination/bus",
+      "convention": "kebab-case",
+      "files_count": 4,
+      "extensions": [".jsonl", ".gitkeep"],
+      "prefixes": [],
+      "inconsistencies": []
+    },
+    {
+      "path": "/storage/coordination/db",
+      "convention": "simple lowercase",
+      "files_count": 2,
+      "extensions": [".db", ".gitkeep"],
+      "prefixes": [],
+      "inconsistencies": []
+    },
+    {
+      "path": "/storage/coordination/hub",
+      "convention": "kebab-case",
+      "files_count": 19,
+      "extensions": [".json", ".db"],
+      "prefixes": ["assist-team-", "bug-report-", "efficiency-report-", "feature-proposals-", "infrastructure-", "unknown-bugs-report-"],
+      "inconsistencies": ["monitor.db has no prefix while all JSON files have semantic prefixes"]
+    },
+    {
+      "path": "/storage/coordination/research",
+      "convention": "snake_case",
+      "files_count": 5,
+      "extensions": [".md"],
+      "prefixes": [],
+      "inconsistencies": ["All .md files use snake_case (architecture_map.md, data_flow_map.md) instead of kebab-case"]
+    },
+    {
+      "path": "/storage/coordination/sops",
+      "convention": "snake_case with PREFIX-NNN",
+      "files_count": 20,
+      "extensions": [".json"],
+      "prefixes": ["sop_0"],
+      "inconsistencies": [
+        "efficiency_guide.json and future_team_data_strategy.json and tool_sops.json lack the sop_NNN_ prefix",
+        "SOP IDs in index (SOP-011 to SOP-028) don't match filenames (sop_011_ to sop_025_)",
+        "SOP-026 maps to efficiency_guide.json, SOP-027 to future_team_data_strategy.json, SOP-028 to tool_sops.json - no naming convention match"
+      ]
+    },
+    {
+      "path": "/storage/coordination/stress-tests",
+      "convention": "snake_case (Python)",
+      "files_count": 8,
+      "extensions": [".py"],
+      "prefixes": ["test_stress_"],
+      "inconsistencies": ["Directory name uses kebab-case (stress-tests) but files use snake_case (test_stress_*)"]
+    },
+    {
+      "path": "/storage/coordination/teams",
+      "convention": "MIXED: kebab-case dirs, snake_case files, kebab-case files",
+      "files_count": 17,
+      "extensions": [".py", ".json", ".md"],
+      "prefixes": ["findings_dg_", "sorted_archive_", "think-tank-", "thinktank_", "operations-plan-", "bug-monitor-", "multi_team_"],
+      "inconsistencies": [
+        "findings_dg_algo.md uses snake_case but think-tank-1-findings.md uses kebab-case",
+        "thinktank_obs1_recommendations.md uses snake_case without hyphen but think-tank-1-findings.md uses kebab-case with hyphen for same concept",
+        "sorted_archive_1.md uses snake_case but operations-plan-2026-03-11.md uses kebab-case",
+        "Team subdirs mix naming: alpha-1, beta-1 vs a1-alpha, b2-alpha vs think-tank-alpha, ops-logger, research-bugs"
+      ]
+    },
+    {
+      "path": "/storage/coordination/teams/*/output",
+      "convention": "snake_case",
+      "files_count": 20,
+      "extensions": [".json"],
+      "prefixes": [],
+      "inconsistencies": ["All output files use snake_case consistently (good)"]
+    },
+    {
+      "path": "/storage/coordination/tests",
+      "convention": "snake_case (Python)",
+      "files_count": 8,
+      "extensions": [".py"],
+      "prefixes": ["test_"],
+      "inconsistencies": []
+    },
+    {
+      "path": "/storage/mcp-server",
+      "convention": "kebab-case dir, lowercase files",
+      "files_count": 2,
+      "extensions": [".txt", ".py"],
+      "prefixes": [],
+      "inconsistencies": []
+    },
+    {
+      "path": "/storage/scripts",
+      "convention": "MIXED: kebab-case and snake_case",
+      "files_count": 33,
+      "extensions": [".py", ".md", ".json", ".js"],
+      "prefixes": ["stress-test-", "test-", "build-", "search-", "repair-", "validate-"],
+      "inconsistencies": [
+        "kebab-case scripts: build-cross-ref-index.py, search-storage.py, repair-storage.py, validate-storage.py, stress-test-*.py, test-*.py",
+        "snake_case scripts: algo_catalog.py, archive_formatter.py, bus_monitor.py, cross_ref_checker.py, cross_team_search.py, doc_fetcher.py, finding_dedup.py, grade_research.py, handoff_tracker.py, index_rebuilder.py, kb_search.py, kb_validator.py, merge_research.py, pattern_analyzer.py, practices_linter.py, quality_scorer.py, staleness_detector.py, version_tracker.py",
+        "Mix in same directory: build-cross-ref-index.py (kebab) vs cross_ref_checker.py (snake) for similar cross-ref concept",
+        "Reports: stress-test-read-report.md (kebab), cross-ref-improvement-report.md (kebab), integrity-test-report.md (kebab), stress-test-write-report.md (kebab) - reports consistently kebab",
+        "viz_*.js files use snake_case prefix but .js extension"
+      ]
+    },
+    {
+      "path": "/storage/scripts/data-gathering",
+      "convention": "snake_case (Python), kebab-case dir",
+      "files_count": 2,
+      "extensions": [".py", ".md"],
+      "prefixes": [],
+      "inconsistencies": ["benchmark_runner.py duplicated in data-gathering/ AND data-gathering/methods/"]
+    },
+    {
+      "path": "/storage/scripts/data-gathering/benchmarks",
+      "convention": "snake_case",
+      "files_count": 4,
+      "extensions": [".json"],
+      "prefixes": [],
+      "inconsistencies": ["Mix of naming: 20260310_210031_benchmark.json (timestamp prefix) vs results.json (generic) vs iteration2_results.json (version prefix) vs schema.json (generic)"]
+    },
+    {
+      "path": "/storage/scripts/data-gathering/methods",
+      "convention": "snake_case with method_ prefix",
+      "files_count": 14,
+      "extensions": [".py", ".json"],
+      "prefixes": ["method_"],
+      "inconsistencies": ["ddg_utils.py, dedup_utils.py, request_cache.py, test_utilities.py, benchmark_runner.py lack the method_ prefix (they are utilities, not methods - acceptable)"]
+    },
+    {
+      "path": "/storage/scripts/fast_cache",
+      "convention": "snake_case dir, lowercase files",
+      "files_count": 2,
+      "extensions": [".go", "binary"],
+      "prefixes": [],
+      "inconsistencies": ["Directory fast_cache uses snake_case but parent data-gathering uses kebab-case"]
+    },
+    {
+      "path": "/storage/scripts/fast_search",
+      "convention": "snake_case dir, lowercase files",
+      "files_count": 2,
+      "extensions": [".go", "binary"],
+      "prefixes": [],
+      "inconsistencies": []
+    },
+    {
+      "path": "/storage/scripts/fast_validate",
+      "convention": "snake_case dir, lowercase files",
+      "files_count": 2,
+      "extensions": [".go", "binary"],
+      "prefixes": [],
+      "inconsistencies": []
+    },
+    {
+      "path": "/storage/sources",
+      "convention": "PREFIX-NNNN-slug (SRC-0001-openalex)",
+      "files_count": 42,
+      "extensions": [".json", ".md"],
+      "prefixes": ["SRC-"],
+      "inconsistencies": [
+        "Gap in IDs: SRC-0008 to SRC-0012 (missing SRC-0009, SRC-0010, SRC-0011)",
+        "SRC-0018 and SRC-0039 both describe FRED API (duplicate source)"
+      ]
+    },
+    {
+      "path": "/teams",
+      "convention": "UPPER_CASE files, PREFIX-NNNN dirs",
+      "files_count": 6,
+      "extensions": [".md", ".json", ".py"],
+      "prefixes": ["TEAM-", "SOPs", "PROPOSAL-", "TEAM_LOG_TEMPLATE"],
+      "inconsistencies": [
+        "TEAM_LOG_TEMPLATE.md uses UPPER_SNAKE_CASE but other templates use UPPER_CASE (TEMPLATE.md)",
+        "TEAM-0022-config.json and TEAM-0022-pipeline.py are at top level but other team data is in sessions/",
+        "SOPs.md and SOPs-prototype-testing.md differ in casing style"
+      ]
+    },
+    {
+      "path": "/teams/TEAM-0022-comm",
+      "convention": "kebab-case",
+      "files_count": 6,
+      "extensions": [".jsonl", ".db"],
+      "prefixes": [],
+      "inconsistencies": ["This team has its own comm directory at /teams/ level while other teams use storage/coordination/teams/"]
+    },
+    {
+      "path": "/teams/TEAM-0022-comm/bus",
+      "convention": "kebab-case",
+      "files_count": 6,
+      "extensions": [".jsonl"],
+      "prefixes": [],
+      "inconsistencies": []
+    },
+    {
+      "path": "/teams/sessions",
+      "convention": "PREFIX-NNNN (TEAM-0001 through TEAM-0029)",
+      "files_count": 26,
+      "extensions": [".md", ".json", ".gitkeep"],
+      "prefixes": ["TEAM-"],
+      "inconsistencies": ["TEAM-0011.md is missing from the sequence (gap between 0010 and 0012)"]
+    }
+  ],
+  "index_formats": [
+    {
+      "path": "knowledge-base/index.json",
+      "schema_fields": ["version", "last_updated", "entry_count", "entries[].{id,title,date,team,category,tags,status,confidence,builds_on}", "categories", "tag_index"],
+      "entry_count": 31,
+      "approx_tokens": 6093,
+      "divergences": ["Has tag_index and categories as reverse lookup maps", "Uses 'entry_count' at top level", "entries[].status and entries[].confidence are unique to this index"]
+    },
+    {
+      "path": "storage/api-tools/index.json",
+      "schema_fields": ["version", "last_updated", "tools[].{id,name,description,path,category,auth_type,date_added,team,modules,entry_point,requires,tags,added,last_used,usage_count}", "categories", "auth_types"],
+      "entry_count": 2,
+      "approx_tokens": 523,
+      "divergences": ["Uses 'tools' as array key (not 'entries')", "Has auth_types reverse index unique to this index", "Has both date_added and added fields (redundant)", "Unique fields: modules, entry_point, requires, auth_type, last_used, usage_count"]
+    },
+    {
+      "path": "storage/scripts/index.json",
+      "schema_fields": ["version", "last_updated", "scripts[].{id,name,filename,language,category,description,dependencies,added,added_by_team}", "categories", "language_index"],
+      "entry_count": 50,
+      "approx_tokens": 6684,
+      "divergences": ["Uses 'scripts' as array key", "Has language_index unique to this index", "Uses 'added_by_team' instead of 'team'", "Uses 'filename' instead of 'path'", "ID prefix SCR- vs TOOL- in api-tools", "SCR-0029 through SCR-0033 use relative paths (../) pointing outside scripts dir"]
+    },
+    {
+      "path": "storage/sources/index.json",
+      "schema_fields": ["version", "last_updated", "source_count", "sources[].{id,name,url,data_types,access_type}", "by_data_type", "by_access_type"],
+      "entry_count": 41,
+      "approx_tokens": 6936,
+      "divergences": ["Uses 'sources' as array key", "Uses 'source_count' instead of 'entry_count'", "Has by_data_type and by_access_type as reverse lookups", "Source entries in index have fewer fields than TEMPLATE.json (missing auth_method, rate_limits, response_format, reliability, last_verified, notes, added_by_team)"]
+    },
+    {
+      "path": "market-research/picks/index.json",
+      "schema_fields": ["version", "last_updated", "total_picks", "picks", "by_method", "by_status", "performance_summary.{total_picks,win_rate,avg_return}"],
+      "entry_count": 0,
+      "approx_tokens": 100,
+      "divergences": ["Uses 'total_picks' instead of 'entry_count'", "Has performance_summary (unique to picks)", "Has by_method and by_status groupings", "Empty - no picks recorded yet"]
+    },
+    {
+      "path": "market-research/methods/ai-quant-techniques/index.json",
+      "schema_fields": ["name", "version", "created", "last_updated", "description", "final_report", "categories[].{id,name,file,technique_count,description,populated_by,verified}", "research_files", "analysis_files", "contributing_teams[].{id,role,grade,score,findings}", "total_techniques", "total_references", "total_tools", "methodology"],
+      "entry_count": 8,
+      "approx_tokens": 1310,
+      "divergences": ["Completely different schema - no version/entries pattern", "Uses semantic versioning (2.0.0) instead of simple (1.0)", "Has contributing_teams with grades and scores", "Has research_files and analysis_files mappings", "Contains relative paths with ../ traversal"]
+    },
+    {
+      "path": "storage/coordination/sops/index.json",
+      "schema_fields": ["version", "last_updated", "sop_count", "sops[].{id,title,filename,version,status,description,superseded_by}"],
+      "entry_count": 20,
+      "approx_tokens": 1802,
+      "divergences": ["Uses 'sops' as array key and 'sop_count'", "Has superseded_by field for version management", "Duplicate IDs: SOP-012 appears twice (v1 superseded, v2 active)", "Duplicate IDs: SOP-016 appears twice (same pattern)", "IDs SOP-026 through SOP-028 map to files without the sop_NNN_ prefix convention"]
+    },
+    {
+      "path": "teams/sessions/index.json",
+      "schema_fields": ["version", "last_updated", "session_count", "sessions[].{team_id,filename,date,objective,builds_on_knowledge,members}"],
+      "entry_count": 29,
+      "approx_tokens": 3530,
+      "divergences": ["Uses 'sessions' and 'session_count'", "Has members array (unique to this index)", "No categories or tag_index reverse lookups", "TEAM-0011 listed in index but no TEAM-0011.md file exists in sessions/", "TEAM-0020 objective describes SDK launcher but session TEAM-0020 is about live prototype testing"]
+    },
+    {
+      "path": "storage/scripts/data-gathering/methods/index.json",
+      "schema_fields": ["version", "last_updated", "verified_by", "updated_by", "methods[].{id,name,file,description,category,data_sources,requires_api_key,avg_duration_seconds,status,created,verification,iteration,iteration2_benchmark,improvements,updated}", "utilities[].{name,file,description,created,iteration}", "categories"],
+      "entry_count": 9,
+      "approx_tokens": 1880,
+      "divergences": ["Uses 'methods' as array key", "Has 'utilities' separate array for non-method files", "ID prefix DG- (unique)", "Has verified_by and updated_by at top level", "Has iteration/benchmark performance data inline", "Much more detailed per-entry metadata than other indexes"]
+    },
+    {
+      "path": "REGISTRY.json",
+      "schema_fields": ["schema", "generated", "total_entries", "pointer_files[].{path,prefix,entry_count,next_id}", "global_tag_index", "id_to_pointer_file"],
+      "entry_count": 31,
+      "approx_tokens": 2374,
+      "divergences": ["Meta-index pointing to pointer files", "Uses 'schema' instead of 'version'", "Has 'generated' timestamp instead of 'last_updated'", "Contains id_to_pointer_file mapping", "Duplicates tag_index from knowledge-base/index.json"]
+    }
+  ],
+  "templates": [
+    {
+      "path": "knowledge-base/TEMPLATE.md",
+      "required_fields": ["id", "date", "team", "role", "category", "tags", "status", "confidence", "builds_on"],
+      "sections": ["Context", "Method", "Result", "Lessons Learned", "Recommendations"],
+      "boilerplate_ratio": 0.65,
+      "notes": "YAML frontmatter + Markdown body. 9 frontmatter fields, 5 body sections."
+    },
+    {
+      "path": "market-research/picks/TEMPLATE.md",
+      "required_fields": ["pick_id", "date", "team", "ticker", "company", "direction", "method", "entry_price", "target_price", "stop_loss", "timeframe", "confidence", "status", "builds_on"],
+      "sections": ["Thesis", "Analysis", "Analysis/Method Applied", "Analysis/Key Metrics / Signals", "Analysis/Risk Factors", "Exit Criteria", "Outcome", "Outcome/Actual Return", "Outcome/What Worked", "Outcome/What Didn't", "Outcome/Knowledge Entry"],
+      "boilerplate_ratio": 0.75,
+      "notes": "Most fields of any template. 14 frontmatter fields. Nested subsections. Has pre/post-trade sections."
+    },
+    {
+      "path": "storage/sources/TEMPLATE.json",
+      "required_fields": ["id", "name", "url", "api_docs_url", "data_types", "access_type", "auth_method", "rate_limits", "response_format", "reliability", "last_verified", "notes", "added_by_team"],
+      "sections": [],
+      "boilerplate_ratio": 0.80,
+      "notes": "JSON format (not Markdown). 13 fields. Actual source entries in index.json only have 4-5 of these fields (id, name, url, data_types, access_type) - template is much richer than what gets indexed."
+    },
+    {
+      "path": "teams/TEAM_LOG_TEMPLATE.md",
+      "required_fields": ["team_id", "date", "members", "objective", "parent_team", "builds_on_knowledge"],
+      "sections": ["Objective", "Approach", "Decisions Made", "Knowledge Generated", "Handoff Notes"],
+      "boilerplate_ratio": 0.70,
+      "notes": "YAML frontmatter + Markdown body. 6 frontmatter fields, 5 body sections. Uses TEAM_LOG_ prefix instead of just TEMPLATE."
+    }
+  ],
+  "naming_inconsistencies": [
+    {
+      "type": "mixed_case_convention_in_directory",
+      "examples": [
+        "storage/scripts/: build-cross-ref-index.py (kebab) vs cross_ref_checker.py (snake) - 18 snake_case files and 15 kebab-case files",
+        "prototype/tests/: live_test_baseline.py (snake) vs live-test-team-plan.md (kebab)",
+        "storage/coordination/teams/: findings_dg_algo.md (snake) vs think-tank-1-findings.md (kebab)",
+        "storage/coordination/: bug_report_coordination.md (snake) vs all .py files (snake) - .md should be kebab per repo convention"
+      ],
+      "severity": "high",
+      "recommendation": "Establish rule: .py files use snake_case, .md files use kebab-case, .json data files use kebab-case. This is already the dominant pattern but not enforced."
+    },
+    {
+      "type": "same_concept_different_names",
+      "examples": [
+        "'entries' vs 'tools' vs 'scripts' vs 'sources' vs 'sops' vs 'sessions' vs 'methods' vs 'picks' as the array key in index.json files",
+        "'entry_count' vs 'source_count' vs 'sop_count' vs 'session_count' vs 'total_picks' as the count field",
+        "'team' vs 'added_by_team' vs 'populated_by' for recording which team created an entry",
+        "'version' vs 'schema' at top level of index files",
+        "'last_updated' vs 'generated' for timestamp field",
+        "'path' vs 'filename' vs 'file' for file references in entries",
+        "CROSS_REFERENCES.md vs cross-references.json for the same concept",
+        "thinktank_ vs think-tank- for think tank naming in teams/"
+      ],
+      "severity": "high",
+      "recommendation": "Standardize index schema: use 'items' or type-specific plural as array key, 'count' as count field, 'team' for attribution, 'version' for schema version, 'last_updated' for timestamps, 'file' for file references."
+    },
+    {
+      "type": "id_prefix_inconsistency",
+      "examples": [
+        "KB-NNNN for knowledge base (4-digit zero-padded)",
+        "TEAM-NNNN for team sessions (4-digit zero-padded)",
+        "SRC-NNNN for sources (4-digit zero-padded)",
+        "SCR-NNNN for scripts (4-digit zero-padded)",
+        "TOOL-NNNN for API tools (4-digit zero-padded)",
+        "SOP-NNN for SOPs (3-digit, NOT zero-padded consistently)",
+        "DG-NNNN for data gathering methods (4-digit zero-padded)",
+        "PICK-XXXX for picks (template only)",
+        "SOP IDs start at 011 instead of 001"
+      ],
+      "severity": "medium",
+      "recommendation": "Standardize all IDs to PREFIX-NNNN (4-digit zero-padded). Renumber SOPs to start from SOP-0001."
+    },
+    {
+      "type": "directory_case_mixing",
+      "examples": [
+        "snake_case dirs: agent_comm, agent_comm_b, fast_cache, fast_search, fast_validate",
+        "kebab-case dirs: api-tools, data-gathering, mcp-server, sonnet-research-api, stress-tests, ai-quant-techniques",
+        "Mixed convention dirs in same parent: storage/coordination/stress-tests (kebab) vs storage/coordination/tests (no hyphen) vs storage/coordination/bus (no hyphen)",
+        "Team dirs use multiple conventions: alpha-1, a1-alpha, think-tank-alpha, ops-logger, research-bugs, session-20260311-165259"
+      ],
+      "severity": "medium",
+      "recommendation": "Standardize all directories to kebab-case. Python package dirs (with __init__.py) may use snake_case per Python convention."
+    },
+    {
+      "type": "template_naming_inconsistency",
+      "examples": [
+        "knowledge-base/TEMPLATE.md (UPPER_CASE)",
+        "market-research/picks/TEMPLATE.md (UPPER_CASE)",
+        "storage/sources/TEMPLATE.json (UPPER_CASE)",
+        "teams/TEAM_LOG_TEMPLATE.md (UPPER_SNAKE_CASE with prefix)"
+      ],
+      "severity": "low",
+      "recommendation": "Rename teams/TEAM_LOG_TEMPLATE.md to teams/TEMPLATE.md for consistency."
+    },
+    {
+      "type": "sop_filename_id_mismatch",
+      "examples": [
+        "SOP-026 maps to efficiency_guide.json (no sop_ prefix)",
+        "SOP-027 maps to future_team_data_strategy.json (no sop_ prefix)",
+        "SOP-028 maps to tool_sops.json (no sop_ prefix)",
+        "SOP-012 and SOP-016 have duplicate IDs in the index (v1 and v2 share same ID)"
+      ],
+      "severity": "high",
+      "recommendation": "Rename efficiency_guide.json to sop_026_efficiency_patterns.json, future_team_data_strategy.json to sop_027_future_team_data_strategy.json, tool_sops.json to sop_028_tool_sops.json. Use unique IDs for versioned SOPs (SOP-012a/SOP-012b or SOP-012-v1/SOP-012-v2)."
+    },
+    {
+      "type": "data_duplication",
+      "examples": [
+        "REGISTRY.json global_tag_index duplicates knowledge-base/index.json tag_index",
+        "SRC-0018 and SRC-0039 both describe FRED API",
+        "KB-0012 and KB-0013 have identical titles ('Free Public APIs for Government and Open Data')",
+        "storage/scripts/data-gathering/benchmark_runner.py duplicated at storage/scripts/data-gathering/methods/benchmark_runner.py",
+        "SCR-0029 through SCR-0033 in scripts/index.json point to files in coordination/ via relative paths"
+      ],
+      "severity": "medium",
+      "recommendation": "Deduplicate FRED entries. Resolve KB-0012/0013 duplicate. Remove benchmark_runner.py duplication. Move coordination scripts to proper index or remove cross-references."
+    },
+    {
+      "type": "orphan_or_missing_files",
+      "examples": [
+        "TEAM-0011.md referenced in index but does not exist in sessions/",
+        "storage/coordination/teams/ has many empty subdirs (a1-beta, b2-alpha, b2-beta, session-20260311-165259)",
+        "No index.json for storage/coordination/teams/ despite having many output files",
+        "__pycache__ directories committed to repo (prototype/, storage/api-tools/, storage/coordination/, storage/scripts/)"
+      ],
+      "severity": "medium",
+      "recommendation": "Add TEAM-0011.md or remove from index. Clean empty team dirs. Add .gitignore for __pycache__. Consider adding index for coordination/teams/ outputs."
+    },
+    {
+      "type": "deeply_nested_paths",
+      "examples": [
+        "storage/coordination/teams/think-tank-bugs/output/direct_channels_bugs.json (6 levels deep)",
+        "storage/api-tools/sonnet-research-api/results/team1_research.json (5 levels deep)",
+        "market-research/methods/ai-quant-techniques/categories/ml-trading.json (5 levels deep)",
+        "storage/scripts/data-gathering/methods/method_websearch.py (5 levels deep)"
+      ],
+      "severity": "low",
+      "recommendation": "Current nesting depth (max 6) is manageable but approaching the limit. Avoid adding more nesting levels."
+    }
+  ],
+  "summary": {
+    "total_files": 295,
+    "total_dirs": 75,
+    "conventions_used": {
+      "snake_case": "Dominant for .py files and Go tool directories",
+      "kebab-case": "Dominant for .md files, .json data files, and top-level directories",
+      "UPPER_CASE": "Used for root documentation and TEMPLATE files",
+      "PREFIX-NNNN": "Used for sequenced entries (KB, TEAM, SRC, SCR, TOOL, SOP, DG, PICK)",
+      "UPPER_SNAKE_CASE": "Rare, used inconsistently (CROSS_REFERENCES.md, TEAM_LOG_TEMPLATE.md)"
+    },
+    "most_common_convention": "snake_case (Python files dominate the repo)",
+    "index_files_count": 10,
+    "total_index_tokens": 31232,
+    "template_files_count": 4,
+    "worst_inconsistencies": [
+      "storage/scripts/ mixes kebab-case and snake_case filenames freely (33 files, ~50/50 split)",
+      "Every index.json has a different schema - no shared structure for array key, count field, or attribution",
+      "SOP filenames don't match SOP IDs for entries 026-028",
+      "storage/coordination/teams/ files use at least 3 naming conventions simultaneously",
+      "CROSS_REFERENCES.md (UPPER_SNAKE) vs cross-references.json (kebab) for same concept in same directory",
+      "Duplicate data: KB-0012/KB-0013 identical titles, SRC-0018/SRC-0039 same API, REGISTRY.json duplicates KB tag_index",
+      "__pycache__ directories checked into version control"
+    ],
+    "recommendations_priority": [
+      "P0: Standardize index.json schema across all resource types (unified field names)",
+      "P0: Fix SOP filename/ID mismatches",
+      "P1: Enforce naming convention per file type (.py=snake, .md=kebab, .json=kebab, dirs=kebab)",
+      "P1: Deduplicate KB-0012/0013 and SRC-0018/0039",
+      "P1: Add __pycache__ to .gitignore",
+      "P2: Standardize ID prefixes to 4-digit zero-padded",
+      "P2: Clean up empty team directories",
+      "P3: Rename TEAM_LOG_TEMPLATE.md to TEMPLATE.md"
+    ]
+  }
+}

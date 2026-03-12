@@ -177,11 +177,23 @@ class SharedState:
 
     # ------------------------------------------------------------------
     # Rate limiting  (RC-4 fix: BEGIN IMMEDIATE to prevent TOCTOU)
+    #
+    # DEPRECATED: This global rate limiter counts ALL agents' calls against
+    # a single shared limit per endpoint, causing a 64.6% denial rate when
+    # multiple agents hit the same endpoint concurrently. Use the per-agent
+    # rate limiter in rate_limiter.py (RateLimiter.check_and_reserve) instead.
     # ------------------------------------------------------------------
 
     @_retry_on_busy
     def reserve_api_call(self, api_endpoint: str, agent_id: str) -> bool:
-        """Atomically check + reserve an API call slot. Returns True if allowed."""
+        """Atomically check + reserve an API call slot. Returns True if allowed.
+
+        .. deprecated::
+            This method uses a global (not per-agent) call count, which causes
+            excessive denials under concurrent load. Use
+            ``rate_limiter.RateLimiter.check_and_reserve()`` instead, which
+            tracks calls per-agent per-endpoint.
+        """
         # We use raw connection.execute to control transaction boundaries.
         conn = self._conn
         with self._lock:

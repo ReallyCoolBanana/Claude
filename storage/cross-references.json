@@ -1,6 +1,5 @@
 {
   "version": "2.0",
-  "generated": "2026-03-10",
   "description": "Cross-reference index linking scripts (SCR) to data sources (SRC). TOOL entries removed as no actual tool files exist (api-tools only contains sonnet-research-api).",
   "summary": {
     "total_scripts": 28,
@@ -63,47 +62,74 @@
     "script_to_script_dependencies": [
       {
         "script_id": "SCR-0009",
-        "depends_on": ["SCR-0006", "SCR-0007", "SCR-0008"],
+        "depends_on": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008"
+        ],
         "detail": "method_hybrid.py aggregates websearch, wikipedia, and arxiv methods"
       },
       {
         "script_id": "SCR-0011",
-        "depends_on": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010"],
+        "depends_on": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010"
+        ],
         "detail": "benchmark_runner.py runs all data gathering methods"
       },
       {
         "script_id": "SCR-0020",
-        "depends_on": ["SCR-0012", "SCR-0014", "SCR-0019"],
+        "depends_on": [
+          "SCR-0012",
+          "SCR-0014",
+          "SCR-0019"
+        ],
         "detail": "staleness_detector.py uses kb_validator, cross_ref_checker, and handoff_tracker"
       },
       {
         "script_id": "SCR-0023",
-        "depends_on": ["SCR-0022"],
+        "depends_on": [
+          "SCR-0022"
+        ],
         "detail": "method_openalex.py uses request_cache"
       },
       {
         "script_id": "SCR-0024",
-        "depends_on": ["SCR-0022"],
+        "depends_on": [
+          "SCR-0022"
+        ],
         "detail": "method_hackernews.py uses request_cache"
       },
       {
         "script_id": "SCR-0025",
-        "depends_on": ["SCR-0021", "SCR-0022"],
+        "depends_on": [
+          "SCR-0021",
+          "SCR-0022"
+        ],
         "detail": "method_guardian.py uses ddg_utils (fallback) and request_cache"
       },
       {
         "script_id": "SCR-0026",
-        "depends_on": ["SCR-0022"],
+        "depends_on": [
+          "SCR-0022"
+        ],
         "detail": "method_semantic_scholar.py uses request_cache"
       },
       {
         "script_id": "SCR-0027",
-        "depends_on": ["SCR-0022"],
+        "depends_on": [
+          "SCR-0022"
+        ],
         "detail": "method_wikidata.py uses request_cache"
       },
       {
         "script_id": "SCR-0028",
-        "depends_on": ["SCR-0022"],
+        "depends_on": [
+          "SCR-0022"
+        ],
         "detail": "method_github.py uses request_cache"
       }
     ],
@@ -176,46 +202,77 @@
       "type": "script",
       "category": "data-collection",
       "uses_sources": [],
-      "external_services": ["DuckDuckGo"],
-      "used_by": ["SCR-0009", "SCR-0011"]
+      "external_services": [
+        "DuckDuckGo"
+      ],
+      "used_by": [
+        "SCR-0009",
+        "SCR-0011"
+      ]
     },
     "SCR-0007": {
       "name": "data-gathering-wikipedia",
       "type": "script",
       "category": "data-collection",
-      "uses_sources": ["SRC-0035"],
-      "used_by": ["SCR-0009", "SCR-0011"]
+      "uses_sources": [
+        "SRC-0035"
+      ],
+      "used_by": [
+        "SCR-0009",
+        "SCR-0011"
+      ]
     },
     "SCR-0008": {
       "name": "data-gathering-arxiv",
       "type": "script",
       "category": "data-collection",
       "uses_sources": [],
-      "external_services": ["arXiv"],
-      "used_by": ["SCR-0009", "SCR-0011"]
+      "external_services": [
+        "arXiv"
+      ],
+      "used_by": [
+        "SCR-0009",
+        "SCR-0011"
+      ]
     },
     "SCR-0009": {
       "name": "data-gathering-hybrid",
       "type": "script",
       "category": "data-collection",
       "uses_sources": [],
-      "depends_on_scripts": ["SCR-0006", "SCR-0007", "SCR-0008"],
-      "used_by": ["SCR-0011"]
+      "depends_on_scripts": [
+        "SCR-0006",
+        "SCR-0007",
+        "SCR-0008"
+      ],
+      "used_by": [
+        "SCR-0011"
+      ]
     },
     "SCR-0010": {
       "name": "data-gathering-iterative",
       "type": "script",
       "category": "data-collection",
       "uses_sources": [],
-      "external_services": ["DuckDuckGo"],
-      "used_by": ["SCR-0011"]
+      "external_services": [
+        "DuckDuckGo"
+      ],
+      "used_by": [
+        "SCR-0011"
+      ]
     },
     "SCR-0011": {
       "name": "data-gathering-benchmark",
       "type": "script",
       "category": "analysis",
       "uses_sources": [],
-      "depends_on_scripts": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010"],
+      "depends_on_scripts": [
+        "SCR-0006",
+        "SCR-0007",
+        "SCR-0008",
+        "SCR-0009",
+        "SCR-0010"
+      ],
       "used_by": []
     },
     "SCR-0012": {
@@ -223,7 +280,9 @@
       "type": "script",
       "category": "utility",
       "uses_sources": [],
-      "used_by": ["SCR-0020"]
+      "used_by": [
+        "SCR-0020"
+      ]
     },
     "SCR-0013": {
       "name": "index-rebuilder",
@@ -237,7 +296,9 @@
       "type": "script",
       "category": "utility",
       "uses_sources": [],
-      "used_by": ["SCR-0020"]
+      "used_by": [
+        "SCR-0020"
+      ]
     },
     "SCR-0015": {
       "name": "fast-search",
@@ -272,14 +333,20 @@
       "type": "script",
       "category": "utility",
       "uses_sources": [],
-      "used_by": ["SCR-0020"]
+      "used_by": [
+        "SCR-0020"
+      ]
     },
     "SCR-0020": {
       "name": "staleness-detector",
       "type": "script",
       "category": "utility",
       "uses_sources": [],
-      "depends_on_scripts": ["SCR-0012", "SCR-0014", "SCR-0019"],
+      "depends_on_scripts": [
+        "SCR-0012",
+        "SCR-0014",
+        "SCR-0019"
+      ],
       "used_by": []
     },
     "SCR-0021": {
@@ -287,293 +354,460 @@
       "type": "script",
       "category": "data-collection",
       "uses_sources": [],
-      "external_services": ["DuckDuckGo"],
-      "used_by": ["SCR-0025"]
+      "external_services": [
+        "DuckDuckGo"
+      ],
+      "used_by": [
+        "SCR-0025"
+      ]
     },
     "SCR-0022": {
       "name": "request-cache",
       "type": "script",
       "category": "data-collection",
       "uses_sources": [],
-      "used_by": ["SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028"]
+      "used_by": [
+        "SCR-0023",
+        "SCR-0024",
+        "SCR-0025",
+        "SCR-0026",
+        "SCR-0027",
+        "SCR-0028"
+      ]
     },
     "SCR-0023": {
       "name": "data-gathering-openalex",
       "type": "script",
       "category": "data-collection",
-      "uses_sources": ["SRC-0012"],
-      "depends_on_scripts": ["SCR-0022"],
+      "uses_sources": [
+        "SRC-0012"
+      ],
+      "depends_on_scripts": [
+        "SCR-0022"
+      ],
       "used_by": []
     },
     "SCR-0024": {
       "name": "data-gathering-hackernews",
       "type": "script",
       "category": "data-collection",
-      "uses_sources": ["SRC-0011"],
-      "depends_on_scripts": ["SCR-0022"],
+      "uses_sources": [
+        "SRC-0011"
+      ],
+      "depends_on_scripts": [
+        "SCR-0022"
+      ],
       "used_by": []
     },
     "SCR-0025": {
       "name": "data-gathering-guardian",
       "type": "script",
       "category": "data-collection",
-      "uses_sources": ["SRC-0010"],
-      "depends_on_scripts": ["SCR-0021", "SCR-0022"],
-      "external_services": ["DuckDuckGo"],
+      "uses_sources": [
+        "SRC-0010"
+      ],
+      "depends_on_scripts": [
+        "SCR-0021",
+        "SCR-0022"
+      ],
+      "external_services": [
+        "DuckDuckGo"
+      ],
       "used_by": []
     },
     "SCR-0026": {
       "name": "data-gathering-semantic-scholar",
       "type": "script",
       "category": "data-collection",
-      "uses_sources": ["SRC-0013"],
-      "depends_on_scripts": ["SCR-0022"],
+      "uses_sources": [
+        "SRC-0013"
+      ],
+      "depends_on_scripts": [
+        "SCR-0022"
+      ],
       "used_by": []
     },
     "SCR-0027": {
       "name": "data-gathering-wikidata",
       "type": "script",
       "category": "data-collection",
-      "uses_sources": ["SRC-0014"],
-      "depends_on_scripts": ["SCR-0022"],
+      "uses_sources": [
+        "SRC-0014"
+      ],
+      "depends_on_scripts": [
+        "SCR-0022"
+      ],
       "used_by": []
     },
     "SCR-0028": {
       "name": "data-gathering-github",
       "type": "script",
       "category": "data-collection",
-      "uses_sources": ["SRC-0025"],
-      "depends_on_scripts": ["SCR-0022"],
+      "uses_sources": [
+        "SRC-0025"
+      ],
+      "depends_on_scripts": [
+        "SCR-0022"
+      ],
       "used_by": []
     },
     "SRC-0001": {
       "name": "Alpha Vantage",
       "type": "source",
-      "data_types": ["financial"],
+      "data_types": [
+        "financial"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0002": {
       "name": "Yahoo Finance",
       "type": "source",
-      "data_types": ["financial"],
+      "data_types": [
+        "financial"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0003": {
       "name": "FRED",
       "type": "source",
-      "data_types": ["financial", "government"],
+      "data_types": [
+        "financial",
+        "government"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0004": {
       "name": "CoinGecko",
       "type": "source",
-      "data_types": ["financial"],
+      "data_types": [
+        "financial"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0005": {
       "name": "Twelve Data",
       "type": "source",
-      "data_types": ["financial"],
+      "data_types": [
+        "financial"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0006": {
       "name": "Exchange Rates",
       "type": "source",
-      "data_types": ["financial"],
+      "data_types": [
+        "financial"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0007": {
       "name": "Finnhub",
       "type": "source",
-      "data_types": ["financial"],
+      "data_types": [
+        "financial"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0008": {
       "name": "NewsAPI",
       "type": "source",
-      "data_types": ["news"],
+      "data_types": [
+        "news"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0009": {
       "name": "GNews",
       "type": "source",
-      "data_types": ["news"],
+      "data_types": [
+        "news"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0010": {
       "name": "The Guardian",
       "type": "source",
-      "data_types": ["news"],
-      "consumed_by_scripts": ["SCR-0025"]
+      "data_types": [
+        "news"
+      ],
+      "consumed_by_scripts": [
+        "SCR-0025"
+      ]
     },
     "SRC-0011": {
       "name": "Hacker News",
       "type": "source",
-      "data_types": ["news", "general"],
-      "consumed_by_scripts": ["SCR-0024"]
+      "data_types": [
+        "news",
+        "general"
+      ],
+      "consumed_by_scripts": [
+        "SCR-0024"
+      ]
     },
     "SRC-0012": {
       "name": "OpenAlex",
       "type": "source",
-      "data_types": ["scientific"],
-      "consumed_by_scripts": ["SCR-0023"]
+      "data_types": [
+        "scientific"
+      ],
+      "consumed_by_scripts": [
+        "SCR-0023"
+      ]
     },
     "SRC-0013": {
       "name": "Semantic Scholar",
       "type": "source",
-      "data_types": ["scientific"],
-      "consumed_by_scripts": ["SCR-0026"]
+      "data_types": [
+        "scientific"
+      ],
+      "consumed_by_scripts": [
+        "SCR-0026"
+      ]
     },
     "SRC-0014": {
       "name": "Wikidata",
       "type": "source",
-      "data_types": ["scientific", "general"],
-      "consumed_by_scripts": ["SCR-0027"]
+      "data_types": [
+        "scientific",
+        "general"
+      ],
+      "consumed_by_scripts": [
+        "SCR-0027"
+      ]
     },
     "SRC-0015": {
       "name": "CORE",
       "type": "source",
-      "data_types": ["scientific"],
+      "data_types": [
+        "scientific"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0016": {
       "name": "CrossRef",
       "type": "source",
-      "data_types": ["scientific"],
+      "data_types": [
+        "scientific"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0017": {
       "name": "DBpedia",
       "type": "source",
-      "data_types": ["scientific", "general"],
+      "data_types": [
+        "scientific",
+        "general"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0018": {
       "name": "Papers With Code",
       "type": "source",
-      "data_types": ["scientific"],
+      "data_types": [
+        "scientific"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0019": {
       "name": "US Census Bureau",
       "type": "source",
-      "data_types": ["government"],
+      "data_types": [
+        "government"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0020": {
       "name": "Data.gov CKAN",
       "type": "source",
-      "data_types": ["government"],
+      "data_types": [
+        "government"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0021": {
       "name": "Open-Meteo",
       "type": "source",
-      "data_types": ["geospatial"],
+      "data_types": [
+        "geospatial"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0022": {
       "name": "OpenWeatherMap",
       "type": "source",
-      "data_types": ["geospatial"],
+      "data_types": [
+        "geospatial"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0023": {
       "name": "BLS",
       "type": "source",
-      "data_types": ["government"],
+      "data_types": [
+        "government"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0024": {
       "name": "World Bank",
       "type": "source",
-      "data_types": ["government"],
+      "data_types": [
+        "government"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0025": {
       "name": "GitHub REST API",
       "type": "source",
-      "data_types": ["general"],
-      "consumed_by_scripts": ["SCR-0028"]
+      "data_types": [
+        "general"
+      ],
+      "consumed_by_scripts": [
+        "SCR-0028"
+      ]
     },
     "SRC-0026": {
       "name": "PyPI",
       "type": "source",
-      "data_types": ["general"],
+      "data_types": [
+        "general"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0027": {
       "name": "npm Registry",
       "type": "source",
-      "data_types": ["general"],
+      "data_types": [
+        "general"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0028": {
       "name": "Reddit",
       "type": "source",
-      "data_types": ["social-media"],
+      "data_types": [
+        "social-media"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0029": {
       "name": "Stack Exchange",
       "type": "source",
-      "data_types": ["general"],
+      "data_types": [
+        "general"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0030": {
       "name": "Nominatim",
       "type": "source",
-      "data_types": ["geospatial"],
+      "data_types": [
+        "geospatial"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0031": {
       "name": "Hugging Face Hub",
       "type": "source",
-      "data_types": ["scientific", "general"],
+      "data_types": [
+        "scientific",
+        "general"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0032": {
       "name": "Free Dictionary",
       "type": "source",
-      "data_types": ["general"],
+      "data_types": [
+        "general"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0033": {
       "name": "Datamuse",
       "type": "source",
-      "data_types": ["general"],
+      "data_types": [
+        "general"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0034": {
       "name": "ConceptNet",
       "type": "source",
-      "data_types": ["scientific"],
+      "data_types": [
+        "scientific"
+      ],
       "consumed_by_scripts": []
     },
     "SRC-0035": {
       "name": "Wikipedia REST",
       "type": "source",
-      "data_types": ["general", "scientific"],
-      "consumed_by_scripts": ["SCR-0007"]
+      "data_types": [
+        "general",
+        "scientific"
+      ],
+      "consumed_by_scripts": [
+        "SCR-0007"
+      ]
     }
   },
   "orphans": {
     "scripts_without_source_link": [
-      "SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005",
-      "SCR-0006", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011",
-      "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0015", "SCR-0016",
-      "SCR-0017", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0021",
+      "SCR-0001",
+      "SCR-0002",
+      "SCR-0003",
+      "SCR-0004",
+      "SCR-0005",
+      "SCR-0006",
+      "SCR-0008",
+      "SCR-0009",
+      "SCR-0010",
+      "SCR-0011",
+      "SCR-0012",
+      "SCR-0013",
+      "SCR-0014",
+      "SCR-0015",
+      "SCR-0016",
+      "SCR-0017",
+      "SCR-0018",
+      "SCR-0019",
+      "SCR-0020",
+      "SCR-0021",
       "SCR-0022"
     ],
     "scripts_without_source_link_notes": "Most are utility/analysis scripts that do not call external APIs. SCR-0006, SCR-0008, SCR-0010, SCR-0021 use DuckDuckGo or arXiv which have no SRC entry.",
     "sources_without_script_link": [
-      "SRC-0001", "SRC-0002", "SRC-0003", "SRC-0004", "SRC-0005",
-      "SRC-0006", "SRC-0007", "SRC-0008", "SRC-0009", "SRC-0015",
-      "SRC-0016", "SRC-0017", "SRC-0018", "SRC-0019", "SRC-0020",
-      "SRC-0021", "SRC-0022", "SRC-0023", "SRC-0024", "SRC-0026",
-      "SRC-0027", "SRC-0028", "SRC-0029", "SRC-0030", "SRC-0031",
-      "SRC-0032", "SRC-0033", "SRC-0034"
+      "SRC-0001",
+      "SRC-0002",
+      "SRC-0003",
+      "SRC-0004",
+      "SRC-0005",
+      "SRC-0006",
+      "SRC-0007",
+      "SRC-0008",
+      "SRC-0009",
+      "SRC-0015",
+      "SRC-0016",
+      "SRC-0017",
+      "SRC-0018",
+      "SRC-0019",
+      "SRC-0020",
+      "SRC-0021",
+      "SRC-0022",
+      "SRC-0023",
+      "SRC-0024",
+      "SRC-0026",
+      "SRC-0027",
+      "SRC-0028",
+      "SRC-0029",
+      "SRC-0030",
+      "SRC-0031",
+      "SRC-0032",
+      "SRC-0033",
+      "SRC-0034"
     ],
     "sources_without_script_link_notes": "28 of 35 sources have no script that consumes them. These are cataloged data sources available for future script development."
-  }
+  },
+  "date": "2026-03-10"
 }

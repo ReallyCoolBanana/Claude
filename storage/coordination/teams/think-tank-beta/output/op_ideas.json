@@ -1,0 +1,357 @@
+{
+  "team": "think-tank-beta",
+  "context_reviewed": [
+    "CLAUDE.md",
+    "SOP-013 (prompt engineering)",
+    "SOP-022 (team sizing)",
+    "TEAM-0029 session log (data reform)",
+    "KB-0008 (data storage methods)",
+    "knowledge-base/index.json (24,373 bytes, 31 entries)",
+    "knowledge-base/TEMPLATE.md (582 bytes)",
+    "All 31 KB entries (275,811 bytes total)",
+    "All 21 SOP files (323,598 bytes total)"
+  ],
+  "perspectives": [
+    {
+      "name": "Token Cost Analysis",
+      "ideas_for_a1": [
+        {
+          "id": "A1-TC01",
+          "title": "Eliminate index.json tag_index and categories duplication",
+          "description": "The current knowledge-base/index.json is 24,373 bytes (~6,100 tokens). The tag_index section (149 unique tags, 205 references) and categories section (31 references) are fully derivable from the entries array. Removing them saves ~14,000 bytes (~3,500 tokens) per read -- a 57% reduction. The SOP should mandate: indexes contain only canonical data, never derived indexes. Derived views are generated on demand by scripts or MCP tools.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "A1-TC02",
+          "title": "Replace verbose YAML frontmatter with compact single-line headers",
+          "description": "Each KB entry has 10-12 lines of YAML frontmatter (~120 bytes, ~30 tokens). Across 31 entries that is 930 tokens of boilerplate. A compact header like '# KB-0008 | 2026-03-10 | TEAM-0008 | methodology | validated | high' compresses to ~20 tokens per entry. SOP should define a single-line header format for all entry types, saving ~10 tokens per file x 31 files = 310 tokens just for KB, plus similar savings across SOPs and team logs.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "A1-TC03",
+          "title": "SOP for maximum file sizes with mandatory summarization",
+          "description": "Three KB entries exceed 25KB: KB-0015 (33KB), KB-0016 (43KB), KB-0017 (39KB), KB-0019 (25KB), KB-0028 (27KB). These five files alone are 167KB (~42,000 tokens). An agent reading all KB entries consumes 275KB (~69,000 tokens). The SOP should cap KB entries at 5KB with a mandatory 'summary' field in the first 500 bytes. Detailed data goes in a companion file (e.g., KB-0015-detail.json). This forces the 80/20 rule: the summary covers 80% of use cases at 10% of the token cost.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-TC04",
+          "title": "Schema-referenced JSON to eliminate repeated keys",
+          "description": "In index.json, 31 entries each repeat 9 key names (id, title, date, team, category, tags, status, confidence, builds_on) = 279 key instances. Each key averages 8 characters = 2,232 characters (~560 tokens) of pure key repetition. A schema-referenced approach uses a header row ['id','title','date',...] then arrays of values: ['KB-0001','Storage System..','2026-03-10',...]. This cuts the entries section from ~16KB to ~9KB, saving ~1,750 tokens (44% reduction on entries).",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-TC05",
+          "title": "Token budget tracking in file creation SOP",
+          "description": "SOP-013 mentions a context budget calculator but no file creation SOP enforces size limits. The new SOP should require every created file to declare its target token budget in a comment/header. Categories: micro (<500 tokens, e.g., pointer files), small (<2000 tokens, e.g., KB summaries), medium (<5000 tokens, e.g., SOPs), large (<15000 tokens, e.g., detailed analyses). Files exceeding their category budget fail validation.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "A1-TC06",
+          "title": "Pointer-file-first navigation pattern SOP",
+          "description": "TEAM-0029 designed .pointer.json files but no SOP enforces their use as the primary navigation method. The SOP should mandate: agents MUST read .pointer.json first (typically <500 tokens), then selectively read only the files they need. This replaces the current pattern of reading entire index.json files (6,100 tokens for KB index alone). Estimated savings: 5,600 tokens per navigation action when an agent only needs 2-3 entries.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "A1-TC07",
+          "title": "Abbreviation dictionary for common terms in filenames and paths",
+          "description": "Current paths like 'storage/coordination/sops/sop_013_prompt_engineering.json' are 58 characters. With standard abbreviations (coord/, pe.json), this becomes 'storage/coord/sops/sop-013-pe.json' (35 chars). Across hundreds of file references in prompts and outputs, abbreviations save 5-10% of path-related tokens. The SOP defines a canonical abbreviation table: coordination->coord, knowledge-base->kb, market-research->mkt, etc.",
+          "impact": "low",
+          "effort": "low"
+        }
+      ],
+      "ideas_for_b2": [
+        {
+          "id": "B2-TC01",
+          "title": "SQLite with virtual-column summaries for token-efficient reads",
+          "description": "Store KB entries in SQLite with columns: id, title, summary_500char, category, tags_csv, full_content. Agents query 'SELECT id, title, summary_500char FROM kb WHERE category=methodology' to get a ~200 token overview instead of reading 69,000 tokens of raw files. The summary column is a generated column updated on INSERT. Token savings: 99.7% for browsing queries.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-TC02",
+          "title": "Columnar CSV export for bulk data retrieval",
+          "description": "When agents need to scan all entries for a pattern, a CSV with columns [id, title, category, tags] is far more token-efficient than JSON. 31 KB entries as JSON index = 6,100 tokens. Same data as CSV = ~1,200 tokens (80% reduction). The database layer should support 'EXPORT FORMAT csv' for any query result.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "B2-TC03",
+          "title": "Tiered retrieval: manifest -> summary -> full content",
+          "description": "Design a 3-tier retrieval system. Tier 1: manifest (all IDs + 10-word titles, ~500 tokens for 31 entries). Tier 2: summaries (ID + 50-word summary, ~2000 tokens for 31 entries). Tier 3: full content (on demand, per entry). Current system forces Tier 3 for everything. An MCP tool 'kb_browse(tier=1)' returns the manifest; 'kb_read(id=KB-0008)' returns full content. Average agent needs Tier 1 + 2-3 Tier 3 reads = ~3,000 tokens vs current ~69,000.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-TC04",
+          "title": "LMDB key-value store for sub-millisecond pointer lookups",
+          "description": "KB-0008 found LMDB has the best read performance with zero-copy mmap. Store pointer data (file paths, summaries, metadata) in LMDB. An MCP tool wraps LMDB.get(key) and returns only the requested record. Token cost per lookup: ~50 tokens (the result) vs ~6,100 tokens (reading index.json). For 10 lookups per session, saves ~60,500 tokens.",
+          "impact": "high",
+          "effort": "high"
+        },
+        {
+          "id": "B2-TC05",
+          "title": "MessagePack binary interchange between agents",
+          "description": "KB-0008 recommends MessagePack as a 30-50% smaller drop-in JSON replacement. For inter-agent data (findings files, aggregated results), using MessagePack reduces file sizes from 323KB (SOPs) to ~210KB. Agents use an MCP tool to read/write MessagePack transparently. The token savings come from smaller files being read into context. Net savings: ~28,000 tokens across a full SOP read.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-TC06",
+          "title": "Query-based content retrieval via MCP instead of file reads",
+          "description": "Replace 'Read file X' with 'Query: get entries where category=methodology AND confidence=high'. The MCP server (designed in TEAM-0029) translates this to a SQLite/LMDB query and returns only matching records. An agent that currently reads 5 files (avg 4KB each = 20KB = 5,000 tokens) instead gets a 2KB query result = 500 tokens. 90% reduction per information-seeking action.",
+          "impact": "high",
+          "effort": "high"
+        },
+        {
+          "id": "B2-TC07",
+          "title": "Delta-only updates for inter-agent communication",
+          "description": "When agents update shared state, they currently rewrite entire files. A delta/patch approach sends only changed fields. For a 5KB findings file where one finding is added (200 bytes), the delta is 200 bytes vs 5KB rewrite. Over a 20-agent session with 100 updates, saves ~480KB of I/O and ~120,000 tokens of context if other agents read the updates.",
+          "impact": "medium",
+          "effort": "high"
+        }
+      ]
+    },
+    {
+      "name": "AI-Native Language Design",
+      "ideas_for_a1": [
+        {
+          "id": "A1-NL01",
+          "title": "Controlled vocabulary registry with zero synonyms",
+          "description": "The repo currently uses both 'entry' and 'record', both 'findings' and 'results', both 'team' and 'agent'. The SOP should define a controlled vocabulary: entry (a KB item), finding (a discrete discovery), team (a group of agents), agent (a single instance), session (one team's work period), operation (a multi-team effort). No synonyms allowed. A vocabulary.json file is the canonical source. Estimated impact: reduces ambiguity in 100% of cross-team communications.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-NL02",
+          "title": "Prefix-based type system for all identifiers",
+          "description": "Extend the existing KB-XXXX, SOP-XXX, TEAM-XXXX pattern to ALL entities: F-XXX (findings), T-XX (tags), C-XX (categories), SRC-XXX (sources), MT-XXX (market picks), SCR-XXX (scripts). Every reference in the repo becomes unambiguously typed by its prefix. An agent seeing 'F-042' knows it is a finding without any context. This also enables cheap regex-based cross-referencing.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "A1-NL03",
+          "title": "Filename convention: TYPE-ID_QUALIFIER.EXT with no natural language",
+          "description": "Current: 'sop_013_prompt_engineering.json' (38 chars, requires parsing underscores and natural language). Proposed: 'SOP-013.json' for the canonical file, with human-readable title ONLY inside the file. Directory structure provides category context. This makes filenames greppable, sortable, and unambiguous. A complementary 'ls' via MCP returns 'SOP-013: Prompt Engineering' with the title resolved from content.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "A1-NL04",
+          "title": "Structured section headers with machine-parseable markers",
+          "description": "Current KB entries use freeform Markdown headers (## Context, ## Method, ## Result). The SOP should mandate markers: '## [CTX] Context', '## [MTH] Method', '## [RES] Result', '## [LES] Lessons', '## [REC] Recommendations'. The 3-letter codes enable instant section extraction without NLP. An agent can request 'give me [REC] from KB-0008' and a tool extracts just that section (~500 tokens instead of 3,778 bytes).",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "A1-NL05",
+          "title": "Tag taxonomy with hierarchical namespacing",
+          "description": "Current tags are flat strings with 149 unique values, many overlapping (e.g., 'sops' vs 'SOPs' vs 'sop-improvements'). Propose a hierarchical namespace: 'infra/coordination', 'infra/communication', 'method/research', 'method/testing', 'domain/market', 'domain/api'. Maximum 3 levels. This reduces 149 tags to ~40 leaf categories under 6 top-level namespaces. Agents can filter at any level: 'infra/*' gets all infrastructure entries.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-NL06",
+          "title": "Status and confidence as single-character codes",
+          "description": "Replace 'status: validated', 'confidence: high' with 'V/H' (validated/high). Across 31 entries, saves ~620 characters (~155 tokens) in the index. More importantly, it creates a dense scannable format: 'KB-0008 V/H methodology' is instantly parseable. Full SOP defines: V=validated, E=experimental, D=deprecated, H=high, M=medium, L=low.",
+          "impact": "low",
+          "effort": "low"
+        },
+        {
+          "id": "A1-NL07",
+          "title": "Canonical date format: compact ISO without hyphens",
+          "description": "Replace '2026-03-11' with '20260311' in machine contexts (filenames, IDs, compact headers). Saves 2 characters per date. Minor individually, but dates appear hundreds of times across the repo. More importantly, it removes ambiguity about whether hyphens are field separators or date separators in compound identifiers.",
+          "impact": "low",
+          "effort": "low"
+        }
+      ],
+      "ideas_for_b2": [
+        {
+          "id": "B2-NL01",
+          "title": "Schema-first database design with AI-readable DDL comments",
+          "description": "Every database table gets a DDL with AI-readable comments: 'CREATE TABLE kb_entries (id TEXT PRIMARY KEY, -- Format: KB-XXXX. title TEXT NOT NULL, -- Max 80 chars, no synonyms for entry types. category TEXT CHECK(category IN (methodology,integration,...)))'. An agent reading the schema knows exactly what is valid without reading documentation. The schema IS the documentation.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-NL02",
+          "title": "Enum tables for all controlled vocabulary terms",
+          "description": "Store the controlled vocabulary in the database itself: CREATE TABLE vocab (term TEXT PRIMARY KEY, synonym_of TEXT, definition TEXT). Queries automatically validate against vocab: INSERT INTO findings(category) VALUES('results') fails because 'results' maps to 'findings' in the vocab table. This enforces the zero-synonym policy at the data layer.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-NL03",
+          "title": "Natural-language-to-SQL query interface via MCP",
+          "description": "An MCP tool accepts 'find all methodology entries about storage from 2026-03-10' and translates to SQL. The agent does not need to know table structure, column names, or query syntax. This is the ultimate AI-native interface: the agent speaks its native language, the tool speaks SQL. Uses the controlled vocabulary to disambiguate terms.",
+          "impact": "high",
+          "effort": "high"
+        },
+        {
+          "id": "B2-NL04",
+          "title": "Typed cross-references with bidirectional resolution",
+          "description": "Current builds_on is a flat array of IDs. A typed reference system: {ref: 'KB-0008', rel: 'extends', field: 'recommendations.1'}. The database stores both forward and reverse links. An agent asking 'what builds on KB-0008?' gets instant results without scanning all entries. Token savings: eliminates the need to read index.json's builds_on across 31 entries to find reverse references.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-NL05",
+          "title": "Embedding-based semantic search over KB entries",
+          "description": "KB-0008 recommends ChromaDB for prototyping semantic search. Store embeddings of KB entry summaries. An agent queries 'how did past teams handle SQLite concurrency?' and gets ranked results without knowing exact tags or categories. This solves the vocabulary mismatch problem where an agent searches for 'concurrent access' but entries are tagged 'concurrency'. Token cost: ~100 tokens for query + ~500 for top-3 results vs ~6,100 for reading index.json.",
+          "impact": "high",
+          "effort": "high"
+        },
+        {
+          "id": "B2-NL06",
+          "title": "Output templates as database schemas, not prose instructions",
+          "description": "SOP-013 describes output formats in prose ('Structure as JSON with keys: findings, recommendations...'). Instead, store output schemas as CREATE TABLE statements or JSON Schema in the database. The agent's prompt says 'output per schema OUTPUT-FINDING-V1'. The MCP tool returns the schema. This is more precise than prose, shorter, and machine-validatable.",
+          "impact": "medium",
+          "effort": "low"
+        }
+      ]
+    },
+    {
+      "name": "Software Tools and Automation",
+      "ideas_for_a1": [
+        {
+          "id": "A1-ST01",
+          "title": "Pre-commit hook: filename convention validator",
+          "description": "A git pre-commit hook that rejects files not matching naming conventions. Rules: KB entries must match /KB-\\d{4}\\.md/, SOPs must match /sop_\\d{3}_.+\\.json/ or /SOP-\\d{3}\\.json/, team logs must match /TEAM-\\d{4}\\.md/, sources must match /SRC-\\d{3}.*\\.json/. The hook runs in <100ms using regex on staged filenames. Prevents the naming drift that TEAM-0029 found (inconsistent naming across 30+ files).",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "A1-ST02",
+          "title": "Auto-index generator triggered by pre-commit hook",
+          "description": "TEAM-0029 decided 'source files are truth, indexes are generated artifacts.' Implement generate_registry.py (prototyped in TEAM-0029) as a pre-commit hook. On every commit that touches KB entries, SOPs, or sources, the hook regenerates index.json files from file contents. This eliminates index drift (which TEAM-0029 found in 3 separate indexes). Already partially built -- needs hardening.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-ST03",
+          "title": "File size linter with token budget enforcement",
+          "description": "A script that runs in CI or pre-commit: for each file, checks size against its type's budget (KB < 5KB, SOP < 50KB, pointer < 1KB, team log < 10KB). Files exceeding budget are flagged with a suggestion to split. Currently 5 KB entries exceed 25KB with no enforcement. The linter outputs: 'KB-0016.md: 43,601 bytes (limit: 5,000). Split into KB-0016.md (summary) + KB-0016-detail.md'.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "A1-ST04",
+          "title": "Template scaffolding CLI: 'new-entry kb|sop|team|source'",
+          "description": "A CLI tool that generates correctly named, correctly structured files. 'python new_entry.py kb' reads index.json, finds next ID (KB-0032), creates knowledge-base/entries/KB-0032.md from TEMPLATE.md with ID/date pre-filled, and prints the path. Eliminates the manual steps in the current workflow (check index, copy template, fill in ID, update index). Saves ~2 minutes and prevents numbering collisions.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "A1-ST05",
+          "title": "Vocabulary linter for controlled term enforcement",
+          "description": "A linter that scans all .md and .json files for synonym violations. If vocabulary.json says the canonical term is 'entry' not 'record', the linter flags every use of 'record' in KB entries and SOPs. Runs as a pre-commit hook or CI check. Output: 'KB-0019.md:42: use entry instead of record (vocabulary.json#entry)'. This enforces Idea A1-NL01 automatically.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-ST06",
+          "title": "MCP server tool: repo_navigate for structured directory browsing",
+          "description": "An MCP tool that returns a structured directory listing: {directories: [{name: 'knowledge-base', entry_count: 31, total_size: '275KB'}, ...], recent_changes: [{file, date, team}]}. This replaces agents running 'ls' and 'wc' commands to understand repo structure. Token cost: ~300 tokens for structured output vs ~2000 tokens for raw ls output + parsing.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-ST07",
+          "title": "Naming convention documentation generator",
+          "description": "A script that scans the repo and generates a living document of actual naming patterns found. Output: 'KB entries: 31 files, pattern KB-XXXX.md, all conforming. SOPs: 21 files, 15 match sop_XXX_name.json, 3 match name.json (non-conforming: efficiency_guide.json, future_team_data_strategy.json, tool_sops.json)'. This provides the evidence base for which conventions to codify in the SOP.",
+          "impact": "low",
+          "effort": "low"
+        }
+      ],
+      "ideas_for_b2": [
+        {
+          "id": "B2-ST01",
+          "title": "MCP server with 7 tools (from TEAM-0029 design)",
+          "description": "Implement the MCP server designed by TEAM-0029's T5: kb_list, kb_read, sop_list, sop_read, team_list, team_read, search. The prototype exists at storage/mcp-server/server.py but needs hardening. This is the single highest-leverage tool: it replaces file reads with structured queries, cutting token consumption by 80-95% for most agent operations. Already designed and prototyped, needs production-quality error handling and tests.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-ST02",
+          "title": "SQLite database with auto-sync from file system",
+          "description": "A background script watches the repo (via inotify or polling) and syncs all KB entries, SOPs, team logs, and sources into a SQLite database. Tables mirror file structure. The MCP server queries SQLite instead of reading files. This combines KB-0008's recommendation (SQLite for embedded structured storage) with TEAM-0029's architecture. The file system remains source of truth; SQLite is a read cache.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-ST03",
+          "title": "Token-counting middleware for MCP responses",
+          "description": "Wrap every MCP tool response in a middleware that counts tokens (using tiktoken or cl100k_base). If a response exceeds a configurable limit (default: 2000 tokens), the middleware automatically truncates and adds a continuation token: {data: [...first 2000 tokens...], continuation: 'kb_read(id=KB-0008, offset=2000)'}. This prevents any single MCP call from consuming excessive context.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-ST04",
+          "title": "Batch query API for multi-entry retrieval",
+          "description": "An MCP tool that accepts multiple queries in one call: kb_batch([{id:'KB-0008'},{id:'KB-0015',section:'REC'}]). Returns combined results in one response. This eliminates the overhead of multiple tool calls (each tool call costs ~50 tokens of framing). For an agent reading 5 entries, batch saves ~200 tokens of tool-call overhead and reduces round trips from 5 to 1.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "B2-ST05",
+          "title": "Incremental diff feed for agent coordination",
+          "description": "A tool that returns only changes since a given timestamp: changes_since('2026-03-11T14:00:00'). Returns a compact diff: [{file: 'KB-0031.md', action: 'created', summary: 'Data reform analysis'}, ...]. Agents polling for updates get ~100 tokens per check instead of re-reading entire indexes. Critical for multi-agent sessions where 20 agents need to stay synchronized.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-ST06",
+          "title": "Compression layer for large content retrieval",
+          "description": "For entries that must be returned in full (e.g., source code in KB-0015 at 33KB), implement a compression layer that returns a structured summary + key sections rather than raw content. The tool parses the Markdown, extracts headers and first sentences, and returns a ~2KB structured overview. The agent can then request specific sections. Saves ~7,500 tokens per large-file read.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-ST07",
+          "title": "Automated database migration from current file-based system",
+          "description": "A one-time migration script that: (1) parses all 31 KB entries into SQLite rows, (2) parses all 21 SOPs into SQLite rows, (3) builds the tag index as a junction table, (4) builds the cross-reference graph as an adjacency table, (5) generates .pointer.json files for all directories. TEAM-0029's T6 designed a 5-phase migration plan. This script implements phases 1-3. Output: a populated SQLite database ready for MCP server consumption.",
+          "impact": "high",
+          "effort": "medium"
+        }
+      ]
+    }
+  ],
+  "cross_cutting_ideas": [
+    {
+      "id": "CC-01",
+      "title": "Unified SOP + Tool + Database trilogy for naming enforcement",
+      "description": "The three perspectives converge on a trilogy: (1) An SOP defining naming rules and controlled vocabulary (Operation A1), (2) a SQLite/LMDB database enforcing those rules via constraints and enum tables (Operation B2), and (3) automated tools (linters, hooks, MCP) that bridge the two. No single layer is sufficient alone. The SOP without tooling is ignored. The tooling without the SOP is arbitrary. The database without both is disconnected. Implement all three together as a coordinated package."
+    },
+    {
+      "id": "CC-02",
+      "title": "Token budget as first-class metric across both operations",
+      "description": "Both operations share a core objective: minimize tokens consumed per unit of useful information retrieved. Operation A1 attacks supply-side (smaller, better-named files). Operation B2 attacks demand-side (smarter retrieval). The shared metric is 'tokens per answer' -- how many tokens an agent must consume to get a specific piece of information. Current baseline: ~6,100 tokens to find one KB entry via index.json. Target: <200 tokens via MCP query. This 30x improvement should be the shared KPI."
+    },
+    {
+      "id": "CC-03",
+      "title": "TEAM-0029 prototype as implementation foundation for both operations",
+      "description": "TEAM-0029 already built: .pointer.json schema, generate_registry.py, MCP server prototype, and REGISTRY.json. Both operations should build on this foundation rather than starting from scratch. Operation A1 codifies the naming rules that TEAM-0029 assumed. Operation B2 hardens the tools that TEAM-0029 prototyped. The pointer files bridge both: they enforce naming (A1) and enable token-efficient navigation (B2)."
+    },
+    {
+      "id": "CC-04",
+      "title": "Anti-recursion guard: these operations must produce domain tools, not more infrastructure analysis",
+      "description": "SOP-022 and KB-0030 warn that 18 of 28 teams worked on infrastructure. TEAM-0029 flagged 'inward-facing gravity' as a risk. These two operations MUST produce executable artifacts (scripts, hooks, database, MCP tools) within a fixed budget of 2 teams x 5 agents = 10 agent-sessions. Any design work beyond that is infrastructure recursion. Success criteria: working pre-commit hooks, populated SQLite database, and running MCP server -- not more analysis documents."
+    },
+    {
+      "id": "CC-05",
+      "title": "Progressive enhancement path: files today, database tomorrow, MCP always",
+      "description": "Both operations should maintain backward compatibility. Phase 1: files with better names and sizes (A1 immediate wins). Phase 2: SQLite database as read cache alongside files (B2 foundation). Phase 3: MCP server as primary agent interface (B2 full vision). At every phase, raw file access still works. This prevents a big-bang migration that breaks all existing tooling and SOPs simultaneously."
+    },
+    {
+      "id": "CC-06",
+      "title": "Measurable before/after benchmark for token consumption",
+      "description": "Before implementing either operation, create a benchmark script that measures: (1) tokens to list all KB entries, (2) tokens to find a specific entry by topic, (3) tokens to read an entry's recommendations section, (4) tokens to find all entries that build on a given entry. Run the benchmark against current file-based system, then re-run after each phase. This provides hard evidence of improvement and prevents the 'it feels better' trap."
+    }
+  ],
+  "date": "2026-03-11"
+}

@@ -1,0 +1,357 @@
+{
+  "metadata": {
+    "title": "Think Tank Gamma: Comprehensive System Health Audit",
+    "author": "THINK-TANK-GAMMA",
+    "date": "2026-03-11",
+    "scope": "Full repository audit: data quality, bugs, operational weaknesses, naming standards",
+    "methodology": "Cross-referencing indexes against filesystem, YAML frontmatter against index.json, TOCTOU catalog analysis, SOP tool reference verification, naming convention audit"
+  },
+  "data_quality": {
+    "sources_index": {
+      "status": "BETTER_THAN_REPORTED",
+      "summary": "KB-0031 claimed sources index was 'catastrophically broken' with every entry mismatched. This is NO LONGER TRUE. All 41 entries in index.json match their corresponding SRC-*.json files (names, URLs, data_types all consistent). The index was likely rebuilt since KB-0031.",
+      "total_entries": 41,
+      "total_files": 41,
+      "name_mismatches": 0,
+      "url_mismatches": 0,
+      "missing_files": 0,
+      "orphaned_files": 0,
+      "issues": [
+        {
+          "entry": "SRC-0018 + SRC-0039",
+          "issue": "Duplicate source: both are 'FRED API (Federal Reserve Economic Data)'. SRC-0018 URL ends with trailing slash, SRC-0039 does not. Different data_types lists but same underlying API.",
+          "severity": "Medium",
+          "fix": "Merge into single entry, combining data_types. Remove duplicate. Update by_data_type and by_access_type indexes."
+        },
+        {
+          "entry": "SRC-0009, SRC-0010, SRC-0011",
+          "issue": "Gap in ID sequence. IDs 9, 10, 11 are missing (jump from SRC-0008 to SRC-0012). May indicate deleted entries without renumbering.",
+          "severity": "Low",
+          "fix": "Document as intentional gaps or renumber. Gaps are cosmetic only."
+        }
+      ]
+    },
+    "kb_drift": {
+      "status": "SIGNIFICANT_DRIFT",
+      "summary": "34 of 41 KB entries (83%) are missing the 'title' field in YAML frontmatter. The index.json has titles for all entries, but these titles exist ONLY in the index, not in the source files. This means the index is the source of truth, not the files.",
+      "entries_missing_title": [
+        "KB-0001", "KB-0002", "KB-0003", "KB-0004", "KB-0005", "KB-0006", "KB-0007",
+        "KB-0008", "KB-0009", "KB-0010", "KB-0011", "KB-0012", "KB-0013", "KB-0014",
+        "KB-0020", "KB-0022", "KB-0023", "KB-0024", "KB-0025", "KB-0026", "KB-0027",
+        "KB-0028", "KB-0029", "KB-0031", "KB-0032", "KB-0033", "KB-0034", "KB-0035",
+        "KB-0036", "KB-0037", "KB-0038", "KB-0039", "KB-0040", "KB-0041"
+      ],
+      "entries_with_title": ["KB-0015", "KB-0016", "KB-0017", "KB-0018", "KB-0019", "KB-0021", "KB-0030"],
+      "other_drift": [
+        {
+          "entry": "KB-0001 through KB-0041",
+          "issue": "Index.json tag_index contains duplicate key 'sqlite' (lines 1224 and 1474) due to different tag groups referencing it. Not a JSON parse error but indicates taxonomy inconsistency."
+        }
+      ]
+    },
+    "duplicates": {
+      "team_logs": {
+        "status": "NO_DUPLICATES_FOUND",
+        "summary": "31 team session files on disk, 31 entries in sessions/index.json (but 30 listed as session_count). TEAM-0032.md exists on disk but is NOT in the sessions index.json.",
+        "issues": [
+          {
+            "file": "TEAM-0032.md",
+            "issue": "Session file exists but not indexed in teams/sessions/index.json. session_count says 30 but there are 31 sessions.",
+            "fix": "Add TEAM-0032 entry to sessions/index.json, update session_count to 31."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "entries": ["SRC-0018", "SRC-0039"],
+          "issue": "Both are FRED API entries. SRC-0018 added by TEAM-0010/TEAM-0011, SRC-0039 added by TEAM-0013. Different data_type lists but same API.",
+          "fix": "Merge into single canonical entry."
+        }
+      ]
+    },
+    "orphans": {
+      "scripts_not_indexed": [
+        "auto_index.py",
+        "generate_registry.py",
+        "import_to_db.py",
+        "mcp_kb_server.py",
+        "query_kb.py",
+        "semantic_indexer.py",
+        "semantic_search.py",
+        "smart_read.py",
+        "smart_search.py",
+        "smart_write.py",
+        "test-cross-references.py",
+        "validate_naming.py",
+        "data-gathering/methods/benchmark_runner.py",
+        "data-gathering/methods/dedup_utils.py",
+        "data-gathering/methods/test_utilities.py"
+      ],
+      "count": 15,
+      "severity": "High",
+      "note": "15 scripts exist on disk but are not in storage/scripts/index.json. Several of these (smart_read, smart_write, query_kb, smart_search, validate_naming, mcp_kb_server, semantic_indexer, semantic_search) are from recent TEAM-0030/TEAM-0032 work and are actively referenced in SOPs."
+    }
+  },
+  "remaining_bugs": {
+    "total_cataloged": 22,
+    "already_fixed": 11,
+    "remaining": 18,
+    "note": "The catalog lists 22 TOCTOU bugs. 11 bugs in the 'already_fixed' section were addressed. However 4 of the 22 bugs were fixed by TEAM-0032 (per KB-0041), leaving 18 unfixed. The 4 fixed bugs from KB-0041 are not reflected in the catalog's already_fixed list -- they are among the 22 listed bugs.",
+    "next_5_to_fix": [
+      {
+        "id": "TOCTOU-WS-001",
+        "severity": "Critical",
+        "file": "storage/coordination/work_stealing.py",
+        "lines": "294-318",
+        "function": "complete_work",
+        "description": "No BEGIN IMMEDIATE wraps SELECT+UPDATE. Another process can reclaim and reassign a work item between the authorization check and the completion UPDATE, causing one team's results to overwrite another's.",
+        "fix_approach": "Wrap in BEGIN IMMEDIATE transaction, add WHERE claimed_by=? AND status='claimed' to the UPDATE statement. Verify rowcount==1 before commit.",
+        "effort": "small",
+        "blocks_domain_work": true
+      },
+      {
+        "id": "TOCTOU-HP-001",
+        "severity": "Critical",
+        "file": "storage/coordination/help_protocol.py",
+        "lines": "573-613",
+        "function": "fulfill_help",
+        "description": "Two separate UPDATEs (help_requests + work_items) without BEGIN IMMEDIATE. Crash between them leaves inconsistent state. Also vulnerable to stale-read race.",
+        "fix_approach": "Wrap both UPDATEs in BEGIN IMMEDIATE. Add WHERE status='accepted' AND accepted_by_team=? guard to the help_requests UPDATE. Check rowcount.",
+        "effort": "small",
+        "blocks_domain_work": true
+      },
+      {
+        "id": "TOCTOU-DC-001",
+        "severity": "High",
+        "file": "storage/coordination/direct_channels.py",
+        "lines": "370-389",
+        "function": "join_channel",
+        "description": "Read-modify-write on JSON participants list without BEGIN IMMEDIATE. Concurrent joins silently drop participants.",
+        "fix_approach": "Use BEGIN IMMEDIATE + json_insert() or json_set() in SQL to avoid Python-side JSON manipulation. Or use compare-and-swap pattern with expected version.",
+        "effort": "small",
+        "blocks_domain_work": true
+      },
+      {
+        "id": "TOCTOU-WS-002",
+        "severity": "High",
+        "file": "storage/coordination/work_stealing.py",
+        "lines": "570-592",
+        "function": "start_stage (PipelineManager)",
+        "description": "Two agents can both start the same pipeline stage because the status check and update are not atomic. Causes duplicate work.",
+        "fix_approach": "Add WHERE status='ready' to the UPDATE. Use BEGIN IMMEDIATE. Check rowcount==1 to confirm the agent won the race.",
+        "effort": "small",
+        "blocks_domain_work": true
+      },
+      {
+        "id": "TOCTOU-MTR-004",
+        "severity": "High",
+        "file": "storage/coordination/multi_team_runner.py",
+        "lines": "491-508",
+        "function": "MultiTeamRunner.stop",
+        "description": "No guard against double invocation from signal handler + main thread. Can call _close_connection twice and send duplicate shutdown messages.",
+        "fix_approach": "Add threading.Event or atomic flag checked at entry. Use compare-and-swap pattern: if not self._stopped.is_set(): self._stopped.set() ... else: return.",
+        "effort": "trivial",
+        "blocks_domain_work": false
+      }
+    ],
+    "severity_breakdown": {
+      "critical": ["TOCTOU-WS-001", "TOCTOU-HP-001"],
+      "high": ["TOCTOU-DC-001", "TOCTOU-DC-002", "TOCTOU-WS-002", "TOCTOU-WS-003", "TOCTOU-MTR-004", "TOCTOU-HP-002", "TOCTOU-HP-003"],
+      "medium": ["TOCTOU-DC-003", "TOCTOU-HP-004", "TOCTOU-CH-001", "TOCTOU-CH-002", "TOCTOU-MTR-001", "TOCTOU-MTR-003", "TOCTOU-WS-004", "TOCTOU-WS-005", "TOCTOU-HP-006"],
+      "low": ["TOCTOU-MTR-002", "TOCTOU-MTR-005", "TOCTOU-DDG-001", "TOCTOU-DDG-002", "TOCTOU-HP-005"]
+    },
+    "test_coverage": {
+      "test_files": [
+        "test_bus_core.py",
+        "test_direct_channels.py",
+        "test_help_protocol.py",
+        "test_coordinator_hub.py",
+        "test_operation_health_coord.py",
+        "test_db_utils.py",
+        "test_work_stealing.py",
+        "test_unknown_bugs_x.py",
+        "test_toctou_fixes.py"
+      ],
+      "note": "9 test files exist covering the main coordination modules. test_toctou_fixes.py specifically tests the 4 TOCTOU fixes from TEAM-0032. Coverage for the remaining 18 bugs is missing -- no tests verify that the unfixed races are handled."
+    }
+  },
+  "operational_weaknesses": [
+    {
+      "area": "SOP tool references",
+      "issue": "SOP-035 (sop_035_benchmark_driven_development.json) references tools smart_read, smart_write, query_kb, smart_search, and validate_naming. These tools exist on disk but are NOT indexed in storage/scripts/index.json.",
+      "impact": "Teams following SOP-035 can use the tools, but other teams discovering tools via the index will not find them.",
+      "severity": "High",
+      "fix": "Add all 15 orphaned scripts to storage/scripts/index.json with proper metadata."
+    },
+    {
+      "area": "KB YAML title fields",
+      "issue": "34 of 41 KB entries lack the 'title' field in YAML frontmatter. Titles exist only in knowledge-base/index.json.",
+      "impact": "Any tool that reads KB entries directly (rather than the index) cannot display titles. MCP server and other tools may show untitled entries. Index rebuilding from source files would lose all titles.",
+      "severity": "High",
+      "fix": "Backfill title field into YAML frontmatter of all 34 entries from index.json. Trivially scriptable."
+    },
+    {
+      "area": "Team session indexing",
+      "issue": "TEAM-0032.md not in teams/sessions/index.json. session_count shows 30 but 31 files exist.",
+      "impact": "Teams reading the index will miss TEAM-0032's session log, which documents MCP server creation, LanceDB integration, and 4 TOCTOU fixes.",
+      "severity": "Medium",
+      "fix": "Add TEAM-0032 to sessions/index.json, update session_count."
+    },
+    {
+      "area": "Duplicate data source",
+      "issue": "FRED API exists as both SRC-0018 and SRC-0039 with different data_types and slightly different URLs (trailing slash difference).",
+      "impact": "Agents searching for economic data may find conflicting entries. Index by_data_type maps some data types to SRC-0018 and others to SRC-0039.",
+      "severity": "Medium",
+      "fix": "Merge into single entry, combine data_types, update all indexes."
+    },
+    {
+      "area": "SOP numbering gaps and version management",
+      "issue": "SOPs 001-010 are missing (numbering starts at SOP-011). SOPs 012 and 016 have both v1 (superseded) and v2 files, with duplicate IDs in the index. SOP-026 through SOP-028 use non-standard filenames (efficiency_guide.json, future_team_data_strategy.json, tool_sops.json) instead of sop_NNN_name.json pattern.",
+      "impact": "Non-standard filenames break automated SOP discovery. Duplicate IDs in index cause confusion.",
+      "severity": "Medium",
+      "fix": "Rename SOP-026/027/028 files to follow sop_NNN pattern. Assign unique IDs to v2 SOPs (e.g., SOP-012a or increment)."
+    },
+    {
+      "area": "Missing SOP execution tracking",
+      "issue": "No mechanism exists to track which SOPs have been executed, by whom, or when. SOPs are write-only documentation.",
+      "impact": "Cannot determine which SOPs are actively used vs theoretical. Cannot measure SOP effectiveness.",
+      "severity": "Low",
+      "fix": "Add optional 'last_executed' and 'execution_count' fields to SOP index entries."
+    }
+  ],
+  "naming_standards": {
+    "summary": "11 Python scripts use kebab-case (hyphens) instead of the Python-standard snake_case (underscores). SOP-029 explicitly mandates snake_case for Python files.",
+    "violations": [
+      {"file": "storage/scripts/build-cross-ref-index.py", "issue": "kebab-case", "fix": "rename to build_cross_ref_index.py", "indexed": true, "index_id": "SCR-0034"},
+      {"file": "storage/scripts/repair-storage.py", "issue": "kebab-case", "fix": "rename to repair_storage.py", "indexed": true, "index_id": "SCR-0003"},
+      {"file": "storage/scripts/search-storage.py", "issue": "kebab-case", "fix": "rename to search_storage.py", "indexed": true, "index_id": "SCR-0035"},
+      {"file": "storage/scripts/stress-test-reads-category.py", "issue": "kebab-case", "fix": "rename to stress_test_reads_category.py", "indexed": true, "index_id": "SCR-0037"},
+      {"file": "storage/scripts/stress-test-reads-cross.py", "issue": "kebab-case", "fix": "rename to stress_test_reads_cross.py", "indexed": true, "index_id": "SCR-0038"},
+      {"file": "storage/scripts/stress-test-reads-id.py", "issue": "kebab-case", "fix": "rename to stress_test_reads_id.py", "indexed": true, "index_id": "SCR-0039"},
+      {"file": "storage/scripts/stress-test-setup-reads.py", "issue": "kebab-case", "fix": "rename to stress_test_setup_reads.py", "indexed": true, "index_id": "SCR-0036"},
+      {"file": "storage/scripts/stress-test-writes.py", "issue": "kebab-case", "fix": "rename to stress_test_writes.py", "indexed": true, "index_id": "SCR-0040"},
+      {"file": "storage/scripts/test-cross-references.py", "issue": "kebab-case, also orphaned (not indexed)", "fix": "rename to test_cross_references.py and index", "indexed": false},
+      {"file": "storage/scripts/test-edge-cases.py", "issue": "kebab-case", "fix": "rename to test_edge_cases.py", "indexed": true, "index_id": "SCR-0002"},
+      {"file": "storage/scripts/validate-storage.py", "issue": "kebab-case", "fix": "rename to validate_storage.py", "indexed": true, "index_id": "SCR-0001"}
+    ],
+    "sop_naming_issues": [
+      {"file": "storage/coordination/sops/efficiency_guide.json", "issue": "Does not follow sop_NNN_name.json pattern", "fix": "rename to sop_026_efficiency_guide.json"},
+      {"file": "storage/coordination/sops/future_team_data_strategy.json", "issue": "Does not follow sop_NNN_name.json pattern", "fix": "rename to sop_027_future_team_data_strategy.json"},
+      {"file": "storage/coordination/sops/tool_sops.json", "issue": "Does not follow sop_NNN_name.json pattern", "fix": "rename to sop_028_tool_sops.json"}
+    ]
+  },
+  "priority_matrix": [
+    {
+      "issue": "15 orphaned scripts not in index.json",
+      "severity": "Critical",
+      "effort": "trivial",
+      "blocks_domain_work": true,
+      "recommendation": "FIX IMMEDIATELY. These include the MCP KB server, smart_read/write/search, query_kb, semantic search tools, and validate_naming -- all actively used. Add entries to storage/scripts/index.json."
+    },
+    {
+      "issue": "TOCTOU-WS-001: complete_work race condition",
+      "severity": "Critical",
+      "effort": "small",
+      "blocks_domain_work": true,
+      "recommendation": "FIX NEXT. Work results can be silently lost. Add BEGIN IMMEDIATE + WHERE guards."
+    },
+    {
+      "issue": "TOCTOU-HP-001: fulfill_help crash consistency",
+      "severity": "Critical",
+      "effort": "small",
+      "blocks_domain_work": true,
+      "recommendation": "FIX NEXT. Two non-atomic UPDATEs leave inconsistent state on crash."
+    },
+    {
+      "issue": "34 KB entries missing title in YAML frontmatter",
+      "severity": "High",
+      "effort": "trivial",
+      "blocks_domain_work": false,
+      "recommendation": "Scriptable fix. Copy titles from index.json into each KB entry's YAML. Prevents data loss if index is regenerated from files."
+    },
+    {
+      "issue": "TEAM-0032 session not in teams/sessions/index.json",
+      "severity": "High",
+      "effort": "trivial",
+      "blocks_domain_work": false,
+      "recommendation": "Add entry to index.json. Ensures TEAM-0032's work (MCP server, LanceDB, TOCTOU fixes) is discoverable."
+    },
+    {
+      "issue": "TOCTOU-DC-001/002: join/leave channel participant loss",
+      "severity": "High",
+      "effort": "small",
+      "blocks_domain_work": true,
+      "recommendation": "Fix with BEGIN IMMEDIATE + atomic JSON manipulation. Affects multi-team coordination reliability."
+    },
+    {
+      "issue": "TOCTOU-WS-002/003: pipeline stage double-start and override",
+      "severity": "High",
+      "effort": "small",
+      "blocks_domain_work": true,
+      "recommendation": "Add WHERE status guards to UPDATE statements. Prevents duplicate pipeline work."
+    },
+    {
+      "issue": "TOCTOU-MTR-004: double stop() invocation",
+      "severity": "High",
+      "effort": "trivial",
+      "blocks_domain_work": false,
+      "recommendation": "Add threading.Event guard. Simple defensive fix."
+    },
+    {
+      "issue": "11 kebab-case Python script filenames",
+      "severity": "Medium",
+      "effort": "small",
+      "blocks_domain_work": false,
+      "recommendation": "Rename files, update index.json filenames, update any import references. SOP-029 mandates this."
+    },
+    {
+      "issue": "Duplicate FRED source (SRC-0018 + SRC-0039)",
+      "severity": "Medium",
+      "effort": "trivial",
+      "blocks_domain_work": false,
+      "recommendation": "Merge entries. Combine data_types lists. Update by_data_type index."
+    },
+    {
+      "issue": "3 SOP files with non-standard names",
+      "severity": "Medium",
+      "effort": "trivial",
+      "blocks_domain_work": false,
+      "recommendation": "Rename to follow sop_NNN_name.json convention. Update index references."
+    },
+    {
+      "issue": "SOP execution tracking absent",
+      "severity": "Low",
+      "effort": "small",
+      "blocks_domain_work": false,
+      "recommendation": "Add last_executed/execution_count fields. Low priority quality-of-life improvement."
+    },
+    {
+      "issue": "Source ID gaps (SRC-0009, 0010, 0011)",
+      "severity": "Low",
+      "effort": "trivial",
+      "blocks_domain_work": false,
+      "recommendation": "Document as intentional or fill gaps. Cosmetic only."
+    },
+    {
+      "issue": "Remaining 13 medium/low TOCTOU bugs",
+      "severity": "Medium",
+      "effort": "medium",
+      "blocks_domain_work": false,
+      "recommendation": "Address in next dedicated bug-fix session. Most are stale-snapshot issues inherent to distributed systems or low-impact config read races."
+    }
+  ],
+  "executive_summary": {
+    "overall_health": "MODERATE - infrastructure works but has significant data hygiene debt",
+    "critical_issues": 3,
+    "high_issues": 7,
+    "medium_issues": 6,
+    "low_issues": 3,
+    "key_finding": "The sources index is NOT catastrophically broken as KB-0031 claimed -- it has been repaired. However, 15 orphaned scripts, 34 KB entries missing titles, and 18 remaining TOCTOU bugs represent significant technical debt. The most impactful quick win is indexing the 15 orphaned scripts (trivial effort, critical impact).",
+    "immediate_actions": [
+      "1. Index 15 orphaned scripts in storage/scripts/index.json (5 min)",
+      "2. Add TEAM-0032 to sessions/index.json (2 min)",
+      "3. Backfill titles into 34 KB entry YAML frontmatter (scriptable, 10 min)",
+      "4. Fix TOCTOU-WS-001 and TOCTOU-HP-001 critical race conditions (30 min each)"
+    ]
+  }
+}

@@ -55,7 +55,8 @@ def _retry_on_busy(func):
                         func.__name__, attempt + 1, _MAX_RETRIES, delay,
                     )
                     time.sleep(delay)
-                    delay *= 2
+                    # P0 FIX: Cap backoff at 50ms to avoid 1.6s+ delays
+                    delay = min(delay * 2, 0.05)
                 else:
                     raise
         raise last_err  # type: ignore[misc]
@@ -198,22 +199,107 @@ class WorkStealing:
         Team label for this instance (used as owner_team on enqueue).
     agent_id:
         Agent identifier for bus messages.
+    auto_reclaim:
+        If True, start a background daemon thread that periodically
+        reclaims abandoned (zombie) work items.
+    reclaim_interval:
+        Seconds between reclaim sweeps (default 30).
+    reclaim_timeout:
+        Seconds a work item can stay in 'claimed' before being reclaimed
+        (default 1800).
+    partitioned_store:
+        Optional PartitionedStore instance.  When provided, the queue
+        partition is used for work_queue, pipelines, and pipeline_stages
+        tables instead of opening a new connection to db_path.
     """
 
-    def __init__(self, db_path: str, bus_dir: Optional[str], team: str, agent_id: str) -> None:
+    def __init__(self, db_path: str, bus_dir: Optional[str], team: str, agent_id: str,
+                 auto_reclaim: bool = False, reclaim_interval: int = 30,
+                 reclaim_timeout: int = 1800,
+                 partitioned_store: Optional["PartitionedStore"] = None) -> None:
         self.db_path = db_path
         self.bus_dir = bus_dir
         self.team = team
         self.agent_id = agent_id
+        self._partitioned_store = partitioned_store
         self._lock = threading.Lock()
-        self._conn = _open_db(db_path)
+        if partitioned_store is not None:
+            self._conn = partitioned_store.queue.conn
+            self._owns_conn = False
+        else:
+            self._conn = _open_db(db_path)
+            self._owns_conn = True
         self._closed = False
+        self._reclaim_thread: Optional[threading.Thread] = None
+        self._reclaim_stop = threading.Event()
+        # P0 FIX: Optionally start automatic zombie reclaim on construction
+        if auto_reclaim:
+            self.start_reclaim_thread(interval=reclaim_interval,
+                                     timeout_seconds=reclaim_timeout)
+
+    def start_reclaim_thread(self, interval: int = 30,
+                             timeout_seconds: int = 1800) -> None:
+        """Start a background daemon thread that periodically reclaims zombie work.
+
+        The thread calls ``reclaim_abandoned_work(timeout_seconds)`` every
+        *interval* seconds.  It is a daemon thread so it will not prevent
+        interpreter shutdown.
+
+        Parameters
+        ----------
+        interval:
+            Seconds between reclaim sweeps (default 30).
+        timeout_seconds:
+            Passed through to ``reclaim_abandoned_work()`` as the staleness
+            threshold (default 1800 = 30 minutes).
+        """
+        if self._reclaim_thread is not None and self._reclaim_thread.is_alive():
+            logger.warning("Reclaim thread already running; ignoring duplicate start")
+            return
+
+        self._reclaim_stop.clear()
+
+        def _reclaim_loop() -> None:
+            logger.info(
+                "Reclaim thread started (interval=%ds, timeout=%ds)",
+                interval, timeout_seconds,
+            )
+            while not self._reclaim_stop.wait(timeout=interval):
+                if self._closed:
+                    break
+                try:
+                    reclaimed = self.reclaim_abandoned_work(timeout_seconds)
+                    if reclaimed:
+                        logger.info(
+                            "Auto-reclaimed %d zombie work items: %s",
+                            len(reclaimed), reclaimed,
+                        )
+                except Exception:
+                    logger.warning(
+                        "Reclaim sweep failed", exc_info=True,
+                    )
+            logger.info("Reclaim thread stopped")
+
+        t = threading.Thread(target=_reclaim_loop, name="work-reclaim-daemon",
+                             daemon=True)
+        t.start()
+        self._reclaim_thread = t
+
+    def stop_reclaim_thread(self) -> None:
+        """Signal the background reclaim thread to stop and wait for it."""
+        self._reclaim_stop.set()
+        if self._reclaim_thread is not None:
+            self._reclaim_thread.join(timeout=5)
+            self._reclaim_thread = None
 
     def close(self) -> None:
         with self._lock:
             if self._closed:
                 return
             self._closed = True
+        # Stop the reclaim thread outside the lock to avoid deadlock
+        self.stop_reclaim_thread()
+        if self._owns_conn:
             self._conn.close()
 
     @_retry_on_busy
@@ -300,21 +386,23 @@ class WorkStealing:
         """
         now = time.time()
         with self._lock:
-            row = self._conn.execute(
-                "SELECT claimed_by, owner_team FROM work_queue WHERE id = ?",
-                (work_id,),
-            ).fetchone()
-            if row is None:
-                raise ValueError(f"Work item {work_id} not found")
-            if row["claimed_by"] != self.team and row["owner_team"] != self.team:
+            cur = self._conn.execute(
+                "UPDATE work_queue SET status = 'completed', result = ?, completed_at = ? "
+                "WHERE id = ? AND (claimed_by = ? OR owner_team = ?)",
+                (json.dumps(result), now, work_id, self.team, self.team),
+            )
+            if cur.rowcount == 0:
+                # Determine reason: not found vs not authorized
+                row = self._conn.execute(
+                    "SELECT claimed_by, owner_team FROM work_queue WHERE id = ?",
+                    (work_id,),
+                ).fetchone()
+                if row is None:
+                    raise ValueError(f"Work item {work_id} not found")
                 raise ValueError(
                     f"Team '{self.team}' is not authorized to complete work item {work_id} "
                     f"(claimed by '{row['claimed_by']}', owned by '{row['owner_team']}')"
                 )
-            self._conn.execute(
-                "UPDATE work_queue SET status = 'completed', result = ?, completed_at = ? WHERE id = ?",
-                (json.dumps(result), now, work_id),
-            )
             self._conn.commit()
 
         _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
@@ -347,6 +435,49 @@ class WorkStealing:
                     "SELECT COUNT(*) FROM work_queue WHERE status = 'queued'",
                 ).fetchone()
         return row[0]
+
+    @_retry_on_busy
+    def reclaim_abandoned_work(self, timeout_seconds: int = 1800) -> list[int]:
+        """BUG-WS-003: Reclaim work items stuck in 'claimed' status past timeout.
+
+        Finds work items in 'claimed' status where claimed_at is older than
+        *timeout_seconds* ago, and resets them to 'queued' status so they can
+        be stolen again.
+
+        Returns a list of reclaimed work item IDs.
+        """
+        cutoff = time.time() - timeout_seconds
+        with self._lock:
+            self._conn.execute("BEGIN IMMEDIATE")
+            try:
+                rows = self._conn.execute(
+                    """SELECT id FROM work_queue
+                       WHERE status = 'claimed' AND claimed_at < ?""",
+                    (cutoff,),
+                ).fetchall()
+                reclaimed_ids = [r["id"] for r in rows]
+                if reclaimed_ids:
+                    placeholders = ",".join("?" for _ in reclaimed_ids)
+                    self._conn.execute(
+                        f"""UPDATE work_queue
+                            SET status = 'queued', claimed_by = NULL, claimed_at = NULL
+                            WHERE id IN ({placeholders})""",
+                        reclaimed_ids,
+                    )
+                self._conn.execute("COMMIT")
+            except Exception:
+                try:
+                    self._conn.execute("ROLLBACK")
+                except sqlite3.OperationalError:
+                    pass
+                raise
+
+        for wid in reclaimed_ids:
+            _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+                "event": "work-reclaimed",
+                "work_id": wid,
+            })
+        return reclaimed_ids
 
     @_retry_on_busy
     def get_stealable_work(self) -> list[dict]:
@@ -383,15 +514,34 @@ class PipelineManager:
         Team label for this instance.
     agent_id:
         Agent identifier for bus messages.
+    partitioned_store:
+        Optional PartitionedStore instance.  When provided, the queue
+        partition is used for pipelines and pipeline_stages tables instead
+        of opening a new connection to db_path.
+    vector_clock:
+        Optional VectorClock instance.  When provided, pipeline stage
+        transitions attach vector clock timestamps to bus notifications
+        for causal ordering verification.  Incoming vector clocks from
+        upstream stages are merged before processing.
     """
 
-    def __init__(self, db_path: str, bus_dir: Optional[str], team: str, agent_id: str) -> None:
+    def __init__(self, db_path: str, bus_dir: Optional[str], team: str, agent_id: str,
+                 partitioned_store: Optional["PartitionedStore"] = None,
+                 vector_clock: Optional[object] = None) -> None:
         self.db_path = db_path
         self.bus_dir = bus_dir
         self.team = team
         self.agent_id = agent_id
+        self._partitioned_store = partitioned_store
+        self._vector_clock = vector_clock
+        self._stage_vectors: dict[str, dict[str, int]] = {}
         self._lock = threading.Lock()
-        self._conn = _open_db(db_path)
+        if partitioned_store is not None:
+            self._conn = partitioned_store.queue.conn
+            self._owns_conn = False
+        else:
+            self._conn = _open_db(db_path)
+            self._owns_conn = True
         self._closed = False
 
     def close(self) -> None:
@@ -399,7 +549,8 @@ class PipelineManager:
             if self._closed:
                 return
             self._closed = True
-            self._conn.close()
+            if self._owns_conn:
+                self._conn.close()
 
     @staticmethod
     def _detect_cycles(stages: list[dict]) -> bool:
@@ -524,13 +675,35 @@ class PipelineManager:
             return True
 
     @_retry_on_busy
-    def start_stage(self, pipeline_id: int, stage_name: str) -> None:
+    def start_stage(self, pipeline_id: int, stage_name: str,
+                    incoming_vector_clock: Optional[dict] = None) -> None:
         """Mark a stage as in_progress.
 
         Only stages with status 'ready' can be started. Raises ValueError
         if the stage is already in_progress, completed, or failed.
+
+        Parameters
+        ----------
+        pipeline_id:
+            The pipeline this stage belongs to.
+        stage_name:
+            Name of the stage to start.
+        incoming_vector_clock:
+            Optional vector clock from the upstream stage that triggered
+            this one.  When provided and a vector_clock is configured,
+            the clock is merged before processing to maintain causal order.
         """
         now = time.time()
+
+        # Merge incoming vector clock if available
+        if incoming_vector_clock and self._vector_clock is not None:
+            try:
+                self._vector_clock.merge(incoming_vector_clock)
+                stage_key = f"{pipeline_id}:{stage_name}"
+                self._stage_vectors[stage_key] = self._vector_clock.vector
+            except Exception as e:
+                logger.warning("Vector clock merge failed for stage %s: %s", stage_name, e)
+
         with self._lock:
             row = self._conn.execute(
                 "SELECT status FROM pipeline_stages WHERE pipeline_id = ? AND stage_name = ?",
@@ -548,16 +721,35 @@ class PipelineManager:
             )
             self._conn.commit()
 
-        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+        body: dict = {
             "event": "pipeline-stage-started",
             "pipeline_id": pipeline_id,
             "stage_name": stage_name,
-        })
+        }
+        if self._vector_clock is not None:
+            body["vector_clock"] = self._vector_clock.vector
+
+        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, body)
 
     @_retry_on_busy
     def complete_stage(self, pipeline_id: int, stage_name: str, output_data: dict) -> None:
-        """Mark a stage as completed and store its output data."""
+        """Mark a stage as completed and store its output data.
+
+        When a vector_clock is configured, the clock is ticked and attached
+        to the bus notification so downstream stages can merge it.
+        """
         now = time.time()
+
+        # Tick vector clock on stage completion
+        vc_snapshot = None
+        if self._vector_clock is not None:
+            try:
+                vc_snapshot = self._vector_clock.tick()
+                stage_key = f"{pipeline_id}:{stage_name}"
+                self._stage_vectors[stage_key] = vc_snapshot
+            except Exception as e:
+                logger.warning("Vector clock tick failed for stage %s: %s", stage_name, e)
+
         with self._lock:
             self._conn.execute(
                 """UPDATE pipeline_stages
@@ -567,11 +759,15 @@ class PipelineManager:
             )
             self._conn.commit()
 
-        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+        body: dict = {
             "event": "pipeline-stage-completed",
             "pipeline_id": pipeline_id,
             "stage_name": stage_name,
-        })
+        }
+        if vc_snapshot is not None:
+            body["vector_clock"] = vc_snapshot
+
+        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, body)
 
     @_retry_on_busy
     def fail_stage(self, pipeline_id: int, stage_name: str, error: str) -> None:
@@ -706,14 +902,125 @@ class PipelineManager:
 
         # Bus notification for each newly-ready stage
         for name in newly_ready:
-            _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+            body: dict = {
                 "event": "pipeline-stage-ready",
                 "pipeline_id": pipeline_id,
                 "stage_name": name,
                 "triggered_by": completed_stage,
-            })
+            }
+            # Attach vector clock from the completed stage so downstream
+            # stages can merge it on start
+            if self._vector_clock is not None:
+                completed_key = f"{pipeline_id}:{completed_stage}"
+                vc = self._stage_vectors.get(completed_key)
+                if vc is not None:
+                    body["vector_clock"] = vc
+                else:
+                    body["vector_clock"] = self._vector_clock.vector
+
+            _bus_notify(self.bus_dir, "global", self.agent_id, self.team, body)
 
         return newly_ready
+
+    def verify_ordering(self, pipeline_id: int) -> dict:
+        """Verify that pipeline stage messages are in causal order.
+
+        Uses the stored vector clock snapshots for each stage to check
+        whether the completion order respects causal dependencies.
+
+        Parameters
+        ----------
+        pipeline_id:
+            The pipeline to verify.
+
+        Returns
+        -------
+        dict
+            {
+                "pipeline_id": int,
+                "in_order": bool,
+                "violations": list[dict],
+                "stage_vectors": dict,
+            }
+        """
+        if self._vector_clock is None:
+            return {
+                "pipeline_id": pipeline_id,
+                "in_order": True,
+                "violations": [],
+                "stage_vectors": {},
+                "note": "No vector clock configured; ordering not tracked.",
+            }
+
+        # Gather stage vectors for this pipeline
+        prefix = f"{pipeline_id}:"
+        stage_vecs: dict[str, dict[str, int]] = {}
+        for key, vc in self._stage_vectors.items():
+            if key.startswith(prefix):
+                stage_name = key[len(prefix):]
+                stage_vecs[stage_name] = vc
+
+        if not stage_vecs:
+            return {
+                "pipeline_id": pipeline_id,
+                "in_order": True,
+                "violations": [],
+                "stage_vectors": {},
+                "note": "No vector clock data recorded for this pipeline.",
+            }
+
+        # Get the pipeline dependency graph
+        violations = []
+        with self._lock:
+            stages = self._conn.execute(
+                "SELECT stage_name, depends_on, status FROM pipeline_stages WHERE pipeline_id = ?",
+                (pipeline_id,),
+            ).fetchall()
+
+        for stage in stages:
+            stage_name = stage["stage_name"]
+            deps = json.loads(stage["depends_on"]) if stage["depends_on"] else []
+            if stage_name not in stage_vecs:
+                continue
+            stage_vc = stage_vecs[stage_name]
+
+            for dep_name in deps:
+                if dep_name not in stage_vecs:
+                    continue
+                dep_vc = stage_vecs[dep_name]
+                # The dependency should have happened-before this stage.
+                # Import is avoided; we do a manual check inline.
+                # is_before: dep_vc[a] <= stage_vc[a] for all a, and strict < for at least one
+                all_agents = set(dep_vc.keys()) | set(stage_vc.keys())
+                all_leq = True
+                at_least_one_less = False
+                for agent in all_agents:
+                    c_dep = dep_vc.get(agent, 0)
+                    c_stage = stage_vc.get(agent, 0)
+                    if c_dep > c_stage:
+                        all_leq = False
+                        break
+                    if c_dep < c_stage:
+                        at_least_one_less = True
+
+                if not (all_leq and at_least_one_less):
+                    violations.append({
+                        "stage": stage_name,
+                        "dependency": dep_name,
+                        "stage_vc": stage_vc,
+                        "dep_vc": dep_vc,
+                        "reason": (
+                            f"Stage '{stage_name}' (vc={stage_vc}) does not causally "
+                            f"follow dependency '{dep_name}' (vc={dep_vc})"
+                        ),
+                    })
+
+        return {
+            "pipeline_id": pipeline_id,
+            "in_order": len(violations) == 0,
+            "violations": violations,
+            "stage_vectors": stage_vecs,
+        }
 
 
 # ===================================================================
@@ -735,14 +1042,25 @@ class Scratchpad:
         Team label (used as default namespace).
     agent_id:
         Agent identifier (recorded as ``written_by``).
+    partitioned_store:
+        Optional PartitionedStore instance.  When provided, the findings
+        partition is used for the scratchpad table instead of opening a
+        new connection to db_path.
     """
 
-    def __init__(self, db_path: str, team: str, agent_id: str) -> None:
+    def __init__(self, db_path: str, team: str, agent_id: str,
+                 partitioned_store: Optional["PartitionedStore"] = None) -> None:
         self.db_path = db_path
         self.team = team
         self.agent_id = agent_id
+        self._partitioned_store = partitioned_store
         self._lock = threading.Lock()
-        self._conn = _open_db(db_path)
+        if partitioned_store is not None:
+            self._conn = partitioned_store.findings.conn
+            self._owns_conn = False
+        else:
+            self._conn = _open_db(db_path)
+            self._owns_conn = True
         self._closed = False
 
     def close(self) -> None:
@@ -750,7 +1068,8 @@ class Scratchpad:
             if self._closed:
                 return
             self._closed = True
-            self._conn.close()
+            if self._owns_conn:
+                self._conn.close()
 
     @_retry_on_busy
     def write(self, key: str, value: Any, namespace: Optional[str] = None, ttl: int = 3600) -> None:

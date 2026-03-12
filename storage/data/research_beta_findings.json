@@ -1,0 +1,277 @@
+{
+  "team": "research-beta",
+  "date": "2026-03-11",
+  "topic": "New APIs, Data Sources, and Tools",
+  "existing_catalog_count": 41,
+  "new_sources": [
+    {
+      "name": "Groq Cloud API",
+      "url": "https://api.groq.com/openai/v1",
+      "category": "AI/ML",
+      "access": "freemium",
+      "description": "Ultra-fast LLM inference API powered by Groq LPU hardware. Supports Llama 4 Scout, Llama 3.3 70B, Qwen 2.5 series, and other open-source models. OpenAI-compatible API format. Free tier requires no credit card.",
+      "data_types": ["text-generation", "chat-completions", "embeddings", "audio-transcription"],
+      "rate_limit": "Free tier has per-minute token/request caps; no credit card required",
+      "relevance": "Fastest free LLM inference available (~300 tok/s). 1.9M+ developers. Complements our HuggingFace entry with a speed-focused alternative for open-source models."
+    },
+    {
+      "name": "NASA Open APIs",
+      "url": "https://api.nasa.gov/",
+      "category": "Science/Space",
+      "access": "api-key",
+      "description": "Suite of APIs providing NASA data including Astronomy Picture of the Day (APOD), Mars Rover Photos, Earth satellite imagery (Landsat 8), EPIC/DSCOVR Earth imagery, Near Earth Object Web Service, and more.",
+      "data_types": ["satellite-imagery", "astronomy-photos", "mars-rover-photos", "near-earth-objects", "earth-observation", "space-weather"],
+      "rate_limit": "1000 requests/hour with free API key",
+      "relevance": "Major free government data source covering space science, Earth observation, and astronomy. High-quality imagery endpoints useful for ML training and data visualization."
+    },
+    {
+      "name": "OSV.dev API (Google Open Source Vulnerabilities)",
+      "url": "https://api.osv.dev/v1",
+      "category": "Developer/Security",
+      "access": "free",
+      "description": "Google's open source vulnerability database API. Query vulnerabilities by commit hash, package version, or OSV ID across all major ecosystems (PyPI, npm, Go, Maven, Debian, etc.). Aggregates from GitHub Security Advisories, PyPA, RustSec, and more.",
+      "data_types": ["vulnerability-data", "security-advisories", "package-vulnerabilities", "CVE-data", "ecosystem-security"],
+      "rate_limit": "No rate limits currently. 32MiB response size limit on HTTP/1.1",
+      "relevance": "Critical security tool with no rate limits. Covers all major package ecosystems. Complements our PyPI vulnerability data (SRC-0027) with cross-ecosystem coverage."
+    },
+    {
+      "name": "NCBI E-utilities / PubMed API",
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/",
+      "category": "Health/Science",
+      "access": "free",
+      "description": "Public API to the NCBI Entrez system providing access to PubMed (36M+ biomedical citations), PMC (full-text articles), Gene, Protein, Nucleotide, and other NCBI databases. Suite of 8 server-side programs for search, link, and retrieval.",
+      "data_types": ["biomedical-literature", "citations", "full-text-articles", "gene-data", "protein-data", "clinical-data", "mesh-terms"],
+      "rate_limit": "3 requests/second without API key; 10 requests/second with free API key",
+      "relevance": "The gold standard for biomedical literature search. 36M+ records. Essential for any health/science research pipeline."
+    },
+    {
+      "name": "ClinicalTrials.gov API v2.0",
+      "url": "https://clinicaltrials.gov/api/v2",
+      "category": "Health/Science",
+      "access": "free",
+      "description": "REST API for the world's largest clinical trials registry. Access study records, interventions, outcomes, eligibility criteria, and sponsor information. JSON responses with ISO 8601 dates. No authentication required.",
+      "data_types": ["clinical-trials", "study-protocols", "interventions", "outcomes", "eligibility-criteria", "sponsor-data"],
+      "rate_limit": "No documented rate limit; reasonable use expected",
+      "relevance": "Largest publicly available clinical trials database. No auth required. Critical for pharmaceutical research, health policy analysis, and medical AI applications."
+    },
+    {
+      "name": "openFDA API",
+      "url": "https://api.fda.gov/",
+      "category": "Health/Regulatory",
+      "access": "free",
+      "description": "Elasticsearch-based API serving public FDA data on drugs, medical devices, and food. Includes adverse event reports (FAERS), recall enforcement data, product labeling, 510(k) clearances, and more. 82,000+ recalls indexed.",
+      "data_types": ["drug-adverse-events", "food-recalls", "medical-device-data", "drug-labeling", "enforcement-reports", "510k-clearances"],
+      "rate_limit": "No key: 240 requests/min per IP. With key: 240 requests/min",
+      "relevance": "Unique regulatory health data source covering drug safety signals, recalls, and device approvals. No authentication required for basic access."
+    },
+    {
+      "name": "ACLED API (Armed Conflict Location & Event Data)",
+      "url": "https://api.acleddata.com/acled/read",
+      "category": "Geopolitical/Conflict",
+      "access": "api-key",
+      "description": "Real-time data on political violence, protests, and conflict events worldwide. Covers dates, actors, locations, fatalities, and event types. ~200K events/year across all countries and territories.",
+      "data_types": ["conflict-events", "political-violence", "protests", "fatalities", "actor-data", "geospatial-conflict-data"],
+      "rate_limit": "Pagination required (5000 rows per call). Free registration at developer.acleddata.com",
+      "relevance": "Premier source for real-time global conflict monitoring. Complements GDELT (SRC-0015) with structured, curated conflict event data rather than news-derived signals."
+    },
+    {
+      "name": "CourtListener REST API (Free Law Project)",
+      "url": "https://www.courtlistener.com/api/rest/v4/",
+      "category": "Legal",
+      "access": "free",
+      "description": "Comprehensive legal data API from the Free Law Project nonprofit. Covers federal and state case law, PACER data via RECAP Archive, oral argument audio, judge information, and financial disclosures. Hundreds of millions of docket entries.",
+      "data_types": ["court-opinions", "case-law", "docket-entries", "oral-arguments", "judge-data", "financial-disclosures", "PACER-data"],
+      "rate_limit": "Open by default for experimentation. Bulk data also available",
+      "relevance": "Best free alternative to PACER for federal court data. Fills a major gap in our catalog - we had zero legal data sources."
+    },
+    {
+      "name": "Federal Register API",
+      "url": "https://www.federalregister.gov/api/v1/",
+      "category": "Legal/Regulatory",
+      "access": "free",
+      "description": "Free access to all Federal Register documents from 1994 to present. No API key required. Returns JSON or CSV. Covers proposed rules, final rules, presidential documents, notices, and executive orders.",
+      "data_types": ["federal-regulations", "proposed-rules", "final-rules", "executive-orders", "presidential-documents", "agency-notices"],
+      "rate_limit": "No key required. Paginated results",
+      "relevance": "Official source for U.S. federal regulatory documents. No authentication needed. Essential for regulatory research and policy analysis."
+    },
+    {
+      "name": "Regulations.gov API",
+      "url": "https://api.regulations.gov/v4/",
+      "category": "Legal/Regulatory",
+      "access": "api-key",
+      "description": "API for federal rulemaking data including documents, public comments, and dockets. Supports full-text search and filtering. Covers proposed rules, final rules, supporting documents across all federal agencies.",
+      "data_types": ["regulatory-documents", "public-comments", "rulemaking-dockets", "agency-rules", "comment-analysis"],
+      "rate_limit": "API key required (free). Rate limits apply",
+      "relevance": "Unique source for public participation data in federal rulemaking. Enables research on regulatory processes and public comment analysis."
+    },
+    {
+      "name": "Open Library API",
+      "url": "https://openlibrary.org/",
+      "category": "Education/Books",
+      "access": "free",
+      "description": "Internet Archive project providing a web page for every book ever published. RESTful API with JSON/YAML/RDF formats. Search by title, author, ISBN, subject. Covers millions of book records with metadata, covers, and reading availability.",
+      "data_types": ["book-metadata", "author-data", "ISBN-lookup", "book-covers", "reading-logs", "edition-data", "subject-data"],
+      "rate_limit": "No key required. 3x rate boost with User-Agent identification",
+      "relevance": "Massive free book metadata API with no authentication required. Fills our Education/Books gap. Useful for building reading tools, library apps, and bibliographic research."
+    },
+    {
+      "name": "DuckDuckGo Instant Answer API",
+      "url": "https://api.duckduckgo.com/",
+      "category": "Search/Utility",
+      "access": "free",
+      "description": "Privacy-focused instant answer API. Returns structured JSON with abstracts, related topics, and source URLs for factual queries. No authentication or API key needed. Does not return full search results, only structured instant answers.",
+      "data_types": ["instant-answers", "abstracts", "related-topics", "entity-information", "disambiguation"],
+      "rate_limit": "No documented rate limit; reasonable use expected",
+      "relevance": "Zero-auth search utility for quick factual lookups. Privacy-focused alternative to Google APIs. Useful for entity resolution and quick fact verification."
+    },
+    {
+      "name": "Google Knowledge Graph Search API",
+      "url": "https://kgsearch.googleapis.com/v1/entities:search",
+      "category": "Knowledge Graph",
+      "access": "api-key",
+      "description": "Search Google's Knowledge Graph for entities (people, places, things) using keywords, IDs, or entity types. Returns JSON-LD following schema.org standards. Provides structured entity data drawn from Wikipedia, Freebase, and other sources.",
+      "data_types": ["entity-search", "knowledge-graph", "structured-data", "schema-org-entities", "entity-descriptions"],
+      "rate_limit": "Free API key required from Google API Console. Standard Google API quotas",
+      "relevance": "Fills our Knowledge Graph category gap alongside Wikidata/DBpedia/ConceptNet. Provides Google's curated entity data with schema.org standards."
+    },
+    {
+      "name": "Alpaca Markets API",
+      "url": "https://api.alpaca.markets/v2",
+      "category": "Financial/Trading",
+      "access": "freemium",
+      "description": "Commission-free stock, options, and crypto trading API with free market data. Includes WebSocket streaming (IEX feed on free tier), 7+ years historical data, paper trading, and real-time quotes. Up to 10,000 API calls/min.",
+      "data_types": ["stock-prices-realtime", "stock-prices-historical", "options-data", "crypto-prices", "trade-execution", "paper-trading", "websocket-streaming"],
+      "rate_limit": "10,000 calls/min on free tier. WebSocket streaming included",
+      "relevance": "Most generous free tier for combined market data + trading API. WebSocket support fills our real-time streaming gap. Paper trading enables strategy backtesting."
+    },
+    {
+      "name": "WHO Global Health Observatory (GHO) OData API",
+      "url": "https://ghoapi.azureedge.net/api/",
+      "category": "Health/Global",
+      "access": "free",
+      "description": "WHO's API for global health statistics including disease burden, mortality, health systems, environmental health, and SDG health indicators. Covers 194 WHO member states with time-series data.",
+      "data_types": ["global-health-statistics", "disease-burden", "mortality-data", "health-indicators", "SDG-data", "country-health-profiles"],
+      "rate_limit": "No authentication required. No documented rate limit",
+      "relevance": "Authoritative global health data from the WHO. Complements World Bank (SRC-0023) health indicators with WHO-specific disease and health system metrics."
+    },
+    {
+      "name": "CoinCap API",
+      "url": "https://api.coincap.io/v2",
+      "category": "Crypto/Real-time",
+      "access": "free",
+      "description": "Real-time cryptocurrency pricing data with public WebSocket endpoint for streaming price updates. Covers 1000+ assets. REST API for historical data, exchanges, and markets. WebSocket at wss://ws.coincap.io/prices?assets=ALL.",
+      "data_types": ["cryptocurrency-prices-realtime", "websocket-streaming", "exchange-data", "market-data", "historical-prices"],
+      "rate_limit": "200 requests/min without key. WebSocket is unlimited and free",
+      "relevance": "Free WebSocket streaming for crypto prices with no authentication. Complements CoinGecko (SRC-0041) and CoinPaprika (SRC-0044) with real-time streaming focus."
+    },
+    {
+      "name": "Libraries.io API",
+      "url": "https://libraries.io/api/",
+      "category": "Developer/Packages",
+      "access": "api-key",
+      "description": "Open source package intelligence covering 9.96M packages across 37+ package managers. Provides dependency data, SourceRank scoring, version history, license info, and repository metadata. Aggregates data from npm, PyPI, Maven, Cargo, and more.",
+      "data_types": ["package-metadata", "dependency-graphs", "sourcerank-scores", "license-data", "version-history", "repository-metadata", "platform-data"],
+      "rate_limit": "60 requests/min with free API key",
+      "relevance": "Cross-ecosystem package intelligence that complements our npm (SRC-0026) and PyPI (SRC-0027) entries. Covers 37+ package managers in one API with dependency and quality scoring."
+    },
+    {
+      "name": "Polygon.io / Massive API",
+      "url": "https://api.polygon.io/v2",
+      "category": "Financial/Real-time",
+      "access": "freemium",
+      "description": "Stock, options, forex, and crypto market data API with WebSocket streaming support. Provides tick-by-tick data, aggregates, reference data, and market snapshots. Rebranded to Massive.com in Oct 2025 but polygon.io endpoints still work.",
+      "data_types": ["stock-prices-realtime", "options-data", "forex-rates", "crypto-prices", "websocket-streaming", "tick-data", "market-snapshots"],
+      "rate_limit": "Free tier: 5 calls/min. Paid plans from $199/mo",
+      "relevance": "Premium-quality financial data with WebSocket streaming. While free tier is limited, it provides tick-level granularity not available from Alpha Vantage or Finnhub."
+    },
+    {
+      "name": "YAGO Knowledge Base",
+      "url": "https://yago-knowledge.org/sparql",
+      "category": "Knowledge Graph",
+      "access": "free",
+      "description": "Large knowledge base derived from Wikipedia, Wikidata, and schema.org. YAGO 4.5 contains 2 billion type-consistent triples for 64 million entities. SPARQL endpoint available. Supports OWL 2 description logic reasoning.",
+      "data_types": ["knowledge-graph", "entities", "ontology", "geographic-data", "biographical-data", "taxonomic-data", "semantic-reasoning"],
+      "rate_limit": "Free SPARQL endpoint. Bulk downloads also available",
+      "relevance": "Cleaner and more logically consistent than raw Wikidata. 2B triples with formal ontology. Strong complement to DBpedia (SRC-0008) and Wikidata (SRC-0005) for reasoning-heavy applications."
+    },
+    {
+      "name": "OpenAI Realtime API (WebSocket)",
+      "url": "https://api.openai.com/v1/realtime",
+      "category": "AI/ML",
+      "access": "freemium",
+      "description": "WebSocket-based API for real-time speech-to-speech and multimodal AI interactions. Supports bidirectional audio streaming, function calling, and voice-to-voice conversation. Requires OpenAI API key with available credits.",
+      "data_types": ["real-time-speech", "audio-streaming", "multimodal-ai", "voice-conversation", "function-calling"],
+      "rate_limit": "Pay-per-token pricing. WebSocket connection maintained for session duration",
+      "relevance": "Represents the frontier of real-time AI APIs with WebSocket streaming. Novel architecture pattern for our catalog showing the shift toward persistent streaming AI connections."
+    },
+    {
+      "name": "NASA Earthdata / GIBS API",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/",
+      "category": "Science/Earth Observation",
+      "access": "free",
+      "description": "NASA's Global Imagery Browse Services providing full-resolution Earth observation satellite imagery via standard OGC WMTS/WMS protocols. Near real-time imagery available within 3-5 hours of observation. Covers atmosphere, ocean, land surface, and more.",
+      "data_types": ["satellite-imagery", "earth-observation", "atmospheric-data", "ocean-data", "land-surface-data", "near-real-time-imagery"],
+      "rate_limit": "Free Earthdata Login required. No rate limits documented",
+      "relevance": "High-resolution, near-real-time Earth observation imagery via standard mapping protocols. Unique geospatial data source not covered by our weather APIs."
+    }
+  ],
+  "new_tools": [
+    {
+      "name": "OSV-Scanner",
+      "url": "https://github.com/google/osv-scanner",
+      "type": "library",
+      "description": "Official CLI frontend to OSV.dev database. Scans project dependencies for known vulnerabilities across all major ecosystems. Supports lockfiles, SBOMs, and container scanning.",
+      "relevance": "Pairs with OSV.dev API for local vulnerability scanning. Supports 12+ languages and all major package managers."
+    },
+    {
+      "name": "Juriscraper",
+      "url": "https://github.com/freelawproject/juriscraper",
+      "type": "library",
+      "description": "Python library for scraping American court websites for opinions, PACER content, and oral arguments. Used by CourtListener/Free Law Project to collect tens of millions of court records.",
+      "relevance": "Companion tool to CourtListener API. Enables direct court data collection when API coverage is insufficient."
+    },
+    {
+      "name": "pytrials",
+      "url": "https://pypi.org/project/pytrials/",
+      "type": "library",
+      "description": "Python wrapper for ClinicalTrials.gov API v2.0. Simplifies queries for study records, search, and data retrieval from the clinical trials registry.",
+      "relevance": "Makes ClinicalTrials.gov API easier to use from Python. Good companion for our health/science data pipeline."
+    },
+    {
+      "name": "Graphiti (by Getzep)",
+      "url": "https://github.com/getzep/graphiti",
+      "type": "framework",
+      "description": "Open-source framework for building real-time knowledge graphs for AI agents. Supports Neo4j, Amazon Neptune, FalkorDB, and Kuzu backends. Uses LLMs for entity and relationship extraction.",
+      "relevance": "Enables building custom knowledge graphs from unstructured data. Bridges our AI/ML and Knowledge Graph categories."
+    },
+    {
+      "name": "Alpaca MCP Server",
+      "url": "https://github.com/alpacahq/alpaca-mcp-server",
+      "type": "service",
+      "description": "Model Context Protocol server enabling AI assistants (Claude, ChatGPT, Cursor) to research markets, analyze data, and execute trades through Alpaca's API.",
+      "relevance": "Demonstrates the emerging MCP pattern for AI-native API access. Could inform how we build agent-accessible data pipelines."
+    }
+  ],
+  "cross_team_notes": [
+    "Groq API provides the fastest free LLM inference - useful for any team needing quick AI processing. OpenAI-compatible format means drop-in replacement.",
+    "OSV.dev has NO rate limits - ideal for bulk vulnerability scanning of our dependencies or any code analysis pipelines.",
+    "ACLED + GDELT together provide comprehensive geopolitical monitoring: ACLED for structured conflict events, GDELT for news-derived signals.",
+    "CourtListener + Federal Register + Regulations.gov together cover the full U.S. legal/regulatory landscape - opinions, rules, and public comments.",
+    "CoinCap WebSocket (wss://ws.coincap.io/prices?assets=ALL) is the easiest zero-auth real-time streaming endpoint - good for testing streaming architectures.",
+    "Libraries.io covers 37+ package managers in one API - much broader than our individual npm and PyPI entries.",
+    "NASA GIBS provides standard WMTS/WMS endpoints that work with any GIS software - no custom integration needed.",
+    "LLM API prices dropped ~80% from 2025 to 2026. Groq Llama 4 Scout is $0.11/M input tokens. Worth revisiting our AI/ML cost assumptions.",
+    "The MCP (Model Context Protocol) pattern is emerging across multiple APIs (Alpaca, Sourcegraph, CourtListener) - this may become the standard way AI agents consume APIs."
+  ],
+  "gaps_identified": [
+    "Education APIs: Khan Academy deprecated their public API. No good free structured education content API exists. OpenStax has no public API.",
+    "Real-time non-financial streaming: Very few free WebSocket APIs exist outside of crypto/stocks. IoT sensor data, social media streams, and event streams are mostly paywalled.",
+    "Geospatial/mapping: We lack free geocoding, routing, and map tile APIs (OpenStreetMap Nominatim, OSRM, Overpass API could fill this).",
+    "Social media APIs: Twitter/X, Reddit, and other social platforms have drastically reduced or eliminated free API access since 2023.",
+    "Translation APIs: While HuggingFace covers translation models, we lack dedicated translation APIs like LibreTranslate or DeepL free tier.",
+    "Audio/music APIs: No free music metadata, lyrics, or audio analysis APIs in our catalog (Spotify API free tier, MusicBrainz could fill this).",
+    "Climate/environmental: Beyond weather, we lack dedicated climate change data APIs (NOAA Climate Data Online, EPA APIs).",
+    "Together AI now requires $5 minimum purchase - no longer has a viable free tier for budget-constrained projects.",
+    "Sourcegraph reduced free code search in 2025 - only 3 Deep Searches per month on free plan."
+  ]
+}

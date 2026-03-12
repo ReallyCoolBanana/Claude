@@ -1,0 +1,237 @@
+{
+  "team": "research-alpha",
+  "date": "2026-03-11",
+  "topic": "Multi-Agent Orchestration State of the Art",
+  "findings": [
+    {
+      "area": "Multi-Agent Orchestration Frameworks (2025-2026)",
+      "current_state": "Three dominant frameworks have emerged: LangGraph (graph-based workflows, v1.0 late 2025, 47M+ PyPI downloads), CrewAI (role-based teams, fastest-growing for multi-agent), and AutoGen/Microsoft Agent Framework (conversational agents, actor-model rewrite in v0.4). OpenAI Swarm was deprecated in favor of the OpenAI Agents SDK. AutoGen split into AG2 (community fork of v0.2) and Microsoft's ground-up rewrite (v0.4) which evolved into the Microsoft Agent Framework combining AutoGen + Semantic Kernel. The industry is converging toward graph-based orchestration patterns. LangGraph pioneered this, but CrewAI, AutoGen v0.4, and others have adopted graph or workflow-based execution models.",
+      "key_insights": [
+        "Industry convergence toward graph-based orchestration: LangGraph pioneered it, now all major frameworks adopt it",
+        "LangGraph v1.0 is now the default runtime for all LangChain agents with 47M+ PyPI downloads",
+        "AutoGen v0.4 adopted the actor model for multi-agent orchestration - a fundamental architecture shift toward event-driven distributed systems",
+        "OpenAI Swarm replaced by OpenAI Agents SDK for production use; Swarm was stateless by design with explicit handoffs",
+        "Microsoft merged AutoGen + Semantic Kernel into the unified Microsoft Agent Framework with workflows, state management, and human-in-the-loop",
+        "Frameworks are composable: common pattern is LangChain for tool management + CrewAI/AutoGen for orchestration",
+        "Orchestrated agent teams increase automation efficiency by 25%+ and cut operational costs ~30%",
+        "CrewAI excels at rapid prototyping with role-based teams; LangGraph excels at production-grade state management; AutoGen excels at iterative conversation-based refinement"
+      ],
+      "relevance_to_us": "Our JSONL + SQLite WAL system is architecturally closest to a custom graph-based orchestrator with shared-state coordination. The industry trend toward graph-based workflows validates our directed-graph approach in multi_team_runner.py. However, we lack durable execution (resume after failure) and human-in-the-loop capabilities that LangGraph v1.0 provides. AutoGen's actor model adoption is worth studying for our coordinator_hub.py pattern. Our system's key advantage is zero external dependencies and full filesystem-level control.",
+      "sources": [
+        "https://o-mega.ai/articles/langgraph-vs-crewai-vs-autogen-top-10-agent-frameworks-2026",
+        "https://www.datacamp.com/tutorial/crewai-vs-langgraph-vs-autogen",
+        "https://www.microsoft.com/en-us/research/articles/autogen-v0-4-reimagining-the-foundation-of-agentic-ai-for-scale-extensibility-and-robustness/",
+        "https://github.com/openai/swarm",
+        "https://learn.microsoft.com/en-us/agent-framework/overview/"
+      ],
+      "recommendations": [
+        "Study LangGraph's durable execution model for implementing crash-recovery resume in our coordinator",
+        "Consider adopting actor-model patterns from AutoGen v0.4 for our agent lifecycle management",
+        "Add graph visualization of agent workflows like LangGraph and AutoGen Studio provide"
+      ]
+    },
+    {
+      "area": "Agent Communication Protocols: A2A and MCP Standards",
+      "current_state": "Two major interoperability standards have emerged in 2025-2026. Anthropic's Model Context Protocol (MCP, Nov 2024) provides standardized tool/context integration for agents - now at 97M+ monthly SDK downloads, adopted by all major AI providers. Google's Agent-to-Agent (A2A) protocol (Apr 2025) provides agent-to-agent networking/collaboration with HTTP/SSE/JSON-RPC foundation. IBM's ACP merged into A2A in Aug 2025. Both are now governed by the Linux Foundation's Agentic AI Foundation (AAIF), co-founded by OpenAI, Anthropic, Google, Microsoft, AWS. A2A v0.3 added gRPC support. MCP dominates in adoption due to simplicity and immediate utility; A2A is more comprehensive but slower to adopt.",
+      "key_insights": [
+        "MCP = plugin system for agents (tools + context); A2A = networking layer for agents (collaboration + coordination)",
+        "Both protocols are complementary, not competing, and now co-governed under Linux Foundation AAIF",
+        "MCP won the adoption race due to simplicity: 97M+ monthly downloads vs A2A's slower enterprise uptake",
+        "A2A built on HTTP/SSE/JSON-RPC with enterprise-grade auth, multi-modal support, long-running task support",
+        "A2A supports tasks that take hours or days with real-time feedback, notifications, and state updates",
+        "Industry consensus: Start with one agent + MCP tools, add A2A when you have genuine multi-agent needs",
+        "A2A v0.3 added gRPC support for higher-performance scenarios"
+      ],
+      "relevance_to_us": "Our JSONL bus is a custom pub/sub system. A2A provides a standardized alternative for agent-to-agent communication that we could eventually adopt or draw from. Our current architecture (JSONL message bus + SQLite shared state) maps well to MCP for tool integration and A2A-like patterns for agent coordination. The A2A protocol's support for long-running tasks with state updates is directly relevant to our coordinator_hub pattern. We should evaluate whether adopting A2A's Agent Card concept could improve our agent discovery/registration.",
+      "sources": [
+        "https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/",
+        "https://dev.to/pockit_tools/mcp-vs-a2a-the-complete-guide-to-ai-agent-protocols-in-2026-30li",
+        "https://www.ibm.com/think/topics/agent2agent-protocol",
+        "https://cloud.google.com/blog/products/ai-machine-learning/agent2agent-protocol-is-getting-an-upgrade",
+        "https://a2a-protocol.org/latest/topics/a2a-and-mcp/"
+      ],
+      "recommendations": [
+        "Evaluate MCP integration for our agent tool usage to benefit from the ecosystem of MCP-compatible tools",
+        "Study A2A's Agent Card specification for improving our agent registration and capability discovery",
+        "Consider A2A's task lifecycle model (submitted/working/input-required/completed/failed) for our help_protocol.py"
+      ]
+    },
+    {
+      "area": "Agent Communication Patterns",
+      "current_state": "Five major communication patterns dominate: (1) Direct message passing with typed messages (REQUEST_TASK, BID_ON_TASK, etc.), (2) Pub/Sub for loosely coupled event dissemination, (3) Shared memory/blackboard systems where agents coordinate through a shared data structure with autonomous volunteering, (4) Contract Net Protocol (marketplace) for competitive task allocation via bidding, (5) Event-based synchronization with barriers for phase coordination. The blackboard pattern is seeing a resurgence in LLM-based systems, with new research (LbMAS) showing agents communicating solely through the blackboard without any direct contact. Real production systems blend multiple patterns.",
+      "key_insights": [
+        "Blackboard pattern resurgence: LbMAS architecture has agents communicate SOLELY through blackboard, no direct contact",
+        "In blackboard architecture, there is no task assignment - requests are broadcast and agents autonomously volunteer",
+        "Pub/Sub is best for loosely coupled reactive agents but agents only see slices, not the whole picture",
+        "Contract Net Protocol (marketplace/auction) enforces accountability and is ideal for load balancing",
+        "Event-based barriers ensure parallel tasks complete before next phase - critical for phased operations",
+        "Real systems blend patterns: swarm + blackboard + marketplace can coexist",
+        "For LLM agents, pub/sub keeps agents reactive (good for alerts, not structured reasoning)"
+      ],
+      "relevance_to_us": "Our system already implements a hybrid: JSONL bus (pub/sub pattern) + SQLite shared state (blackboard pattern) + help_protocol (marketplace-like bidding). The research validates our hybrid approach. The LbMAS blackboard-only architecture is interesting - our SQLite shared state already serves as a partial blackboard, but we could formalize it. Our direct_channels.py implements the direct message passing pattern. The Contract Net Protocol's bidding mechanism maps to our work_stealing.py. We are already blending patterns effectively.",
+      "sources": [
+        "https://apxml.com/courses/agentic-llm-memory-architectures/chapter-5-multi-agent-systems/coordination-mechanisms-mas",
+        "https://medium.com/@dp2580/building-intelligent-multi-agent-systems-with-mcps-and-the-blackboard-pattern-to-build-systems-a454705d5672",
+        "https://arxiv.org/html/2507.01701v1",
+        "https://medium.com/@ohusiev_6834/multi-agent-coordination-patterns-architectures-beyond-the-hype-3f61847e4f86",
+        "https://apxml.com/courses/agentic-llm-memory-architectures/chapter-5-multi-agent-systems/communication-protocols-llm-agents"
+      ],
+      "recommendations": [
+        "Formalize our SQLite shared state as an explicit blackboard with public/private spaces",
+        "Add a Contract Net Protocol mode to work_stealing.py for competitive task allocation",
+        "Implement event-based barriers in multi_team_runner.py for cleaner phase transitions"
+      ]
+    },
+    {
+      "area": "Consensus and Conflict Resolution",
+      "current_state": "Active research area with multiple approaches: (1) Rule-based strategies for efficiency and predictability in well-defined tasks, (2) Learning-based strategies via RL and debate for complex tasks, (3) Hierarchical veto with specialized critics holding independent veto authority (Swiss cheese model), (4) Implicit vs explicit consensus (EMNLP 2025) showing implicit consensus consistently outperforms explicit voting, (5) Four enterprise collaboration patterns evaluated: hierarchical delegation, peer-to-peer negotiation, blackboard-based coordination, and market-based allocation. Gartner reports 1,445% surge in multi-agent inquiries Q1 2024 to Q2 2025. Active frontiers include epistemic uncertainty decomposition in multi-agent debate.",
+      "key_insights": [
+        "Implicit consensus consistently outperforms explicit consensus on key metrics (EMNLP 2025)",
+        "Hierarchical veto (Swiss cheese model) is emerging as alternative to consensus voting - each critic has domain-specific veto",
+        "Four proven enterprise patterns: hierarchical delegation, peer-to-peer negotiation, blackboard coordination, market allocation",
+        "Rule-based strategies are more efficient for well-defined procedures; learning-based for variable tasks",
+        "Decentralized protocols + consensus algorithms enhance resilience over centralized control",
+        "MedCollab uses IBIS-structured argumentation for multi-agent debate in clinical diagnosis",
+        "Silo-Bench provides scalable environment for evaluating distributed coordination in multi-agent LLM systems"
+      ],
+      "relevance_to_us": "Our think_tank.py implements a form of implicit consensus where multiple agent groups analyze problems independently and their findings converge. The EMNLP 2025 finding that implicit consensus outperforms explicit validates this approach. We should consider adding the hierarchical veto pattern for quality gates. Our coordinator_hub.py uses hierarchical delegation, but we could benefit from adding peer-to-peer negotiation for teams that need to resolve conflicts without coordinator involvement.",
+      "sources": [
+        "https://aclanthology.org/2025.emnlp-main.772.pdf",
+        "https://theamericanjournals.com/index.php/tajet/article/download/7396/6746/10780",
+        "https://arxiv.org/pdf/2601.14351",
+        "https://arxiv.org/html/2501.06322v1",
+        "https://machinelearningmastery.com/7-agentic-ai-trends-to-watch-in-2026/"
+      ],
+      "recommendations": [
+        "Implement hierarchical veto pattern in think_tank.py for quality-critical decisions",
+        "Add peer-to-peer negotiation capability to direct_channels.py for inter-team conflict resolution",
+        "Formalize our implicit consensus approach in think_tank.py as a first-class pattern"
+      ]
+    },
+    {
+      "area": "Work Distribution: Stealing, Decomposition, Load Balancing",
+      "current_state": "Major advances in 2025: (1) TDAG framework - dynamic task decomposition with auto-generated specialized sub-agents per subtask, (2) GAPPO - genetic algorithm-enhanced PPO for RL-based task allocation with energy-efficient load balancing, (3) Decentralized two-layer architecture (Nature 2025) for dynamic task assignment under partial observability and noisy feedback, (4) Hierarchical MAP with three-layer architecture distributing decomposition across global/type/robot-level agents, (5) Work stealing pattern where workers request work without needing service discovery or load balancing. Message queue + load balancing algorithms are the dominant production pattern for task delegation.",
+      "key_insights": [
+        "TDAG dynamically generates specialized sub-agents per subtask - agents are ephemeral and task-specific",
+        "Decentralized two-layer architectures handle partial observability and noisy feedback better than centralized",
+        "Hierarchical MAP: three layers (global, type, robot) distribute task decomposition for better scaling",
+        "Work stealing requires no service discovery - workers simply request work, making it NAT-friendly and simple",
+        "DynTaskMAS: dynamic frameworks with async parallel execution are up to 33% faster than sequential",
+        "GAPPO: RL + genetic algorithms enable agents to independently evaluate surroundings and adapt allocation",
+        "Multi-layer model approach: lightweight models for perception, LLMs for planning, multi-modal for execution"
+      ],
+      "relevance_to_us": "Our work_stealing.py already implements the core work stealing pattern. The TDAG concept of dynamically generating sub-agents maps well to our help_protocol.py's dynamic reassignment. The hierarchical MAP three-layer architecture could improve our coordinator_hub.py by separating global coordination from type-level and individual-level decisions. Our PipelineManager in work_stealing.py implements DAG-based pipelines which align with the industry trend toward graph-based task decomposition.",
+      "sources": [
+        "https://www.nature.com/articles/s41598-025-21709-9",
+        "https://arxiv.org/abs/2402.10178",
+        "https://www.mdpi.com/2076-3417/15/4/1905",
+        "https://huggingface.co/blog/adarshxs/agentic-task-delegation",
+        "https://stack.convex.dev/work-stealing"
+      ],
+      "recommendations": [
+        "Add dynamic sub-agent generation capability inspired by TDAG for complex subtask handling",
+        "Implement three-layer hierarchical decomposition in coordinator_hub.py (strategic/tactical/execution)",
+        "Add feedback-driven task re-decomposition when subtasks fail or take too long"
+      ]
+    },
+    {
+      "area": "Agent Specialization vs Generalization Trade-offs",
+      "current_state": "Emerging consensus: hybrid architectures win. Specialized agents are 37.6% more precise than generalist agents (2025 peer-reviewed study). In healthcare, specialist multi-agent systems achieved 89% diagnostic accuracy vs 74% for single-agent baseline. However, Google Research's landmark study of 180 agent configurations showed 'more agents' often hits a ceiling and can degrade performance. For sequential reasoning tasks, every multi-agent variant degraded performance by 39-70%. The gap between single-agent and multi-agent is narrowing as frontier LLMs improve. Hybrid cascading (MAS to SAS) improves accuracy 1.1-12% while reducing costs by up to 20%.",
+      "key_insights": [
+        "Specialized agents are 37.6% more precise than generalist agents for their specific tasks",
+        "Google: 180 configurations tested; centralized coordination improves 80.8% on parallelizable tasks but degrades 39-70% on sequential reasoning",
+        "Capability saturation: multi-agent coordination yields diminishing/negative returns once single-agent baselines exceed ~45%",
+        "Independent agents amplify errors 17.2x; centralized coordination contains to 4.4x",
+        "Predictive model (R^2=0.513) uses task properties to predict optimal architecture with 87% accuracy on unseen tasks",
+        "Hybrid cascading (SAS+MAS) improves accuracy 1.1-12% while reducing costs up to 20%",
+        "Early 2025 shifted toward specialized/vertical agents for specific tasks rather than general-purpose",
+        "Prompt intoxication: overloading a single agent with too many tools/instructions degrades accuracy"
+      ],
+      "relevance_to_us": "Our system uses specialized teams (research, coding, analysis) which aligns with the 37.6% precision advantage finding. Our coordinator_hub.py with hub-and-spoke pattern matches the centralized coordination that contains error amplification to 4.4x. Google's finding that sequential reasoning tasks degrade with multi-agent is critical: our think_tank pattern may be counterproductive for tasks that are inherently sequential. We should audit our task assignments against Google's decomposability criteria.",
+      "sources": [
+        "https://research.google/blog/towards-a-science-of-scaling-agent-systems-when-and-why-agent-systems-work/",
+        "https://arxiv.org/abs/2512.08296",
+        "https://www.ginomarin.com/articles/single-vs-multi-agent-ai",
+        "https://arxiv.org/abs/2505.18286",
+        "https://www.infoq.com/news/2026/02/google-agent-scaling-principles/"
+      ],
+      "recommendations": [
+        "Implement task property analysis before team deployment - use decomposability + tool density to select architecture",
+        "Add capability to fall back from multi-agent to single-agent when task is sequential/non-decomposable",
+        "Audit current team assignments against Google's scaling principles to identify tasks where fewer agents would perform better"
+      ]
+    },
+    {
+      "area": "Failure Recovery Patterns in Multi-Agent Systems",
+      "current_state": "Key patterns: (1) Circuit breakers between agent clusters with adaptive thresholds based on interaction success rates, (2) Communication resilience via 95th-percentile timeout calibration, (3) Mesh vs hub-and-spoke debate resolved toward hybrid: high-level orchestrators for strategy + local mesh for tactics, (4) Stateful recovery allowing agents to resume from stored context, (5) LLM-driven fault self-healing (IFSHM) combining LLMs for fault semantic interpretation + deep RL for remediation. New taxonomy of agentic AI faults (arXiv Mar 2026) systematically categorizes failure modes. Industry recognition that most multi-agent failures come from weak reasoning architecture, not weak models.",
+      "key_insights": [
+        "Circuit breakers should use adaptive triggers, not static thresholds - agent behavior changes over time",
+        "Use 95th percentile response times for timeouts, not averages - prevents false failure signals",
+        "Winning hybrid: high-level orchestrators for strategic coordination + local mesh for tactical execution",
+        "Most multi-agent failures are caused by weak reasoning architecture, NOT weak models",
+        "IFSHM: LLM-driven fault diagnosis extracts semantic fault info from logs, DRL selects remediation actions",
+        "New taxonomy (Mar 2026) categorizes faults from prompt failures to cascading action execution errors",
+        "Organizations using multi-agent architectures achieve 45% faster problem resolution and 60% more accurate outcomes",
+        "AI agents market projected $5.25B (2024) to $52.62B (2030) at 46.3% CAGR"
+      ],
+      "relevance_to_us": "Our KB-0017 failure analysis identified 26 failure modes, which aligns well with the new taxonomy work. Our coordinator_hub.py implements hub-and-spoke but should evolve toward the recommended hybrid (orchestrator + local mesh). We lack circuit breakers and adaptive timeout calibration. The IFSHM concept of LLM-driven fault diagnosis is highly relevant - we could use our bus messages as the fault signal input. The emphasis on reasoning architecture over model capability validates our investment in coordination infrastructure.",
+      "sources": [
+        "https://galileo.ai/blog/multi-agent-ai-system-failure-recovery",
+        "https://arxiv.org/pdf/2506.07411",
+        "https://arxiv.org/html/2603.06847",
+        "https://medium.com/@nraman.n6/building-resilient-multi-agent-reasoning-systems-a-practical-guide-for-2026-23992ab8156f",
+        "https://arxiv.org/abs/2511.05511"
+      ],
+      "recommendations": [
+        "Add circuit breaker pattern to coordinator_hub.py with adaptive thresholds based on agent interaction metrics",
+        "Implement 95th-percentile timeout calibration instead of fixed timeouts in help_protocol.py",
+        "Add stateful recovery: serialize agent state to SQLite for crash-resume capability",
+        "Evolve toward hybrid architecture: coordinator for strategic decisions + allow local mesh for team-internal coordination"
+      ]
+    },
+    {
+      "area": "Scalability Limits and Solutions",
+      "current_state": "Critical gap: 63% of organizations experiment with agents, but fewer than 25% scale to production. Key limits: (1) Skill selection degrades non-linearly at capacity thresholds when compiling multi-agent to single-agent, (2) Communication overhead from multi-round natural language coordination is costly, (3) Governance/security concerns - agents deployed faster than secured. Solutions: (1) Hierarchical routing restores accuracy by 40% in large skill libraries, (2) Bounded autonomy with clear limits and escalation paths, (3) Workflow redesign (McKinsey: 3x more likely to scale). CLEAR framework proposed for multi-dimensional evaluation: Cost, Latency, Efficacy, Assurance, Reliability. The 'agent harness' paradigm is emerging for 2026.",
+      "key_insights": [
+        "63% of orgs experiment with agents but <25% scale to production - this is 2026's central business challenge",
+        "Skill selection accuracy degrades non-linearly as libraries grow - phase transition at capacity thresholds",
+        "Hierarchical routing (coarse->fine skill categories) restores accuracy by up to 40% in large libraries",
+        "85% of companies experiment with gen AI but only a small fraction deploy agents in production",
+        "Cost-normalized accuracy (CNA) and cost per success (CPS) are better metrics than raw accuracy",
+        "GAIA benchmark Level 3: top score 61% by Writer's Action Agent (mid-2025)",
+        "Gartner: 1,445% surge in multi-agent system inquiries Q1 2024 to Q2 2025",
+        "Gartner predicts 40% of enterprise apps will embed agents by end of 2026, up from <5% in 2025",
+        "2026 is the year of 'agent harnesses' - structured scaffolding that makes agents reliable at scale"
+      ],
+      "relevance_to_us": "We operate at 5-20 agents which is well within practical scaling limits. Our main risk is coordination overhead, not agent count. The hierarchical routing concept could improve our work_stealing.py task assignment. The CLEAR framework's multi-dimensional evaluation aligns with our need for better benchmarks (per KB-0021's efficiency analysis). The bounded autonomy concept is relevant to our SOP system. Our biggest scaling limit is the single-writer SQLite constraint, which caps write throughput.",
+      "sources": [
+        "https://beta.hyper.ai/en/stories/53d4fafdd3b77c15bc7008b4122bc84c",
+        "https://arxiv.org/html/2511.14136v1",
+        "https://www.onabout.ai/p/mastering-multi-agent-orchestration-architectures-patterns-roi-benchmarks-for-2025-2026",
+        "https://machinelearningmastery.com/7-agentic-ai-trends-to-watch-in-2026/",
+        "https://arxiv.org/pdf/2601.04748"
+      ],
+      "recommendations": [
+        "Implement hierarchical task routing in coordinator_hub.py for better task-to-team matching",
+        "Add CLEAR-style multi-dimensional metrics to our benchmark suite beyond throughput",
+        "Implement bounded autonomy with explicit escalation paths for each agent role",
+        "Consider sharding SQLite writes across multiple databases for higher write throughput at scale"
+      ]
+    }
+  ],
+  "cross_team_notes": [
+    "CRITICAL: Google's scaling research (180 configurations) shows multi-agent degrades performance 39-70% on sequential reasoning tasks. Teams should audit current task assignments and only use multi-agent for parallelizable/decomposable work.",
+    "A2A protocol and MCP are now co-governed under Linux Foundation AAIF. Any team working on external interoperability should prioritize MCP integration first (97M+ downloads, universal adoption), then A2A for agent-to-agent scenarios.",
+    "Implicit consensus (our think_tank pattern) outperforms explicit voting per EMNLP 2025. This validates our approach - do NOT switch to voting-based consensus.",
+    "The industry is converging on graph-based orchestration. Our DAG-based PipelineManager is well-aligned. Other teams should model their workflows as directed graphs.",
+    "Circuit breaker pattern with adaptive thresholds is now industry standard for agent failure handling. The bug-hunting team should add this to coordinator_hub.py.",
+    "AutoGen v0.4 adopted the actor model for agent orchestration. Teams investigating architecture improvements should study this pattern for our agent lifecycle management.",
+    "Hybrid architectures (specialist agents + generalist orchestrator) are the proven winning pattern. Our current architecture already follows this - maintain it.",
+    "The 'agent harness' paradigm (2026) emphasizes structured scaffolding over raw agent capabilities. Our SOP system and coordination infrastructure IS the harness - this validates our investment."
+  ],
+  "priority_actions": [
+    "HIGHEST: Implement task property analysis (decomposability, tool density, sequential vs parallel) before team deployment to select optimal architecture per Google's scaling principles. This alone could improve our system's efficiency by avoiding multi-agent overhead on sequential tasks.",
+    "HIGH: Add circuit breaker pattern with adaptive thresholds to coordinator_hub.py and stateful crash-recovery (serialize agent state to SQLite for resume). This addresses our KB-0017 CR-3 coordinator single point of failure and aligns with industry best practices.",
+    "HIGH: Evaluate MCP integration for our agent tool usage. With 97M+ monthly downloads and universal adoption, MCP is the standard for agent-tool interaction. Adding MCP support would make our agents compatible with the broader ecosystem and unlock the growing library of MCP-compatible tools and data sources."
+  ]
+}

@@ -1,0 +1,622 @@
+{
+  "benchmarks": {
+    "team_sizing": {
+      "description": "Tests coordination overhead for team sizes 1-50 agents",
+      "all_passed": true,
+      "results": [
+        {
+          "team_size": 1,
+          "total_overhead_ms": 7.406,
+          "per_agent_overhead_ms": 7.406,
+          "overhead_pct_of_1s_work": 0.741,
+          "registration_ms": 4.229,
+          "updates_ms": 2.135,
+          "reads_ms": 0.31,
+          "broadcast_ms": 0.478,
+          "work_creation_ms": 0.253
+        },
+        {
+          "team_size": 2,
+          "total_overhead_ms": 11.235,
+          "per_agent_overhead_ms": 5.617,
+          "overhead_pct_of_1s_work": 0.562,
+          "registration_ms": 4.444,
+          "updates_ms": 5.426,
+          "reads_ms": 0.322,
+          "broadcast_ms": 0.493,
+          "work_creation_ms": 0.55
+        },
+        {
+          "team_size": 3,
+          "total_overhead_ms": 14.446,
+          "per_agent_overhead_ms": 4.815,
+          "overhead_pct_of_1s_work": 0.482,
+          "registration_ms": 5.126,
+          "updates_ms": 7.689,
+          "reads_ms": 0.355,
+          "broadcast_ms": 0.519,
+          "work_creation_ms": 0.758
+        },
+        {
+          "team_size": 5,
+          "total_overhead_ms": 22.683,
+          "per_agent_overhead_ms": 4.537,
+          "overhead_pct_of_1s_work": 0.454,
+          "registration_ms": 6.718,
+          "updates_ms": 13.563,
+          "reads_ms": 0.503,
+          "broadcast_ms": 0.671,
+          "work_creation_ms": 1.227
+        },
+        {
+          "team_size": 8,
+          "total_overhead_ms": 33.804,
+          "per_agent_overhead_ms": 4.225,
+          "overhead_pct_of_1s_work": 0.423,
+          "registration_ms": 7.969,
+          "updates_ms": 22.133,
+          "reads_ms": 0.556,
+          "broadcast_ms": 0.698,
+          "work_creation_ms": 2.447
+        },
+        {
+          "team_size": 10,
+          "total_overhead_ms": 45.631,
+          "per_agent_overhead_ms": 4.563,
+          "overhead_pct_of_1s_work": 0.456,
+          "registration_ms": 11.097,
+          "updates_ms": 29.996,
+          "reads_ms": 0.632,
+          "broadcast_ms": 0.789,
+          "work_creation_ms": 3.118
+        },
+        {
+          "team_size": 15,
+          "total_overhead_ms": 63.233,
+          "per_agent_overhead_ms": 4.216,
+          "overhead_pct_of_1s_work": 0.422,
+          "registration_ms": 14.238,
+          "updates_ms": 44.655,
+          "reads_ms": 0.937,
+          "broadcast_ms": 0.559,
+          "work_creation_ms": 2.843
+        },
+        {
+          "team_size": 20,
+          "total_overhead_ms": 74.856,
+          "per_agent_overhead_ms": 3.743,
+          "overhead_pct_of_1s_work": 0.374,
+          "registration_ms": 15.104,
+          "updates_ms": 55.485,
+          "reads_ms": 1.089,
+          "broadcast_ms": 0.626,
+          "work_creation_ms": 2.552
+        },
+        {
+          "team_size": 30,
+          "total_overhead_ms": 137.245,
+          "per_agent_overhead_ms": 4.575,
+          "overhead_pct_of_1s_work": 0.457,
+          "registration_ms": 24.002,
+          "updates_ms": 108.792,
+          "reads_ms": 1.412,
+          "broadcast_ms": 0.537,
+          "work_creation_ms": 2.502
+        },
+        {
+          "team_size": 50,
+          "total_overhead_ms": 173.312,
+          "per_agent_overhead_ms": 3.466,
+          "overhead_pct_of_1s_work": 0.347,
+          "registration_ms": 45.779,
+          "updates_ms": 122.268,
+          "reads_ms": 2.213,
+          "broadcast_ms": 0.622,
+          "work_creation_ms": 2.429
+        }
+      ],
+      "analysis": {
+        "sweet_spot": "3-8 agents: lowest per-agent overhead (4.2-4.8ms) with manageable total overhead (<34ms)",
+        "diminishing_returns_at": 20,
+        "overhead_dominated_by": "status updates (60-70% of total overhead)",
+        "per_agent_overhead_range_ms": "3.5-7.4",
+        "note": "Per-agent overhead is lowest at 50 agents (3.47ms) but total overhead (173ms) becomes significant. Practical sweet spot balances per-agent efficiency with total coordination cost."
+      }
+    },
+    "connection_patterns": {
+      "description": "Hub (centralized) vs Channels (peer-to-peer) throughput comparison",
+      "all_passed": true,
+      "hub": {
+        "registration": {
+          "mean_ms": 0.934,
+          "median_ms": 0.798,
+          "p95_ms": 1.189,
+          "total_ms": 46.718,
+          "count": 50
+        },
+        "status_updates": {
+          "mean_ms": 0.333,
+          "median_ms": 0.311,
+          "p95_ms": 0.485,
+          "total_ms": 16.642,
+          "count": 50
+        },
+        "dashboard_reads": {
+          "mean_ms": 0.088,
+          "median_ms": 0.154,
+          "p95_ms": 0.155,
+          "total_ms": 0.351,
+          "count": 4
+        },
+        "instructions": {
+          "mean_ms": 0.281,
+          "median_ms": 0.264,
+          "p95_ms": 0.321,
+          "total_ms": 28.062,
+          "count": 100
+        },
+        "concurrent_updates": {
+          "mean_ms": 30.926,
+          "median_ms": 19.486,
+          "p95_ms": 105.018,
+          "total_ms": 309.265,
+          "threads": 10,
+          "errors": 0
+        }
+      },
+      "channels": {
+        "creation": {
+          "mean_ms": 0.323,
+          "median_ms": 0.316,
+          "p95_ms": 0.382,
+          "total_ms": 2.906,
+          "count": 9
+        },
+        "message_send": {
+          "mean_ms": 0.51,
+          "median_ms": 0.492,
+          "p95_ms": 0.676,
+          "total_ms": 51.045,
+          "count": 100
+        },
+        "message_read": {
+          "mean_ms": 0.367,
+          "median_ms": 0.347,
+          "p95_ms": 0.554,
+          "total_ms": 3.307,
+          "count": 9
+        },
+        "progress_broadcast": {
+          "mean_ms": 0.319,
+          "median_ms": 0.309,
+          "p95_ms": 0.382,
+          "total_ms": 3.189,
+          "count": 10
+        },
+        "bottleneck_detection": {
+          "mean_ms": 0.012,
+          "median_ms": 0.009,
+          "p95_ms": 0.015,
+          "total_ms": 0.586,
+          "count": 50
+        },
+        "concurrent_messaging": {
+          "mean_ms": 6.058,
+          "median_ms": 0.597,
+          "p95_ms": 55.463,
+          "total_ms": 484.61,
+          "threads": 8,
+          "messages_per_thread": 10,
+          "errors": 0
+        }
+      },
+      "analysis": {
+        "hub_single_op_median_ms": 0.264,
+        "channels_single_op_median_ms": 0.492,
+        "hub_concurrent_p95_ms": 105.018,
+        "channels_concurrent_p95_ms": 55.463,
+        "winner_single_thread": "hub (1.9x faster median for single ops)",
+        "winner_concurrent": "channels (1.9x better p95 under concurrency)",
+        "recommendation": "Use hub for coordination/status; use channels for inter-agent messaging under concurrent load"
+      }
+    },
+    "operation_ordering": {
+      "description": "Pipeline throughput at 3, 5, 10, 20 stages",
+      "all_passed": true,
+      "results": [
+        {
+          "stages": 3,
+          "total_ms": 4.194,
+          "mean_per_stage_ms": 1.064,
+          "median_ms": 0.914,
+          "p95_ms": 1.461
+        },
+        {
+          "stages": 5,
+          "total_ms": 6.184,
+          "mean_per_stage_ms": 0.883,
+          "median_ms": 0.97,
+          "p95_ms": 1.376
+        },
+        {
+          "stages": 10,
+          "total_ms": 11.286,
+          "mean_per_stage_ms": 0.94,
+          "median_ms": 0.967,
+          "p95_ms": 1.267
+        },
+        {
+          "stages": 20,
+          "total_ms": 23.579,
+          "mean_per_stage_ms": 1.072,
+          "median_ms": 1.082,
+          "p95_ms": 1.399
+        }
+      ],
+      "analysis": {
+        "scales_linearly": true,
+        "per_stage_overhead_ms": "0.88-1.07",
+        "optimal_stages": "5-10 (lowest per-stage overhead)",
+        "recommendation": "Pipeline overhead is ~1ms/stage. Keep pipelines under 10 stages for sub-10ms total overhead."
+      }
+    },
+    "contention_analysis": {
+      "description": "Concurrent thread contention: 1-32 threads, proxy for agent-to-subagent ratio efficiency",
+      "all_passed": true,
+      "results": [
+        {
+          "threads": 1,
+          "ops_per_second": 3611.2,
+          "mean_ms": 0.277,
+          "p50_ms": 0.247,
+          "p95_ms": 0.506,
+          "p99_ms": 0,
+          "total_ops": 50,
+          "errors": 0
+        },
+        {
+          "threads": 2,
+          "ops_per_second": 2383.9,
+          "mean_ms": 0.419,
+          "p50_ms": 0.221,
+          "p95_ms": 0.342,
+          "p99_ms": 19.125,
+          "total_ops": 100,
+          "errors": 0
+        },
+        {
+          "threads": 4,
+          "ops_per_second": 1285.3,
+          "mean_ms": 0.778,
+          "p50_ms": 0.236,
+          "p95_ms": 0.363,
+          "p99_ms": 34.093,
+          "total_ops": 200,
+          "errors": 0
+        },
+        {
+          "threads": 8,
+          "ops_per_second": 578.2,
+          "mean_ms": 1.73,
+          "p50_ms": 0.234,
+          "p95_ms": 0.391,
+          "p99_ms": 54.547,
+          "total_ops": 400,
+          "errors": 0
+        },
+        {
+          "threads": 16,
+          "ops_per_second": 202.2,
+          "mean_ms": 4.945,
+          "p50_ms": 0.244,
+          "p95_ms": 0.589,
+          "p99_ms": 129.695,
+          "total_ops": 800,
+          "errors": 0
+        },
+        {
+          "threads": 32,
+          "ops_per_second": 119.7,
+          "mean_ms": 8.354,
+          "p50_ms": 0.226,
+          "p95_ms": 0.538,
+          "p99_ms": 229.942,
+          "total_ops": 1600,
+          "errors": 0
+        }
+      ],
+      "analysis": {
+        "efficiency_curve": {
+          "1_thread": "100% (baseline 3611 ops/s)",
+          "2_threads": "66% (2384 ops/s)",
+          "4_threads": "36% (1285 ops/s)",
+          "8_threads": "16% (578 ops/s)",
+          "16_threads": "5.6% (202 ops/s)",
+          "32_threads": "3.3% (120 ops/s)"
+        },
+        "cliff_at": 4,
+        "note": "p50 latency stays constant (~0.24ms) across all thread counts, but tail latency (p99) explodes: 0ms at 1 thread to 230ms at 32 threads. This indicates SQLite WAL write serialization under contention.",
+        "recommendation": "Keep concurrent writers at 2-4 per database. Beyond 4, throughput drops sharply due to write serialization."
+      }
+    },
+    "work_stealing": {
+      "description": "Work queue enqueue/steal throughput and thundering herd behavior",
+      "all_passed": true,
+      "results": {
+        "enqueue": {
+          "count": 200,
+          "mean_ms": 0.457,
+          "median_ms": 0.444,
+          "p95_ms": 0.699,
+          "total_ms": 91.493
+        },
+        "steal_single": {
+          "count": 200,
+          "mean_ms": 0.355,
+          "median_ms": 0.307,
+          "p95_ms": 0.656,
+          "total_ms": 70.951,
+          "items_stolen": 200
+        },
+        "thundering_herd": {
+          "threads": 10,
+          "items_available": 50,
+          "total_stolen": 50,
+          "no_double_steal": true,
+          "mean_ms": 6.104,
+          "median_ms": 0.237,
+          "p95_ms": 78.786,
+          "total_ms": 610.412
+        },
+        "pipeline": {
+          "count": 16,
+          "mean_ms": 0.372,
+          "median_ms": 0.305,
+          "p95_ms": 1.223,
+          "total_ms": 5.959
+        },
+        "scratchpad": {
+          "count": 200,
+          "mean_ms": 0.121,
+          "median_ms": 0.195,
+          "p95_ms": 0.275,
+          "total_ms": 24.144
+        }
+      },
+      "analysis": {
+        "double_steal_safe": true,
+        "single_steal_throughput_ops_s": 2817,
+        "enqueue_throughput_ops_s": 2188,
+        "thundering_herd_overhead": "10 threads competing for 50 items: p95 jumps to 79ms vs 0.66ms single-thread",
+        "recommendation": "Work stealing is safe (no double-steal). Use single-consumer pattern when possible; thundering herd adds 120x tail latency."
+      }
+    },
+    "help_protocol": {
+      "description": "Help request throughput, offer races, idle detection, and auto-assignment",
+      "all_passed": true,
+      "results": {
+        "work_item_throughput": {
+          "count": 100,
+          "mean_ms": 0.3,
+          "median_ms": 0.285,
+          "p95_ms": 0.398,
+          "total_ms": 30.016
+        },
+        "request_throughput": {
+          "count": 20,
+          "mean_ms": 0.427,
+          "median_ms": 0.434,
+          "p95_ms": 0.582,
+          "total_ms": 8.539
+        },
+        "offer_race": {
+          "races": 5,
+          "total_winners": 5,
+          "total_losers": 20,
+          "mean_ms": 2.264,
+          "median_ms": 1.305,
+          "p95_ms": 8.343,
+          "winner_mean_ms": 0.862,
+          "note": "5 teams racing for 5 requests: exactly 1 winner per request, race resolution is correct"
+        },
+        "idle_detection": {
+          "count": 50,
+          "mean_ms": 0.055,
+          "median_ms": 0.042,
+          "p95_ms": 0.104,
+          "teams_detected": 9
+        },
+        "auto_assignment": {
+          "assignments": 9,
+          "total_ms": 5.389,
+          "per_assignment_ms": 0.599
+        }
+      },
+      "analysis": {
+        "race_safety": "Confirmed: exactly 1 winner per race, no double-assignments",
+        "idle_detection_fast": true,
+        "recommendation": "Help protocol is production-ready. Race resolution is correct under concurrent offers."
+      }
+    },
+    "tool_regression": {
+      "description": "Regression test suite for all repository tools + performance benchmarks",
+      "test_suite": {
+        "suite": "ALL tools",
+        "tools_tested": 12,
+        "total_tests": 45,
+        "passed": 45,
+        "failed": 0,
+        "tool_breakdown": [
+          {
+            "suite": "auto_index tests",
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          {
+            "suite": "cross_ref_checker tests",
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          {
+            "suite": "finding_dedup tests",
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          {
+            "suite": "import_to_db tests",
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          {
+            "suite": "kb_validator tests",
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          {
+            "suite": "pattern_analyzer tests",
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          {
+            "suite": "quality_scorer tests",
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          {
+            "suite": "query_kb tests",
+            "total": 14,
+            "passed": 14,
+            "failed": 0
+          },
+          {
+            "suite": "smart_read tests",
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          {
+            "suite": "smart_search tests",
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          {
+            "suite": "smart_write tests",
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          {
+            "suite": "validate_naming tests",
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          }
+        ]
+      },
+      "query_kb_benchmarks": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "timings": [
+          {
+            "operation": "summary",
+            "ms": 40.62,
+            "tokens": 206
+          },
+          {
+            "operation": "list KB csv",
+            "ms": 40.7,
+            "tokens": 711
+          },
+          {
+            "operation": "search database",
+            "ms": 42.19,
+            "tokens": 119
+          },
+          {
+            "operation": "read entry",
+            "ms": 42.34,
+            "tokens": 96
+          },
+          {
+            "operation": "tags",
+            "ms": 41.6,
+            "tokens": 1413
+          },
+          {
+            "operation": "related",
+            "ms": 41.03,
+            "tokens": 680
+          },
+          {
+            "operation": "invalid ID",
+            "ms": 40.48,
+            "exit_code": 1
+          }
+        ],
+        "mean_ms": 41.28,
+        "peak_memory_kb": 14756
+      },
+      "smart_read_benchmarks": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "timings": [
+          {
+            "operation": "selective fields",
+            "ms": 30.75,
+            "tokens": 96,
+            "savings_pct": 89
+          },
+          {
+            "operation": "summary only",
+            "ms": 30.62,
+            "tokens": 70,
+            "savings_pct": 92
+          },
+          {
+            "operation": "json format",
+            "ms": 31.3,
+            "tokens": 61,
+            "savings_pct": 93
+          },
+          {
+            "operation": "invalid ID",
+            "ms": 30.6,
+            "exit_code": 1
+          }
+        ],
+        "mean_ms": 30.82,
+        "peak_memory_kb": 13412,
+        "average_token_savings_pct": 91.3
+      }
+    }
+  },
+  "summary": {
+    "optimal_team_size": "3-8 agents per team. Per-agent overhead minimizes at 3.5-4.5ms in this range while keeping total coordination overhead under 34ms. Beyond 20 agents, total overhead exceeds 75ms with diminishing returns.",
+    "optimal_connection_pattern": "Hybrid: hub for coordination/status (1.9x faster single-op median at 0.26ms), channels for inter-agent messaging under concurrency (1.9x better p95 at 55ms vs 105ms).",
+    "optimal_ordering": "5-10 pipeline stages optimal. Per-stage overhead is ~0.88-1.07ms. Linear scaling confirmed; keep under 10 stages for sub-10ms total pipeline overhead.",
+    "optimal_agent_ratio": "2-4 concurrent writers per SQLite database. Throughput drops from 3611 ops/s (1 thread) to 578 ops/s (8 threads). The cliff is at 4 threads where efficiency drops below 36%. Tail latency (p99) explodes from ~0ms to 34ms at 4 threads and 230ms at 32 threads.",
+    "key_findings": [
+      "All 45 tool regression tests pass (12 tools tested). No regressions detected.",
+      "Coordination overhead is dominated by status updates (60-70% of total), not registration or reads.",
+      "SQLite WAL handles up to 4 concurrent writers efficiently; beyond that, write serialization causes severe tail latency (p99 >50ms).",
+      "Work stealing is double-steal safe under thundering herd conditions (10 threads, 50 items), but adds 120x tail latency vs single-consumer.",
+      "Help protocol race resolution is correct: exactly 1 winner per race, no double-assignments across 5 concurrent races.",
+      "Channels peer-to-peer messaging outperforms hub under concurrent load (p95: 55ms vs 105ms), but hub is faster for single-threaded coordination ops.",
+      "smart_read achieves 91% average token savings vs full file reads, at ~31ms per operation.",
+      "query_kb averages 41ms per operation with peak memory of 14.8MB - lightweight enough for frequent agent use.",
+      "Pipeline overhead scales linearly at ~1ms/stage. No nonlinear bottlenecks detected up to 20 stages.",
+      "Idle detection is extremely fast (0.04ms median) - suitable for high-frequency polling in coordinator loops."
+    ]
+  },
+  "date": "2026-03-11"
+}

@@ -1,6 +1,5 @@
 {
   "version": "1.0",
-  "last_updated": "2026-03-11",
   "tools": [
     {
       "id": "TOOL-0001",
@@ -9,7 +8,6 @@
       "path": "sonnet-research-api/",
       "category": "integration",
       "auth_type": "api-key",
-      "date_added": "2026-03-10",
       "team": "TEAM-0002",
       "modules": [
         "client.py",
@@ -30,14 +28,40 @@
         "api",
         "queue"
       ],
-      "added": "2026-03-11",
       "last_used": "2026-03-11",
-      "usage_count": 0
+      "usage_count": 0,
+      "date": "2026-03-11"
+    },
+    {
+      "id": "TOOL-0002",
+      "name": "API Documentation Parser",
+      "description": "Parses OpenAPI/Swagger specs (2.0 and 3.x). Extracts endpoint summaries, parameters, request/response schemas, security schemes, and tags. Resolves $ref references. Generates structured JSON or Markdown reports of API capabilities. CLI with parse, summary, and endpoints commands.",
+      "path": "doc_parser.py",
+      "category": "analysis",
+      "auth_type": "none",
+      "team": "PROG-TEAM-1",
+      "modules": [
+        "doc_parser.py"
+      ],
+      "entry_point": "doc_parser.py",
+      "requires": [],
+      "tags": [
+        "openapi",
+        "swagger",
+        "api",
+        "parser",
+        "documentation"
+      ],
+      "last_used": "2026-03-11",
+      "usage_count": 0,
+      "date": "2026-03-11"
     }
   ],
   "categories": {
     "communication": [],
-    "analysis": [],
+    "analysis": [
+      "TOOL-0002"
+    ],
     "integration": [
       "TOOL-0001"
     ],
@@ -46,6 +70,10 @@
   "auth_types": {
     "api-key": [
       "TOOL-0001"
+    ],
+    "none": [
+      "TOOL-0002"
     ]
-  }
+  },
+  "date": "2026-03-11"
 }

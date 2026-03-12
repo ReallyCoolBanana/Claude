@@ -1,0 +1,360 @@
+{
+  "metadata": {
+    "researcher": "Research Agent 2",
+    "date": "2026-03-11",
+    "topic": "LanceDB for Semantic Search Integration",
+    "sources": [
+      "https://docs.lancedb.com/tables",
+      "https://lancedb.github.io/lancedb/python/python/",
+      "https://lancedb.com/docs/integrations/embedding/sentence-transformers/",
+      "https://docs.lancedb.com/search/hybrid-search",
+      "https://docs.lancedb.com/search/full-text-search",
+      "https://docs.lancedb.com/tables/update",
+      "https://docs.lancedb.com/storage",
+      "https://lancedb.com/docs/indexing/fts-index/"
+    ]
+  },
+
+  "python_api": {
+    "installation": "pip install lancedb",
+    "core_workflow": {
+      "description": "Connect -> Create/Open Table -> Add Data -> Query. Both sync and async APIs available.",
+      "connect": "db = lancedb.connect('/path/to/db')  # local directory, or S3/GCS URI",
+      "connect_async": "db = await lancedb.connect_async('/path/to/db')",
+      "create_table_from_dicts": "table = db.create_table('name', data=[{'text': 'hello', 'vector': [0.1, 0.2]}])",
+      "create_table_with_schema": "table = db.create_table('name', schema=MyLanceModel)",
+      "open_table": "table = db.open_table('name')",
+      "add_data": "table.add([{'text': 'new doc', 'vector': [0.3, 0.4]}])",
+      "search_vector": "table.search([0.1, 0.2]).limit(10).to_pandas()",
+      "search_text": "table.search('query text').limit(10).to_list()",
+      "search_with_filter": "table.search(query).where(\"category = 'kb'\").limit(10).to_pandas()"
+    },
+    "schema_with_embeddings": {
+      "description": "LanceDB's Pydantic-based schema auto-generates embeddings via the embedding registry.",
+      "example": [
+        "from lancedb.pydantic import LanceModel, Vector",
+        "from lancedb.embeddings import get_registry",
+        "",
+        "model = get_registry().get('sentence-transformers').create(",
+        "    name='BAAI/bge-small-en-v1.5', device='cpu'",
+        ")",
+        "",
+        "class Document(LanceModel):",
+        "    text: str = model.SourceField()",
+        "    vector: Vector(model.ndims()) = model.VectorField()",
+        "    source_type: str  # 'kb', 'team_log', 'script', 'sop'",
+        "    source_path: str",
+        "    title: str",
+        "",
+        "db = lancedb.connect('storage/data/lance_db')",
+        "table = db.create_table('documents', schema=Document)",
+        "table.add([{'text': 'content...', 'source_type': 'kb', 'source_path': '...', 'title': '...'}])",
+        "# Embeddings generated automatically from 'text' field"
+      ]
+    },
+    "data_ingestion_formats": [
+      "list[dict]",
+      "pandas.DataFrame",
+      "pyarrow.Table",
+      "Iterator[pyarrow.RecordBatch] (for large datasets)"
+    ],
+    "result_formats": [
+      "pandas.DataFrame (to_pandas())",
+      "list[dict] (to_list())",
+      "pyarrow.Table (to_arrow())",
+      "Pydantic models (to_pydantic(ModelClass))",
+      "polars.DataFrame"
+    ]
+  },
+
+  "embedding_options": {
+    "recommended_for_this_repo": {
+      "model": "BAAI/bge-small-en-v1.5",
+      "dimensions": 384,
+      "reason": "Best quality-to-size ratio for small document collections. Free, local, no API keys. Good for English technical text.",
+      "alternatives": [
+        {
+          "model": "sentence-transformers/all-MiniLM-L6-v2",
+          "dimensions": 384,
+          "note": "Slightly lower quality but very fast. Good default."
+        },
+        {
+          "model": "sentence-transformers/all-MiniLM-L12-v2",
+          "dimensions": 384,
+          "note": "Better quality than L6, slightly slower."
+        },
+        {
+          "model": "BAAI/bge-base-en-v1.5",
+          "dimensions": 768,
+          "note": "Higher quality, 2x embedding size. Use if quality matters more than speed."
+        }
+      ]
+    },
+    "lancedb_integration": {
+      "registry_name": "sentence-transformers",
+      "setup": "model = get_registry().get('sentence-transformers').create(name='BAAI/bge-small-en-v1.5', device='cpu')",
+      "auto_embedding": true,
+      "notes": [
+        "Embeddings auto-generated on add() when using LanceModel schema",
+        "Query embeddings auto-generated on search() calls",
+        "Normalized embeddings used by default (recommended for cosine similarity)",
+        "No API keys needed - runs entirely locally",
+        "First run downloads model (~130MB for bge-small-en-v1.5)"
+      ]
+    },
+    "dependencies": [
+      "pip install lancedb",
+      "pip install sentence-transformers",
+      "pip install torch  # CPU-only: pip install torch --index-url https://download.pytorch.org/whl/cpu"
+    ],
+    "commercial_options_if_needed": [
+      "OpenAI text-embedding-3-small (1536 dims, requires API key)",
+      "Cohere embed-english-v3.0 (1024 dims, requires API key)",
+      "Google text-embedding-004 (768 dims, requires API key)"
+    ]
+  },
+
+  "storage_requirements": {
+    "formula": "per_document_bytes = embedding_dims * 4 (float32) + metadata_bytes + text_bytes",
+    "estimate_for_this_repo": {
+      "document_count": 120,
+      "breakdown": {
+        "kb_entries": 38,
+        "team_logs": 31,
+        "scripts": 50,
+        "sops": 16
+      },
+      "per_document": {
+        "embedding_384dim": "1.5 KB",
+        "metadata_fields": "~0.5 KB (source_type, source_path, title, timestamps)",
+        "text_content_avg": "~2 KB (stored for retrieval)",
+        "total_per_doc": "~4 KB"
+      },
+      "total_estimated": {
+        "embeddings_only": "~180 KB (120 docs * 1.5 KB)",
+        "with_metadata_and_text": "~480 KB (120 docs * 4 KB)",
+        "with_fts_index": "~1-2 MB (BM25 index overhead)",
+        "total_on_disk": "~2-5 MB"
+      },
+      "verdict": "Negligible. Even with all documents indexed, total storage is under 5 MB. The Lance format is disk-efficient and columnar."
+    },
+    "lance_format_notes": [
+      "Uses Apache Arrow columnar format on disk",
+      "Supports zero-copy reads for fast access",
+      "Compression available but minimal benefit for pre-compressed embeddings",
+      "Lance v2.1 format is stable and production-ready"
+    ]
+  },
+
+  "query_api": {
+    "vector_search": {
+      "basic": "table.search([0.1, 0.2, ...]).limit(10).to_list()",
+      "with_auto_embedding": "table.search('what is the coordination system?').limit(10).to_list()",
+      "with_filter": "table.search('query').where(\"source_type = 'kb'\").limit(5).to_pandas()",
+      "with_projection": "table.search('query').select(['title', 'source_path', 'text']).limit(10).to_list()",
+      "returns": "Results include selected columns plus '_distance' column (lower = more similar)"
+    },
+    "full_text_search": {
+      "create_index": "table.create_fts_index('text', use_tantivy=True, tokenizer_name='en_stem')",
+      "search": "table.search('coordination system', query_type='fts').limit(10).to_list()",
+      "multi_column": "table.create_fts_index(['text', 'title'], use_tantivy=True)",
+      "returns": "Results include '_score' column (BM25 relevance score, higher = more relevant)"
+    },
+    "hybrid_search": {
+      "basic": "table.search('coordination system', query_type='hybrid').limit(10).to_list()",
+      "with_reranker": "table.search('query', query_type='hybrid').reranker('rrf').limit(10).to_pandas()",
+      "with_filter": "table.search('query', query_type='hybrid').where(\"source_type IN ('kb', 'sop')\").limit(10).to_list()",
+      "default_reranker": "RRFReranker (Reciprocal Rank Fusion) - combines vector and FTS scores",
+      "notes": "Scores are normalized to make vector and FTS results comparable"
+    },
+    "query_types": ["vector", "fts", "hybrid", "auto"],
+    "auto_detection": "If input is str and FTS index exists, uses hybrid/fts. If input is list[float], uses vector search."
+  },
+
+  "hybrid_search": {
+    "lancedb_native_hybrid": {
+      "description": "LanceDB has built-in hybrid search combining vector similarity + BM25 full-text search in a single query.",
+      "how_it_works": [
+        "1. Create both vector index and FTS index on the same table",
+        "2. Use query_type='hybrid' to run both searches simultaneously",
+        "3. Results are combined using a reranking algorithm (default: RRF)",
+        "4. Scores are normalized for comparability"
+      ],
+      "rerankers": [
+        "RRFReranker (default) - Reciprocal Rank Fusion, no model needed",
+        "CrossEncoderReranker - Uses cross-encoder model for reranking (higher quality, slower)",
+        "CohereReranker - Uses Cohere rerank API",
+        "Custom rerankers supported"
+      ],
+      "recommendation": "Use RRFReranker for this repo - fast, no extra dependencies, good enough for ~120 docs"
+    },
+    "alongside_sqlite_fts5": {
+      "can_coexist": true,
+      "approach": "Use LanceDB for semantic search + hybrid search. Keep existing SQLite FTS5 for fast keyword lookups if already in use.",
+      "recommended_strategy": "Replace SQLite FTS5 with LanceDB's built-in FTS since LanceDB handles both vector and full-text natively. This avoids maintaining two separate search systems.",
+      "when_to_keep_sqlite": [
+        "If SQLite is used for structured data beyond search (coordination system, etc.)",
+        "If existing code heavily depends on SQLite FTS5 queries",
+        "If you need transactional guarantees that SQLite provides"
+      ],
+      "architecture_options": [
+        {
+          "name": "Option A: LanceDB-only (recommended)",
+          "description": "Use LanceDB for all search (vector + FTS). SQLite remains for coordination/structured data only.",
+          "pros": "Single search API, simpler code, built-in hybrid search",
+          "cons": "Need to migrate any existing FTS queries"
+        },
+        {
+          "name": "Option B: LanceDB + SQLite side-by-side",
+          "description": "LanceDB for semantic search, SQLite FTS5 for keyword search, merge results in application code.",
+          "pros": "No migration needed, can compare approaches",
+          "cons": "Two systems to maintain, custom result merging logic"
+        }
+      ]
+    }
+  },
+
+  "minimal_integration": {
+    "phase_1_mvp": {
+      "description": "Index knowledge base entries only. ~38 documents. Proves the concept.",
+      "scope": ["knowledge-base/entries/*.md"],
+      "effort": "~100 lines of Python",
+      "steps": [
+        "1. pip install lancedb sentence-transformers",
+        "2. Create indexer script that reads KB Markdown files",
+        "3. Parse YAML frontmatter + body text from each entry",
+        "4. Create LanceDB table with auto-embedding schema",
+        "5. Add all KB entries",
+        "6. Create FTS index on text column",
+        "7. Create search function that runs hybrid queries",
+        "8. Return results with source paths and relevance scores"
+      ],
+      "schema": {
+        "text": "str (SourceField - concatenation of title + summary + body)",
+        "vector": "Vector(384) (VectorField - auto-generated)",
+        "entry_id": "str (e.g., 'KB-0034')",
+        "title": "str",
+        "source_path": "str (relative path to .md file)",
+        "tags": "str (comma-separated)",
+        "created_date": "str",
+        "source_type": "str (always 'kb' in phase 1)"
+      }
+    },
+    "phase_2_expansion": {
+      "description": "Add team logs, SOPs, and scripts. ~120 documents total.",
+      "additional_scope": [
+        "teams/team-*.md",
+        "storage/coordination/sops/*.md",
+        "storage/scripts/*.py (docstrings + comments)"
+      ],
+      "effort": "~50 additional lines (mostly parsing logic per source type)"
+    },
+    "phase_3_full": {
+      "description": "Add chunking for long documents, graph-based retrieval links, cross-reference scoring.",
+      "features": [
+        "Chunk long documents (>2000 tokens) into overlapping segments",
+        "Use builds_on / related_to metadata for graph-aware reranking",
+        "Add recency scoring (newer entries ranked higher for same relevance)"
+      ]
+    },
+    "recommendation": "Start with Phase 1 MVP. It covers the highest-value content (KB entries) with minimal code. Expand to Phase 2 once validated."
+  },
+
+  "incremental_updates": {
+    "approach": "Use merge_insert() with entry_id as the merge key for upsert semantics.",
+    "add_new_entry": {
+      "description": "When a new KB entry is created, add it to the LanceDB table. Embeddings are auto-generated.",
+      "code": [
+        "new_doc = {'text': 'full text content...', 'entry_id': 'KB-0039', 'title': '...', ...}",
+        "table.add([new_doc])  # embedding auto-generated"
+      ]
+    },
+    "update_existing_entry": {
+      "description": "When a KB entry is modified, use merge_insert to upsert.",
+      "code": [
+        "updated = pa.table({'entry_id': ['KB-0034'], 'text': ['updated content...'], ...})",
+        "table.merge_insert('entry_id')",
+        "    .when_matched_update_all()",
+        "    .when_not_matched_insert_all()",
+        "    .execute(updated)"
+      ]
+    },
+    "full_reindex": {
+      "description": "For bulk updates or schema changes, recreate the table with mode='overwrite'.",
+      "code": "table = db.create_table('documents', data=all_docs, mode='overwrite')"
+    },
+    "fts_index_rebuild": "After adding new data, the FTS index may need rebuilding: table.create_fts_index('text', replace=True). Native FTS supports incremental indexing; Tantivy-based does not.",
+    "automation_options": [
+      "Git hook (post-commit): detect changed .md files, update LanceDB",
+      "Startup scan: compare file mtimes with last-indexed timestamps",
+      "Watch script: inotify-based watcher for real-time indexing"
+    ],
+    "recommendation": "Use startup scan approach: on each search session start, check for new/modified files and upsert them. Simple, reliable, no daemon needed."
+  },
+
+  "recommended_approach": {
+    "summary": "Deploy LanceDB as an embedded vector database alongside the existing SQLite coordination system. Use sentence-transformers for free local embeddings. Start with KB entries, expand to all document types.",
+    "architecture": {
+      "search_engine": "LanceDB (vector + FTS hybrid search)",
+      "embedding_model": "BAAI/bge-small-en-v1.5 (384 dims, ~130MB download, runs on CPU)",
+      "storage_location": "storage/data/lance_db/ (Lance format directory)",
+      "coordination_db": "SQLite (unchanged - continues to handle coordination, structured data)",
+      "estimated_storage": "<5 MB for all ~120 documents"
+    },
+    "implementation_plan": [
+      {
+        "step": 1,
+        "task": "Create storage/scripts/semantic_search.py with LanceDB indexing + search",
+        "effort": "~150 lines"
+      },
+      {
+        "step": 2,
+        "task": "Index all 38 KB entries with auto-embedding",
+        "effort": "First run: ~30 seconds (model download + embedding generation)"
+      },
+      {
+        "step": 3,
+        "task": "Create FTS index for hybrid search",
+        "effort": "~1 second for 38 documents"
+      },
+      {
+        "step": 4,
+        "task": "Add search CLI interface (python semantic_search.py 'query')",
+        "effort": "~30 lines"
+      },
+      {
+        "step": 5,
+        "task": "Expand to team logs, SOPs, scripts",
+        "effort": "~50 additional lines of parsing"
+      },
+      {
+        "step": 6,
+        "task": "Add incremental update on startup (scan for changed files)",
+        "effort": "~40 lines"
+      }
+    ],
+    "key_advantages": [
+      "Zero infrastructure - embedded, no server needed",
+      "Free embeddings - sentence-transformers runs locally on CPU",
+      "Native hybrid search - vector + BM25 in one query, no custom merging",
+      "Tiny footprint - <5 MB storage for entire repo",
+      "Simple API - ~150 lines for full implementation",
+      "Incremental updates via merge_insert() upsert",
+      "Compatible with existing SQLite coordination system"
+    ],
+    "risks_and_mitigations": [
+      {
+        "risk": "sentence-transformers + torch is a large dependency (~500MB-2GB)",
+        "mitigation": "Use CPU-only torch to reduce size. Or use onnx runtime for smaller footprint."
+      },
+      {
+        "risk": "Tantivy FTS index doesn't support incremental updates",
+        "mitigation": "Use native FTS (use_tantivy=False) or rebuild FTS index on changes (fast for <200 docs)"
+      },
+      {
+        "risk": "Model download required on first run",
+        "mitigation": "Cache model in a known location. Document the first-run behavior."
+      }
+    ]
+  }
+}

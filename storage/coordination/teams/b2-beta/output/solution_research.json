@@ -1,0 +1,411 @@
+{
+  "metadata": {
+    "team": "B2-Beta",
+    "task": "Token-Efficient Database I/O for AI Agents",
+    "date": "2026-03-11",
+    "repo_context": {
+      "current_entries": 31,
+      "current_index_tokens": "~6000 tokens for knowledge-base/index.json alone",
+      "current_format": "Markdown files with YAML frontmatter + JSON index files",
+      "mcp_server_exists": true,
+      "mcp_server_path": "storage/mcp-server/server.py",
+      "existing_prior_art": ["KB-0008 (Data Storage Methods)", "KB-0031 (Data Reform Analysis)", "KB-0016 (SQLite WAL Shared State)"]
+    }
+  },
+
+  "database_solutions": [
+    {
+      "technology": "SQLite FTS5 (Full-Text Search)",
+      "description": "FTS5 is SQLite's latest full-text search extension using an inverted index (LSM-tree internally). It builds a mapping from tokens to rows containing them, enabling sub-millisecond text searches. Supports MATCH queries, BM25 ranking, phrase search, prefix search, AND/OR/NOT operators, column weighting, and trigram tokenizer for LIKE/GLOB patterns. Tables are created as virtual tables (CREATE VIRTUAL TABLE ... USING fts5). External-content mode allows the FTS index to reference data in a normal table, avoiding data duplication.",
+      "pros": [
+        "Sub-millisecond search on 100s-1000s of entries vs full-scan",
+        "BM25 ranking built-in for relevance scoring",
+        "Column weighting (title matches > body matches)",
+        "External-content mode avoids data duplication",
+        "Highlight/snippet functions for context-aware results",
+        "Already built into Python's sqlite3 module",
+        "Inverted index provides O(1) term lookup",
+        "Supports prefix queries for autocomplete patterns"
+      ],
+      "cons": [
+        "Requires sync triggers to keep FTS index in sync with base table",
+        "Additional storage overhead for inverted index",
+        "Tokenizer may not handle YAML frontmatter well without preprocessing",
+        "BM25 scores are inverted (lower = better) which can confuse implementations"
+      ],
+      "token_efficiency": "HIGH - Instead of reading 6000-token index.json, a query like 'SELECT id, title FROM kb_fts WHERE kb_fts MATCH \"database\" ORDER BY rank LIMIT 5' returns ~50 tokens of relevant results. That's a 99% reduction for targeted searches.",
+      "complexity": "LOW-MEDIUM - FTS5 table creation is a few lines of SQL. External-content mode with sync triggers adds ~20 lines. Migration from files is a one-time bulk insert.",
+      "recommendation": "STRONGLY RECOMMENDED as primary search mechanism. This is the single highest-impact change for token efficiency."
+    },
+    {
+      "technology": "SQLite JSON1 Extension",
+      "description": "Built into SQLite since 3.38.0 (2022). Provides json_extract(), json_each(), json_tree(), and -> / ->> operators for querying JSON stored in TEXT columns. Supports indexing on computed JSON expressions (CREATE INDEX idx ON tbl(json_extract(data, '$.field'))). Can store entire KB entry metadata as a JSON blob and query specific fields without parsing the whole document.",
+      "pros": [
+        "Store entry metadata as JSON, query any field with SQL",
+        "Computed indexes on JSON paths for fast filtered queries",
+        "json_each() enables tag-based queries without separate join tables",
+        "No schema migration needed when adding new metadata fields",
+        "Can query deeply nested structures with json_tree()",
+        "Already built into modern Python sqlite3"
+      ],
+      "cons": [
+        "Slightly slower than native columns for frequently-queried fields",
+        "JSON stored as TEXT, not as efficient as native columnar storage",
+        "Complex json_tree() queries can be hard to optimize",
+        "No JSON schema validation at the database level"
+      ],
+      "token_efficiency": "MEDIUM-HIGH - Enables field-level queries like 'SELECT json_extract(meta, \"$.title\"), json_extract(meta, \"$.tags\") FROM entries WHERE json_extract(meta, \"$.category\") = \"methodology\"' returning only needed fields. Estimated 70-80% reduction vs reading full index.",
+      "complexity": "LOW - JSON1 is built-in, no extra setup. Computed indexes are standard SQL.",
+      "recommendation": "RECOMMENDED as complement to FTS5. Use JSON columns for flexible metadata storage with computed indexes on high-frequency query fields (category, date, status)."
+    },
+    {
+      "technology": "SQLite Virtual Tables (General)",
+      "description": "SQLite virtual tables allow custom data sources to appear as regular SQL tables. FTS5 is itself a virtual table. Custom virtual tables can expose derived views, computed aggregations, or external data. For this repo, virtual tables could expose: (1) a cross-reference graph, (2) entry dependency chains via builds_on, (3) tag co-occurrence matrices. Combined with CREATE TABLE AS SELECT for materialized views (since SQLite lacks native materialized views), common query patterns can be pre-computed.",
+      "pros": [
+        "Unified SQL interface over heterogeneous data sources",
+        "Can simulate materialized views with CREATE TABLE AS + triggers",
+        "Custom virtual tables can expose computed relationships",
+        "FTS5, R-Tree, and CSV virtual tables are built-in"
+      ],
+      "cons": [
+        "Custom virtual table implementation requires C extension or Python vtable module",
+        "Simulated materialized views need manual refresh (trigger-based or periodic)",
+        "No automatic invalidation like real materialized views",
+        "Added complexity for maintenance"
+      ],
+      "token_efficiency": "MEDIUM - Pre-computed views like 'entries_by_category' or 'recent_entries_summary' eliminate repeated computation. Tag co-occurrence views enable 'related entries' queries in ~20 tokens instead of scanning the full tag index (~800 tokens).",
+      "complexity": "MEDIUM-HIGH - Custom virtual tables are complex. Simulated materialized views with triggers are moderate.",
+      "recommendation": "SELECTIVELY RECOMMENDED - Use simulated materialized views for the 3-5 most common query patterns. Skip custom virtual tables unless a specific need arises."
+    },
+    {
+      "technology": "DuckDB",
+      "description": "Columnar embedded database optimized for analytical (OLAP) queries. Supports native Parquet/CSV/JSON ingestion, vectorized execution, and multi-threaded queries. Excels at aggregation, joins, and complex SQL over large datasets. Python integration via duckdb module.",
+      "pros": [
+        "10-50x faster than SQLite for analytical aggregations",
+        "Native JSON, CSV, Parquet file reading without import",
+        "Multi-threaded execution on modern CPUs",
+        "Full SQL:2011 support with window functions, CTEs",
+        "Can query files directly without loading into tables",
+        "Excellent Python/Pandas integration"
+      ],
+      "cons": [
+        "Overkill for this repo's scale (31 KB entries, ~200 total entries)",
+        "Optimized for read-heavy analytics, not frequent small writes",
+        "Larger binary footprint than SQLite (~40MB vs ~2MB)",
+        "Less battle-tested for concurrent multi-process access",
+        "No FTS equivalent built-in",
+        "Additional dependency to install and maintain"
+      ],
+      "token_efficiency": "MEDIUM - Same SQL-based field selection as SQLite, but no FTS5 equivalent means text search must be done differently. Token savings come from analytical queries (aggregations, groupings) which are 10-50x faster but the repo rarely needs such queries.",
+      "complexity": "LOW for basic use, but adds a dependency with less ecosystem maturity than SQLite.",
+      "recommendation": "NOT RECOMMENDED for this use case. The repo has <200 entries and needs text search + metadata queries, not analytical aggregations. SQLite with FTS5+JSON1 covers all needs with zero additional dependencies."
+    },
+    {
+      "technology": "LevelDB / LMDB (Key-Value Stores)",
+      "description": "LevelDB (Google, LSM-tree based) and LMDB (mmap-based B+tree) are embedded key-value stores. LevelDB excels at sequential writes; LMDB excels at reads with zero-copy mmap. Both store arbitrary byte arrays keyed by strings. Python bindings: plyvel (LevelDB), lmdb (LMDB).",
+      "pros": [
+        "Extremely fast key-value lookups (sub-microsecond for LMDB)",
+        "Minimal overhead - pure key-value, no SQL parsing",
+        "LMDB: zero-copy reads via mmap, zero tuning required",
+        "LevelDB: built-in Bloom filters, compression, batch writes",
+        "Good for caching pre-computed query results"
+      ],
+      "cons": [
+        "No query language - must implement all search logic in application code",
+        "No built-in text search, joins, or aggregations",
+        "LevelDB has history of corruption bugs, limited maintenance",
+        "Must serialize/deserialize all values manually",
+        "Adds external dependency",
+        "Loses SQL's declarative power for ad-hoc queries"
+      ],
+      "token_efficiency": "HIGH for known-key lookups (get entry by ID: ~1 token query, ~N token result). LOW for search queries (must scan all entries in application code, losing all DB optimization).",
+      "complexity": "MEDIUM - Simple API but must implement all query logic manually. Negates the benefits of SQL for complex queries.",
+      "recommendation": "NOT RECOMMENDED as primary store. POTENTIALLY USEFUL as a caching layer for pre-computed query results (e.g., cache 'entries by tag X' results in LMDB for O(1) retrieval). But SQLite with proper indexes achieves similar performance for this scale."
+    }
+  ],
+
+  "indexing_solutions": [
+    {
+      "strategy": "Tiered Indexing (Level 0 / Level 1 / Level 2)",
+      "description": "Three-tier progressive disclosure pattern inspired by Microsoft Agent Skills and Anthropic's context engineering guidance. Level 0 (Ultra-Short): ~50 tokens, contains only entry count, categories, and last-updated timestamp. Level 1 (Tags+Titles): ~500 tokens, contains ID-title-tags-category tuples for all entries. Level 2 (Full Content): On-demand per-entry, ~200-500 tokens each. Agents load Level 0 at startup, query Level 1 for discovery, and fetch Level 2 only for entries they need.",
+      "implementation_notes": "Generate three files or database views: (1) SUMMARY.json with counts and categories (~5 lines), (2) INDEX_COMPACT.json with [{id, title, tags, category}] array (~1 line per entry, no descriptions), (3) Full entries on-demand via MCP get() tool or direct file read. The MCP server already has a search() tool that returns metadata; extend it with a 'summary()' tool returning Level 0, and make search() return Level 1 data by default. Level 2 is already the get() tool. Pre-generate Level 0 and Level 1 as static files that update when entries change.",
+      "token_savings_estimate": "Level 0: 50 tokens (vs 6000 current) = 99.2% reduction for orientation. Level 1: 500 tokens for 31 entries (vs 6000) = 91.7% reduction for discovery. Level 2: On-demand, only loaded when needed. Overall: 76-99% reduction depending on query pattern. Microsoft's progressive disclosure reported 90%+ savings with 132 skills.",
+      "complexity": "LOW - Generating tiered files is a simple script. MCP server changes are ~30 lines of code."
+    },
+    {
+      "strategy": "Bloom Filters for Tag/Category Pre-filtering",
+      "description": "Use Bloom filters (probabilistic set membership data structure) to quickly exclude entries that definitely do not match a query before performing full lookups. For this repo: build one Bloom filter per tag and one per category. Before searching, check the Bloom filter for the query terms. If the filter says 'definitely not present', skip the search entirely. False positive rate configurable (typically 1-5%).",
+      "implementation_notes": "Python implementations: 'rbloom' (Rust-backed, fastest), 'bloom-filter2' (pure Python), or ~30 lines from scratch. For 31 entries with 100 unique tags, a Bloom filter needs only ~120 bytes at 1% FPR. Store as a binary file or embed in SQLite. Rebuild when entries change. Primary value: tag membership queries ('does any entry have tag X?') without loading the full tag index. Secondary value: pre-filtering before FTS5 queries to avoid unnecessary full-text searches.",
+      "token_savings_estimate": "Moderate - saves ~800 tokens (full tag_index section of index.json) per tag lookup. But at 31 entries, the absolute savings are small. Value increases significantly at 500+ entries. Estimated 30-50% reduction in tag-related queries for current scale, 70-90% at 500+ entries.",
+      "complexity": "LOW - ~30 lines of Python for basic implementation. Rebuild on entry changes."
+    },
+    {
+      "strategy": "Inverted Index (Token-to-Entry Mapping)",
+      "description": "Build a mapping from content tokens (words) to the entries that contain them. This is what FTS5 does internally, but a lightweight custom version can be built for title/tag/category fields specifically, stored as a simple JSON file or SQLite table. For example: {'database': ['KB-0008', 'KB-0016'], 'coordination': ['KB-0016', 'KB-0022', ...]}. Provides O(1) term-to-entries lookup without full-text search overhead.",
+      "implementation_notes": "Build at index generation time: tokenize titles, tags, and categories. Store as JSON ({term: [ids]}) or SQLite table (term TEXT, entry_id TEXT, with index on term). For 31 entries with ~200 unique terms, the inverted index is ~400 lines of JSON (~2000 tokens). However, SQLite FTS5 already provides this with better ranking, so a custom inverted index is only useful if SQLite is not adopted. The current index.json already has a 'tag_index' which is a partial inverted index - extend it to cover title words.",
+      "token_savings_estimate": "HIGH for targeted queries - looking up 'database' in a word-to-entries map costs ~10 tokens vs scanning 6000-token index. But the current tag_index already provides this for tags (~800 tokens to load, then O(1) lookup). Net improvement over current: 50-70% for title-word queries. Superseded by FTS5 if SQLite is adopted.",
+      "complexity": "LOW - ~50 lines of Python to build from existing entries. Updates on entry changes."
+    },
+    {
+      "strategy": "Materialized Views (Pre-computed Query Results)",
+      "description": "Pre-compute and cache results for the most common query patterns as static files or SQLite tables. Examples: (1) 'recent_entries.json' - last 10 entries with titles and dates, (2) 'entries_by_category.json' - entries grouped by category with just IDs and titles, (3) 'dependency_graph.json' - builds_on relationships as adjacency list, (4) 'entry_summaries.json' - one-line summary per entry. Refresh these when entries change (via pre-commit hook or generation script).",
+      "implementation_notes": "For SQLite: use CREATE TABLE AS SELECT to create materialized tables, refresh via trigger or periodic rebuild. For file-based: generate JSON files as part of the index rebuild process. The existing MCP server's _build_index() already does in-memory materialization - persist the results. Key materialized views to build: (1) compact_index: [{id, title, category, date}] - no tags, no builds_on, ~20 tokens/entry. (2) tag_cloud: {tag: count} for quick topic overview - ~100 tokens total. (3) recent_activity: last 5 entries with one-line summaries - ~50 tokens. (4) category_counts: {category: count} - ~30 tokens.",
+      "token_savings_estimate": "Very high for common patterns. compact_index: 620 tokens for 31 entries vs 6000 in full index = 90% reduction. tag_cloud: 100 tokens vs 800 for tag_index section = 87% reduction. recent_activity: 50 tokens for quick orientation = 99% reduction vs reading full index. Overall estimated 80-95% reduction for the top 5 query patterns.",
+      "complexity": "LOW - Generation scripts are straightforward. Integration with existing index rebuild tools."
+    },
+    {
+      "strategy": "Hybrid Tiered + FTS5 Architecture",
+      "description": "Combine tiered indexing with SQLite FTS5 for the optimal solution. Level 0: Static summary file (50 tokens). Level 1: SQLite query returning compact metadata (FTS5 MATCH for text, JSON1 for filters). Level 2: Full entry content from file system. The MCP server mediates all levels, providing progressive disclosure automatically. Agents never read raw index files - they use MCP tools that return token-budgeted results.",
+      "implementation_notes": "Implementation order: (1) Create SQLite DB with entries table + FTS5 virtual table. (2) Generate Level 0 summary as static JSON. (3) Modify MCP server to query SQLite instead of scanning files. (4) Add 'summary' tool (Level 0), modify 'search' to return Level 1 by default, keep 'get' for Level 2. (5) Add token_budget parameter to search tool. (6) Pre-commit hook to rebuild SQLite from source files.",
+      "token_savings_estimate": "95-99% reduction for typical agent workflows. Orientation: 50 tokens (Level 0) instead of 6000. Discovery: 100-300 tokens (Level 1 search results) instead of 6000. Full read: On-demand per entry, only when needed. Estimated annual token savings at current usage: 85-95% of all index-reading tokens.",
+      "complexity": "MEDIUM - Requires SQLite DB, FTS5 setup, MCP server modifications, and rebuild automation. But each piece is individually simple."
+    }
+  ],
+
+  "query_protocols": [
+    {
+      "pattern": "Lazy Loading (Metadata First, Content On Demand)",
+      "description": "Return entry metadata (id, title, category, date) first. Only load full content when the agent explicitly requests it via a second call. This matches the MCP server's existing search() + get() pattern, but needs to be enforced as the default workflow.",
+      "token_cost": "First call (search): 10-50 tokens per result. Second call (get): 200-500 tokens per entry. Total for finding and reading 1 entry: 250-550 tokens. Current cost of reading index + file: 6000-7000 tokens. Savings: 92-96%.",
+      "implementation_approach": "Already partially implemented in MCP server. Enforce by: (1) Making search() return only {id, title, category, date} by default. (2) Adding a 'fields' parameter to search() for custom field selection. (3) Documenting in CLAUDE.md that agents should use search() before get(). (4) Adding a 'brief' flag to get() that returns frontmatter only, not full content."
+    },
+    {
+      "pattern": "Field-Level Access (Projection Queries)",
+      "description": "Allow queries to specify exactly which fields to return, avoiding loading unnecessary data. SQL analogy: SELECT id, title FROM entries vs SELECT * FROM entries. MCP tool analogy: search(query='database', fields=['id', 'title']) returns only requested fields.",
+      "token_cost": "Full entry: ~300 tokens. With field selection (id+title only): ~15 tokens. Category+tags: ~30 tokens. Savings: 90-95% per entry depending on fields requested.",
+      "implementation_approach": "Modify MCP search() tool to accept 'fields' parameter (list of field names). In SQLite implementation: directly in SELECT clause. In file-based implementation: filter dict keys before JSON serialization. Default fields: ['id', 'title', 'category']. Extended fields available: tags, date, team, status, builds_on, content."
+    },
+    {
+      "pattern": "Token Budget Queries",
+      "description": "Queries specify a maximum token budget for results. The query engine returns the best results that fit within the budget, truncating or omitting lower-ranked results as needed. Example: search(query='database', token_budget=500) returns top results totaling <=500 tokens.",
+      "token_cost": "Exactly the specified budget (or less). Agent controls cost precisely. For a 200-token budget: ~8-10 compact results or 1 detailed result. For a 500-token budget: ~20-25 compact results or 2-3 detailed results.",
+      "implementation_approach": "Estimate tokens per result based on field selection (rough: 4 chars = 1 token). In search loop: accumulate result tokens, stop when budget exhausted. Return results sorted by relevance (BM25 rank from FTS5), highest-relevance first. Add 'token_budget' parameter to MCP search() tool. Include 'tokens_used' and 'results_truncated' in response metadata so agent knows if more results exist."
+    },
+    {
+      "pattern": "Streaming/Incremental Results",
+      "description": "Return results incrementally, allowing the agent to stop when it has enough information. In MCP context, this means returning a small batch of results with a 'cursor' for pagination, rather than all results at once.",
+      "token_cost": "First page: 100-200 tokens (5 results). Subsequent pages: 100-200 tokens each. Agent typically needs only 1-2 pages. Total: 100-400 tokens vs 6000 for full index. Savings: 93-98%.",
+      "implementation_approach": "Add pagination to MCP search(): search(query='...', limit=5, offset=0). Return {results: [...], total_matches: N, has_more: true, next_offset: 5}. Agent calls again with offset=5 if needed. Most searches resolve in first page. Combine with token_budget for double-bounded queries."
+    },
+    {
+      "pattern": "Semantic Summary Queries",
+      "description": "Instead of returning raw entries, return a pre-computed summary answering the query. Example: 'What do we know about databases?' returns a 100-token narrative summary instead of 5 raw entries totaling 2000 tokens. Summaries are pre-generated at index time for common topics.",
+      "token_cost": "50-150 tokens per summary vs 500-2500 tokens for equivalent raw entries. Savings: 70-95%. However, summaries may miss edge cases or recent additions.",
+      "implementation_approach": "Pre-generate topic summaries for each category and high-frequency tag. Store in SQLite or as JSON. Update when entries change. MCP tool: summarize(topic='databases') returns pre-computed narrative. Limitation: cannot cover all possible queries, so this supplements rather than replaces search(). Generation could use an LLM to write summaries from entry titles and tags."
+    },
+    {
+      "pattern": "MCP Progressive Discovery Protocol",
+      "description": "Formalize the MCP server's tool hierarchy as a progressive discovery protocol. Step 1: status() returns repo overview in ~50 tokens. Step 2: search() returns matching entry metadata in ~100-300 tokens. Step 3: get() returns full entry content in ~200-500 tokens. Agents follow this protocol automatically, never loading more than needed.",
+      "token_cost": "Orientation: 50 tokens (status). Discovery: 100-300 tokens (search). Deep read: 200-500 tokens per entry (get). Full workflow: 350-850 tokens for a typical find-and-read operation. Current equivalent: 6000-8000 tokens (read index + read file).",
+      "implementation_approach": "Already 80% implemented in existing MCP server. Changes needed: (1) Enhance status() to include compact recent-entries list. (2) Make search() return Level 1 data by default (no full content). (3) Add conventions() guidance that tells agents to use status() -> search() -> get() workflow. (4) Update CLAUDE.md to document the protocol. (5) Add 'orientation' prompt that returns optimal starting context."
+    }
+  ],
+
+  "integration_plan": {
+    "architecture": {
+      "description": "Dual-mode architecture: Files remain source of truth, SQLite serves as query layer",
+      "components": [
+        {
+          "name": "Source Files (Truth Layer)",
+          "role": "Markdown files with YAML frontmatter remain the canonical data store. Human-readable, git-friendly, no migration risk.",
+          "files": "knowledge-base/entries/KB-*.md, storage/sources/SRC-*.json, teams/TEAM-*.md, storage/coordination/sops/SOP-*.md"
+        },
+        {
+          "name": "SQLite Query Database (Query Layer)",
+          "role": "Generated artifact containing: (1) entries table with metadata columns + JSON blob, (2) FTS5 virtual table indexing titles, tags, categories, and summaries, (3) Materialized view tables for common queries. Regenerated from source files on demand.",
+          "file": "storage/repo_index.db"
+        },
+        {
+          "name": "Static Summary Files (Cache Layer)",
+          "role": "Pre-generated JSON files for ultra-fast, zero-dependency access: SUMMARY.json (Level 0, ~50 tokens), INDEX_COMPACT.json (Level 1, ~500 tokens). Used when SQLite is unavailable or for quick orientation.",
+          "files": "SUMMARY.json, INDEX_COMPACT.json (repo root)"
+        },
+        {
+          "name": "MCP Server (Access Layer)",
+          "role": "Extended storage/mcp-server/server.py that queries SQLite instead of scanning files. Provides progressive discovery tools: status() -> search() -> get(). Adds token_budget and fields parameters.",
+          "file": "storage/mcp-server/server.py"
+        }
+      ],
+      "data_flow": "Source files --(generate_index.py)--> SQLite DB + Static summaries --(MCP server)--> Agent queries"
+    },
+    "migration_steps": [
+      {
+        "phase": 0,
+        "name": "Data Quality Fixes",
+        "description": "Fix known issues from KB-0031 analysis: broken sources index, team log duplicates, frontmatter drift. No new infrastructure.",
+        "effort": "1-2 sessions",
+        "risk": "LOW",
+        "dependencies": []
+      },
+      {
+        "phase": 1,
+        "name": "SQLite Database Generation",
+        "description": "Create generate_index.py script that: (1) Parses all KB entries, team logs, sources, SOPs, scripts, API tools. (2) Inserts metadata into SQLite entries table. (3) Creates FTS5 virtual table on title, tags, category, and first-100-words of content. (4) Creates materialized view tables for common queries. (5) Generates SUMMARY.json and INDEX_COMPACT.json. Run as pre-commit hook or on-demand.",
+        "effort": "1 session",
+        "risk": "LOW - purely additive, does not modify existing files",
+        "dependencies": ["Phase 0"]
+      },
+      {
+        "phase": 2,
+        "name": "MCP Server Enhancement",
+        "description": "Modify server.py to: (1) Query SQLite DB instead of scanning files. (2) Fall back to file scanning if DB is missing. (3) Add fields parameter to search(). (4) Add token_budget parameter to search(). (5) Add summary() tool returning Level 0 data. (6) Add pagination (limit/offset) to search(). (7) Enhance status() with compact recent-entries.",
+        "effort": "1 session",
+        "risk": "LOW - backward compatible, existing tools still work",
+        "dependencies": ["Phase 1"]
+      },
+      {
+        "phase": 3,
+        "name": "Protocol Documentation and Agent Onboarding",
+        "description": "Update CLAUDE.md with: (1) Progressive discovery protocol (status -> search -> get). (2) Token-efficient query patterns. (3) Deprecation notice for direct index.json reading. Update MCP onboarding prompt to teach new agents the protocol.",
+        "effort": "0.5 sessions",
+        "risk": "LOW",
+        "dependencies": ["Phase 2"]
+      },
+      {
+        "phase": 4,
+        "name": "Tiered Index Optimization",
+        "description": "Add Bloom filters for tag pre-filtering. Pre-compute topic summaries for top categories. Add semantic summary queries to MCP server. Build dependency graph materialized view. Optional: add LMDB cache for hot query results.",
+        "effort": "1-2 sessions",
+        "risk": "LOW - purely additive optimizations",
+        "dependencies": ["Phase 3"]
+      }
+    ],
+    "compatibility_notes": {
+      "backward_compatible": true,
+      "existing_files_unchanged": true,
+      "existing_mcp_tools_preserved": true,
+      "fallback_if_db_missing": "MCP server falls back to current file-scanning behavior if repo_index.db is absent",
+      "git_implications": "SQLite DB should be in .gitignore (generated artifact). SUMMARY.json and INDEX_COMPACT.json can be committed for quick access. generate_index.py committed as a script.",
+      "python_dependencies": "No new dependencies. SQLite FTS5 and JSON1 are built into Python 3.9+. Bloom filter is optional (~30 lines of pure Python or 'rbloom' package).",
+      "coordination_system_impact": "None - coordination system (coordinator_hub.py, help_protocol.py, etc.) uses its own SQLite databases independently. The query layer is a separate DB file."
+    },
+    "mcp_integration": {
+      "current_tools": ["search(query, type, tags, limit)", "get(id)", "status()", "conventions(type)"],
+      "enhanced_tools": [
+        {
+          "name": "search",
+          "new_parameters": {
+            "fields": "List of fields to return (default: ['id', 'title', 'category'])",
+            "token_budget": "Maximum tokens in response (default: unlimited)",
+            "offset": "Pagination offset (default: 0)",
+            "sort": "Sort order: 'relevance', 'date', 'id' (default: 'relevance')"
+          },
+          "description": "Enhanced search with field selection, token budgeting, and pagination"
+        },
+        {
+          "name": "get",
+          "new_parameters": {
+            "fields": "List of fields to return (default: all including content)",
+            "brief": "Boolean - return metadata only, no content (default: false)"
+          },
+          "description": "Entry retrieval with optional field selection and brief mode"
+        },
+        {
+          "name": "summary",
+          "parameters": {},
+          "description": "NEW TOOL - Returns Level 0 repository summary in ~50 tokens: entry counts by type, categories, last update date"
+        },
+        {
+          "name": "related",
+          "parameters": {
+            "id": "Entry ID to find related entries for",
+            "limit": "Max results (default: 5)"
+          },
+          "description": "NEW TOOL - Returns entries related by tags, builds_on links, or content similarity"
+        }
+      ],
+      "new_resources": [
+        "repo://summary - Level 0 repository summary",
+        "repo://index - Level 1 compact index",
+        "repo://kb/{id}/brief - Level 1 metadata for specific entry"
+      ]
+    }
+  },
+
+  "summary": {
+    "recommended_stack": {
+      "primary_database": "SQLite with FTS5 + JSON1 (built into Python, no dependencies)",
+      "indexing_strategy": "Tiered (Level 0 summary / Level 1 compact index / Level 2 on-demand content)",
+      "query_protocol": "MCP Progressive Discovery (status -> search -> get) with token budgets",
+      "caching": "Static JSON files (SUMMARY.json, INDEX_COMPACT.json) for zero-dependency access",
+      "optional_enhancements": "Bloom filters for tag pre-filtering, materialized views for common queries"
+    },
+    "estimated_token_reduction": {
+      "orientation_queries": "99% (50 tokens vs 6000 current)",
+      "discovery_queries": "92-95% (100-500 tokens vs 6000 current)",
+      "targeted_lookups": "85-90% (200-500 tokens per entry vs 6000 + entry content)",
+      "overall_agent_workflow": "85-95% reduction in index-related token usage",
+      "annual_impact_estimate": "At 10 agent sessions/day reading index: ~55,000 tokens saved per day, ~20M tokens saved per year"
+    },
+    "implementation_priority": [
+      {
+        "priority": 1,
+        "item": "Generate Level 0 SUMMARY.json and Level 1 INDEX_COMPACT.json",
+        "effort": "30 minutes",
+        "impact": "Immediate 90%+ token savings for orientation queries",
+        "rationale": "Zero infrastructure change, purely additive, instant value"
+      },
+      {
+        "priority": 2,
+        "item": "Create SQLite DB with FTS5 index from existing entries",
+        "effort": "2-3 hours",
+        "impact": "Sub-millisecond text search, 95%+ token savings for search queries",
+        "rationale": "Enables all advanced query features. No external dependencies."
+      },
+      {
+        "priority": 3,
+        "item": "Enhance MCP server with field selection and token budgets",
+        "effort": "2-3 hours",
+        "impact": "Agent-controlled token costs, progressive discovery protocol",
+        "rationale": "Builds on SQLite foundation, makes savings accessible to all agents"
+      },
+      {
+        "priority": 4,
+        "item": "Add materialized views for top 5 query patterns",
+        "effort": "1-2 hours",
+        "impact": "Pre-computed results for common queries, further 50% reduction",
+        "rationale": "Low effort, high value for repeated patterns"
+      },
+      {
+        "priority": 5,
+        "item": "Add Bloom filters and topic summaries",
+        "effort": "2-3 hours",
+        "impact": "Marginal improvement at current scale, significant at 500+ entries",
+        "rationale": "Future-proofing, relatively low effort"
+      }
+    ],
+    "key_risks": [
+      {
+        "risk": "SQLite DB gets out of sync with source files",
+        "mitigation": "Generate DB from files on every run (takes <1 second for current scale). Add pre-commit hook to regenerate. DB is a gitignored artifact.",
+        "severity": "MEDIUM",
+        "likelihood": "LOW with automation"
+      },
+      {
+        "risk": "FTS5 not available in some Python installations",
+        "mitigation": "FTS5 is compiled into Python's sqlite3 by default since Python 3.9 on most platforms. Add a runtime check and fall back to LIKE queries if unavailable.",
+        "severity": "LOW",
+        "likelihood": "LOW"
+      },
+      {
+        "risk": "Over-engineering for current scale (31 entries)",
+        "mitigation": "Phase the implementation. Start with static JSON files (Priority 1), which require zero infrastructure. Only add SQLite if agents are actively benefiting from Level 0/1 files.",
+        "severity": "MEDIUM",
+        "likelihood": "MEDIUM"
+      },
+      {
+        "risk": "Agent behavior change required (stop reading index.json directly)",
+        "mitigation": "Keep index.json files working. Document new protocol in CLAUDE.md. MCP server provides the same data more efficiently - agents naturally prefer lower-cost paths.",
+        "severity": "LOW",
+        "likelihood": "LOW"
+      },
+      {
+        "risk": "Concurrent DB access from multiple agents",
+        "mitigation": "SQLite WAL mode supports multiple concurrent readers. The DB is read-only for agents (regenerated by scripts). KB-0016 already documents SQLite WAL patterns for this repo.",
+        "severity": "LOW",
+        "likelihood": "LOW with WAL mode"
+      }
+    ],
+    "key_insight": "The single highest-impact change is NOT a database migration. It is generating two small static files (SUMMARY.json at ~50 tokens and INDEX_COMPACT.json at ~500 tokens) that agents read instead of the 6000-token index.json. This can be done in 30 minutes with zero infrastructure changes. SQLite FTS5 is the second-highest impact change, enabling sub-millisecond ranked text search with 95%+ token savings. Together, these two changes cover 90% of the token reduction opportunity."
+  }
+}

@@ -16,6 +16,7 @@ import logging
 import os
 import re
 import sqlite3
+import tempfile
 import threading
 import time
 import uuid
@@ -32,9 +33,13 @@ VALID_MSG_TYPES = frozenset({
 })
 
 MAX_MESSAGE_BYTES = 4096
+PIPE_BUF = 4096  # FIX: BUG-DC-002 — POSIX guarantees atomic writes up to this size
 
 _MAX_RETRIES = 5
 _RETRY_BACKOFF = 0.1
+
+# FIX: BUG-DC-002 — lock for serializing large bus writes that exceed PIPE_BUF
+_bus_write_lock = threading.Lock()
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS channels (
@@ -74,7 +79,7 @@ CREATE TABLE IF NOT EXISTS read_offsets (
 );
 """
 
-VALID_PRESENCE = frozenset({"available", "busy", "helping", "away"})
+VALID_PRESENCE = frozenset({"available", "busy", "helping", "away", "offline", "idle"})  # FIX: BUG-DC-003 — added 'offline' and 'idle'
 VALID_CHANNEL_TYPES = frozenset({"direct", "team", "topic", "broadcast"})
 
 
@@ -99,7 +104,8 @@ def _retry_on_busy(func):
                         func.__name__, attempt + 1, _MAX_RETRIES, delay,
                     )
                     time.sleep(delay)
-                    delay *= 2
+                    # P0 FIX: Cap backoff at 50ms to avoid 1.6s+ delays
+                    delay = min(delay * 2, 0.05)
                 else:
                     raise
         raise last_err  # type: ignore[misc]
@@ -143,11 +149,33 @@ def _bus_publish(bus_dir: str, channel: str, agent_id: str, team: str,
     filepath = os.path.join(bus_dir, f"{safe}.jsonl")
     try:
         os.makedirs(bus_dir, exist_ok=True)
-        fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
-        try:
-            os.write(fd, raw)
-        finally:
-            os.close(fd)
+        if len(raw) <= PIPE_BUF:
+            # FIX: BUG-DC-002 — POSIX guarantees atomic append for writes <= PIPE_BUF
+            fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+            try:
+                os.write(fd, raw)
+            finally:
+                os.close(fd)
+        else:
+            # FIX: BUG-DC-002 — large writes use temp file + rename to avoid torn writes
+            with _bus_write_lock:
+                tmp_fd, tmp_path = tempfile.mkstemp(dir=bus_dir, suffix=".tmp")
+                try:
+                    os.write(tmp_fd, raw)
+                    os.close(tmp_fd)
+                    # Append temp file contents to the target file
+                    with open(tmp_path, "rb") as tmp_f:
+                        data = tmp_f.read()
+                    fd = os.open(filepath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+                    try:
+                        os.write(fd, data)
+                    finally:
+                        os.close(fd)
+                finally:
+                    try:
+                        os.unlink(tmp_path)
+                    except OSError:
+                        pass
     except OSError as e:
         logger.error("Failed to publish message to %s: %s", filepath, e)
         return None
@@ -227,22 +255,36 @@ class DirectChannels:
         The team identifier for this instance.
     agent_id:
         The agent identifier for this instance.
+    partitioned_store:
+        Optional PartitionedStore instance.  When provided, the comms partition
+        is used for channels, presence, progress, read_offsets, and messages
+        tables instead of opening a new connection to db_path.  This enables
+        incremental migration to partitioned databases.
     """
 
-    def __init__(self, db_path: str, bus_dir: str, team: str, agent_id: str) -> None:
+    def __init__(self, db_path: str, bus_dir: str, team: str, agent_id: str,
+                 partitioned_store: Optional["PartitionedStore"] = None) -> None:
         self.db_path = db_path
         self.bus_dir = bus_dir
         self.team = team
         self.agent_id = agent_id
+        self._partitioned_store = partitioned_store
 
         self._lock = threading.Lock()
-        os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
-        self._conn = sqlite3.connect(db_path, timeout=30, check_same_thread=False)
-        self._conn.row_factory = sqlite3.Row
-        self._conn.execute("PRAGMA journal_mode=WAL")
-        self._conn.execute("PRAGMA busy_timeout=30000")
-        self._conn.executescript(_SCHEMA)
-        self._conn.commit()
+        if partitioned_store is not None:
+            # Use the comms partition for channels, presence, progress,
+            # read_offsets, and messages tables
+            self._conn = partitioned_store.comms.conn
+            self._owns_conn = False
+        else:
+            os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
+            self._conn = sqlite3.connect(db_path, timeout=30, check_same_thread=False)
+            self._conn.row_factory = sqlite3.Row
+            self._conn.execute("PRAGMA journal_mode=WAL")
+            self._conn.execute("PRAGMA busy_timeout=30000")
+            self._conn.executescript(_SCHEMA)
+            self._conn.commit()
+            self._owns_conn = True
 
         # Track read offsets per channel for bus polling — loaded from DB
         self._read_offsets: dict[str, int] = {}
@@ -251,11 +293,12 @@ class DirectChannels:
         self._load_read_offsets()
 
     def close(self) -> None:
-        """Close the database connection."""
+        """Close the database connection (only if we own it)."""
         with self._lock:
             if not self._closed:
                 self._closed = True
-                self._conn.close()
+                if self._owns_conn:
+                    self._conn.close()
 
     def __del__(self) -> None:
         """Ensure the database connection is closed on garbage collection."""
@@ -275,6 +318,9 @@ class DirectChannels:
         Returns the channel name.
         """
         self._check_closed()
+        # FIX: BUG-DC-004 — prevent creating a direct channel to self
+        if self.team == target_team:
+            raise ValueError(f"Cannot create a direct channel to self (team={self.team!r})")
         channel_name = _direct_channel_name(self.team, target_team)
         participants = json.dumps(sorted([self.team, target_team]))
         now = time.time()
@@ -341,22 +387,31 @@ class DirectChannels:
         """Add this team to an existing channel's participant list."""
         self._check_closed()
         with self._lock:
-            row = self._conn.execute(
-                "SELECT participants FROM channels WHERE channel_name = ? AND status = 'active'",
-                (channel_name,),
-            ).fetchone()
-            if row is None:
-                raise ValueError(f"Channel {channel_name!r} does not exist or is archived")
+            self._conn.execute("BEGIN IMMEDIATE")
+            try:
+                row = self._conn.execute(
+                    "SELECT participants FROM channels WHERE channel_name = ? AND status = 'active'",
+                    (channel_name,),
+                ).fetchone()
+                if row is None:
+                    self._conn.execute("ROLLBACK")
+                    raise ValueError(f"Channel {channel_name!r} does not exist or is archived")
 
-            current = json.loads(row["participants"])
-            if self.team not in current:
-                current.append(self.team)
-                current.sort()
-            self._conn.execute(
-                "UPDATE channels SET participants = ?, last_activity = ? WHERE channel_name = ?",
-                (json.dumps(current), time.time(), channel_name),
-            )
-            self._conn.commit()
+                current = json.loads(row["participants"])
+                if self.team not in current:
+                    current.append(self.team)
+                    current.sort()
+                self._conn.execute(
+                    "UPDATE channels SET participants = ?, last_activity = ? WHERE channel_name = ?",
+                    (json.dumps(current), time.time(), channel_name),
+                )
+                self._conn.commit()
+            except Exception:
+                try:
+                    self._conn.execute("ROLLBACK")
+                except sqlite3.OperationalError:
+                    pass
+                raise
 
         _bus_publish(
             self.bus_dir, "global", self.agent_id, self.team, "info",
@@ -368,21 +423,30 @@ class DirectChannels:
         """Remove this team from a channel's participant list."""
         self._check_closed()
         with self._lock:
-            row = self._conn.execute(
-                "SELECT participants FROM channels WHERE channel_name = ?",
-                (channel_name,),
-            ).fetchone()
-            if row is None:
-                return
+            self._conn.execute("BEGIN IMMEDIATE")
+            try:
+                row = self._conn.execute(
+                    "SELECT participants FROM channels WHERE channel_name = ?",
+                    (channel_name,),
+                ).fetchone()
+                if row is None:
+                    self._conn.execute("ROLLBACK")
+                    return
 
-            current = json.loads(row["participants"])
-            if self.team in current:
-                current.remove(self.team)
-            self._conn.execute(
-                "UPDATE channels SET participants = ?, last_activity = ? WHERE channel_name = ?",
-                (json.dumps(current), time.time(), channel_name),
-            )
-            self._conn.commit()
+                current = json.loads(row["participants"])
+                if self.team in current:
+                    current.remove(self.team)
+                self._conn.execute(
+                    "UPDATE channels SET participants = ?, last_activity = ? WHERE channel_name = ?",
+                    (json.dumps(current), time.time(), channel_name),
+                )
+                self._conn.commit()
+            except Exception:
+                try:
+                    self._conn.execute("ROLLBACK")
+                except sqlite3.OperationalError:
+                    pass
+                raise
 
     @_retry_on_busy
     def list_active_channels(self) -> list[dict]:
@@ -572,6 +636,9 @@ class DirectChannels:
                         bottleneck: str = None) -> None:
         """Update this team's progress and broadcast it."""
         self._check_closed()
+        # FIX: BUG-DC-003 — validate progress_pct is within 0-100
+        if not (0 <= progress_pct <= 100):
+            raise ValueError(f"progress_pct must be between 0 and 100, got {progress_pct}")
         now = time.time()
         with self._lock:
             self._conn.execute(

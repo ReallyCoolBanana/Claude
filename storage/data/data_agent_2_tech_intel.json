@@ -1,0 +1,793 @@
+{
+  "agent_id": "DATA-AGENT-2",
+  "purpose": "Technical Architecture Intelligence for Think Tank 2",
+  "target": "THINK-TANK-2-TECHNICAL-ARCHITECTURE",
+  "section_1_mcp_configuration": {
+    "file": ".mcp.json",
+    "current_servers": {
+      "repo": {
+        "command": "python3",
+        "args": [
+          "storage/mcp-server/server.py"
+        ],
+        "env": {},
+        "description": "Repository MCP server - provides repo-level tools"
+      },
+      "kb-search": {
+        "command": "python3",
+        "args": [
+          "storage/scripts/mcp_kb_server.py"
+        ],
+        "env": {},
+        "description": "Knowledge base search server - FTS5, semantic search, tag cloud, related entries"
+      }
+    },
+    "total_servers": 2,
+    "observations": [
+      "Only 2 MCP servers currently configured",
+      "No financial data MCP servers installed",
+      "Both are local Python servers - no npm/npx servers",
+      "Adding new servers requires only editing .mcp.json"
+    ]
+  },
+  "section_2_mcp_server_code_patterns": {
+    "file": "storage/scripts/mcp_kb_server.py",
+    "framework": "mcp.server.fastmcp.FastMCP",
+    "pattern_summary": "Uses FastMCP for declarative tool registration with @mcp.tool() decorator. SQLite backend with WAL mode. Each tool is a function that returns dict/list[dict]. Server runs via mcp.run().",
+    "key_code_snippets": {
+      "initialization": "from mcp.server.fastmcp import FastMCP\nmcp = FastMCP('kb-search')",
+      "db_connection": "def _db():\n    db = sqlite3.connect(str(DB_PATH))\n    db.row_factory = sqlite3.Row\n    db.execute('PRAGMA journal_mode = WAL')\n    return db",
+      "tool_registration": "@mcp.tool()\ndef kb_search(query: str, resource_type: str = None, limit: int = 10) -> list[dict]:\n    \"\"\"FTS5 full-text search with BM25 ranking.\"\"\"\n    ...",
+      "entry_point": "if __name__ == '__main__':\n    mcp.run()"
+    },
+    "tools_exposed": [
+      {
+        "name": "kb_search",
+        "description": "FTS5 full-text search with BM25 ranking"
+      },
+      {
+        "name": "kb_get",
+        "description": "Get specific entry by ID with tags and relationships"
+      },
+      {
+        "name": "kb_list",
+        "description": "List entries by resource type"
+      },
+      {
+        "name": "kb_tags",
+        "description": "Tag frequency cloud"
+      },
+      {
+        "name": "kb_related",
+        "description": "Find related entries via builds_on chains and shared tags"
+      },
+      {
+        "name": "kb_semantic_search",
+        "description": "Vector similarity search via lancedb/sentence-transformers"
+      }
+    ],
+    "design_notes": [
+      "All tools return plain dicts/lists - FastMCP handles JSON serialization",
+      "Error handling returns {'error': msg} dicts rather than raising exceptions",
+      "Semantic search gracefully degrades if lancedb not installed",
+      "Database connection is per-request (no connection pooling needed for MCP)"
+    ]
+  },
+  "section_3_data_gathering_tool_patterns": {
+    "common_pattern": {
+      "structure": "Each method has METHOD_ID, METHOD_NAME constants, a run(query) function, and __main__ CLI entry point",
+      "output_format": "Standardized JSON: {method_id, method_name, query, results: [], metadata: {duration_seconds, sources_count, data_points, ...}}",
+      "http_pattern": "urllib.request with User-Agent header, timeout, error handling for HTTPError/URLError/OSError",
+      "caching": "Optional request_cache integration via try/except ImportError fallback",
+      "cli_pattern": "if __name__ == '__main__': sys.argv[1] as query, json.dumps to stdout"
+    },
+    "methods_analyzed": {
+      "method_websearch_DG0001": {
+        "file": "storage/scripts/data-gathering/methods/method_websearch.py",
+        "approach": "Multi-query search: generates 3-5 query variants, searches DuckDuckGo for each, deduplicates by URL",
+        "dependencies": [
+          "ddg_utils.search_duckduckgo"
+        ],
+        "key_pattern": "Query variant generation for broader coverage"
+      },
+      "method_hackernews_DG0005": {
+        "file": "storage/scripts/data-gathering/methods/method_hackernews.py",
+        "approach": "Dual-source: Algolia HN search API + Firebase HN top stories API",
+        "api_endpoints": [
+          "https://hn.algolia.com/api/v1/search",
+          "https://hacker-news.firebaseio.com/v0"
+        ],
+        "key_pattern": "_api_get() helper with cache integration, error dicts for failed requests"
+      },
+      "method_guardian_DG0006": {
+        "file": "storage/scripts/data-gathering/methods/method_guardian.py",
+        "approach": "Guardian Content API with DuckDuckGo site-scoped fallback",
+        "api_endpoint": "https://content.guardianapis.com/search",
+        "api_key": "test (public test key)",
+        "key_pattern": "Graceful degradation: API fails -> DDG site:theguardian.com fallback"
+      },
+      "method_hybrid_DG0004": {
+        "file": "storage/scripts/data-gathering/methods/method_hybrid.py",
+        "approach": "Parallel execution of all methods (web, wikipedia, arxiv, openalex, wikidata) via ThreadPoolExecutor, cross-source corroboration scoring, TF-IDF deduplication",
+        "key_patterns": [
+          "Dynamic module loading via importlib.util",
+          "Parallel execution with ThreadPoolExecutor(max_workers=5)",
+          "Source credibility tiers: academic (1.5x) > encyclopedia (1.2x) > structured_knowledge (1.1x) > web (1.0x)",
+          "Cross-reference via keyword overlap (>=4 keywords) and URL matching",
+          "Weighted scoring combining credibility and corroboration",
+          "run_with_results() for pre-computed data (avoids double-execution)"
+        ]
+      }
+    },
+    "building_new_method_template": {
+      "required_elements": [
+        "METHOD_ID constant (e.g., 'DG-XXXX')",
+        "METHOD_NAME constant",
+        "run(query) function returning standardized JSON",
+        "Optional: _cached_request integration",
+        "CLI entry point with sys.argv"
+      ],
+      "standardized_output": {
+        "method_id": "DG-XXXX",
+        "method_name": "Name",
+        "query": "input query",
+        "results": [
+          "list of result dicts"
+        ],
+        "metadata": {
+          "duration_seconds": 0.0,
+          "sources_count": 0,
+          "data_points": 0
+        }
+      }
+    }
+  },
+  "section_4_pick_template": {
+    "file": "market-research/picks/TEMPLATE.md",
+    "format": "YAML frontmatter + Markdown body",
+    "frontmatter_fields": {
+      "pick_id": "PICK-XXXX",
+      "date": "YYYY-MM-DD",
+      "team": "TEAM-XXXX",
+      "ticker": "string",
+      "company": "string",
+      "direction": "long|short",
+      "method": "fundamental|technical|sentiment|quantitative|macro-sector",
+      "entry_price": "null or number",
+      "target_price": "null or number",
+      "stop_loss": "null or number",
+      "timeframe": "short-term|medium-term|long-term",
+      "confidence": "high|medium|low",
+      "status": "active|closed|watchlist",
+      "builds_on": [
+        "KB-XXXX",
+        "PICK-XXXX"
+      ]
+    },
+    "body_sections": [
+      "## Thesis - Why this stock, why now?",
+      "## Analysis - Method Applied, Key Metrics/Signals, Risk Factors",
+      "## Exit Criteria - When to close position",
+      "## Outcome (fill when closed) - Actual Return, What Worked, What Didn't, Knowledge Entry link"
+    ]
+  },
+  "section_5_tt_beta_tools_assessment": {
+    "file": "storage/data/tt_beta_tools_assessment.json",
+    "key_findings": {
+      "current_state": {
+        "total_scripts": 54,
+        "total_api_tools": 2,
+        "total_cataloged_sources": 44,
+        "data_gathering_methods": 11,
+        "mcp_servers": 2,
+        "observation": "Heavily weighted toward utility/infrastructure (27 utility) vs domain-output (8 analysis, 16 data-collection). Only 2 API tools despite 44 cataloged sources."
+      },
+      "top_5_recommendations": [
+        {
+          "rank": 1,
+          "item": "Add financial MCP servers to .mcp.json",
+          "impact": "critical",
+          "effort": "small (hours)",
+          "specific_actions": [
+            "Alpha Vantage MCP",
+            "Yahoo Finance Stockflow MCP",
+            "Financial Datasets MCP"
+          ]
+        },
+        {
+          "rank": 2,
+          "item": "Build SEC EDGAR data-gathering tool",
+          "impact": "critical",
+          "effort": "medium (1 day)"
+        },
+        {
+          "rank": 3,
+          "item": "Build pick_logger tool",
+          "impact": "high",
+          "effort": "small (hours)"
+        },
+        {
+          "rank": 4,
+          "item": "Build FRED data-gathering tool",
+          "impact": "high",
+          "effort": "small (hours)"
+        },
+        {
+          "rank": 5,
+          "item": "Adopt LightRAG for knowledge graph retrieval",
+          "impact": "medium-high",
+          "effort": "medium (2-3 days)"
+        }
+      ],
+      "build_vs_adopt_decisions": {
+        "adopt": [
+          "Financial data access (MCP servers)",
+          "Knowledge graph retrieval (LightRAG)"
+        ],
+        "build": [
+          "SEC EDGAR tool",
+          "FRED tool",
+          "pick_logger",
+          "cost_tracker",
+          "Agent Skills",
+          "context_budget_monitor"
+        ],
+        "extend": [
+          "dedup_checker (extend SCR-0041)"
+        ],
+        "skip": [
+          "sop_consolidator",
+          "trace_propagator",
+          "zombie_reclaimer",
+          "Reddit API",
+          "ConceptNet",
+          "Open-Meteo"
+        ]
+      },
+      "implementation_roadmap": {
+        "week_1": [
+          "Add 2-3 financial MCP servers",
+          "Build pick_logger.py",
+          "Build cost_tracker.py"
+        ],
+        "week_2": [
+          "Build method_sec_edgar.py",
+          "Build method_fred.py",
+          "Build method_finnhub.py"
+        ],
+        "week_3": [
+          "Integrate LightRAG",
+          "Package market-research Agent Skill",
+          "Build context_budget_monitor.py"
+        ]
+      },
+      "key_insight": "The biggest gap is the ratio of domain-output tools to coordination tools. Adding 2-3 financial MCP servers to .mcp.json would instantly transform capability from 'can research topics' to 'can analyze stocks with real financial data' in hours."
+    }
+  },
+  "section_6_coordination_sops": {
+    "sop_014_simultaneous_project_management": {
+      "file": "storage/coordination/sops/sop_014_simultaneous_project_management.json",
+      "purpose": "Enables central commander to run 2-5 simultaneous projects with hub-and-spoke monitoring",
+      "key_concepts": {
+        "project_decomposition": "Parse user request into distinct project objectives, assign team groups (Group-{LETTER}-{purpose}), isolate output paths",
+        "scaling_tiers": {
+          "small_4_8": "1-2 projects, 2-4 teams, low coordinator overhead",
+          "medium_8_16": "2-3 projects, 4-8 teams, monitor at team level",
+          "large_16_30": "3-5 projects, 6-10 teams, monitor at project level with project leads"
+        },
+        "resource_rebalancing": "Completed group's agents reassigned to lagging projects",
+        "file_isolation": "No two agents from different project groups write to same file (except append-only JSONL)"
+      },
+      "relevance_to_5_sessions": "This SOP defines how to run multi-project operations. For 5 sessions, each session can be a project group with isolated output paths."
+    },
+    "sop_022_team_sizing": {
+      "file": "storage/coordination/sops/sop_022_team_sizing.json",
+      "purpose": "Evidence-based team sizing from 28 sessions, 132 agent instances",
+      "sizing_rules": {
+        "SIZE_01_solo": "1 agent for independent research. 4.0 artifacts/agent. ~0% overhead.",
+        "SIZE_02_small": "3 agents for focused tool building. 1.0 artifacts/agent. ~5% overhead.",
+        "SIZE_03_medium": "5-8 agents for integrated operations. 15-20% overhead.",
+        "SIZE_04_large": "9-12 agents for parallel research streams. 20-25% overhead. Must use lead-sub pattern.",
+        "SIZE_05_avoid": "15+ agents: 89% efficiency loss. Only for unique multi-team capabilities."
+      },
+      "validated_compositions": {
+        "bug_hunt_5": "1 coordinator + 2 think-tanks + 2 coding teams",
+        "feature_build_7": "1 coordinator + 1 think-tank + 1 research + 3 coding + 1 standby",
+        "audit_5": "1 coordinator + 3 audit-teams + 1 think-tank-convergence",
+        "data_pipeline_8": "1 coordinator + 3 gatherers + 2 sorters + 1 think-tank + 1 programming",
+        "market_research_sprint_5": "1 coordinator + 2 research-teams + 1 analysis + 1 coding"
+      },
+      "anti_patterns": [
+        "Default to maximum agents",
+        "One agent per file",
+        "Think tank proliferation (>1:2 ratio)",
+        "No standby agents"
+      ]
+    }
+  },
+  "section_7_web_research": {
+    "alpha_vantage_mcp": {
+      "search_query": "Alpha Vantage MCP server Claude integration",
+      "findings": {
+        "official_server": {
+          "url": "https://mcp.alphavantage.co/",
+          "github": "https://github.com/alphavantage/alpha_vantage_mcp",
+          "status": "Official, vendor-maintained",
+          "features": [
+            "Real-time stock quotes (price, volume, change)",
+            "Company information (sector, industry, market cap)",
+            "Cryptocurrency exchange rates",
+            "Historical options chain data",
+            "Financial statements (income, balance sheet, cash flow)",
+            "Company overviews and earnings",
+            "Financial news with sentiment analysis"
+          ],
+          "unique_feature": "Progressive Tool Discovery - minimizes token usage while preserving response quality",
+          "setup": "Add to claude_desktop_config.json or .mcp.json, requires free API key",
+          "rate_limits": {
+            "premium_endpoints": "25 requests/day (free tier)",
+            "standard_endpoints": "500 requests/day (free tier)"
+          }
+        },
+        "community_servers": [
+          {
+            "name": "berlinbra/alpha-vantage-mcp",
+            "github": "https://github.com/berlinbra/alpha-vantage-mcp",
+            "description": "Community MCP server for Alpha Vantage API"
+          },
+          {
+            "name": "QuantML-Github/alpha-vantage-mcp",
+            "url": "https://mcpservers.org/servers/QuantML-Github/alpha-vantage-mcp"
+          }
+        ],
+        "integration_effort": "Small - add to .mcp.json, get free API key"
+      }
+    },
+    "yahoo_finance_mcp": {
+      "search_query": "Yahoo Finance MCP server Claude stockflow",
+      "findings": {
+        "stockflow": {
+          "name": "StockFlow MCP Server",
+          "github": "https://github.com/twolven/mcp-stockflow",
+          "description": "Real-time stock data and options analysis through Yahoo Finance",
+          "features": [
+            "Real-time stock data",
+            "Options analysis",
+            "Market data access"
+          ],
+          "setup": "pip install mcp yfinance, clone repo, add to claude-desktop-config.json",
+          "auth": "No API key needed",
+          "listed_date": "January 2, 2026 on Glama"
+        },
+        "other_servers": [
+          {
+            "name": "yahoo-finance-mcp (Alex2Yang97)",
+            "github": "https://github.com/Alex2Yang97/yahoo-finance-mcp",
+            "description": "Comprehensive financial data: historical prices, company info, financial statements, options, news"
+          },
+          {
+            "name": "yahoo-finance-mcp (danishashko)",
+            "github": "https://github.com/danishashko/yahoo-finance-mcp",
+            "description": "Beginner-friendly: stock data, charts, financials, analyst ratings, company comparison"
+          },
+          {
+            "name": "mcp-yahoo-finance (PyPI)",
+            "pypi": "https://pypi.org/project/mcp-yahoo-finance/",
+            "description": "Available via uvx or Docker, add to claude_desktop_config.json"
+          },
+          {
+            "name": "mcp-yfinance (9nate-drake)",
+            "github": "https://github.com/9nate-drake/mcp-yfinance",
+            "description": "Financial data for Claude Desktop using yfinance"
+          },
+          {
+            "name": "yahoo-finance-server (AgentX-ai)",
+            "github": "https://github.com/AgentX-ai/yahoo-finance-server",
+            "description": "Comprehensive stock market data, news, financials"
+          }
+        ],
+        "recommendation": "StockFlow (twolven) is the most established. Alex2Yang97 version is most feature-complete. Both work with no API key."
+      }
+    },
+    "sec_edgar_python": {
+      "search_query": "SEC EDGAR Python API 2025",
+      "findings": {
+        "best_option": {
+          "name": "EdgarTools",
+          "github": "https://github.com/dgunning/edgartools",
+          "pypi": "pip install edgartools",
+          "docs": "https://edgartools.readthedocs.io/",
+          "features": [
+            "No API keys, no subscriptions, no rate limits",
+            "Parses SEC filings into Python objects (not raw HTML/XML)",
+            "Includes MCP server and AI skills for Claude Desktop/Code",
+            "Supports all SEC form types: 10-K, 10-Q, 8-K, 13F, Form 4, DEF 14A, S-1, etc.",
+            "Natural language query support"
+          ],
+          "critical_note": "EdgarTools already has its own MCP server - could be added directly to .mcp.json instead of building method_sec_edgar.py"
+        },
+        "alternatives": [
+          {
+            "name": "SEC Official APIs (data.sec.gov)",
+            "url": "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+            "features": "Free RESTful JSON APIs, no auth needed, real-time updates, XBRL data",
+            "rate_limit": "10 requests/second with User-Agent header"
+          },
+          {
+            "name": "sec-api (commercial)",
+            "pypi": "pip install sec-api",
+            "github": "https://github.com/janlukasschroeder/sec-api-python",
+            "features": "18M+ filings, full-text search, real-time stream, XBRL-to-JSON",
+            "note": "Requires paid API key from sec-api.io"
+          },
+          {
+            "name": "edgar-sec",
+            "docs": "https://nikhilxsunder.github.io/edgar-sec/",
+            "features": "Lightweight, typed, async/sync, caching, rate limiting"
+          },
+          {
+            "name": "sec-edgar-toolkit",
+            "github": "https://github.com/stefanoamorelli/sec-edgar-toolkit",
+            "features": "Multi-language (Python + TypeScript), 10-K/10-Q/8-K parsing, XBRL extraction"
+          }
+        ],
+        "recommendation": "EdgarTools is the best choice - free, actively maintained, richest structured data, AND has its own MCP server. This is a game-changer: we may not need to build method_sec_edgar.py at all if we just add the EdgarTools MCP server."
+      }
+    },
+    "fred_api_python": {
+      "search_query": "FRED API Python tutorial",
+      "findings": {
+        "best_library": {
+          "name": "fredapi",
+          "github": "https://github.com/mortada/fredapi",
+          "pypi": "https://pypi.org/project/fredapi/",
+          "features": [
+            "Official Python wrapper for FRED web service",
+            "Returns pandas Series/DataFrame",
+            "ALFRED support (historic data revisions)",
+            "search() method for fulltext series search"
+          ],
+          "setup": "pip install fredapi, get free API key from fred.stlouisfed.org"
+        },
+        "alternatives": [
+          {
+            "name": "pystlouisfed",
+            "github": "https://github.com/TomasKoutek/pystlouisfed",
+            "features": "Covers entire FRED/ALFRED/FRED Maps/FRASER API, pandas DataFrames with correct data types"
+          },
+          {
+            "name": "FRB client",
+            "docs": "https://frb.readthedocs.io/",
+            "features": "Multiple output formats: CSV, TSV, dict, DataFrame, numpy array"
+          }
+        ],
+        "api_details": {
+          "base_url": "https://api.stlouisfed.org/",
+          "auth": "Free API key required (apply at fred.stlouisfed.org)",
+          "rate_limit": "120 requests/minute",
+          "series_count": "765,000+ time series",
+          "key_series_for_market_research": [
+            "GDP - Gross Domestic Product",
+            "CPIAUCSL - Consumer Price Index (inflation)",
+            "UNRATE - Unemployment Rate",
+            "DFF - Federal Funds Rate",
+            "T10Y2Y - 10-Year minus 2-Year Treasury spread (yield curve)",
+            "M2SL - M2 Money Supply",
+            "DEXUSEU - USD/EUR Exchange Rate"
+          ]
+        },
+        "integration_approach": "Build method_fred.py using fredapi library, following existing method_*.py pattern. Alternatively, wrap as MCP server."
+      }
+    },
+    "lightrag_implementation": {
+      "search_query": "LightRAG Python implementation graph enhanced retrieval",
+      "findings": {
+        "overview": {
+          "name": "LightRAG",
+          "github": "https://github.com/HKUDS/LightRAG",
+          "paper": "https://arxiv.org/abs/2410.05779",
+          "publication": "EMNLP 2025 Findings",
+          "pypi_package": "lightrag-hku",
+          "authors": "University of Hong Kong (School of Data Science)"
+        },
+        "core_approach": {
+          "description": "Graph-enhanced RAG combining knowledge graphs with vector retrieval",
+          "key_innovations": [
+            "Dual-level retrieval: specific entity queries + abstract conceptual queries",
+            "LLM-powered entity/relationship extraction into knowledge graph",
+            "Incremental updates without full reprocessing",
+            "Built-in deduplication of entities and relations across text segments"
+          ]
+        },
+        "performance_claims": {
+          "token_reduction": "99% reduction in token usage",
+          "api_calls": "Single API call per query",
+          "quality_improvement": "Up to 86.4% better in complex domains (e.g., legal)"
+        },
+        "recent_updates_2025_2026": [
+          {
+            "date": "2025-09",
+            "feature": "Enhanced KG extraction for open-source LLMs (Qwen3-30B-A3B)"
+          },
+          {
+            "date": "2025-08",
+            "feature": "Reranker support for mixed queries"
+          },
+          {
+            "date": "2025-08",
+            "feature": "Document deletion with automatic KG regeneration"
+          },
+          {
+            "date": "2025-06",
+            "feature": "RAG-Anything: multimodal RAG (text, images, tables, equations)"
+          },
+          {
+            "date": "2025-03",
+            "feature": "Citation functionality for source attribution"
+          },
+          {
+            "date": "2025-01",
+            "feature": "PostgreSQL support as all-in-one storage"
+          }
+        ],
+        "ecosystem": {
+          "mcp_server": "Available - uses LightRAG + Tree-sitter for repository knowledge graphs",
+          "go_implementation": "Exists, combining vector DB with graph relationships",
+          "storage_backends": [
+            "PostgreSQL",
+            "Local file system",
+            "Custom"
+          ]
+        },
+        "applicability_to_our_kb": "HIGH. Our 40+ KB entries with builds_on chains form a natural graph. LightRAG could replace FTS5/TF-IDF with graph-aware retrieval understanding entity relationships (tools -> APIs -> data sources -> picks)."
+      }
+    },
+    "claude_agent_sdk": {
+      "search_query": "Claude Agent SDK examples programmatic orchestration",
+      "findings": {
+        "overview": {
+          "name": "Claude Agent SDK",
+          "python_version": "v0.1.48 on PyPI",
+          "typescript_version": "v0.2.71 on npm",
+          "announcement_date": "May 22, 2025 (as 'Claude Code SDK')",
+          "rename_date": "September 29, 2025 (to 'Claude Agent SDK')",
+          "official_docs": "https://platform.claude.com/docs/en/agent-sdk/overview",
+          "quickstart": "https://platform.claude.com/docs/en/agent-sdk/quickstart",
+          "agent_teams_docs": "https://code.claude.com/docs/en/agent-teams"
+        },
+        "core_philosophy": "Designed to give agents a computer, not just a prompt. Production-grade runtime with terminal, file system, and web access.",
+        "key_capabilities": {
+          "subagent_orchestration": {
+            "description": "Define subagents programmatically in ClaudeAgentOptions. Orchestrator uses built-in Task tool to invoke subagents.",
+            "model_mixing": "Different models per subagent (e.g., Opus orchestrator + Sonnet workers for cost optimization)"
+          },
+          "agent_teams": {
+            "description": "Coordinate multiple Claude Code instances. One team lead coordinates, teammates work independently in own context windows.",
+            "vs_subagents": "Use subagents for quick focused workers; use agent teams when teammates need to share findings and coordinate"
+          },
+          "programmatic_tool_calling": {
+            "description": "Claude writes code that calls multiple tools, processes outputs, and controls what enters its context window",
+            "benefit": "Reduces API round-trips by batching tool calls in code"
+          },
+          "built_in_subagent_types": {
+            "explore": "Fast, read-only subagent for codebase search",
+            "plan": "Research-focused subagent for context gathering and planning"
+          }
+        },
+        "claude_flow": {
+          "description": "Open-source orchestration framework for running multiple Claude agents in coordinated workflows",
+          "capabilities": [
+            "Specialized agent collaboration",
+            "Shared memory",
+            "Task division"
+          ],
+          "url": "https://www.analyticsvidhya.com/blog/2026/03/claude-flow/"
+        },
+        "relevance_to_sessions": "We are already running inside this SDK. Key opportunities: (1) Package workflows as Agent Skills, (2) Use subagent spawning instead of custom coordination, (3) Leverage built-in Explore/Plan subagents."
+      }
+    }
+  },
+  "section_8_script_index": {
+    "file": "storage/scripts/index.json",
+    "total_scripts": 54,
+    "by_category": {
+      "data-collection": {
+        "count": 16,
+        "scripts": [
+          "SCR-0006 (websearch)",
+          "SCR-0007 (wikipedia)",
+          "SCR-0008 (arxiv)",
+          "SCR-0009 (hybrid)",
+          "SCR-0010 (iterative)",
+          "SCR-0021 (ddg-utils)",
+          "SCR-0022 (request-cache)",
+          "SCR-0023 (openalex)",
+          "SCR-0024 (hackernews)",
+          "SCR-0025 (guardian)",
+          "SCR-0026 (semantic-scholar)",
+          "SCR-0027 (wikidata)",
+          "SCR-0028 (github)",
+          "SCR-0046 (doc-fetcher)",
+          "SCR-0047 (version-tracker)",
+          "SCR-0048 (algo-catalog)"
+        ]
+      },
+      "analysis": {
+        "count": 8,
+        "scripts": [
+          "SCR-0004 (grade-research)",
+          "SCR-0005 (merge-research)",
+          "SCR-0011 (benchmark)",
+          "SCR-0031 (think-tank)",
+          "SCR-0041 (finding-dedup)",
+          "SCR-0042 (quality-scorer)",
+          "SCR-0050 (pattern-analyzer)",
+          "SCR-0054 (team-analyzer)"
+        ]
+      },
+      "automation": {
+        "count": 3,
+        "scripts": [
+          "SCR-0029 (bus-cli)",
+          "SCR-0030 (multi-team-runner)",
+          "SCR-0033 (coordinator-hub)"
+        ]
+      },
+      "utility": {
+        "count": 27,
+        "scripts": [
+          "SCR-0001 through SCR-0003 (validate/test/repair)",
+          "SCR-0012-0014 (kb-validator/index-rebuilder/cross-ref)",
+          "SCR-0015-0017 (Go: fast-search/validate/cache)",
+          "SCR-0018 (kb-search)",
+          "SCR-0019-0020 (handoff/staleness)",
+          "SCR-0032 (dashboard)",
+          "SCR-0034-0040 (build-cross-ref/search/stress-tests)",
+          "SCR-0043-0045 (archive-formatter/cross-team-search/bus-monitor)",
+          "SCR-0049 (practices-linter)",
+          "SCR-0051-0053 (benchmarker/tester/coord-stress)"
+        ]
+      }
+    },
+    "languages": {
+      "python": 51,
+      "go": 3
+    },
+    "gaps_identified": [
+      "No financial data gathering scripts (SEC EDGAR, FRED, Alpha Vantage, Finnhub)",
+      "No pick logging/tracking tool",
+      "No cost/API usage tracking",
+      "No context budget monitoring",
+      "16 data-collection scripts but all for general research, none for financial data"
+    ]
+  },
+  "section_9_synthesis_for_think_tank_2": {
+    "critical_architecture_decisions": [
+      {
+        "decision": "MCP-first vs Script-first for financial data",
+        "recommendation": "MCP-first. Add existing MCP servers (Alpha Vantage official, EdgarTools, Yahoo Finance) to .mcp.json. Only build custom method_*.py scripts for APIs without MCP servers (FRED, Finnhub).",
+        "rationale": "MCP servers provide instant tool access without code. EdgarTools MCP server is a game-changer - provides full SEC EDGAR access including AI skills for Claude."
+      },
+      {
+        "decision": "Which MCP servers to add in Session 1",
+        "recommendation": [
+          "Alpha Vantage (official, free key, Progressive Tool Discovery)",
+          "EdgarTools (free, no key, full SEC filings, has MCP server built-in)",
+          "Yahoo Finance / StockFlow (no auth needed, real-time data)"
+        ]
+      },
+      {
+        "decision": "LightRAG adoption timing",
+        "recommendation": "Session 3 or later. Requires indexing pipeline setup. Current FTS5 + semantic search via kb-search MCP server is functional. LightRAG is an enhancement, not a blocker."
+      },
+      {
+        "decision": "Agent Skills packaging",
+        "recommendation": "Session 2. Package market-research-pick workflow as .skill.md file. Low effort, high reuse value."
+      },
+      {
+        "decision": "Custom coordination vs Agent SDK built-ins",
+        "recommendation": "Evaluate in Session 4. Our custom coordination (coordinator_hub.py, multi_team_runner.py) works. Agent SDK's subagent spawning and Claude Flow are alternatives worth comparing but not urgent to migrate."
+      }
+    ],
+    "5_session_tech_architecture_map": {
+      "session_1": {
+        "focus": "Financial Data Foundation",
+        "actions": [
+          "Add Alpha Vantage MCP server to .mcp.json",
+          "Add EdgarTools MCP server to .mcp.json",
+          "Add Yahoo Finance MCP server to .mcp.json",
+          "Build pick_logger.py",
+          "Build cost_tracker.py",
+          "Test all MCP servers with sample queries"
+        ],
+        "team_size": "5 (1 coordinator + 2 MCP integration + 1 pick_logger builder + 1 cost_tracker builder)"
+      },
+      "session_2": {
+        "focus": "Custom Data Tools + Agent Skills",
+        "actions": [
+          "Build method_fred.py (FRED economic data)",
+          "Build method_finnhub.py (if not covered by MCP)",
+          "Package market-research-pick workflow as Agent Skill",
+          "Extend finding_dedup.py with pre-creation checks",
+          "First real market pick using new tools"
+        ],
+        "team_size": "5 (market research sprint composition)"
+      },
+      "session_3": {
+        "focus": "Knowledge Graph + Retrieval Enhancement",
+        "actions": [
+          "Evaluate LightRAG with our KB corpus",
+          "Build LightRAG indexing pipeline",
+          "Either extend kb-search MCP or build new LightRAG MCP server",
+          "Build context_budget_monitor.py",
+          "Continue market picks"
+        ],
+        "team_size": "7 (feature build composition)"
+      },
+      "session_4": {
+        "focus": "Pipeline Integration + Optimization",
+        "actions": [
+          "Build integrated market analysis pipeline (data -> analysis -> pick)",
+          "Evaluate Agent SDK subagents vs custom coordination",
+          "Add Financial Modeling Prep if needed",
+          "Performance optimization of MCP servers",
+          "Market picks sprint"
+        ],
+        "team_size": "8 (data pipeline composition)"
+      },
+      "session_5": {
+        "focus": "Consolidation + Review",
+        "actions": [
+          "Full system integration testing",
+          "Pick performance review",
+          "Documentation of all new tools and workflows",
+          "Knowledge base entries for everything learned",
+          "Identify next 5-session roadmap"
+        ],
+        "team_size": "5 (audit composition)"
+      }
+    },
+    "mcp_config_blueprint": {
+      "description": "Target .mcp.json after Session 1",
+      "servers": {
+        "repo": {
+          "command": "python3",
+          "args": [
+            "storage/mcp-server/server.py"
+          ]
+        },
+        "kb-search": {
+          "command": "python3",
+          "args": [
+            "storage/scripts/mcp_kb_server.py"
+          ]
+        },
+        "alpha-vantage": {
+          "note": "Official Alpha Vantage MCP server",
+          "setup_url": "https://mcp.alphavantage.co/",
+          "requires": "ALPHA_VANTAGE_API_KEY env var"
+        },
+        "edgartools": {
+          "note": "SEC EDGAR data via EdgarTools",
+          "setup_url": "https://github.com/dgunning/edgartools",
+          "requires": "pip install edgartools"
+        },
+        "yahoo-finance": {
+          "note": "Yahoo Finance via StockFlow or mcp-yahoo-finance",
+          "options": [
+            "twolven/mcp-stockflow (pip install mcp yfinance)",
+            "mcp-yahoo-finance PyPI package (uvx mcp-yahoo-finance)"
+          ],
+          "requires": "No API key"
+        }
+      }
+    },
+    "new_discovery_edgartools_mcp": {
+      "critical": true,
+      "description": "EdgarTools (the best SEC EDGAR Python library) already includes its own MCP server AND AI Skills for Claude. This was NOT in the TT-Beta assessment. This means we can add SEC EDGAR as an MCP server directly instead of building method_sec_edgar.py. This is the single most important new finding.",
+      "github": "https://github.com/dgunning/edgartools",
+      "impact": "Eliminates need to build method_sec_edgar.py. Saves ~1 day of development."
+    }
+  },
+  "date": "2026-03-11"
+}

@@ -1,0 +1,479 @@
+{
+  "id": "TT-ALPHA-DOMAIN-STRATEGY",
+  "version": "1.0",
+  "date": "2026-03-11",
+  "team": "THINK-TANK-ALPHA",
+  "title": "Domain Output Strategy: How We Finally Produce Market Picks and External Research",
+  "executive_summary": "The repository has COMPLETE infrastructure for market research but ZERO execution. All four analysis methods (fundamental, technical, sentiment, quantitative) have detailed guides. SOP-018 defines the full workflow. 41 data sources are cataloged with 16 data-collection scripts. The only missing piece is DOING THE WORK. The primary blocker is not tooling -- it is the recursive pattern of building more infrastructure instead of using what exists. This strategy provides a concrete, single-session execution plan.",
+
+  "readiness_assessment": {
+    "overall_verdict": "READY TO EXECUTE. No additional tooling required for first picks.",
+    "methods": {
+      "fundamental": {
+        "status": "READY",
+        "guide_location": "market-research/methods/fundamental.md",
+        "what_exists": "Complete guide with valuation ratios (P/E, P/B, P/S, EV/EBITDA, PEG), growth metrics, balance sheet health checks, profitability metrics (ROE, ROIC), qualitative moat analysis, DCF template, and pick checklist.",
+        "data_needed": "Company financials, earnings data, balance sheet data",
+        "data_sources_available": ["SRC-0040 Finnhub (company-fundamentals, financial-statements, earnings-estimates)", "SRC-0038 Alpha Vantage (stock-prices, economic-indicators)"],
+        "execution_method": "Claude can perform fundamental analysis using WebSearch/WebFetch to gather current financial data, then apply the checklist from fundamental.md. No scripts needed -- this is analytical work.",
+        "confidence_for_first_pick": "HIGH"
+      },
+      "technical": {
+        "status": "READY WITH LIMITATIONS",
+        "guide_location": "market-research/methods/technical.md",
+        "what_exists": "Complete guide with moving averages, MACD, RSI, stochastic oscillator, volume analysis, support/resistance, chart patterns, and pick checklist.",
+        "data_needed": "Historical price data, volume data, technical indicator calculations",
+        "data_sources_available": ["SRC-0038 Alpha Vantage (stock-prices-historical, technical-indicators)", "SRC-0040 Finnhub (stock-prices-historical)"],
+        "limitations": "Cannot render charts visually. Must rely on numerical indicator values from APIs. Alpha Vantage has built-in technical indicator endpoints (SMA, EMA, RSI, MACD, etc.) which compensates.",
+        "execution_method": "Fetch technical indicators from Alpha Vantage API endpoints. Apply checklist criteria numerically.",
+        "confidence_for_first_pick": "MEDIUM"
+      },
+      "sentiment": {
+        "status": "READY",
+        "guide_location": "market-research/methods/sentiment.md",
+        "what_exists": "Complete guide with news sentiment, social media signals, insider activity, institutional positioning, fear/greed metrics, and contrarian signals.",
+        "data_needed": "News articles, social media mentions, insider transactions, short interest",
+        "data_sources_available": ["SRC-0040 Finnhub (news-sentiment, insider-transactions, sec-filings)", "SRC-0015 GDELT (sentiment-analysis, news-articles, entity-extraction)", "SRC-0029/SRC-0030 Hacker News (tech sentiment)", "SRC-0013 Guardian (news-articles)", "SRC-0012 NewsAPI (news-headlines)"],
+        "execution_method": "Aggregate news sentiment from multiple sources. Check Finnhub for insider transactions. Use WebSearch for current market sentiment indicators (VIX, AAII survey). Apply contrarian framework.",
+        "confidence_for_first_pick": "HIGH"
+      },
+      "quantitative": {
+        "status": "PARTIALLY READY",
+        "guide_location": "market-research/methods/quantitative.md",
+        "what_exists": "Complete guide with factor models, pairs trading, mean reversion, momentum, risk management, and pick checklist.",
+        "data_needed": "Historical price data for large universe, factor scores, statistical calculations",
+        "limitations": "Full quantitative screening requires programmatic processing of large datasets. Factor scoring across a stock universe requires systematic data collection. Pairs trading requires correlation/cointegration testing.",
+        "execution_method": "Can do SIMPLIFIED quant analysis: screen for momentum (12-month returns via Alpha Vantage), value factors (P/E, P/B via Finnhub fundamentals), and mean reversion signals. Full multi-factor models require more infrastructure.",
+        "confidence_for_first_pick": "LOW for full quant, MEDIUM for simplified factor screening"
+      },
+      "ai_quant_techniques": {
+        "status": "NOT READY",
+        "guide_location": "market-research/methods/ai-quant-techniques/analysis/technique-comparison.md",
+        "what_exists": "Empty comparison template -- tables say 'populated by merge_research.py'. Never populated.",
+        "assessment": "This is a placeholder, not a usable method. Skip entirely for first picks."
+      }
+    }
+  },
+
+  "available_data_sources": {
+    "financial_market_data": [
+      {
+        "name": "Alpha Vantage",
+        "id": "SRC-0038",
+        "type": "freemium",
+        "access_method": "REST API at https://www.alphavantage.co/query",
+        "status": "AVAILABLE - free tier with API key",
+        "provides": "Real-time and historical stock prices, forex, crypto, technical indicators (SMA, EMA, RSI, MACD, Bollinger Bands, etc.), commodity prices, economic indicators",
+        "rate_limit": "5 API calls/minute on free tier, 500/day",
+        "critical_for": ["technical", "quantitative"],
+        "has_detail_file": true,
+        "detail_file": "storage/sources/SRC-0038-alpha-vantage.json"
+      },
+      {
+        "name": "Finnhub",
+        "id": "SRC-0040",
+        "type": "freemium",
+        "access_method": "REST API at https://finnhub.io/api/v1",
+        "status": "AVAILABLE - free tier with API key",
+        "provides": "Real-time/historical stock prices, company fundamentals, financial statements, earnings estimates, forex, crypto, economic calendar, news sentiment, insider transactions, SEC filings",
+        "rate_limit": "60 API calls/minute on free tier",
+        "critical_for": ["fundamental", "sentiment"],
+        "has_detail_file": true,
+        "detail_file": "storage/sources/SRC-0040-finnhub.json"
+      },
+      {
+        "name": "CoinGecko",
+        "id": "SRC-0041",
+        "type": "freemium",
+        "access_method": "REST API at https://api.coingecko.com/api/v3",
+        "status": "AVAILABLE - free tier no key needed",
+        "provides": "Crypto prices (real-time and historical), market cap, trading volume, exchange data, DeFi data, trending coins",
+        "critical_for": ["crypto picks if desired"],
+        "has_detail_file": true
+      },
+      {
+        "name": "CoinPaprika",
+        "id": "SRC-0044",
+        "type": "free",
+        "access_method": "REST API at https://api.coinpaprika.com/v1",
+        "status": "AVAILABLE - fully free, no key needed",
+        "provides": "Crypto prices, OHLCV candles, market cap, volume, exchange data, global market data, coin events",
+        "critical_for": ["crypto picks"],
+        "has_detail_file": true
+      },
+      {
+        "name": "ExchangeRate-API",
+        "id": "SRC-0042",
+        "type": "free",
+        "access_method": "REST API at https://open.er-api.com/v6/latest",
+        "status": "AVAILABLE - fully free, no key needed",
+        "provides": "Forex exchange rates, currency conversion",
+        "has_detail_file": true
+      },
+      {
+        "name": "fawazahmed0 Exchange API",
+        "id": "SRC-0043",
+        "type": "free",
+        "access_method": "CDN at https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1",
+        "status": "AVAILABLE - fully free, no key needed",
+        "provides": "Forex rates, crypto rates, precious metals, historical rates",
+        "has_detail_file": true
+      }
+    ],
+    "economic_data": [
+      {
+        "name": "FRED API",
+        "id": "SRC-0018/SRC-0039",
+        "type": "api-key-required",
+        "access_method": "REST API at https://api.stlouisfed.org/fred",
+        "status": "REQUIRES API KEY - free to obtain from FRED website",
+        "provides": "GDP, inflation/CPI, unemployment, interest rates, money supply, consumer sentiment, housing data, trade balance, industrial production",
+        "critical_for": ["macro analysis backdrop for all picks"],
+        "has_detail_file": true
+      },
+      {
+        "name": "Bureau of Labor Statistics",
+        "id": "SRC-0020",
+        "type": "free",
+        "access_method": "REST API at https://api.bls.gov/publicAPI/v2/timeseries/data/",
+        "status": "AVAILABLE - free, no key needed for basic access",
+        "provides": "Employment, unemployment, CPI, wages, productivity, occupational data",
+        "has_detail_file": true
+      },
+      {
+        "name": "US Treasury Fiscal Data",
+        "id": "SRC-0024",
+        "type": "free",
+        "access_method": "REST API at https://api.fiscaldata.treasury.gov/services/api/fiscal_service/",
+        "status": "AVAILABLE - free, no key needed",
+        "provides": "Federal debt, revenue, spending, treasury securities, interest rates",
+        "has_detail_file": true
+      },
+      {
+        "name": "World Bank Indicators",
+        "id": "SRC-0023",
+        "type": "free",
+        "access_method": "REST API at https://api.worldbank.org/v2/",
+        "status": "AVAILABLE - free, no key needed",
+        "provides": "Global economic indicators, development, demographics, health, trade",
+        "has_detail_file": true
+      }
+    ],
+    "news_and_sentiment": [
+      {
+        "name": "GDELT Project",
+        "id": "SRC-0015",
+        "type": "free",
+        "access_method": "REST API at https://api.gdeltproject.org/api/v2",
+        "status": "AVAILABLE - free, no key needed",
+        "provides": "Global news, sentiment analysis, entity extraction, themes, timelines, TV news mentions",
+        "critical_for": ["sentiment analysis"],
+        "has_detail_file": true
+      },
+      {
+        "name": "Guardian Open Platform",
+        "id": "SRC-0013",
+        "type": "free",
+        "access_method": "REST API at https://content.guardianapis.com",
+        "status": "AVAILABLE - free with developer key (easy to obtain)",
+        "provides": "News articles with full text, tags, sections",
+        "has_detail_file": true
+      },
+      {
+        "name": "Hacker News (Algolia + Firebase)",
+        "id": "SRC-0029/SRC-0030",
+        "type": "free",
+        "access_method": "REST APIs",
+        "status": "AVAILABLE - free, no key needed",
+        "provides": "Tech community sentiment, trending stories, discussion volume",
+        "has_detail_file": true
+      }
+    ],
+    "no_key_immediately_usable": [
+      "SRC-0015 GDELT", "SRC-0020 BLS", "SRC-0024 US Treasury",
+      "SRC-0023 World Bank", "SRC-0029 HN Algolia", "SRC-0030 HN Firebase",
+      "SRC-0042 ExchangeRate-API", "SRC-0043 fawazahmed0 Exchange",
+      "SRC-0044 CoinPaprika"
+    ],
+    "need_free_api_key": [
+      "SRC-0038 Alpha Vantage", "SRC-0040 Finnhub", "SRC-0041 CoinGecko (optional)",
+      "SRC-0013 Guardian", "SRC-0012 NewsAPI", "SRC-0018/0039 FRED"
+    ]
+  },
+
+  "available_scripts_for_data_collection": {
+    "ready_to_use": [
+      {
+        "id": "SCR-0006",
+        "name": "data-gathering-websearch",
+        "path": "storage/scripts/data-gathering/methods/method_websearch.py",
+        "what_it_does": "Multi-query web search via DuckDuckGo with dedup",
+        "useful_for": "General market/company research"
+      },
+      {
+        "id": "SCR-0007",
+        "name": "data-gathering-wikipedia",
+        "path": "storage/scripts/data-gathering/methods/method_wikipedia.py",
+        "what_it_does": "Wikipedia deep extraction with DuckDuckGo fallback",
+        "useful_for": "Company/industry background research"
+      },
+      {
+        "id": "SCR-0024",
+        "name": "data-gathering-hackernews",
+        "path": "storage/scripts/data-gathering/methods/method_hackernews.py",
+        "what_it_does": "HN search via Algolia + Firebase",
+        "useful_for": "Tech sentiment, trending topics"
+      },
+      {
+        "id": "SCR-0025",
+        "name": "data-gathering-guardian",
+        "path": "storage/scripts/data-gathering/methods/method_guardian.py",
+        "what_it_does": "Guardian news search with fallback",
+        "useful_for": "News sentiment analysis"
+      },
+      {
+        "id": "SCR-0028",
+        "name": "data-gathering-github",
+        "path": "storage/scripts/data-gathering/methods/method_github.py",
+        "what_it_does": "GitHub repo and code search",
+        "useful_for": "Tech company/open-source activity analysis"
+      },
+      {
+        "id": "SCR-0009",
+        "name": "data-gathering-hybrid",
+        "path": "storage/scripts/data-gathering/methods/method_hybrid.py",
+        "what_it_does": "Multi-source aggregation with cross-referencing and corroboration scoring",
+        "useful_for": "High-quality research combining web + Wikipedia + arXiv"
+      },
+      {
+        "id": "SCR-0022",
+        "name": "request-cache",
+        "path": "storage/scripts/data-gathering/methods/request_cache.py",
+        "what_it_does": "HTTP response caching with TTL",
+        "useful_for": "Avoiding redundant API calls"
+      },
+      {
+        "id": "SCR-0004",
+        "name": "grade-research",
+        "path": "storage/scripts/grade_research.py",
+        "what_it_does": "Evaluates research quality across 5 dimensions",
+        "useful_for": "Quality-gating research before making picks"
+      },
+      {
+        "id": "SCR-0043",
+        "name": "archive-formatter",
+        "path": "storage/scripts/archive_formatter.py",
+        "what_it_does": "Converts findings to KB entries with YAML frontmatter",
+        "useful_for": "Turning research into permanent KB entries"
+      }
+    ],
+    "not_available_for_market_data": "CRITICAL GAP: No existing scripts specifically fetch stock prices, financial statements, or technical indicators from Alpha Vantage or Finnhub. The data-gathering scripts are oriented toward academic/news/web research, not financial market data."
+  },
+
+  "execution_plan": {
+    "strategy": "Use Claude's built-in WebSearch and WebFetch capabilities as the primary data gathering mechanism, supplemented by existing data-gathering scripts for news/sentiment. Produce 3-5 picks using the SIMPLEST method first (fundamental + sentiment hybrid), not the most complex.",
+    "estimated_session_time": "Single session, ~60 minutes of focused work",
+
+    "steps": [
+      {
+        "step": 1,
+        "description": "Macro backdrop: Gather current market conditions",
+        "tools_needed": ["WebSearch", "WebFetch"],
+        "actions": [
+          "Search for current S&P 500 level, VIX, 10-year Treasury yield, Fed funds rate",
+          "Search for recent Fed commentary, inflation data, employment situation",
+          "Determine current market regime: risk-on, risk-off, transitional"
+        ],
+        "estimated_output": "200-word macro summary establishing context for picks",
+        "time_estimate": "5 minutes"
+      },
+      {
+        "step": 2,
+        "description": "Sector screening: Identify 2-3 sectors with catalysts",
+        "tools_needed": ["WebSearch"],
+        "actions": [
+          "Search for sector performance YTD, sector rotation trends",
+          "Identify sectors with upcoming catalysts (earnings season, regulatory changes, secular trends)",
+          "Filter to sectors with both fundamental and sentiment tailwinds"
+        ],
+        "estimated_output": "2-3 target sectors with rationale",
+        "time_estimate": "10 minutes"
+      },
+      {
+        "step": 3,
+        "description": "Stock screening within target sectors",
+        "tools_needed": ["WebSearch", "WebFetch"],
+        "actions": [
+          "For each target sector, search for top companies by market cap",
+          "Gather key fundamentals: P/E, revenue growth, earnings growth, debt levels",
+          "Check recent news sentiment: insider buying, analyst upgrades/downgrades",
+          "Identify 8-10 candidates across sectors"
+        ],
+        "estimated_output": "Candidate list with key metrics",
+        "time_estimate": "15 minutes"
+      },
+      {
+        "step": 4,
+        "description": "Deep analysis of top 5 candidates",
+        "tools_needed": ["WebSearch", "WebFetch"],
+        "actions": [
+          "Apply fundamental.md checklist to each candidate",
+          "Apply sentiment.md checklist (news tone, insider activity, institutional positioning)",
+          "Score each candidate on: valuation, growth, moat, sentiment, risk",
+          "Rank by composite score"
+        ],
+        "estimated_output": "Scored and ranked candidate list with full analysis",
+        "time_estimate": "15 minutes"
+      },
+      {
+        "step": 5,
+        "description": "Generate 3-5 formal picks using TEMPLATE.md",
+        "tools_needed": ["Write tool"],
+        "actions": [
+          "For top 3-5 candidates, create pick files using market-research/picks/TEMPLATE.md format",
+          "Fill all required fields per SOP-018: ticker, date, entry_price, target_price, stop_loss, method, thesis, risks, confidence",
+          "Name files as YYYY-MM-DD_TICKER.md"
+        ],
+        "estimated_output": "3-5 pick files in market-research/picks/",
+        "time_estimate": "10 minutes"
+      },
+      {
+        "step": 6,
+        "description": "Update index and create KB entry",
+        "tools_needed": ["Write tool", "Edit tool"],
+        "actions": [
+          "Update market-research/picks/index.json with all new picks",
+          "Create a KB entry documenting the research methodology and results",
+          "Validate JSON is well-formed"
+        ],
+        "estimated_output": "Updated index.json, 1 KB entry",
+        "time_estimate": "5 minutes"
+      }
+    ]
+  },
+
+  "team_composition": {
+    "recommended_pattern": "Market Research Sprint (from SOP-022)",
+    "size": 5,
+    "roles": [
+      {
+        "role": "Coordinator",
+        "count": 1,
+        "justification": "Manages workflow, ensures SOP-018 compliance, validates pick quality"
+      },
+      {
+        "role": "Research Team A (Fundamental + Macro)",
+        "count": 1,
+        "justification": "Gathers financial data, applies fundamental.md checklist, performs valuation analysis. Solo agent for maximum efficiency per SIZE-01."
+      },
+      {
+        "role": "Research Team B (Sentiment + News)",
+        "count": 1,
+        "justification": "Gathers news sentiment, insider activity, social signals. Applies sentiment.md checklist. Independent stream from Team A."
+      },
+      {
+        "role": "Analysis / Cross-Validation Team",
+        "count": 1,
+        "justification": "Merges findings from both research teams, scores candidates, applies second-method validation per SOP-018 step 5."
+      },
+      {
+        "role": "Writer / Indexer",
+        "count": 1,
+        "justification": "Produces pick files from TEMPLATE.md, updates index.json, creates KB entries. Ensures all documentation is complete."
+      }
+    ],
+    "domain_ratio": "4/5 = 80% domain work (exceeds SOP-023 minimum of 60%)",
+    "infrastructure_ratio": "0/5 = 0% infrastructure work",
+    "documentation_ratio": "1/5 = 20% documentation (Writer role, meets SOP-023 10% minimum)"
+  },
+
+  "blockers": [
+    {
+      "blocker": "No API keys configured for Alpha Vantage or Finnhub",
+      "severity": "LOW",
+      "workaround": "Use WebSearch/WebFetch to gather financial data directly from financial websites (Yahoo Finance, MarketWatch, Google Finance). These provide the same data without API keys. API keys only needed for programmatic batch access.",
+      "long_term_fix": "Obtain free API keys and store them securely for future sessions"
+    },
+    {
+      "blocker": "No financial-data-specific scripts exist",
+      "severity": "LOW",
+      "workaround": "WebSearch and WebFetch provide sufficient data gathering for 3-5 picks. Dedicated scripts would only be needed for large-scale quantitative screening (50+ stocks).",
+      "long_term_fix": "Build Alpha Vantage and Finnhub wrapper scripts after first picks demonstrate the workflow works"
+    },
+    {
+      "blocker": "Cannot render charts for technical analysis",
+      "severity": "MEDIUM",
+      "workaround": "Use fundamental + sentiment methods for first picks (they don't require charts). For technical: use numerical indicator values from Alpha Vantage API or financial websites.",
+      "long_term_fix": "Not a real blocker -- professional analysts often work with numerical indicator values"
+    },
+    {
+      "blocker": "Sources index quality issues (KB-0031 finding)",
+      "severity": "LOW",
+      "workaround": "The sources/index.json has 41 entries with detail files for all of them. The by_data_type index is comprehensive. Any mismatches between index entries and detail files are cosmetic and do not prevent data access.",
+      "long_term_fix": "Run validate-storage.py to identify and fix specific mismatches"
+    },
+    {
+      "blocker": "Rate limiting on free API tiers",
+      "severity": "LOW",
+      "workaround": "For 3-5 picks, rate limits are not binding. Alpha Vantage allows 5 calls/min (sufficient for individual stock lookups). Finnhub allows 60 calls/min. WebSearch has no hard limit for manual research.",
+      "long_term_fix": "Only relevant when scaling to batch quantitative screening"
+    },
+    {
+      "blocker": "Recursive infrastructure trap",
+      "severity": "CRITICAL",
+      "workaround": "THIS is the real blocker. The solution is discipline, not tooling. SOP-023 exists. The execution plan above requires ZERO new infrastructure. Every tool needed already exists. The team must resist the urge to 'build a better data pipeline first' or 'create a market research framework' and instead JUST DO THE RESEARCH.",
+      "long_term_fix": "Enforce SOP-023 pre-launch checklist. Post-session audit for domain artifacts."
+    }
+  ],
+
+  "beyond_market_research": [
+    {
+      "category": "Technology Industry Analysis Reports",
+      "description": "Use existing data-gathering scripts (HN, GitHub, Guardian, Wikipedia) to produce structured reports on technology trends, emerging frameworks, AI developments. These are domain KB entries that provide real external value.",
+      "feasibility": "HIGH - all tools exist (SCR-0024 HN, SCR-0028 GitHub, SCR-0025 Guardian, SCR-0009 hybrid)",
+      "example_outputs": ["AI framework adoption trends 2026", "Open-source project health comparisons", "Programming language popularity shifts"]
+    },
+    {
+      "category": "Economic Indicator Dashboard Data",
+      "description": "Fetch and analyze economic data from free sources (BLS, Treasury, World Bank) to produce macro-economic analysis reports. Useful as backdrop for market research and independently valuable.",
+      "feasibility": "HIGH - BLS and Treasury APIs are free and require no keys",
+      "example_outputs": ["Monthly labor market summary", "Inflation trend analysis", "Federal debt trajectory report"]
+    },
+    {
+      "category": "API Quality and Reliability Reports",
+      "description": "Test the 41 cataloged data sources for actual availability, response time, data quality, and documentation accuracy. This is domain work (evaluating external tools) not infrastructure work.",
+      "feasibility": "HIGH - just needs systematic API testing",
+      "example_outputs": ["API reliability scorecard", "Best free data sources by category", "API migration guide for deprecated endpoints"]
+    },
+    {
+      "category": "Competitive Analysis Tools",
+      "description": "Build lightweight external-facing tools: stock screener CLI, economic data fetcher, news sentiment aggregator. These are domain tools that produce domain output, not coordination infrastructure.",
+      "feasibility": "MEDIUM - requires focused coding time, but patterns exist in existing scripts",
+      "example_outputs": ["CLI stock screener using Alpha Vantage", "Sentiment score calculator using GDELT", "Economic calendar alerter using BLS data"]
+    },
+    {
+      "category": "Knowledge Base Domain Entries",
+      "description": "Create KB entries about actual domain topics: investment methodologies evaluated, data source comparisons, market regime analysis. SOP-023 notes the KB is 34% integration + 34% methodology (infrastructure-heavy). Need domain entries.",
+      "feasibility": "HIGH - requires only research and writing",
+      "example_outputs": ["KB entry: Value investing in 2026 high-rate environment", "KB entry: Evaluating free financial APIs", "KB entry: Sentiment analysis signal reliability"]
+    }
+  ],
+
+  "critical_insight": {
+    "the_real_problem": "This repository has been stuck in a recursive loop for 14+ team sessions. The infrastructure is DONE. There are 54 scripts, 41 sources, 28+ SOPs, 41 KB entries, and a complete multi-agent coordination system. Yet ZERO domain output exists. The problem is not 'what tools do we need?' -- it is 'will the next team actually use the tools that already exist?'",
+    "the_solution": "Stop planning. Stop building frameworks. Stop writing SOPs about how to do market research. OPEN market-research/methods/fundamental.md. SEARCH for a company's financials. APPLY the checklist. WRITE the pick file. UPDATE the index. That is the entire workflow. It takes one agent 30 minutes.",
+    "minimum_viable_output": "One single pick file (market-research/picks/2026-03-11_AAPL.md) with all required fields filled in would represent more domain output than the last 14 teams combined.",
+    "sop_023_compliance": "This strategy document itself is the LAST piece of analysis needed. The next action must be execution, not more analysis."
+  },
+
+  "immediate_next_actions": [
+    "1. STOP reading this document and START researching stocks",
+    "2. Use WebSearch to find current S&P 500 top/bottom performers this quarter",
+    "3. Pick the most interesting sector based on macro conditions",
+    "4. Research 3 companies in that sector using WebSearch/WebFetch",
+    "5. Apply fundamental.md checklist to score them",
+    "6. Write pick files using TEMPLATE.md for the top 3",
+    "7. Update market-research/picks/index.json",
+    "8. Create ONE KB entry documenting the methodology and results"
+  ]
+}

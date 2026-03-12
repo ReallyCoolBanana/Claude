@@ -1,0 +1,108 @@
+{
+  "team_id": "TEAM-0022",
+  "date": "2026-03-11",
+  "sop": "SOP-025",
+  "objective": "Execute Proto A Development Pipeline: Plan and implement features for using Proto A in programming, testing, and bug fixing workflows. Two iterations.",
+
+  "teams": [
+    {
+      "name": "think-tank-alpha",
+      "role": "Plan analysis and work decomposition",
+      "agents": [
+        {"agent_id": "tt-alpha-lead", "role": "coordinator"},
+        {"agent_id": "tt-alpha-analyst", "role": "worker"}
+      ]
+    },
+    {
+      "name": "think-tank-beta",
+      "role": "Verification and convergence",
+      "agents": [
+        {"agent_id": "tt-beta-lead", "role": "coordinator"},
+        {"agent_id": "tt-beta-verifier", "role": "worker"}
+      ]
+    },
+    {
+      "name": "research-ext-1",
+      "role": "External research: implementation patterns and best practices",
+      "agents": [
+        {"agent_id": "res1-lead", "role": "coordinator"},
+        {"agent_id": "res1-researcher", "role": "worker"}
+      ]
+    },
+    {
+      "name": "research-ext-2",
+      "role": "External research: testing strategies and bug patterns",
+      "agents": [
+        {"agent_id": "res2-lead", "role": "coordinator"},
+        {"agent_id": "res2-researcher", "role": "worker"}
+      ]
+    },
+    {
+      "name": "data-archive",
+      "role": "Data processing, archival, and think tank support",
+      "agents": [
+        {"agent_id": "archive-lead", "role": "coordinator"},
+        {"agent_id": "archive-processor", "role": "worker"}
+      ]
+    },
+    {
+      "name": "dev-prog",
+      "role": "Feature implementation",
+      "agents": [
+        {"agent_id": "prog-lead", "role": "coordinator"},
+        {"agent_id": "prog-worker-1", "role": "worker"}
+      ]
+    },
+    {
+      "name": "dev-test",
+      "role": "Test writing and execution",
+      "agents": [
+        {"agent_id": "test-lead", "role": "coordinator"},
+        {"agent_id": "test-worker-1", "role": "worker"}
+      ]
+    },
+    {
+      "name": "dev-fix",
+      "role": "Bug fixing",
+      "agents": [
+        {"agent_id": "fix-lead", "role": "coordinator"},
+        {"agent_id": "fix-worker-1", "role": "worker"}
+      ]
+    }
+  ],
+
+  "pipeline": {
+    "name": "proto-a-dev-pipeline-v1",
+    "stages": [
+      {
+        "name": "research_and_plan",
+        "assigned_teams": ["think-tank-alpha", "research-ext-1", "research-ext-2", "data-archive"],
+        "depends_on": []
+      },
+      {
+        "name": "programming",
+        "assigned_teams": ["dev-prog", "research-ext-1", "research-ext-2", "data-archive"],
+        "depends_on": ["research_and_plan"]
+      },
+      {
+        "name": "testing",
+        "assigned_teams": ["dev-test", "think-tank-beta", "data-archive"],
+        "depends_on": ["programming"]
+      },
+      {
+        "name": "bug_fixing",
+        "assigned_teams": ["dev-fix", "research-ext-2", "think-tank-beta"],
+        "depends_on": ["testing"]
+      },
+      {
+        "name": "convergence_and_archive",
+        "assigned_teams": ["think-tank-alpha", "think-tank-beta", "data-archive"],
+        "depends_on": ["bug_fixing"]
+      }
+    ]
+  },
+
+  "heartbeat_interval": 30,
+  "dead_agent_timeout": 120,
+  "cleanup_interval": 600
+}

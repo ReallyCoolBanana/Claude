@@ -1,16 +1,17 @@
 {
   "id": "SOP-016",
   "version": "1.0",
-  "created": "2026-03-11",
   "team": "TEAM-0026-central-command",
   "title": "Cross-Team Data Flow and Report Consolidation",
   "purpose": "Defines how data flows between teams within and across simultaneous projects. Covers report formats, consolidation pipelines, deduplication, and final output assembly.",
-  "builds_on": ["SOP-013", "SOP-014", "SOP-015"],
-
+  "builds_on": [
+    "SOP-013",
+    "SOP-014",
+    "SOP-015"
+  ],
   "section_1_report_standardization": {
     "title": "Standard Report Formats",
     "description": "All team outputs must follow standardized formats for automated consolidation.",
-
     "required_metadata_block": {
       "description": "Every output JSON file MUST start with this metadata block.",
       "schema": {
@@ -25,35 +26,57 @@
         }
       }
     },
-
     "report_types": {
       "index_report": {
         "purpose": "File or tool catalog",
-        "required_keys": ["metadata", "files|items", "statistics", "findings"],
+        "required_keys": [
+          "metadata",
+          "files|items",
+          "statistics",
+          "findings"
+        ],
         "aggregation_strategy": "Merge arrays, deduplicate by path/id"
       },
       "bug_report": {
         "purpose": "Bug identification and tracking",
-        "required_keys": ["metadata", "test_results", "bugs_verified_fixed", "bugs_still_present", "new_bugs_found", "summary"],
+        "required_keys": [
+          "metadata",
+          "test_results",
+          "bugs_verified_fixed",
+          "bugs_still_present",
+          "new_bugs_found",
+          "summary"
+        ],
         "aggregation_strategy": "Merge bug arrays, deduplicate by id, take highest severity when duplicated"
       },
       "documentation_report": {
         "purpose": "Documentation gaps and content",
-        "required_keys": ["metadata", "documentation_gaps", "system_documentation", "new_sop_recommendations", "summary"],
+        "required_keys": [
+          "metadata",
+          "documentation_gaps",
+          "system_documentation",
+          "new_sop_recommendations",
+          "summary"
+        ],
         "aggregation_strategy": "Merge gap arrays, merge documentation sections by key"
       },
       "assessment_report": {
         "purpose": "Tool or system evaluation",
-        "required_keys": ["metadata", "tool_categories", "test_results", "bugs_fixed", "tools_verified_working", "summary"],
+        "required_keys": [
+          "metadata",
+          "tool_categories",
+          "test_results",
+          "bugs_fixed",
+          "tools_verified_working",
+          "summary"
+        ],
         "aggregation_strategy": "Merge test results, deduplicate fixed bugs"
       }
     }
   },
-
   "section_2_consolidation_pipeline": {
     "title": "Report Consolidation Pipeline",
     "description": "Step-by-step process for merging outputs from all teams into final deliverables.",
-
     "pipeline_steps": [
       {
         "step": 1,
@@ -102,7 +125,6 @@
       }
     ]
   },
-
   "section_3_data_flow_rules": {
     "title": "Data Flow Between Teams",
     "rules": [
@@ -133,11 +155,9 @@
       }
     ]
   },
-
   "section_4_findings_taxonomy": {
     "title": "Standard Findings Taxonomy",
     "description": "Consistent categorization for all findings across all teams.",
-
     "categories": {
       "bug": "Code defect that causes incorrect behavior",
       "race_condition": "Concurrency bug that manifests under parallel access",
@@ -150,23 +170,26 @@
       "design": "Architectural issue or suboptimal design pattern",
       "redundancy": "Duplicated code or functionality across modules"
     },
-
     "severity_levels": {
       "critical": "Must fix immediately. System fails or produces wrong results under normal use.",
       "high": "Fix soon. Manifests under concurrent use or specific conditions.",
       "medium": "Fix when convenient. Edge case or minor degradation.",
       "low": "Nice to fix. Cosmetic, documentation, or minor improvement."
     },
-
     "finding_id_format": {
       "pattern": "{CATEGORY}-{SUBSYSTEM}-{NNN}",
-      "examples": ["BUG-COORD-001", "PERF-PROTO-015", "DOC-SCRIPT-003", "TEST-ALL-007"]
+      "examples": [
+        "BUG-COORD-001",
+        "PERF-PROTO-015",
+        "DOC-SCRIPT-003",
+        "TEST-ALL-007"
+      ]
     }
   },
-
   "quick_reference": {
     "consolidation_command": "python3 -c \"import json,glob; files=glob.glob('storage/coordination/hub/infrastructure-*.json'); [print(f'{f}: {json.load(open(f))[\"metadata\"][\"team\"]} - {json.load(open(f))[\"metadata\"][\"task\"]}') for f in sorted(files)]\"",
     "data_flow_summary": "Teams write to isolated outputs → Commander collects → Validates → Deduplicates → Cross-references → Assembles master report",
     "key_principle": "Data flows UP to the commander, never sideways between project groups"
-  }
+  },
+  "date": "2026-03-11"
 }

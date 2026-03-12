@@ -1,0 +1,84 @@
+{
+  "team": "LIMA",
+  "wave": 3,
+  "timestamp": "2026-03-12T00:00:00Z",
+  "agents": ["lima-lead", "lima-dev-1", "lima-dev-2"],
+  "mission": "Implement message filtering, acknowledgments, and batching",
+  "status": "complete",
+  "tasks": {
+    "task_1_filtering_subscription": {
+      "agent": "lima-lead",
+      "status": "complete",
+      "description": "Message filtering and subscription system",
+      "details": "Already implemented by prior wave in bus.py. Verified working: subscribe() method on BusReader accepts msg_types, priority_min, team_filter. poll() applies fast regex pre-filter (_quick_match) on raw bytes before JSON decode, skipping non-matching lines. Post-decode validation catches regex false positives.",
+      "files_modified": [],
+      "features": [
+        "BusReader.subscribe(msg_types, priority_min, team_filter)",
+        "Fast regex pre-filter on raw bytes (_quick_match) avoids JSON decode for non-matching lines",
+        "Post-decode validation catches regex false positives",
+        "priority field on Message dataclass (default=0)",
+        "BusWriter.publish() accepts optional priority parameter"
+      ]
+    },
+    "task_2_ack_protocol": {
+      "agent": "lima-dev-1",
+      "status": "complete",
+      "description": "End-to-end acknowledgment protocol with timeout and retry",
+      "files_created": ["prototype/agent_comm/ack_protocol.py"],
+      "files_modified": ["prototype/agent_comm/__init__.py"],
+      "features": [
+        "AckProtocol class wrapping BusWriter + BusReader",
+        "send_with_ack() - blocking send with timeout, polls for ack",
+        "send_no_wait() - non-blocking tracked send for async workflows",
+        "ack() - sends ack message with in_reply_to referencing original",
+        "process_incoming_acks() - batch process ack messages from poll",
+        "get_unacked(older_than) - query messages not acked within timeout",
+        "retry_unacked(max_retries) - re-publish unacked messages with retry tracking",
+        "get_stats() - summary of pending/acked/failed counts",
+        "cleanup(older_than) - remove old acked/failed entries",
+        "SQLite WAL mode with SQLITE_BUSY retry (SOP-034 compliant)",
+        "Thread-safe with threading.Lock"
+      ],
+      "schema": {
+        "table": "ack_tracking",
+        "columns": ["message_id", "channel", "msg_type", "target_agent", "body", "priority", "ttl", "sent_at", "acked_at", "retry_count", "max_retries", "status"],
+        "statuses": ["pending", "acked", "failed"]
+      }
+    },
+    "task_3_batching_priority_lanes": {
+      "agent": "lima-dev-2",
+      "status": "complete",
+      "description": "Message batching and priority lane system",
+      "details": "Already implemented by prior wave in bus.py. Verified working: publish_batch() groups by priority lane, chunks to stay under 4096-byte POSIX limit, atomic fd writes. Priority >= 5 routes to {channel}_urgent.jsonl. BusReader.poll() checks urgent lane first.",
+      "files_modified": [],
+      "features": [
+        "BusWriter.publish_batch(channel, messages) - atomic multi-message append",
+        "Batch chunking respects 4096-byte POSIX atomic write limit",
+        "Priority >= 5 routes to {channel}_urgent.jsonl (fast lane)",
+        "Normal messages go to {channel}.jsonl",
+        "BusReader.poll() checks urgent lane first, then normal lane",
+        "Urgent lane has separate offset tracking for persistence"
+      ]
+    }
+  },
+  "tests": {
+    "smoke_test": "PASSED",
+    "test_cases": [
+      "No-filter poll returns all messages",
+      "Filtered poll (msg_types + priority_min) returns only matching",
+      "Batch publish writes 10 messages, all readable",
+      "Priority lane separation (priority>=5 in urgent file)",
+      "Ack protocol: send_no_wait tracks in SQLite",
+      "Ack protocol: get_unacked returns pending messages",
+      "Ack protocol: ack() sends ack message with in_reply_to",
+      "Ack protocol: process_incoming_acks marks messages acked",
+      "Ack protocol: get_stats returns correct counts"
+    ]
+  },
+  "deliverables": {
+    "updated_bus_py": "prototype/agent_comm/bus.py (already had filtering, batching, priority from prior wave)",
+    "new_ack_protocol": "prototype/agent_comm/ack_protocol.py",
+    "updated_init": "prototype/agent_comm/__init__.py (exports AckProtocol)",
+    "results": "storage/coordination/overhaul/output/lima_results.json"
+  }
+}

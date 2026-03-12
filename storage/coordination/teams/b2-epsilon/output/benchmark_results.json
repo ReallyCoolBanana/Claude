@@ -1,0 +1,170 @@
+{
+  "measurement_metadata": {
+    "team": "B2-Epsilon",
+    "date": "2026-03-11",
+    "methodology": "chars/4 token approximation. Old costs from B2-Alpha baseline or measured. New costs measured from actual tool output.",
+    "baseline_source": "storage/coordination/teams/b2-alpha/output/token_cost_baseline.json"
+  },
+  "benchmarks": [
+    {
+      "name": "Read: Full KB entry vs smart_read selective fields",
+      "old_tokens": 945,
+      "new_tokens": 113,
+      "reduction_pct": 88.0,
+      "speedup_factor": 8.4,
+      "command": "python3 storage/scripts/smart_read.py KB-0008 --fields title,tags,summary",
+      "notes": "Old: read full KB-0008.md (3778 chars). New: smart_read returns only title+tags+summary (450 chars). Tool self-reports 89% savings."
+    },
+    {
+      "name": "Read: Full KB entry vs query_kb read selective fields",
+      "old_tokens": 945,
+      "new_tokens": 100,
+      "reduction_pct": 89.4,
+      "speedup_factor": 9.5,
+      "command": "python3 storage/scripts/query_kb.py read KB-0008 --fields title,summary,tags",
+      "notes": "query_kb returns even more compact output (399 chars) with truncated summary. Slightly better than smart_read."
+    },
+    {
+      "name": "Search: Full index.json read vs smart_search",
+      "old_tokens": 6093,
+      "new_tokens": 313,
+      "reduction_pct": 94.9,
+      "speedup_factor": 19.5,
+      "command": "python3 storage/scripts/smart_search.py database --types kb --max-results 5",
+      "notes": "Old: read entire index.json (24373 chars) to find database entries. New: smart_search returns 5 results with context snippets (1251 chars). Massive savings."
+    },
+    {
+      "name": "Search: Full index.json read vs query_kb search",
+      "old_tokens": 6093,
+      "new_tokens": 123,
+      "reduction_pct": 98.0,
+      "speedup_factor": 49.5,
+      "command": "python3 storage/scripts/query_kb.py search database --type KB --limit 5",
+      "notes": "query_kb search is even more compact (491 chars), returning tabular output with 1 result (fewer matches but more token-efficient). Best search result."
+    },
+    {
+      "name": "List/browse: Full index.json vs query_kb summary",
+      "old_tokens": 6093,
+      "new_tokens": 210,
+      "reduction_pct": 96.6,
+      "speedup_factor": 29.0,
+      "command": "python3 storage/scripts/query_kb.py summary",
+      "notes": "Summary provides high-level counts and categories per resource type (838 chars). Perfect for 'what exists?' queries."
+    },
+    {
+      "name": "List/browse: Full index.json vs query_kb list CSV",
+      "old_tokens": 6093,
+      "new_tokens": 724,
+      "reduction_pct": 88.1,
+      "speedup_factor": 8.4,
+      "command": "python3 storage/scripts/query_kb.py list KB --format csv",
+      "notes": "CSV list of all 31 KB entries with id,title,category,date (2897 chars). Good for browsing all entries without full metadata."
+    },
+    {
+      "name": "List/browse: Full index.json vs SUMMARY.json (Level 0)",
+      "old_tokens": 6093,
+      "new_tokens": 79,
+      "reduction_pct": 98.7,
+      "speedup_factor": 77.1,
+      "command": "Read knowledge-base/SUMMARY.json",
+      "notes": "SUMMARY.json is 317 chars containing just entry count, categories, id range, and last_updated. Minimal Level 0 overview."
+    },
+    {
+      "name": "List/browse: Full index.json vs INDEX_COMPACT.json (Level 1)",
+      "old_tokens": 6093,
+      "new_tokens": 1591,
+      "reduction_pct": 73.9,
+      "speedup_factor": 3.8,
+      "command": "Read knowledge-base/INDEX_COMPACT.json",
+      "notes": "INDEX_COMPACT.json is 6364 chars. Moderate savings -- still has per-entry data but in compact format."
+    },
+    {
+      "name": "Write: Template+content+index cycle vs smart_write dry-run",
+      "old_tokens": 14561,
+      "new_tokens": 160,
+      "reduction_pct": 98.9,
+      "speedup_factor": 91.0,
+      "command": "echo 'content' | python3 storage/scripts/smart_write.py --type kb --title 'Benchmark Test Entry' --category testing --tags benchmark,test --dry-run",
+      "notes": "Old: read template (146 tokens) + write content (2079 tokens) + read index (6168 tokens) + rewrite index (6168 tokens) = 14561. New: smart_write handles all internally, agent only sees 641 chars of confirmation. Biggest savings of all benchmarks."
+    },
+    {
+      "name": "Tags: Full index.json parse vs query_kb tags",
+      "old_tokens": 6093,
+      "new_tokens": 1418,
+      "reduction_pct": 76.7,
+      "speedup_factor": 4.3,
+      "command": "python3 storage/scripts/query_kb.py tags --type KB",
+      "notes": "Returns all tags with usage counts (5670 chars). Large output because there are 130+ unique tags. Still 77% savings vs reading full index."
+    },
+    {
+      "name": "Relationships: Full index.json parse vs query_kb related",
+      "old_tokens": 6093,
+      "new_tokens": 681,
+      "reduction_pct": 88.8,
+      "speedup_factor": 8.9,
+      "command": "python3 storage/scripts/query_kb.py related KB-0005",
+      "notes": "Returns builds-on chain (ancestors+children) and shared-tag matches (2724 chars). Rich relationship data without reading the full index."
+    }
+  ],
+  "edge_cases": [
+    {
+      "test": "query_kb read with invalid ID (KB-9999)",
+      "result": "Returns clear error: 'Error: Entry KB-9999 not found.' with exit code 1",
+      "passed": true
+    },
+    {
+      "test": "smart_read with invalid ID (KB-9999)",
+      "result": "Returns clear error: 'Error: Cannot find file for KB-9999 in .../knowledge-base/entries. Tried pattern: KB-9999.md' with exit code 1",
+      "passed": true
+    },
+    {
+      "test": "smart_search with --max-tokens 50",
+      "result": "Returns 0 results because budget is too small to include any result. Shows '0 results, 1 tokens used'. Technically works but returns nothing useful -- should show at least a truncated result or a warning.",
+      "passed": false
+    },
+    {
+      "test": "CSV output saves tokens vs JSON",
+      "result": "CSV: 2897 chars (724 tokens). JSON: 5283 chars (1321 tokens). CSV is 45.2% smaller. Confirmed: CSV format saves significant tokens.",
+      "passed": true
+    },
+    {
+      "test": "query_kb related with invalid ID (KB-9999)",
+      "result": "Returns clear error: 'Error: Entry KB-9999 not found.' with exit code 1",
+      "passed": true
+    }
+  ],
+  "aggregate": {
+    "avg_reduction_pct": 90.2,
+    "total_old_tokens": 64285,
+    "total_new_tokens": 5512,
+    "overall_speedup": 11.7,
+    "best_benchmark_speedup": 91.0,
+    "worst_benchmark_speedup": 3.8
+  },
+  "tool_quality": {
+    "bugs_found": [
+      "smart_search --max-tokens 50 returns 0 results with no warning. A very low token budget silently produces empty output instead of warning the user or showing at least one truncated result.",
+      "query_kb search for 'database' only returns 1 result (KB-0008) despite --limit 5, while smart_search finds 5 relevant entries. query_kb may use stricter matching or different scoring."
+    ],
+    "usability_issues": [
+      "smart_read and query_kb read have slightly different output formats. smart_read includes the full summary text while query_kb truncates it. No obvious way to control truncation length in query_kb.",
+      "query_kb tags output for KB type returns 130+ tags (5670 chars). For large tag sets this is still expensive. Could benefit from a --limit or --min-count filter.",
+      "INDEX_COMPACT.json at 6364 chars provides only 73.9% reduction -- it could be further compressed by removing redundant fields."
+    ],
+    "recommendations": [
+      "Add --min-count flag to query_kb tags to filter low-frequency tags (would reduce 5670 chars to ~500 chars for tags with count >= 2)",
+      "Fix smart_search --max-tokens to always return at least 1 result or emit a warning when budget is insufficient",
+      "Investigate query_kb search scoring -- it finds fewer results than smart_search for the same query. Consider aligning algorithms.",
+      "Add --truncate-length option to query_kb read for controlling summary length",
+      "Consider compressing INDEX_COMPACT.json further -- current savings (73.9%) lag behind other tools (88-99%)",
+      "CSV format should be the default for list operations -- it saves 45% vs JSON with no loss of essential information"
+    ]
+  },
+  "summary": {
+    "headline_metric": "90.2% average token reduction across all 11 benchmarks (11.7x overall speedup)",
+    "best_improvement": "Write operations: 98.9% reduction (91x speedup) via smart_write handling template+index internally",
+    "worst_improvement": "INDEX_COMPACT.json: 73.9% reduction (3.8x speedup) -- still contains per-entry data in compact form",
+    "production_ready": true,
+    "details": "All tools handle errors gracefully with clear messages and proper exit codes. Two minor bugs found: (1) smart_search --max-tokens with very low budgets returns empty results silently, (2) query_kb search finds fewer results than smart_search for the same query. Neither bug is blocking. CSV output saves 45% over JSON for list operations. The tiered approach (SUMMARY.json at 79 tokens -> query_kb summary at 210 tokens -> query_kb list at 724 tokens -> full index at 6093 tokens) provides excellent progressive disclosure. Overall assessment: production-ready with minor improvements recommended."
+  }
+}

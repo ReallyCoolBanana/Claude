@@ -1,0 +1,614 @@
+{
+  "metadata": {
+    "title": "Risk Intelligence Report for Think Tank 3: Quality & Risk Management",
+    "agent": "DATA-AGENT-3",
+    "date": "2026-03-11",
+    "purpose": "Comprehensive risk intel for planning risk mitigation, quality gates, and contingencies across 5 sessions",
+    "sources_read": [
+      "storage/data/tt_gamma_health_audit.json",
+      "storage/data/archiver_toctou_catalog.json",
+      "storage/coordination/tests/test_toctou_fixes.py",
+      "storage/coordination/sops/sop_020_bug_fix_workflow.json",
+      "storage/coordination/sops/sop_021_failure_recovery_runbook.json",
+      "storage/coordination/sops/sop_023_anti_recursion.json",
+      "storage/coordination/sops/sop_029_file_naming.json",
+      "knowledge-base/entries/KB-0030.md",
+      "knowledge-base/entries/KB-0031.md",
+      "knowledge-base/entries/KB-0035.md",
+      "storage/data/unified_findings.json"
+    ]
+  },
+
+  "section_1_system_health_audit": {
+    "source": "storage/data/tt_gamma_health_audit.json",
+    "overall_health": "MODERATE - infrastructure works but has significant data hygiene debt",
+    "issue_counts": {
+      "critical": 3,
+      "high": 7,
+      "medium": 6,
+      "low": 3
+    },
+    "data_quality_status": {
+      "sources_index": "BETTER_THAN_REPORTED - All 41 entries match. KB-0031 claim of 'catastrophically broken' is outdated.",
+      "kb_drift": "SIGNIFICANT_DRIFT - 34/41 KB entries missing title in YAML frontmatter. Titles only in index.json.",
+      "duplicates": {
+        "fred_api_duplicate": "SRC-0018 and SRC-0039 both describe FRED API",
+        "team_session_gap": "TEAM-0032.md exists but not in sessions/index.json"
+      },
+      "orphaned_scripts": 15
+    },
+    "priority_matrix_top_5": [
+      {"issue": "15 orphaned scripts not in index.json", "severity": "Critical", "effort": "trivial", "blocks_domain": true},
+      {"issue": "TOCTOU-WS-001: complete_work race condition", "severity": "Critical", "effort": "small", "blocks_domain": true},
+      {"issue": "TOCTOU-HP-001: fulfill_help crash consistency", "severity": "Critical", "effort": "small", "blocks_domain": true},
+      {"issue": "34 KB entries missing title in YAML frontmatter", "severity": "High", "effort": "trivial", "blocks_domain": false},
+      {"issue": "TEAM-0032 session not indexed", "severity": "High", "effort": "trivial", "blocks_domain": false}
+    ],
+    "immediate_actions": [
+      "Index 15 orphaned scripts (5 min)",
+      "Add TEAM-0032 to sessions/index.json (2 min)",
+      "Backfill titles into 34 KB entries (scriptable, 10 min)",
+      "Fix TOCTOU-WS-001 and TOCTOU-HP-001 (30 min each)"
+    ]
+  },
+
+  "section_2_toctou_bug_catalog": {
+    "source": "storage/data/archiver_toctou_catalog.json",
+    "total_cataloged": 22,
+    "already_fixed": 11,
+    "remaining_unfixed": 18,
+    "fixed_by_team_032_not_in_catalog": 4,
+    "severity_breakdown": {
+      "critical": 2,
+      "high": 5,
+      "medium": 9,
+      "low": 6
+    },
+    "critical_bugs": [
+      {
+        "id": "TOCTOU-WS-001",
+        "file": "storage/coordination/work_stealing.py",
+        "function": "complete_work",
+        "risk": "Work results silently lost. Another process can reclaim and reassign work between auth check and completion UPDATE.",
+        "fix": "BEGIN IMMEDIATE + WHERE claimed_by=? AND status='claimed' + rowcount check"
+      },
+      {
+        "id": "TOCTOU-HP-001",
+        "file": "storage/coordination/help_protocol.py",
+        "function": "fulfill_help",
+        "risk": "Two non-atomic UPDATEs leave inconsistent state on crash. Help request fulfilled but work item not completed, or vice versa.",
+        "fix": "BEGIN IMMEDIATE wrapping both UPDATEs + WHERE status='accepted' AND accepted_by_team=? guard"
+      }
+    ],
+    "high_severity_bugs": [
+      {"id": "TOCTOU-DC-001", "function": "join_channel", "risk": "Concurrent joins silently drop participants"},
+      {"id": "TOCTOU-DC-002", "function": "leave_channel", "risk": "Concurrent leaves reverse each other"},
+      {"id": "TOCTOU-WS-002", "function": "start_stage", "risk": "Two agents start same pipeline stage"},
+      {"id": "TOCTOU-WS-003", "function": "complete_stage", "risk": "Completed stage can overwrite failed status"},
+      {"id": "TOCTOU-MTR-004", "function": "MultiTeamRunner.stop", "risk": "Double invocation from signal handler + main thread"}
+    ],
+    "pattern_groups": [
+      {"pattern": "SELECT-then-UPDATE without BEGIN IMMEDIATE", "bug_count": 8},
+      {"pattern": "Read-modify-write on JSON column", "bug_count": 2},
+      {"pattern": "Stale snapshot driving decisions", "bug_count": 5},
+      {"pattern": "Multiple non-transactional writes", "bug_count": 4},
+      {"pattern": "Threading lock not protecting cross-process", "bug_count": 5},
+      {"pattern": "Double-invocation / re-entrancy", "bug_count": 2},
+      {"pattern": "Config read without synchronization", "bug_count": 2}
+    ],
+    "risk_assessment": "Critical bugs (WS-001, HP-001) can cause silent data loss in multi-agent coordination. For single-agent market research execution, these are NOT blocking. For multi-agent sessions with work stealing or help protocol, they ARE blocking."
+  },
+
+  "section_3_test_infrastructure": {
+    "test_files": [
+      "storage/coordination/tests/test_bus_core.py",
+      "storage/coordination/tests/test_direct_channels.py",
+      "storage/coordination/tests/test_help_protocol.py",
+      "storage/coordination/tests/test_coordinator_hub.py",
+      "storage/coordination/tests/test_operation_health_coord.py",
+      "storage/coordination/tests/test_db_utils.py",
+      "storage/coordination/tests/test_work_stealing.py",
+      "storage/coordination/tests/test_unknown_bugs_x.py",
+      "storage/coordination/tests/test_toctou_fixes.py"
+    ],
+    "total_test_files": 9,
+    "toctou_test_coverage": {
+      "tests_exist_for": ["TOCTOU-WS-001 (complete_work)", "TOCTOU-HP-001 (fulfill_help)", "TOCTOU-DC-001 (join_channel)", "TOCTOU-DC-002 (leave_channel)"],
+      "test_approach": "Stress tests with threading.Barrier to maximize contention. 12-25 threads per test, 5 rounds each.",
+      "test_classes": [
+        {"class": "TestCompleteWorkAtomicity", "threads": 15, "rounds": 5, "asserts": "exactly 1 success, N-1 ValueErrors"},
+        {"class": "TestFulfillHelpAtomicity", "threads": 12, "rounds": 5, "asserts": "exactly 1 success, consistent DB state"},
+        {"class": "TestJoinChannelAtomicity", "threads": 25, "rounds": 5, "asserts": "all joins reflected, no lost joins, no duplicates"},
+        {"class": "TestLeaveChannelAtomicity", "threads": 20, "rounds": 5, "asserts": "all leaves reflected, only creator remains"}
+      ]
+    },
+    "coverage_gaps": "No tests for the remaining 18 unfixed TOCTOU bugs. No integration tests. No acceptance tests. No cross-process tests (only in-process threading tests).",
+    "risk_for_think_tank": "Tests validate the 4 fixed bugs but provide no safety net for unfixed bugs. Any fix to remaining bugs needs NEW tests written following the same barrier pattern."
+  },
+
+  "section_4_anti_recursion_protocol": {
+    "source": "storage/coordination/sops/sop_023_anti_recursion.json",
+    "core_rules": {
+      "AR-01": "Minimum 60% agent capacity on domain work",
+      "AR-02": "Maximum 30% on infrastructure (hard cap: 3 infra agents max)",
+      "AR-03": "10% reserved for documentation and handoff"
+    },
+    "infrastructure_freeze": {
+      "FREEZE-01": "No new SOPs unless genuinely novel failure mode encountered",
+      "FREEZE-02": "No new coordination modules unless blocking a domain task",
+      "FREEZE-03": "Bug fixes to existing infrastructure always allowed",
+      "FREEZE-04": "Performance improvements require evidence of bottleneck"
+    },
+    "recursion_warning_signs": [
+      "Think tanks analyzing coordination system",
+      "Coding teams modifying coordination code (non-bug-fix)",
+      "Research teams studying multi-agent patterns",
+      "Session log with zero domain artifacts",
+      "New SOP or protocol proposed"
+    ],
+    "risk_for_think_tank": "This think tank IS analyzing coordination/infrastructure. Must ensure recommendations produce domain-enabling outcomes, not more infrastructure. Quality gates for market picks = domain work. Quality gates for coordination system = infrastructure recursion risk."
+  },
+
+  "section_5_failure_recovery_runbook": {
+    "source": "storage/coordination/sops/sop_021_failure_recovery_runbook.json",
+    "failure_modes_covered": {
+      "agent_crash": {
+        "detection": "Stale heartbeat > 2x interval",
+        "recovery": "Deregister -> backup partial output -> relaunch with context",
+        "if_repeated": "Split task, check for infinite loops, assign to different team"
+      },
+      "sqlite_lock_contention": {
+        "prevention": "WAL mode + busy_timeout(5000) + BEGIN IMMEDIATE",
+        "recovery": "Force WAL checkpoint -> increase busy_timeout -> retry with backoff -> add jitter",
+        "emergency": "Stop all agents, checkpoint, integrity check, staggered restart"
+      },
+      "bus_file_corruption": {
+        "detection": "JSON parse errors on bus read",
+        "recovery": "repair_bus_file() -> manual repair -> backup and recreate -> notify teams"
+      },
+      "coordinator_failure": {
+        "recovery": "Backup DB -> integrity check -> restart hub -> verify reconnection",
+        "if_state_lost": "Recreate DB, re-register from bus history"
+      },
+      "network_resource": {
+        "strategy": "Exponential backoff with jitter (base 1s, max 60s, 5 retries)",
+        "circuit_breaker": "5 consecutive failures -> mark down for 5 min -> probe -> extend to 15 min if still down"
+      }
+    },
+    "risk_gaps": [
+      "SOP-021 has never been stress-tested (per KB-0035)",
+      "No runbook for data quality failures (stale/missing index entries)",
+      "No runbook for market research data failures (bad API data, stale prices)",
+      "No runbook for pick quality failures (thesis invalidated post-pick)"
+    ]
+  },
+
+  "section_6_bug_fix_workflow": {
+    "source": "storage/coordination/sops/sop_020_bug_fix_workflow.json",
+    "workflow_steps": [
+      "Read and understand full bug report",
+      "Reproduce the bug",
+      "Identify root cause via code tracing",
+      "Document root cause analysis BEFORE coding",
+      "Classify severity (critical > high > medium > low)",
+      "Plan minimal fix (smallest possible change)",
+      "Implement fix with minimal changes",
+      "Write regression test (must fail without fix, pass with fix)",
+      "Run specific test + full test suite",
+      "Run stress tests if available",
+      "Document fix summary",
+      "Update bug report status"
+    ],
+    "key_rules": [
+      "Fix all critical before starting high, all high before medium",
+      "If multiple at same severity, fix most blocking first",
+      "Do not refactor surrounding code in same fix",
+      "Do not add unrelated improvements",
+      "If test fails, investigate if related to fix or pre-existing"
+    ],
+    "quality_gates_for_bug_fixes": [
+      "Root cause documented before code change",
+      "Fix is minimal and targeted",
+      "Regression test written and passing",
+      "Full test suite passing",
+      "Fix summary documented with bug_id, severity, root_cause, files_modified, tests_added"
+    ]
+  },
+
+  "section_7_past_failures_and_antipatterns": {
+    "sources": ["KB-0035", "KB-0030", "KB-0031"],
+    "critical_antipatterns": {
+      "infrastructure_gravity_well": {
+        "evidence": "7 consecutive teams (T22-T28) focused on infrastructure, 0 domain output since T14",
+        "impact": "Zero market research picks logged. Zero SOP-018 executions. System value entirely theoretical.",
+        "mitigation": "SOP-023 anti-recursion protocol. 60/30/10 domain/infra/overhead split."
+      },
+      "duplicate_work": {
+        "evidence": "KB-0012/KB-0013 identical, SOP-022/SOP-032 overlap, T13 duplicated T11",
+        "mitigation": "Pre-creation duplicate check (SOP-029 FC-01). Dedup_checker tool (TB-006)."
+      },
+      "sop_proliferation": {
+        "evidence": "26 SOPs, several never executed, multiple duplicates. 13 SOPs approaches overhead saturation.",
+        "mitigation": "SOP-024 lifecycle management. FREEZE-01: no new SOPs without novel failure mode."
+      },
+      "efficiency_collapse_at_scale": {
+        "evidence": "Per-agent efficiency drops -89% at scale (4.0 solo -> 0.44 at 27 agents)",
+        "mitigation": "SOP-022 team sizing. Optimal: 5-8 agents. Solo for research. Teams for concurrent execution only."
+      }
+    },
+    "key_lessons_learned": [
+      "Solo agents are 5-10x more efficient for research tasks",
+      "Pattern selection causes 96x variance vs 17x for team size - highest leverage optimization",
+      "Iteration yields 3-15x gains on second pass",
+      "The cure for infrastructure gravity is forced domain work",
+      "Dual-store pattern (frontmatter + index) inevitably drifts without automated sync",
+      "The biggest immediate win is fixing broken data, not building new infrastructure",
+      "Sources index was repaired since KB-0031 - outdated assessments persist and mislead teams"
+    ]
+  },
+
+  "section_8_data_quality_issues": {
+    "source": "storage/data/unified_findings.json",
+    "bugs_to_fix_summary": {
+      "total": 13,
+      "by_severity": {
+        "critical": 3,
+        "high": 4,
+        "medium": 4,
+        "low": 2
+      },
+      "immediate_fixes": [
+        {"id": "BF-001", "item": "15 orphaned scripts not indexed", "severity": "Critical", "effort": "TRIVIAL"},
+        {"id": "BF-002", "item": "TOCTOU-WS-001 complete_work race", "severity": "Critical", "effort": "SMALL"},
+        {"id": "BF-003", "item": "TOCTOU-HP-001 fulfill_help crash", "severity": "Critical", "effort": "SMALL"},
+        {"id": "BF-005", "item": "TEAM-0032 not indexed", "severity": "High", "effort": "TRIVIAL"}
+      ]
+    },
+    "kb_0031_data_reform_findings": {
+      "critical_findings": [
+        "Dual-store drift: YAML frontmatter diverges from JSON index entries",
+        "No unified query across 6+ separate index formats",
+        "Agent orientation cost: 5-10 file reads to orient at session start",
+        "SOPs invisible: 20 SOP files with no index, not in CLAUDE.md",
+        "Inward-facing gravity: 18/28 teams on infrastructure, not domain"
+      ],
+      "recommended_solution": "Distributed .pointer.json + auto-generated REGISTRY.json + MCP server (scored 3.95/5)",
+      "current_status": "MCP KB search server built (TEAM-0032) but pointer files not yet implemented"
+    },
+    "unified_findings_cross_references": {
+      "all_three_think_tanks_agree": [
+        "Infrastructure recursion is the primary blocker (UNANIMOUS)",
+        "FRED API duplicate should be merged (UNANIMOUS)",
+        "Existing tools sufficient for first market picks (UNANIMOUS)",
+        "Sources index is acceptable quality (UNANIMOUS, correcting KB-0031)"
+      ],
+      "disagreements": [
+        "Custom scripts vs MCP servers (resolved: adopt MCP where available, build where not)",
+        "Alpha Vantage rate limits: 500/day vs 25/day (Beta's 25/day is more current)",
+        "TOCTOU bug urgency: critical for multi-agent, not blocking for single-agent"
+      ]
+    }
+  },
+
+  "section_9_naming_standards": {
+    "source": "storage/coordination/sops/sop_029_file_naming.json",
+    "key_patterns": {
+      "kb_entries": "KB-NNNN.md (4-digit zero-padded)",
+      "team_logs": "TEAM-NNNN.md",
+      "sops": "sop_NNN_short_descriptor.json",
+      "scripts": "snake_case.py (NO kebab-case)",
+      "sources": "SRC-NNNN-descriptor.json",
+      "picks": "PICK-NNNN.md"
+    },
+    "current_violations": {
+      "kebab_case_scripts": 11,
+      "non_standard_sop_filenames": 3,
+      "missing_yaml_titles": 34
+    },
+    "quality_gate_for_new_files": [
+      "Search index.json for duplicates before creating",
+      "Verify next sequential ID",
+      "Filename matches mandatory pattern",
+      "Target directory matches placement rules",
+      "File fits within token budget category",
+      "Case convention matches rules for file extension",
+      "After creation: index regenerated, summary present if >2000 tokens"
+    ]
+  },
+
+  "section_10_web_research": {
+    "market_research_risk_management": {
+      "key_frameworks": [
+        {
+          "name": "Quantitative Risk Framework",
+          "description": "Structured approach using measurable data and statistical methods to evaluate risks by likelihood and impact",
+          "tools": ["Value at Risk (VaR)", "Historical VaR", "Parametric VaR", "Monte Carlo simulations"],
+          "applicability": "Use VaR-style thinking for position sizing. Define maximum acceptable loss per pick."
+        },
+        {
+          "name": "Three-Phase Risk Reporting",
+          "description": "MSCI framework: (1) compile position and market data, (2) apply methodologies including stress testing, (3) summarize portfolio risks concisely",
+          "applicability": "Structure pick reviews around data compilation, stress scenario analysis, and summary reporting."
+        },
+        {
+          "name": "Regulatory Frameworks",
+          "description": "Basel III, MiFID II, SOX establish guidelines for capital requirements, transparency, corporate accountability",
+          "applicability": "Borrow transparency and documentation requirements for pick justification."
+        }
+      ],
+      "sources": [
+        "https://www.msci.com/resources/research/technical_documentation/RMGuide.pdf",
+        "https://corporatefinanceinstitute.com/resources/career-map/sell-side/risk-management/market-risk-fundamentals-2/",
+        "https://www.metricstream.com/learn/quantitative-risk-frameworks.html",
+        "https://www.cfainstitute.org/insights/professional-learning/refresher-readings/2026/measuring-managing-market-risk"
+      ]
+    },
+    "stock_pick_validation_checklist": {
+      "expert_methodology": "Value investing superinvestors (Buffett, Munger, Pabrai, Spier) use checklist approach. Like airline pilots during takeoff, quality-driven investors use checklists for due diligence.",
+      "quality_metrics": {
+        "profitability": {
+          "ROCE": "5-year average >= 15%",
+          "free_cash_flow_yield": ">= 2-3%",
+          "free_cash_conversion": ">= 75% from earnings"
+        },
+        "financial_health": {
+          "eps_growth": "Consistent over 5-10 years",
+          "debt_to_equity": "Reasonable for industry"
+        },
+        "qualitative": {
+          "business_clarity": "Can you describe what the company does in one sentence?",
+          "management_quality": "Track record, alignment with shareholders",
+          "competitive_moat": "Sustainable competitive advantages",
+          "growth_prospects": "Clear strategies for expansion"
+        }
+      },
+      "validation_quality_gates": [
+        "Gate 1: Can I describe the business in one sentence?",
+        "Gate 2: Does it pass profitability thresholds (ROCE >= 15%, FCF yield >= 2%)?",
+        "Gate 3: Is the company financially healthy (EPS growth, reasonable debt)?",
+        "Gate 4: Does it have a durable competitive moat?",
+        "Gate 5: Is management quality high?",
+        "Gate 6: Are there clear growth catalysts?",
+        "Gate 7: Is the valuation reasonable relative to intrinsic value?",
+        "Gate 8: Have I identified and assessed key risks?"
+      ],
+      "sources": [
+        "https://www.linkedin.com/pulse/checklist-approach-quality-stock-picking-david-j-waldron-36nme",
+        "https://www.drvijaymalik.com/stocks-buying-checklist/",
+        "https://www.schwab.com/learn/story/how-to-pick-stocks-using-fundamental-and-technical-analysis",
+        "https://www.kavout.com/market-lens/mastering-stock-analysis-key-investment-checklist-questions-for-evaluating-stocks-industries-and-competitors",
+        "https://www.stockopedia.com/academy/articles/a-checklist-for-finding-high-quality-shares/",
+        "https://www.oldschoolvalue.com/investing-strategy/stock-selection-investment-checklist/",
+        "https://www.safalniveshak.com/my-8-point-stock-analysis-checklist/"
+      ]
+    },
+    "backtesting_methodology": {
+      "key_pitfalls": [
+        "Survivorship bias: Only including currently active stocks inflates returns",
+        "Overfitting/data snooping: Repeated parameter adjustments transform test into training data",
+        "Unrealistic costs: Ignoring commissions, bid-ask spreads, slippage",
+        "Insufficient sample: Need 100-200+ trades for statistical significance"
+      ],
+      "best_practices": [
+        "Walk-forward testing: Optimize on in-sample, test on out-of-sample (gold standard)",
+        "Sufficient sample size: Minimum 100-200 trades",
+        "Realistic transaction costs: Include commissions, spreads, slippage",
+        "Separate validation data: Untouched dataset for final validation",
+        "Cross-check data sources: Verify data across multiple sources before trusting results",
+        "Disclose number of trials and methodology used"
+      ],
+      "applicability_to_our_picks": "With zero picks logged, backtesting is not yet applicable. However, establishing a performance tracking framework NOW (entry price, date, thesis, confidence) enables future backtesting. The pick_logger tool (TB-003) is essential for this.",
+      "sources": [
+        "https://orats.com/university/backtesting-methodology",
+        "https://stoic.ai/blog/backtesting-trading-strategies/",
+        "https://www.quantvps.com/blog/backtesting-trading-strategies"
+      ]
+    }
+  },
+
+  "risk_synthesis": {
+    "top_10_risks_for_5_sessions": [
+      {
+        "rank": 1,
+        "risk": "Infrastructure recursion trap",
+        "probability": "HIGH",
+        "impact": "CRITICAL",
+        "evidence": "7 consecutive teams fell into this pattern. Zero domain output since T14.",
+        "mitigation": "Enforce SOP-023. 60% domain minimum. Pre-launch checklist. Post-session audit.",
+        "quality_gate": "Pre-launch: domain agent count >= 60%. Post-session: at least 1 domain artifact produced."
+      },
+      {
+        "rank": 2,
+        "risk": "Zero market picks remains zero",
+        "probability": "MEDIUM",
+        "impact": "CRITICAL",
+        "evidence": "SOP-018 never executed. 14+ sessions without domain output.",
+        "mitigation": "Session 1 must produce 3-5 picks using Alpha's 6-step plan. No new tooling allowed.",
+        "quality_gate": "Session 1 ends with >= 3 pick files in market-research/picks/."
+      },
+      {
+        "rank": 3,
+        "risk": "Pick quality too low to be useful",
+        "probability": "MEDIUM",
+        "impact": "HIGH",
+        "evidence": "No quality validation framework exists yet. First picks may lack rigor.",
+        "mitigation": "Apply 8-gate validation checklist from web research. Each pick must pass all gates.",
+        "quality_gate": "Every pick passes: business clarity, profitability metrics, financial health, moat, management, growth, valuation, risk assessment."
+      },
+      {
+        "rank": 4,
+        "risk": "Critical TOCTOU bugs cause data loss in multi-agent sessions",
+        "probability": "MEDIUM",
+        "impact": "HIGH",
+        "evidence": "2 critical bugs (WS-001, HP-001) can silently lose work results or leave inconsistent state.",
+        "mitigation": "Fix WS-001 and HP-001 in session 2. Use single-agent mode for session 1 to avoid triggering.",
+        "quality_gate": "Bug fix passes: regression test written, full test suite green, stress test passing."
+      },
+      {
+        "rank": 5,
+        "risk": "Data hygiene debt misleads future teams",
+        "probability": "HIGH",
+        "impact": "MEDIUM",
+        "evidence": "15 orphaned scripts, 34 missing titles, unindexed session, duplicate FRED source.",
+        "mitigation": "Quick fixes in session 1 (17 min total). Scriptable title backfill in session 2.",
+        "quality_gate": "All index files accurate. No orphaned scripts. No duplicate entries."
+      },
+      {
+        "rank": 6,
+        "risk": "API rate limit exhaustion during market research",
+        "probability": "MEDIUM",
+        "impact": "MEDIUM",
+        "evidence": "Alpha Vantage reduced to 25 calls/day. Finnhub 60/min. No cost tracking exists.",
+        "mitigation": "Use WebSearch/WebFetch for initial picks. Build cost_tracker (TB-005) in session 2. Adopt MCP servers for better rate limits.",
+        "quality_gate": "Track API calls per session. Never exceed free tier limits."
+      },
+      {
+        "rank": 7,
+        "risk": "Duplicate work across sessions",
+        "probability": "MEDIUM",
+        "impact": "MEDIUM",
+        "evidence": "KB-0012/KB-0013 identical, SOP-022/SOP-032 overlap, T13 duplicated T11.",
+        "mitigation": "Pre-session duplicate check. Use dedup_checker (TB-006). Check existing picks before researching same stocks.",
+        "quality_gate": "Session start: search existing picks and KB for overlapping topics."
+      },
+      {
+        "rank": 8,
+        "risk": "Efficiency collapse from oversized teams",
+        "probability": "MEDIUM",
+        "impact": "MEDIUM",
+        "evidence": "Per-agent efficiency drops 89% at 27 agents vs solo.",
+        "mitigation": "Default to 5-8 agents per SOP-022. Solo agents for research tasks.",
+        "quality_gate": "Pre-launch: team size <= 8 for integrated ops, solo for research."
+      },
+      {
+        "rank": 9,
+        "risk": "Stale/incorrect market data leads to bad picks",
+        "probability": "LOW",
+        "impact": "HIGH",
+        "evidence": "No data validation framework for financial data. Web data can be stale or incorrect.",
+        "mitigation": "Cross-reference multiple sources. Include data freshness in pick documentation. Flag data older than 24h.",
+        "quality_gate": "Every pick cites 2+ independent data sources. Data timestamp included."
+      },
+      {
+        "rank": 10,
+        "risk": "SOP-021 failure recovery never tested",
+        "probability": "LOW",
+        "impact": "MEDIUM",
+        "evidence": "KB-0035 notes SOP-021 was never stress-tested.",
+        "mitigation": "Run tabletop exercise on recovery procedures. Fix gaps found.",
+        "quality_gate": "Recovery from simulated agent crash completes within 2 min."
+      }
+    ],
+
+    "quality_gates_by_session": {
+      "session_1_market_research_execution": {
+        "pre_launch": [
+          "60%+ agents on domain work (SOP-023 AR-01)",
+          "No new SOPs or coordination modules planned",
+          "Quick fixes queued (BF-001, BF-005)",
+          "Pick template (TEMPLATE.md) reviewed and understood"
+        ],
+        "during_execution": [
+          "Each pick passes 8-gate validation checklist",
+          "Data from 2+ independent sources per pick",
+          "No infrastructure drift (mid-session check)"
+        ],
+        "post_session": [
+          ">= 3 pick files in market-research/picks/",
+          "picks/index.json updated",
+          "Session log documents actual domain/infra split",
+          "Quick fixes BF-001 and BF-005 completed"
+        ]
+      },
+      "session_2_tools_and_fixes": {
+        "pre_launch": [
+          "Session 1 picks reviewed for quality",
+          "TOCTOU fix plan documented (WS-001, HP-001)"
+        ],
+        "during_execution": [
+          "Each bug fix follows SOP-020 workflow",
+          "Regression test written for each fix",
+          "Full test suite passes after each fix",
+          "Domain tools (pick_logger, SEC EDGAR) functional"
+        ],
+        "post_session": [
+          "2 critical TOCTOU bugs fixed with tests",
+          "pick_logger.py operational",
+          "2-3 additional picks logged",
+          "KB titles backfilled"
+        ]
+      },
+      "session_3_expansion": {
+        "pre_launch": [
+          "Pick performance review completed",
+          "Data quality fixes from session 2 verified"
+        ],
+        "during_execution": [
+          "Industry analysis uses multiple data sources",
+          "Economic indicators cross-referenced",
+          "Cost tracking active for API usage"
+        ],
+        "post_session": [
+          "1 tech industry report produced",
+          "1 economic indicator report produced",
+          "Pick performance tracking operational",
+          "Total picks >= 6"
+        ]
+      },
+      "session_4_5_sustainability": {
+        "pre_launch": [
+          "Review all prior picks for accuracy",
+          "Identify picks needing thesis update"
+        ],
+        "during_execution": [
+          "Walk-forward validation of pick methodology",
+          "Remaining high-severity TOCTOU bugs addressed",
+          "Agent Skill packaging if time permits"
+        ],
+        "post_session": [
+          "Pick count >= 10",
+          "Performance tracking shows methodology validity",
+          "All critical/high bugs fixed",
+          "Repository data hygiene debt < 5 items"
+        ]
+      }
+    },
+
+    "contingency_plans": {
+      "if_picks_fail_quality_gates": "Reduce scope to 1-2 high-conviction picks. Apply full 8-gate checklist. Better 1 quality pick than 5 poor ones.",
+      "if_api_rate_limits_hit": "Fall back to WebSearch/WebFetch. Use cached data. Stagger requests with exponential backoff per SOP-021.",
+      "if_critical_bug_causes_data_loss": "Stop multi-agent ops. Switch to single-agent mode. Apply SOP-021 recovery. Fix bug before resuming multi-agent.",
+      "if_infrastructure_recursion_detected": "Immediate stop. Apply SOP-023 warning sign checklist. Redirect agents to domain work. Document the drift in session log.",
+      "if_market_data_stale_or_wrong": "Cross-reference with 2+ additional sources. Flag uncertainty in pick documentation. Reduce confidence score.",
+      "if_team_efficiency_drops": "Reduce team size per SOP-022. Reassign to solo tasks. Check for blocking dependencies."
+    },
+
+    "missing_capabilities_for_risk_management": [
+      {
+        "gap": "No pick quality scoring system",
+        "description": "No automated way to score picks against quality criteria. Currently manual.",
+        "recommendation": "Build pick_scorer.py that checks each pick file against the 8-gate checklist."
+      },
+      {
+        "gap": "No performance tracking for picks",
+        "description": "Cannot measure if pick methodology is producing good results.",
+        "recommendation": "Build pick_logger (TB-003) first. Add price tracking in later sessions."
+      },
+      {
+        "gap": "No cost tracking for API usage",
+        "description": "Cannot monitor rate limit consumption across sessions.",
+        "recommendation": "Build cost_tracker (TB-005) in session 2."
+      },
+      {
+        "gap": "No data freshness validation",
+        "description": "No mechanism to verify financial data is current.",
+        "recommendation": "Include data_timestamp field in pick template. Flag data older than market close."
+      },
+      {
+        "gap": "No integration/acceptance tests",
+        "description": "Only unit-level and stress tests exist. No end-to-end workflow tests.",
+        "recommendation": "Defer to backlog per SOP-023. Not domain-enabling."
+      }
+    ]
+  }
+}
