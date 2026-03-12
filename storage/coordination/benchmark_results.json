@@ -1,0 +1,540 @@
+{
+  "benchmark_suite": "multi_agent_system_benchmark",
+  "version": "2.0.0",
+  "timestamp": "2026-03-12T23:55:35",
+  "config": {
+    "iterations": 5,
+    "num_agents": 8,
+    "suites_run": [
+      "hub",
+      "help",
+      "stealing",
+      "channels",
+      "bus",
+      "circuit",
+      "capability",
+      "loadbalancer",
+      "quality",
+      "sqlite",
+      "e2e"
+    ]
+  },
+  "total_duration_ms": 20998.474,
+  "results": {
+    "hub": {
+      "name": "Coordinator Hub",
+      "benchmarks": {
+        "registration": {
+          "mean_ms": 2.4343,
+          "p50_ms": 1.3824,
+          "p95_ms": 11.3911,
+          "p99_ms": 12.8862,
+          "min_ms": 0.7769,
+          "max_ms": 12.8862,
+          "count": 40
+        },
+        "status_update": {
+          "mean_ms": 0.8282,
+          "p50_ms": 0.859,
+          "p95_ms": 1.1398,
+          "p99_ms": 1.1506,
+          "min_ms": 0.4594,
+          "max_ms": 1.1506,
+          "count": 40
+        },
+        "dashboard_read": {
+          "mean_ms": 0.0824,
+          "p50_ms": 0.0607,
+          "p95_ms": 0.1943,
+          "p99_ms": 0.2074,
+          "min_ms": 0.0556,
+          "max_ms": 0.2074,
+          "count": 25
+        },
+        "instruction_delivery": {
+          "mean_ms": 0.8913,
+          "p50_ms": 0.8102,
+          "p95_ms": 1.3687,
+          "p99_ms": 1.5113,
+          "min_ms": 0.5679,
+          "max_ms": 1.5113,
+          "count": 40
+        }
+      },
+      "error": null
+    },
+    "help": {
+      "name": "Help Protocol",
+      "benchmarks": {
+        "add_work_item": {
+          "mean_ms": 0.7213,
+          "p50_ms": 0.6972,
+          "p95_ms": 1.1055,
+          "p99_ms": 1.1403,
+          "min_ms": 0.4024,
+          "max_ms": 1.1403,
+          "count": 40
+        },
+        "request_help": {
+          "mean_ms": 0.8371,
+          "p50_ms": 0.8676,
+          "p95_ms": 1.3368,
+          "p99_ms": 1.3368,
+          "min_ms": 0.5114,
+          "max_ms": 1.3368,
+          "count": 20
+        },
+        "auto_assign": {
+          "mean_ms": 3.3342,
+          "p50_ms": 3.5604,
+          "p95_ms": 4.4555,
+          "p99_ms": 4.4555,
+          "min_ms": 2.0868,
+          "max_ms": 4.4555,
+          "count": 5
+        },
+        "idle_detection": {
+          "mean_ms": 0.0389,
+          "p50_ms": 0.0429,
+          "p95_ms": 0.0603,
+          "p99_ms": 0.0603,
+          "min_ms": 0.0172,
+          "max_ms": 0.0603,
+          "count": 5
+        }
+      },
+      "error": null
+    },
+    "stealing": {
+      "name": "Work Stealing",
+      "benchmarks": {
+        "enqueue": {
+          "mean_ms": 0.6069,
+          "p50_ms": 0.5324,
+          "p95_ms": 1.3025,
+          "p99_ms": 1.4917,
+          "min_ms": 0.2584,
+          "max_ms": 1.4917,
+          "count": 100
+        },
+        "steal_sequential": {
+          "mean_ms": 0.9726,
+          "p50_ms": 0.9194,
+          "p95_ms": 1.5697,
+          "p99_ms": 2.3962,
+          "min_ms": 0.4858,
+          "max_ms": 2.3962,
+          "count": 40
+        },
+        "complete": {
+          "mean_ms": 0.6875,
+          "p50_ms": 0.6876,
+          "p95_ms": 1.2447,
+          "p99_ms": 1.3223,
+          "min_ms": 0.3686,
+          "max_ms": 1.3223,
+          "count": 40
+        },
+        "steal_thundering_herd": {
+          "mean_ms": 25.8826,
+          "p50_ms": 19.351,
+          "p95_ms": 80.5013,
+          "p99_ms": 80.5851,
+          "min_ms": 1.2827,
+          "max_ms": 80.5851,
+          "count": 40
+        },
+        "pipeline_advance": {
+          "mean_ms": 0,
+          "p50_ms": 0,
+          "p95_ms": 0,
+          "p99_ms": 0,
+          "min_ms": 0,
+          "max_ms": 0,
+          "count": 0
+        }
+      },
+      "error": null
+    },
+    "channels": {
+      "name": "Direct Channels",
+      "benchmarks": {
+        "send_message": {
+          "mean_ms": 1.2754,
+          "p50_ms": 1.2318,
+          "p95_ms": 1.9285,
+          "p99_ms": 2.1957,
+          "min_ms": 0.7585,
+          "max_ms": 2.1957,
+          "count": 40
+        },
+        "read_messages": {
+          "mean_ms": 0.62,
+          "p50_ms": 0.6169,
+          "p95_ms": 0.9805,
+          "p99_ms": 1.0922,
+          "min_ms": 0.2897,
+          "max_ms": 1.0922,
+          "count": 40
+        },
+        "update_presence": {
+          "mean_ms": 0.7978,
+          "p50_ms": 0.7396,
+          "p95_ms": 1.3797,
+          "p99_ms": 1.5013,
+          "min_ms": 0.4141,
+          "max_ms": 1.5013,
+          "count": 40
+        },
+        "broadcast_progress": {
+          "mean_ms": 0.758,
+          "p50_ms": 0.7453,
+          "p95_ms": 1.1214,
+          "p99_ms": 1.1214,
+          "min_ms": 0.3633,
+          "max_ms": 1.1214,
+          "count": 15
+        }
+      },
+      "error": null
+    },
+    "bus": {
+      "name": "Bus Throughput",
+      "benchmarks": {
+        "1_agents": {
+          "write": {
+            "mean_ms": 0.0218,
+            "p50_ms": 0.0156,
+            "p95_ms": 0.0475,
+            "p99_ms": 0.1772,
+            "min_ms": 0.0136,
+            "max_ms": 0.2724,
+            "count": 250,
+            "total_messages": 250,
+            "throughput_msgs_per_sec": 45943.48
+          }
+        },
+        "4_agents": {
+          "write": {
+            "mean_ms": 0.5195,
+            "p50_ms": 0.4905,
+            "p95_ms": 0.9428,
+            "p99_ms": 1.3434,
+            "min_ms": 0.014,
+            "max_ms": 1.7308,
+            "count": 1000,
+            "total_messages": 1000,
+            "throughput_msgs_per_sec": 1924.89
+          }
+        },
+        "8_agents": {
+          "write": {
+            "mean_ms": 1.0565,
+            "p50_ms": 0.923,
+            "p95_ms": 2.4044,
+            "p99_ms": 3.2955,
+            "min_ms": 0.0159,
+            "max_ms": 5.4774,
+            "count": 2000,
+            "total_messages": 2000,
+            "throughput_msgs_per_sec": 946.52
+          }
+        },
+        "16_agents": {
+          "write": {
+            "mean_ms": 1.9211,
+            "p50_ms": 1.6069,
+            "p95_ms": 4.825,
+            "p99_ms": 6.9231,
+            "min_ms": 0.0174,
+            "max_ms": 9.1583,
+            "count": 4000,
+            "total_messages": 4000,
+            "throughput_msgs_per_sec": 520.53
+          }
+        }
+      },
+      "error": null
+    },
+    "circuit": {
+      "name": "Circuit Breaker",
+      "benchmarks": {
+        "call_allowed": {
+          "mean_ms": 0.0592,
+          "p50_ms": 0.0093,
+          "p95_ms": 0.4604,
+          "p99_ms": 0.797,
+          "min_ms": 0.0085,
+          "max_ms": 1.0603,
+          "count": 500
+        },
+        "record_outcome": {
+          "mean_ms": 0.5018,
+          "p50_ms": 0.4914,
+          "p95_ms": 0.753,
+          "p99_ms": 0.8274,
+          "min_ms": 0.2401,
+          "max_ms": 0.8571,
+          "count": 250
+        },
+        "state_transition_check": {
+          "mean_ms": 0.0317,
+          "p50_ms": 0.0291,
+          "p95_ms": 0.0581,
+          "p99_ms": 0.0583,
+          "min_ms": 0.0193,
+          "max_ms": 0.0583,
+          "count": 25
+        }
+      },
+      "error": null
+    },
+    "capability": {
+      "name": "Capability Matching",
+      "benchmarks": {
+        "register_capability": {
+          "mean_ms": 0.5414,
+          "p50_ms": 0.4931,
+          "p95_ms": 0.991,
+          "p99_ms": 1.1054,
+          "min_ms": 0.2714,
+          "max_ms": 1.1054,
+          "count": 40
+        },
+        "find_best_match": {
+          "mean_ms": 0.0477,
+          "p50_ms": 0.0386,
+          "p95_ms": 0.1046,
+          "p99_ms": 0.1109,
+          "min_ms": 0.0223,
+          "max_ms": 0.1109,
+          "count": 25
+        }
+      },
+      "error": null
+    },
+    "loadbalancer": {
+      "name": "Load Balancer",
+      "benchmarks": {
+        "update_load": {
+          "mean_ms": 0.3703,
+          "p50_ms": 0.3688,
+          "p95_ms": 0.5887,
+          "p99_ms": 0.7033,
+          "min_ms": 0.2381,
+          "max_ms": 0.7033,
+          "count": 40
+        },
+        "get_least_loaded": {
+          "mean_ms": 0.0153,
+          "p50_ms": 0.0104,
+          "p95_ms": 0.0742,
+          "p99_ms": 0.1122,
+          "min_ms": 0.0097,
+          "max_ms": 0.1122,
+          "count": 100
+        }
+      },
+      "error": null
+    },
+    "quality": {
+      "name": "Quality Gates",
+      "benchmarks": {
+        "define_gate": {
+          "mean_ms": 0.4323,
+          "p50_ms": 0.3632,
+          "p95_ms": 0.754,
+          "p99_ms": 0.7803,
+          "min_ms": 0.248,
+          "max_ms": 0.7803,
+          "count": 25
+        },
+        "validate_output": {
+          "mean_ms": 0.3712,
+          "p50_ms": 0.3483,
+          "p95_ms": 0.5856,
+          "p99_ms": 0.8928,
+          "min_ms": 0.2541,
+          "max_ms": 0.8928,
+          "count": 100
+        }
+      },
+      "error": null
+    },
+    "sqlite": {
+      "name": "SQLite Contention",
+      "benchmarks": {
+        "1_writers": {
+          "mean_ms": 0.4079,
+          "p50_ms": 0.3355,
+          "p95_ms": 0.7465,
+          "p99_ms": 1.2648,
+          "min_ms": 0.2111,
+          "max_ms": 1.4145,
+          "count": 250,
+          "total_ops": 250,
+          "errors": 0,
+          "ops_per_sec": 2451.35,
+          "efficiency_pct": 100.0
+        },
+        "4_writers": {
+          "mean_ms": 1.6995,
+          "p50_ms": 0.4778,
+          "p95_ms": 1.0654,
+          "p99_ms": 54.9769,
+          "min_ms": 0.1335,
+          "max_ms": 130.3493,
+          "count": 1000,
+          "total_ops": 1000,
+          "errors": 0,
+          "ops_per_sec": 588.41,
+          "efficiency_pct": 6.0
+        },
+        "8_writers": {
+          "mean_ms": 2.643,
+          "p50_ms": 0.3643,
+          "p95_ms": 0.8454,
+          "p99_ms": 105.0285,
+          "min_ms": 0.1501,
+          "max_ms": 431.1816,
+          "count": 2000,
+          "total_ops": 2000,
+          "errors": 0,
+          "ops_per_sec": 378.36,
+          "efficiency_pct": 1.9
+        },
+        "16_writers": {
+          "mean_ms": 7.9846,
+          "p50_ms": 0.3376,
+          "p95_ms": 0.7628,
+          "p99_ms": 231.4552,
+          "min_ms": 0.1167,
+          "max_ms": 1133.3759,
+          "count": 4000,
+          "total_ops": 4000,
+          "errors": 0,
+          "ops_per_sec": 125.24,
+          "efficiency_pct": 0.3
+        },
+        "32_writers": {
+          "mean_ms": 15.5721,
+          "p50_ms": 0.3146,
+          "p95_ms": 0.8955,
+          "p99_ms": 532.0797,
+          "min_ms": 0.1145,
+          "max_ms": 2333.3118,
+          "count": 8000,
+          "total_ops": 8000,
+          "errors": 0,
+          "ops_per_sec": 64.22,
+          "efficiency_pct": 0.1
+        }
+      },
+      "error": null
+    },
+    "e2e": {
+      "name": "End-to-End Scenario",
+      "benchmarks": {
+        "scenario_total": {
+          "mean_ms": 139.3605,
+          "p50_ms": 140.4751,
+          "p95_ms": 145.4931,
+          "p99_ms": 145.4931,
+          "min_ms": 129.168,
+          "max_ms": 145.4931,
+          "count": 5
+        },
+        "phases": {
+          "setup": {
+            "mean_ms": 5.0484,
+            "p50_ms": 4.5142,
+            "p95_ms": 6.2243,
+            "p99_ms": 6.2243,
+            "min_ms": 4.0933,
+            "max_ms": 6.2243,
+            "count": 5
+          },
+          "registration": {
+            "mean_ms": 27.2001,
+            "p50_ms": 26.683,
+            "p95_ms": 31.1474,
+            "p99_ms": 31.1474,
+            "min_ms": 24.4115,
+            "max_ms": 31.1474,
+            "count": 5
+          },
+          "work_distribution": {
+            "mean_ms": 39.637,
+            "p50_ms": 40.161,
+            "p95_ms": 42.5357,
+            "p99_ms": 42.5357,
+            "min_ms": 35.6367,
+            "max_ms": 42.5357,
+            "count": 5
+          },
+          "work_execution": {
+            "mean_ms": 37.1176,
+            "p50_ms": 37.2765,
+            "p95_ms": 37.7511,
+            "p99_ms": 37.7511,
+            "min_ms": 35.9508,
+            "max_ms": 37.7511,
+            "count": 5
+          },
+          "help_flow": {
+            "mean_ms": 11.4163,
+            "p50_ms": 11.6209,
+            "p95_ms": 13.6339,
+            "p99_ms": 13.6339,
+            "min_ms": 8.9711,
+            "max_ms": 13.6339,
+            "count": 5
+          },
+          "communication": {
+            "mean_ms": 0.7866,
+            "p50_ms": 0.803,
+            "p95_ms": 0.8791,
+            "p99_ms": 0.8791,
+            "min_ms": 0.6748,
+            "max_ms": 0.8791,
+            "count": 5
+          },
+          "dashboard": {
+            "mean_ms": 0.338,
+            "p50_ms": 0.3187,
+            "p95_ms": 0.4159,
+            "p99_ms": 0.4159,
+            "min_ms": 0.3127,
+            "max_ms": 0.4159,
+            "count": 5
+          },
+          "teardown": {
+            "mean_ms": 17.8057,
+            "p50_ms": 17.0677,
+            "p95_ms": 22.4182,
+            "p99_ms": 22.4182,
+            "min_ms": 15.9128,
+            "max_ms": 22.4182,
+            "count": 5
+          }
+        },
+        "config": {
+          "num_teams": 8,
+          "agents_per_team": 3,
+          "total_agents": 24,
+          "work_items": 48
+        }
+      },
+      "error": null
+    }
+  },
+  "regressions": [],
+  "regression_count": 0,
+  "errors": [],
+  "all_pass": true,
+  "sop_035_thresholds": {
+    "latency_p95_increase_pct": 20.0,
+    "throughput_decrease_pct": 15.0,
+    "token_efficiency_increase_pct": 10.0
+  }
+}
