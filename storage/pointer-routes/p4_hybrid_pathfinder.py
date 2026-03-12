@@ -150,12 +150,14 @@ def adaptive_pathfind(pn, start, target, alpha_w, alpha_s, alpha_t, max_hops=8):
     return None, 0, []
 
 
-def run_all_tunings(pn):
-    """Run all 10 tasks across all 5 tunings. Returns structured results."""
+def run_all_tunings(pn, tasks=None):
+    """Run all tasks across all 5 tunings. Returns structured results."""
+    if tasks is None:
+        tasks = TASKS
     results = {}
     for tuning_name, (aw, as_, at) in TUNINGS.items():
         tuning_results = []
-        for task in TASKS:
+        for task in tasks:
             path, total_score, details = adaptive_pathfind(
                 pn, task["start"], task["target"], aw, as_, at
             )
@@ -233,16 +235,19 @@ def main():
     pn = load_network()
     print(f"Loaded {len(pn['nodes'])} nodes")
 
-    # Verify tasks are reachable
+    # Verify tasks are reachable — skip tasks with invalid start nodes
+    valid_tasks = []
     for task in TASKS:
         if task["start"] not in pn["nodes"]:
-            print(f"WARNING: start {task['start']} not in network")
+            print(f"WARNING: start {task['start']} not in network, skipping task '{task['name']}'")
+            continue
         if task["target"] not in pn["nodes"]:
-            print(f"WARNING: target {task['target']} not in network")
+            print(f"WARNING: target {task['target']} not in network (may be unreachable)")
+        valid_tasks.append(task)
 
-    print(f"\nRunning {len(TUNINGS)} tunings x {len(TASKS)} tasks = {len(TUNINGS) * len(TASKS)} paths\n")
+    print(f"\nRunning {len(TUNINGS)} tunings x {len(valid_tasks)} tasks = {len(TUNINGS) * len(valid_tasks)} paths\n")
 
-    results = run_all_tunings(pn)
+    results = run_all_tunings(pn, valid_tasks)
     summaries, ranked, best_name = evaluate_tunings(results)
 
     # Print results

@@ -1,52 +1,53 @@
 {
   "generated": "2026-03-12T23:20:33.621451Z",
-  "total_routes": 136,
-  "total_hops": 697,
-  "avg_hops_per_route": 5.12,
+  "total_routes": 156,
+  "total_hops": 780,
+  "avg_hops_per_route": 5.0,
   "outcome_distribution": {
-    "unknown-outcome": 1,
-    "success": 135
+    "failure": 2,
+    "success": 153,
+    "partial": 1
   },
   "strength_usage": {
     "unknown": 16,
-    "supporting": 120,
-    "primary": 286,
-    "unclassified": 233,
-    "related": 42
+    "supporting": 132,
+    "primary": 297,
+    "unclassified": 290,
+    "related": 45
   },
   "top_entry_nodes": {
+    "SOP-011": 10,
     "SOP-028": 10,
-    "SOP-011": 8,
     "SOP-029": 7,
+    "SOP-012": 7,
+    "SOP-015": 7,
+    "SOP-017": 7,
+    "SOP-013": 6,
+    "SOP-020": 6,
     "SCR-0057": 5,
-    "SOP-012": 5,
-    "SOP-015": 5,
-    "SOP-017": 5,
+    "SOP-014": 5,
+    "SOP-016": 5,
+    "SOP-019": 5,
     "SOP-025": 5,
-    "SOP-013": 4,
-    "SOP-020": 4,
     "SOP-023": 4,
-    "wiki-ai:AIOps": 4,
-    "A": 3,
-    "SOP-014": 3,
-    "SOP-016": 3
+    "wiki-ai:AIOps": 4
   },
   "top_exit_nodes": {
-    "SRC-0001": 11,
+    "SRC-0001": 13,
     "pointer-network": 7,
     "SCR-0019": 5,
+    "SCR-0001": 4,
+    "SRC-0050": 4,
+    "SCR-0057": 4,
     "B": 3,
     "SOP-028": 3,
     "SOP-012": 3,
     "KB-0001": 3,
-    "SCR-0001": 3,
-    "SRC-0050": 3,
-    "SCR-0057": 3,
+    "SRC-0020": 3,
     "KB-0025": 3,
     "SOP-014": 3,
-    "SCR-0033": 3,
-    "SOP-029": 2,
-    "TEAM-0005": 2
+    "SCR-0055": 3,
+    "SCR-0033": 3
   },
   "top_edges": [
     {
@@ -57,17 +58,17 @@
       }
     },
     {
-      "edge": "SCR-0057 -> SCR-0032",
+      "edge": "SOP-029 -> SCR-0057",
       "traversals": 12,
       "outcomes": {
         "success": 12
       }
     },
     {
-      "edge": "SOP-029 -> SCR-0057",
-      "traversals": 10,
+      "edge": "SCR-0057 -> SCR-0032",
+      "traversals": 12,
       "outcomes": {
-        "success": 10
+        "success": 12
       }
     },
     {
@@ -79,9 +80,9 @@
     },
     {
       "edge": "SCR-0033 -> SRC-0050",
-      "traversals": 9,
+      "traversals": 10,
       "outcomes": {
-        "success": 9
+        "success": 10
       }
     },
     {
@@ -127,6 +128,13 @@
       }
     },
     {
+      "edge": "SOP-015 -> SOP-028",
+      "traversals": 8,
+      "outcomes": {
+        "success": 8
+      }
+    },
+    {
       "edge": "SOP-029 -> SOP-012",
       "traversals": 7,
       "outcomes": {
@@ -134,10 +142,17 @@
       }
     },
     {
-      "edge": "SOP-015 -> SOP-028",
+      "edge": "SOP-016 -> SOP-013",
       "traversals": 7,
       "outcomes": {
         "success": 7
+      }
+    },
+    {
+      "edge": "SOP-020 -> KB-0025",
+      "traversals": 6,
+      "outcomes": {
+        "success": 6
       }
     },
     {
@@ -155,6 +170,13 @@
       }
     },
     {
+      "edge": "KB-0004 -> TEAM-0014",
+      "traversals": 6,
+      "outcomes": {
+        "success": 6
+      }
+    },
+    {
       "edge": "SOP-027 -> SCR-0043",
       "traversals": 6,
       "outcomes": {
@@ -166,27 +188,6 @@
       "traversals": 6,
       "outcomes": {
         "success": 6
-      }
-    },
-    {
-      "edge": "SOP-G01 -> SOP-013",
-      "traversals": 6,
-      "outcomes": {
-        "success": 6
-      }
-    },
-    {
-      "edge": "SOP-016 -> SOP-013",
-      "traversals": 5,
-      "outcomes": {
-        "success": 5
-      }
-    },
-    {
-      "edge": "SOP-G02 -> TEAM-0022",
-      "traversals": 5,
-      "outcomes": {
-        "success": 5
       }
     }
   ],
@@ -208,23 +209,36 @@
     "SOP-015 -> SCR-0037": 2,
     "wiki-ai:AIOps -> SRC-0001": 2,
     "SOP-023 -> SRC-0001": 2,
-    "None -> None": 1,
+    "SOP-011 -> SCR-0043": 2,
+    "SOP-012 -> SCR-0057": 2,
+    "SOP-016 -> SCR-0025": 2,
+    "SOP-014 -> SRC-0020": 2,
+    "SOP-011 -> SRC-0051": 2,
+    "SOP-020 -> SCR-0055": 2,
     "SCR-0057 -> SOP-029": 1,
     "SINGLE-NODE -> SINGLE-NODE": 1
   },
-  "agents_tracked": 37,
-  "tasks_tracked": 18,
+  "agents_tracked": 41,
+  "tasks_tracked": 19,
   "strength_effectiveness": {
     "primary": {
-      "total_uses": 286,
+      "total_uses": 297,
       "success_rate": 100.0
     },
     "supporting": {
-      "total_uses": 120,
+      "total_uses": 132,
       "success_rate": 100.0
     },
     "related": {
-      "total_uses": 42,
+      "total_uses": 45,
+      "success_rate": 100.0
+    },
+    "unknown": {
+      "total_uses": 16,
+      "success_rate": 93.8
+    },
+    "unclassified": {
+      "total_uses": 290,
       "success_rate": 100.0
     }
   }

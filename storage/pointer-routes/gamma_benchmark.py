@@ -44,12 +44,17 @@ def get_tags_from_reasons(reasons):
     return tags
 
 
+_node_tags_cache = {}
+
 def get_node_tags(node_id):
     """Get all tags associated with a node by examining all its pointers."""
+    if node_id in _node_tags_cache:
+        return _node_tags_cache[node_id]
     node = NODES.get(node_id, {})
     tags = set()
     for ptr in node.get("pointers", []):
         tags |= get_tags_from_reasons(ptr.get("reasons", []))
+    _node_tags_cache[node_id] = tags
     return tags
 
 

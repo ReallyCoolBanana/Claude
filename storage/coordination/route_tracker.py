@@ -325,8 +325,10 @@ def recommend_route(task: str, entry_node: str = None):
 
             if entry_node and common_routes:
                 # Fix #1: Filter to routes starting from entry_node
+                # BUG-B1-011: Filter out routes with 0% success rate
                 matching = [r for r in common_routes
-                            if r["route"].startswith(entry_node)]
+                            if r["route"].startswith(entry_node)
+                            and r.get("route_success_rate", 0) > 0]
                 if matching:
                     # Pick the highest-scored matching route
                     best = max(matching, key=lambda r: r.get("score", r.get("count", 0)))
@@ -338,10 +340,15 @@ def recommend_route(task: str, entry_node: str = None):
                 # No pattern matches entry_node — fall through to strength-based
             elif not entry_node and tp.get("recommended_route"):
                 # No entry_node specified, return global best
-                print(f"Recommended route for '{task}': {tp['recommended_route']}")
-                print(f"  (based on {tp['total_attempts']} attempts, "
-                      f"{tp['success_rate']}% success rate)")
-                return tp["recommended_route"]
+                # BUG-B1-011: Filter out routes with 0% success rate
+                if tp.get("success_rate", 0) > 0:
+                    print(f"Recommended route for '{task}': {tp['recommended_route']}")
+                    print(f"  (based on {tp['total_attempts']} attempts, "
+                          f"{tp['success_rate']}% success rate)")
+                    return tp["recommended_route"]
+                else:
+                    print(f"No viable route for '{task}': all known routes have 0% success rate")
+                    return None
 
     # Fallback: use pointer network strength to suggest a path
     try:
