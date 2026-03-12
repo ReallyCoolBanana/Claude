@@ -1,0 +1,694 @@
+{
+  "schema_version": "2.0",
+  "domain": "sops",
+  "last_updated": "2026-03-12",
+  "entry_count": 20,
+  "entries": [
+    {
+      "id": "SOP-011",
+      "title": "Central Commander Launch Protocol",
+      "date": "2026-03-11",
+      "category": "operations",
+      "tags": [
+        "coordination",
+        "multi-agent",
+        "fan-out",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_011_central_commander_launch.json",
+      "trigger": "Ensure the coordinator always maximizes parallelism when launching agent teams. Eliminates the sequential-wave anti-pattern.",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-012",
+          "SOP-013",
+          "SOP-014"
+        ]
+      }
+    },
+    {
+      "id": "SOP-012",
+      "title": "Real-Time Monitoring and Intervention Protocol",
+      "date": "2026-03-11",
+      "category": "operations",
+      "tags": [
+        "monitoring",
+        "coordination",
+        "multi-agent",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_012_monitoring_intervention.json",
+      "trigger": "Provides structured procedures for monitoring simultaneous agent teams, detecting problems early, and intervening when necessary.",
+      "references": {
+        "builds_on": [
+          "SOP-G01"
+        ],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-011",
+          "SOP-021"
+        ]
+      }
+    },
+    {
+      "id": "SOP-013",
+      "title": "Agent Prompt Engineering and Context Distribution",
+      "date": "2026-03-11",
+      "category": "development",
+      "tags": [
+        "multi-agent",
+        "sop",
+        "coordination"
+      ],
+      "status": "active",
+      "filename": "sop_013_prompt_engineering.json",
+      "trigger": "Standardized procedures for crafting agent prompts and distributing context to maximize agent effectiveness in multi-team operations.",
+      "references": {
+        "builds_on": [
+          "SOP-G01",
+          "SOP-G02"
+        ],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-011",
+          "SOP-012"
+        ]
+      }
+    },
+    {
+      "id": "SOP-014",
+      "title": "Simultaneous Multi-Project Management Protocol",
+      "date": "2026-03-11",
+      "category": "operations",
+      "tags": [
+        "coordination",
+        "multi-agent",
+        "hub-spoke",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_014_simultaneous_project_management.json",
+      "trigger": "Enables a central commander to run multiple independent projects simultaneously using hub-and-spoke monitoring.",
+      "references": {
+        "builds_on": [
+          "SOP-011",
+          "SOP-012",
+          "SOP-013"
+        ],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-015",
+          "SOP-016"
+        ]
+      }
+    },
+    {
+      "id": "SOP-015",
+      "title": "Infrastructure Audit and Mass Indexing Protocol",
+      "date": "2026-03-11",
+      "category": "infrastructure",
+      "tags": [
+        "indexing",
+        "validation",
+        "monitoring",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_015_infrastructure_audit.json",
+      "trigger": "Standardized procedure for conducting comprehensive repository audits including mass file indexing, tool inventory, bug testing, and documentation generation.",
+      "references": {
+        "builds_on": [
+          "SOP-011",
+          "SOP-012",
+          "SOP-014"
+        ],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-016"
+        ]
+      }
+    },
+    {
+      "id": "SOP-016",
+      "title": "Cross-Team Data Flow and Report Consolidation",
+      "date": "2026-03-11",
+      "category": "operations",
+      "tags": [
+        "coordination",
+        "pipeline",
+        "deduplication",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_016_cross_team_data_flow.json",
+      "trigger": "Defines how data flows between teams within and across simultaneous projects. Covers report formats, consolidation pipelines, and deduplication.",
+      "references": {
+        "builds_on": [
+          "SOP-013",
+          "SOP-014",
+          "SOP-015"
+        ],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-011"
+        ]
+      }
+    },
+    {
+      "id": "SOP-017",
+      "title": "Data Gathering Operations",
+      "date": "2026-03-11",
+      "category": "data-gathering",
+      "tags": [
+        "data-gathering",
+        "caching",
+        "validation",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_017_data_gathering_operations.json",
+      "trigger": "Standard procedure for selecting, configuring, and running data-gathering methods. Covers method selection, rate limiting, caching, error handling, and result grading.",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0023"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-018",
+          "SOP-023"
+        ]
+      }
+    },
+    {
+      "id": "SOP-018",
+      "title": "Market Research Operations",
+      "date": "2026-03-11",
+      "category": "research",
+      "tags": [
+        "stock-analysis",
+        "data-gathering",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_018_market_research_operations.json",
+      "trigger": "Standard procedure for conducting market research, selecting analysis methods, logging stock picks, tracking performance, and maintaining the picks index.",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-017"
+        ]
+      }
+    },
+    {
+      "id": "SOP-019",
+      "title": "Environment Setup for Fresh Deployment",
+      "date": "2026-03-11",
+      "category": "infrastructure",
+      "tags": [
+        "python",
+        "go",
+        "sqlite",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_019_environment_setup.json",
+      "trigger": "Standard procedure for setting up a fresh environment from scratch. Covers Python installation, dependency management, Go binary compilation, directory initialization, and verification.",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-015"
+        ]
+      }
+    },
+    {
+      "id": "SOP-020",
+      "title": "Systematic Bug Fix Workflow",
+      "date": "2026-03-11",
+      "category": "development",
+      "tags": [
+        "bug-fix",
+        "validation",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_020_bug_fix_workflow.json",
+      "trigger": "Standard procedure for receiving bug reports, prioritizing them, making targeted fixes, verifying with tests, and documenting outcomes.",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-021"
+        ]
+      }
+    },
+    {
+      "id": "SOP-021",
+      "title": "Failure Recovery Runbook",
+      "date": "2026-03-11",
+      "category": "operations",
+      "tags": [
+        "failure-analysis",
+        "sqlite",
+        "coordination",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_021_failure_recovery_runbook.json",
+      "trigger": "Comprehensive runbook for recovering from common failure modes: agent crashes, SQLite lock contention, bus file corruption, coordinator failures, and network/resource failures.",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-012",
+          "SOP-020"
+        ]
+      }
+    },
+    {
+      "id": "SOP-022",
+      "title": "Sub-Agent Delegation: When to Use and When Not To",
+      "date": "2026-03-12",
+      "category": "operations",
+      "tags": [
+        "multi-agent",
+        "coordination",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_022_subagent_delegation.json",
+      "trigger": "Decision framework for commanders to determine when delegating work to sub-agents improves efficiency versus when direct execution is faster.",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-011",
+          "SOP-023"
+        ]
+      }
+    },
+    {
+      "id": "SOP-023",
+      "title": "Data Gathering Pipeline",
+      "date": "2026-03-12",
+      "category": "data-gathering",
+      "tags": [
+        "data-gathering",
+        "pipeline",
+        "indexing",
+        "validation",
+        "search",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_023_data_gathering_pipeline.json",
+      "trigger": "Standardize how research data flows from gathering through processing to storage. Ensures all research is deduplicated, quality-checked, properly tagged, and indexed.",
+      "references": {
+        "builds_on": [
+          "SOP-022"
+        ],
+        "uses_scripts": [
+          "SCR-0023"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-017",
+          "SOP-024"
+        ]
+      }
+    },
+    {
+      "id": "SOP-024",
+      "title": "Data Quality & Freshness Maintenance",
+      "date": "2026-03-12",
+      "category": "data-gathering",
+      "tags": [
+        "validation",
+        "data-gathering",
+        "indexing",
+        "deduplication",
+        "monitoring",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_024_data_quality_maintenance.json",
+      "trigger": "Keep stored data accurate, fresh, and well-organized over time. Defines periodic health checks, freshness rules, tag hygiene, deduplication, and index rebuild protocols.",
+      "references": {
+        "builds_on": [
+          "SOP-023"
+        ],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-017"
+        ]
+      }
+    },
+    {
+      "id": "SOP-025",
+      "title": "Research Tool Integration: Building and Using Data Extraction Tools",
+      "date": "2026-03-12",
+      "category": "research",
+      "tags": [
+        "data-gathering",
+        "indexing",
+        "automation",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_025_research_tool_integration.json",
+      "trigger": "Standardize how research tools are built, tested, indexed, and used by agent teams. Ensures tools are discoverable, token-efficient, and integrated into research pipelines.",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0043"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-026",
+          "SOP-027"
+        ]
+      }
+    },
+    {
+      "id": "SOP-026",
+      "title": "Wikipedia Research Toolkit: Usage Guide",
+      "date": "2026-03-12",
+      "category": "research",
+      "tags": [
+        "data-gathering",
+        "wikidata",
+        "search",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_026_wikipedia_toolkit.json",
+      "trigger": "Complete instructions for using wikipedia_tools.py (SCR-0043) to extract links, metadata, and citations from Wikipedia articles via DBpedia SPARQL.",
+      "references": {
+        "builds_on": [
+          "SOP-025"
+        ],
+        "uses_scripts": [
+          "SCR-0043"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-027"
+        ]
+      }
+    },
+    {
+      "id": "SOP-027",
+      "title": "Wikipedia Category Pull: End-to-End Collection & Enrichment",
+      "date": "2026-03-12",
+      "category": "data-gathering",
+      "tags": [
+        "data-gathering",
+        "pipeline",
+        "indexing",
+        "wikidata",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_027_wikipedia_category_pull.json",
+      "trigger": "Standard operating procedure for collecting, extracting, summarizing, tagging, scoring, and indexing all pages from any Wikipedia Category page.",
+      "references": {
+        "builds_on": [
+          "SOP-025",
+          "SOP-026"
+        ],
+        "uses_scripts": [
+          "SCR-0043",
+          "SCR-0044"
+        ],
+        "uses_sources": [],
+        "related_to": []
+      }
+    },
+    {
+      "id": "SOP-G01",
+      "title": "Multi-Team Efficiency Patterns and Anti-Patterns",
+      "date": "2026-03-11",
+      "category": "operations",
+      "tags": [
+        "coordination",
+        "multi-agent",
+        "work-stealing",
+        "pipeline",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "efficiency_guide.json",
+      "trigger": "Efficiency patterns and anti-patterns for multi-team AI coordination using Proto A.",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-011",
+          "SOP-012",
+          "SOP-G02"
+        ]
+      }
+    },
+    {
+      "id": "SOP-G02",
+      "title": "Data Storage Strategy and Knowledge Transfer Protocol",
+      "date": "2026-03-11",
+      "category": "infrastructure",
+      "tags": [
+        "storage",
+        "indexing",
+        "coordination",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "future_team_data_strategy.json",
+      "trigger": "Defines what data to store, where to store it, how to format it, and how to hand off knowledge between sessions.",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-G01",
+          "SOP-013"
+        ]
+      }
+    },
+    {
+      "id": "SOP-G03",
+      "title": "Proto A Coordination Tool SOPs",
+      "date": "2026-03-11",
+      "category": "operations",
+      "tags": [
+        "coordination",
+        "multi-agent",
+        "communication",
+        "message-bus",
+        "work-stealing",
+        "hub-spoke",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "tool_sops.json",
+      "trigger": "Standard Operating Procedures for all Proto A coordination tools (help_protocol, direct_channels, work_stealing, bus_cli, dashboard, think_tank).",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-G01",
+          "SOP-011",
+          "SOP-012"
+        ]
+      }
+    }
+  ],
+  "secondary_indexes": {
+    "by_category": {
+      "operations": [
+        "SOP-011",
+        "SOP-012",
+        "SOP-014",
+        "SOP-016",
+        "SOP-021",
+        "SOP-022",
+        "SOP-G01",
+        "SOP-G03"
+      ],
+      "development": [
+        "SOP-013",
+        "SOP-020"
+      ],
+      "infrastructure": [
+        "SOP-015",
+        "SOP-019",
+        "SOP-G02"
+      ],
+      "data-gathering": [
+        "SOP-017",
+        "SOP-023",
+        "SOP-024",
+        "SOP-027"
+      ],
+      "research": [
+        "SOP-018",
+        "SOP-025",
+        "SOP-026"
+      ]
+    },
+    "by_tag": {
+      "coordination": [
+        "SOP-011",
+        "SOP-012",
+        "SOP-013",
+        "SOP-014",
+        "SOP-016",
+        "SOP-021",
+        "SOP-022",
+        "SOP-G01",
+        "SOP-G02",
+        "SOP-G03"
+      ],
+      "multi-agent": [
+        "SOP-011",
+        "SOP-012",
+        "SOP-013",
+        "SOP-014",
+        "SOP-022",
+        "SOP-G01",
+        "SOP-G03"
+      ],
+      "fan-out": [
+        "SOP-011"
+      ],
+      "sop": [
+        "SOP-011",
+        "SOP-012",
+        "SOP-013",
+        "SOP-014",
+        "SOP-015",
+        "SOP-016",
+        "SOP-017",
+        "SOP-018",
+        "SOP-019",
+        "SOP-020",
+        "SOP-021",
+        "SOP-022",
+        "SOP-023",
+        "SOP-024",
+        "SOP-025",
+        "SOP-026",
+        "SOP-027",
+        "SOP-G01",
+        "SOP-G02",
+        "SOP-G03"
+      ],
+      "monitoring": [
+        "SOP-012",
+        "SOP-015",
+        "SOP-024"
+      ],
+      "hub-spoke": [
+        "SOP-014",
+        "SOP-G03"
+      ],
+      "indexing": [
+        "SOP-015",
+        "SOP-023",
+        "SOP-024",
+        "SOP-025",
+        "SOP-027",
+        "SOP-G02"
+      ],
+      "validation": [
+        "SOP-015",
+        "SOP-017",
+        "SOP-020",
+        "SOP-023",
+        "SOP-024"
+      ],
+      "pipeline": [
+        "SOP-016",
+        "SOP-023",
+        "SOP-027",
+        "SOP-G01"
+      ],
+      "deduplication": [
+        "SOP-016",
+        "SOP-024"
+      ],
+      "data-gathering": [
+        "SOP-017",
+        "SOP-018",
+        "SOP-023",
+        "SOP-024",
+        "SOP-025",
+        "SOP-026",
+        "SOP-027"
+      ],
+      "caching": [
+        "SOP-017"
+      ],
+      "stock-analysis": [
+        "SOP-018"
+      ],
+      "python": [
+        "SOP-019"
+      ],
+      "go": [
+        "SOP-019"
+      ],
+      "sqlite": [
+        "SOP-019",
+        "SOP-021"
+      ],
+      "bug-fix": [
+        "SOP-020"
+      ],
+      "failure-analysis": [
+        "SOP-021"
+      ],
+      "search": [
+        "SOP-023",
+        "SOP-026"
+      ],
+      "automation": [
+        "SOP-025"
+      ],
+      "wikidata": [
+        "SOP-026",
+        "SOP-027"
+      ],
+      "work-stealing": [
+        "SOP-G01",
+        "SOP-G03"
+      ],
+      "storage": [
+        "SOP-G02"
+      ],
+      "communication": [
+        "SOP-G03"
+      ],
+      "message-bus": [
+        "SOP-G03"
+      ]
+    }
+  }
+}
