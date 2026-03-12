@@ -30,7 +30,7 @@ import sys
 import time
 from pathlib import Path
 from collections import defaultdict, Counter
-from datetime import datetime
+from datetime import datetime, timezone
 
 ROUTES_DIR = Path(__file__).parent.parent / "pointer-routes"
 ROUTES_LOG = ROUTES_DIR / "route_log.jsonl"
@@ -79,7 +79,7 @@ def log_route(agent_id: str, task: str, route: list, outcome: str,
         })
 
     record = {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "epoch": time.time(),
         "agent_id": agent_id,
         "task": task,
@@ -108,10 +108,14 @@ def load_routes():
         return []
     routes = []
     with open(ROUTES_LOG) as f:
-        for line in f:
+        for line_num, line in enumerate(f, 1):
             line = line.strip()
             if line:
-                routes.append(json.loads(line))
+                try:
+                    routes.append(json.loads(line))
+                except json.JSONDecodeError as e:
+                    print(f"Warning: skipping corrupt JSONL line {line_num}: {e}",
+                          file=sys.stderr)
     return routes
 
 
@@ -156,7 +160,7 @@ def analyze_routes():
 
     # Build analysis report
     analysis = {
-        "generated": datetime.utcnow().isoformat() + "Z",
+        "generated": datetime.now(timezone.utc).isoformat(),
         "total_routes": len(routes),
         "total_hops": sum(r.get("hop_count", 0) for r in routes),
         "avg_hops_per_route": round(
@@ -219,7 +223,7 @@ def extract_patterns():
         task_routes[r.get("task", "unknown")].append(r)
 
     patterns = {
-        "generated": datetime.utcnow().isoformat() + "Z",
+        "generated": datetime.now(timezone.utc).isoformat(),
         "total_patterns": 0,
         "task_patterns": {}
     }

@@ -10,7 +10,7 @@ import subprocess
 import sys
 import os
 from pathlib import Path
-from collections import defaultdict, Counter
+from collections import defaultdict, Counter, deque
 from datetime import datetime
 
 NETWORK_PATH = Path(__file__).parent.parent / "pointer-network.json"
@@ -83,9 +83,9 @@ def bfs_shortest_path(start, end):
     if start == end:
         return [start]
     visited = {start}
-    queue = [[start]]
+    queue = deque([[start]])
     while queue:
-        path = queue.pop(0)
+        path = queue.popleft()
         current = path[-1]
         node = NODES.get(current, {})
         for ptr in node.get("pointers", []):

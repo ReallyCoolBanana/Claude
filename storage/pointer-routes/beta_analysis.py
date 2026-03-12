@@ -4,7 +4,8 @@ import json
 from collections import defaultdict, Counter
 from pathlib import Path
 
-PN_PATH = Path("/home/user/Claude/storage/pointer-network.json")
+_SCRIPT_DIR = Path(__file__).resolve().parent
+PN_PATH = _SCRIPT_DIR.parent / "pointer-network.json"
 
 with open(PN_PATH) as f:
     pn = json.load(f)
@@ -289,7 +290,7 @@ report = {
     ]
 }
 
-with open("/home/user/Claude/storage/pointer-routes/benchmark_beta_report.json", "w") as f:
+with open(_SCRIPT_DIR / "benchmark_beta_report.json", "w") as f:
     json.dump(report, f, indent=2)
 
 print(f"\n=== REPORT WRITTEN ===")

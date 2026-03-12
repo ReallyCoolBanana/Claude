@@ -15,8 +15,12 @@ ROUTE_TRACKER = BASE / "coordination" / "route_tracker.py"
 REPORT_PATH = Path(__file__).parent / "benchmark_c1_report.json"
 
 # Load pointer network
-with open(PN_PATH) as f:
-    pn = json.load(f)
+try:
+    with open(PN_PATH) as f:
+        pn = json.load(f)
+except FileNotFoundError:
+    print(f"Error: pointer network file not found: {PN_PATH}", file=sys.stderr)
+    sys.exit(1)
 
 nodes = pn["nodes"]
 
