@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "last_updated": "2026-03-12",
-  "entry_count": 41,
+  "entry_count": 48,
   "sources": [
     {
       "id": "SRC-0001",
@@ -330,20 +330,76 @@
       "data_types": ["financial"],
       "access_type": "free",
       "tags": ["financial-api", "public-api"]
+    },
+    {
+      "id": "SRC-0045",
+      "name": "CKAN - US Data.gov",
+      "url": "https://catalog.data.gov/api/3/action/package_search",
+      "data_types": ["government", "general"],
+      "access_type": "free",
+      "tags": ["ckan", "government-api", "open-data", "public-api"]
+    },
+    {
+      "id": "SRC-0046",
+      "name": "CKAN - Canada Open Data",
+      "url": "https://open.canada.ca/data/api/3/action/package_search",
+      "data_types": ["government", "general"],
+      "access_type": "free",
+      "tags": ["ckan", "government-api", "open-data", "public-api"]
+    },
+    {
+      "id": "SRC-0047",
+      "name": "CKAN - Australia data.gov.au",
+      "url": "https://data.gov.au/api/3/action/package_search",
+      "data_types": ["government", "general"],
+      "access_type": "free",
+      "tags": ["ckan", "government-api", "open-data", "public-api"]
+    },
+    {
+      "id": "SRC-0048",
+      "name": "CKAN - UK data.gov.uk",
+      "url": "https://ckan.publishing.service.gov.uk/api/3/action/package_search",
+      "data_types": ["government", "general"],
+      "access_type": "free",
+      "tags": ["ckan", "government-api", "open-data", "public-api"]
+    },
+    {
+      "id": "SRC-0049",
+      "name": "CKAN - European Data Portal",
+      "url": "https://data.europa.eu/api/hub/search/api/3/action/package_search",
+      "data_types": ["government", "general"],
+      "access_type": "free",
+      "tags": ["ckan", "government-api", "open-data", "public-api"]
+    },
+    {
+      "id": "SRC-0050",
+      "name": "MCP Server Ecosystem (Glama.ai)",
+      "url": "https://glama.ai/mcp/servers",
+      "data_types": ["general"],
+      "access_type": "free",
+      "tags": ["mcp", "ai-ml", "tool-registry", "public-api"]
+    },
+    {
+      "id": "SRC-0051",
+      "name": "MCP Server Ecosystem (Smithery.ai)",
+      "url": "https://smithery.ai/",
+      "data_types": ["general"],
+      "access_type": "free",
+      "tags": ["mcp", "ai-ml", "tool-registry", "public-api"]
     }
   ],
   "by_data_type": {
     "financial": ["SRC-0018", "SRC-0024", "SRC-0038", "SRC-0039", "SRC-0040", "SRC-0041", "SRC-0042", "SRC-0043", "SRC-0044"],
     "news": ["SRC-0012", "SRC-0013", "SRC-0014", "SRC-0015", "SRC-0016", "SRC-0017", "SRC-0029", "SRC-0030"],
     "social-media": ["SRC-0029", "SRC-0030"],
-    "government": ["SRC-0018", "SRC-0019", "SRC-0020", "SRC-0023", "SRC-0024", "SRC-0039"],
+    "government": ["SRC-0018", "SRC-0019", "SRC-0020", "SRC-0023", "SRC-0024", "SRC-0039", "SRC-0045", "SRC-0046", "SRC-0047", "SRC-0048", "SRC-0049"],
     "scientific": ["SRC-0001", "SRC-0002", "SRC-0003", "SRC-0004", "SRC-0005", "SRC-0007", "SRC-0008", "SRC-0034"],
     "ai-ml": ["SRC-0035", "SRC-0036", "SRC-0037"],
     "geospatial": ["SRC-0015", "SRC-0021", "SRC-0022", "SRC-0028"],
-    "general": ["SRC-0005", "SRC-0006", "SRC-0008", "SRC-0025", "SRC-0026", "SRC-0027", "SRC-0031", "SRC-0032", "SRC-0033"]
+    "general": ["SRC-0005", "SRC-0006", "SRC-0008", "SRC-0025", "SRC-0026", "SRC-0027", "SRC-0031", "SRC-0032", "SRC-0033", "SRC-0045", "SRC-0046", "SRC-0047", "SRC-0048", "SRC-0049", "SRC-0050", "SRC-0051"]
   },
   "by_access_type": {
-    "free": ["SRC-0002", "SRC-0003", "SRC-0004", "SRC-0005", "SRC-0006", "SRC-0008", "SRC-0013", "SRC-0015", "SRC-0020", "SRC-0021", "SRC-0022", "SRC-0023", "SRC-0024", "SRC-0026", "SRC-0027", "SRC-0028", "SRC-0029", "SRC-0030", "SRC-0032", "SRC-0033", "SRC-0034", "SRC-0042", "SRC-0043", "SRC-0044"],
+    "free": ["SRC-0002", "SRC-0003", "SRC-0004", "SRC-0005", "SRC-0006", "SRC-0008", "SRC-0013", "SRC-0015", "SRC-0020", "SRC-0021", "SRC-0022", "SRC-0023", "SRC-0024", "SRC-0026", "SRC-0027", "SRC-0028", "SRC-0029", "SRC-0030", "SRC-0032", "SRC-0033", "SRC-0034", "SRC-0042", "SRC-0043", "SRC-0044", "SRC-0045", "SRC-0046", "SRC-0047", "SRC-0048", "SRC-0049", "SRC-0050", "SRC-0051"],
     "freemium": ["SRC-0001", "SRC-0012", "SRC-0014", "SRC-0016", "SRC-0017", "SRC-0025", "SRC-0031", "SRC-0035", "SRC-0036", "SRC-0037", "SRC-0038", "SRC-0040", "SRC-0041"],
     "paid": [],
     "api-key-required": ["SRC-0007", "SRC-0018", "SRC-0019", "SRC-0039"]

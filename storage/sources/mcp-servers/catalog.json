@@ -1,0 +1,487 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-03-12",
+  "description": "Catalog of MCP (Model Context Protocol) servers for extending AI capabilities",
+  "registries": [
+    {
+      "name": "Glama.ai",
+      "url": "https://glama.ai/mcp/servers",
+      "description": "Most comprehensive MCP server registry, updated daily"
+    },
+    {
+      "name": "Smithery.ai",
+      "url": "https://smithery.ai/",
+      "description": "MCP server registry and hosting platform with OAuth support"
+    },
+    {
+      "name": "Official MCP Registry",
+      "url": "https://github.com/modelcontextprotocol",
+      "description": "Official Anthropic MCP organization and reference implementations"
+    }
+  ],
+  "servers": [
+    {
+      "name": "filesystem",
+      "description": "Read, write, and manage files and directories",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem",
+      "category": "filesystem",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-filesystem"
+    },
+    {
+      "name": "github",
+      "description": "GitHub API integration for repos, issues, PRs, and code search",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/github",
+      "category": "dev-tool",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-github"
+    },
+    {
+      "name": "gitlab",
+      "description": "GitLab API integration for projects, issues, and merge requests",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/gitlab",
+      "category": "dev-tool",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-gitlab"
+    },
+    {
+      "name": "google-drive",
+      "description": "Google Drive file access and search",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/google-drive",
+      "category": "productivity",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-google-drive"
+    },
+    {
+      "name": "google-maps",
+      "description": "Google Maps geocoding, directions, and place search",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/google-maps",
+      "category": "geospatial",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-google-maps"
+    },
+    {
+      "name": "slack",
+      "description": "Slack messaging, channel management, and search",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/slack",
+      "category": "communication",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-slack"
+    },
+    {
+      "name": "memory",
+      "description": "Persistent memory using a knowledge graph with entities and relations",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/memory",
+      "category": "knowledge",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-memory"
+    },
+    {
+      "name": "postgres",
+      "description": "PostgreSQL database querying and schema inspection",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/postgres",
+      "category": "database",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-postgres"
+    },
+    {
+      "name": "sqlite",
+      "description": "SQLite database operations and analysis",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/sqlite",
+      "category": "database",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-sqlite"
+    },
+    {
+      "name": "puppeteer",
+      "description": "Browser automation for web scraping and testing",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/puppeteer",
+      "category": "web",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-puppeteer"
+    },
+    {
+      "name": "brave-search",
+      "description": "Web search using Brave Search API",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/brave-search",
+      "category": "search",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-brave-search"
+    },
+    {
+      "name": "fetch",
+      "description": "HTTP fetching with content extraction and conversion",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/fetch",
+      "category": "web",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-fetch"
+    },
+    {
+      "name": "everart",
+      "description": "AI image generation via EverArt platform",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/everart",
+      "category": "ai-ml",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-everart"
+    },
+    {
+      "name": "sequential-thinking",
+      "description": "Dynamic chain-of-thought reasoning tool",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking",
+      "category": "reasoning",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-sequential-thinking"
+    },
+    {
+      "name": "sentry",
+      "description": "Sentry error tracking integration for issue analysis",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/sentry",
+      "category": "dev-tool",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-sentry"
+    },
+    {
+      "name": "redis",
+      "description": "Redis key-value store operations",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/redis",
+      "category": "database",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-redis"
+    },
+    {
+      "name": "mysql",
+      "description": "MySQL database querying and schema inspection",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/mysql",
+      "category": "database",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-mysql"
+    },
+    {
+      "name": "aws-kb-retrieval",
+      "description": "AWS Bedrock Knowledge Base retrieval",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/aws-kb-retrieval",
+      "category": "cloud",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-aws-kb-retrieval"
+    },
+    {
+      "name": "linear",
+      "description": "Linear project management - issues, projects, and teams",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/linear",
+      "category": "productivity",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-linear"
+    },
+    {
+      "name": "docker",
+      "description": "Docker container and image management",
+      "source": "https://github.com/ckreiling/mcp-server-docker",
+      "category": "dev-tool",
+      "official": false,
+      "install": "uvx mcp-server-docker"
+    },
+    {
+      "name": "kubernetes",
+      "description": "Kubernetes cluster management and pod operations",
+      "source": "https://github.com/strowk/mcp-k8s-go",
+      "category": "dev-tool",
+      "official": false,
+      "install": "go install github.com/strowk/mcp-k8s-go"
+    },
+    {
+      "name": "notion",
+      "description": "Notion workspace - pages, databases, and search",
+      "source": "https://github.com/makenotion/notion-mcp-server",
+      "category": "productivity",
+      "official": false,
+      "install": "npx -y @notionhq/notion-mcp-server"
+    },
+    {
+      "name": "obsidian",
+      "description": "Obsidian vault reading, searching, and editing",
+      "source": "https://github.com/smithery-ai/mcp-obsidian",
+      "category": "productivity",
+      "official": false,
+      "install": "npx -y mcp-obsidian"
+    },
+    {
+      "name": "todoist",
+      "description": "Todoist task management integration",
+      "source": "https://github.com/abhiz123/todoist-mcp-server",
+      "category": "productivity",
+      "official": false,
+      "install": "npx -y todoist-mcp-server"
+    },
+    {
+      "name": "raycast",
+      "description": "Raycast productivity tool integration",
+      "source": "https://github.com/raycast/mcp-server-raycast",
+      "category": "productivity",
+      "official": false,
+      "install": "npx -y @raycast/mcp-server-raycast"
+    },
+    {
+      "name": "qdrant",
+      "description": "Qdrant vector database for semantic search",
+      "source": "https://github.com/qdrant/mcp-server-qdrant",
+      "category": "database",
+      "official": false,
+      "install": "uvx mcp-server-qdrant"
+    },
+    {
+      "name": "neo4j",
+      "description": "Neo4j graph database queries and schema",
+      "source": "https://github.com/neo4j-contrib/mcp-neo4j",
+      "category": "database",
+      "official": false,
+      "install": "uvx mcp-neo4j"
+    },
+    {
+      "name": "mongodb",
+      "description": "MongoDB document database operations",
+      "source": "https://github.com/mongodb/mongodb-mcp-server",
+      "category": "database",
+      "official": false,
+      "install": "npx -y mongodb-mcp-server"
+    },
+    {
+      "name": "elasticsearch",
+      "description": "Elasticsearch search and analytics queries",
+      "source": "https://github.com/elastic/mcp-server-elasticsearch",
+      "category": "search",
+      "official": false,
+      "install": "npx -y @elastic/mcp-server-elasticsearch"
+    },
+    {
+      "name": "bigquery",
+      "description": "Google BigQuery data warehouse querying",
+      "source": "https://github.com/ergut/mcp-bigquery",
+      "category": "database",
+      "official": false,
+      "install": "npx -y mcp-bigquery"
+    },
+    {
+      "name": "snowflake",
+      "description": "Snowflake data warehouse queries",
+      "source": "https://github.com/datawiz168/mcp-snowflake-service",
+      "category": "database",
+      "official": false,
+      "install": "uvx mcp-snowflake-service"
+    },
+    {
+      "name": "supabase",
+      "description": "Supabase database and auth management",
+      "source": "https://github.com/supabase-community/supabase-mcp",
+      "category": "database",
+      "official": false,
+      "install": "npx -y supabase-mcp-server"
+    },
+    {
+      "name": "playwright",
+      "description": "Browser automation with Playwright for testing and scraping",
+      "source": "https://github.com/executeautomation/mcp-playwright",
+      "category": "web",
+      "official": false,
+      "install": "npx -y @executeautomation/playwright-mcp-server"
+    },
+    {
+      "name": "firecrawl",
+      "description": "Web scraping and crawling with content extraction",
+      "source": "https://github.com/mendableai/firecrawl-mcp-server",
+      "category": "web",
+      "official": false,
+      "install": "npx -y firecrawl-mcp"
+    },
+    {
+      "name": "exa",
+      "description": "Exa AI-powered web search",
+      "source": "https://github.com/exa-labs/exa-mcp-server",
+      "category": "search",
+      "official": false,
+      "install": "npx -y exa-mcp-server"
+    },
+    {
+      "name": "tavily",
+      "description": "Tavily AI search engine for research",
+      "source": "https://github.com/tavily-ai/tavily-mcp",
+      "category": "search",
+      "official": false,
+      "install": "npx -y tavily-mcp"
+    },
+    {
+      "name": "perplexity",
+      "description": "Perplexity AI search with citations",
+      "source": "https://github.com/ppl-ai/modelcontextprotocol",
+      "category": "search",
+      "official": false,
+      "install": "npx -y @anthropic/perplexity-mcp"
+    },
+    {
+      "name": "jira",
+      "description": "Jira project tracking - issues, sprints, and boards",
+      "source": "https://github.com/sooperset/mcp-atlassian",
+      "category": "productivity",
+      "official": false,
+      "install": "uvx mcp-atlassian"
+    },
+    {
+      "name": "confluence",
+      "description": "Confluence wiki - pages, spaces, and search",
+      "source": "https://github.com/sooperset/mcp-atlassian",
+      "category": "productivity",
+      "official": false,
+      "install": "uvx mcp-atlassian"
+    },
+    {
+      "name": "discord",
+      "description": "Discord messaging and server management",
+      "source": "https://github.com/v-3/discordmcp",
+      "category": "communication",
+      "official": false,
+      "install": "npx -y discord-mcp"
+    },
+    {
+      "name": "email",
+      "description": "Email sending and management via SMTP/IMAP",
+      "source": "https://github.com/mcp-servers/mcp-server-email",
+      "category": "communication",
+      "official": false,
+      "install": "npx -y mcp-server-email"
+    },
+    {
+      "name": "twilio",
+      "description": "Twilio SMS and voice communication",
+      "source": "https://github.com/twilio-labs/mcp-server-twilio",
+      "category": "communication",
+      "official": false,
+      "install": "npx -y @twilio-alpha/mcp"
+    },
+    {
+      "name": "stripe",
+      "description": "Stripe payment processing API",
+      "source": "https://github.com/stripe/agent-toolkit",
+      "category": "api",
+      "official": false,
+      "install": "npx -y @stripe/mcp"
+    },
+    {
+      "name": "shopify",
+      "description": "Shopify e-commerce store management",
+      "source": "https://github.com/Shopify/dev-mcp",
+      "category": "api",
+      "official": false,
+      "install": "npx -y @shopify/dev-mcp"
+    },
+    {
+      "name": "cloudflare",
+      "description": "Cloudflare Workers, KV, and DNS management",
+      "source": "https://github.com/cloudflare/mcp-server-cloudflare",
+      "category": "cloud",
+      "official": false,
+      "install": "npx -y @cloudflare/mcp-server-cloudflare"
+    },
+    {
+      "name": "aws-cdk",
+      "description": "AWS CDK infrastructure-as-code assistance",
+      "source": "https://github.com/awslabs/mcp",
+      "category": "cloud",
+      "official": false,
+      "install": "uvx awslabs.aws-documentation-mcp-server"
+    },
+    {
+      "name": "vercel",
+      "description": "Vercel deployment and project management",
+      "source": "https://github.com/vercel/mcp-adapter",
+      "category": "cloud",
+      "official": false,
+      "install": "npx -y @vercel/mcp"
+    },
+    {
+      "name": "terraform",
+      "description": "Terraform infrastructure management and planning",
+      "source": "https://github.com/hashicorp/terraform-mcp-server",
+      "category": "dev-tool",
+      "official": false,
+      "install": "npx -y @hashicorp/terraform-mcp-server"
+    },
+    {
+      "name": "grafana",
+      "description": "Grafana dashboards, alerting, and data exploration",
+      "source": "https://github.com/grafana/mcp-grafana",
+      "category": "monitoring",
+      "official": false,
+      "install": "npx -y mcp-grafana"
+    },
+    {
+      "name": "datadog",
+      "description": "Datadog monitoring and observability queries",
+      "source": "https://github.com/DataDog/datadog-mcp-server",
+      "category": "monitoring",
+      "official": false,
+      "install": "npx -y @datadog/mcp"
+    },
+    {
+      "name": "axiom",
+      "description": "Axiom log analytics and APM querying",
+      "source": "https://github.com/axiomhq/mcp-server-axiom",
+      "category": "monitoring",
+      "official": false,
+      "install": "npx -y @axiomhq/mcp-server-axiom"
+    },
+    {
+      "name": "neon",
+      "description": "Neon serverless PostgreSQL management",
+      "source": "https://github.com/neondatabase/mcp-server-neon",
+      "category": "database",
+      "official": false,
+      "install": "npx -y @neondatabase/mcp-server-neon"
+    },
+    {
+      "name": "time",
+      "description": "Time zone conversion and date/time utilities",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/time",
+      "category": "utility",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-time"
+    },
+    {
+      "name": "cli",
+      "description": "Execute shell commands in a controlled environment",
+      "source": "https://github.com/MladenSU/cli-mcp-server",
+      "category": "dev-tool",
+      "official": false,
+      "install": "uvx cli-mcp-server"
+    },
+    {
+      "name": "git",
+      "description": "Git repository operations - commits, branches, diffs",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/git",
+      "category": "dev-tool",
+      "official": true,
+      "install": "npx -y @modelcontextprotocol/server-git"
+    }
+  ],
+  "categories": {
+    "database": ["postgres", "sqlite", "redis", "mysql", "qdrant", "neo4j", "mongodb", "bigquery", "snowflake", "supabase", "neon"],
+    "dev-tool": ["github", "gitlab", "sentry", "docker", "kubernetes", "terraform", "cli", "git"],
+    "search": ["brave-search", "elasticsearch", "exa", "tavily", "perplexity"],
+    "web": ["puppeteer", "fetch", "playwright", "firecrawl"],
+    "productivity": ["google-drive", "linear", "notion", "obsidian", "todoist", "raycast", "jira", "confluence"],
+    "communication": ["slack", "discord", "email", "twilio"],
+    "cloud": ["aws-kb-retrieval", "cloudflare", "aws-cdk", "vercel"],
+    "monitoring": ["grafana", "datadog", "axiom"],
+    "api": ["stripe", "shopify"],
+    "geospatial": ["google-maps"],
+    "knowledge": ["memory"],
+    "ai-ml": ["everart"],
+    "reasoning": ["sequential-thinking"],
+    "utility": ["time"],
+    "filesystem": ["filesystem"]
+  },
+  "stats": {
+    "total_servers": 55,
+    "official_count": 20,
+    "community_count": 35,
+    "category_count": 15
+  }
+}
