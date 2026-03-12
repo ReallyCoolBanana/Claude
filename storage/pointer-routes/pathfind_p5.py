@@ -292,7 +292,13 @@ def run_all_searches():
     sop_nodes = sorted([nid for nid in network["nodes"] if nid.startswith("SOP-")])
 
     # Pre-compute monitoring goal
-    monitoring_goal_fn, monitoring_domain, _ = make_goal_find_monitoring_tool(network)
+    try:
+        monitoring_goal_fn, monitoring_domain, _ = make_goal_find_monitoring_tool(network)
+        monitoring_goal_available = True
+    except Exception as e:
+        print(f"WARNING: Failed to pre-compute monitoring goal function: {e}")
+        print("  Monitoring tool searches will be skipped.")
+        monitoring_goal_available = False
 
     # Define 20 search tasks
     searches = []
@@ -303,8 +309,11 @@ def run_all_searches():
         searches.append((sop, gf, gd, gt, "p5-1"))
 
     # 5 "find monitoring tool" searches
-    for sop in ["SOP-012", "SOP-015", "SOP-016", "SOP-021", "SOP-029"]:
-        searches.append((sop, monitoring_goal_fn, monitoring_domain, "find-monitoring-tool", "p5-2"))
+    if monitoring_goal_available:
+        for sop in ["SOP-012", "SOP-015", "SOP-016", "SOP-021", "SOP-029"]:
+            searches.append((sop, monitoring_goal_fn, monitoring_domain, "find-monitoring-tool", "p5-2"))
+    else:
+        print("  Skipping 5 'find monitoring tool' searches due to pre-computation failure.")
 
     # 5 "find knowledge" searches with various query tags
     knowledge_queries = [

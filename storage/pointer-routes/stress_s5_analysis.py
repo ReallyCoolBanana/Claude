@@ -181,21 +181,6 @@ def find_bridges(adj_undirected, all_nodes):
     bridges = []
     timer = [0]
 
-    def dfs(u):
-        visited.add(u)
-        disc[u] = low[u] = timer[0]
-        timer[0] += 1
-        for v in adj_undirected.get(u, []):
-            if v not in visited:
-                parent[v] = u
-                dfs(v)
-                low[u] = min(low[u], low[v])
-                if low[v] > disc[u]:
-                    bridges.append((u, v))
-            elif v != parent.get(u):
-                low[u] = min(low[u], disc[v])
-
-    # Need iterative DFS to avoid stack overflow on large graphs
     def dfs_iterative(start):
         stack = [(start, iter(sorted(adj_undirected.get(start, []))), False)]
         visited.add(start)
