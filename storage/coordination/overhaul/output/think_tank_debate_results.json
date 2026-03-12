@@ -1,0 +1,363 @@
+{
+  "timestamp": "2026-03-12T04:22:32",
+  "config": {
+    "work_items": 500,
+    "workers": 10,
+    "simulated_work_ms": 1
+  },
+  "proposals": [
+    {
+      "team": "TT-A (Theory)",
+      "strategy_name": "Chase-Lev Per-Worker Deques",
+      "description": "Each worker maintains a local deque. Work distributed round-robin initially. When empty, steal from random victim's deque bottom.",
+      "rationale": "Eliminates shared DB from hot path entirely. The Chase-Lev deque (1990s) is proven optimal for fork-join parallelism. Used in Cilk, Java ForkJoinPool, Tokio, and Rayon. O(1) local push/pop, stealing only occurs when idle.",
+      "expected_improvement": "10-15x over baseline (no DB in hot path)",
+      "trade_offs": [
+        "No persistent queue (if process crashes, work lost)",
+        "No priority ordering across workers",
+        "Requires all work known upfront"
+      ],
+      "implementation_complexity": "medium",
+      "inspiration": "Chase-Lev '05 deque, Cilk-5 runtime, Blumofe & Leiserson '99"
+    },
+    {
+      "team": "TT-A (Theory)",
+      "strategy_name": "Contract Net Protocol",
+      "description": "Centralized coordinator announces task batches. Workers bid based on current capacity. Coordinator assigns to highest bidder.",
+      "rationale": "Classic multi-agent coordination from AI research (Smith, 1980). Serializes assignment through one coordinator, eliminating worker-worker contention entirely. Used in robotic fleet management.",
+      "expected_improvement": "3-5x (coordinator is bottleneck but no contention)",
+      "trade_offs": [
+        "Coordinator is single point of failure",
+        "Bidding rounds add latency",
+        "Overkill for homogeneous workers"
+      ],
+      "implementation_complexity": "medium",
+      "inspiration": "FIPA Contract Net Protocol, Smith 1980"
+    },
+    {
+      "team": "TT-B (Systems)",
+      "strategy_name": "Go-Style Local Run Queues",
+      "description": "Each worker has bounded local queue (64 items). Overflow goes to global. Workers check: local \u2192 global \u2192 steal from random peer.",
+      "rationale": "The Go runtime scheduler (GMP model) uses this three-tier approach. Local queue is contention-free. Global queue serializes overflow. Stealing is last resort. Proven at massive scale in Go production.",
+      "expected_improvement": "8-12x (most work from local queue, no DB)",
+      "trade_offs": [
+        "Global queue can bottleneck if many workers overflow",
+        "Initial distribution matters a lot",
+        "No persistent state"
+      ],
+      "implementation_complexity": "low",
+      "inspiration": "Go runtime scheduler (GMP model), Vyukov 2013"
+    },
+    {
+      "team": "TT-B (Systems)",
+      "strategy_name": "Two-Level Scheduling",
+      "description": "Level 1: partition work into sub-teams (locality groups). Level 2: within each sub-team, workers steal from neighbors first.",
+      "rationale": "Spark and Dask use two-level scheduling for data locality. By restricting stealing to nearby workers first, we reduce cross-sub-team contention. NUMA-aware approach.",
+      "expected_improvement": "8-10x (locality reduces steal distance)",
+      "trade_offs": [
+        "More complex initial partitioning",
+        "Sub-team imbalance if work is uneven",
+        "Extra indirection layer"
+      ],
+      "implementation_complexity": "medium",
+      "inspiration": "Apache Spark scheduler, Dask distributed scheduler"
+    },
+    {
+      "team": "TT-B (Systems)",
+      "strategy_name": "Backoff + Jitter + Batch",
+      "description": "Batch steal from SQLite with exponential backoff and random jitter when contention detected. Prevents thundering herd.",
+      "rationale": "AWS architecture best practice for distributed systems. Stays compatible with existing SQLite infrastructure while reducing contention via decorrelated jitter backoff.",
+      "expected_improvement": "4-6x (keeps SQLite, reduces contention)",
+      "trade_offs": [
+        "Still uses SQLite (fundamental throughput limit)",
+        "Backoff adds latency under low contention",
+        "Jitter makes performance less predictable"
+      ],
+      "implementation_complexity": "low",
+      "inspiration": "AWS Architecture Blog, Brooker 2015 'Exponential Backoff And Jitter'"
+    }
+  ],
+  "debate_points": [
+    {
+      "team": "TT-C (Challenger)",
+      "target_proposal": "Chase-Lev Per-Worker Deques",
+      "point_type": "challenge",
+      "argument": "Chase-Lev requires all work known upfront. In real multi-agent AI systems, work is discovered dynamically (e.g., research leads to new subtasks). A pure push-based model can't handle work that arrives mid-execution.",
+      "evidence": "KB-0023 shows help_protocol handles dynamic work injection. Chase-Lev deque has no equivalent."
+    },
+    {
+      "team": "TT-C (Challenger)",
+      "target_proposal": "Contract Net Protocol",
+      "point_type": "challenge",
+      "argument": "The bidding window (5ms) adds unnecessary latency for homogeneous workers. With identical LLM agents, there's nothing meaningful to bid on \u2014 all workers have the same capacity. CNP shines when agents are heterogeneous.",
+      "evidence": "Our workers are identical Python threads. CNP was designed for heterogeneous robotic fleets with different capabilities."
+    },
+    {
+      "team": "TT-C (Challenger)",
+      "target_proposal": "Go-Style Local Run Queues",
+      "point_type": "support",
+      "argument": "This is the strongest proposal because it handles dynamic work via the global queue while keeping the hot path lock-free via local queues. It also degrades gracefully: if initial distribution is wrong, stealing corrects it.",
+      "evidence": "Go runtime handles millions of goroutines with this model. It's battle-tested in production at Google scale."
+    },
+    {
+      "team": "TT-C (Challenger)",
+      "target_proposal": "Two-Level Scheduling",
+      "point_type": "question",
+      "argument": "What defines a 'sub-team' in our context? We don't have NUMA nodes or data locality. Without a real locality dimension to exploit, two-level scheduling is just pre-partitioning with extra steps.",
+      "evidence": "In Spark, two-level scheduling exploits data locality (tasks run near their data). Our agents don't have a locality concept."
+    },
+    {
+      "team": "TT-D (Synthesis)",
+      "target_proposal": "ALL",
+      "point_type": "synthesis",
+      "argument": "The key insight is separation of concerns: decouple WORK STORAGE (persistent, in SQLite) from WORK DISTRIBUTION (transient, in-memory). The best strategy keeps SQLite as the durable source of truth but moves the hot path (worker\u2192item assignment) to in-memory structures. The Go-style model with a hierarchical lead achieves this naturally.",
+      "evidence": "KB-0027 showed hierarchical (10.4x) and pre-partition (10.8x) both avoid SQLite in the hot path. The Go model adds dynamic work injection."
+    },
+    {
+      "team": "TT-D (Synthesis)",
+      "target_proposal": "ALL",
+      "point_type": "synthesis",
+      "argument": "RECOMMENDED HYBRID: Hierarchical lead batch-steals from SQLite into an in-memory Go-style multi-queue dispatcher. Workers pull from local queues. When local is empty, steal from peers. When no peers have work, request from the lead's global buffer. This combines the durability of SQLite with the performance of in-memory distribution.",
+      "evidence": "Combines hierarchical (10.4x), Go-style (locality), and Chase-Lev (O(1) local ops). Expected: 10-12x improvement with dynamic work support."
+    }
+  ],
+  "benchmark_results": [
+    {
+      "strategy": "baseline_single_steal",
+      "throughput": 901.37,
+      "distribution_cv": 0.592,
+      "steal_ratio": 3.359,
+      "coordination_ops": 1010,
+      "items_completed": 500,
+      "duration_s": 0.555,
+      "items_per_worker": [
+        66,
+        30,
+        72,
+        21,
+        71,
+        15,
+        101,
+        27,
+        25,
+        72
+      ],
+      "extra": {}
+    },
+    {
+      "strategy": "hierarchical_lead",
+      "throughput": 8480.61,
+      "distribution_cv": 0.0,
+      "steal_ratio": 0.039,
+      "coordination_ops": 26,
+      "items_completed": 500,
+      "duration_s": 0.059,
+      "items_per_worker": [
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "extra": {}
+    },
+    {
+      "strategy": "chase_lev_deques",
+      "throughput": 8803.35,
+      "distribution_cv": 0.0,
+      "steal_ratio": 0.0,
+      "coordination_ops": 90,
+      "items_completed": 500,
+      "duration_s": 0.057,
+      "items_per_worker": [
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "extra": {
+        "inspiration": "Chase-Lev deque, Cilk runtime"
+      }
+    },
+    {
+      "strategy": "contract_net_protocol",
+      "throughput": 7275.97,
+      "distribution_cv": 0.1033,
+      "steal_ratio": 0.1,
+      "coordination_ops": 0,
+      "items_completed": 500,
+      "duration_s": 0.069,
+      "items_per_worker": [
+        46,
+        46,
+        56,
+        46,
+        46,
+        46,
+        46,
+        56,
+        56,
+        56
+      ],
+      "extra": {
+        "inspiration": "FIPA Contract Net Protocol"
+      }
+    },
+    {
+      "strategy": "go_scheduler_local_queues",
+      "throughput": 8536.39,
+      "distribution_cv": 0.0,
+      "steal_ratio": 0.001,
+      "coordination_ops": 300,
+      "items_completed": 500,
+      "duration_s": 0.059,
+      "items_per_worker": [
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "extra": {
+        "inspiration": "Go GMP scheduler",
+        "source_breakdown": {
+          "local": 500,
+          "global": 0,
+          "stolen": 0
+        }
+      }
+    },
+    {
+      "strategy": "two_level_scheduling",
+      "throughput": 8818.94,
+      "distribution_cv": 0.0,
+      "steal_ratio": 0.0,
+      "coordination_ops": 342,
+      "items_completed": 500,
+      "duration_s": 0.057,
+      "items_per_worker": [
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "extra": {
+        "inspiration": "Spark/Dask two-level scheduling",
+        "num_subteams": 3
+      }
+    },
+    {
+      "strategy": "backoff_jitter_batch",
+      "throughput": 2189.04,
+      "distribution_cv": 0.763,
+      "steal_ratio": 1.412,
+      "coordination_ops": 150,
+      "items_completed": 500,
+      "duration_s": 0.228,
+      "items_per_worker": [
+        90,
+        0,
+        80,
+        0,
+        85,
+        55,
+        85,
+        0,
+        35,
+        70
+      ],
+      "extra": {
+        "inspiration": "AWS exponential backoff with jitter"
+      }
+    }
+  ],
+  "rankings": [
+    {
+      "rank": 1,
+      "strategy": "two_level_scheduling",
+      "composite_score": 1.0,
+      "throughput": 8818.94,
+      "vs_baseline": 9.8,
+      "distribution_cv": 0.0,
+      "steal_ratio": 0.0
+    },
+    {
+      "rank": 2,
+      "strategy": "chase_lev_deques",
+      "composite_score": 0.999,
+      "throughput": 8803.35,
+      "vs_baseline": 9.8,
+      "distribution_cv": 0.0,
+      "steal_ratio": 0.0
+    },
+    {
+      "rank": 3,
+      "strategy": "go_scheduler_local_queues",
+      "composite_score": 0.987,
+      "throughput": 8536.39,
+      "vs_baseline": 9.5,
+      "distribution_cv": 0.0,
+      "steal_ratio": 0.001
+    },
+    {
+      "rank": 4,
+      "strategy": "hierarchical_lead",
+      "composite_score": 0.981,
+      "throughput": 8480.61,
+      "vs_baseline": 9.4,
+      "distribution_cv": 0.0,
+      "steal_ratio": 0.039
+    },
+    {
+      "rank": 5,
+      "strategy": "contract_net_protocol",
+      "composite_score": 0.88,
+      "throughput": 7275.97,
+      "vs_baseline": 8.1,
+      "distribution_cv": 0.1033,
+      "steal_ratio": 0.1
+    },
+    {
+      "rank": 6,
+      "strategy": "backoff_jitter_batch",
+      "composite_score": 0.273,
+      "throughput": 2189.04,
+      "vs_baseline": 2.4,
+      "distribution_cv": 0.763,
+      "steal_ratio": 1.412
+    },
+    {
+      "rank": 7,
+      "strategy": "baseline_single_steal",
+      "composite_score": 0.108,
+      "throughput": 901.37,
+      "vs_baseline": 1.0,
+      "distribution_cv": 0.592,
+      "steal_ratio": 3.359
+    }
+  ],
+  "winner": "two_level_scheduling",
+  "synthesis": "Hybrid hierarchical+Go-style: SQLite for durability, lead batch-steals into in-memory multi-queue dispatcher, workers pull locally, steal from peers, fallback to lead buffer."
+}

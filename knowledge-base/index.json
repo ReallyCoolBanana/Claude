@@ -1,7 +1,7 @@
 {
   "version": "1.0",
-  "last_updated": "2026-03-11",
-  "entry_count": 25,
+  "last_updated": "2026-03-12",
+  "entry_count": 37,
   "entries": [
     {
       "id": "KB-0001",
@@ -537,12 +537,214 @@
       "builds_on": [
         "KB-0024"
       ]
+    },
+    {
+      "id": "KB-0026",
+      "title": "Multi-Agent Coordination System Benchmark Results",
+      "date": "2026-03-12",
+      "team": "bench-coordination",
+      "category": "optimization",
+      "tags": [
+        "benchmark",
+        "multi-agent",
+        "coordination",
+        "scaling",
+        "proto-a",
+        "work-stealing",
+        "pipeline",
+        "capability-matching"
+      ],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": [
+        "KB-0023",
+        "KB-0024",
+        "KB-0025"
+      ]
+    },
+    {
+      "id": "KB-0027",
+      "title": "Large-Team Efficiency Experiment: 8 Strategies Compared (10x Improvement Found)",
+      "date": "2026-03-12",
+      "team": "bench-coordination",
+      "category": "optimization",
+      "tags": [
+        "benchmark",
+        "efficiency",
+        "large-teams",
+        "work-stealing",
+        "batch-steal",
+        "pre-partition",
+        "hierarchical",
+        "coordination-overhead"
+      ],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": [
+        "KB-0026"
+      ]
+    },
+    {
+      "id": "KB-0028",
+      "title": "Think Tank Debate: 7 Coordination Strategies Benchmarked (External Research)",
+      "date": "2026-03-12",
+      "team": "bench-coordination",
+      "category": "optimization",
+      "tags": [
+        "benchmark",
+        "think-tank",
+        "debate",
+        "chase-lev",
+        "contract-net",
+        "go-scheduler",
+        "two-level",
+        "backoff-jitter",
+        "work-stealing",
+        "coordination-strategies"
+      ],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": [
+        "KB-0026",
+        "KB-0027"
+      ]
+    },
+    {
+      "id": "KB-0029",
+      "title": "Vulkan Graphics API: Comprehensive Research Reference",
+      "date": "2026-03-12",
+      "team": "vulkan-research",
+      "category": "methodology",
+      "tags": [
+        "vulkan",
+        "graphics-api",
+        "gpu",
+        "rendering",
+        "compute-shaders",
+        "ray-tracing",
+        "memory-management",
+        "synchronization",
+        "SPIR-V",
+        "cross-platform"
+      ],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": []
+    },
+    {
+      "id": "KB-0030",
+      "title": "Vulkan API Libraries: Comprehensive Catalog",
+      "date": "2026-03-12",
+      "team": "vulkan-research",
+      "category": "tool-usage",
+      "tags": [
+        "vulkan",
+        "libraries",
+        "vk-bootstrap",
+        "VMA",
+        "GLM",
+        "GLFW",
+        "SDL",
+        "shaderc",
+        "SPIRV-Cross",
+        "stb_image",
+        "tinyobjloader",
+        "volk"
+      ],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": [
+        "KB-0029"
+      ]
+    },
+    {
+      "id": "KB-0031",
+      "title": "Multi-Agent Coordination: Academic Research Survey (6 Areas)",
+      "date": "2026-03-12",
+      "team": "bench-coordination",
+      "category": "optimization",
+      "tags": ["multi-agent", "task-allocation", "coordination", "SQLite", "write-coalescing", "team-sizing", "scheduling", "work-stealing", "join-idle-queue", "error-amplification"],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": ["KB-0026", "KB-0027", "KB-0028"]
+    },
+    {
+      "id": "KB-0032",
+      "title": "Concurrent Work Distribution Patterns: Deep Research Survey",
+      "date": "2026-03-12",
+      "team": "bench-coordination",
+      "category": "optimization",
+      "tags": ["work-stealing", "concurrent-queues", "chase-lev", "go-scheduler", "tokio", "forkjoinpool", "lock-free", "ray", "dask", "batch-sizing", "game-engine-patterns", "scheduling"],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": ["KB-0026", "KB-0027", "KB-0028"]
+    },
+    {
+      "id": "KB-0033",
+      "title": "Vulkan Graphics API: Comprehensive Technical Reference",
+      "date": "2026-03-12",
+      "team": "vulkan-research",
+      "category": "tool-usage",
+      "tags": ["vulkan", "graphics-api", "rendering-pipeline", "compute-shaders", "synchronization", "memory-management", "ray-tracing", "mesh-shaders", "spir-v", "validation-layers", "performance", "cross-platform"],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": ["KB-0029", "KB-0030"]
+    },
+    {
+      "id": "KB-0034",
+      "title": "Vulkan CMake Build Patterns: FetchContent, Shaders, and Distribution",
+      "date": "2026-03-12",
+      "team": "vulkan-research",
+      "category": "tool-usage",
+      "tags": ["cmake", "fetchcontent", "vulkan", "shader-compilation", "spir-v", "windows-build", "msvc", "distribution", "embedding"],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": ["KB-0030", "KB-0033"]
+    },
+    {
+      "id": "KB-0035",
+      "title": "Coordination Improvement Patterns: Implementation-Ready Research",
+      "date": "2026-03-12",
+      "team": "bench-coordination",
+      "category": "optimization",
+      "tags": ["write-coalescing", "join-idle-queue", "power-of-two-choices", "event-driven", "adaptive-batching", "lifo-slot", "sqlite", "work-stealing", "coordination", "implementation-patterns"],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": ["KB-0031", "KB-0032", "KB-0026", "KB-0027"]
+    },
+    {
+      "id": "KB-0036",
+      "title": "Vulkan Initialization Code Patterns: vk-bootstrap + VMA Reference",
+      "date": "2026-03-12",
+      "team": "vulkan-research",
+      "category": "tool-usage",
+      "tags": ["vulkan", "vk-bootstrap", "VMA", "initialization", "swapchain", "command-buffers", "synchronization", "cleanup", "frames-in-flight", "code-patterns"],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": ["KB-0029", "KB-0030", "KB-0033"]
+    },
+    {
+      "id": "KB-0037",
+      "title": "Vulkan Rendering Techniques: Lighting, Geometry, Animation, and Synchronization",
+      "date": "2026-03-12",
+      "team": "vulkan-research",
+      "category": "tool-usage",
+      "tags": ["vulkan", "lighting", "blinn-phong", "uv-sphere", "orbit-animation", "push-constants", "depth-buffer", "reverse-z", "swapchain-recreation", "frames-in-flight", "arcball-camera", "glm"],
+      "status": "validated",
+      "confidence": "high",
+      "builds_on": ["KB-0029", "KB-0033", "KB-0036"]
     }
   ],
   "categories": {
     "optimization": [
       "KB-0001",
-      "KB-0009"
+      "KB-0009",
+      "KB-0026",
+      "KB-0027",
+      "KB-0035",
+      "KB-0028",
+      "KB-0031",
+      "KB-0032"
     ],
     "integration": [
       "KB-0002",
@@ -566,10 +768,16 @@
       "KB-0011",
       "KB-0018",
       "KB-0020",
-      "KB-0021"
+      "KB-0021",
+      "KB-0029"
     ],
     "tool-usage": [
-      "KB-0006"
+      "KB-0006",
+      "KB-0030",
+      "KB-0033",
+      "KB-0034",
+      "KB-0036",
+      "KB-0037"
     ],
     "testing": [
       "KB-0024"
@@ -906,6 +1114,225 @@
     ],
     "gap-entry": [
       "KB-0011"
+    ],
+    "benchmark": [
+      "KB-0026",
+      "KB-0027",
+      "KB-0028"
+    ],
+    "think-tank": [
+      "KB-0021",
+      "KB-0028"
+    ],
+    "debate": [
+      "KB-0028"
+    ],
+    "chase-lev": [
+      "KB-0028"
+    ],
+    "contract-net": [
+      "KB-0028"
+    ],
+    "go-scheduler": [
+      "KB-0028"
+    ],
+    "two-level": [
+      "KB-0028"
+    ],
+    "backoff-jitter": [
+      "KB-0028"
+    ],
+    "work-stealing": [
+      "KB-0026",
+      "KB-0027",
+      "KB-0028",
+      "KB-0035"
+    ],
+    "write-coalescing": [
+      "KB-0035"
+    ],
+    "join-idle-queue": [
+      "KB-0035"
+    ],
+    "power-of-two-choices": [
+      "KB-0035"
+    ],
+    "event-driven": [
+      "KB-0035"
+    ],
+    "adaptive-batching": [
+      "KB-0035"
+    ],
+    "lifo-slot": [
+      "KB-0035"
+    ],
+    "implementation-patterns": [
+      "KB-0035"
+    ],
+    "coordination-strategies": [
+      "KB-0028"
+    ],
+    "cmake": [
+      "KB-0034"
+    ],
+    "fetchcontent": [
+      "KB-0034"
+    ],
+    "shader-compilation": [
+      "KB-0034"
+    ],
+    "windows-build": [
+      "KB-0034"
+    ],
+    "msvc": [
+      "KB-0034"
+    ],
+    "distribution": [
+      "KB-0034"
+    ],
+    "embedding": [
+      "KB-0034"
+    ],
+    "vulkan": [
+      "KB-0029",
+      "KB-0030",
+      "KB-0033",
+      "KB-0034",
+      "KB-0036",
+      "KB-0037"
+    ],
+    "graphics-api": [
+      "KB-0029",
+      "KB-0033"
+    ],
+    "gpu": [
+      "KB-0029"
+    ],
+    "rendering": [
+      "KB-0029"
+    ],
+    "compute-shaders": [
+      "KB-0029",
+      "KB-0033"
+    ],
+    "ray-tracing": [
+      "KB-0029",
+      "KB-0033"
+    ],
+    "memory-management": [
+      "KB-0029",
+      "KB-0033"
+    ],
+    "synchronization": [
+      "KB-0029",
+      "KB-0033"
+    ],
+    "SPIR-V": [
+      "KB-0029"
+    ],
+    "spir-v": [
+      "KB-0033",
+      "KB-0034"
+    ],
+    "cross-platform": [
+      "KB-0029",
+      "KB-0033"
+    ],
+    "rendering-pipeline": [
+      "KB-0033"
+    ],
+    "mesh-shaders": [
+      "KB-0033"
+    ],
+    "validation-layers": [
+      "KB-0033"
+    ],
+    "performance": [
+      "KB-0033"
+    ],
+    "initialization": [
+      "KB-0036"
+    ],
+    "swapchain": [
+      "KB-0036"
+    ],
+    "command-buffers": [
+      "KB-0036"
+    ],
+    "cleanup": [
+      "KB-0036"
+    ],
+    "frames-in-flight": [
+      "KB-0036",
+      "KB-0037"
+    ],
+    "code-patterns": [
+      "KB-0036"
+    ],
+    "lighting": [
+      "KB-0037"
+    ],
+    "blinn-phong": [
+      "KB-0037"
+    ],
+    "uv-sphere": [
+      "KB-0037"
+    ],
+    "orbit-animation": [
+      "KB-0037"
+    ],
+    "push-constants": [
+      "KB-0037"
+    ],
+    "depth-buffer": [
+      "KB-0037"
+    ],
+    "reverse-z": [
+      "KB-0037"
+    ],
+    "swapchain-recreation": [
+      "KB-0037"
+    ],
+    "arcball-camera": [
+      "KB-0037"
+    ],
+    "glm": [
+      "KB-0037"
+    ],
+    "libraries": [
+      "KB-0030"
+    ],
+    "vk-bootstrap": [
+      "KB-0030",
+      "KB-0036"
+    ],
+    "VMA": [
+      "KB-0030",
+      "KB-0036"
+    ],
+    "GLM": [
+      "KB-0030"
+    ],
+    "GLFW": [
+      "KB-0030"
+    ],
+    "SDL": [
+      "KB-0030"
+    ],
+    "shaderc": [
+      "KB-0030"
+    ],
+    "SPIRV-Cross": [
+      "KB-0030"
+    ],
+    "stb_image": [
+      "KB-0030"
+    ],
+    "tinyobjloader": [
+      "KB-0030"
+    ],
+    "volk": [
+      "KB-0030"
     ]
   }
 }

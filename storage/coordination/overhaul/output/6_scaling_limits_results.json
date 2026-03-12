@@ -1,0 +1,129 @@
+[
+  {
+    "dimension": "scaling_limits",
+    "test_name": "scale_5_agents",
+    "metrics": {
+      "num_agents": 5,
+      "total_items": 100,
+      "items_completed": 100,
+      "duration_s": 0.173,
+      "throughput_items_per_s": 577.56,
+      "per_agent_throughput": 115.51,
+      "avg_steal_latency_ms": 49.157,
+      "p95_steal_latency_ms": 27.084,
+      "total_contention_events": 0,
+      "contention_per_agent": 0.0,
+      "thread_errors": 0
+    },
+    "passed": true,
+    "duration_s": 0.173,
+    "details": "5 agents: 577.6 items/s, steal_avg=49.2ms, contention=0",
+    "errors": []
+  },
+  {
+    "dimension": "scaling_limits",
+    "test_name": "scale_10_agents",
+    "metrics": {
+      "num_agents": 10,
+      "total_items": 200,
+      "items_completed": 200,
+      "duration_s": 0.41,
+      "throughput_items_per_s": 487.42,
+      "per_agent_throughput": 48.74,
+      "avg_steal_latency_ms": 116.355,
+      "p95_steal_latency_ms": 35.265,
+      "total_contention_events": 0,
+      "contention_per_agent": 0.0,
+      "thread_errors": 0
+    },
+    "passed": true,
+    "duration_s": 0.41,
+    "details": "10 agents: 487.4 items/s, steal_avg=116.4ms, contention=0",
+    "errors": []
+  },
+  {
+    "dimension": "scaling_limits",
+    "test_name": "scale_20_agents",
+    "metrics": {
+      "num_agents": 20,
+      "total_items": 400,
+      "items_completed": 400,
+      "duration_s": 0.602,
+      "throughput_items_per_s": 664.1,
+      "per_agent_throughput": 33.2,
+      "avg_steal_latency_ms": 85.06,
+      "p95_steal_latency_ms": 92.542,
+      "total_contention_events": 0,
+      "contention_per_agent": 0.0,
+      "thread_errors": 0
+    },
+    "passed": true,
+    "duration_s": 0.602,
+    "details": "20 agents: 664.1 items/s, steal_avg=85.1ms, contention=0",
+    "errors": []
+  },
+  {
+    "dimension": "scaling_limits",
+    "test_name": "scale_50_agents",
+    "metrics": {
+      "num_agents": 50,
+      "total_items": 1000,
+      "items_completed": 1000,
+      "duration_s": 1.552,
+      "throughput_items_per_s": 644.54,
+      "per_agent_throughput": 12.89,
+      "avg_steal_latency_ms": 214.721,
+      "p95_steal_latency_ms": 184.294,
+      "total_contention_events": 0,
+      "contention_per_agent": 0.0,
+      "thread_errors": 0
+    },
+    "passed": true,
+    "duration_s": 1.552,
+    "details": "50 agents: 644.5 items/s, steal_avg=214.7ms, contention=0",
+    "errors": []
+  },
+  {
+    "dimension": "scaling_limits",
+    "test_name": "scaling_bottleneck_analysis",
+    "metrics": {
+      "agent_counts_tested": [
+        5,
+        10,
+        20,
+        50
+      ],
+      "throughputs": {
+        "5": 577.56,
+        "10": 487.42,
+        "20": 664.1,
+        "50": 644.54
+      },
+      "per_agent_throughputs": {
+        "5": 115.51,
+        "10": 48.74,
+        "20": 33.2,
+        "50": 12.89
+      },
+      "steal_latencies_ms": {
+        "5": 49.16,
+        "10": 116.36,
+        "20": 85.06,
+        "50": 214.72
+      },
+      "contention_events": {
+        "5": 0,
+        "10": 0,
+        "20": 0,
+        "50": 0
+      },
+      "biggest_efficiency_drop_at": 10,
+      "latency_spike_at": null,
+      "linear_scaling_efficiency": 11.2
+    },
+    "passed": true,
+    "duration_s": 0.0,
+    "details": "Biggest efficiency drop at 10 agents. Latency spike at none detected. Linear scaling efficiency: 11.2%",
+    "errors": []
+  }
+]

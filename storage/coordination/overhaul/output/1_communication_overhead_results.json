@@ -1,0 +1,53 @@
+[
+  {
+    "dimension": "communication_overhead",
+    "test_name": "overhead_per_deliverable",
+    "metrics": {
+      "deliverables_produced": 27,
+      "bus_writes": 99,
+      "db_ops": 45,
+      "ack_roundtrips": 27,
+      "total_coordination_ops": 171,
+      "overhead_ratio": 6.33,
+      "overhead_pct": 86.4,
+      "agents": 9
+    },
+    "passed": true,
+    "duration_s": 0.027,
+    "details": "Overhead ratio: 6.33 coordination ops per deliverable",
+    "errors": []
+  },
+  {
+    "dimension": "communication_overhead",
+    "test_name": "bus_throughput_9_agents",
+    "metrics": {
+      "total_messages": 900,
+      "expected_messages": 900,
+      "messages_per_second": 9583.6,
+      "avg_write_latency_ms": 0.842,
+      "p95_write_latency_ms": 2.784,
+      "p99_write_latency_ms": 4.746,
+      "thread_errors": 0
+    },
+    "passed": true,
+    "duration_s": 0.094,
+    "details": "900 messages in 0.09s = 9584 msg/s",
+    "errors": []
+  },
+  {
+    "dimension": "communication_overhead",
+    "test_name": "direct_channel_latency",
+    "metrics": {
+      "messages_sent": 50,
+      "messages_received": 50,
+      "avg_send_latency_ms": 0.519,
+      "p95_send_latency_ms": 0.591,
+      "total_read_time_ms": 0.661,
+      "read_throughput_msg_per_s": 50000.0
+    },
+    "passed": true,
+    "duration_s": 0.03,
+    "details": "Sent 50, received 50",
+    "errors": []
+  }
+]

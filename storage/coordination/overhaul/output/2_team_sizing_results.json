@@ -1,0 +1,140 @@
+[
+  {
+    "dimension": "team_sizing",
+    "test_name": "team_size_2_agents",
+    "metrics": {
+      "team_size": 2,
+      "total_items": 100,
+      "items_completed": 100,
+      "duration_s": 0.172,
+      "throughput_items_per_s": 580.54,
+      "per_agent_throughput": 290.27,
+      "steal_overhead_s": 0.052,
+      "work_time_s": 0.111,
+      "steal_to_work_ratio": 0.468,
+      "distribution_cv": 0.028,
+      "items_per_agent": [
+        49,
+        51
+      ],
+      "expected_efficiency_formula": 2.3784,
+      "thread_errors": 0
+    },
+    "passed": true,
+    "duration_s": 0.172,
+    "details": "Size 2: 580.5 items/s total, 290.3/agent, steal/work ratio=0.468, CV=0.028",
+    "errors": []
+  },
+  {
+    "dimension": "team_sizing",
+    "test_name": "team_size_3_agents",
+    "metrics": {
+      "team_size": 3,
+      "total_items": 100,
+      "items_completed": 100,
+      "duration_s": 0.196,
+      "throughput_items_per_s": 510.28,
+      "per_agent_throughput": 170.09,
+      "steal_overhead_s": 0.068,
+      "work_time_s": 0.111,
+      "steal_to_work_ratio": 0.611,
+      "distribution_cv": 0.332,
+      "items_per_agent": [
+        32,
+        23,
+        45
+      ],
+      "expected_efficiency_formula": 1.7548,
+      "thread_errors": 0
+    },
+    "passed": true,
+    "duration_s": 0.196,
+    "details": "Size 3: 510.3 items/s total, 170.1/agent, steal/work ratio=0.611, CV=0.332",
+    "errors": []
+  },
+  {
+    "dimension": "team_sizing",
+    "test_name": "team_size_4_agents",
+    "metrics": {
+      "team_size": 4,
+      "total_items": 100,
+      "items_completed": 100,
+      "duration_s": 0.186,
+      "throughput_items_per_s": 536.31,
+      "per_agent_throughput": 134.08,
+      "steal_overhead_s": 0.135,
+      "work_time_s": 0.111,
+      "steal_to_work_ratio": 1.215,
+      "distribution_cv": 0.642,
+      "items_per_agent": [
+        46,
+        29,
+        11,
+        14
+      ],
+      "expected_efficiency_formula": 1.4142,
+      "thread_errors": 0
+    },
+    "passed": true,
+    "duration_s": 0.186,
+    "details": "Size 4: 536.3 items/s total, 134.1/agent, steal/work ratio=1.215, CV=0.642",
+    "errors": []
+  },
+  {
+    "dimension": "team_sizing",
+    "test_name": "team_size_5_agents",
+    "metrics": {
+      "team_size": 5,
+      "total_items": 100,
+      "items_completed": 100,
+      "duration_s": 0.169,
+      "throughput_items_per_s": 592.13,
+      "per_agent_throughput": 118.43,
+      "steal_overhead_s": 0.134,
+      "work_time_s": 0.11,
+      "steal_to_work_ratio": 1.216,
+      "distribution_cv": 0.539,
+      "items_per_agent": [
+        7,
+        13,
+        31,
+        18,
+        31
+      ],
+      "expected_efficiency_formula": 1.1963,
+      "thread_errors": 0
+    },
+    "passed": true,
+    "duration_s": 0.169,
+    "details": "Size 5: 592.1 items/s total, 118.4/agent, steal/work ratio=1.216, CV=0.539",
+    "errors": []
+  },
+  {
+    "dimension": "team_sizing",
+    "test_name": "efficiency_formula_validation",
+    "metrics": {
+      "measured_exponent": -0.9876,
+      "expected_exponent": -0.75,
+      "exponent_delta": 0.2376,
+      "measured_coefficient": 1.8799,
+      "expected_coefficient": 4.0,
+      "formula_match_within_0.5": true,
+      "normalized_efficiencies": {
+        "2": 1.0,
+        "3": 0.586,
+        "4": 0.4619,
+        "5": 0.408
+      },
+      "raw_per_agent_throughputs": {
+        "2": 290.27,
+        "3": 170.09,
+        "4": 134.08,
+        "5": 118.43
+      }
+    },
+    "passed": true,
+    "duration_s": 0.0,
+    "details": "Measured: E = 1.88 * N^(-0.988), Expected: E = 4.0 * N^(-0.75). Exponent delta: 0.238",
+    "errors": []
+  }
+]
