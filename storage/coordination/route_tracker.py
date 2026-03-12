@@ -338,6 +338,13 @@ def recommend_route(task: str, entry_node: str = None):
     except Exception:
         pn = {"nodes": {}}
 
+    # Fix #5: Validate that entry_node exists in the pointer network
+    if entry_node and entry_node not in pn.get("nodes", {}):
+        print(f"Warning: entry node '{entry_node}' not found in pointer network")
+        # Continue with pattern-based recommendation only (already attempted above)
+        print(f"No route recommendation available for task='{task}', entry='{entry_node}'")
+        return None
+
     if entry_node:
         node = pn.get("nodes", {}).get(entry_node, {})
         primary = [p for p in node.get("pointers", [])
@@ -361,24 +368,36 @@ def recommend_route(task: str, entry_node: str = None):
             print(f"No history for '{task}'. Related tools from {entry_node}: {targets}")
             return targets
     else:
-        # Fix #3: When entry_node is None and no patterns, search all SOP nodes
+        # Fix #3+#4: When entry_node is None and no patterns, search all SOP nodes
+        # Fix #4: Score by pointer_count * (1 + tag_match_bonus) for task relevance
+        task_keywords = set(task.lower().replace("-", " ").replace("_", " ").split())
         best_node = None
-        best_count = 0
+        best_score = 0
         for node_id, node_data in pn.get("nodes", {}).items():
             if not node_id.startswith("SOP-"):
                 continue
             pointers = node_data.get("pointers", [])
             relevant = [p for p in pointers
                         if p.get("strength") in ("primary", "supporting")]
-            if len(relevant) > best_count:
-                best_count = len(relevant)
+            pointer_count = len(relevant)
+            if pointer_count == 0:
+                continue
+            # Check tag overlap with task keywords
+            tags = node_data.get("tags", [])
+            tag_words = set()
+            for tag in tags:
+                tag_words.update(tag.lower().replace("-", " ").replace("_", " ").split())
+            tag_matches = len(task_keywords & tag_words)
+            score = pointer_count * (1 + tag_matches)
+            if score > best_score:
+                best_score = score
                 best_node = node_id
         if best_node:
             node_data = pn["nodes"][best_node]
             targets = [p["to"] for p in node_data.get("pointers", [])
                        if p.get("strength") in ("primary", "supporting")]
             print(f"No history for '{task}'. Best-connected SOP: {best_node} "
-                  f"with {best_count} primary/supporting pointers: {targets}")
+                  f"with score {best_score} (pointer+tag relevance): {targets}")
             return targets
 
     print(f"No route recommendation available for task='{task}', entry='{entry_node}'")

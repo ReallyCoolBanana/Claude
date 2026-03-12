@@ -1,0 +1,188 @@
+{
+  "title": "Pointer Network Benchmark — Master Report",
+  "timestamp": "2026-03-12T22:16:00Z",
+  "scope": "Full network benchmark with 4 audit teams + 3 repair teams",
+
+  "network_before": {
+    "total_nodes": 310,
+    "total_edges": 4535,
+    "edges_with_strength": 397,
+    "orphan_nodes": 96,
+    "sops_with_primary_pointer": 6,
+    "sops_without_primary_pointer": 16,
+    "missing_backlinks_high_weight": 26,
+    "unreachable_scripts_from_sops": 7
+  },
+
+  "network_after": {
+    "total_edges_with_strength": 625,
+    "orphan_critical_nodes_fixed": 4,
+    "sops_with_primary_pointer": 22,
+    "sops_without_primary_pointer": 0,
+    "missing_backlinks_fixed": 26,
+    "new_pointers_added": 45,
+    "unreachable_scripts_fixed": 7,
+    "recommendation_bugs_fixed": 4
+  },
+
+  "benchmark_stats": {
+    "total_routes_logged": 95,
+    "total_hops_recorded": 144,
+    "agents_deployed": 26,
+    "task_types_tested": 16,
+    "benchmark_teams": 4,
+    "repair_teams": 3,
+    "avg_hops_per_route": 1.52,
+    "outcome_distribution": {
+      "success": 65,
+      "failure": 18,
+      "partial": 12
+    },
+    "overall_success_rate_pct": 68.4
+  },
+
+  "team_reports": {
+    "alpha": {
+      "team": "Team Alpha — SOP Strength Validation",
+      "agents": ["alpha-1", "alpha-2", "alpha-3", "alpha-4", "alpha-5", "alpha-6"],
+      "task": "strength-validation",
+      "sops_audited": 22,
+      "findings": {
+        "sops_missing_primary": 16,
+        "high_weight_unclassified": 8,
+        "misclassified_edges": 0,
+        "coverage_gaps": 13
+      },
+      "severity": "critical",
+      "report_file": "storage/pointer-routes/benchmark_alpha_report.json"
+    },
+    "beta": {
+      "team": "Team Beta — Dead Route & Orphan Detection",
+      "agents": ["beta-1", "beta-2", "beta-3", "beta-4"],
+      "task": "dead-route-detection",
+      "findings": {
+        "orphan_nodes_total": 96,
+        "critical_orphans": 4,
+        "missing_backlinks": 26,
+        "unreachable_scripts": 7,
+        "weight_anomalies_skewed_nodes": 33,
+        "duplicate_edges": 0,
+        "disconnected_clusters": 0
+      },
+      "severity": "critical",
+      "report_file": "storage/pointer-routes/benchmark_beta_report.json"
+    },
+    "gamma": {
+      "team": "Team Gamma — Cross-Domain Stress Test",
+      "agents": ["gamma-1", "gamma-2", "gamma-3", "gamma-4", "gamma-5"],
+      "task": "cross-domain-traversal",
+      "journeys_simulated": 20,
+      "findings": {
+        "overall_success_rate_pct": 60.0,
+        "avg_tag_coherence": 0.34,
+        "worst_task_type": "data-gathering (0% success — scripts found but no SRC connection)",
+        "best_task_type": "coordination (100% success)",
+        "avg_efficiency_score": 4.53,
+        "dead_end_rate": "data-gathering scripts lack SRC pointers"
+      },
+      "severity": "high",
+      "report_file": "storage/pointer-routes/benchmark_gamma_report.json"
+    },
+    "delta": {
+      "team": "Team Delta — Recommendation Accuracy",
+      "agents": ["delta-1", "delta-2", "delta-3", "delta-4"],
+      "task": "recommendation-testing",
+      "findings": {
+        "critical_bug_entry_node_ignored": true,
+        "fallback_ignores_related_strength": true,
+        "no_fallback_without_entry_node": true,
+        "frequency_based_not_success_weighted": true,
+        "coverage_rate": "100% for tasks with history",
+        "cold_start_failures": "SOPs with only 'related' pointers get no recommendation"
+      },
+      "severity": "critical",
+      "report_file": "storage/pointer-routes/benchmark_delta_report.json"
+    }
+  },
+
+  "repairs_completed": {
+    "repair_1": {
+      "team": "Repair Team 1 — Strength Classification",
+      "changes": {
+        "sop_to_sop_edges_classified": 45,
+        "other_high_weight_edges_classified": 183,
+        "sops_given_primary_pointer": 16,
+        "total_new_classifications": 228
+      },
+      "result": "All 22 SOPs now have at least 1 primary-strength pointer to a script"
+    },
+    "repair_2": {
+      "team": "Repair Team 2 — Orphans & Backlinks",
+      "changes": {
+        "orphan_scripts_fixed": 3,
+        "orphan_sops_fixed": 1,
+        "backlinks_added": 26,
+        "unreachable_scripts_connected": 7,
+        "total_pointers_added": 45
+      },
+      "result": "Zero critical orphans remain; all scripts reachable from SOPs"
+    },
+    "repair_3": {
+      "team": "Repair Team 3 — Recommendation System",
+      "changes": {
+        "bugs_fixed": 3,
+        "enhancements_added": 1,
+        "details": [
+          "Fixed: entry_node now properly filters pattern-based recommendations",
+          "Fixed: Fallback now includes 'related' strength tier",
+          "Fixed: No-entry-node fallback searches all SOP nodes",
+          "Enhanced: Recommendations now scored by count * success_rate"
+        ]
+      },
+      "result": "All 4 test cases pass; recommendation system properly respects entry_node"
+    }
+  },
+
+  "strength_effectiveness_post_benchmark": {
+    "primary": {"uses": 52, "success_rate_pct": 71.2},
+    "supporting": {"uses": 10, "success_rate_pct": 60.0},
+    "related": {"uses": 16, "success_rate_pct": 56.2},
+    "tangential": {"uses": 3, "success_rate_pct": 66.7}
+  },
+
+  "top_routes_discovered": [
+    {"route": "SOP-027 -> SCR-0043 -> SCR-0044", "traversals": 17, "success_rate_pct": 82.4, "domain": "wikipedia-enrichment"},
+    {"route": "SOP-023 -> SCR-0023 -> SRC-0001", "traversals": 7, "success_rate_pct": 85.7, "domain": "data-gathering"},
+    {"route": "SOP-029 -> SCR-0057", "traversals": 7, "success_rate_pct": 57.1, "domain": "route-tracking"},
+    {"route": "SOP-012 -> SCR-0019", "traversals": 6, "success_rate_pct": 66.7, "domain": "monitoring"},
+    {"route": "SOP-017 -> SCR-0023 -> SRC-0001", "traversals": 3, "success_rate_pct": 100.0, "domain": "indexing"}
+  ],
+
+  "remaining_issues": [
+    {
+      "severity": "medium",
+      "issue": "92 wiki-* orphan nodes with no incoming pointers",
+      "recommendation": "Low priority — most are legitimate leaf nodes. Add incoming pointers for high-value AI topic articles."
+    },
+    {
+      "severity": "medium",
+      "issue": "33 nodes with heavily skewed weight distributions",
+      "recommendation": "Review edge calibration for nodes where max/min weight ratio exceeds 10:1"
+    },
+    {
+      "severity": "medium",
+      "issue": "Tag coherence averages only 0.34 across cross-domain traversals",
+      "recommendation": "Improve tag coverage on SCR and SRC nodes to match SOP tags"
+    },
+    {
+      "severity": "low",
+      "issue": "data-gathering task type has 0% full-success rate (scripts found but no SRC connections)",
+      "recommendation": "Add direct SCR -> SRC pointers for data-gathering scripts"
+    },
+    {
+      "severity": "low",
+      "issue": "3,910 edges still without strength classification",
+      "recommendation": "Extend strength classification to KB, SRC, TEAM, and wiki edges in a future pass"
+    }
+  ]
+}

@@ -1,0 +1,755 @@
+{
+  "benchmark": "alpha-strength-validation",
+  "timestamp": "2026-03-12",
+  "summary": {
+    "sops_validated": 22,
+    "total_edges_checked": 435,
+    "edges_with_strength": 159,
+    "classification_rate": 36.6,
+    "issues_found": 37
+  },
+  "sops_without_primary": [
+    {
+      "sop": "SOP-011",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 5
+    },
+    {
+      "sop": "SOP-012",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 4
+    },
+    {
+      "sop": "SOP-013",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 5
+    },
+    {
+      "sop": "SOP-014",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 4
+    },
+    {
+      "sop": "SOP-015",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 9
+    },
+    {
+      "sop": "SOP-016",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 5
+    },
+    {
+      "sop": "SOP-018",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 10
+    },
+    {
+      "sop": "SOP-019",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 5
+    },
+    {
+      "sop": "SOP-020",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 10
+    },
+    {
+      "sop": "SOP-021",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 4
+    },
+    {
+      "sop": "SOP-022",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 5
+    },
+    {
+      "sop": "SOP-024",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 12
+    },
+    {
+      "sop": "SOP-028",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 3
+    },
+    {
+      "sop": "SOP-G01",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 4
+    },
+    {
+      "sop": "SOP-G02",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 4
+    },
+    {
+      "sop": "SOP-G03",
+      "issue": "no_primary_pointers_at_all",
+      "total_pointers": 20,
+      "classified": 5
+    }
+  ],
+  "misclassified_edges": [],
+  "high_weight_unclassified": [
+    {
+      "sop": "SOP-015",
+      "to": "SOP-028",
+      "weight": 7,
+      "issue": "high_weight_no_strength",
+      "reasons": [
+        "shared_tags:indexing,sop",
+        "explicit_reference:related_to",
+        "category_affinity:infrastructure"
+      ]
+    },
+    {
+      "sop": "SOP-027",
+      "to": "SOP-028",
+      "weight": 8,
+      "issue": "high_weight_no_strength",
+      "reasons": [
+        "shared_tags:indexing,sop",
+        "explicit_reference:builds_on",
+        "explicit_reference:built_upon_by"
+      ]
+    },
+    {
+      "sop": "SOP-028",
+      "to": "SOP-027",
+      "weight": 8,
+      "issue": "high_weight_no_strength",
+      "reasons": [
+        "shared_tags:indexing,sop",
+        "explicit_reference:builds_on",
+        "explicit_reference:built_upon_by"
+      ]
+    },
+    {
+      "sop": "SOP-028",
+      "to": "SOP-G02",
+      "weight": 7,
+      "issue": "high_weight_no_strength",
+      "reasons": [
+        "shared_tags:indexing,coordination,sop",
+        "explicit_reference:related_to",
+        "category_affinity:infrastructure"
+      ]
+    },
+    {
+      "sop": "SOP-028",
+      "to": "SOP-015",
+      "weight": 7,
+      "issue": "high_weight_no_strength",
+      "reasons": [
+        "shared_tags:indexing,sop",
+        "explicit_reference:related_to",
+        "category_affinity:infrastructure"
+      ]
+    },
+    {
+      "sop": "SOP-029",
+      "to": "SOP-028",
+      "weight": 10,
+      "issue": "high_weight_no_strength",
+      "reasons": [
+        "explicit_reference:builds_on",
+        "explicit_reference:related_to",
+        "shared_tags:coordination,indexing,sop",
+        "category_affinity:infrastructure"
+      ]
+    },
+    {
+      "sop": "SOP-029",
+      "to": "SOP-012",
+      "weight": 7,
+      "issue": "high_weight_no_strength",
+      "reasons": [
+        "explicit_reference:related_to",
+        "shared_tags:coordination,monitoring,sop",
+        "category_affinity:infrastructure \u2248 operations"
+      ]
+    },
+    {
+      "sop": "SOP-G02",
+      "to": "SOP-028",
+      "weight": 7,
+      "issue": "high_weight_no_strength",
+      "reasons": [
+        "shared_tags:indexing,coordination,sop",
+        "explicit_reference:related_to",
+        "category_affinity:infrastructure"
+      ]
+    }
+  ],
+  "coverage_gaps": [
+    {
+      "sop": "SOP-011",
+      "issue": "no_primary_or_supporting_path_to_scripts",
+      "unclassified_script_pointers": 5,
+      "script_targets_available": [
+        "SCR-0019",
+        "SCR-0030",
+        "SCR-0032",
+        "SCR-0033",
+        "SCR-0031"
+      ]
+    },
+    {
+      "sop": "SOP-013",
+      "issue": "no_primary_or_supporting_path_to_scripts",
+      "unclassified_script_pointers": 5,
+      "script_targets_available": [
+        "SCR-0019",
+        "SCR-0030",
+        "SCR-0031",
+        "SCR-0032",
+        "SCR-0033"
+      ]
+    },
+    {
+      "sop": "SOP-015",
+      "issue": "no_primary_or_supporting_path_to_scripts",
+      "unclassified_script_pointers": 9,
+      "script_targets_available": [
+        "SCR-0012",
+        "SCR-0014",
+        "SCR-0016",
+        "SCR-0020",
+        "SCR-0034",
+        "SCR-0042",
+        "SCR-0019",
+        "SCR-0030",
+        "SCR-0032"
+      ]
+    },
+    {
+      "sop": "SOP-016",
+      "issue": "no_primary_or_supporting_path_to_scripts",
+      "unclassified_script_pointers": 5,
+      "script_targets_available": [
+        "SCR-0031",
+        "SCR-0019",
+        "SCR-0030",
+        "SCR-0032",
+        "SCR-0033"
+      ]
+    },
+    {
+      "sop": "SOP-018",
+      "issue": "no_primary_or_supporting_path_to_scripts",
+      "unclassified_script_pointers": 10,
+      "script_targets_available": [
+        "SCR-0004",
+        "SCR-0006",
+        "SCR-0007",
+        "SCR-0008",
+        "SCR-0009",
+        "SCR-0010",
+        "SCR-0011",
+        "SCR-0021",
+        "SCR-0022",
+        "SCR-0023"
+      ]
+    },
+    {
+      "sop": "SOP-019",
+      "issue": "no_primary_or_supporting_path_to_scripts",
+      "unclassified_script_pointers": 5,
+      "script_targets_available": [
+        "SCR-0033",
+        "SCR-0019",
+        "SCR-0029",
+        "SCR-0030",
+        "SCR-0032"
+      ]
+    },
+    {
+      "sop": "SOP-020",
+      "issue": "no_primary_or_supporting_path_to_scripts",
+      "unclassified_script_pointers": 10,
+      "script_targets_available": [
+        "SCR-0001",
+        "SCR-0002",
+        "SCR-0003",
+        "SCR-0004",
+        "SCR-0012",
+        "SCR-0014",
+        "SCR-0016",
+        "SCR-0020",
+        "SCR-0034",
+        "SCR-0041"
+      ]
+    },
+    {
+      "sop": "SOP-021",
+      "issue": "no_primary_or_supporting_path_to_scripts",
+      "unclassified_script_pointers": 4,
+      "script_targets_available": [
+        "SCR-0033",
+        "SCR-0019",
+        "SCR-0030",
+        "SCR-0032"
+      ]
+    },
+    {
+      "sop": "SOP-022",
+      "issue": "no_primary_or_supporting_path_to_scripts",
+      "unclassified_script_pointers": 5,
+      "script_targets_available": [
+        "SCR-0019",
+        "SCR-0030",
+        "SCR-0032",
+        "SCR-0033",
+        "SCR-0031"
+      ]
+    },
+    {
+      "sop": "SOP-024",
+      "issue": "no_primary_or_supporting_path_to_scripts",
+      "unclassified_script_pointers": 12,
+      "script_targets_available": [
+        "SCR-0009",
+        "SCR-0012",
+        "SCR-0014",
+        "SCR-0016",
+        "SCR-0020",
+        "SCR-0034",
+        "SCR-0041",
+        "SCR-0042",
+        "SCR-0006",
+        "SCR-0007",
+        "SCR-0008",
+        "SCR-0010"
+      ]
+    },
+    {
+      "sop": "SOP-028",
+      "issue": "no_primary_or_supporting_path_to_scripts",
+      "unclassified_script_pointers": 3,
+      "script_targets_available": [
+        "SCR-0013",
+        "SCR-0034",
+        "TOOL-0001"
+      ]
+    },
+    {
+      "sop": "SOP-G01",
+      "issue": "no_primary_or_supporting_path_to_scripts",
+      "unclassified_script_pointers": 4,
+      "script_targets_available": [
+        "SCR-0019",
+        "SCR-0030",
+        "SCR-0032",
+        "SCR-0033"
+      ]
+    },
+    {
+      "sop": "SOP-G02",
+      "issue": "no_primary_or_supporting_path_to_scripts",
+      "unclassified_script_pointers": 4,
+      "script_targets_available": [
+        "SCR-0019",
+        "SCR-0030",
+        "SCR-0032",
+        "SCR-0033"
+      ]
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "high",
+      "action": "add_primary_strength_to_script_pointers",
+      "description": "16 SOPs lack primary-strength pointers to scripts/tools",
+      "affected_sops": [
+        "SOP-011",
+        "SOP-012",
+        "SOP-013",
+        "SOP-014",
+        "SOP-015",
+        "SOP-016",
+        "SOP-018",
+        "SOP-019",
+        "SOP-020",
+        "SOP-021",
+        "SOP-022",
+        "SOP-024",
+        "SOP-028",
+        "SOP-G01",
+        "SOP-G02",
+        "SOP-G03"
+      ]
+    },
+    {
+      "priority": "high",
+      "action": "classify_high_weight_edges",
+      "description": "8 edges with weight >= 7 have no strength classification",
+      "count": 8
+    },
+    {
+      "priority": "critical",
+      "action": "ensure_sop_to_script_connectivity",
+      "description": "13 SOPs cannot reach any script via primary or supporting paths",
+      "affected_sops": [
+        "SOP-011",
+        "SOP-013",
+        "SOP-015",
+        "SOP-016",
+        "SOP-018",
+        "SOP-019",
+        "SOP-020",
+        "SOP-021",
+        "SOP-022",
+        "SOP-024",
+        "SOP-028",
+        "SOP-G01",
+        "SOP-G02"
+      ]
+    }
+  ],
+  "sop_details": {
+    "SOP-011": {
+      "sop_id": "SOP-011",
+      "total_pointers": 20,
+      "strength_classified": 5,
+      "primary_pointers": [],
+      "supporting_pointers": [],
+      "issues": []
+    },
+    "SOP-012": {
+      "sop_id": "SOP-012",
+      "total_pointers": 20,
+      "strength_classified": 4,
+      "primary_pointers": [],
+      "supporting_pointers": [
+        {
+          "to": "SCR-0019",
+          "weight": 4
+        },
+        {
+          "to": "SCR-0030",
+          "weight": 4
+        },
+        {
+          "to": "SCR-0032",
+          "weight": 4
+        }
+      ],
+      "issues": []
+    },
+    "SOP-013": {
+      "sop_id": "SOP-013",
+      "total_pointers": 20,
+      "strength_classified": 5,
+      "primary_pointers": [],
+      "supporting_pointers": [],
+      "issues": []
+    },
+    "SOP-014": {
+      "sop_id": "SOP-014",
+      "total_pointers": 20,
+      "strength_classified": 4,
+      "primary_pointers": [],
+      "supporting_pointers": [
+        {
+          "to": "SCR-0033",
+          "weight": 4
+        }
+      ],
+      "issues": []
+    },
+    "SOP-015": {
+      "sop_id": "SOP-015",
+      "total_pointers": 20,
+      "strength_classified": 9,
+      "primary_pointers": [],
+      "supporting_pointers": [],
+      "issues": [
+        {
+          "sop": "SOP-015",
+          "to": "SOP-028",
+          "weight": 7,
+          "issue": "high_weight_no_strength",
+          "reasons": [
+            "shared_tags:indexing,sop",
+            "explicit_reference:related_to",
+            "category_affinity:infrastructure"
+          ]
+        }
+      ]
+    },
+    "SOP-016": {
+      "sop_id": "SOP-016",
+      "total_pointers": 20,
+      "strength_classified": 5,
+      "primary_pointers": [],
+      "supporting_pointers": [],
+      "issues": []
+    },
+    "SOP-017": {
+      "sop_id": "SOP-017",
+      "total_pointers": 20,
+      "strength_classified": 16,
+      "primary_pointers": [
+        {
+          "to": "SCR-0023",
+          "weight": 8
+        }
+      ],
+      "supporting_pointers": [],
+      "issues": []
+    },
+    "SOP-018": {
+      "sop_id": "SOP-018",
+      "total_pointers": 20,
+      "strength_classified": 10,
+      "primary_pointers": [],
+      "supporting_pointers": [],
+      "issues": []
+    },
+    "SOP-019": {
+      "sop_id": "SOP-019",
+      "total_pointers": 20,
+      "strength_classified": 5,
+      "primary_pointers": [],
+      "supporting_pointers": [],
+      "issues": []
+    },
+    "SOP-020": {
+      "sop_id": "SOP-020",
+      "total_pointers": 20,
+      "strength_classified": 10,
+      "primary_pointers": [],
+      "supporting_pointers": [],
+      "issues": []
+    },
+    "SOP-021": {
+      "sop_id": "SOP-021",
+      "total_pointers": 20,
+      "strength_classified": 4,
+      "primary_pointers": [],
+      "supporting_pointers": [],
+      "issues": []
+    },
+    "SOP-022": {
+      "sop_id": "SOP-022",
+      "total_pointers": 20,
+      "strength_classified": 5,
+      "primary_pointers": [],
+      "supporting_pointers": [],
+      "issues": []
+    },
+    "SOP-023": {
+      "sop_id": "SOP-023",
+      "total_pointers": 20,
+      "strength_classified": 15,
+      "primary_pointers": [
+        {
+          "to": "SCR-0023",
+          "weight": 9
+        }
+      ],
+      "supporting_pointers": [],
+      "issues": []
+    },
+    "SOP-024": {
+      "sop_id": "SOP-024",
+      "total_pointers": 20,
+      "strength_classified": 12,
+      "primary_pointers": [],
+      "supporting_pointers": [],
+      "issues": []
+    },
+    "SOP-025": {
+      "sop_id": "SOP-025",
+      "total_pointers": 20,
+      "strength_classified": 2,
+      "primary_pointers": [
+        {
+          "to": "SCR-0043",
+          "weight": 7
+        }
+      ],
+      "supporting_pointers": [],
+      "issues": []
+    },
+    "SOP-026": {
+      "sop_id": "SOP-026",
+      "total_pointers": 20,
+      "strength_classified": 13,
+      "primary_pointers": [
+        {
+          "to": "SCR-0043",
+          "weight": 7
+        }
+      ],
+      "supporting_pointers": [],
+      "issues": []
+    },
+    "SOP-027": {
+      "sop_id": "SOP-027",
+      "total_pointers": 20,
+      "strength_classified": 15,
+      "primary_pointers": [
+        {
+          "to": "SCR-0043",
+          "weight": 8
+        },
+        {
+          "to": "SCR-0044",
+          "weight": 8
+        }
+      ],
+      "supporting_pointers": [],
+      "issues": [
+        {
+          "sop": "SOP-027",
+          "to": "SOP-028",
+          "weight": 8,
+          "issue": "high_weight_no_strength",
+          "reasons": [
+            "shared_tags:indexing,sop",
+            "explicit_reference:builds_on",
+            "explicit_reference:built_upon_by"
+          ]
+        }
+      ]
+    },
+    "SOP-028": {
+      "sop_id": "SOP-028",
+      "total_pointers": 20,
+      "strength_classified": 3,
+      "primary_pointers": [],
+      "supporting_pointers": [],
+      "issues": [
+        {
+          "sop": "SOP-028",
+          "to": "SOP-027",
+          "weight": 8,
+          "issue": "high_weight_no_strength",
+          "reasons": [
+            "shared_tags:indexing,sop",
+            "explicit_reference:builds_on",
+            "explicit_reference:built_upon_by"
+          ]
+        },
+        {
+          "sop": "SOP-028",
+          "to": "SOP-G02",
+          "weight": 7,
+          "issue": "high_weight_no_strength",
+          "reasons": [
+            "shared_tags:indexing,coordination,sop",
+            "explicit_reference:related_to",
+            "category_affinity:infrastructure"
+          ]
+        },
+        {
+          "sop": "SOP-028",
+          "to": "SOP-015",
+          "weight": 7,
+          "issue": "high_weight_no_strength",
+          "reasons": [
+            "shared_tags:indexing,sop",
+            "explicit_reference:related_to",
+            "category_affinity:infrastructure"
+          ]
+        }
+      ]
+    },
+    "SOP-029": {
+      "sop_id": "SOP-029",
+      "total_pointers": 15,
+      "strength_classified": 4,
+      "primary_pointers": [
+        {
+          "to": "SCR-0057",
+          "weight": 7
+        }
+      ],
+      "supporting_pointers": [],
+      "issues": [
+        {
+          "sop": "SOP-029",
+          "to": "SOP-028",
+          "weight": 10,
+          "issue": "high_weight_no_strength",
+          "reasons": [
+            "explicit_reference:builds_on",
+            "explicit_reference:related_to",
+            "shared_tags:coordination,indexing,sop",
+            "category_affinity:infrastructure"
+          ]
+        },
+        {
+          "sop": "SOP-029",
+          "to": "SOP-012",
+          "weight": 7,
+          "issue": "high_weight_no_strength",
+          "reasons": [
+            "explicit_reference:related_to",
+            "shared_tags:coordination,monitoring,sop",
+            "category_affinity:infrastructure \u2248 operations"
+          ]
+        }
+      ]
+    },
+    "SOP-G01": {
+      "sop_id": "SOP-G01",
+      "total_pointers": 20,
+      "strength_classified": 4,
+      "primary_pointers": [],
+      "supporting_pointers": [],
+      "issues": []
+    },
+    "SOP-G02": {
+      "sop_id": "SOP-G02",
+      "total_pointers": 20,
+      "strength_classified": 4,
+      "primary_pointers": [],
+      "supporting_pointers": [],
+      "issues": [
+        {
+          "sop": "SOP-G02",
+          "to": "SOP-028",
+          "weight": 7,
+          "issue": "high_weight_no_strength",
+          "reasons": [
+            "shared_tags:indexing,coordination,sop",
+            "explicit_reference:related_to",
+            "category_affinity:infrastructure"
+          ]
+        }
+      ]
+    },
+    "SOP-G03": {
+      "sop_id": "SOP-G03",
+      "total_pointers": 20,
+      "strength_classified": 5,
+      "primary_pointers": [],
+      "supporting_pointers": [
+        {
+          "to": "SCR-0033",
+          "weight": 4
+        }
+      ],
+      "issues": []
+    }
+  }
+}

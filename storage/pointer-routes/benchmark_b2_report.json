@@ -1,0 +1,1357 @@
+{
+  "report": "Team B2 Wiki Connectivity Stress Test",
+  "generated": "2026-03-12",
+  "run": "Run-002",
+  "wiki_reachability": {
+    "total_wiki_nodes": 114,
+    "from_SOP": {
+      "reachable": 22,
+      "total": 114,
+      "pct": 19.3
+    },
+    "from_SCR": {
+      "reachable": 22,
+      "total": 114,
+      "pct": 19.3
+    },
+    "from_KB": {
+      "reachable": 22,
+      "total": 114,
+      "pct": 19.3
+    },
+    "direct_edges_to_wiki": {
+      "SCR": 18,
+      "SRC": 23
+    },
+    "direct_edges_from_wiki": {
+      "KB": 226,
+      "SCR": 533,
+      "SOP": 20,
+      "SRC": 147,
+      "TEAM": 128
+    }
+  },
+  "wiki_bridges": {
+    "nodes_pointing_to_wiki": [
+      "SCR-0018",
+      "SRC-0032",
+      "SRC-0033",
+      "SRC-0034"
+    ],
+    "nodes_receiving_from_wiki": [
+      "KB-0005",
+      "KB-0006",
+      "KB-0007",
+      "KB-0009",
+      "KB-0010",
+      "KB-0040",
+      "SCR-0003",
+      "SCR-0006",
+      "SCR-0007",
+      "SCR-0008",
+      "SCR-0009",
+      "SCR-0010",
+      "SCR-0013",
+      "SCR-0015",
+      "SCR-0018",
+      "SCR-0021",
+      "SCR-0023",
+      "SCR-0024",
+      "SOP-025",
+      "SRC-0032",
+      "SRC-0033",
+      "SRC-0034",
+      "TEAM-0005",
+      "TEAM-0006",
+      "TEAM-0007",
+      "TEAM-0009",
+      "TEAM-0012"
+    ],
+    "total_bridge_nodes_to_wiki": 4,
+    "total_bridge_nodes_from_wiki": 27,
+    "bridge_edges": [
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:AI_agent"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:AZFinText"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Artificial_intelligence_arms_race"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Artificial_intelligence_in_physical_therapy"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Automated_machine_learning"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Cognitive_computing"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Data_Science_and_Predictive_Analytics"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Dia_(web_browser)"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Galaxy_AI"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Gender_digital_divide"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Knowledge_cutoff"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Neuro-symbolic_AI"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Operational_artificial_intelligence"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Personality_computing"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Perusall"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Schema-agnostic_databases"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Universal_psychometrics"
+      },
+      {
+        "from": "SCR-0018",
+        "to": "wiki-ai:Web_intelligence"
+      },
+      {
+        "from": "SRC-0032",
+        "to": "wiki-ai:AI-assisted_software_development"
+      },
+      {
+        "from": "SRC-0032",
+        "to": "wiki-ai:AI-complete"
+      },
+      {
+        "from": "SRC-0032",
+        "to": "wiki-ai:AIOps"
+      },
+      {
+        "from": "SRC-0032",
+        "to": "wiki-ai:AI_agent"
+      },
+      {
+        "from": "SRC-0032",
+        "to": "wiki-ai:AI_anthropomorphism"
+      },
+      {
+        "from": "SRC-0033",
+        "to": "wiki-ai:AZFinText"
+      },
+      {
+        "from": "SRC-0033",
+        "to": "wiki-ai:Artificial_intelligence_arms_race"
+      },
+      {
+        "from": "SRC-0033",
+        "to": "wiki-ai:Artificial_intelligence_in_physical_therapy"
+      },
+      {
+        "from": "SRC-0033",
+        "to": "wiki-ai:Automated_machine_learning"
+      },
+      {
+        "from": "SRC-0033",
+        "to": "wiki-ai:Cognitive_computing"
+      },
+      {
+        "from": "SRC-0033",
+        "to": "wiki-ai:Data_Science_and_Predictive_Analytics"
+      },
+      {
+        "from": "SRC-0033",
+        "to": "wiki-ai:Dia_(web_browser)"
+      }
+    ],
+    "key_finding": "Wiki is largely one-directional: wiki nodes point OUT to KB/SCR/SOP (1054 edges), but very few non-wiki nodes point IN to wiki (41 edges). Only 4 non-wiki nodes have any edge to wiki."
+  },
+  "sop_to_kb_quality": {
+    "SOP-011": {
+      "direct_kb_links": 10,
+      "two_hop_kb_links": 125,
+      "total_kb_reachable": 26,
+      "avg_jaccard": 0.186,
+      "top_matches": [
+        {
+          "kb_node": "KB-0038",
+          "shared_tags": [
+            "coordination",
+            "fan-out",
+            "multi-agent"
+          ],
+          "jaccard_score": 0.6,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0025",
+          "shared_tags": [
+            "coordination",
+            "multi-agent",
+            "sop"
+          ],
+          "jaccard_score": 0.5,
+          "sop_tags_count": 4,
+          "kb_tags_count": 5
+        },
+        {
+          "kb_node": "KB-0026",
+          "shared_tags": [
+            "coordination",
+            "multi-agent"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        }
+      ],
+      "sop_tags": [
+        "coordination",
+        "fan-out",
+        "multi-agent",
+        "sop"
+      ]
+    },
+    "SOP-012": {
+      "direct_kb_links": 10,
+      "two_hop_kb_links": 124,
+      "total_kb_reachable": 25,
+      "avg_jaccard": 0.176,
+      "top_matches": [
+        {
+          "kb_node": "KB-0025",
+          "shared_tags": [
+            "coordination",
+            "multi-agent",
+            "sop"
+          ],
+          "jaccard_score": 0.5,
+          "sop_tags_count": 4,
+          "kb_tags_count": 5
+        },
+        {
+          "kb_node": "KB-0026",
+          "shared_tags": [
+            "coordination",
+            "multi-agent"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0022",
+          "shared_tags": [
+            "coordination",
+            "multi-agent"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        }
+      ],
+      "sop_tags": [
+        "coordination",
+        "monitoring",
+        "multi-agent",
+        "sop"
+      ]
+    },
+    "SOP-013": {
+      "direct_kb_links": 10,
+      "two_hop_kb_links": 134,
+      "total_kb_reachable": 27,
+      "avg_jaccard": 0.2,
+      "top_matches": [
+        {
+          "kb_node": "KB-0025",
+          "shared_tags": [
+            "coordination",
+            "multi-agent",
+            "sop"
+          ],
+          "jaccard_score": 0.6,
+          "sop_tags_count": 3,
+          "kb_tags_count": 5
+        },
+        {
+          "kb_node": "KB-0026",
+          "shared_tags": [
+            "coordination",
+            "multi-agent"
+          ],
+          "jaccard_score": 0.4,
+          "sop_tags_count": 3,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0022",
+          "shared_tags": [
+            "coordination",
+            "multi-agent"
+          ],
+          "jaccard_score": 0.4,
+          "sop_tags_count": 3,
+          "kb_tags_count": 4
+        }
+      ],
+      "sop_tags": [
+        "coordination",
+        "multi-agent",
+        "sop"
+      ]
+    },
+    "SOP-014": {
+      "direct_kb_links": 7,
+      "two_hop_kb_links": 140,
+      "total_kb_reachable": 27,
+      "avg_jaccard": 0.185,
+      "top_matches": [
+        {
+          "kb_node": "KB-0025",
+          "shared_tags": [
+            "coordination",
+            "hub-spoke",
+            "multi-agent",
+            "sop"
+          ],
+          "jaccard_score": 0.8,
+          "sop_tags_count": 4,
+          "kb_tags_count": 5
+        },
+        {
+          "kb_node": "KB-0026",
+          "shared_tags": [
+            "coordination",
+            "multi-agent"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0022",
+          "shared_tags": [
+            "coordination",
+            "multi-agent"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        }
+      ],
+      "sop_tags": [
+        "coordination",
+        "hub-spoke",
+        "multi-agent",
+        "sop"
+      ]
+    },
+    "SOP-015": {
+      "direct_kb_links": 2,
+      "two_hop_kb_links": 149,
+      "total_kb_reachable": 30,
+      "avg_jaccard": 0.068,
+      "top_matches": [
+        {
+          "kb_node": "KB-0006",
+          "shared_tags": [
+            "indexing",
+            "validation"
+          ],
+          "jaccard_score": 0.4,
+          "sop_tags_count": 4,
+          "kb_tags_count": 3
+        },
+        {
+          "kb_node": "KB-0001",
+          "shared_tags": [
+            "indexing",
+            "validation"
+          ],
+          "jaccard_score": 0.286,
+          "sop_tags_count": 4,
+          "kb_tags_count": 5
+        },
+        {
+          "kb_node": "KB-0011",
+          "shared_tags": [
+            "validation"
+          ],
+          "jaccard_score": 0.25,
+          "sop_tags_count": 4,
+          "kb_tags_count": 1
+        }
+      ],
+      "sop_tags": [
+        "indexing",
+        "monitoring",
+        "sop",
+        "validation"
+      ]
+    },
+    "SOP-016": {
+      "direct_kb_links": 7,
+      "two_hop_kb_links": 137,
+      "total_kb_reachable": 31,
+      "avg_jaccard": 0.088,
+      "top_matches": [
+        {
+          "kb_node": "KB-0026",
+          "shared_tags": [
+            "coordination",
+            "pipeline"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0024",
+          "shared_tags": [
+            "coordination",
+            "sop"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0025",
+          "shared_tags": [
+            "coordination",
+            "sop"
+          ],
+          "jaccard_score": 0.286,
+          "sop_tags_count": 4,
+          "kb_tags_count": 5
+        }
+      ],
+      "sop_tags": [
+        "coordination",
+        "deduplication",
+        "pipeline",
+        "sop"
+      ]
+    },
+    "SOP-017": {
+      "direct_kb_links": 1,
+      "two_hop_kb_links": 137,
+      "total_kb_reachable": 23,
+      "avg_jaccard": 0.071,
+      "top_matches": [
+        {
+          "kb_node": "KB-0004",
+          "shared_tags": [
+            "data-gathering",
+            "validation"
+          ],
+          "jaccard_score": 0.286,
+          "sop_tags_count": 5,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0011",
+          "shared_tags": [
+            "validation"
+          ],
+          "jaccard_score": 0.2,
+          "sop_tags_count": 5,
+          "kb_tags_count": 1
+        },
+        {
+          "kb_node": "KB-0033",
+          "shared_tags": [
+            "validation"
+          ],
+          "jaccard_score": 0.167,
+          "sop_tags_count": 5,
+          "kb_tags_count": 2
+        }
+      ],
+      "sop_tags": [
+        "caching",
+        "data-gathering",
+        "python",
+        "search",
+        "validation"
+      ]
+    },
+    "SOP-018": {
+      "direct_kb_links": 10,
+      "two_hop_kb_links": 108,
+      "total_kb_reachable": 33,
+      "avg_jaccard": 0.05,
+      "top_matches": [
+        {
+          "kb_node": "KB-0044",
+          "shared_tags": [
+            "data-gathering"
+          ],
+          "jaccard_score": 0.25,
+          "sop_tags_count": 3,
+          "kb_tags_count": 2
+        },
+        {
+          "kb_node": "KB-0002",
+          "shared_tags": [
+            "data-gathering"
+          ],
+          "jaccard_score": 0.2,
+          "sop_tags_count": 3,
+          "kb_tags_count": 3
+        },
+        {
+          "kb_node": "KB-0003",
+          "shared_tags": [
+            "stock-analysis"
+          ],
+          "jaccard_score": 0.2,
+          "sop_tags_count": 3,
+          "kb_tags_count": 3
+        }
+      ],
+      "sop_tags": [
+        "data-gathering",
+        "sop",
+        "stock-analysis"
+      ]
+    },
+    "SOP-019": {
+      "direct_kb_links": 11,
+      "two_hop_kb_links": 129,
+      "total_kb_reachable": 26,
+      "avg_jaccard": 0.057,
+      "top_matches": [
+        {
+          "kb_node": "KB-0035",
+          "shared_tags": [
+            "sqlite"
+          ],
+          "jaccard_score": 0.167,
+          "sop_tags_count": 4,
+          "kb_tags_count": 3
+        },
+        {
+          "kb_node": "KB-0032",
+          "shared_tags": [
+            "go"
+          ],
+          "jaccard_score": 0.143,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0017",
+          "shared_tags": [
+            "sqlite"
+          ],
+          "jaccard_score": 0.143,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        }
+      ],
+      "sop_tags": [
+        "go",
+        "python",
+        "sop",
+        "sqlite"
+      ]
+    },
+    "SOP-020": {
+      "direct_kb_links": 9,
+      "two_hop_kb_links": 120,
+      "total_kb_reachable": 34,
+      "avg_jaccard": 0.059,
+      "top_matches": [
+        {
+          "kb_node": "KB-0025",
+          "shared_tags": [
+            "bug-fix",
+            "sop"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 3,
+          "kb_tags_count": 5
+        },
+        {
+          "kb_node": "KB-0011",
+          "shared_tags": [
+            "validation"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 3,
+          "kb_tags_count": 1
+        },
+        {
+          "kb_node": "KB-0033",
+          "shared_tags": [
+            "validation"
+          ],
+          "jaccard_score": 0.25,
+          "sop_tags_count": 3,
+          "kb_tags_count": 2
+        }
+      ],
+      "sop_tags": [
+        "bug-fix",
+        "sop",
+        "validation"
+      ]
+    },
+    "SOP-021": {
+      "direct_kb_links": 10,
+      "two_hop_kb_links": 140,
+      "total_kb_reachable": 26,
+      "avg_jaccard": 0.135,
+      "top_matches": [
+        {
+          "kb_node": "KB-0024",
+          "shared_tags": [
+            "coordination",
+            "failure-analysis",
+            "sop"
+          ],
+          "jaccard_score": 0.6,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0035",
+          "shared_tags": [
+            "coordination",
+            "sqlite"
+          ],
+          "jaccard_score": 0.4,
+          "sop_tags_count": 4,
+          "kb_tags_count": 3
+        },
+        {
+          "kb_node": "KB-0017",
+          "shared_tags": [
+            "failure-analysis",
+            "sqlite"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        }
+      ],
+      "sop_tags": [
+        "coordination",
+        "failure-analysis",
+        "sop",
+        "sqlite"
+      ]
+    },
+    "SOP-022": {
+      "direct_kb_links": 10,
+      "two_hop_kb_links": 127,
+      "total_kb_reachable": 28,
+      "avg_jaccard": 0.193,
+      "top_matches": [
+        {
+          "kb_node": "KB-0025",
+          "shared_tags": [
+            "coordination",
+            "multi-agent",
+            "sop"
+          ],
+          "jaccard_score": 0.6,
+          "sop_tags_count": 3,
+          "kb_tags_count": 5
+        },
+        {
+          "kb_node": "KB-0026",
+          "shared_tags": [
+            "coordination",
+            "multi-agent"
+          ],
+          "jaccard_score": 0.4,
+          "sop_tags_count": 3,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0022",
+          "shared_tags": [
+            "coordination",
+            "multi-agent"
+          ],
+          "jaccard_score": 0.4,
+          "sop_tags_count": 3,
+          "kb_tags_count": 4
+        }
+      ],
+      "sop_tags": [
+        "coordination",
+        "multi-agent",
+        "sop"
+      ]
+    },
+    "SOP-023": {
+      "direct_kb_links": 3,
+      "two_hop_kb_links": 136,
+      "total_kb_reachable": 31,
+      "avg_jaccard": 0.087,
+      "top_matches": [
+        {
+          "kb_node": "KB-0006",
+          "shared_tags": [
+            "automation",
+            "indexing",
+            "validation"
+          ],
+          "jaccard_score": 0.5,
+          "sop_tags_count": 6,
+          "kb_tags_count": 3
+        },
+        {
+          "kb_node": "KB-0040",
+          "shared_tags": [
+            "automation",
+            "validation"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 6,
+          "kb_tags_count": 2
+        },
+        {
+          "kb_node": "KB-0004",
+          "shared_tags": [
+            "data-gathering",
+            "validation"
+          ],
+          "jaccard_score": 0.25,
+          "sop_tags_count": 6,
+          "kb_tags_count": 4
+        }
+      ],
+      "sop_tags": [
+        "automation",
+        "data-gathering",
+        "indexing",
+        "python",
+        "search",
+        "validation"
+      ]
+    },
+    "SOP-024": {
+      "direct_kb_links": 4,
+      "two_hop_kb_links": 140,
+      "total_kb_reachable": 28,
+      "avg_jaccard": 0.09,
+      "top_matches": [
+        {
+          "kb_node": "KB-0006",
+          "shared_tags": [
+            "indexing",
+            "validation"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 5,
+          "kb_tags_count": 3
+        },
+        {
+          "kb_node": "KB-0004",
+          "shared_tags": [
+            "data-gathering",
+            "validation"
+          ],
+          "jaccard_score": 0.286,
+          "sop_tags_count": 5,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0001",
+          "shared_tags": [
+            "indexing",
+            "validation"
+          ],
+          "jaccard_score": 0.25,
+          "sop_tags_count": 5,
+          "kb_tags_count": 5
+        }
+      ],
+      "sop_tags": [
+        "data-gathering",
+        "deduplication",
+        "indexing",
+        "monitoring",
+        "validation"
+      ]
+    },
+    "SOP-025": {
+      "direct_kb_links": 14,
+      "two_hop_kb_links": 106,
+      "total_kb_reachable": 34,
+      "avg_jaccard": 0.074,
+      "top_matches": [
+        {
+          "kb_node": "KB-0006",
+          "shared_tags": [
+            "automation",
+            "indexing"
+          ],
+          "jaccard_score": 0.4,
+          "sop_tags_count": 4,
+          "kb_tags_count": 3
+        },
+        {
+          "kb_node": "KB-0044",
+          "shared_tags": [
+            "data-gathering"
+          ],
+          "jaccard_score": 0.2,
+          "sop_tags_count": 4,
+          "kb_tags_count": 2
+        },
+        {
+          "kb_node": "KB-0040",
+          "shared_tags": [
+            "automation"
+          ],
+          "jaccard_score": 0.2,
+          "sop_tags_count": 4,
+          "kb_tags_count": 2
+        }
+      ],
+      "sop_tags": [
+        "automation",
+        "data-gathering",
+        "indexing",
+        "sop"
+      ]
+    },
+    "SOP-026": {
+      "direct_kb_links": 3,
+      "two_hop_kb_links": 133,
+      "total_kb_reachable": 22,
+      "avg_jaccard": 0.067,
+      "top_matches": [
+        {
+          "kb_node": "KB-0005",
+          "shared_tags": [
+            "data-gathering",
+            "wikidata"
+          ],
+          "jaccard_score": 0.286,
+          "sop_tags_count": 3,
+          "kb_tags_count": 6
+        },
+        {
+          "kb_node": "KB-0044",
+          "shared_tags": [
+            "data-gathering"
+          ],
+          "jaccard_score": 0.25,
+          "sop_tags_count": 3,
+          "kb_tags_count": 2
+        },
+        {
+          "kb_node": "KB-0002",
+          "shared_tags": [
+            "data-gathering"
+          ],
+          "jaccard_score": 0.2,
+          "sop_tags_count": 3,
+          "kb_tags_count": 3
+        }
+      ],
+      "sop_tags": [
+        "data-gathering",
+        "search",
+        "wikidata"
+      ]
+    },
+    "SOP-027": {
+      "direct_kb_links": 1,
+      "two_hop_kb_links": 132,
+      "total_kb_reachable": 22,
+      "avg_jaccard": 0.096,
+      "top_matches": [
+        {
+          "kb_node": "KB-0005",
+          "shared_tags": [
+            "data-gathering",
+            "wikidata"
+          ],
+          "jaccard_score": 0.25,
+          "sop_tags_count": 4,
+          "kb_tags_count": 6
+        },
+        {
+          "kb_node": "KB-0044",
+          "shared_tags": [
+            "data-gathering"
+          ],
+          "jaccard_score": 0.2,
+          "sop_tags_count": 4,
+          "kb_tags_count": 2
+        },
+        {
+          "kb_node": "KB-0002",
+          "shared_tags": [
+            "data-gathering"
+          ],
+          "jaccard_score": 0.167,
+          "sop_tags_count": 4,
+          "kb_tags_count": 3
+        }
+      ],
+      "sop_tags": [
+        "data-gathering",
+        "indexing",
+        "sop",
+        "wikidata"
+      ]
+    },
+    "SOP-028": {
+      "direct_kb_links": 2,
+      "two_hop_kb_links": 148,
+      "total_kb_reachable": 35,
+      "avg_jaccard": 0.086,
+      "top_matches": [
+        {
+          "kb_node": "KB-0006",
+          "shared_tags": [
+            "automation",
+            "indexing"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 5,
+          "kb_tags_count": 3
+        },
+        {
+          "kb_node": "KB-0022",
+          "shared_tags": [
+            "coordination",
+            "indexing"
+          ],
+          "jaccard_score": 0.286,
+          "sop_tags_count": 5,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0024",
+          "shared_tags": [
+            "coordination",
+            "sop"
+          ],
+          "jaccard_score": 0.286,
+          "sop_tags_count": 5,
+          "kb_tags_count": 4
+        }
+      ],
+      "sop_tags": [
+        "automation",
+        "coordination",
+        "indexing",
+        "python",
+        "sop"
+      ]
+    },
+    "SOP-029": {
+      "direct_kb_links": 0,
+      "two_hop_kb_links": 107,
+      "total_kb_reachable": 20,
+      "avg_jaccard": 0.13,
+      "top_matches": [
+        {
+          "kb_node": "KB-0022",
+          "shared_tags": [
+            "coordination",
+            "indexing"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0024",
+          "shared_tags": [
+            "coordination",
+            "sop"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0025",
+          "shared_tags": [
+            "coordination",
+            "sop"
+          ],
+          "jaccard_score": 0.286,
+          "sop_tags_count": 4,
+          "kb_tags_count": 5
+        }
+      ],
+      "sop_tags": [
+        "coordination",
+        "indexing",
+        "monitoring",
+        "sop"
+      ]
+    },
+    "SOP-G01": {
+      "direct_kb_links": 9,
+      "two_hop_kb_links": 142,
+      "total_kb_reachable": 25,
+      "avg_jaccard": 0.227,
+      "top_matches": [
+        {
+          "kb_node": "KB-0026",
+          "shared_tags": [
+            "coordination",
+            "multi-agent",
+            "pipeline",
+            "work-stealing"
+          ],
+          "jaccard_score": 0.8,
+          "sop_tags_count": 5,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0023",
+          "shared_tags": [
+            "coordination",
+            "multi-agent",
+            "pipeline",
+            "work-stealing"
+          ],
+          "jaccard_score": 0.571,
+          "sop_tags_count": 5,
+          "kb_tags_count": 6
+        },
+        {
+          "kb_node": "KB-0027",
+          "shared_tags": [
+            "coordination",
+            "multi-agent",
+            "work-stealing"
+          ],
+          "jaccard_score": 0.5,
+          "sop_tags_count": 5,
+          "kb_tags_count": 4
+        }
+      ],
+      "sop_tags": [
+        "coordination",
+        "multi-agent",
+        "pipeline",
+        "sop",
+        "work-stealing"
+      ]
+    },
+    "SOP-G02": {
+      "direct_kb_links": 8,
+      "two_hop_kb_links": 125,
+      "total_kb_reachable": 29,
+      "avg_jaccard": 0.107,
+      "top_matches": [
+        {
+          "kb_node": "KB-0008",
+          "shared_tags": [
+            "indexing",
+            "storage"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0022",
+          "shared_tags": [
+            "coordination",
+            "indexing"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        },
+        {
+          "kb_node": "KB-0024",
+          "shared_tags": [
+            "coordination",
+            "sop"
+          ],
+          "jaccard_score": 0.333,
+          "sop_tags_count": 4,
+          "kb_tags_count": 4
+        }
+      ],
+      "sop_tags": [
+        "coordination",
+        "indexing",
+        "sop",
+        "storage"
+      ]
+    },
+    "SOP-G03": {
+      "direct_kb_links": 9,
+      "two_hop_kb_links": 139,
+      "total_kb_reachable": 24,
+      "avg_jaccard": 0.22,
+      "top_matches": [
+        {
+          "kb_node": "KB-0025",
+          "shared_tags": [
+            "coordination",
+            "hub-spoke",
+            "multi-agent",
+            "sop"
+          ],
+          "jaccard_score": 0.5,
+          "sop_tags_count": 7,
+          "kb_tags_count": 5
+        },
+        {
+          "kb_node": "KB-0023",
+          "shared_tags": [
+            "communication",
+            "coordination",
+            "multi-agent",
+            "work-stealing"
+          ],
+          "jaccard_score": 0.444,
+          "sop_tags_count": 7,
+          "kb_tags_count": 6
+        },
+        {
+          "kb_node": "KB-0026",
+          "shared_tags": [
+            "coordination",
+            "multi-agent",
+            "work-stealing"
+          ],
+          "jaccard_score": 0.375,
+          "sop_tags_count": 7,
+          "kb_tags_count": 4
+        }
+      ],
+      "sop_tags": [
+        "communication",
+        "coordination",
+        "hub-spoke",
+        "message-bus",
+        "multi-agent",
+        "sop",
+        "work-stealing"
+      ]
+    }
+  },
+  "knowledge_enrichment_journeys": [
+    {
+      "journey_id": 1,
+      "agent": "b2-1",
+      "route": [
+        "SOP-011",
+        "KB-0025",
+        "SOP-016",
+        "KB-0005",
+        "SRC-0034",
+        "wiki-ai:AI-complete"
+      ],
+      "route_str": "SOP-011 -> KB-0025 -> SOP-016 -> KB-0005 -> SRC-0034 -> wiki-ai:AI-complete",
+      "outcome": "success",
+      "assessment": "Full enrichment path found: 6 hops, reached wiki"
+    },
+    {
+      "journey_id": 2,
+      "agent": "b2-2",
+      "route": [
+        "SOP-012",
+        "KB-0025",
+        "SOP-016",
+        "KB-0005",
+        "SRC-0034",
+        "wiki-ai:AI-complete"
+      ],
+      "route_str": "SOP-012 -> KB-0025 -> SOP-016 -> KB-0005 -> SRC-0034 -> wiki-ai:AI-complete",
+      "outcome": "success",
+      "assessment": "Full enrichment path found: 6 hops, reached wiki"
+    },
+    {
+      "journey_id": 3,
+      "agent": "b2-3",
+      "route": [
+        "SOP-013",
+        "KB-0025",
+        "SOP-016",
+        "KB-0005",
+        "SRC-0034",
+        "wiki-ai:AI-complete"
+      ],
+      "route_str": "SOP-013 -> KB-0025 -> SOP-016 -> KB-0005 -> SRC-0034 -> wiki-ai:AI-complete",
+      "outcome": "success",
+      "assessment": "Full enrichment path found: 6 hops, reached wiki"
+    },
+    {
+      "journey_id": 4,
+      "agent": "b2-4",
+      "route": [
+        "SOP-014",
+        "KB-0025",
+        "SOP-016",
+        "KB-0005",
+        "SRC-0034",
+        "wiki-ai:AI-complete"
+      ],
+      "route_str": "SOP-014 -> KB-0025 -> SOP-016 -> KB-0005 -> SRC-0034 -> wiki-ai:AI-complete",
+      "outcome": "success",
+      "assessment": "Full enrichment path found: 6 hops, reached wiki"
+    },
+    {
+      "journey_id": 5,
+      "agent": "b2-5",
+      "route": [
+        "SOP-015",
+        "SCR-0020",
+        "TEAM-0008",
+        "SCR-0018",
+        "wiki-ai:Neuro-symbolic_AI"
+      ],
+      "route_str": "SOP-015 -> SCR-0020 -> TEAM-0008 -> SCR-0018 -> wiki-ai:Neuro-symbolic_AI",
+      "outcome": "success",
+      "assessment": "Full enrichment path found: 5 hops, reached wiki"
+    },
+    {
+      "journey_id": 6,
+      "agent": "b2-1",
+      "route": [
+        "SOP-016",
+        "KB-0025",
+        "SOP-016",
+        "KB-0005",
+        "SRC-0034",
+        "wiki-ai:AI-complete"
+      ],
+      "route_str": "SOP-016 -> KB-0025 -> SOP-016 -> KB-0005 -> SRC-0034 -> wiki-ai:AI-complete",
+      "outcome": "success",
+      "assessment": "Full enrichment path found: 6 hops, reached wiki"
+    },
+    {
+      "journey_id": 7,
+      "agent": "b2-2",
+      "route": [
+        "SOP-017",
+        "SCR-0007",
+        "SRC-0006",
+        "SCR-0018",
+        "wiki-ai:Neuro-symbolic_AI"
+      ],
+      "route_str": "SOP-017 -> SCR-0007 -> SRC-0006 -> SCR-0018 -> wiki-ai:Neuro-symbolic_AI",
+      "outcome": "success",
+      "assessment": "Full enrichment path found: 5 hops, reached wiki"
+    },
+    {
+      "journey_id": 8,
+      "agent": "b2-3",
+      "route": [
+        "SOP-018",
+        "SCR-0007",
+        "SRC-0006",
+        "SCR-0018",
+        "wiki-ai:Neuro-symbolic_AI"
+      ],
+      "route_str": "SOP-018 -> SCR-0007 -> SRC-0006 -> SCR-0018 -> wiki-ai:Neuro-symbolic_AI",
+      "outcome": "success",
+      "assessment": "Full enrichment path found: 5 hops, reached wiki"
+    },
+    {
+      "journey_id": 9,
+      "agent": "b2-4",
+      "route": [
+        "SOP-019",
+        "KB-0032",
+        "SCR-0016",
+        "TEAM-0008",
+        "SCR-0018",
+        "wiki-ai:Neuro-symbolic_AI"
+      ],
+      "route_str": "SOP-019 -> KB-0032 -> SCR-0016 -> TEAM-0008 -> SCR-0018 -> wiki-ai:Neuro-symbolic_AI",
+      "outcome": "success",
+      "assessment": "Full enrichment path found: 6 hops, reached wiki"
+    },
+    {
+      "journey_id": 10,
+      "agent": "b2-5",
+      "route": [
+        "SOP-020",
+        "KB-0007",
+        "TEAM-0008",
+        "SCR-0018",
+        "wiki-ai:Neuro-symbolic_AI"
+      ],
+      "route_str": "SOP-020 -> KB-0007 -> TEAM-0008 -> SCR-0018 -> wiki-ai:Neuro-symbolic_AI",
+      "outcome": "success",
+      "assessment": "Full enrichment path found: 5 hops, reached wiki"
+    }
+  ],
+  "journey_summary": {
+    "total": 10,
+    "success": 10,
+    "partial": 0,
+    "failure": 0,
+    "success_rate_pct": 100.0
+  },
+  "recommended_wiki_links": [
+    {
+      "from": "SOP-023",
+      "to": "wiki-ai:Neuro-symbolic_AI",
+      "shared_tags": [
+        "automation",
+        "search"
+      ],
+      "overlap_count": 2,
+      "currently_connected": false,
+      "rationale": "SOP-023 shares 2 tags with wiki-ai:Neuro-symbolic_AI: automation, search"
+    },
+    {
+      "from": "SOP-023",
+      "to": "wiki-ai:Workplace_impact_of_artificial_intelligence",
+      "shared_tags": [
+        "automation",
+        "search"
+      ],
+      "overlap_count": 2,
+      "currently_connected": false,
+      "rationale": "SOP-023 shares 2 tags with wiki-ai:Workplace_impact_of_artificial_intelligence: automation, search"
+    }
+  ],
+  "recommendations": {
+    "priority_1": "Add backlinks from SOP nodes to relevant wiki articles. Currently 0 SOPs point to wiki directly.",
+    "priority_2": "Add backlinks from KB nodes to wiki. KB entries about AI/automation/testing have strong tag overlap with wiki articles but no direct edges.",
+    "priority_3": "Strengthen existing wiki edges (currently weight=1-2 with no strength classification). Assign strength labels.",
+    "priority_4": "Top 2 recommended new edges would bridge the largest tag-overlap gaps."
+  }
+}
