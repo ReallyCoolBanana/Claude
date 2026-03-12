@@ -202,17 +202,23 @@ class AgentReporter:
         is used for agent_status and coordinator_instructions tables instead
         of opening a new connection to db_path.  This enables incremental
         migration to the partitioned database layout.
+    ack_protocol:
+        Optional AckProtocol instance.  When provided, instructions received
+        via ``check_instructions()`` are automatically acknowledged on the
+        bus so the coordinator can track delivery.
     """
 
     def __init__(self, db_path: str, agent_id: str, team: str, role: str,
                  bus_dir: Optional[str] = None,
-                 partitioned_store: Optional["PartitionedStore"] = None) -> None:
+                 partitioned_store: Optional["PartitionedStore"] = None,
+                 ack_protocol: Optional[object] = None) -> None:
         self.db_path = db_path
         self.agent_id = agent_id
         self.team = team
         self.role = role
         self.bus_dir = bus_dir
         self._partitioned_store = partitioned_store
+        self._ack_protocol = ack_protocol
         self._lock = threading.Lock()
         if partitioned_store is not None:
             # Use the hub partition for agent_status and coordinator_instructions
@@ -446,6 +452,30 @@ class AgentReporter:
                 self._conn.execute("ROLLBACK")
                 raise
 
+        # Auto-ack instructions via ack_protocol if available
+        if self._ack_protocol is not None and instructions:
+            for inst in instructions:
+                payload = inst.get("payload")
+                if payload:
+                    try:
+                        payload_data = json.loads(payload) if isinstance(payload, str) else payload
+                        # Look for an ack-tracked message ID in the payload
+                        msg_id = payload_data.get("_ack_message_id")
+                        if msg_id:
+                            self._ack_protocol.ack(msg_id)
+                    except Exception as e:
+                        logger.debug("Auto-ack for instruction %s failed: %s", inst.get("id"), e)
+                # Also try acking by instruction_id pattern on the bus
+                try:
+                    inst_id = str(inst.get("id", ""))
+                    if inst_id:
+                        self._ack_protocol.ack(
+                            f"instruction-{inst_id}",
+                            channel="global",
+                        )
+                except Exception:
+                    pass  # Best-effort ack
+
         return instructions
 
     def close(self) -> None:
@@ -496,19 +526,28 @@ class CoordinatorDashboard:
     health_check_interval:
         Seconds between automatic health checks when monitoring is active.
         Defaults to 60 seconds.  Set to 0 to disable automatic checks.
+    ack_protocol:
+        Optional AckProtocol instance.  When provided, critical instruction
+        types (redirect, reassign, shutdown) are sent via send_no_wait for
+        reliable delivery with acknowledgment tracking.
     """
+
+    # Instruction types that require reliable ack-tracked delivery
+    _CRITICAL_INSTRUCTION_TYPES = frozenset({"redirect", "reassign", "shutdown"})
 
     def __init__(self, db_path: str, bus_dir: Optional[str] = None,
                  partitioned_store: Optional["PartitionedStore"] = None,
                  circuit_breaker: Optional["CircuitBreaker"] = None,
                  deadlock_detector: Optional["DeadlockDetector"] = None,
-                 health_check_interval: float = 60.0) -> None:
+                 health_check_interval: float = 60.0,
+                 ack_protocol: Optional[object] = None) -> None:
         self.db_path = db_path
         self.bus_dir = bus_dir
         self._partitioned_store = partitioned_store
         self._circuit_breaker = circuit_breaker
         self._deadlock_detector = deadlock_detector
         self._health_check_interval = health_check_interval
+        self._ack_protocol = ack_protocol
         self._lock = threading.Lock()
         if partitioned_store is not None:
             self._conn = partitioned_store.hub.conn
@@ -662,14 +701,64 @@ class CoordinatorDashboard:
             instruction_id = cur.lastrowid
             self._conn.commit()
 
-        _bus_notify(self.bus_dir, "global", "coordinator", "coordinator", {
+        body = {
             "event": "instruction-sent",
             "target_agent": target_agent,
             "instruction_type": instruction_type,
             "instruction_id": instruction_id,
-        })
+        }
+        is_critical = instruction_type in self._CRITICAL_INSTRUCTION_TYPES
+        if is_critical and self._ack_protocol is not None:
+            try:
+                self._ack_protocol.send_no_wait(
+                    channel="global",
+                    msg_type="instruction",
+                    body=body,
+                    target_agent=target_agent,
+                    priority=8,
+                    ttl=3600,
+                )
+            except Exception as e:
+                logger.warning(
+                    "Ack-tracked instruction to %s failed: %s; falling back to bus",
+                    target_agent, e,
+                )
+                _bus_notify(self.bus_dir, "global", "coordinator", "coordinator", body)
+        else:
+            _bus_notify(self.bus_dir, "global", "coordinator", "coordinator", body)
 
         return instruction_id
+
+    def get_unacknowledged_instructions(self, older_than: float = 60.0) -> list[dict]:
+        """Check which agents haven't acknowledged critical instructions.
+
+        Requires an ack_protocol to be configured.  Returns a list of
+        unacked message dicts from the ack tracking table.  If no
+        ack_protocol is configured, returns an empty list.
+
+        Parameters
+        ----------
+        older_than:
+            Only consider messages older than this many seconds (default 60).
+
+        Returns
+        -------
+        list[dict]
+            Unacknowledged instruction messages.
+        """
+        self._check_closed()
+        if self._ack_protocol is None:
+            return []
+        try:
+            unacked = self._ack_protocol.get_unacked(older_than=older_than)
+            # Filter to only instruction-type messages
+            return [
+                msg for msg in unacked
+                if msg.get("msg_type") == "instruction"
+            ]
+        except Exception as e:
+            logger.warning("get_unacknowledged_instructions failed: %s", e)
+            return []
 
     @_retry_on_busy
     def get_stale_agents(self, timeout_seconds: int = 300) -> list[dict]:
@@ -766,13 +855,33 @@ class CoordinatorDashboard:
                 self._conn.execute("ROLLBACK")
                 raise
 
+        # For critical instruction types, use ack-tracked delivery if available
+        is_critical = instruction_type in self._CRITICAL_INSTRUCTION_TYPES
         for aid, inst_id in zip(agent_ids, instruction_ids):
-            _bus_notify(self.bus_dir, "global", "coordinator", "coordinator", {
+            body = {
                 "event": "instruction-sent",
                 "target_agent": aid,
                 "instruction_type": instruction_type,
                 "instruction_id": inst_id,
-            })
+            }
+            if is_critical and self._ack_protocol is not None:
+                try:
+                    self._ack_protocol.send_no_wait(
+                        channel="global",
+                        msg_type="instruction",
+                        body=body,
+                        target_agent=aid,
+                        priority=8,
+                        ttl=3600,
+                    )
+                except Exception as e:
+                    logger.warning(
+                        "Ack-tracked broadcast to %s failed: %s; falling back to bus",
+                        aid, e,
+                    )
+                    _bus_notify(self.bus_dir, "global", "coordinator", "coordinator", body)
+            else:
+                _bus_notify(self.bus_dir, "global", "coordinator", "coordinator", body)
 
         return instruction_ids
 

@@ -922,6 +922,106 @@ class PipelineManager:
 
         return newly_ready
 
+    def verify_ordering(self, pipeline_id: int) -> dict:
+        """Verify that pipeline stage messages are in causal order.
+
+        Uses the stored vector clock snapshots for each stage to check
+        whether the completion order respects causal dependencies.
+
+        Parameters
+        ----------
+        pipeline_id:
+            The pipeline to verify.
+
+        Returns
+        -------
+        dict
+            {
+                "pipeline_id": int,
+                "in_order": bool,
+                "violations": list[dict],
+                "stage_vectors": dict,
+            }
+        """
+        if self._vector_clock is None:
+            return {
+                "pipeline_id": pipeline_id,
+                "in_order": True,
+                "violations": [],
+                "stage_vectors": {},
+                "note": "No vector clock configured; ordering not tracked.",
+            }
+
+        # Gather stage vectors for this pipeline
+        prefix = f"{pipeline_id}:"
+        stage_vecs: dict[str, dict[str, int]] = {}
+        for key, vc in self._stage_vectors.items():
+            if key.startswith(prefix):
+                stage_name = key[len(prefix):]
+                stage_vecs[stage_name] = vc
+
+        if not stage_vecs:
+            return {
+                "pipeline_id": pipeline_id,
+                "in_order": True,
+                "violations": [],
+                "stage_vectors": {},
+                "note": "No vector clock data recorded for this pipeline.",
+            }
+
+        # Get the pipeline dependency graph
+        violations = []
+        with self._lock:
+            stages = self._conn.execute(
+                "SELECT stage_name, depends_on, status FROM pipeline_stages WHERE pipeline_id = ?",
+                (pipeline_id,),
+            ).fetchall()
+
+        for stage in stages:
+            stage_name = stage["stage_name"]
+            deps = json.loads(stage["depends_on"]) if stage["depends_on"] else []
+            if stage_name not in stage_vecs:
+                continue
+            stage_vc = stage_vecs[stage_name]
+
+            for dep_name in deps:
+                if dep_name not in stage_vecs:
+                    continue
+                dep_vc = stage_vecs[dep_name]
+                # The dependency should have happened-before this stage.
+                # Import is avoided; we do a manual check inline.
+                # is_before: dep_vc[a] <= stage_vc[a] for all a, and strict < for at least one
+                all_agents = set(dep_vc.keys()) | set(stage_vc.keys())
+                all_leq = True
+                at_least_one_less = False
+                for agent in all_agents:
+                    c_dep = dep_vc.get(agent, 0)
+                    c_stage = stage_vc.get(agent, 0)
+                    if c_dep > c_stage:
+                        all_leq = False
+                        break
+                    if c_dep < c_stage:
+                        at_least_one_less = True
+
+                if not (all_leq and at_least_one_less):
+                    violations.append({
+                        "stage": stage_name,
+                        "dependency": dep_name,
+                        "stage_vc": stage_vc,
+                        "dep_vc": dep_vc,
+                        "reason": (
+                            f"Stage '{stage_name}' (vc={stage_vc}) does not causally "
+                            f"follow dependency '{dep_name}' (vc={dep_vc})"
+                        ),
+                    })
+
+        return {
+            "pipeline_id": pipeline_id,
+            "in_order": len(violations) == 0,
+            "violations": violations,
+            "stage_vectors": stage_vecs,
+        }
+
 
 # ===================================================================
 # Scratchpad

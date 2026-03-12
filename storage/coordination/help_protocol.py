@@ -21,6 +21,8 @@ from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .db_partition import PartitionedStore
+    from .capability_discovery import CapabilityRegistry
+    from .load_balancer import LoadBalancer
 
 logger = logging.getLogger(__name__)
 
@@ -146,17 +148,31 @@ class HelpProtocol:
         help_requests, team_capabilities, and team_status are routed to
         the findings partition instead of the monolithic database.  This
         enables incremental migration to the partitioned database layout.
+    capability_registry:
+        Optional CapabilityRegistry instance.  When provided,
+        ``auto_assign_idle_teams()`` uses ``match_work_to_team()`` for
+        intelligent capability-based assignment instead of the built-in
+        capability matching.
+    load_balancer:
+        Optional LoadBalancer instance.  When provided,
+        ``auto_assign_idle_teams()`` uses ``get_least_loaded()`` to break
+        ties between equally-capable teams.  ``offer_help()`` and
+        ``fulfill_help()`` update load metrics automatically.
     """
 
     def __init__(self, db_path: str, bus_dir: str, team: str, agent_id: str,
                  partitioned_store: Optional["PartitionedStore"] = None,
-                 ack_protocol: Optional[object] = None) -> None:
+                 ack_protocol: Optional[object] = None,
+                 capability_registry: Optional["CapabilityRegistry"] = None,
+                 load_balancer: Optional["LoadBalancer"] = None) -> None:
         self.db_path = db_path
         self.bus_dir = bus_dir
         self.team = team
         self.agent_id = agent_id
         self._partitioned_store = partitioned_store
         self._ack_protocol = ack_protocol
+        self._capability_registry = capability_registry
+        self._load_balancer = load_balancer
         self._lock = threading.Lock()
         if partitioned_store is not None:
             # All HelpProtocol tables live in the findings partition
@@ -615,6 +631,22 @@ class HelpProtocol:
                 else:
                     self._publish_bus("global", "info", accepted_body)
 
+                # Update load balancer: team is taking on work
+                if self._load_balancer is not None:
+                    try:
+                        load = self._load_balancer.get_load(self.team)
+                        new_active = (load["active_tasks"] + 1) if load else 1
+                        new_queue = load["queue_depth"] if load else 0
+                        self._load_balancer.update_load(
+                            self.team, new_active, new_queue,
+                        )
+                    except Exception:
+                        logger.warning(
+                            "Load balancer update failed after offer_help "
+                            "(team=%s, request=%d)",
+                            self.team, request_id, exc_info=True,
+                        )
+
                 return True
 
             except Exception:
@@ -701,6 +733,17 @@ class HelpProtocol:
                 self._publish_bus("global", "info", fulfilled_body)
         else:
             self._publish_bus("global", "info", fulfilled_body)
+
+        # Update load balancer: team completed work
+        if self._load_balancer is not None:
+            try:
+                self._load_balancer.record_completion(self.team)
+            except Exception:
+                logger.warning(
+                    "Load balancer completion update failed "
+                    "(team=%s, request=%d)",
+                    self.team, request_id, exc_info=True,
+                )
 
     # ------------------------------------------------------------------
     # Ack-based reliability
@@ -974,6 +1017,7 @@ class HelpProtocol:
 
         assignments = []
         assigned_teams = set()
+        idle_team_names = [t["team"] for t in all_idle_teams]
 
         for req in open_requests:
             request_id = req["id"]
@@ -981,21 +1025,92 @@ class HelpProtocol:
             # Use pre-fetched capabilities instead of re-querying
             required = request_caps[request_id]
 
-            if required:
-                # Score idle teams by capability match
-                helpers = []
-                required_set = set(required)
-                for team_info in all_idle_teams:
-                    team_caps = set(team_info.get("capabilities", []))
-                    match_count = len(team_caps & required_set)
-                    if match_count > 0:
-                        helper = dict(team_info)
-                        helper["match_score"] = match_count / len(required_set)
-                        helpers.append(helper)
-                helpers.sort(key=lambda t: t.get("match_score", 0), reverse=True)
+            # --- Capability-based matching ---
+            # When a CapabilityRegistry is provided, delegate scoring to it
+            # for more sophisticated proficiency-weighted matching.
+            if self._capability_registry is not None and required:
+                try:
+                    best_team = self._capability_registry.match_work_to_team(
+                        work_item={"required_capabilities": required},
+                        exclude_teams=[req["requesting_team"]] + list(assigned_teams),
+                        idle_teams=idle_team_names,
+                    )
+                    if best_team is not None:
+                        # Build helpers list with the registry's pick first,
+                        # then remaining idle teams as fallback
+                        helpers = [
+                            t for t in all_idle_teams if t["team"] == best_team
+                        ]
+                        # If load_balancer is available and multiple teams
+                        # had equal capability scores, use it to break ties
+                        if self._load_balancer is not None:
+                            remaining = [
+                                t for t in all_idle_teams
+                                if t["team"] != best_team
+                                and t["team"] != req["requesting_team"]
+                                and t["team"] not in assigned_teams
+                            ]
+                            if remaining:
+                                remaining_names = [t["team"] for t in remaining]
+                                least = self._load_balancer.get_least_loaded(remaining_names)
+                                if least:
+                                    helpers.extend(
+                                        t for t in remaining if t["team"] == least
+                                    )
+                    else:
+                        helpers = []
+                except Exception:
+                    logger.warning(
+                        "CapabilityRegistry match failed for request %d, "
+                        "falling back to built-in matching",
+                        request_id, exc_info=True,
+                    )
+                    # Fall through to built-in matching below
+                    helpers = None
             else:
-                # No specific capabilities needed — all idle teams are compatible
-                helpers = list(all_idle_teams)
+                helpers = None
+
+            # Built-in matching fallback (when no registry or registry failed)
+            if helpers is None:
+                if required:
+                    helpers = []
+                    required_set = set(required)
+                    for team_info in all_idle_teams:
+                        team_caps = set(team_info.get("capabilities", []))
+                        match_count = len(team_caps & required_set)
+                        if match_count > 0:
+                            helper = dict(team_info)
+                            helper["match_score"] = match_count / len(required_set)
+                            helpers.append(helper)
+                    helpers.sort(key=lambda t: t.get("match_score", 0), reverse=True)
+
+                    # When load_balancer is available, use it to break ties
+                    # among top-scoring helpers
+                    if self._load_balancer is not None and len(helpers) > 1:
+                        top_score = helpers[0].get("match_score", 0)
+                        tied = [h for h in helpers if h.get("match_score", 0) == top_score]
+                        if len(tied) > 1:
+                            tied_names = [h["team"] for h in tied]
+                            least = self._load_balancer.get_least_loaded(tied_names)
+                            if least:
+                                # Move least-loaded to front
+                                helpers = (
+                                    [h for h in helpers if h["team"] == least]
+                                    + [h for h in helpers if h["team"] != least]
+                                )
+                else:
+                    # No specific capabilities needed — all idle teams are compatible
+                    helpers = list(all_idle_teams)
+
+                    # Use load balancer to pick among all idle teams
+                    if self._load_balancer is not None and len(helpers) > 1:
+                        candidate_names = [h["team"] for h in helpers]
+                        least = self._load_balancer.get_least_loaded(candidate_names)
+                        if least:
+                            helpers = (
+                                [h for h in helpers if h["team"] == least]
+                                + [h for h in helpers if h["team"] != least]
+                            )
 
             # FIX: BUG-HP-013 - only fall back to any team if no capabilities were required
             if not helpers and not required:
@@ -1098,6 +1213,22 @@ class HelpProtocol:
                             "work_item_id": work_item_id,
                             "auto_assigned": True,
                         })
+
+                        # Update load balancer: helper team is taking on work
+                        if self._load_balancer is not None:
+                            try:
+                                load = self._load_balancer.get_load(helper_team)
+                                new_active = (load["active_tasks"] + 1) if load else 1
+                                new_queue = load["queue_depth"] if load else 0
+                                self._load_balancer.update_load(
+                                    helper_team, new_active, new_queue,
+                                )
+                            except Exception:
+                                logger.warning(
+                                    "Load balancer update failed after auto-assign "
+                                    "(team=%s, request=%d)",
+                                    helper_team, request_id, exc_info=True,
+                                )
 
                         break  # Move to next request
 
