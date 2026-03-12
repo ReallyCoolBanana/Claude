@@ -17,11 +17,13 @@ import sys
 import os
 from collections import defaultdict
 from itertools import permutations
+from pathlib import Path
 from datetime import datetime
 
-NETWORK_PATH = "/home/user/Claude/storage/pointer-network.json"
-REPORT_PATH = "/home/user/Claude/storage/pointer-routes/pathfind_p6_multistop.json"
-ROUTE_TRACKER = "/home/user/Claude/storage/coordination/route_tracker.py"
+_SCRIPT_DIR = Path(__file__).resolve().parent
+NETWORK_PATH = _SCRIPT_DIR.parent / "pointer-network.json"
+REPORT_PATH = _SCRIPT_DIR / "pathfind_p6_multistop.json"
+ROUTE_TRACKER = _SCRIPT_DIR.parent / "coordination" / "route_tracker.py"
 
 
 def load_network(path):

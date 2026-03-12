@@ -17,8 +17,12 @@ POINTER_NETWORK = BASE / "pointer-network.json"
 ROUTE_TRACKER = BASE / "coordination" / "route_tracker.py"
 REPORT_PATH = BASE / "pointer-routes" / "stress_s8_report.json"
 
-with open(POINTER_NETWORK) as f:
-    PN = json.load(f)
+try:
+    with open(POINTER_NETWORK) as f:
+        PN = json.load(f)
+except FileNotFoundError:
+    print(f"Error: pointer network file not found: {POINTER_NETWORK}", file=sys.stderr)
+    sys.exit(1)
 NODES = PN["nodes"]
 
 

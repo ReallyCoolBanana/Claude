@@ -18,8 +18,12 @@ REPORT_PATH = Path(__file__).parent / "benchmark_gamma_report.json"
 ROUTE_TRACKER = Path(__file__).parent.parent / "coordination" / "route_tracker.py"
 
 # Load the pointer network
-with open(NETWORK_PATH) as f:
-    PN = json.load(f)
+try:
+    with open(NETWORK_PATH) as f:
+        PN = json.load(f)
+except FileNotFoundError:
+    print(f"Error: pointer network file not found: {NETWORK_PATH}", file=sys.stderr)
+    sys.exit(1)
 NODES = PN["nodes"]
 
 

@@ -4,8 +4,11 @@
 import json
 import sys
 from collections import defaultdict
+from pathlib import Path
 
-with open("/home/user/Claude/storage/pointer-network.json", "r") as f:
+_SCRIPT_DIR = Path(__file__).resolve().parent
+
+with open(_SCRIPT_DIR.parent / "pointer-network.json", "r") as f:
     data = json.load(f)
 
 bugs = []
@@ -379,7 +382,7 @@ for b in bugs:
     summary["bug_counts"]["by_category"][cat] = summary["bug_counts"]["by_category"].get(cat, 0) + 1
     summary["bug_counts"]["by_severity"][sev] = summary["bug_counts"]["by_severity"].get(sev, 0) + 1
 
-output_path = "/home/user/Claude/storage/pointer-routes/bugs_b2_data_integrity.json"
+output_path = _SCRIPT_DIR / "bugs_b2_data_integrity.json"
 with open(output_path, "w") as f:
     json.dump(summary, f, indent=2)
 

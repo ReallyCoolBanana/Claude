@@ -2,6 +2,10 @@
 """
 Maximum-weight pathfinding on the pointer network using modified Dijkstra's.
 
+NOTE: This file uses a simple-path-aware Dijkstra (tracks full paths in
+the heap, avoids cycles, enforces max_hops). For a simpler standard
+Dijkstra variant with predecessor reconstruction, see pathfind_p1_weight.py.
+
 Standard Dijkstra finds shortest (min-weight) paths. We invert the logic:
 - Use a max-heap (negate weights for Python's min-heap)
 - Relax edges when cumulative weight is GREATER than current best
@@ -14,10 +18,12 @@ import subprocess
 import sys
 import os
 from collections import defaultdict
+from pathlib import Path
 
-NETWORK_PATH = "/home/user/Claude/storage/pointer-network.json"
-REPORT_PATH = "/home/user/Claude/storage/pointer-routes/pathfind_p1_weight.json"
-ROUTE_TRACKER = "/home/user/Claude/storage/coordination/route_tracker.py"
+_SCRIPT_DIR = Path(__file__).resolve().parent
+NETWORK_PATH = _SCRIPT_DIR.parent / "pointer-network.json"
+REPORT_PATH = _SCRIPT_DIR / "pathfind_p1_weight.json"
+ROUTE_TRACKER = _SCRIPT_DIR.parent / "coordination" / "route_tracker.py"
 
 def load_network(path):
     with open(path) as f:
@@ -149,7 +155,7 @@ def log_route(agent, path, total_weight, hops, outcome="success"):
     route_str = " -> ".join(path)
     notes = f"total_weight={total_weight}, hops={hops}"
     cmd = [
-        "python3", ROUTE_TRACKER, "log",
+        sys.executable, ROUTE_TRACKER, "log",
         "--agent", agent,
         "--task", "weight-pathfinding",
         "--route", route_str,

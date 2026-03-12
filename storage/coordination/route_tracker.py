@@ -138,10 +138,13 @@ def analyze_routes():
     agent_patterns = defaultdict(list)
     task_patterns = defaultdict(list)
 
+    known_outcomes = {"success", "failure", "partial"}
+
     for r in routes:
         entry = r.get("entry_node", "?")
         exit_node = r.get("exit_node", "?")
-        outcome = r.get("outcome", "unknown")
+        raw_outcome = r.get("outcome", "unknown")
+        outcome = raw_outcome if raw_outcome in known_outcomes else "other"
 
         node_entry_freq[entry] += 1
         node_exit_freq[exit_node] += 1
@@ -284,11 +287,11 @@ def get_top_routes(entry_node: str):
         return []
 
     print(f"\nRoutes from {entry_node} ({len(matching)} total):")
-    route_counter = Counter(" -> ".join(r["route"]) for r in matching)
+    route_counter = Counter(" -> ".join(r.get("route", [])) for r in matching)
     for route_str, count in route_counter.most_common(10):
         outcomes = Counter(
-            r["outcome"] for r in matching
-            if " -> ".join(r["route"]) == route_str
+            r.get("outcome", "unknown") for r in matching
+            if " -> ".join(r.get("route", [])) == route_str
         )
         print(f"  [{count}x] {route_str}")
         print(f"         outcomes: {dict(outcomes)}")

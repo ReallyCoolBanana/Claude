@@ -113,6 +113,9 @@ def trace_monitoring_workflow(sop_id):
     workflows = []
     for scr_ptr in scr_links:
         scr_id = scr_ptr["to"]
+        if scr_id not in nodes:
+            print(f"  WARNING: SCR target {scr_id} from {sop_id} not found in network, skipping")
+            continue
         # Now follow SCR->SCR chains
         chain = find_longest_chain_from(scr_id, scr_adjacency)
         full_path = [sop_id] + chain
@@ -130,6 +133,11 @@ monitoring_workflows_detail = {}
 
 print(f"=== TASK 2: Monitoring SOP Workflow Depth ===")
 for sop_id in monitoring_sops:
+    if sop_id not in nodes:
+        print(f"  WARNING: {sop_id} not found in pointer network, skipping")
+        monitoring_depth[sop_id] = 0
+        monitoring_workflows_detail[sop_id] = {"total_scr_links": 0, "max_depth": 0, "workflows": []}
+        continue
     workflows = trace_monitoring_workflow(sop_id)
     if workflows:
         max_depth = max(w["depth"] for w in workflows)
@@ -172,6 +180,9 @@ def find_cross_sop_paths(sop_id):
 
     paths = []
     for scr_id, strength, weight in scr_targets:
+        if scr_id not in nodes:
+            print(f"  WARNING: SCR target {scr_id} from {sop_id} not found in network, skipping")
+            continue
         # Check if this SCR points to any SOP
         scr_data = nodes.get(scr_id, {})
         sop_targets = [(p["to"], p.get("strength", "?"), p.get("weight", 0))
@@ -190,6 +201,9 @@ def find_cross_sop_paths(sop_id):
 
         # Also check SCR->SCR->SOP (2-hop via scripts)
         for scr_neighbor in scr_adjacency.get(scr_id, []):
+            if scr_neighbor not in nodes:
+                print(f"  WARNING: SCR neighbor {scr_neighbor} not found in network, skipping")
+                continue
             scr2_data = nodes.get(scr_neighbor, {})
             sop_targets2 = [(p["to"], p.get("strength", "?"), p.get("weight", 0))
                             for p in scr2_data.get("pointers", [])
