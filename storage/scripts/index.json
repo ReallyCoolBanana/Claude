@@ -7,8 +7,9 @@
       "name": "validate-storage",
       "filename": "validate-storage.py",
       "language": "python",
-      "category": "utility",
+      "category": "validation",
       "description": "Comprehensive validation tool for the storage system. Checks schema validation, referential integrity, file existence, orphan detection, ID format, date format, required fields, duplicates, version validation, and length limits across all three subsections.",
+      "tags": ["validation", "storage", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0003"
@@ -18,8 +19,9 @@
       "name": "test-edge-cases",
       "filename": "test-edge-cases.py",
       "language": "python",
-      "category": "utility",
+      "category": "validation",
       "description": "Edge case and boundary testing suite for the storage system. Runs 35 tests covering malformed JSON, long descriptions, special characters, ID format violations, category mismatches, version field issues, and duplicate detection.",
+      "tags": ["validation", "storage", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0003"
@@ -29,8 +31,9 @@
       "name": "repair-storage",
       "filename": "repair-storage.py",
       "language": "python",
-      "category": "utility",
+      "category": "automation",
       "description": "Automated repair tool for common storage system issues. Fixes versions, dates, rebuilds category indexes, removes duplicates, truncates long descriptions, and ensures structural completeness. Supports --dry-run mode.",
+      "tags": ["automation", "storage", "validation", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0003"
@@ -42,6 +45,7 @@
       "language": "python",
       "category": "analysis",
       "description": "Evaluates research JSON quality across five dimensions: citation count/quality, coverage breadth, depth (word count), and specificity (metrics, tools, code). Outputs a graded report with recommendations.",
+      "tags": ["validation", "stock-analysis", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0005"
@@ -53,6 +57,7 @@
       "language": "python",
       "category": "analysis",
       "description": "Merges multiple team research JSON files by topic category. Deduplicates techniques using string similarity, identifies coverage gaps across teams, and outputs a unified research document.",
+      "tags": ["deduplication", "multi-agent", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0005"
@@ -64,6 +69,7 @@
       "language": "python",
       "category": "data-collection",
       "description": "Multi-query web search via DuckDuckGo. Generates 3-5 query variants and deduplicates results by URL.",
+      "tags": ["data-gathering", "search", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0003"
@@ -75,6 +81,7 @@
       "language": "python",
       "category": "data-collection",
       "description": "Wikipedia API deep extraction with DuckDuckGo fallback. Extracts summaries, sections, references, categories, and follows See Also links.",
+      "tags": ["data-gathering", "search", "public-api", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0003"
@@ -86,6 +93,7 @@
       "language": "python",
       "category": "data-collection",
       "description": "arXiv academic paper search with DuckDuckGo fallback. Extracts titles, authors, abstracts, categories, and publication dates.",
+      "tags": ["data-gathering", "search", "arxiv", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0003"
@@ -97,6 +105,7 @@
       "language": "python",
       "category": "data-collection",
       "description": "Hybrid multi-source aggregation combining web search, Wikipedia, and arXiv. Cross-references findings and scores by corroboration count.",
+      "tags": ["data-gathering", "search", "deduplication", "python"],
       "dependencies": ["SCR-0006", "SCR-0007", "SCR-0008"],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0003"
@@ -108,6 +117,7 @@
       "language": "python",
       "category": "data-collection",
       "description": "Iterative deepening search doing 3 rounds of progressively deeper DuckDuckGo queries. Each round refines queries based on previous results.",
+      "tags": ["data-gathering", "search", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0003"
@@ -119,6 +129,7 @@
       "language": "python",
       "category": "analysis",
       "description": "Benchmark harness that runs all data gathering methods against a test query, times them, and calculates quality scores based on result count, source diversity, and information density.",
+      "tags": ["benchmark", "data-gathering", "python"],
       "dependencies": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010"],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0003"
@@ -128,8 +139,9 @@
       "name": "kb-validator",
       "filename": "kb_validator.py",
       "language": "python",
-      "category": "utility",
+      "category": "validation",
       "description": "Validates knowledge base entries and index.json consistency. Checks YAML frontmatter required fields, builds_on references, index entry/file matching, tag_index completeness, category consistency, and team ID format. Outputs structured JSON report.",
+      "tags": ["validation", "indexing", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0006"
@@ -139,8 +151,9 @@
       "name": "index-rebuilder",
       "filename": "index_rebuilder.py",
       "language": "python",
-      "category": "utility",
+      "category": "indexing",
       "description": "Auto-generates index.json files by scanning knowledge-base/entries/ and teams/sessions/ directories. Parses YAML frontmatter, rebuilds entries, categories, and tag_index. Supports --dry-run and --fix modes with diff output.",
+      "tags": ["indexing", "automation", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0006"
@@ -150,8 +163,9 @@
       "name": "cross-ref-checker",
       "filename": "cross_ref_checker.py",
       "language": "python",
-      "category": "utility",
+      "category": "validation",
       "description": "Validates all cross-references across the repository. Checks KB builds_on chains, team session KB references, script dependencies. Detects cycles via DFS, finds orphan files and dangling index entries. Outputs dependency tree and structured JSON report.",
+      "tags": ["validation", "indexing", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0006"
@@ -161,8 +175,9 @@
       "name": "fast-search",
       "filename": "fast_search/main.go",
       "language": "go",
-      "category": "utility",
+      "category": "search",
       "description": "High-speed full-text search index compiled in Go. Builds an inverted index of all .md, .json, .py, .go files. Supports exact match, multi-word AND, and phrase search modes. Query time <5ms on current corpus (126 files). Outputs JSON results with file, line, column, and context.",
+      "tags": ["search", "indexing", "go"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0008"
@@ -172,8 +187,9 @@
       "name": "fast-validate",
       "filename": "fast_validate/main.go",
       "language": "go",
-      "category": "utility",
+      "category": "validation",
       "description": "High-speed repository structure validator compiled in Go. Validates all index.json files, cross-references (KB builds_on, script dependencies), file existence, orphan detection, and dependency cycle detection in a single pass. Completes in <2ms. Outputs JSON report with pass/fail and all issues.",
+      "tags": ["validation", "indexing", "go"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0008"
@@ -183,8 +199,9 @@
       "name": "fast-cache",
       "filename": "fast_cache/main.go",
       "language": "go",
-      "category": "utility",
+      "category": "caching",
       "description": "High-speed file-based key-value cache for API responses, compiled in Go. Keys are SHA-256 of URL. Supports get, set (with TTL), delete, stats, gc (garbage collection), and keys commands. Uses index file + data directory for sub-millisecond cache hits. CLI interface with JSON output.",
+      "tags": ["caching", "storage", "go"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0008"
@@ -194,8 +211,9 @@
       "name": "kb-search",
       "filename": "kb_search.py",
       "language": "python",
-      "category": "utility",
+      "category": "search",
       "description": "Full-text search across KB entries, team logs, and script metadata using TF-IDF ranking. CLI with argparse supporting query, --tags, --category, and --type filters. Returns ranked results with context snippets.",
+      "tags": ["search", "nlp", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0008"
@@ -205,8 +223,9 @@
       "name": "handoff-tracker",
       "filename": "handoff_tracker.py",
       "language": "python",
-      "category": "utility",
+      "category": "coordination",
       "description": "Parses Handoff Notes sections from team session logs, extracts action items, and checks if subsequent teams addressed each item. Tracks resolution rate across all iterations.",
+      "tags": ["coordination", "multi-agent", "monitoring", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0008"
@@ -216,8 +235,9 @@
       "name": "staleness-detector",
       "filename": "staleness_detector.py",
       "language": "python",
-      "category": "utility",
+      "category": "validation",
       "description": "Repository health checker with 6 checks: stale statuses, regressions, unaddressed handoffs, broken references, index mismatches, and orphan files. Outputs scored health report.",
+      "tags": ["validation", "monitoring", "python"],
       "dependencies": ["SCR-0012", "SCR-0014", "SCR-0019"],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0008"
@@ -229,6 +249,7 @@
       "language": "python",
       "category": "data-collection",
       "description": "Shared DuckDuckGo search utilities. Contains DuckDuckGoParser class, search_duckduckgo function, rate limiting (0.5s between requests), and configurable User-Agent. Extracted from 4 duplicate implementations.",
+      "tags": ["search", "data-gathering", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0007"
@@ -240,6 +261,7 @@
       "language": "python",
       "category": "data-collection",
       "description": "File-based HTTP response cache with SHA-256 keys, base64 storage, and configurable TTL (default 1 hour). Functions: cached_request(), clear_cache(), cache_stats().",
+      "tags": ["caching", "data-gathering", "python"],
       "dependencies": [],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0007"
@@ -251,6 +273,7 @@
       "language": "python",
       "category": "data-collection",
       "description": "OpenAlex academic search via REST API. Searches 250M+ scholarly works, extracts titles, authors, abstracts (from inverted index), citation counts, DOIs, and open access status. Uses polite pool for higher rate limits.",
+      "tags": ["data-gathering", "openalex", "search", "python"],
       "dependencies": ["SCR-0022"],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0010"
@@ -262,6 +285,7 @@
       "language": "python",
       "category": "data-collection",
       "description": "Hacker News search via Algolia API plus Firebase top stories. Extracts titles, URLs, authors, points, comment counts. Deduplicates across both sources.",
+      "tags": ["data-gathering", "hacker-news", "search", "python"],
       "dependencies": ["SCR-0022"],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0010"
@@ -273,6 +297,7 @@
       "language": "python",
       "category": "data-collection",
       "description": "Guardian news search via Open Platform API. Extracts headlines, body text, sections, and publication dates. Falls back to DuckDuckGo site-scoped search if API fails.",
+      "tags": ["data-gathering", "guardian", "search", "python"],
       "dependencies": ["SCR-0021", "SCR-0022"],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0010"
@@ -284,6 +309,7 @@
       "language": "python",
       "category": "data-collection",
       "description": "Semantic Scholar paper search via Academic Graph API. Extracts titles, authors, abstracts, AI-generated TLDRs, citation counts, fields of study, and open access PDF links. Respects 1 req/sec rate limit.",
+      "tags": ["data-gathering", "semantic-scholar", "search", "python"],
       "dependencies": ["SCR-0022"],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0010"
@@ -295,6 +321,7 @@
       "language": "python",
       "category": "data-collection",
       "description": "Wikidata knowledge graph search. Two-phase: searches entities then fetches full details including labels, descriptions, key properties (instance of, subclass of), and Wikipedia sitelinks.",
+      "tags": ["data-gathering", "wikidata", "search", "python"],
       "dependencies": ["SCR-0022"],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0010"
@@ -306,6 +333,7 @@
       "language": "python",
       "category": "data-collection",
       "description": "GitHub repository and code search via REST API. Searches repos by stars, extracts descriptions, languages, topics, licenses, and fork counts. Also searches code with graceful rate-limit handling.",
+      "tags": ["data-gathering", "github-api", "search", "python"],
       "dependencies": ["SCR-0022"],
       "added": "2026-03-10",
       "added_by_team": "TEAM-0010"
@@ -315,8 +343,9 @@
       "name": "bus-cli",
       "filename": "../coordination/bus_cli.py",
       "language": "python",
-      "category": "automation",
+      "category": "coordination",
       "description": "CLI for JSONL message bus operations. Provides command-line interface for reading, writing, and managing messages on the JSONL-based inter-agent communication bus.",
+      "tags": ["message-bus", "communication", "jsonl", "python"],
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "TEAM-0025"
@@ -326,8 +355,9 @@
       "name": "multi-team-runner",
       "filename": "../coordination/multi_team_runner.py",
       "language": "python",
-      "category": "automation",
+      "category": "coordination",
       "description": "Production multi-team launcher with heartbeat monitoring. Manages lifecycle of multiple agent teams with health checks, restart logic, and coordinated startup/shutdown.",
+      "tags": ["coordination", "multi-agent", "monitoring", "python"],
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "TEAM-0025"
@@ -339,6 +369,7 @@
       "language": "python",
       "category": "analysis",
       "description": "Convergence script for cross-referencing team findings. Aggregates and reconciles results from multiple teams to identify consensus, conflicts, and coverage gaps.",
+      "tags": ["coordination", "multi-agent", "deduplication", "python"],
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "TEAM-0025"
@@ -348,8 +379,9 @@
       "name": "dashboard",
       "filename": "../coordination/dashboard.py",
       "language": "python",
-      "category": "utility",
+      "category": "coordination",
       "description": "Real-time text-based agent monitoring dashboard. Displays live status of running agent teams, message throughput, task progress, and system health in a terminal UI.",
+      "tags": ["monitoring", "coordination", "multi-agent", "python"],
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "TEAM-0025"
@@ -359,8 +391,9 @@
       "name": "coordinator-hub",
       "filename": "../coordination/coordinator_hub.py",
       "language": "python",
-      "category": "automation",
+      "category": "coordination",
       "description": "Hub-and-spoke agent coordination via SQLite. Central coordinator that manages task assignment, result collection, and agent communication through a SQLite-based shared state.",
+      "tags": ["coordination", "hub-spoke", "sqlite", "multi-agent", "python"],
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "TEAM-0025"
@@ -370,8 +403,9 @@
       "name": "build-cross-ref-index",
       "filename": "build-cross-ref-index.py",
       "language": "python",
-      "category": "utility",
+      "category": "indexing",
       "description": "Cross-reference index builder. Scans repository to build a comprehensive index of all cross-references between KB entries, team logs, scripts, and other artifacts.",
+      "tags": ["indexing", "validation", "python"],
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "TEAM-0001"
@@ -381,8 +415,9 @@
       "name": "search-storage",
       "filename": "search-storage.py",
       "language": "python",
-      "category": "utility",
+      "category": "search",
       "description": "Storage search utility. Provides search capabilities across the storage system including scripts, API tools, and data sources.",
+      "tags": ["search", "storage", "python"],
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "TEAM-0001"
@@ -392,8 +427,9 @@
       "name": "stress-test-setup-reads",
       "filename": "stress-test-setup-reads.py",
       "language": "python",
-      "category": "utility",
+      "category": "validation",
       "description": "Read stress test setup. Prepares the environment and test data for storage system read stress testing.",
+      "tags": ["stress-test", "storage", "python"],
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "TEAM-0001"
@@ -403,8 +439,9 @@
       "name": "stress-test-reads-category",
       "filename": "stress-test-reads-category.py",
       "language": "python",
-      "category": "utility",
+      "category": "validation",
       "description": "Category read stress testing. Stress tests the storage system's category-based read operations under high load conditions.",
+      "tags": ["stress-test", "storage", "python"],
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "TEAM-0001"
@@ -414,8 +451,9 @@
       "name": "stress-test-reads-cross",
       "filename": "stress-test-reads-cross.py",
       "language": "python",
-      "category": "utility",
+      "category": "validation",
       "description": "Cross-reference read stress testing. Stress tests the storage system's cross-reference lookup operations under high load conditions.",
+      "tags": ["stress-test", "storage", "python"],
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "TEAM-0001"
@@ -425,8 +463,9 @@
       "name": "stress-test-reads-id",
       "filename": "stress-test-reads-id.py",
       "language": "python",
-      "category": "utility",
+      "category": "validation",
       "description": "ID lookup read stress testing. Stress tests the storage system's ID-based lookup operations under high load conditions.",
+      "tags": ["stress-test", "storage", "python"],
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "TEAM-0001"
@@ -436,8 +475,9 @@
       "name": "stress-test-writes",
       "filename": "stress-test-writes.py",
       "language": "python",
-      "category": "utility",
+      "category": "validation",
       "description": "Write stress testing. Stress tests the storage system's write operations including concurrent writes, large payloads, and rapid sequential writes.",
+      "tags": ["stress-test", "storage", "concurrency", "python"],
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "TEAM-0001"
@@ -447,8 +487,9 @@
       "name": "test-utilities",
       "filename": "data-gathering/methods/test_utilities.py",
       "language": "python",
-      "category": "utility",
+      "category": "validation",
       "description": "Test suite for data-gathering utility modules (ddg_utils, request_cache, dedup_utils). Covers rate limiter thread safety, config locks, cache operations, TOCTOU-safe reads, tokenization, similarity scoring, and deduplication.",
+      "tags": ["validation", "data-gathering", "concurrency", "python"],
       "dependencies": ["SCR-0021", "SCR-0022"],
       "added": "2026-03-12",
       "added_by_team": "TEAM-0026"
@@ -458,8 +499,9 @@
       "name": "test-cross-references",
       "filename": "test-cross-references.py",
       "language": "python",
-      "category": "utility",
+      "category": "validation",
       "description": "Cross-reference analysis test script. Populates index.json files with test entries and validates cross-referencing capabilities across scripts, API tools, and sources indexes.",
+      "tags": ["validation", "indexing", "python"],
       "dependencies": [],
       "added": "2026-03-12",
       "added_by_team": "TEAM-0004"
@@ -468,8 +510,12 @@
   "categories": {
     "data-collection": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028"],
     "analysis": ["SCR-0004", "SCR-0005", "SCR-0011", "SCR-0031"],
-    "automation": ["SCR-0029", "SCR-0030", "SCR-0033"],
-    "utility": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0015", "SCR-0016", "SCR-0017", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0032", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040", "SCR-0041", "SCR-0042"]
+    "automation": ["SCR-0003"],
+    "validation": ["SCR-0001", "SCR-0002", "SCR-0012", "SCR-0014", "SCR-0016", "SCR-0020", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040", "SCR-0041", "SCR-0042"],
+    "search": ["SCR-0015", "SCR-0018", "SCR-0035"],
+    "indexing": ["SCR-0013", "SCR-0034"],
+    "caching": ["SCR-0017"],
+    "coordination": ["SCR-0019", "SCR-0029", "SCR-0030", "SCR-0032", "SCR-0033"]
   },
   "language_index": {
     "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028", "SCR-0029", "SCR-0030", "SCR-0031", "SCR-0032", "SCR-0033", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040", "SCR-0041", "SCR-0042"],
