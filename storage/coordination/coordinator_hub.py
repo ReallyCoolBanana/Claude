@@ -25,6 +25,8 @@ from typing import Any, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .db_partition import PartitionedStore
+    from .circuit_breaker import CircuitBreaker
+    from .deadlock_detector import DeadlockDetector
 
 logger = logging.getLogger(__name__)
 
@@ -485,13 +487,28 @@ class CoordinatorDashboard:
         is used for agent_status and coordinator_instructions tables instead
         of opening a new connection to db_path.  This enables incremental
         migration to the partitioned database layout.
+    circuit_breaker:
+        Optional CircuitBreaker instance.  When provided, ``run_health_checks()``
+        will include open/half-open circuit information in the health report.
+    deadlock_detector:
+        Optional DeadlockDetector instance.  When provided, ``run_health_checks()``
+        will scan for pipeline, help-request, and work-queue deadlocks.
+    health_check_interval:
+        Seconds between automatic health checks when monitoring is active.
+        Defaults to 60 seconds.  Set to 0 to disable automatic checks.
     """
 
     def __init__(self, db_path: str, bus_dir: Optional[str] = None,
-                 partitioned_store: Optional["PartitionedStore"] = None) -> None:
+                 partitioned_store: Optional["PartitionedStore"] = None,
+                 circuit_breaker: Optional["CircuitBreaker"] = None,
+                 deadlock_detector: Optional["DeadlockDetector"] = None,
+                 health_check_interval: float = 60.0) -> None:
         self.db_path = db_path
         self.bus_dir = bus_dir
         self._partitioned_store = partitioned_store
+        self._circuit_breaker = circuit_breaker
+        self._deadlock_detector = deadlock_detector
+        self._health_check_interval = health_check_interval
         self._lock = threading.Lock()
         if partitioned_store is not None:
             self._conn = partitioned_store.hub.conn
@@ -500,6 +517,9 @@ class CoordinatorDashboard:
             self._conn = _open_db(db_path)
             self._owns_conn = True
         self._closed = False
+        self._health_thread: Optional[threading.Thread] = None
+        self._health_stop = threading.Event()
+        self._last_health_report: Optional[dict] = None
 
     def _check_closed(self) -> None:
         """Raise RuntimeError if this instance has been closed."""
@@ -840,8 +860,157 @@ class CoordinatorDashboard:
             "avg_progress": avg_progress,
         }
 
+    # ------------------------------------------------------------------
+    # Health checks (circuit breaker + deadlock detector integration)
+    # ------------------------------------------------------------------
+
+    def run_health_checks(self) -> dict:
+        """Run circuit breaker and deadlock detector health checks.
+
+        Collects data from both optional subsystems and returns a combined
+        health report.  Safe to call even when neither subsystem is wired
+        in -- the report will simply contain empty sections.
+
+        Returns
+        -------
+        dict
+            {
+                "checked_at": float,
+                "deadlocks": {...} or None,
+                "open_circuits": [...] or None,
+                "stale_agents": [...],
+                "healthy": bool,
+            }
+        """
+        self._check_closed()
+        report: dict[str, Any] = {
+            "checked_at": time.time(),
+            "deadlocks": None,
+            "open_circuits": None,
+            "stale_agents": [],
+            "healthy": True,
+        }
+
+        # Deadlock detector scan
+        if self._deadlock_detector is not None:
+            try:
+                scan = self._deadlock_detector.scan_all()
+                report["deadlocks"] = scan
+                if scan.get("total_deadlocks", 0) > 0:
+                    report["healthy"] = False
+                    logger.warning(
+                        "Health check: %d deadlock(s) detected",
+                        scan["total_deadlocks"],
+                    )
+            except Exception:
+                logger.exception("Health check: deadlock scan failed")
+                report["deadlocks"] = {"error": "scan_failed"}
+                report["healthy"] = False
+
+        # Circuit breaker scan
+        if self._circuit_breaker is not None:
+            try:
+                all_circuits = self._circuit_breaker.get_all_circuits()
+                open_circuits = [
+                    c for c in all_circuits
+                    if c.get("state") in ("open", "half_open")
+                ]
+                report["open_circuits"] = open_circuits
+                if open_circuits:
+                    report["healthy"] = False
+                    logger.warning(
+                        "Health check: %d open/half-open circuit(s)",
+                        len(open_circuits),
+                    )
+            except Exception:
+                logger.exception("Health check: circuit breaker scan failed")
+                report["open_circuits"] = [{"error": "scan_failed"}]
+                report["healthy"] = False
+
+        # Also include stale agent detection as part of health
+        try:
+            report["stale_agents"] = self.get_stale_agents()
+            if report["stale_agents"]:
+                report["healthy"] = False
+        except Exception:
+            logger.exception("Health check: stale agent check failed")
+
+        self._last_health_report = report
+
+        _bus_notify(self.bus_dir, "health-check", "coordinator", "coordinator", {
+            "event": "health-check-complete",
+            "healthy": report["healthy"],
+            "deadlock_count": (
+                report["deadlocks"].get("total_deadlocks", 0)
+                if isinstance(report.get("deadlocks"), dict) else 0
+            ),
+            "open_circuit_count": (
+                len(report["open_circuits"])
+                if isinstance(report.get("open_circuits"), list) else 0
+            ),
+            "stale_agent_count": len(report.get("stale_agents", [])),
+        })
+
+        return report
+
+    def get_last_health_report(self) -> Optional[dict]:
+        """Return the most recent health check report, or None if never run."""
+        return self._last_health_report
+
+    def start_health_monitor(self) -> Optional[threading.Thread]:
+        """Start a background thread that runs health checks periodically.
+
+        The thread calls ``run_health_checks()`` every
+        ``health_check_interval`` seconds.  Returns the thread (already
+        started), or None if the interval is zero or no subsystems are
+        configured.
+
+        Returns
+        -------
+        threading.Thread or None
+        """
+        if self._health_check_interval <= 0:
+            return None
+        if self._circuit_breaker is None and self._deadlock_detector is None:
+            return None
+        if self._health_thread is not None and self._health_thread.is_alive():
+            logger.warning("Health monitor thread already running")
+            return self._health_thread
+
+        self._health_stop.clear()
+
+        def _monitor():
+            logger.info(
+                "Health monitor started (interval=%.1fs)",
+                self._health_check_interval,
+            )
+            while not self._health_stop.is_set():
+                try:
+                    self.run_health_checks()
+                except Exception:
+                    logger.exception("Health monitor: check failed")
+                self._health_stop.wait(timeout=self._health_check_interval)
+            logger.info("Health monitor stopped")
+
+        thread = threading.Thread(
+            target=_monitor,
+            name="coordinator-health-monitor",
+            daemon=True,
+        )
+        thread.start()
+        self._health_thread = thread
+        return thread
+
+    def stop_health_monitor(self) -> None:
+        """Stop the background health monitor thread if running."""
+        self._health_stop.set()
+        if self._health_thread is not None and self._health_thread.is_alive():
+            self._health_thread.join(timeout=5.0)
+            self._health_thread = None
+
     def close(self) -> None:
-        """Clean shutdown: close the database connection if we own it."""
+        """Clean shutdown: stop health monitor and close database connection."""
+        self.stop_health_monitor()
         with self._lock:
             if not self._closed:
                 self._closed = True

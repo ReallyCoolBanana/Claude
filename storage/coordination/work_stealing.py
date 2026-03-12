@@ -207,17 +207,28 @@ class WorkStealing:
     reclaim_timeout:
         Seconds a work item can stay in 'claimed' before being reclaimed
         (default 1800).
+    partitioned_store:
+        Optional PartitionedStore instance.  When provided, the queue
+        partition is used for work_queue, pipelines, and pipeline_stages
+        tables instead of opening a new connection to db_path.
     """
 
     def __init__(self, db_path: str, bus_dir: Optional[str], team: str, agent_id: str,
                  auto_reclaim: bool = False, reclaim_interval: int = 30,
-                 reclaim_timeout: int = 1800) -> None:
+                 reclaim_timeout: int = 1800,
+                 partitioned_store: Optional["PartitionedStore"] = None) -> None:
         self.db_path = db_path
         self.bus_dir = bus_dir
         self.team = team
         self.agent_id = agent_id
+        self._partitioned_store = partitioned_store
         self._lock = threading.Lock()
-        self._conn = _open_db(db_path)
+        if partitioned_store is not None:
+            self._conn = partitioned_store.queue.conn
+            self._owns_conn = False
+        else:
+            self._conn = _open_db(db_path)
+            self._owns_conn = True
         self._closed = False
         self._reclaim_thread: Optional[threading.Thread] = None
         self._reclaim_stop = threading.Event()
@@ -288,7 +299,8 @@ class WorkStealing:
             self._closed = True
         # Stop the reclaim thread outside the lock to avoid deadlock
         self.stop_reclaim_thread()
-        self._conn.close()
+        if self._owns_conn:
+            self._conn.close()
 
     @_retry_on_busy
     def enqueue_work(self, title: str, description: str = "", priority: int = 5) -> int:
@@ -502,15 +514,34 @@ class PipelineManager:
         Team label for this instance.
     agent_id:
         Agent identifier for bus messages.
+    partitioned_store:
+        Optional PartitionedStore instance.  When provided, the queue
+        partition is used for pipelines and pipeline_stages tables instead
+        of opening a new connection to db_path.
+    vector_clock:
+        Optional VectorClock instance.  When provided, pipeline stage
+        transitions attach vector clock timestamps to bus notifications
+        for causal ordering verification.  Incoming vector clocks from
+        upstream stages are merged before processing.
     """
 
-    def __init__(self, db_path: str, bus_dir: Optional[str], team: str, agent_id: str) -> None:
+    def __init__(self, db_path: str, bus_dir: Optional[str], team: str, agent_id: str,
+                 partitioned_store: Optional["PartitionedStore"] = None,
+                 vector_clock: Optional[object] = None) -> None:
         self.db_path = db_path
         self.bus_dir = bus_dir
         self.team = team
         self.agent_id = agent_id
+        self._partitioned_store = partitioned_store
+        self._vector_clock = vector_clock
+        self._stage_vectors: dict[str, dict[str, int]] = {}
         self._lock = threading.Lock()
-        self._conn = _open_db(db_path)
+        if partitioned_store is not None:
+            self._conn = partitioned_store.queue.conn
+            self._owns_conn = False
+        else:
+            self._conn = _open_db(db_path)
+            self._owns_conn = True
         self._closed = False
 
     def close(self) -> None:
@@ -518,7 +549,8 @@ class PipelineManager:
             if self._closed:
                 return
             self._closed = True
-            self._conn.close()
+            if self._owns_conn:
+                self._conn.close()
 
     @staticmethod
     def _detect_cycles(stages: list[dict]) -> bool:
@@ -643,13 +675,35 @@ class PipelineManager:
             return True
 
     @_retry_on_busy
-    def start_stage(self, pipeline_id: int, stage_name: str) -> None:
+    def start_stage(self, pipeline_id: int, stage_name: str,
+                    incoming_vector_clock: Optional[dict] = None) -> None:
         """Mark a stage as in_progress.
 
         Only stages with status 'ready' can be started. Raises ValueError
         if the stage is already in_progress, completed, or failed.
+
+        Parameters
+        ----------
+        pipeline_id:
+            The pipeline this stage belongs to.
+        stage_name:
+            Name of the stage to start.
+        incoming_vector_clock:
+            Optional vector clock from the upstream stage that triggered
+            this one.  When provided and a vector_clock is configured,
+            the clock is merged before processing to maintain causal order.
         """
         now = time.time()
+
+        # Merge incoming vector clock if available
+        if incoming_vector_clock and self._vector_clock is not None:
+            try:
+                self._vector_clock.merge(incoming_vector_clock)
+                stage_key = f"{pipeline_id}:{stage_name}"
+                self._stage_vectors[stage_key] = self._vector_clock.vector
+            except Exception as e:
+                logger.warning("Vector clock merge failed for stage %s: %s", stage_name, e)
+
         with self._lock:
             row = self._conn.execute(
                 "SELECT status FROM pipeline_stages WHERE pipeline_id = ? AND stage_name = ?",
@@ -667,16 +721,35 @@ class PipelineManager:
             )
             self._conn.commit()
 
-        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+        body: dict = {
             "event": "pipeline-stage-started",
             "pipeline_id": pipeline_id,
             "stage_name": stage_name,
-        })
+        }
+        if self._vector_clock is not None:
+            body["vector_clock"] = self._vector_clock.vector
+
+        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, body)
 
     @_retry_on_busy
     def complete_stage(self, pipeline_id: int, stage_name: str, output_data: dict) -> None:
-        """Mark a stage as completed and store its output data."""
+        """Mark a stage as completed and store its output data.
+
+        When a vector_clock is configured, the clock is ticked and attached
+        to the bus notification so downstream stages can merge it.
+        """
         now = time.time()
+
+        # Tick vector clock on stage completion
+        vc_snapshot = None
+        if self._vector_clock is not None:
+            try:
+                vc_snapshot = self._vector_clock.tick()
+                stage_key = f"{pipeline_id}:{stage_name}"
+                self._stage_vectors[stage_key] = vc_snapshot
+            except Exception as e:
+                logger.warning("Vector clock tick failed for stage %s: %s", stage_name, e)
+
         with self._lock:
             self._conn.execute(
                 """UPDATE pipeline_stages
@@ -686,11 +759,15 @@ class PipelineManager:
             )
             self._conn.commit()
 
-        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+        body: dict = {
             "event": "pipeline-stage-completed",
             "pipeline_id": pipeline_id,
             "stage_name": stage_name,
-        })
+        }
+        if vc_snapshot is not None:
+            body["vector_clock"] = vc_snapshot
+
+        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, body)
 
     @_retry_on_busy
     def fail_stage(self, pipeline_id: int, stage_name: str, error: str) -> None:
@@ -825,12 +902,23 @@ class PipelineManager:
 
         # Bus notification for each newly-ready stage
         for name in newly_ready:
-            _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+            body: dict = {
                 "event": "pipeline-stage-ready",
                 "pipeline_id": pipeline_id,
                 "stage_name": name,
                 "triggered_by": completed_stage,
-            })
+            }
+            # Attach vector clock from the completed stage so downstream
+            # stages can merge it on start
+            if self._vector_clock is not None:
+                completed_key = f"{pipeline_id}:{completed_stage}"
+                vc = self._stage_vectors.get(completed_key)
+                if vc is not None:
+                    body["vector_clock"] = vc
+                else:
+                    body["vector_clock"] = self._vector_clock.vector
+
+            _bus_notify(self.bus_dir, "global", self.agent_id, self.team, body)
 
         return newly_ready
 
@@ -854,14 +942,25 @@ class Scratchpad:
         Team label (used as default namespace).
     agent_id:
         Agent identifier (recorded as ``written_by``).
+    partitioned_store:
+        Optional PartitionedStore instance.  When provided, the findings
+        partition is used for the scratchpad table instead of opening a
+        new connection to db_path.
     """
 
-    def __init__(self, db_path: str, team: str, agent_id: str) -> None:
+    def __init__(self, db_path: str, team: str, agent_id: str,
+                 partitioned_store: Optional["PartitionedStore"] = None) -> None:
         self.db_path = db_path
         self.team = team
         self.agent_id = agent_id
+        self._partitioned_store = partitioned_store
         self._lock = threading.Lock()
-        self._conn = _open_db(db_path)
+        if partitioned_store is not None:
+            self._conn = partitioned_store.findings.conn
+            self._owns_conn = False
+        else:
+            self._conn = _open_db(db_path)
+            self._owns_conn = True
         self._closed = False
 
     def close(self) -> None:
@@ -869,7 +968,8 @@ class Scratchpad:
             if self._closed:
                 return
             self._closed = True
-            self._conn.close()
+            if self._owns_conn:
+                self._conn.close()
 
     @_retry_on_busy
     def write(self, key: str, value: Any, namespace: Optional[str] = None, ttl: int = 3600) -> None:

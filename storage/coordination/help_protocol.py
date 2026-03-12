@@ -149,12 +149,14 @@ class HelpProtocol:
     """
 
     def __init__(self, db_path: str, bus_dir: str, team: str, agent_id: str,
-                 partitioned_store: Optional["PartitionedStore"] = None) -> None:
+                 partitioned_store: Optional["PartitionedStore"] = None,
+                 ack_protocol: Optional[object] = None) -> None:
         self.db_path = db_path
         self.bus_dir = bus_dir
         self.team = team
         self.agent_id = agent_id
         self._partitioned_store = partitioned_store
+        self._ack_protocol = ack_protocol
         self._lock = threading.Lock()
         if partitioned_store is not None:
             # All HelpProtocol tables live in the findings partition
@@ -477,15 +479,31 @@ class HelpProtocol:
             request_id = cur.lastrowid
             self._conn.commit()
 
-        # Publish help-request to bus
-        self._publish_bus("global", "info", {
+        # Publish help-request to bus (with ack tracking if available)
+        help_body = {
             "event": "help-request",
             "request_id": request_id,
             "work_item_id": work_item_id,
             "description": description,
             "required_capabilities": json.loads(caps) if caps else [],
             "estimated_minutes": est,
-        })
+        }
+        if self._ack_protocol is not None:
+            try:
+                self._ack_protocol.send_no_wait(
+                    channel="global",
+                    msg_type="info",
+                    body=help_body,
+                    target_agent="coordinator",
+                    priority=5,
+                    ttl=3600,
+                )
+            except Exception as e:
+                logger.warning("Ack-tracked help-request send failed: %s", e)
+                # Fall back to plain bus publish
+                self._publish_bus("global", "info", help_body)
+        else:
+            self._publish_bus("global", "info", help_body)
 
         return request_id
 
@@ -573,13 +591,29 @@ class HelpProtocol:
 
                 conn.execute("COMMIT")
 
-                # Publish help-accepted to bus
-                self._publish_bus("global", "info", {
+                # Publish help-accepted to bus (ack-tracked to requesting team)
+                accepted_body = {
                     "event": "help-accepted",
                     "request_id": request_id,
                     "assigned_to_team": self.team,
                     "work_item_id": work_item_id,
-                })
+                }
+                if self._ack_protocol is not None:
+                    try:
+                        requesting_team = row["requesting_team"]
+                        self._ack_protocol.send_no_wait(
+                            channel="global",
+                            msg_type="info",
+                            body=accepted_body,
+                            target_agent=requesting_team,
+                            priority=5,
+                            ttl=3600,
+                        )
+                    except Exception as e:
+                        logger.warning("Ack-tracked help-accepted send failed: %s", e)
+                        self._publish_bus("global", "info", accepted_body)
+                else:
+                    self._publish_bus("global", "info", accepted_body)
 
                 return True
 
@@ -602,7 +636,7 @@ class HelpProtocol:
             self._conn.execute("BEGIN IMMEDIATE")
             try:
                 row = self._conn.execute(
-                    "SELECT work_item_id, accepted_by_team, status FROM help_requests WHERE id = ?",
+                    "SELECT work_item_id, accepted_by_team, requesting_team, status FROM help_requests WHERE id = ?",
                     (request_id,),
                 ).fetchone()
 
@@ -630,6 +664,8 @@ class HelpProtocol:
                     (now, request_id),
                 )
 
+                requesting_team = row["requesting_team"]
+
                 if row and row["work_item_id"] is not None:
                     self._conn.execute(
                         "UPDATE work_items SET status = 'completed', updated_at = ? WHERE id = ?",
@@ -643,6 +679,60 @@ class HelpProtocol:
                 except sqlite3.OperationalError:
                     pass
                 raise
+
+        # Publish help-fulfilled notification (ack-tracked to requesting team)
+        fulfilled_body = {
+            "event": "help-fulfilled",
+            "request_id": request_id,
+            "fulfilled_by_team": self.team,
+        }
+        if self._ack_protocol is not None and requesting_team:
+            try:
+                self._ack_protocol.send_no_wait(
+                    channel="global",
+                    msg_type="info",
+                    body=fulfilled_body,
+                    target_agent=requesting_team,
+                    priority=5,
+                    ttl=3600,
+                )
+            except Exception as e:
+                logger.warning("Ack-tracked help-fulfilled send failed: %s", e)
+                self._publish_bus("global", "info", fulfilled_body)
+        else:
+            self._publish_bus("global", "info", fulfilled_body)
+
+    # ------------------------------------------------------------------
+    # Ack-based reliability
+    # ------------------------------------------------------------------
+
+    def check_unacked_requests(self, older_than: float = 60.0) -> list[dict]:
+        """Check for unacknowledged help-related messages and retry them.
+
+        Requires an ack_protocol to be configured. Returns a list of
+        unacked message dicts from the ack tracking table. If no
+        ack_protocol is configured, returns an empty list.
+
+        Parameters
+        ----------
+        older_than:
+            Only consider messages older than this many seconds (default 60).
+
+        Returns
+        -------
+        list[dict]
+            Unacknowledged messages that were retried.
+        """
+        if self._ack_protocol is None:
+            return []
+        try:
+            unacked = self._ack_protocol.get_unacked(older_than=older_than)
+            if unacked:
+                self._ack_protocol.retry_unacked(older_than=older_than)
+            return unacked
+        except Exception as e:
+            logger.warning("check_unacked_requests failed: %s", e)
+            return []
 
     # ------------------------------------------------------------------
     # Idle detection

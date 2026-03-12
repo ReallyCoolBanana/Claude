@@ -255,22 +255,36 @@ class DirectChannels:
         The team identifier for this instance.
     agent_id:
         The agent identifier for this instance.
+    partitioned_store:
+        Optional PartitionedStore instance.  When provided, the comms partition
+        is used for channels, presence, progress, read_offsets, and messages
+        tables instead of opening a new connection to db_path.  This enables
+        incremental migration to partitioned databases.
     """
 
-    def __init__(self, db_path: str, bus_dir: str, team: str, agent_id: str) -> None:
+    def __init__(self, db_path: str, bus_dir: str, team: str, agent_id: str,
+                 partitioned_store: Optional["PartitionedStore"] = None) -> None:
         self.db_path = db_path
         self.bus_dir = bus_dir
         self.team = team
         self.agent_id = agent_id
+        self._partitioned_store = partitioned_store
 
         self._lock = threading.Lock()
-        os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
-        self._conn = sqlite3.connect(db_path, timeout=30, check_same_thread=False)
-        self._conn.row_factory = sqlite3.Row
-        self._conn.execute("PRAGMA journal_mode=WAL")
-        self._conn.execute("PRAGMA busy_timeout=30000")
-        self._conn.executescript(_SCHEMA)
-        self._conn.commit()
+        if partitioned_store is not None:
+            # Use the comms partition for channels, presence, progress,
+            # read_offsets, and messages tables
+            self._conn = partitioned_store.comms.conn
+            self._owns_conn = False
+        else:
+            os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
+            self._conn = sqlite3.connect(db_path, timeout=30, check_same_thread=False)
+            self._conn.row_factory = sqlite3.Row
+            self._conn.execute("PRAGMA journal_mode=WAL")
+            self._conn.execute("PRAGMA busy_timeout=30000")
+            self._conn.executescript(_SCHEMA)
+            self._conn.commit()
+            self._owns_conn = True
 
         # Track read offsets per channel for bus polling — loaded from DB
         self._read_offsets: dict[str, int] = {}
@@ -279,11 +293,12 @@ class DirectChannels:
         self._load_read_offsets()
 
     def close(self) -> None:
-        """Close the database connection."""
+        """Close the database connection (only if we own it)."""
         with self._lock:
             if not self._closed:
                 self._closed = True
-                self._conn.close()
+                if self._owns_conn:
+                    self._conn.close()
 
     def __del__(self) -> None:
         """Ensure the database connection is closed on garbage collection."""

@@ -55,6 +55,67 @@ try:
 except ImportError:
     _HAS_COMPACTOR = False
 
+try:
+    from storage.coordination.escalation_timers import EscalationTimerManager
+    _HAS_ESCALATION = True
+except ImportError:
+    try:
+        # Fallback: relative import for when run as part of the package
+        from .escalation_timers import EscalationTimerManager
+        _HAS_ESCALATION = True
+    except ImportError:
+        _HAS_ESCALATION = False
+
+try:
+    from storage.coordination.db_partition import PartitionedStore
+    _HAS_PARTITIONED = True
+except ImportError:
+    try:
+        from .db_partition import PartitionedStore
+        _HAS_PARTITIONED = True
+    except ImportError:
+        _HAS_PARTITIONED = False
+
+try:
+    from storage.coordination.coordinator_hub import CoordinatorDashboard
+    _HAS_COORDINATOR_HUB = True
+except ImportError:
+    try:
+        from .coordinator_hub import CoordinatorDashboard
+        _HAS_COORDINATOR_HUB = True
+    except ImportError:
+        _HAS_COORDINATOR_HUB = False
+
+try:
+    from storage.coordination.help_protocol import HelpProtocol
+    _HAS_HELP_PROTOCOL = True
+except ImportError:
+    try:
+        from .help_protocol import HelpProtocol
+        _HAS_HELP_PROTOCOL = True
+    except ImportError:
+        _HAS_HELP_PROTOCOL = False
+
+try:
+    from storage.coordination.direct_channels import DirectChannels
+    _HAS_DIRECT_CHANNELS = True
+except ImportError:
+    try:
+        from .direct_channels import DirectChannels
+        _HAS_DIRECT_CHANNELS = True
+    except ImportError:
+        _HAS_DIRECT_CHANNELS = False
+
+try:
+    from storage.coordination.work_stealing import WorkStealing, PipelineManager, Scratchpad
+    _HAS_WORK_STEALING = True
+except ImportError:
+    try:
+        from .work_stealing import WorkStealing, PipelineManager, Scratchpad
+        _HAS_WORK_STEALING = True
+    except ImportError:
+        _HAS_WORK_STEALING = False
+
 # ---------------------------------------------------------------------------
 # Paths — resolve relative to this script's location
 # ---------------------------------------------------------------------------
@@ -406,13 +467,15 @@ class MultiTeamRunner:
     - Write operational logs to the JSONL bus
     """
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: dict, partitioned: bool = True) -> None:
         self.config = config
         self.teams: list[dict] = config["teams"]
         self.heartbeat_interval: float = config.get("heartbeat_interval", 30.0)
         self.dead_agent_timeout: float = config.get("dead_agent_timeout", 120.0)
         self.cleanup_interval: float = config.get("cleanup_interval", 600.0)
         self.compaction_interval: float = config.get("compaction_interval", 0.0)
+        self.enable_escalation: bool = config.get("enable_escalation", True)
+        self.enable_partitioned: bool = partitioned and _HAS_PARTITIONED
 
         self._stop_event = threading.Event()
         self._hb_thread: threading.Thread | None = None
@@ -420,8 +483,20 @@ class MultiTeamRunner:
         self._compaction_thread: threading.Thread | None = None
         self._compactor: BusCompactor | None = None
         self._offset_store: OffsetStore | None = None
+        self._escalation_manager: EscalationTimerManager | None = None if _HAS_ESCALATION else None
+        self._partitioned_store: PartitionedStore | None = None if _HAS_PARTITIONED else None
+        self._coordinator_dashboard: CoordinatorDashboard | None = None if _HAS_COORDINATOR_HUB else None
+        self._help_protocol: HelpProtocol | None = None if _HAS_HELP_PROTOCOL else None
+        self._direct_channels: DirectChannels | None = None if _HAS_DIRECT_CHANNELS else None
+        self._work_stealing: WorkStealing | None = None if _HAS_WORK_STEALING else None
+        self._pipeline_manager: PipelineManager | None = None if _HAS_WORK_STEALING else None
+        self._scratchpad: Scratchpad | None = None if _HAS_WORK_STEALING else None
         self._started_at: float | None = None
         self._phase = "init"
+        # Track which agents already have active escalation timers to avoid
+        # creating duplicate timers on every health-check cycle.
+        self._agent_blocker_timers: dict[str, str] = {}   # agent_id -> timer_id
+        self._agent_idle_timers: dict[str, str] = {}       # agent_id -> timer_id
 
     # -- initialisation -----------------------------------------------------
 
@@ -438,6 +513,19 @@ class MultiTeamRunner:
             self._offset_store = OffsetStore(offsets_db)
             self._compactor = BusCompactor(_BUS_DIR, self._offset_store)
             log.info("Bus compactor initialised (offsets db: %s)", offsets_db)
+
+        # Initialise escalation timer manager if available and enabled
+        if _HAS_ESCALATION and self.enable_escalation:
+            escalation_db = os.path.join(_DB_DIR, "escalation.db")
+            self._escalation_manager = EscalationTimerManager(
+                db_path=escalation_db,
+                bus_dir=_BUS_DIR,
+            )
+            self._escalation_manager.start_monitor_thread(check_interval=10.0)
+            log.info(
+                "Escalation timer manager initialised (db: %s)",
+                escalation_db,
+            )
 
         log.info("Coordination environment initialised")
         _bus_write("global", "runner", "system", "info", {
