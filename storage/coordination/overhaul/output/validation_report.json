@@ -1,21 +1,21 @@
 {
   "validation_suite": "overhaul_validation",
   "version": "1.0.0",
-  "timestamp": "2026-03-12T02:22:10",
+  "timestamp": "2026-03-12T02:23:24",
   "repo_root": "/home/user/Claude",
-  "total_duration_ms": 111.835,
+  "total_duration_ms": 120.433,
   "summary": {
     "categories": 6,
-    "total_checks": 164,
-    "passed": 70,
-    "failed": 90,
+    "total_checks": 167,
+    "passed": 75,
+    "failed": 88,
     "skipped": 4,
     "all_pass": false
   },
   "categories": [
     {
       "category": "index_validation",
-      "duration_ms": 2.518,
+      "duration_ms": 3.35,
       "passed": 25,
       "failed": 68,
       "skipped": 0,
@@ -490,7 +490,7 @@
     },
     {
       "category": "schema_validation",
-      "duration_ms": 0.287,
+      "duration_ms": 0.255,
       "passed": 15,
       "failed": 20,
       "skipped": 0,
@@ -675,7 +675,7 @@
     },
     {
       "category": "bus_validation",
-      "duration_ms": 24.431,
+      "duration_ms": 22.648,
       "passed": 11,
       "failed": 0,
       "skipped": 2,
@@ -689,17 +689,17 @@
         {
           "name": "bus_write_basic",
           "result": "pass",
-          "detail": "msg_id=7e30e3d0-79d5-4830-84e7-41213000cf74"
+          "detail": "msg_id=ea9c8e05-63b8-44d0-a609-48245167d939"
         },
         {
           "name": "bus_read_basic",
           "result": "pass",
-          "detail": "Read 1 message, offset=188"
+          "detail": "Read 1 message, offset=189"
         },
         {
           "name": "bus_offset_tracking",
           "result": "pass",
-          "detail": "Read 5 new messages from offset 188"
+          "detail": "Read 5 new messages from offset 189"
         },
         {
           "name": "bus_read_idempotent",
@@ -750,7 +750,7 @@
     },
     {
       "category": "rate_limiter_validation",
-      "duration_ms": 0.774,
+      "duration_ms": 0.687,
       "passed": 0,
       "failed": 0,
       "skipped": 1,
@@ -765,7 +765,7 @@
     },
     {
       "category": "db_partition_validation",
-      "duration_ms": 72.115,
+      "duration_ms": 70.063,
       "passed": 12,
       "failed": 0,
       "skipped": 1,
@@ -840,11 +840,11 @@
     },
     {
       "category": "coordination_integration",
-      "duration_ms": 11.491,
-      "passed": 7,
-      "failed": 2,
+      "duration_ms": 23.223,
+      "passed": 12,
+      "failed": 0,
       "skipped": 0,
-      "all_pass": false,
+      "all_pass": true,
       "checks": [
         {
           "name": "coordinator_hub_import",
@@ -877,9 +877,19 @@
           "detail": ""
         },
         {
-          "name": "work_stealing_test",
-          "result": "fail",
-          "detail": "WorkStealing.__init__() missing 2 required positional arguments: 'team' and 'agent_id'"
+          "name": "ws_enqueue",
+          "result": "pass",
+          "detail": "Work item 1 created"
+        },
+        {
+          "name": "ws_steal",
+          "result": "pass",
+          "detail": "Work item stolen successfully"
+        },
+        {
+          "name": "ws_complete",
+          "result": "pass",
+          "detail": "Work item completed"
         },
         {
           "name": "help_protocol_import",
@@ -887,9 +897,14 @@
           "detail": ""
         },
         {
-          "name": "help_protocol_test",
-          "result": "fail",
-          "detail": "HelpProtocol.__init__() missing 2 required positional arguments: 'team' and 'agent_id'"
+          "name": "hp_work_item",
+          "result": "pass",
+          "detail": "Work item 1 created"
+        },
+        {
+          "name": "hp_request_help",
+          "result": "pass",
+          "detail": "Help request 1 created"
         }
       ]
     }

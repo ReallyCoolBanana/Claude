@@ -504,10 +504,10 @@ def benchmark_end_to_end(repo_root: str, iterations: int = 3) -> dict:
 
             # Phase 3: Work enqueue
             t0 = time.perf_counter()
-            ws = WorkStealing(ws_db, bus_dir=bus_dir)
+            ws = WorkStealing(ws_db, bus_dir, "epsilon", "ep-lead")
             work_ids = []
             for i in range(10):
-                wid = ws.enqueue("epsilon", f"Task {i}", f"Description {i}", priority=5)
+                wid = ws.enqueue_work(f"Task {i}", f"Description {i}", priority=5)
                 work_ids.append(wid)
             enqueue_ms = (time.perf_counter() - t0) * 1000
             phase_times["work_enqueue"].append(enqueue_ms)
@@ -516,19 +516,20 @@ def benchmark_end_to_end(repo_root: str, iterations: int = 3) -> dict:
             t0 = time.perf_counter()
             stolen = []
             for i in range(5):
-                item = ws.steal(f"team-{i}")
+                stealer = WorkStealing(ws_db, bus_dir, f"team-{i}", f"agent-{i}")
+                item = stealer.steal_work()
                 if item:
                     stolen.append(item)
+                stealer.close()
             steal_ms = (time.perf_counter() - t0) * 1000
             phase_times["work_steal"].append(steal_ms)
 
             # Phase 5: Help request
             t0 = time.perf_counter()
-            hp = HelpProtocol(hp_db, bus_dir=bus_dir)
-            hp.register_team("epsilon", capabilities=["dev", "test"])
-            hp.register_team("delta", capabilities=["db", "perf"])
+            hp = HelpProtocol(hp_db, bus_dir, "epsilon", "ep-lead")
             for i in range(3):
-                hp.request_help("epsilon", f"e2e-agent-{i}", f"Need help with task {i}")
+                wi = hp.add_work_item(f"Help task {i}", priority="high")
+                hp.request_help(wi, f"Need help with task {i}")
             help_ms = (time.perf_counter() - t0) * 1000
             phase_times["help_request"].append(help_ms)
 

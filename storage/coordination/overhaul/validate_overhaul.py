@@ -910,30 +910,32 @@ def validate_coordination_integration(repo_root: str) -> ValidationResult:
             from storage.coordination.work_stealing import WorkStealing
             result.add_pass("work_stealing_import")
 
-            ws = WorkStealing(ws_db_path, bus_dir=bus_dir)
+            ws = WorkStealing(ws_db_path, bus_dir, "epsilon", "ep-lead")
 
             # Enqueue work
-            work_id = ws.enqueue("epsilon", "Test task", "Description", priority=5)
+            work_id = ws.enqueue_work("Test task", "Description", priority=5)
             if work_id:
                 result.add_pass("ws_enqueue", f"Work item {work_id} created")
             else:
-                result.add_fail("ws_enqueue", "enqueue returned None/0")
+                result.add_fail("ws_enqueue", "enqueue_work returned None/0")
 
-            # Steal work
-            item = ws.steal("other-team")
-            if item and item.get("title") == "Test task":
+            # Steal work (need a different team instance)
+            ws2 = WorkStealing(ws_db_path, bus_dir, "other-team", "other-agent")
+            item = ws2.steal_work()
+            if item and dict(item).get("title") == "Test task":
                 result.add_pass("ws_steal", "Work item stolen successfully")
             else:
                 result.add_fail("ws_steal", f"Unexpected steal result: {item}")
 
             # Complete work
             try:
-                ws.complete(work_id, "other-team", "Done")
+                ws2.complete_work(work_id, {"status": "done"})
                 result.add_pass("ws_complete", "Work item completed")
             except Exception as exc:
                 result.add_fail("ws_complete", str(exc))
 
             ws.close()
+            ws2.close()
         except ImportError as exc:
             result.add_fail("work_stealing_import", str(exc))
         except Exception as exc:
@@ -945,21 +947,17 @@ def validate_coordination_integration(repo_root: str) -> ValidationResult:
             from storage.coordination.help_protocol import HelpProtocol
             result.add_pass("help_protocol_import")
 
-            hp = HelpProtocol(hp_db_path, bus_dir=bus_dir)
-
-            # Register team
-            hp.register_team("epsilon", capabilities=["validation", "benchmarking"])
+            hp = HelpProtocol(hp_db_path, bus_dir, "epsilon", "ep-lead")
 
             # Create work item
-            wi_id = hp.create_work_item("epsilon", "ep-lead", "Validation", priority="high")
+            wi_id = hp.add_work_item("Validation task", priority="high")
             if wi_id:
                 result.add_pass("hp_work_item", f"Work item {wi_id} created")
             else:
-                result.add_fail("hp_work_item", "create_work_item returned None/0")
+                result.add_fail("hp_work_item", "add_work_item returned None/0")
 
             # Request help
-            req_id = hp.request_help("epsilon", "ep-lead", "Need benchmarking help",
-                                      required_capabilities=["benchmarking"])
+            req_id = hp.request_help(wi_id, "Need benchmarking help")
             if req_id:
                 result.add_pass("hp_request_help", f"Help request {req_id} created")
             else:
