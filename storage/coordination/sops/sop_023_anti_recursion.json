@@ -1,17 +1,18 @@
 {
   "id": "SOP-023",
   "version": "1.0",
-  "created": "2026-03-11",
   "team": "ANALYSIS-001",
   "title": "Anti-Recursion Protocol: Preventing Inward-Facing Gravity",
   "purpose": "Prevents the pattern where teams spend their time building coordination infrastructure to build more coordination infrastructure. Enforces a minimum ratio of domain work to infrastructure work. Based on the critical finding that Teams 22-28 (7 consecutive teams) all focused inward.",
-  "builds_on": ["SOP-011", "SOP-014", "ANALYSIS-001"],
+  "builds_on": [
+    "SOP-011",
+    "SOP-014",
+    "ANALYSIS-001"
+  ],
   "evidence_base": "TT-3 finding: 'The repository is becoming a coordination system that coordinates the building of more coordination systems.'",
-
   "section_1_domain_work_ratio": {
     "title": "Mandatory Domain Work Ratio",
     "description": "Every operation must allocate a minimum percentage of agent capacity to domain work (market research, data analysis, tool building for external use).",
-
     "rules": [
       {
         "id": "AR-01",
@@ -32,18 +33,15 @@
         "definition": "KB entries, session logs, index updates. This is overhead, not discretionary."
       }
     ],
-
     "enforcement": {
       "pre_launch_check": "Before launching, coordinator tallies agents by category. If domain < 60% or infra > 30%, must rebalance.",
       "mid_session_check": "At CP-3 (mid-session), verify domain agents are actually doing domain work (not drifting into infra)",
       "post_session_audit": "Session log must report actual domain/infra/overhead split with evidence"
     }
   },
-
   "section_2_infrastructure_freeze": {
     "title": "Infrastructure Modification Controls",
     "description": "The coordination system is mature enough for production use. Further changes require justification.",
-
     "freeze_rules": [
       {
         "id": "FREEZE-01",
@@ -69,11 +67,9 @@
       }
     ]
   },
-
   "section_3_recursion_detection": {
     "title": "Detecting Recursive Patterns",
     "description": "Signs that the team is falling into inward-facing gravity.",
-
     "warning_signs": [
       {
         "sign": "Think tanks analyzing the coordination system",
@@ -102,11 +98,9 @@
       }
     ]
   },
-
   "section_4_domain_work_catalog": {
     "title": "Approved Domain Work Categories",
     "description": "Pre-approved domain work that teams should prioritize over infrastructure.",
-
     "high_priority": [
       {
         "category": "Market Research Execution",
@@ -126,7 +120,6 @@
         "action": "Build tools that enable domain research. These are domain-enabling, not infrastructure."
       }
     ],
-
     "medium_priority": [
       {
         "category": "Knowledge Base Content",
@@ -140,7 +133,6 @@
       }
     ]
   },
-
   "checklists": {
     "pre_launch": [
       "Domain agent count ≥ 60% of total agents",
@@ -154,5 +146,6 @@
       "Actual domain/infra/overhead split recorded in session log",
       "If zero domain output: document why and commit to domain-first next session"
     ]
-  }
+  },
+  "date": "2026-03-11"
 }

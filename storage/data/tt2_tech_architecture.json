@@ -1,6 +1,5 @@
 {
   "id": "TT2-TECH-ARCHITECTURE",
-  "created": "2026-03-11",
   "author": "THINK-TANK-2-TECHNICAL-ARCHITECTURE",
   "based_on": [
     "ROADMAP-5-SESSIONS",
@@ -11,7 +10,6 @@
     "market-research/picks/TEMPLATE.md",
     "market-research/methods/*.md"
   ],
-
   "tools_to_build": [
     {
       "name": "pick_logger",
@@ -20,25 +18,107 @@
       "purpose": "Automate creation of structured market research pick files from TEMPLATE.md, auto-generate sequential PICK IDs, update market-research/picks/index.json atomically, and validate all required YAML frontmatter fields before writing.",
       "interface": {
         "inputs": [
-          {"name": "ticker", "type": "str", "required": true, "description": "Stock ticker symbol (e.g., AAPL)"},
-          {"name": "company", "type": "str", "required": true, "description": "Full company name"},
-          {"name": "direction", "type": "str", "required": true, "description": "long or short"},
-          {"name": "method", "type": "str", "required": true, "description": "fundamental|technical|sentiment|quantitative|macro-sector"},
-          {"name": "entry_price", "type": "float|null", "required": false, "description": "Entry price at time of pick"},
-          {"name": "target_price", "type": "float|null", "required": false, "description": "Target price for exit"},
-          {"name": "stop_loss", "type": "float|null", "required": false, "description": "Stop loss level"},
-          {"name": "timeframe", "type": "str", "required": true, "description": "short-term|medium-term|long-term"},
-          {"name": "confidence", "type": "str", "required": true, "description": "high|medium|low"},
-          {"name": "thesis", "type": "str", "required": true, "description": "Multi-line thesis text for the pick"},
-          {"name": "analysis", "type": "str", "required": false, "description": "Multi-line analysis text (method applied, key metrics, risk factors)"},
-          {"name": "exit_criteria", "type": "str", "required": false, "description": "Exit criteria text"},
-          {"name": "team", "type": "str", "required": false, "description": "Team ID (defaults to current session)"},
-          {"name": "builds_on", "type": "list[str]", "required": false, "description": "List of KB or PICK IDs this builds on"}
+          {
+            "name": "ticker",
+            "type": "str",
+            "required": true,
+            "description": "Stock ticker symbol (e.g., AAPL)"
+          },
+          {
+            "name": "company",
+            "type": "str",
+            "required": true,
+            "description": "Full company name"
+          },
+          {
+            "name": "direction",
+            "type": "str",
+            "required": true,
+            "description": "long or short"
+          },
+          {
+            "name": "method",
+            "type": "str",
+            "required": true,
+            "description": "fundamental|technical|sentiment|quantitative|macro-sector"
+          },
+          {
+            "name": "entry_price",
+            "type": "float|null",
+            "required": false,
+            "description": "Entry price at time of pick"
+          },
+          {
+            "name": "target_price",
+            "type": "float|null",
+            "required": false,
+            "description": "Target price for exit"
+          },
+          {
+            "name": "stop_loss",
+            "type": "float|null",
+            "required": false,
+            "description": "Stop loss level"
+          },
+          {
+            "name": "timeframe",
+            "type": "str",
+            "required": true,
+            "description": "short-term|medium-term|long-term"
+          },
+          {
+            "name": "confidence",
+            "type": "str",
+            "required": true,
+            "description": "high|medium|low"
+          },
+          {
+            "name": "thesis",
+            "type": "str",
+            "required": true,
+            "description": "Multi-line thesis text for the pick"
+          },
+          {
+            "name": "analysis",
+            "type": "str",
+            "required": false,
+            "description": "Multi-line analysis text (method applied, key metrics, risk factors)"
+          },
+          {
+            "name": "exit_criteria",
+            "type": "str",
+            "required": false,
+            "description": "Exit criteria text"
+          },
+          {
+            "name": "team",
+            "type": "str",
+            "required": false,
+            "description": "Team ID (defaults to current session)"
+          },
+          {
+            "name": "builds_on",
+            "type": "list[str]",
+            "required": false,
+            "description": "List of KB or PICK IDs this builds on"
+          }
         ],
         "outputs": [
-          {"name": "pick_file_path", "type": "str", "description": "Full path to created pick file, e.g., market-research/picks/2026-03-12_AAPL.md"},
-          {"name": "pick_id", "type": "str", "description": "Assigned pick ID, e.g., PICK-0001"},
-          {"name": "index_updated", "type": "bool", "description": "Whether index.json was successfully updated"}
+          {
+            "name": "pick_file_path",
+            "type": "str",
+            "description": "Full path to created pick file, e.g., market-research/picks/2026-03-12_AAPL.md"
+          },
+          {
+            "name": "pick_id",
+            "type": "str",
+            "description": "Assigned pick ID, e.g., PICK-0001"
+          },
+          {
+            "name": "index_updated",
+            "type": "bool",
+            "description": "Whether index.json was successfully updated"
+          }
         ]
       },
       "implementation_sketch": "#!/usr/bin/env python3\n\"\"\"Pick Logger - Creates structured market research pick files.\"\"\"\nimport json, sys, os, datetime, re, argparse\nfrom pathlib import Path\n\nBASE_DIR = Path(__file__).resolve().parent.parent.parent\nPICKS_DIR = BASE_DIR / 'market-research' / 'picks'\nINDEX_PATH = PICKS_DIR / 'index.json'\nTEMPLATE_PATH = PICKS_DIR / 'TEMPLATE.md'\n\nVALID_DIRECTIONS = {'long', 'short'}\nVALID_METHODS = {'fundamental', 'technical', 'sentiment', 'quantitative', 'macro-sector'}\nVALID_TIMEFRAMES = {'short-term', 'medium-term', 'long-term'}\nVALID_CONFIDENCE = {'high', 'medium', 'low'}\n\ndef next_pick_id() -> str:\n    \"\"\"Read index.json, find highest PICK-XXXX, return next.\"\"\"\n    index = json.loads(INDEX_PATH.read_text())\n    existing = [p['pick_id'] for p in index.get('picks', [])]\n    nums = [int(re.search(r'(\\d+)', pid).group(1)) for pid in existing if re.search(r'(\\d+)', pid)]\n    return f'PICK-{(max(nums, default=0) + 1):04d}'\n\ndef validate_inputs(args: dict) -> list[str]:\n    \"\"\"Validate all inputs. Returns list of error messages (empty = valid).\"\"\"\n    errors = []\n    if not args.get('ticker'): errors.append('ticker is required')\n    if args.get('direction') not in VALID_DIRECTIONS: errors.append(f'direction must be one of {VALID_DIRECTIONS}')\n    if args.get('method') not in VALID_METHODS: errors.append(f'method must be one of {VALID_METHODS}')\n    if args.get('timeframe') not in VALID_TIMEFRAMES: errors.append(f'timeframe must be one of {VALID_TIMEFRAMES}')\n    if args.get('confidence') not in VALID_CONFIDENCE: errors.append(f'confidence must be one of {VALID_CONFIDENCE}')\n    if not args.get('thesis'): errors.append('thesis is required')\n    return errors\n\ndef build_frontmatter(pick_id: str, date: str, args: dict) -> str:\n    \"\"\"Build YAML frontmatter string.\"\"\"\n    lines = ['---']\n    lines.append(f'pick_id: {pick_id}')\n    lines.append(f'date: {date}')\n    lines.append(f'team: {args.get(\"team\", \"\")}')\n    lines.append(f'ticker: \"{args[\"ticker\"].upper()}\"')\n    lines.append(f'company: \"{args[\"company\"]}\"')\n    lines.append(f'direction: {args[\"direction\"]}')\n    lines.append(f'method: {args[\"method\"]}')\n    lines.append(f'entry_price: {args.get(\"entry_price\", \"null\")}')\n    lines.append(f'target_price: {args.get(\"target_price\", \"null\")}')\n    lines.append(f'stop_loss: {args.get(\"stop_loss\", \"null\")}')\n    lines.append(f'timeframe: {args[\"timeframe\"]}')\n    lines.append(f'confidence: {args[\"confidence\"]}')\n    lines.append(f'status: active')\n    builds = args.get('builds_on', [])\n    lines.append(f'builds_on: [{', '.join(builds)}]')\n    lines.append('---')\n    return '\\n'.join(lines)\n\ndef build_body(args: dict) -> str:\n    \"\"\"Build markdown body from provided text fields.\"\"\"\n    ticker = args['ticker'].upper()\n    sections = [f'# Stock Pick: {ticker}', '', '## Thesis', args.get('thesis', ''), '']\n    sections += ['## Analysis', args.get('analysis', ''), '']\n    sections += ['## Exit Criteria', args.get('exit_criteria', 'TBD'), '']\n    sections += ['## Outcome (fill in when closed)', '### Actual Return', '### What Worked', '### What Didn\\'t', '### Knowledge Entry']\n    return '\\n'.join(sections)\n\ndef update_index(pick_id: str, date: str, args: dict, filepath: str) -> None:\n    \"\"\"Update index.json with new pick entry.\"\"\"\n    index = json.loads(INDEX_PATH.read_text())\n    entry = {'pick_id': pick_id, 'date': date, 'ticker': args['ticker'].upper(), 'company': args['company'], 'direction': args['direction'], 'method': args['method'], 'confidence': args['confidence'], 'status': 'active', 'file': os.path.relpath(filepath, PICKS_DIR.parent.parent)}\n    index['picks'].append(entry)\n    index['total_picks'] = len(index['picks'])\n    index['by_method'].setdefault(args['method'], []).append(pick_id)\n    index['by_status'].setdefault('active', []).append(pick_id)\n    INDEX_PATH.write_text(json.dumps(index, indent=2))\n\ndef create_pick(args: dict) -> dict:\n    \"\"\"Create pick file and update index. Returns result dict.\"\"\"\n    errors = validate_inputs(args)\n    if errors: return {'error': errors}\n    pick_id = next_pick_id()\n    date = datetime.date.today().isoformat()\n    filename = f'{date}_{args[\"ticker\"].upper()}.md'\n    filepath = PICKS_DIR / filename\n    if filepath.exists():\n        filepath = PICKS_DIR / f'{date}_{args[\"ticker\"].upper()}_2.md'\n    content = build_frontmatter(pick_id, date, args) + '\\n' + build_body(args)\n    filepath.write_text(content)\n    update_index(pick_id, date, args, str(filepath))\n    return {'pick_id': pick_id, 'file_path': str(filepath), 'index_updated': True}\n\nif __name__ == '__main__':\n    parser = argparse.ArgumentParser()\n    # Add all args, support --json for stdin input\n    # Call create_pick, print JSON result",
@@ -53,16 +133,52 @@
       "purpose": "Fetch SEC EDGAR filing data for US public companies. Supports company lookup by ticker, retrieval of recent filings (10-K, 10-Q, 8-K), and extraction of key financial data from XBRL/JSON endpoints. Follows the standardized method_*.py pattern (DG-XXXX ID, run(query), CLI entry point, JSON output). NOTE: This tool may be unnecessary if EdgarTools MCP server is adopted in Session 2.",
       "interface": {
         "inputs": [
-          {"name": "query", "type": "str", "required": true, "description": "Ticker symbol or company name (e.g., 'AAPL' or 'Apple Inc')"},
-          {"name": "filing_type", "type": "str", "required": false, "default": "10-K", "description": "Filing type filter: 10-K, 10-Q, 8-K, or 'all'"},
-          {"name": "limit", "type": "int", "required": false, "default": 5, "description": "Max filings to return"}
+          {
+            "name": "query",
+            "type": "str",
+            "required": true,
+            "description": "Ticker symbol or company name (e.g., 'AAPL' or 'Apple Inc')"
+          },
+          {
+            "name": "filing_type",
+            "type": "str",
+            "required": false,
+            "default": "10-K",
+            "description": "Filing type filter: 10-K, 10-Q, 8-K, or 'all'"
+          },
+          {
+            "name": "limit",
+            "type": "int",
+            "required": false,
+            "default": 5,
+            "description": "Max filings to return"
+          }
         ],
         "outputs": [
-          {"name": "method_id", "type": "str", "value": "DG-0012"},
-          {"name": "method_name", "type": "str", "value": "SEC EDGAR"},
-          {"name": "query", "type": "str"},
-          {"name": "results", "type": "list[dict]", "description": "List of filing dicts with accession_number, filing_date, form_type, filing_url, and extracted financial_data dict (Revenue, NetIncomeLoss, EPS, TotalAssets, TotalLiabilities, StockholdersEquity)"},
-          {"name": "metadata", "type": "dict", "description": "{duration_seconds, sources_count, data_points, cik, company_name, ticker}"}
+          {
+            "name": "method_id",
+            "type": "str",
+            "value": "DG-0012"
+          },
+          {
+            "name": "method_name",
+            "type": "str",
+            "value": "SEC EDGAR"
+          },
+          {
+            "name": "query",
+            "type": "str"
+          },
+          {
+            "name": "results",
+            "type": "list[dict]",
+            "description": "List of filing dicts with accession_number, filing_date, form_type, filing_url, and extracted financial_data dict (Revenue, NetIncomeLoss, EPS, TotalAssets, TotalLiabilities, StockholdersEquity)"
+          },
+          {
+            "name": "metadata",
+            "type": "dict",
+            "description": "{duration_seconds, sources_count, data_points, cik, company_name, ticker}"
+          }
         ]
       },
       "implementation_sketch": "#!/usr/bin/env python3\n\"\"\"DG-0012: SEC EDGAR Filing Data\n\nFetches SEC EDGAR filing data for US public companies.\nUses the free SEC EDGAR REST API (no auth, 10 req/sec).\n\nUsage:\n    python3 method_sec_edgar.py AAPL\n    python3 method_sec_edgar.py MSFT --filing-type 10-Q --limit 3\n\"\"\"\nimport json, sys, time, re, urllib.request, urllib.parse, urllib.error\n\nMETHOD_ID = 'DG-0012'\nMETHOD_NAME = 'SEC EDGAR'\nEDGAR_BASE = 'https://data.sec.gov'\nCOMPANY_TICKERS_URL = f'{EDGAR_BASE}/files/company_tickers.json'\nUSER_AGENT = 'ClaudeResearch/1.0 (research@example.com)'\nTIMEOUT = 15\n_LAST_REQUEST_TIME = 0  # Rate limiting\n\n# Cache integration (optional)\nUSE_CACHE = True\n_cached_request = None\ntry:\n    if USE_CACHE:\n        from request_cache import cached_request as _cached_request\nexcept ImportError:\n    pass\n\ndef _api_get(url: str) -> dict|list:\n    \"\"\"SEC EDGAR API GET with User-Agent and rate limiting.\"\"\"\n    global _LAST_REQUEST_TIME\n    elapsed = time.time() - _LAST_REQUEST_TIME\n    if elapsed < 0.1:  # 10 req/sec limit\n        time.sleep(0.1 - elapsed)\n    headers = {'User-Agent': USER_AGENT, 'Accept': 'application/json'}\n    try:\n        if _cached_request is not None:\n            raw = _cached_request(url, headers=headers, timeout=TIMEOUT)\n            _LAST_REQUEST_TIME = time.time()\n            return json.loads(raw.decode('utf-8'))\n        req = urllib.request.Request(url, headers=headers)\n        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:\n            _LAST_REQUEST_TIME = time.time()\n            return json.loads(resp.read().decode('utf-8'))\n    except urllib.error.HTTPError as e:\n        return {'error': f'HTTP {e.code}: {e.reason}'}\n    except (urllib.error.URLError, OSError) as e:\n        return {'error': f'Network error: {e}'}\n\ndef ticker_to_cik(ticker: str) -> tuple[str, str]:\n    \"\"\"Map ticker to (CIK zero-padded to 10 digits, company_name).\"\"\"\n    data = _api_get(COMPANY_TICKERS_URL)\n    if isinstance(data, dict) and 'error' in data:\n        return None, data['error']\n    ticker_upper = ticker.upper()\n    for entry in data.values():\n        if entry.get('ticker', '').upper() == ticker_upper:\n            cik = str(entry['cik_str']).zfill(10)\n            return cik, entry.get('title', '')\n    return None, f'Ticker {ticker} not found'\n\ndef get_recent_filings(cik: str, form_type: str = '10-K', limit: int = 5) -> list[dict]:\n    \"\"\"Fetch recent filings from submissions endpoint.\"\"\"\n    url = f'{EDGAR_BASE}/submissions/CIK{cik}.json'\n    data = _api_get(url)\n    if 'error' in data: return [data]\n    recent = data.get('filings', {}).get('recent', {})\n    forms = recent.get('form', [])\n    dates = recent.get('filingDate', [])\n    accessions = recent.get('accessionNumber', [])\n    results = []\n    for i, f in enumerate(forms):\n        if form_type != 'all' and f != form_type: continue\n        if len(results) >= limit: break\n        acc = accessions[i].replace('-', '')\n        results.append({'form_type': f, 'filing_date': dates[i], 'accession_number': accessions[i], 'filing_url': f'https://www.sec.gov/Archives/edgar/data/{cik}/{acc}'})\n    return results\n\ndef get_company_facts(cik: str) -> dict:\n    \"\"\"Fetch XBRL company facts: Revenue, NetIncome, EPS, Assets, Liabilities.\"\"\"\n    url = f'{EDGAR_BASE}/api/xbrl/companyfacts/CIK{cik}.json'\n    data = _api_get(url)\n    if 'error' in data: return data\n    us_gaap = data.get('facts', {}).get('us-gaap', {})\n    def latest_annual(concept):\n        units = us_gaap.get(concept, {}).get('units', {})\n        for unit_type, vals in units.items():\n            annual = [v for v in vals if v.get('form') == '10-K']\n            if annual: return annual[-1]\n        return None\n    return {k: latest_annual(k) for k in ['Revenues','RevenueFromContractWithCustomerExcludingAssessedTax','NetIncomeLoss','EarningsPerShareBasic','Assets','Liabilities','StockholdersEquity']}\n\ndef run(query: str, filing_type: str = '10-K', limit: int = 5) -> dict:\n    t0 = time.time()\n    cik, company = ticker_to_cik(query)\n    if cik is None: return {'method_id': METHOD_ID, 'error': company}\n    filings = get_recent_filings(cik, filing_type, limit)\n    facts = get_company_facts(cik)\n    return {'method_id': METHOD_ID, 'method_name': METHOD_NAME, 'query': query, 'results': filings, 'company_facts': facts, 'metadata': {'duration_seconds': round(time.time()-t0,2), 'cik': cik, 'company_name': company, 'ticker': query.upper(), 'sources_count': len(filings), 'data_points': sum(1 for v in facts.values() if v)}}\n\nif __name__ == '__main__':\n    q = sys.argv[1] if len(sys.argv) > 1 else 'AAPL'\n    ft = sys.argv[2] if len(sys.argv) > 2 else '10-K'\n    print(json.dumps(run(q, ft), indent=2, default=str))",
@@ -75,10 +191,22 @@
         "required_header": "User-Agent with contact email (SEC policy)",
         "rate_limit": "10 requests/second",
         "key_endpoints": [
-          {"path": "/files/company_tickers.json", "purpose": "Ticker-to-CIK mapping (all public companies)"},
-          {"path": "/submissions/CIK{cik10}.json", "purpose": "Filing history, recent filings, company info"},
-          {"path": "/api/xbrl/companyfacts/CIK{cik10}.json", "purpose": "All XBRL financial data for a company"},
-          {"path": "/api/xbrl/companyconcept/CIK{cik10}/us-gaap/{concept}.json", "purpose": "Single financial concept time series"}
+          {
+            "path": "/files/company_tickers.json",
+            "purpose": "Ticker-to-CIK mapping (all public companies)"
+          },
+          {
+            "path": "/submissions/CIK{cik10}.json",
+            "purpose": "Filing history, recent filings, company info"
+          },
+          {
+            "path": "/api/xbrl/companyfacts/CIK{cik10}.json",
+            "purpose": "All XBRL financial data for a company"
+          },
+          {
+            "path": "/api/xbrl/companyconcept/CIK{cik10}/us-gaap/{concept}.json",
+            "purpose": "Single financial concept time series"
+          }
         ]
       },
       "alternative_approach": {
@@ -87,8 +215,13 @@
         "test_command": "pip install edgartools && python3 -c \"from edgar import Company; c = Company('AAPL'); print(c.get_filings(form='10-K').latest())\"",
         "mcp_config": {
           "command": "python3",
-          "args": ["-m", "edgar.mcp"],
-          "env": {"EDGAR_IDENTITY": "Research research@example.com"}
+          "args": [
+            "-m",
+            "edgar.mcp"
+          ],
+          "env": {
+            "EDGAR_IDENTITY": "Research research@example.com"
+          }
         },
         "recommendation": "Try EdgarTools MCP first in Session 2. If it works, skip building method_sec_edgar.py in Session 3 and redirect that coding agent to method_fred.py or other domain work."
       }
@@ -100,18 +233,64 @@
       "purpose": "Fetch Federal Reserve Economic Data (FRED) time series for macro-economic analysis. Supports series lookup by ID, search by keywords, and retrieval of key indicators (GDP, CPI, unemployment, Fed funds rate, yield curve). Follows the standardized method_*.py pattern. Includes a 'dashboard' mode that returns a snapshot of all key macro indicators.",
       "interface": {
         "inputs": [
-          {"name": "query", "type": "str", "required": true, "description": "FRED series ID (e.g., 'GDP', 'CPIAUCSL') or search keywords (e.g., 'unemployment rate') or 'dashboard' for macro snapshot"},
-          {"name": "mode", "type": "str", "required": false, "default": "auto", "description": "auto (detect ID vs search), series (fetch by ID), search (search by keywords), dashboard (fetch all key indicators)"},
-          {"name": "observation_start", "type": "str", "required": false, "description": "Start date YYYY-MM-DD for time series"},
-          {"name": "observation_end", "type": "str", "required": false, "description": "End date YYYY-MM-DD for time series"},
-          {"name": "limit", "type": "int", "required": false, "default": 100, "description": "Max observations to return"}
+          {
+            "name": "query",
+            "type": "str",
+            "required": true,
+            "description": "FRED series ID (e.g., 'GDP', 'CPIAUCSL') or search keywords (e.g., 'unemployment rate') or 'dashboard' for macro snapshot"
+          },
+          {
+            "name": "mode",
+            "type": "str",
+            "required": false,
+            "default": "auto",
+            "description": "auto (detect ID vs search), series (fetch by ID), search (search by keywords), dashboard (fetch all key indicators)"
+          },
+          {
+            "name": "observation_start",
+            "type": "str",
+            "required": false,
+            "description": "Start date YYYY-MM-DD for time series"
+          },
+          {
+            "name": "observation_end",
+            "type": "str",
+            "required": false,
+            "description": "End date YYYY-MM-DD for time series"
+          },
+          {
+            "name": "limit",
+            "type": "int",
+            "required": false,
+            "default": 100,
+            "description": "Max observations to return"
+          }
         ],
         "outputs": [
-          {"name": "method_id", "type": "str", "value": "DG-0013"},
-          {"name": "method_name", "type": "str", "value": "FRED Economic Data"},
-          {"name": "query", "type": "str"},
-          {"name": "results", "type": "list[dict]", "description": "Time series observations: [{date, value, series_id, series_title}] or dashboard dict"},
-          {"name": "metadata", "type": "dict", "description": "{duration_seconds, sources_count, data_points, series_info: {id, title, frequency, units, seasonal_adjustment, last_updated}}"}
+          {
+            "name": "method_id",
+            "type": "str",
+            "value": "DG-0013"
+          },
+          {
+            "name": "method_name",
+            "type": "str",
+            "value": "FRED Economic Data"
+          },
+          {
+            "name": "query",
+            "type": "str"
+          },
+          {
+            "name": "results",
+            "type": "list[dict]",
+            "description": "Time series observations: [{date, value, series_id, series_title}] or dashboard dict"
+          },
+          {
+            "name": "metadata",
+            "type": "dict",
+            "description": "{duration_seconds, sources_count, data_points, series_info: {id, title, frequency, units, seasonal_adjustment, last_updated}}"
+          }
         ]
       },
       "implementation_sketch": "#!/usr/bin/env python3\n\"\"\"DG-0013: FRED Economic Data\n\nFetches Federal Reserve Economic Data for macro analysis.\nRequires FRED_API_KEY environment variable (free at fred.stlouisfed.org).\n\nUsage:\n    python3 method_fred.py GDP\n    python3 method_fred.py dashboard\n    python3 method_fred.py 'unemployment rate' --mode search\n\"\"\"\nimport json, sys, time, os, re, urllib.request, urllib.parse, urllib.error\n\nMETHOD_ID = 'DG-0013'\nMETHOD_NAME = 'FRED Economic Data'\nFRED_BASE = 'https://api.stlouisfed.org/fred'\nTIMEOUT = 15\n\nKEY_SERIES = {\n    'GDP': 'Gross Domestic Product',\n    'CPIAUCSL': 'Consumer Price Index (All Urban Consumers)',\n    'UNRATE': 'Unemployment Rate',\n    'DFF': 'Federal Funds Effective Rate',\n    'T10Y2Y': '10Y-2Y Treasury Spread (Yield Curve)',\n    'M2SL': 'M2 Money Supply',\n    'DEXUSEU': 'USD/EUR Exchange Rate',\n    'VIXCLS': 'CBOE Volatility Index (VIX)',\n    'FEDFUNDS': 'Federal Funds Rate',\n    'SP500': 'S&P 500 Index'\n}\n\n# BLS fallback series (no API key required)\nBLS_FALLBACK = {\n    'CES0000000001': 'Total Nonfarm Employment',\n    'LNS14000000': 'Unemployment Rate',\n    'CUSR0000SA0': 'CPI All Items'\n}\nBLS_BASE = 'https://api.bls.gov/publicAPI/v2/timeseries/data/'\n\n# Cache integration\nUSE_CACHE = True\n_cached_request = None\ntry:\n    if USE_CACHE:\n        from request_cache import cached_request as _cached_request\nexcept ImportError:\n    pass\n\ndef _fred_get(endpoint: str, params: dict) -> dict:\n    \"\"\"FRED API GET with API key injection.\"\"\"\n    api_key = os.environ.get('FRED_API_KEY', '')\n    if not api_key:\n        return {'error': 'FRED_API_KEY environment variable not set. Get free key at https://fred.stlouisfed.org/docs/api/api_key.html'}\n    params['api_key'] = api_key\n    params['file_type'] = 'json'\n    qs = urllib.parse.urlencode(params)\n    url = f'{FRED_BASE}/{endpoint}?{qs}'\n    headers = {'User-Agent': 'ClaudeResearch/1.0'}\n    try:\n        if _cached_request:\n            raw = _cached_request(url, headers=headers, timeout=TIMEOUT)\n            return json.loads(raw.decode('utf-8'))\n        req = urllib.request.Request(url, headers=headers)\n        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:\n            return json.loads(resp.read().decode('utf-8'))\n    except urllib.error.HTTPError as e:\n        return {'error': f'HTTP {e.code}: {e.reason}'}\n    except (urllib.error.URLError, OSError) as e:\n        return {'error': f'Network error: {e}'}\n\ndef _bls_get(series_ids: list[str], start_year: int, end_year: int) -> dict:\n    \"\"\"BLS API v2 fallback (no API key for basic access).\"\"\"\n    payload = json.dumps({'seriesid': series_ids, 'startyear': str(start_year), 'endyear': str(end_year)}).encode('utf-8')\n    req = urllib.request.Request(BLS_BASE, data=payload, headers={'Content-Type': 'application/json'})\n    try:\n        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:\n            return json.loads(resp.read().decode('utf-8'))\n    except Exception as e:\n        return {'error': str(e)}\n\ndef get_series(series_id: str, start: str = None, end: str = None, limit: int = 100) -> dict:\n    \"\"\"Fetch observations for a FRED series.\"\"\"\n    params = {'series_id': series_id, 'sort_order': 'desc', 'limit': str(limit)}\n    if start: params['observation_start'] = start\n    if end: params['observation_end'] = end\n    return _fred_get('series/observations', params)\n\ndef get_series_info(series_id: str) -> dict:\n    \"\"\"Fetch metadata for a FRED series.\"\"\"\n    return _fred_get('series', {'series_id': series_id})\n\ndef search_series(keywords: str, limit: int = 10) -> list[dict]:\n    \"\"\"Search for FRED series by keywords.\"\"\"\n    data = _fred_get('series/search', {'search_text': keywords, 'limit': str(limit)})\n    if 'error' in data: return [data]\n    return [{'id': s['id'], 'title': s['title'], 'frequency': s.get('frequency_short',''), 'units': s.get('units',''), 'popularity': s.get('popularity',0)} for s in data.get('seriess', [])]\n\ndef get_dashboard() -> dict:\n    \"\"\"Fetch latest values for all KEY_SERIES. Returns macro snapshot.\"\"\"\n    dashboard = {}\n    for sid, name in KEY_SERIES.items():\n        obs = get_series(sid, limit=2)\n        if 'error' in obs:\n            dashboard[sid] = {'name': name, 'error': obs['error']}\n            continue\n        observations = obs.get('observations', [])\n        if observations:\n            latest = observations[0]\n            previous = observations[1] if len(observations) > 1 else None\n            val = float(latest['value']) if latest['value'] != '.' else None\n            prev_val = float(previous['value']) if previous and previous['value'] != '.' else None\n            change = round(val - prev_val, 4) if val is not None and prev_val is not None else None\n            dashboard[sid] = {'name': name, 'date': latest['date'], 'value': val, 'previous_value': prev_val, 'change': change}\n    return dashboard\n\ndef run(query: str, mode: str = 'auto', **kwargs) -> dict:\n    t0 = time.time()\n    if mode == 'dashboard' or query.lower() == 'dashboard':\n        dash = get_dashboard()\n        return {'method_id': METHOD_ID, 'method_name': METHOD_NAME, 'query': 'dashboard', 'results': dash, 'metadata': {'duration_seconds': round(time.time()-t0,2), 'sources_count': len(dash), 'data_points': sum(1 for v in dash.values() if 'value' in v)}}\n    if mode == 'search' or (mode == 'auto' and not re.match(r'^[A-Z0-9]+$', query)):\n        results = search_series(query, kwargs.get('limit', 10))\n        return {'method_id': METHOD_ID, 'method_name': METHOD_NAME, 'query': query, 'results': results, 'metadata': {'duration_seconds': round(time.time()-t0,2), 'sources_count': len(results)}}\n    # Series mode\n    obs = get_series(query.upper(), kwargs.get('observation_start'), kwargs.get('observation_end'), kwargs.get('limit', 100))\n    info = get_series_info(query.upper())\n    return {'method_id': METHOD_ID, 'method_name': METHOD_NAME, 'query': query, 'results': obs.get('observations', []), 'metadata': {'duration_seconds': round(time.time()-t0,2), 'data_points': len(obs.get('observations',[])), 'series_info': info.get('seriess',[{}])[0] if 'seriess' in info else {}}}\n\nif __name__ == '__main__':\n    q = sys.argv[1] if len(sys.argv) > 1 else 'dashboard'\n    print(json.dumps(run(q), indent=2, default=str))",
@@ -124,10 +303,26 @@
         "env_var": "FRED_API_KEY",
         "rate_limit": "120 requests/minute",
         "key_endpoints": [
-          {"path": "/fred/series/observations", "params": "series_id, observation_start, observation_end, sort_order, limit", "purpose": "Time series data"},
-          {"path": "/fred/series/search", "params": "search_text, limit", "purpose": "Full-text series search"},
-          {"path": "/fred/series", "params": "series_id", "purpose": "Series metadata (title, frequency, units)"},
-          {"path": "/fred/releases", "params": "limit", "purpose": "Upcoming economic data releases"}
+          {
+            "path": "/fred/series/observations",
+            "params": "series_id, observation_start, observation_end, sort_order, limit",
+            "purpose": "Time series data"
+          },
+          {
+            "path": "/fred/series/search",
+            "params": "search_text, limit",
+            "purpose": "Full-text series search"
+          },
+          {
+            "path": "/fred/series",
+            "params": "series_id",
+            "purpose": "Series metadata (title, frequency, units)"
+          },
+          {
+            "path": "/fred/releases",
+            "params": "limit",
+            "purpose": "Upcoming economic data releases"
+          }
         ]
       },
       "fallback_if_no_api_key": {
@@ -139,7 +334,6 @@
       }
     }
   ],
-
   "mcp_servers_to_adopt": [
     {
       "name": "alpha-vantage",
@@ -147,7 +341,10 @@
       "priority": 1,
       "mcp_config": {
         "command": "npx",
-        "args": ["-y", "alpha-vantage-mcp"],
+        "args": [
+          "-y",
+          "alpha-vantage-mcp"
+        ],
         "env": {
           "ALPHA_VANTAGE_API_KEY": "${ALPHA_VANTAGE_API_KEY}"
         }
@@ -156,14 +353,24 @@
         {
           "note": "Official vendor package if available",
           "command": "npx",
-          "args": ["-y", "@anthropic/alpha-vantage-mcp"],
-          "env": {"ALPHA_VANTAGE_API_KEY": "${ALPHA_VANTAGE_API_KEY}"}
+          "args": [
+            "-y",
+            "@anthropic/alpha-vantage-mcp"
+          ],
+          "env": {
+            "ALPHA_VANTAGE_API_KEY": "${ALPHA_VANTAGE_API_KEY}"
+          }
         },
         {
           "note": "Python-based alternative via pip",
           "command": "python3",
-          "args": ["-m", "alpha_vantage_mcp"],
-          "env": {"ALPHA_VANTAGE_API_KEY": "${ALPHA_VANTAGE_API_KEY}"}
+          "args": [
+            "-m",
+            "alpha_vantage_mcp"
+          ],
+          "env": {
+            "ALPHA_VANTAGE_API_KEY": "${ALPHA_VANTAGE_API_KEY}"
+          }
         }
       ],
       "setup_steps": [
@@ -192,20 +399,27 @@
       "priority": 2,
       "mcp_config": {
         "command": "uvx",
-        "args": ["mcp-yahoo-finance"],
+        "args": [
+          "mcp-yahoo-finance"
+        ],
         "env": {}
       },
       "alternative_mcp_configs": [
         {
           "note": "If uvx not available, use pip-installed server",
           "command": "python3",
-          "args": ["-m", "mcp_yahoo_finance"],
+          "args": [
+            "-m",
+            "mcp_yahoo_finance"
+          ],
           "env": {}
         },
         {
           "note": "StockFlow variant",
           "command": "python3",
-          "args": ["path/to/mcp-stockflow/server.py"],
+          "args": [
+            "path/to/mcp-stockflow/server.py"
+          ],
           "env": {}
         }
       ],
@@ -234,7 +448,10 @@
       "priority": 3,
       "mcp_config": {
         "command": "python3",
-        "args": ["-m", "edgar.mcp"],
+        "args": [
+          "-m",
+          "edgar.mcp"
+        ],
         "env": {
           "EDGAR_IDENTITY": "Research research@example.com"
         }
@@ -243,8 +460,12 @@
         {
           "note": "CLI entrypoint variant",
           "command": "edgar",
-          "args": ["mcp-server"],
-          "env": {"EDGAR_IDENTITY": "Research research@example.com"}
+          "args": [
+            "mcp-server"
+          ],
+          "env": {
+            "EDGAR_IDENTITY": "Research research@example.com"
+          }
         }
       ],
       "setup_steps": [
@@ -267,7 +488,6 @@
       "impact_on_roadmap": "If EdgarTools MCP works in Session 2, the Session 3 coding agent allocated to method_sec_edgar.py can be redirected to build method_fred.py instead, compressing the roadmap by pulling FRED forward from Session 5 to Session 3."
     }
   ],
-
   "data_pipelines": [
     {
       "name": "market_research_pipeline",
@@ -293,21 +513,70 @@
             "technical_score": "float 0-10",
             "sentiment_score": "float 0-10",
             "composite_score": "float 0-10 (weighted average)",
-            "valuation_metrics": {"pe": "float", "forward_pe": "float", "pb": "float", "ev_ebitda": "float", "peg": "float"},
-            "growth_metrics": {"revenue_growth_yoy": "float %", "eps_growth_yoy": "float %", "fcf_growth_yoy": "float %"},
-            "balance_sheet": {"debt_to_equity": "float", "current_ratio": "float", "cash_position_m": "float"},
-            "profitability": {"roe": "float %", "roic": "float %", "net_margin": "float %", "operating_margin": "float %"},
-            "technical_signals": {"rsi_14": "float", "macd_signal": "bullish|bearish|neutral", "above_200sma": "bool", "volume_trend": "increasing|decreasing|flat"},
-            "sentiment_signals": {"insider_activity": "buying|selling|mixed|none", "analyst_consensus": "buy|hold|sell", "news_sentiment": "positive|negative|neutral"},
-            "risk_factors": ["str"],
-            "catalysts": ["str"],
-            "data_sources_used": ["str"]
+            "valuation_metrics": {
+              "pe": "float",
+              "forward_pe": "float",
+              "pb": "float",
+              "ev_ebitda": "float",
+              "peg": "float"
+            },
+            "growth_metrics": {
+              "revenue_growth_yoy": "float %",
+              "eps_growth_yoy": "float %",
+              "fcf_growth_yoy": "float %"
+            },
+            "balance_sheet": {
+              "debt_to_equity": "float",
+              "current_ratio": "float",
+              "cash_position_m": "float"
+            },
+            "profitability": {
+              "roe": "float %",
+              "roic": "float %",
+              "net_margin": "float %",
+              "operating_margin": "float %"
+            },
+            "technical_signals": {
+              "rsi_14": "float",
+              "macd_signal": "bullish|bearish|neutral",
+              "above_200sma": "bool",
+              "volume_trend": "increasing|decreasing|flat"
+            },
+            "sentiment_signals": {
+              "insider_activity": "buying|selling|mixed|none",
+              "analyst_consensus": "buy|hold|sell",
+              "news_sentiment": "positive|negative|neutral"
+            },
+            "risk_factors": [
+              "str"
+            ],
+            "catalysts": [
+              "str"
+            ],
+            "data_sources_used": [
+              "str"
+            ]
           }
         },
         "output_pick_file": {
           "format": "YAML frontmatter + Markdown body per TEMPLATE.md",
           "location_pattern": "market-research/picks/YYYY-MM-DD_TICKER.md",
-          "required_yaml_fields": ["pick_id", "date", "team", "ticker", "company", "direction", "method", "entry_price", "target_price", "stop_loss", "timeframe", "confidence", "status", "builds_on"]
+          "required_yaml_fields": [
+            "pick_id",
+            "date",
+            "team",
+            "ticker",
+            "company",
+            "direction",
+            "method",
+            "entry_price",
+            "target_price",
+            "stop_loss",
+            "timeframe",
+            "confidence",
+            "status",
+            "builds_on"
+          ]
         },
         "output_index_entry": {
           "format": "JSON object appended to picks[] array in index.json",
@@ -347,12 +616,34 @@
         },
         "intermediate_dashboard": {
           "schema": {
-            "gdp_growth": {"current_qoq_annualized": "float %", "trend": "accelerating|decelerating|stable"},
-            "inflation_cpi": {"current_yoy": "float %", "trend": "rising|falling|stable", "fed_target_deviation": "float %"},
-            "unemployment": {"current": "float %", "3m_trend": "rising|falling|stable"},
-            "fed_funds_rate": {"current": "float %", "last_change": "str", "market_expectation": "str"},
-            "yield_curve": {"t10y2y_spread": "float bps", "inverted": "bool", "recession_signal": "bool"},
-            "vix": {"current": "float", "30d_avg": "float", "regime": "low_vol|normal|elevated|crisis"},
+            "gdp_growth": {
+              "current_qoq_annualized": "float %",
+              "trend": "accelerating|decelerating|stable"
+            },
+            "inflation_cpi": {
+              "current_yoy": "float %",
+              "trend": "rising|falling|stable",
+              "fed_target_deviation": "float %"
+            },
+            "unemployment": {
+              "current": "float %",
+              "3m_trend": "rising|falling|stable"
+            },
+            "fed_funds_rate": {
+              "current": "float %",
+              "last_change": "str",
+              "market_expectation": "str"
+            },
+            "yield_curve": {
+              "t10y2y_spread": "float bps",
+              "inverted": "bool",
+              "recession_signal": "bool"
+            },
+            "vix": {
+              "current": "float",
+              "30d_avg": "float",
+              "regime": "low_vol|normal|elevated|crisis"
+            },
             "assessment": "str (2-3 sentence macro summary)"
           }
         },
@@ -405,7 +696,6 @@
       ]
     }
   ],
-
   "agent_skill_spec": {
     "name": "market-research",
     "session": 5,
@@ -428,8 +718,12 @@
         "step": 1,
         "name": "Macro Context Gathering",
         "description": "Establish current macro-economic backdrop before screening",
-        "tools_primary": ["method_fred.py dashboard mode"],
-        "tools_fallback": ["WebSearch for 'current US economic conditions GDP inflation unemployment 2026'"],
+        "tools_primary": [
+          "method_fred.py dashboard mode"
+        ],
+        "tools_fallback": [
+          "WebSearch for 'current US economic conditions GDP inflation unemployment 2026'"
+        ],
         "output": "Macro summary covering GDP growth trend, inflation (CPI), unemployment, Fed funds rate outlook, yield curve status, VIX regime",
         "time_budget_minutes": 10
       },
@@ -437,7 +731,10 @@
         "step": 2,
         "name": "Sector Screening",
         "description": "Identify 2-3 promising sectors based on macro conditions, catalysts, and relative performance",
-        "tools_primary": ["WebSearch for sector ETF performance (XLK, XLF, XLE, XLV, etc.)", "Yahoo Finance MCP for sector comparison"],
+        "tools_primary": [
+          "WebSearch for sector ETF performance (XLK, XLF, XLE, XLV, etc.)",
+          "Yahoo Finance MCP for sector comparison"
+        ],
         "criteria": "Favor sectors with: (1) tailwinds from macro conditions, (2) catalysts in next 3-6 months, (3) reasonable valuations relative to history",
         "output": "Ranked list of 2-3 target sectors with rationale",
         "time_budget_minutes": 10
@@ -446,7 +743,10 @@
         "step": 3,
         "name": "Stock Screening",
         "description": "Screen 8-10 candidates within target sectors using quantitative filters",
-        "tools_primary": ["Yahoo Finance MCP or Alpha Vantage MCP for screening", "WebSearch for company news"],
+        "tools_primary": [
+          "Yahoo Finance MCP or Alpha Vantage MCP for screening",
+          "WebSearch for company news"
+        ],
         "criteria_from": "market-research/methods/fundamental.md initial screen: P/E < sector median, revenue growth > 5% YoY, positive FCF, debt-to-equity < industry avg",
         "output": "Ranked list of 8-10 candidates with key metrics (P/E, revenue growth, market cap, sector)",
         "time_budget_minutes": 15
@@ -460,28 +760,44 @@
             "substep": "4a",
             "name": "Fundamental Analysis",
             "checklist": "market-research/methods/fundamental.md",
-            "tools": ["Alpha Vantage MCP (company overview, financial statements)", "EdgarTools MCP or method_sec_edgar.py (10-K/10-Q filings)", "Yahoo Finance MCP (key statistics)"],
+            "tools": [
+              "Alpha Vantage MCP (company overview, financial statements)",
+              "EdgarTools MCP or method_sec_edgar.py (10-K/10-Q filings)",
+              "Yahoo Finance MCP (key statistics)"
+            ],
             "score_dimensions": "Valuation (vs peers + historical), Growth (revenue, EPS, FCF), Balance Sheet Health, Profitability (ROE, ROIC, margins), Competitive Moat"
           },
           {
             "substep": "4b",
             "name": "Technical Analysis",
             "checklist": "market-research/methods/technical.md",
-            "tools": ["Alpha Vantage MCP (RSI, MACD, SMA, EMA, Bollinger Bands)", "Yahoo Finance MCP (historical prices, volume)"],
+            "tools": [
+              "Alpha Vantage MCP (RSI, MACD, SMA, EMA, Bollinger Bands)",
+              "Yahoo Finance MCP (historical prices, volume)"
+            ],
             "score_dimensions": "Trend (above/below 200-SMA), Momentum (RSI, MACD), Support/Resistance levels, Volume confirmation"
           },
           {
             "substep": "4c",
             "name": "Sentiment Analysis",
             "checklist": "market-research/methods/sentiment.md",
-            "tools": ["Yahoo Finance MCP (analyst ratings, insider transactions)", "Alpha Vantage MCP (news sentiment)", "WebSearch (recent news flow)"],
+            "tools": [
+              "Yahoo Finance MCP (analyst ratings, insider transactions)",
+              "Alpha Vantage MCP (news sentiment)",
+              "WebSearch (recent news flow)"
+            ],
             "score_dimensions": "Insider activity, Analyst consensus, News sentiment, Institutional positioning"
           },
           {
             "substep": "4d",
             "name": "Scoring",
             "description": "Score each dimension 1-10, compute weighted composite",
-            "weights": {"fundamental": 0.40, "technical": 0.25, "sentiment": 0.20, "macro_fit": 0.15},
+            "weights": {
+              "fundamental": 0.4,
+              "technical": 0.25,
+              "sentiment": 0.2,
+              "macro_fit": 0.15
+            },
             "minimum_composite": 6.0
           }
         ],
@@ -526,7 +842,6 @@
     ],
     "time_budget_total_minutes": 95
   },
-
   "integration_matrix": {
     "description": "How all tools, MCP servers, data pipelines, and scripts connect and feed data to each other across the 5-session roadmap.",
     "connections": [
@@ -576,7 +891,12 @@
         "to": "Market Research Pipeline (Step 4) + Agent Skill (Step 4 substeps)",
         "data_flow": "Analysis checklists and scoring criteria for fundamental, technical, sentiment, quantitative methods",
         "sessions": "1+",
-        "files": ["fundamental.md", "technical.md", "sentiment.md", "quantitative.md"]
+        "files": [
+          "fundamental.md",
+          "technical.md",
+          "sentiment.md",
+          "quantitative.md"
+        ]
       },
       {
         "from": "Market Research Pipeline (Step 4-5 output)",
@@ -619,11 +939,47 @@
       "description": "Target .mcp.json after Session 2 (5 servers, up from 2)",
       "config": {
         "mcpServers": {
-          "repo": {"command": "python3", "args": ["storage/mcp-server/server.py"], "env": {}},
-          "kb-search": {"command": "python3", "args": ["storage/scripts/mcp_kb_server.py"], "env": {}},
-          "alpha-vantage": {"command": "npx", "args": ["-y", "alpha-vantage-mcp"], "env": {"ALPHA_VANTAGE_API_KEY": "${ALPHA_VANTAGE_API_KEY}"}},
-          "yahoo-finance": {"command": "uvx", "args": ["mcp-yahoo-finance"], "env": {}},
-          "edgartools": {"command": "python3", "args": ["-m", "edgar.mcp"], "env": {"EDGAR_IDENTITY": "Research research@example.com"}}
+          "repo": {
+            "command": "python3",
+            "args": [
+              "storage/mcp-server/server.py"
+            ],
+            "env": {}
+          },
+          "kb-search": {
+            "command": "python3",
+            "args": [
+              "storage/scripts/mcp_kb_server.py"
+            ],
+            "env": {}
+          },
+          "alpha-vantage": {
+            "command": "npx",
+            "args": [
+              "-y",
+              "alpha-vantage-mcp"
+            ],
+            "env": {
+              "ALPHA_VANTAGE_API_KEY": "${ALPHA_VANTAGE_API_KEY}"
+            }
+          },
+          "yahoo-finance": {
+            "command": "uvx",
+            "args": [
+              "mcp-yahoo-finance"
+            ],
+            "env": {}
+          },
+          "edgartools": {
+            "command": "python3",
+            "args": [
+              "-m",
+              "edgar.mcp"
+            ],
+            "env": {
+              "EDGAR_IDENTITY": "Research research@example.com"
+            }
+          }
         }
       },
       "growth": "2 -> 5 servers (150% increase)",
@@ -657,7 +1013,6 @@
       }
     }
   },
-
   "critical_decisions_for_implementation_teams": [
     {
       "id": "DECISION-01",
@@ -694,13 +1049,27 @@
       "decision": "Yahoo Finance MCP server selection",
       "recommendation": "Try mcp-yahoo-finance (PyPI) first via uvx. If unavailable, try Alex2Yang97/yahoo-finance-mcp (most feature-complete) or twolven/mcp-stockflow (most established).",
       "options_ranked": [
-        {"name": "mcp-yahoo-finance", "install": "uvx mcp-yahoo-finance", "pros": "PyPI package, easy install", "cons": "Newer, less battle-tested"},
-        {"name": "Alex2Yang97/yahoo-finance-mcp", "install": "git clone + pip install", "pros": "Most feature-complete", "cons": "Requires git clone"},
-        {"name": "twolven/mcp-stockflow", "install": "git clone + pip install mcp yfinance", "pros": "Most established", "cons": "Requires git clone"}
+        {
+          "name": "mcp-yahoo-finance",
+          "install": "uvx mcp-yahoo-finance",
+          "pros": "PyPI package, easy install",
+          "cons": "Newer, less battle-tested"
+        },
+        {
+          "name": "Alex2Yang97/yahoo-finance-mcp",
+          "install": "git clone + pip install",
+          "pros": "Most feature-complete",
+          "cons": "Requires git clone"
+        },
+        {
+          "name": "twolven/mcp-stockflow",
+          "install": "git clone + pip install mcp yfinance",
+          "pros": "Most established",
+          "cons": "Requires git clone"
+        }
       ]
     }
   ],
-
   "risk_mitigations": {
     "all_mcp_servers_fail_to_install": {
       "likelihood": "Low",
@@ -728,7 +1097,6 @@
       "mitigation": "BLS API v2 at api.bls.gov requires no API key for basic access (25 queries/day). Covers employment and inflation data. WebSearch can supplement with GDP, rates data from news sources."
     }
   },
-
   "implementation_timeline_summary": {
     "session_1": {
       "tools_built": 0,
@@ -737,14 +1105,22 @@
     },
     "session_2": {
       "tools_built": 1,
-      "tools_list": ["pick_logger.py"],
+      "tools_list": [
+        "pick_logger.py"
+      ],
       "mcp_servers_added": 3,
-      "mcp_list": ["alpha-vantage", "yahoo-finance", "edgartools"],
+      "mcp_list": [
+        "alpha-vantage",
+        "yahoo-finance",
+        "edgartools"
+      ],
       "rationale": "Financial data foundation. 1 infra agent handles all MCP setup + pick_logger."
     },
     "session_3": {
       "tools_built": "0 or 1",
-      "tools_list": ["method_sec_edgar.py (conditional on EdgarTools MCP failure)"],
+      "tools_list": [
+        "method_sec_edgar.py (conditional on EdgarTools MCP failure)"
+      ],
       "mcp_servers_added": 0,
       "rationale": "SEC EDGAR depth. If EdgarTools MCP works from Session 2, coding agent builds method_fred.py instead."
     },
@@ -755,8 +1131,12 @@
     },
     "session_5": {
       "tools_built": "1 or 2",
-      "tools_list": ["method_fred.py (if not pulled forward to Session 3)", "market-research.skill.md"],
+      "tools_list": [
+        "method_fred.py (if not pulled forward to Session 3)",
+        "market-research.skill.md"
+      ],
       "rationale": "FRED + Agent Skill packaging. Final tools round."
     }
-  }
+  },
+  "date": "2026-03-11"
 }

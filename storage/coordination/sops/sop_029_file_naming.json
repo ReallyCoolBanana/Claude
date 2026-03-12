@@ -1,12 +1,13 @@
 {
   "id": "SOP-029",
   "version": "1.0",
-  "created": "2026-03-11",
   "team": "A1-Gamma",
   "title": "File Creation & Naming Standards",
   "purpose": "Establishes mandatory naming patterns, directory placement rules, and file size budgets for all repository resources. Addresses the naming inconsistencies found by A1-Alpha audit: mixed case in storage/scripts/ (50/50 snake/kebab split), SOP filename/ID mismatches (SOP-026 through SOP-028), and same-concept-different-names across index files.",
-  "builds_on": ["SOP-024", "SOP-023"],
-
+  "builds_on": [
+    "SOP-024",
+    "SOP-023"
+  ],
   "section_1_creation_decision": {
     "title": "When to Create a New File vs Extend Existing",
     "rules": [
@@ -36,7 +37,6 @@
       "Check that the file fits within its token budget per section_4"
     ]
   },
-
   "section_2_naming_patterns": {
     "title": "Mandatory Naming Patterns by Resource Type",
     "description": "Every file must match its resource type pattern exactly. No exceptions.",
@@ -127,21 +127,50 @@
       }
     ]
   },
-
   "section_3_directory_placement": {
     "title": "Directory Placement Rules",
     "description": "Every resource type has exactly one correct directory. Do not place files elsewhere.",
     "placements": [
-      {"resource_type": "knowledge_base_entry", "directory": "knowledge-base/entries/"},
-      {"resource_type": "team_session_log", "directory": "teams/sessions/"},
-      {"resource_type": "sop", "directory": "storage/coordination/sops/"},
-      {"resource_type": "data_source", "directory": "storage/sources/"},
-      {"resource_type": "script", "directory": "storage/scripts/"},
-      {"resource_type": "api_tool", "directory": "storage/api-tools/"},
-      {"resource_type": "market_pick", "directory": "market-research/picks/"},
-      {"resource_type": "market_method", "directory": "market-research/methods/"},
-      {"resource_type": "coordination_module", "directory": "storage/coordination/"},
-      {"resource_type": "team_output", "directory": "storage/coordination/teams/<team-name>/output/"}
+      {
+        "resource_type": "knowledge_base_entry",
+        "directory": "knowledge-base/entries/"
+      },
+      {
+        "resource_type": "team_session_log",
+        "directory": "teams/sessions/"
+      },
+      {
+        "resource_type": "sop",
+        "directory": "storage/coordination/sops/"
+      },
+      {
+        "resource_type": "data_source",
+        "directory": "storage/sources/"
+      },
+      {
+        "resource_type": "script",
+        "directory": "storage/scripts/"
+      },
+      {
+        "resource_type": "api_tool",
+        "directory": "storage/api-tools/"
+      },
+      {
+        "resource_type": "market_pick",
+        "directory": "market-research/picks/"
+      },
+      {
+        "resource_type": "market_method",
+        "directory": "market-research/methods/"
+      },
+      {
+        "resource_type": "coordination_module",
+        "directory": "storage/coordination/"
+      },
+      {
+        "resource_type": "team_output",
+        "directory": "storage/coordination/teams/<team-name>/output/"
+      }
     ],
     "directory_naming_rules": [
       {
@@ -161,7 +190,6 @@
       }
     ]
   },
-
   "section_4_file_size_budgets": {
     "title": "Token Budget Categories",
     "description": "Every file has a target token budget based on its category. Files exceeding their budget should be split.",
@@ -170,28 +198,44 @@
         "name": "micro",
         "max_tokens": 500,
         "max_bytes_approx": 2000,
-        "examples": ["pointer files", "config fragments", "single-entry indexes"],
+        "examples": [
+          "pointer files",
+          "config fragments",
+          "single-entry indexes"
+        ],
         "use_case": "Navigation aids, metadata-only files, small configs"
       },
       {
         "name": "small",
         "max_tokens": 2000,
         "max_bytes_approx": 8000,
-        "examples": ["KB entry summaries", "simple SOPs", "source definitions", "team outputs"],
+        "examples": [
+          "KB entry summaries",
+          "simple SOPs",
+          "source definitions",
+          "team outputs"
+        ],
         "use_case": "Standard entries with focused content"
       },
       {
         "name": "medium",
         "max_tokens": 5000,
         "max_bytes_approx": 20000,
-        "examples": ["detailed SOPs", "comprehensive KB entries", "index files"],
+        "examples": [
+          "detailed SOPs",
+          "comprehensive KB entries",
+          "index files"
+        ],
         "use_case": "Entries requiring structured procedures or multi-section analysis"
       },
       {
         "name": "large",
         "max_tokens": 15000,
         "max_bytes_approx": 60000,
-        "examples": ["detailed analysis reports", "comprehensive audit results"],
+        "examples": [
+          "detailed analysis reports",
+          "comprehensive audit results"
+        ],
         "use_case": "Rare. Only for entries that cannot be meaningfully split. Must include a summary in the first 500 bytes."
       }
     ],
@@ -210,21 +254,51 @@
       "rationale": "The summary covers 80% of use cases at 10% of the token cost."
     }
   },
-
   "section_5_case_conventions": {
     "title": "Case Convention by File Type",
     "rules": [
-      {"extension": ".py", "case": "snake_case", "example": "validate_storage.py"},
-      {"extension": ".md", "case": "kebab-case for data files, UPPER_CASE for templates/docs", "example": "cross-ref-report.md, TEMPLATE.md, README.md"},
-      {"extension": ".json", "case": "snake_case for SOPs/configs, kebab-case for data, lowercase for index", "example": "sop_029_file_naming.json, SRC-0001-openalex.json, index.json"},
-      {"extension": ".js", "case": "snake_case", "example": "viz_data_flow.js"},
-      {"extension": ".go", "case": "lowercase single word", "example": "main.go"},
-      {"extension": ".sh", "case": "kebab-case", "example": "pre-commit.sh"},
-      {"extension": ".yaml/.yml", "case": "snake_case", "example": "team_templates.yaml"},
-      {"extension": ".jsonl", "case": "kebab-case", "example": "global-bus.jsonl"}
+      {
+        "extension": ".py",
+        "case": "snake_case",
+        "example": "validate_storage.py"
+      },
+      {
+        "extension": ".md",
+        "case": "kebab-case for data files, UPPER_CASE for templates/docs",
+        "example": "cross-ref-report.md, TEMPLATE.md, README.md"
+      },
+      {
+        "extension": ".json",
+        "case": "snake_case for SOPs/configs, kebab-case for data, lowercase for index",
+        "example": "sop_029_file_naming.json, SRC-0001-openalex.json, index.json"
+      },
+      {
+        "extension": ".js",
+        "case": "snake_case",
+        "example": "viz_data_flow.js"
+      },
+      {
+        "extension": ".go",
+        "case": "lowercase single word",
+        "example": "main.go"
+      },
+      {
+        "extension": ".sh",
+        "case": "kebab-case",
+        "example": "pre-commit.sh"
+      },
+      {
+        "extension": ".yaml/.yml",
+        "case": "snake_case",
+        "example": "team_templates.yaml"
+      },
+      {
+        "extension": ".jsonl",
+        "case": "kebab-case",
+        "example": "global-bus.jsonl"
+      }
     ]
   },
-
   "section_6_common_mistakes": {
     "title": "Common Mistakes to Avoid",
     "description": "Based on the A1-Alpha file pattern audit findings.",
@@ -273,7 +347,6 @@
       }
     ]
   },
-
   "checklists": {
     "before_creating_any_file": [
       "Searched index.json for duplicates or overlapping entries",
@@ -290,5 +363,6 @@
       "Index.json has been regenerated (per SOP-030)",
       "If >2000 tokens, summary field/section is present in first 500 bytes"
     ]
-  }
+  },
+  "date": "2026-03-11"
 }

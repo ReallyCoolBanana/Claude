@@ -3,20 +3,58 @@
   "title": "SQLite Contention Management",
   "version": "1.0",
   "status": "active",
-  "created_date": "2026-03-11",
   "category": "infrastructure",
   "purpose": "Prevent SQLite WAL write contention from becoming the coordination bottleneck. Empirical benchmarks show a hard efficiency cliff at 4 concurrent writers (throughput drops to 36% of single-thread) and p99 latency explodes from 0ms at 1 thread to 230ms at 32 threads. This SOP defines maximum writer limits, partitioning strategies, backoff procedures, and monitoring thresholds to keep operations within safe contention bounds.",
   "scope": "All multi-agent operations using SQLite WAL for coordination state (hub databases, work queues, scratchpads, channel stores). Applies to coordinator_hub.py, help_protocol.py, work_stealing.py, and direct_channels.py.",
-  "builds_on": ["SOP-032", "SOP-033", "SOP-021"],
-
+  "builds_on": [
+    "SOP-032",
+    "SOP-033",
+    "SOP-021"
+  ],
   "key_findings": {
     "contention_curve": {
-      "1_thread": {"ops_per_sec": 3611, "efficiency_pct": 100, "p50_ms": 0.247, "p95_ms": 0.506, "p99_ms": 0},
-      "2_threads": {"ops_per_sec": 2384, "efficiency_pct": 66.0, "p50_ms": 0.221, "p95_ms": 0.342, "p99_ms": 19.1},
-      "4_threads": {"ops_per_sec": 1285, "efficiency_pct": 35.6, "p50_ms": 0.236, "p95_ms": 0.363, "p99_ms": 34.1},
-      "8_threads": {"ops_per_sec": 578, "efficiency_pct": 16.0, "p50_ms": 0.234, "p95_ms": 0.391, "p99_ms": 54.5},
-      "16_threads": {"ops_per_sec": 202, "efficiency_pct": 5.6, "p50_ms": 0.244, "p95_ms": 0.589, "p99_ms": 129.7},
-      "32_threads": {"ops_per_sec": 120, "efficiency_pct": 3.3, "p50_ms": 0.226, "p95_ms": 0.538, "p99_ms": 229.9}
+      "1_thread": {
+        "ops_per_sec": 3611,
+        "efficiency_pct": 100,
+        "p50_ms": 0.247,
+        "p95_ms": 0.506,
+        "p99_ms": 0
+      },
+      "2_threads": {
+        "ops_per_sec": 2384,
+        "efficiency_pct": 66.0,
+        "p50_ms": 0.221,
+        "p95_ms": 0.342,
+        "p99_ms": 19.1
+      },
+      "4_threads": {
+        "ops_per_sec": 1285,
+        "efficiency_pct": 35.6,
+        "p50_ms": 0.236,
+        "p95_ms": 0.363,
+        "p99_ms": 34.1
+      },
+      "8_threads": {
+        "ops_per_sec": 578,
+        "efficiency_pct": 16.0,
+        "p50_ms": 0.234,
+        "p95_ms": 0.391,
+        "p99_ms": 54.5
+      },
+      "16_threads": {
+        "ops_per_sec": 202,
+        "efficiency_pct": 5.6,
+        "p50_ms": 0.244,
+        "p95_ms": 0.589,
+        "p99_ms": 129.7
+      },
+      "32_threads": {
+        "ops_per_sec": 120,
+        "efficiency_pct": 3.3,
+        "p50_ms": 0.226,
+        "p95_ms": 0.538,
+        "p99_ms": 229.9
+      }
     },
     "key_observation": "p50 latency stays constant at ~0.24ms across all thread counts. The problem is SQLite WAL write serialization causing extreme TAIL latency (p99). Median operations are fast; it is the contention-caused retries that destroy throughput.",
     "cliff_at_4_threads": "At 4 concurrent writers, throughput drops to 36% and p99 hits 34ms. This is the practical maximum for a single database.",
@@ -24,7 +62,6 @@
     "thundering_herd": "10 threads competing for 50 work items: p95 jumps to 79ms vs 0.66ms single-thread (120x amplification). Work stealing is double-steal safe but latency-expensive.",
     "cross_reference": "Combined with SOP-032 optimal team size of 5-8 agents, teams of 5-8 MUST use partitioned write access or a coordinator proxy to avoid the 4-thread cliff."
   },
-
   "procedures": [
     {
       "step": 1,
@@ -129,7 +166,6 @@
       "output": "Zombie reclaim configured and active"
     }
   ],
-
   "anti_patterns": [
     {
       "name": "The Shared Database",
@@ -156,7 +192,6 @@
       "fix": "Enable timeout-based reclaim (default 30 minutes). Check for stale items every 60 seconds."
     }
   ],
-
   "quick_reference": {
     "max_writers_per_db": 4,
     "partition_trigger": "5+ concurrent writers to same database",
@@ -167,16 +202,38 @@
     "work_stealing_single_consumer_p95_ms": 0.66,
     "work_stealing_thundering_herd_p95_ms": 79
   },
-
   "references": [
-    {"source": "storage/data/final_analysis.json", "section": "optimal_agent_to_subagent_ratio", "data_points": "6 contention levels, throughput and latency measurements"},
-    {"source": "storage/data/empirical_benchmarks.json", "section": "contention_analysis", "data_points": "1-32 threads, ops/s, p50/p95/p99 latency"},
-    {"source": "storage/data/empirical_benchmarks.json", "section": "work_stealing", "data_points": "Thundering herd validation, 10 threads x 50 items"},
-    {"source": "storage/data/unified_benchmarks.json", "section": "coordination_benchmarks.sqlite_contention_scaling", "data_points": "Independent contention benchmark confirming cliff at 4 threads"},
-    {"source": "storage/coordination/teams/think-tank-convergence.json", "section": "finding_3_weak_links", "data_points": "SQLite contention identified as primary scaling bottleneck"},
-    {"source": "storage/data/final_analysis.json", "section": "weak_links", "data_points": "Zombie work items ranked #3 severity high"}
+    {
+      "source": "storage/data/final_analysis.json",
+      "section": "optimal_agent_to_subagent_ratio",
+      "data_points": "6 contention levels, throughput and latency measurements"
+    },
+    {
+      "source": "storage/data/empirical_benchmarks.json",
+      "section": "contention_analysis",
+      "data_points": "1-32 threads, ops/s, p50/p95/p99 latency"
+    },
+    {
+      "source": "storage/data/empirical_benchmarks.json",
+      "section": "work_stealing",
+      "data_points": "Thundering herd validation, 10 threads x 50 items"
+    },
+    {
+      "source": "storage/data/unified_benchmarks.json",
+      "section": "coordination_benchmarks.sqlite_contention_scaling",
+      "data_points": "Independent contention benchmark confirming cliff at 4 threads"
+    },
+    {
+      "source": "storage/coordination/teams/think-tank-convergence.json",
+      "section": "finding_3_weak_links",
+      "data_points": "SQLite contention identified as primary scaling bottleneck"
+    },
+    {
+      "source": "storage/data/final_analysis.json",
+      "section": "weak_links",
+      "data_points": "Zombie work items ranked #3 severity high"
+    }
   ],
-
   "metrics": {
     "compliance_indicators": [
       "No database has more than 4 concurrent writers without documented partitioning plan",
@@ -192,5 +249,6 @@
       "zero_deadlocked_pipelines": true
     },
     "measurement_method": "Log p99 latency and ops/sec per database per 30-second monitoring interval. Compare against contention curve. Flag any database operating above its writer-count tier threshold."
-  }
+  },
+  "date": "2026-03-11"
 }

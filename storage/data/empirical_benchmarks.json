@@ -1,5 +1,4 @@
 {
-  "run_date": "2026-03-11",
   "benchmarks": {
     "team_sizing": {
       "description": "Tests coordination overhead for team sizes 1-50 agents",
@@ -128,19 +127,88 @@
       "description": "Hub (centralized) vs Channels (peer-to-peer) throughput comparison",
       "all_passed": true,
       "hub": {
-        "registration": {"mean_ms": 0.934, "median_ms": 0.798, "p95_ms": 1.189, "total_ms": 46.718, "count": 50},
-        "status_updates": {"mean_ms": 0.333, "median_ms": 0.311, "p95_ms": 0.485, "total_ms": 16.642, "count": 50},
-        "dashboard_reads": {"mean_ms": 0.088, "median_ms": 0.154, "p95_ms": 0.155, "total_ms": 0.351, "count": 4},
-        "instructions": {"mean_ms": 0.281, "median_ms": 0.264, "p95_ms": 0.321, "total_ms": 28.062, "count": 100},
-        "concurrent_updates": {"mean_ms": 30.926, "median_ms": 19.486, "p95_ms": 105.018, "total_ms": 309.265, "threads": 10, "errors": 0}
+        "registration": {
+          "mean_ms": 0.934,
+          "median_ms": 0.798,
+          "p95_ms": 1.189,
+          "total_ms": 46.718,
+          "count": 50
+        },
+        "status_updates": {
+          "mean_ms": 0.333,
+          "median_ms": 0.311,
+          "p95_ms": 0.485,
+          "total_ms": 16.642,
+          "count": 50
+        },
+        "dashboard_reads": {
+          "mean_ms": 0.088,
+          "median_ms": 0.154,
+          "p95_ms": 0.155,
+          "total_ms": 0.351,
+          "count": 4
+        },
+        "instructions": {
+          "mean_ms": 0.281,
+          "median_ms": 0.264,
+          "p95_ms": 0.321,
+          "total_ms": 28.062,
+          "count": 100
+        },
+        "concurrent_updates": {
+          "mean_ms": 30.926,
+          "median_ms": 19.486,
+          "p95_ms": 105.018,
+          "total_ms": 309.265,
+          "threads": 10,
+          "errors": 0
+        }
       },
       "channels": {
-        "creation": {"mean_ms": 0.323, "median_ms": 0.316, "p95_ms": 0.382, "total_ms": 2.906, "count": 9},
-        "message_send": {"mean_ms": 0.51, "median_ms": 0.492, "p95_ms": 0.676, "total_ms": 51.045, "count": 100},
-        "message_read": {"mean_ms": 0.367, "median_ms": 0.347, "p95_ms": 0.554, "total_ms": 3.307, "count": 9},
-        "progress_broadcast": {"mean_ms": 0.319, "median_ms": 0.309, "p95_ms": 0.382, "total_ms": 3.189, "count": 10},
-        "bottleneck_detection": {"mean_ms": 0.012, "median_ms": 0.009, "p95_ms": 0.015, "total_ms": 0.586, "count": 50},
-        "concurrent_messaging": {"mean_ms": 6.058, "median_ms": 0.597, "p95_ms": 55.463, "total_ms": 484.61, "threads": 8, "messages_per_thread": 10, "errors": 0}
+        "creation": {
+          "mean_ms": 0.323,
+          "median_ms": 0.316,
+          "p95_ms": 0.382,
+          "total_ms": 2.906,
+          "count": 9
+        },
+        "message_send": {
+          "mean_ms": 0.51,
+          "median_ms": 0.492,
+          "p95_ms": 0.676,
+          "total_ms": 51.045,
+          "count": 100
+        },
+        "message_read": {
+          "mean_ms": 0.367,
+          "median_ms": 0.347,
+          "p95_ms": 0.554,
+          "total_ms": 3.307,
+          "count": 9
+        },
+        "progress_broadcast": {
+          "mean_ms": 0.319,
+          "median_ms": 0.309,
+          "p95_ms": 0.382,
+          "total_ms": 3.189,
+          "count": 10
+        },
+        "bottleneck_detection": {
+          "mean_ms": 0.012,
+          "median_ms": 0.009,
+          "p95_ms": 0.015,
+          "total_ms": 0.586,
+          "count": 50
+        },
+        "concurrent_messaging": {
+          "mean_ms": 6.058,
+          "median_ms": 0.597,
+          "p95_ms": 55.463,
+          "total_ms": 484.61,
+          "threads": 8,
+          "messages_per_thread": 10,
+          "errors": 0
+        }
       },
       "analysis": {
         "hub_single_op_median_ms": 0.264,
@@ -379,18 +447,78 @@
         "passed": 45,
         "failed": 0,
         "tool_breakdown": [
-          {"suite": "auto_index tests", "total": 2, "passed": 2, "failed": 0},
-          {"suite": "cross_ref_checker tests", "total": 1, "passed": 1, "failed": 0},
-          {"suite": "finding_dedup tests", "total": 1, "passed": 1, "failed": 0},
-          {"suite": "import_to_db tests", "total": 1, "passed": 1, "failed": 0},
-          {"suite": "kb_validator tests", "total": 2, "passed": 2, "failed": 0},
-          {"suite": "pattern_analyzer tests", "total": 2, "passed": 2, "failed": 0},
-          {"suite": "quality_scorer tests", "total": 1, "passed": 1, "failed": 0},
-          {"suite": "query_kb tests", "total": 14, "passed": 14, "failed": 0},
-          {"suite": "smart_read tests", "total": 7, "passed": 7, "failed": 0},
-          {"suite": "smart_search tests", "total": 7, "passed": 7, "failed": 0},
-          {"suite": "smart_write tests", "total": 4, "passed": 4, "failed": 0},
-          {"suite": "validate_naming tests", "total": 3, "passed": 3, "failed": 0}
+          {
+            "suite": "auto_index tests",
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          {
+            "suite": "cross_ref_checker tests",
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          {
+            "suite": "finding_dedup tests",
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          {
+            "suite": "import_to_db tests",
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          {
+            "suite": "kb_validator tests",
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          {
+            "suite": "pattern_analyzer tests",
+            "total": 2,
+            "passed": 2,
+            "failed": 0
+          },
+          {
+            "suite": "quality_scorer tests",
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          },
+          {
+            "suite": "query_kb tests",
+            "total": 14,
+            "passed": 14,
+            "failed": 0
+          },
+          {
+            "suite": "smart_read tests",
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          {
+            "suite": "smart_search tests",
+            "total": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          {
+            "suite": "smart_write tests",
+            "total": 4,
+            "passed": 4,
+            "failed": 0
+          },
+          {
+            "suite": "validate_naming tests",
+            "total": 3,
+            "passed": 3,
+            "failed": 0
+          }
         ]
       },
       "query_kb_benchmarks": {
@@ -398,13 +526,41 @@
         "passed": 7,
         "failed": 0,
         "timings": [
-          {"operation": "summary", "ms": 40.62, "tokens": 206},
-          {"operation": "list KB csv", "ms": 40.7, "tokens": 711},
-          {"operation": "search database", "ms": 42.19, "tokens": 119},
-          {"operation": "read entry", "ms": 42.34, "tokens": 96},
-          {"operation": "tags", "ms": 41.6, "tokens": 1413},
-          {"operation": "related", "ms": 41.03, "tokens": 680},
-          {"operation": "invalid ID", "ms": 40.48, "exit_code": 1}
+          {
+            "operation": "summary",
+            "ms": 40.62,
+            "tokens": 206
+          },
+          {
+            "operation": "list KB csv",
+            "ms": 40.7,
+            "tokens": 711
+          },
+          {
+            "operation": "search database",
+            "ms": 42.19,
+            "tokens": 119
+          },
+          {
+            "operation": "read entry",
+            "ms": 42.34,
+            "tokens": 96
+          },
+          {
+            "operation": "tags",
+            "ms": 41.6,
+            "tokens": 1413
+          },
+          {
+            "operation": "related",
+            "ms": 41.03,
+            "tokens": 680
+          },
+          {
+            "operation": "invalid ID",
+            "ms": 40.48,
+            "exit_code": 1
+          }
         ],
         "mean_ms": 41.28,
         "peak_memory_kb": 14756
@@ -414,10 +570,29 @@
         "passed": 4,
         "failed": 0,
         "timings": [
-          {"operation": "selective fields", "ms": 30.75, "tokens": 96, "savings_pct": 89},
-          {"operation": "summary only", "ms": 30.62, "tokens": 70, "savings_pct": 92},
-          {"operation": "json format", "ms": 31.3, "tokens": 61, "savings_pct": 93},
-          {"operation": "invalid ID", "ms": 30.6, "exit_code": 1}
+          {
+            "operation": "selective fields",
+            "ms": 30.75,
+            "tokens": 96,
+            "savings_pct": 89
+          },
+          {
+            "operation": "summary only",
+            "ms": 30.62,
+            "tokens": 70,
+            "savings_pct": 92
+          },
+          {
+            "operation": "json format",
+            "ms": 31.3,
+            "tokens": 61,
+            "savings_pct": 93
+          },
+          {
+            "operation": "invalid ID",
+            "ms": 30.6,
+            "exit_code": 1
+          }
         ],
         "mean_ms": 30.82,
         "peak_memory_kb": 13412,
@@ -442,5 +617,6 @@
       "Pipeline overhead scales linearly at ~1ms/stage. No nonlinear bottlenecks detected up to 20 stages.",
       "Idle detection is extremely fast (0.04ms median) - suitable for high-frequency polling in coordinator loops."
     ]
-  }
+  },
+  "date": "2026-03-11"
 }

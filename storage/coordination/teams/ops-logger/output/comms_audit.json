@@ -1,42 +1,63 @@
 {
   "team": "ops-logger",
-  "created": "2026-03-11",
   "communication_audit": {
-    "tools_analyzed": ["bus", "scratchpad", "direct_channels", "help_protocol", "work_stealing"],
+    "tools_analyzed": [
+      "bus",
+      "scratchpad",
+      "direct_channels",
+      "help_protocol",
+      "work_stealing"
+    ],
     "usage_by_team": [
       {
         "team_id": "TEAM-0001",
-        "tools_used": ["git_worktrees", "file_outputs"],
+        "tools_used": [
+          "git_worktrees",
+          "file_outputs"
+        ],
         "primary_pattern": "Isolated worktree parallelism with file-based consolidation. No inter-agent communication during execution. Coordinator merged results post-hoc from worktree outputs."
       },
       {
         "team_id": "TEAM-0004",
-        "tools_used": ["file_outputs"],
+        "tools_used": [
+          "file_outputs"
+        ],
         "primary_pattern": "Phase-gated sequential handoff. Research teams wrote files consumed by software team in next phase. Coordinator routed findings manually between teams."
       },
       {
         "team_id": "TEAM-0005",
-        "tools_used": ["file_outputs"],
+        "tools_used": [
+          "file_outputs"
+        ],
         "primary_pattern": "Solo agent with no communication needs. Single software engineer iterating on code."
       },
       {
         "team_id": "TEAM-0009",
-        "tools_used": ["file_outputs", "coordinator_report"],
+        "tools_used": [
+          "file_outputs",
+          "coordinator_report"
+        ],
         "primary_pattern": "Coordinator-mediated file exchange. 12 agents + 8 subagents across 8 teams. Coordinator had read-only access to all outputs and produced a cross-team synergy report. No live messaging."
       },
       {
         "team_id": "TEAM-0010",
-        "tools_used": ["file_outputs"],
+        "tools_used": [
+          "file_outputs"
+        ],
         "primary_pattern": "Solo research agent. No inter-agent communication needed."
       },
       {
         "team_id": "TEAM-0013",
-        "tools_used": ["file_outputs"],
+        "tools_used": [
+          "file_outputs"
+        ],
         "primary_pattern": "Solo research agent cataloging APIs. No communication."
       },
       {
         "team_id": "TEAM-0014",
-        "tools_used": ["file_outputs"],
+        "tools_used": [
+          "file_outputs"
+        ],
         "primary_pattern": "Two-phase parallel with file handoff. 9 agents across research and software teams. No live communication -- phase boundary was the synchronization point."
       },
       {
@@ -56,7 +77,9 @@
       },
       {
         "team_id": "TEAM-0018",
-        "tools_used": ["file_outputs"],
+        "tools_used": [
+          "file_outputs"
+        ],
         "primary_pattern": "Build-test-fix loop across 7 subagents. Communication was sequential handoff: build team writes code, test team runs tests, fix team patches bugs. 4 iterations. File-based coordination."
       },
       {
@@ -66,57 +89,91 @@
       },
       {
         "team_id": "TEAM-0020",
-        "tools_used": ["file_outputs"],
+        "tools_used": [
+          "file_outputs"
+        ],
         "primary_pattern": "Hub-coordinated parallel teams. 8+ teams (3 programming, 3 research, 2 think tanks). Coordinator mediated via file outputs. Built SDK launcher system but did not use Proto A for own coordination."
       },
       {
         "team_id": "TEAM-0021",
-        "tools_used": ["bus"],
+        "tools_used": [
+          "bus"
+        ],
         "primary_pattern": "First Proto A dogfooding. 3 think tanks communicated via JSONL bus: 31 messages across 3 channels (global, topic-think-tank, topic-insights). Active cross-referencing of findings in real-time."
       },
       {
         "team_id": "TEAM-0022_original",
-        "tools_used": ["bus"],
+        "tools_used": [
+          "bus"
+        ],
         "primary_pattern": "First production Proto A deployment. 18 agents, 6 teams. 47 messages across 3 channels. bus_cli.py as primary interface. File-based outputs for persistence (157KB). No help_protocol, direct_channels, or work_stealing (not yet built)."
       },
       {
         "team_id": "TEAM-0023",
-        "tools_used": ["bus", "file_outputs"],
+        "tools_used": [
+          "bus",
+          "file_outputs"
+        ],
         "primary_pattern": "Design-to-implementation pipeline. 7 teams (~20 agents). Think tanks designed features, coding teams implemented them. Bus used for coordination. Created help_protocol, direct_channels, and work_stealing modules."
       },
       {
         "team_id": "TEAM-0024",
-        "tools_used": ["bus", "file_outputs"],
+        "tools_used": [
+          "bus",
+          "file_outputs"
+        ],
         "primary_pattern": "Simultaneous stress testing. 7 teams all parallel. Think tanks analyzed code, coding teams wrote stress tests, research team studied best practices. Bus for coordination, file outputs for results. 96 stress tests produced."
       },
       {
         "team_id": "TEAM-0025",
-        "tools_used": ["bus", "help_protocol", "direct_channels", "work_stealing", "scratchpad", "coordinator_hub"],
+        "tools_used": [
+          "bus",
+          "help_protocol",
+          "direct_channels",
+          "work_stealing",
+          "scratchpad",
+          "coordinator_hub"
+        ],
         "primary_pattern": "Most comprehensive Proto A usage. 15 teams in 3 batches. Used help_protocol for idle team reassignment (user directive), coordinator_hub for monitoring. Bug fixes applied to all 3 coordination modules. Anti-sequential enforcement."
       },
       {
         "team_id": "TEAM-0026",
-        "tools_used": ["file_outputs"],
+        "tools_used": [
+          "file_outputs"
+        ],
         "primary_pattern": "Solo coding team doing data quality fixes. No communication needed."
       },
       {
         "team_id": "TEAM-0027",
-        "tools_used": ["file_outputs"],
+        "tools_used": [
+          "file_outputs"
+        ],
         "primary_pattern": "4 parallel audit teams with coordinator. Completed in ~90 seconds. No Proto A used -- pure file-based parallel execution. Demonstrates that simple parallel tasks do not need the coordination stack."
       },
       {
         "team_id": "TEAM-0028",
-        "tools_used": ["bus", "direct_channels"],
+        "tools_used": [
+          "bus",
+          "direct_channels"
+        ],
         "primary_pattern": "7 teams with Proto A bus: 12 dedicated channels (3 per TT-RT pair plus global/bug). Researchers published to bus channels, think tanks consumed paired channels. Bug monitor checked bus integrity. Most structured channel usage observed."
       },
       {
         "team_id": "TEAM-0022_pipeline",
-        "tools_used": ["bus", "direct_channels", "work_stealing", "scratchpad", "help_protocol"],
+        "tools_used": [
+          "bus",
+          "direct_channels",
+          "work_stealing",
+          "scratchpad",
+          "help_protocol"
+        ],
         "primary_pattern": "Full pipeline execution using all Proto A primitives. 8 teams through 5-stage pipeline with PipelineManager. WorkStealing for task distribution. Scratchpad for cross-stage data. DirectChannels for progress. 2 complete iterations. Most complete Proto A integration."
       },
       {
         "team_id": "TEAM-0029",
-        "tools_used": ["file_outputs"],
+        "tools_used": [
+          "file_outputs"
+        ],
         "primary_pattern": "4-phase analysis pipeline. 8 teams across phases. File-based outputs between phases. No Proto A coordination despite being a late session. Phase boundaries used as sync points."
       }
     ],
@@ -381,5 +438,6 @@
     "sessions_using_proto_a": 7,
     "sessions_using_file_only": 21,
     "key_finding": "The coordination system is technically sound (80/80 unit tests + 96 stress tests pass, <1% I/O overhead) but operationally underdeployed. Only 25% of sessions used Proto A. Of the 4,500+ lines of coordination code built, only the JSONL bus is regularly used. help_protocol, work_stealing, and scratchpad are almost never used in production despite being the solutions to the most observed inefficiency (idle team waste). The biggest risk is not a technical failure but an organizational one: 7 consecutive teams spent time building coordination infrastructure instead of using it for domain work."
-  }
+  },
+  "date": "2026-03-11"
 }

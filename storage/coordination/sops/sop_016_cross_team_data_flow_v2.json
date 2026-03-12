@@ -1,13 +1,16 @@
 {
   "id": "SOP-016",
   "version": "2.0",
-  "created": "2026-03-11",
   "updated": "2026-03-11",
   "updated_by": "ANALYSIS-001",
   "title": "Cross-Team Data Flow, Handoff Protocol, and Quality Gates (v2)",
   "changelog": "v2: Added gatherer-to-sorter handoff protocol (identified as largest gap by TT-OBS-1), quality gates between pipeline stages, batch manifest schema, and load-balanced sorter assignment",
-  "builds_on": ["SOP-013", "SOP-014", "SOP-015", "SOP-016-v1"],
-
+  "builds_on": [
+    "SOP-013",
+    "SOP-014",
+    "SOP-015",
+    "SOP-016-v1"
+  ],
   "improvements_over_v1": [
     "Added formal gatherer-to-sorter handoff protocol (v1 had none — largest identified gap)",
     "Added quality gates between pipeline stages with minimum thresholds",
@@ -16,11 +19,9 @@
     "Added deduplication step using fingerprinting from think_tank.py",
     "Added cross-validation stage where think tanks periodically validate flowing data"
   ],
-
   "section_1_handoff_protocol": {
     "title": "Gatherer-to-Sorter Handoff Protocol",
     "description": "Defines how data gatherers package and hand off data to sorter/archiver teams.",
-
     "batch_manifest_schema": {
       "description": "Every handoff must include a manifest that describes the batch.",
       "schema": {
@@ -29,8 +30,12 @@
         "timestamp": "number (Unix epoch)",
         "item_count": "number",
         "quality_score": "number (0.0-1.0, see quality gates)",
-        "categories": ["array of strings (topics covered)"],
-        "dedup_hashes": ["array of content fingerprints for dedup"],
+        "categories": [
+          "array of strings (topics covered)"
+        ],
+        "dedup_hashes": [
+          "array of content fingerprints for dedup"
+        ],
         "items": [
           {
             "id": "string",
@@ -50,7 +55,6 @@
         }
       }
     },
-
     "handoff_steps": [
       {
         "step": 1,
@@ -97,11 +101,9 @@
       }
     ]
   },
-
   "section_2_quality_gates": {
     "title": "Quality Gates Between Pipeline Stages",
     "description": "Data must pass quality checks to move between stages. Prevents garbage-in-garbage-out.",
-
     "gates": [
       {
         "gate": "G1: Pre-Handoff (Gatherer → Sorter)",
@@ -139,11 +141,9 @@
       }
     ]
   },
-
   "section_3_load_balanced_sorter_assignment": {
     "title": "Load-Balanced Sorter Assignment",
     "description": "Replaces static 1:1 gatherer-to-sorter mapping with dynamic queue-based assignment.",
-
     "mechanism": "WorkStealing queue with category='sort'",
     "scaling_guideline": "1 sorter per 2 gatherers",
     "backpressure": {
@@ -153,6 +153,6 @@
       "extreme_action": "Pause all gatherers until queue drains to < 3"
     }
   },
-
-  "note": "The full v1 content (report standardization, consolidation pipeline, data flow rules, findings taxonomy) remains valid and is inherited. This v2 adds the handoff/quality layer."
+  "note": "The full v1 content (report standardization, consolidation pipeline, data flow rules, findings taxonomy) remains valid and is inherited. This v2 adds the handoff/quality layer.",
+  "date": "2026-03-11"
 }

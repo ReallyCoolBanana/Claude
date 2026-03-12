@@ -1,21 +1,23 @@
 {
   "agent_id": "DATA-AGENT-2",
   "purpose": "Technical Architecture Intelligence for Think Tank 2",
-  "generated": "2026-03-11",
   "target": "THINK-TANK-2-TECHNICAL-ARCHITECTURE",
-
   "section_1_mcp_configuration": {
     "file": ".mcp.json",
     "current_servers": {
       "repo": {
         "command": "python3",
-        "args": ["storage/mcp-server/server.py"],
+        "args": [
+          "storage/mcp-server/server.py"
+        ],
         "env": {},
         "description": "Repository MCP server - provides repo-level tools"
       },
       "kb-search": {
         "command": "python3",
-        "args": ["storage/scripts/mcp_kb_server.py"],
+        "args": [
+          "storage/scripts/mcp_kb_server.py"
+        ],
         "env": {},
         "description": "Knowledge base search server - FTS5, semantic search, tag cloud, related entries"
       }
@@ -28,7 +30,6 @@
       "Adding new servers requires only editing .mcp.json"
     ]
   },
-
   "section_2_mcp_server_code_patterns": {
     "file": "storage/scripts/mcp_kb_server.py",
     "framework": "mcp.server.fastmcp.FastMCP",
@@ -40,12 +41,30 @@
       "entry_point": "if __name__ == '__main__':\n    mcp.run()"
     },
     "tools_exposed": [
-      {"name": "kb_search", "description": "FTS5 full-text search with BM25 ranking"},
-      {"name": "kb_get", "description": "Get specific entry by ID with tags and relationships"},
-      {"name": "kb_list", "description": "List entries by resource type"},
-      {"name": "kb_tags", "description": "Tag frequency cloud"},
-      {"name": "kb_related", "description": "Find related entries via builds_on chains and shared tags"},
-      {"name": "kb_semantic_search", "description": "Vector similarity search via lancedb/sentence-transformers"}
+      {
+        "name": "kb_search",
+        "description": "FTS5 full-text search with BM25 ranking"
+      },
+      {
+        "name": "kb_get",
+        "description": "Get specific entry by ID with tags and relationships"
+      },
+      {
+        "name": "kb_list",
+        "description": "List entries by resource type"
+      },
+      {
+        "name": "kb_tags",
+        "description": "Tag frequency cloud"
+      },
+      {
+        "name": "kb_related",
+        "description": "Find related entries via builds_on chains and shared tags"
+      },
+      {
+        "name": "kb_semantic_search",
+        "description": "Vector similarity search via lancedb/sentence-transformers"
+      }
     ],
     "design_notes": [
       "All tools return plain dicts/lists - FastMCP handles JSON serialization",
@@ -54,7 +73,6 @@
       "Database connection is per-request (no connection pooling needed for MCP)"
     ]
   },
-
   "section_3_data_gathering_tool_patterns": {
     "common_pattern": {
       "structure": "Each method has METHOD_ID, METHOD_NAME constants, a run(query) function, and __main__ CLI entry point",
@@ -67,7 +85,9 @@
       "method_websearch_DG0001": {
         "file": "storage/scripts/data-gathering/methods/method_websearch.py",
         "approach": "Multi-query search: generates 3-5 query variants, searches DuckDuckGo for each, deduplicates by URL",
-        "dependencies": ["ddg_utils.search_duckduckgo"],
+        "dependencies": [
+          "ddg_utils.search_duckduckgo"
+        ],
         "key_pattern": "Query variant generation for broader coverage"
       },
       "method_hackernews_DG0005": {
@@ -111,7 +131,9 @@
         "method_id": "DG-XXXX",
         "method_name": "Name",
         "query": "input query",
-        "results": ["list of result dicts"],
+        "results": [
+          "list of result dicts"
+        ],
         "metadata": {
           "duration_seconds": 0.0,
           "sources_count": 0,
@@ -120,7 +142,6 @@
       }
     }
   },
-
   "section_4_pick_template": {
     "file": "market-research/picks/TEMPLATE.md",
     "format": "YAML frontmatter + Markdown body",
@@ -138,7 +159,10 @@
       "timeframe": "short-term|medium-term|long-term",
       "confidence": "high|medium|low",
       "status": "active|closed|watchlist",
-      "builds_on": ["KB-XXXX", "PICK-XXXX"]
+      "builds_on": [
+        "KB-XXXX",
+        "PICK-XXXX"
+      ]
     },
     "body_sections": [
       "## Thesis - Why this stock, why now?",
@@ -147,7 +171,6 @@
       "## Outcome (fill when closed) - Actual Return, What Worked, What Didn't, Knowledge Entry link"
     ]
   },
-
   "section_5_tt_beta_tools_assessment": {
     "file": "storage/data/tt_beta_tools_assessment.json",
     "key_findings": {
@@ -165,7 +188,11 @@
           "item": "Add financial MCP servers to .mcp.json",
           "impact": "critical",
           "effort": "small (hours)",
-          "specific_actions": ["Alpha Vantage MCP", "Yahoo Finance Stockflow MCP", "Financial Datasets MCP"]
+          "specific_actions": [
+            "Alpha Vantage MCP",
+            "Yahoo Finance Stockflow MCP",
+            "Financial Datasets MCP"
+          ]
         },
         {
           "rank": 2,
@@ -193,20 +220,50 @@
         }
       ],
       "build_vs_adopt_decisions": {
-        "adopt": ["Financial data access (MCP servers)", "Knowledge graph retrieval (LightRAG)"],
-        "build": ["SEC EDGAR tool", "FRED tool", "pick_logger", "cost_tracker", "Agent Skills", "context_budget_monitor"],
-        "extend": ["dedup_checker (extend SCR-0041)"],
-        "skip": ["sop_consolidator", "trace_propagator", "zombie_reclaimer", "Reddit API", "ConceptNet", "Open-Meteo"]
+        "adopt": [
+          "Financial data access (MCP servers)",
+          "Knowledge graph retrieval (LightRAG)"
+        ],
+        "build": [
+          "SEC EDGAR tool",
+          "FRED tool",
+          "pick_logger",
+          "cost_tracker",
+          "Agent Skills",
+          "context_budget_monitor"
+        ],
+        "extend": [
+          "dedup_checker (extend SCR-0041)"
+        ],
+        "skip": [
+          "sop_consolidator",
+          "trace_propagator",
+          "zombie_reclaimer",
+          "Reddit API",
+          "ConceptNet",
+          "Open-Meteo"
+        ]
       },
       "implementation_roadmap": {
-        "week_1": ["Add 2-3 financial MCP servers", "Build pick_logger.py", "Build cost_tracker.py"],
-        "week_2": ["Build method_sec_edgar.py", "Build method_fred.py", "Build method_finnhub.py"],
-        "week_3": ["Integrate LightRAG", "Package market-research Agent Skill", "Build context_budget_monitor.py"]
+        "week_1": [
+          "Add 2-3 financial MCP servers",
+          "Build pick_logger.py",
+          "Build cost_tracker.py"
+        ],
+        "week_2": [
+          "Build method_sec_edgar.py",
+          "Build method_fred.py",
+          "Build method_finnhub.py"
+        ],
+        "week_3": [
+          "Integrate LightRAG",
+          "Package market-research Agent Skill",
+          "Build context_budget_monitor.py"
+        ]
       },
       "key_insight": "The biggest gap is the ratio of domain-output tools to coordination tools. Adding 2-3 financial MCP servers to .mcp.json would instantly transform capability from 'can research topics' to 'can analyze stocks with real financial data' in hours."
     }
   },
-
   "section_6_coordination_sops": {
     "sop_014_simultaneous_project_management": {
       "file": "storage/coordination/sops/sop_014_simultaneous_project_management.json",
@@ -240,10 +297,14 @@
         "data_pipeline_8": "1 coordinator + 3 gatherers + 2 sorters + 1 think-tank + 1 programming",
         "market_research_sprint_5": "1 coordinator + 2 research-teams + 1 analysis + 1 coding"
       },
-      "anti_patterns": ["Default to maximum agents", "One agent per file", "Think tank proliferation (>1:2 ratio)", "No standby agents"]
+      "anti_patterns": [
+        "Default to maximum agents",
+        "One agent per file",
+        "Think tank proliferation (>1:2 ratio)",
+        "No standby agents"
+      ]
     }
   },
-
   "section_7_web_research": {
     "alpha_vantage_mcp": {
       "search_query": "Alpha Vantage MCP server Claude integration",
@@ -289,7 +350,11 @@
           "name": "StockFlow MCP Server",
           "github": "https://github.com/twolven/mcp-stockflow",
           "description": "Real-time stock data and options analysis through Yahoo Finance",
-          "features": ["Real-time stock data", "Options analysis", "Market data access"],
+          "features": [
+            "Real-time stock data",
+            "Options analysis",
+            "Market data access"
+          ],
           "setup": "pip install mcp yfinance, clone repo, add to claude-desktop-config.json",
           "auth": "No API key needed",
           "listed_date": "January 2, 2026 on Glama"
@@ -440,17 +505,39 @@
           "quality_improvement": "Up to 86.4% better in complex domains (e.g., legal)"
         },
         "recent_updates_2025_2026": [
-          {"date": "2025-09", "feature": "Enhanced KG extraction for open-source LLMs (Qwen3-30B-A3B)"},
-          {"date": "2025-08", "feature": "Reranker support for mixed queries"},
-          {"date": "2025-08", "feature": "Document deletion with automatic KG regeneration"},
-          {"date": "2025-06", "feature": "RAG-Anything: multimodal RAG (text, images, tables, equations)"},
-          {"date": "2025-03", "feature": "Citation functionality for source attribution"},
-          {"date": "2025-01", "feature": "PostgreSQL support as all-in-one storage"}
+          {
+            "date": "2025-09",
+            "feature": "Enhanced KG extraction for open-source LLMs (Qwen3-30B-A3B)"
+          },
+          {
+            "date": "2025-08",
+            "feature": "Reranker support for mixed queries"
+          },
+          {
+            "date": "2025-08",
+            "feature": "Document deletion with automatic KG regeneration"
+          },
+          {
+            "date": "2025-06",
+            "feature": "RAG-Anything: multimodal RAG (text, images, tables, equations)"
+          },
+          {
+            "date": "2025-03",
+            "feature": "Citation functionality for source attribution"
+          },
+          {
+            "date": "2025-01",
+            "feature": "PostgreSQL support as all-in-one storage"
+          }
         ],
         "ecosystem": {
           "mcp_server": "Available - uses LightRAG + Tree-sitter for repository knowledge graphs",
           "go_implementation": "Exists, combining vector DB with graph relationships",
-          "storage_backends": ["PostgreSQL", "Local file system", "Custom"]
+          "storage_backends": [
+            "PostgreSQL",
+            "Local file system",
+            "Custom"
+          ]
         },
         "applicability_to_our_kb": "HIGH. Our 40+ KB entries with builds_on chains form a natural graph. LightRAG could replace FTS5/TF-IDF with graph-aware retrieval understanding entity relationships (tools -> APIs -> data sources -> picks)."
       }
@@ -489,33 +576,77 @@
         },
         "claude_flow": {
           "description": "Open-source orchestration framework for running multiple Claude agents in coordinated workflows",
-          "capabilities": ["Specialized agent collaboration", "Shared memory", "Task division"],
+          "capabilities": [
+            "Specialized agent collaboration",
+            "Shared memory",
+            "Task division"
+          ],
           "url": "https://www.analyticsvidhya.com/blog/2026/03/claude-flow/"
         },
         "relevance_to_sessions": "We are already running inside this SDK. Key opportunities: (1) Package workflows as Agent Skills, (2) Use subagent spawning instead of custom coordination, (3) Leverage built-in Explore/Plan subagents."
       }
     }
   },
-
   "section_8_script_index": {
     "file": "storage/scripts/index.json",
     "total_scripts": 54,
     "by_category": {
       "data-collection": {
         "count": 16,
-        "scripts": ["SCR-0006 (websearch)", "SCR-0007 (wikipedia)", "SCR-0008 (arxiv)", "SCR-0009 (hybrid)", "SCR-0010 (iterative)", "SCR-0021 (ddg-utils)", "SCR-0022 (request-cache)", "SCR-0023 (openalex)", "SCR-0024 (hackernews)", "SCR-0025 (guardian)", "SCR-0026 (semantic-scholar)", "SCR-0027 (wikidata)", "SCR-0028 (github)", "SCR-0046 (doc-fetcher)", "SCR-0047 (version-tracker)", "SCR-0048 (algo-catalog)"]
+        "scripts": [
+          "SCR-0006 (websearch)",
+          "SCR-0007 (wikipedia)",
+          "SCR-0008 (arxiv)",
+          "SCR-0009 (hybrid)",
+          "SCR-0010 (iterative)",
+          "SCR-0021 (ddg-utils)",
+          "SCR-0022 (request-cache)",
+          "SCR-0023 (openalex)",
+          "SCR-0024 (hackernews)",
+          "SCR-0025 (guardian)",
+          "SCR-0026 (semantic-scholar)",
+          "SCR-0027 (wikidata)",
+          "SCR-0028 (github)",
+          "SCR-0046 (doc-fetcher)",
+          "SCR-0047 (version-tracker)",
+          "SCR-0048 (algo-catalog)"
+        ]
       },
       "analysis": {
         "count": 8,
-        "scripts": ["SCR-0004 (grade-research)", "SCR-0005 (merge-research)", "SCR-0011 (benchmark)", "SCR-0031 (think-tank)", "SCR-0041 (finding-dedup)", "SCR-0042 (quality-scorer)", "SCR-0050 (pattern-analyzer)", "SCR-0054 (team-analyzer)"]
+        "scripts": [
+          "SCR-0004 (grade-research)",
+          "SCR-0005 (merge-research)",
+          "SCR-0011 (benchmark)",
+          "SCR-0031 (think-tank)",
+          "SCR-0041 (finding-dedup)",
+          "SCR-0042 (quality-scorer)",
+          "SCR-0050 (pattern-analyzer)",
+          "SCR-0054 (team-analyzer)"
+        ]
       },
       "automation": {
         "count": 3,
-        "scripts": ["SCR-0029 (bus-cli)", "SCR-0030 (multi-team-runner)", "SCR-0033 (coordinator-hub)"]
+        "scripts": [
+          "SCR-0029 (bus-cli)",
+          "SCR-0030 (multi-team-runner)",
+          "SCR-0033 (coordinator-hub)"
+        ]
       },
       "utility": {
         "count": 27,
-        "scripts": ["SCR-0001 through SCR-0003 (validate/test/repair)", "SCR-0012-0014 (kb-validator/index-rebuilder/cross-ref)", "SCR-0015-0017 (Go: fast-search/validate/cache)", "SCR-0018 (kb-search)", "SCR-0019-0020 (handoff/staleness)", "SCR-0032 (dashboard)", "SCR-0034-0040 (build-cross-ref/search/stress-tests)", "SCR-0043-0045 (archive-formatter/cross-team-search/bus-monitor)", "SCR-0049 (practices-linter)", "SCR-0051-0053 (benchmarker/tester/coord-stress)"]
+        "scripts": [
+          "SCR-0001 through SCR-0003 (validate/test/repair)",
+          "SCR-0012-0014 (kb-validator/index-rebuilder/cross-ref)",
+          "SCR-0015-0017 (Go: fast-search/validate/cache)",
+          "SCR-0018 (kb-search)",
+          "SCR-0019-0020 (handoff/staleness)",
+          "SCR-0032 (dashboard)",
+          "SCR-0034-0040 (build-cross-ref/search/stress-tests)",
+          "SCR-0043-0045 (archive-formatter/cross-team-search/bus-monitor)",
+          "SCR-0049 (practices-linter)",
+          "SCR-0051-0053 (benchmarker/tester/coord-stress)"
+        ]
       }
     },
     "languages": {
@@ -530,7 +661,6 @@
       "16 data-collection scripts but all for general research, none for financial data"
     ]
   },
-
   "section_9_synthesis_for_think_tank_2": {
     "critical_architecture_decisions": [
       {
@@ -620,8 +750,18 @@
     "mcp_config_blueprint": {
       "description": "Target .mcp.json after Session 1",
       "servers": {
-        "repo": {"command": "python3", "args": ["storage/mcp-server/server.py"]},
-        "kb-search": {"command": "python3", "args": ["storage/scripts/mcp_kb_server.py"]},
+        "repo": {
+          "command": "python3",
+          "args": [
+            "storage/mcp-server/server.py"
+          ]
+        },
+        "kb-search": {
+          "command": "python3",
+          "args": [
+            "storage/scripts/mcp_kb_server.py"
+          ]
+        },
         "alpha-vantage": {
           "note": "Official Alpha Vantage MCP server",
           "setup_url": "https://mcp.alphavantage.co/",
@@ -648,5 +788,6 @@
       "github": "https://github.com/dgunning/edgartools",
       "impact": "Eliminates need to build method_sec_edgar.py. Saves ~1 day of development."
     }
-  }
+  },
+  "date": "2026-03-11"
 }

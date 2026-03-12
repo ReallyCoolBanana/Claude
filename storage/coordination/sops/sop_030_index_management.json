@@ -1,12 +1,13 @@
 {
   "id": "SOP-030",
   "version": "1.0",
-  "created": "2026-03-11",
   "team": "A1-Gamma",
   "title": "Index Management & Maintenance",
   "purpose": "Defines the universal index.json schema, mandates that indexes are generated artifacts (never hand-edited), and establishes validation rules. Addresses the A1-Alpha finding that every index.json has a different schema -- no shared structure for array key, count field, or attribution fields.",
-  "builds_on": ["SOP-029", "SOP-024"],
-
+  "builds_on": [
+    "SOP-029",
+    "SOP-024"
+  ],
   "section_1_universal_schema": {
     "title": "Universal index.json Schema",
     "description": "All index.json files MUST use the same top-level structure. Type-specific fields go inside individual entries, not at the top level.",
@@ -45,7 +46,6 @@
     },
     "type_specific_fields": "Additional fields (e.g., 'category', 'confidence', 'builds_on' for KB; 'superseded_by' for SOPs; 'url', 'access_type' for sources) are allowed inside entries but must not duplicate universal fields."
   },
-
   "section_2_derived_data_policy": {
     "title": "Derived Data is NOT Stored in Indexes",
     "description": "Indexes contain only canonical data. All derived views are computed on demand.",
@@ -84,7 +84,6 @@
     "rationale": "Removing derived data from knowledge-base/index.json alone saves ~14,000 bytes (~3,500 tokens) per read -- a 57% reduction. Across 10 index files, estimated savings of ~8,000 tokens per full-index scan.",
     "exception": "The root REGISTRY.json may contain cross-index pointers as a navigation aid, but must not duplicate data that exists in individual index.json files."
   },
-
   "section_3_generation_rules": {
     "title": "Indexes are GENERATED, Never Hand-Edited",
     "rules": [
@@ -113,7 +112,6 @@
       }
     ]
   },
-
   "section_4_conflict_resolution": {
     "title": "Handling Index Conflicts",
     "rules": [
@@ -135,7 +133,6 @@
       }
     ]
   },
-
   "section_5_validation_rules": {
     "title": "Index Consistency Validation",
     "checks": [
@@ -192,7 +189,6 @@
       }
     ]
   },
-
   "section_6_auto_index_script": {
     "title": "Auto-Index Script Requirements",
     "description": "A script that regenerates any index.json from the source files in its directory.",
@@ -230,7 +226,6 @@
     ],
     "existing_tools": "storage/scripts/index_rebuilder.py and TEAM-0029's generate_registry.py are partial implementations. Consolidate into one canonical script."
   },
-
   "checklists": {
     "after_any_file_crud": [
       "Regenerate the index.json for the affected directory",
@@ -245,5 +240,6 @@
       "No duplicate IDs in entries array",
       "All file references are filenames only (no paths)"
     ]
-  }
+  },
+  "date": "2026-03-11"
 }

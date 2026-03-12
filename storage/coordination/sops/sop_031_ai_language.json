@@ -1,154 +1,346 @@
 {
   "id": "SOP-031",
   "version": "1.0",
-  "created": "2026-03-11",
   "team": "A1-Gamma",
   "title": "AI-Efficient Language Guide",
   "purpose": "Defines the controlled vocabulary, abbreviation dictionary, tag taxonomy, and token-efficient writing conventions for this repository. Every file should minimize boilerplate and use canonical terms only. Addresses the A1-Alpha finding of same-concept-different-names across the repo and think-tank-beta's token cost analysis showing 57% index bloat from derived data and redundant keys.",
-  "builds_on": ["SOP-029", "SOP-030"],
-
+  "builds_on": [
+    "SOP-029",
+    "SOP-030"
+  ],
   "section_1_controlled_vocabulary": {
     "title": "Canonical Terms for This Repository",
     "description": "Use ONLY the preferred term. Never use the discouraged synonyms. Zero-synonym policy: one concept, one word.",
     "terms": [
       {
         "preferred": "entry",
-        "discouraged": ["record", "item", "document", "artifact", "object"],
+        "discouraged": [
+          "record",
+          "item",
+          "document",
+          "artifact",
+          "object"
+        ],
         "definition": "A single indexed resource in any directory (KB entry, SOP entry, source entry).",
         "context": "Use in indexes, cross-references, and documentation."
       },
       {
         "preferred": "finding",
-        "discouraged": ["result", "outcome", "discovery", "observation", "insight"],
+        "discouraged": [
+          "result",
+          "outcome",
+          "discovery",
+          "observation",
+          "insight"
+        ],
         "definition": "A discrete piece of knowledge produced by a team during a session.",
         "context": "Use in team outputs, think tank reports, and KB entries."
       },
       {
         "preferred": "team",
-        "discouraged": ["group", "squad", "unit", "crew"],
+        "discouraged": [
+          "group",
+          "squad",
+          "unit",
+          "crew"
+        ],
         "definition": "A group of agents working together in one session.",
         "context": "Use in session logs, attribution fields, and coordination."
       },
       {
         "preferred": "agent",
-        "discouraged": ["instance", "worker", "bot", "assistant", "model"],
+        "discouraged": [
+          "instance",
+          "worker",
+          "bot",
+          "assistant",
+          "model"
+        ],
         "definition": "A single AI instance performing work.",
         "context": "Use when referring to individual agents within a team."
       },
       {
         "preferred": "session",
-        "discouraged": ["run", "execution", "operation", "deployment", "iteration"],
+        "discouraged": [
+          "run",
+          "execution",
+          "operation",
+          "deployment",
+          "iteration"
+        ],
         "definition": "One team's complete work period from launch to log submission.",
         "context": "Use in team logs and performance tracking."
       },
       {
         "preferred": "operation",
-        "discouraged": ["mission", "project", "campaign", "initiative"],
+        "discouraged": [
+          "mission",
+          "project",
+          "campaign",
+          "initiative"
+        ],
         "definition": "A multi-team coordinated effort spanning multiple sessions.",
         "context": "Use in multi_team_runner plans and coordinator instructions."
       },
       {
         "preferred": "index",
-        "discouraged": ["registry", "catalog", "manifest", "directory listing", "inventory"],
+        "discouraged": [
+          "registry",
+          "catalog",
+          "manifest",
+          "directory listing",
+          "inventory"
+        ],
         "definition": "The index.json file that lists all entries in a directory.",
         "context": "REGISTRY.json at root is the exception (legacy name)."
       },
       {
         "preferred": "tag",
-        "discouraged": ["label", "keyword", "marker", "classifier"],
+        "discouraged": [
+          "label",
+          "keyword",
+          "marker",
+          "classifier"
+        ],
         "definition": "A kebab-case term from the controlled taxonomy applied to entries.",
         "context": "Use in entry metadata and search."
       },
       {
         "preferred": "category",
-        "discouraged": ["type", "kind", "class", "group", "bucket"],
+        "discouraged": [
+          "type",
+          "kind",
+          "class",
+          "group",
+          "bucket"
+        ],
         "definition": "The primary classification of an entry from the fixed category list.",
         "context": "One category per entry. Tags provide secondary classification."
       },
       {
         "preferred": "script",
-        "discouraged": ["utility", "tool", "helper", "program"],
+        "discouraged": [
+          "utility",
+          "tool",
+          "helper",
+          "program"
+        ],
         "definition": "A standalone executable file in storage/scripts/.",
         "context": "Distinguished from 'tool' which is an API tool in storage/api-tools/."
       },
       {
         "preferred": "tool",
-        "discouraged": ["service", "module", "library", "package"],
+        "discouraged": [
+          "service",
+          "module",
+          "library",
+          "package"
+        ],
         "definition": "An API tool or integration in storage/api-tools/.",
         "context": "Distinguished from 'script' and 'coordination module'."
       },
       {
         "preferred": "source",
-        "discouraged": ["provider", "endpoint", "feed", "data source", "API"],
+        "discouraged": [
+          "provider",
+          "endpoint",
+          "feed",
+          "data source",
+          "API"
+        ],
         "definition": "An external data source cataloged in storage/sources/.",
         "context": "Use 'source' for the catalog entry. Use the specific API name when referring to the external service."
       },
       {
         "preferred": "method",
-        "discouraged": ["approach", "technique", "strategy", "methodology", "framework"],
+        "discouraged": [
+          "approach",
+          "technique",
+          "strategy",
+          "methodology",
+          "framework"
+        ],
         "definition": "A research or analysis method in market-research/methods/.",
         "context": "Use for market research methods specifically."
       },
       {
         "preferred": "pick",
-        "discouraged": ["recommendation", "call", "trade", "position", "bet"],
+        "discouraged": [
+          "recommendation",
+          "call",
+          "trade",
+          "position",
+          "bet"
+        ],
         "definition": "A market research pick logged in market-research/picks/.",
         "context": "Use per SOP-018 market research operations."
       }
     ]
   },
-
   "section_2_abbreviation_dictionary": {
     "title": "Standard Abbreviations",
     "description": "Use these abbreviations in filenames, path references, comments, and compact headers. Always expand in titles and prose meant for human reading.",
     "abbreviations": [
-      {"abbr": "coord", "full": "coordination", "use_in": "paths, filenames, comments"},
-      {"abbr": "kb", "full": "knowledge base", "use_in": "paths, references, comments"},
-      {"abbr": "mkt", "full": "market research", "use_in": "paths, references, comments"},
-      {"abbr": "sop", "full": "standard operating procedure", "use_in": "paths, IDs, filenames"},
-      {"abbr": "src", "full": "source", "use_in": "IDs, filenames"},
-      {"abbr": "scr", "full": "script", "use_in": "IDs only (SCR-NNNN)"},
-      {"abbr": "cfg", "full": "configuration", "use_in": "filenames, comments"},
-      {"abbr": "proto", "full": "prototype", "use_in": "paths, comments"},
-      {"abbr": "mgmt", "full": "management", "use_in": "filenames, comments"},
-      {"abbr": "auth", "full": "authentication", "use_in": "filenames, field names"},
-      {"abbr": "api", "full": "application programming interface", "use_in": "everywhere"},
-      {"abbr": "cli", "full": "command-line interface", "use_in": "filenames, comments"},
-      {"abbr": "sdk", "full": "software development kit", "use_in": "filenames, comments"},
-      {"abbr": "db", "full": "database", "use_in": "filenames, comments"},
-      {"abbr": "idx", "full": "index", "use_in": "variable names, comments"},
-      {"abbr": "ref", "full": "reference", "use_in": "filenames, comments"},
-      {"abbr": "xref", "full": "cross-reference", "use_in": "filenames, comments"},
-      {"abbr": "ops", "full": "operations", "use_in": "filenames, team names"},
-      {"abbr": "perf", "full": "performance", "use_in": "filenames, comments"},
-      {"abbr": "viz", "full": "visualization", "use_in": "filenames (viz_ prefix)"},
-      {"abbr": "val", "full": "validation", "use_in": "filenames, comments"},
-      {"abbr": "dedup", "full": "deduplication", "use_in": "filenames, comments"}
+      {
+        "abbr": "coord",
+        "full": "coordination",
+        "use_in": "paths, filenames, comments"
+      },
+      {
+        "abbr": "kb",
+        "full": "knowledge base",
+        "use_in": "paths, references, comments"
+      },
+      {
+        "abbr": "mkt",
+        "full": "market research",
+        "use_in": "paths, references, comments"
+      },
+      {
+        "abbr": "sop",
+        "full": "standard operating procedure",
+        "use_in": "paths, IDs, filenames"
+      },
+      {
+        "abbr": "src",
+        "full": "source",
+        "use_in": "IDs, filenames"
+      },
+      {
+        "abbr": "scr",
+        "full": "script",
+        "use_in": "IDs only (SCR-NNNN)"
+      },
+      {
+        "abbr": "cfg",
+        "full": "configuration",
+        "use_in": "filenames, comments"
+      },
+      {
+        "abbr": "proto",
+        "full": "prototype",
+        "use_in": "paths, comments"
+      },
+      {
+        "abbr": "mgmt",
+        "full": "management",
+        "use_in": "filenames, comments"
+      },
+      {
+        "abbr": "auth",
+        "full": "authentication",
+        "use_in": "filenames, field names"
+      },
+      {
+        "abbr": "api",
+        "full": "application programming interface",
+        "use_in": "everywhere"
+      },
+      {
+        "abbr": "cli",
+        "full": "command-line interface",
+        "use_in": "filenames, comments"
+      },
+      {
+        "abbr": "sdk",
+        "full": "software development kit",
+        "use_in": "filenames, comments"
+      },
+      {
+        "abbr": "db",
+        "full": "database",
+        "use_in": "filenames, comments"
+      },
+      {
+        "abbr": "idx",
+        "full": "index",
+        "use_in": "variable names, comments"
+      },
+      {
+        "abbr": "ref",
+        "full": "reference",
+        "use_in": "filenames, comments"
+      },
+      {
+        "abbr": "xref",
+        "full": "cross-reference",
+        "use_in": "filenames, comments"
+      },
+      {
+        "abbr": "ops",
+        "full": "operations",
+        "use_in": "filenames, team names"
+      },
+      {
+        "abbr": "perf",
+        "full": "performance",
+        "use_in": "filenames, comments"
+      },
+      {
+        "abbr": "viz",
+        "full": "visualization",
+        "use_in": "filenames (viz_ prefix)"
+      },
+      {
+        "abbr": "val",
+        "full": "validation",
+        "use_in": "filenames, comments"
+      },
+      {
+        "abbr": "dedup",
+        "full": "deduplication",
+        "use_in": "filenames, comments"
+      }
     ]
   },
-
   "section_3_tag_taxonomy": {
     "title": "Normalized Tag Taxonomy",
     "description": "All tags MUST be kebab-case, from this controlled list. Maximum 5 tags per entry. Tags must not duplicate the entry's category.",
     "taxonomy": {
       "infrastructure": [
-        "coordination", "communication", "bus", "monitoring", "pipeline",
-        "database", "caching", "deployment", "configuration"
+        "coordination",
+        "communication",
+        "bus",
+        "monitoring",
+        "pipeline",
+        "database",
+        "caching",
+        "deployment",
+        "configuration"
       ],
       "methodology": [
-        "research", "testing", "benchmarking", "analysis", "auditing",
-        "data-gathering", "prompt-engineering", "team-sizing"
+        "research",
+        "testing",
+        "benchmarking",
+        "analysis",
+        "auditing",
+        "data-gathering",
+        "prompt-engineering",
+        "team-sizing"
       ],
       "domain": [
-        "market-research", "fundamental-analysis", "technical-analysis",
-        "sentiment-analysis", "quantitative", "api-integration"
+        "market-research",
+        "fundamental-analysis",
+        "technical-analysis",
+        "sentiment-analysis",
+        "quantitative",
+        "api-integration"
       ],
       "quality": [
-        "optimization", "debugging", "recovery", "validation", "deduplication",
-        "naming", "documentation"
+        "optimization",
+        "debugging",
+        "recovery",
+        "validation",
+        "deduplication",
+        "naming",
+        "documentation"
       ],
       "process": [
-        "sop", "workflow", "lifecycle", "anti-recursion", "handoff"
+        "sop",
+        "workflow",
+        "lifecycle",
+        "anti-recursion",
+        "handoff"
       ]
     },
     "rules": [
@@ -183,24 +375,52 @@
       }
     ]
   },
-
   "section_4_categories": {
     "title": "Fixed Category List",
     "description": "Every indexed entry has exactly one category from this list. Categories are mutually exclusive.",
     "categories": [
-      {"name": "methodology", "definition": "Research methods, analysis techniques, testing approaches"},
-      {"name": "integration", "definition": "System integration, API connections, tool interoperability"},
-      {"name": "optimization", "definition": "Performance improvements, efficiency gains, resource reduction"},
-      {"name": "debugging", "definition": "Bug reports, failure analysis, error resolution"},
-      {"name": "testing", "definition": "Test frameworks, stress tests, validation suites"},
-      {"name": "tool-usage", "definition": "How to use specific tools, scripts, or APIs"},
-      {"name": "market-research", "definition": "Stock analysis, picks, market data evaluation"},
-      {"name": "configuration", "definition": "Setup, environment, deployment configuration"},
-      {"name": "architecture", "definition": "System design, data flow, structural decisions"},
-      {"name": "reference", "definition": "Lookup tables, catalogs, inventories, standards"}
+      {
+        "name": "methodology",
+        "definition": "Research methods, analysis techniques, testing approaches"
+      },
+      {
+        "name": "integration",
+        "definition": "System integration, API connections, tool interoperability"
+      },
+      {
+        "name": "optimization",
+        "definition": "Performance improvements, efficiency gains, resource reduction"
+      },
+      {
+        "name": "debugging",
+        "definition": "Bug reports, failure analysis, error resolution"
+      },
+      {
+        "name": "testing",
+        "definition": "Test frameworks, stress tests, validation suites"
+      },
+      {
+        "name": "tool-usage",
+        "definition": "How to use specific tools, scripts, or APIs"
+      },
+      {
+        "name": "market-research",
+        "definition": "Stock analysis, picks, market data evaluation"
+      },
+      {
+        "name": "configuration",
+        "definition": "Setup, environment, deployment configuration"
+      },
+      {
+        "name": "architecture",
+        "definition": "System design, data flow, structural decisions"
+      },
+      {
+        "name": "reference",
+        "definition": "Lookup tables, catalogs, inventories, standards"
+      }
     ]
   },
-
   "section_5_path_references": {
     "title": "Path Reference Format",
     "description": "When referencing files in documentation, use the shortest unambiguous path.",
@@ -234,7 +454,6 @@
       }
     ]
   },
-
   "section_6_token_budget_awareness": {
     "title": "Token-Efficient Writing Conventions",
     "description": "Every file should minimize boilerplate without sacrificing clarity.",
@@ -269,8 +488,18 @@
         "id": "TOKEN-05",
         "guideline": "Keep YAML frontmatter compact",
         "rationale": "10-12 lines of YAML frontmatter per KB entry costs ~30 tokens. Across 31 entries, 930 tokens of boilerplate. Keep frontmatter to essential fields only.",
-        "required_fields": ["id", "date", "team", "category", "tags", "status"],
-        "optional_fields": ["confidence", "builds_on"],
+        "required_fields": [
+          "id",
+          "date",
+          "team",
+          "category",
+          "tags",
+          "status"
+        ],
+        "optional_fields": [
+          "confidence",
+          "builds_on"
+        ],
         "remove": "Fields duplicated in the index (title is in both frontmatter and index -- keep in both as it aids standalone reading)"
       },
       {
@@ -281,7 +510,6 @@
       }
     ]
   },
-
   "section_7_anti_patterns": {
     "title": "Anti-Patterns to Avoid",
     "description": "Common token-wasting patterns found in the repository.",
@@ -341,7 +569,6 @@
       }
     ]
   },
-
   "checklists": {
     "before_writing_any_file": [
       "All terms match the controlled vocabulary in section_1",
@@ -368,5 +595,6 @@
       "use_method_not": "approach, technique, strategy",
       "use_pick_not": "recommendation, call, trade"
     }
-  }
+  },
+  "date": "2026-03-11"
 }

@@ -3,29 +3,51 @@
   "title": "Data Collection and Indexing Standards",
   "version": "1.0",
   "status": "active",
-  "created_date": "2026-03-11",
   "category": "data-management",
   "purpose": "Establish mandatory standards for data collection, indexing, naming, and cross-referencing across all repository resource types. The efficiency_report.json audit scored repository data management at 4/10 with 35% storage overhead, 8 duplications, 12 inconsistencies, and 6 orphaned references. This SOP defines the three-tier index system, required fields per tier, naming conventions, cross-reference format, and automated validation requirements to prevent future drift.",
   "scope": "All repository resource types: knowledge base entries (KB), scripts (SCR), SOPs (SOP), data files (DATA), sources (SRC), tools (TOOL). Applies to any operation that creates, modifies, or deletes indexed resources.",
-  "builds_on": ["SOP-026", "SOP-027", "SOP-028"],
-
+  "builds_on": [
+    "SOP-026",
+    "SOP-027",
+    "SOP-028"
+  ],
   "key_findings": {
     "efficiency_audit_score": "4/10 with 35% storage overhead (efficiency_report.json)",
     "duplications_found": {
       "count": 8,
-      "high_severity": ["DUP-001: unified_benchmarks.json and final_analysis.json overlap (~8KB redundant)", "DUP-002: unified_benchmarks.json and empirical_benchmarks.json overlap (~6KB redundant)"],
-      "medium_severity": ["DUP-003: Contention data duplicated across final_analysis and empirical_benchmarks", "DUP-004: KB-0012 and KB-0013 identical content", "DUP-005: SRC-0018 and SRC-0039 both FRED API", "DUP-008: Multi-tier index intentional redundancy (~15KB)"],
+      "high_severity": [
+        "DUP-001: unified_benchmarks.json and final_analysis.json overlap (~8KB redundant)",
+        "DUP-002: unified_benchmarks.json and empirical_benchmarks.json overlap (~6KB redundant)"
+      ],
+      "medium_severity": [
+        "DUP-003: Contention data duplicated across final_analysis and empirical_benchmarks",
+        "DUP-004: KB-0012 and KB-0013 identical content",
+        "DUP-005: SRC-0018 and SRC-0039 both FRED API",
+        "DUP-008: Multi-tier index intentional redundancy (~15KB)"
+      ],
       "root_cause": "No deduplication checks before creating entries. No cross-reference system to link related data."
     },
     "inconsistencies_found": {
       "count": 12,
-      "critical_count_mismatches": ["INC-001: KB count differs across tiers (SUMMARY=33, index=32, COMPACT=31, files=33)", "INC-002: SCR count differs (SUMMARY=54, index=54, COMPACT=50, local SUMMARY=50)", "INC-003: SOP count differs (SUMMARY=23, index=20, COMPACT=18)"],
-      "schema_inconsistencies": ["INC-005: 5 different date field names across data files", "INC-006: Different entry schemas per subsystem index", "INC-007: Different count field names per subsystem"],
+      "critical_count_mismatches": [
+        "INC-001: KB count differs across tiers (SUMMARY=33, index=32, COMPACT=31, files=33)",
+        "INC-002: SCR count differs (SUMMARY=54, index=54, COMPACT=50, local SUMMARY=50)",
+        "INC-003: SOP count differs (SUMMARY=23, index=20, COMPACT=18)"
+      ],
+      "schema_inconsistencies": [
+        "INC-005: 5 different date field names across data files",
+        "INC-006: Different entry schemas per subsystem index",
+        "INC-007: Different count field names per subsystem"
+      ],
       "root_cause": "No automated synchronization between index tiers. No shared schema definition."
     },
     "orphaned_references": {
       "count": 6,
-      "examples": ["ORP-001: KB-0033.md exists on disk, not in any index", "ORP-003: SCR-0051 through SCR-0054 in index.json but missing from INDEX_COMPACT", "ORP-006: 12+ script files on disk with no index entry"],
+      "examples": [
+        "ORP-001: KB-0033.md exists on disk, not in any index",
+        "ORP-003: SCR-0051 through SCR-0054 in index.json but missing from INDEX_COMPACT",
+        "ORP-006: 12+ script files on disk with no index entry"
+      ],
       "root_cause": "No validation step after creating files. No check that all tiers are updated together."
     },
     "schema_issues": {
@@ -35,7 +57,6 @@
       "inconsistent_crossrefs": "SCH-004: Cross-references use 3 different formats (ID arrays, path strings, dot-notation)"
     }
   },
-
   "three_tier_index_system": {
     "description": "Every resource subsystem MUST maintain exactly three index tiers, generated from a single source of truth (index.json). INDEX_COMPACT.json and SUMMARY.json are derived views.",
     "tier_1_summary": {
@@ -61,7 +82,11 @@
         "category": "Category string (never null). Must be one of the defined categories for the resource type.",
         "status": "active | superseded | deprecated | draft"
       },
-      "optional_fields": ["tags", "description", "version"],
+      "optional_fields": [
+        "tags",
+        "description",
+        "version"
+      ],
       "max_size": "< 50KB per subsystem",
       "update_trigger": "Any change to index.json"
     },
@@ -79,16 +104,35 @@
         "cross_references": "Array of cross-reference objects (see cross_reference_format)"
       },
       "type_specific_extensions": {
-        "KB": ["team", "tags", "confidence", "builds_on"],
-        "SCR": ["language", "dependencies", "added_by_team"],
-        "SOP": ["version", "builds_on", "supersedes"],
-        "DATA": ["data_points", "sources"],
-        "SRC": ["api_type", "rate_limits", "auth_required"]
+        "KB": [
+          "team",
+          "tags",
+          "confidence",
+          "builds_on"
+        ],
+        "SCR": [
+          "language",
+          "dependencies",
+          "added_by_team"
+        ],
+        "SOP": [
+          "version",
+          "builds_on",
+          "supersedes"
+        ],
+        "DATA": [
+          "data_points",
+          "sources"
+        ],
+        "SRC": [
+          "api_type",
+          "rate_limits",
+          "auth_required"
+        ]
       },
       "update_trigger": "Any entry creation, modification, or deletion"
     }
   },
-
   "naming_conventions": {
     "id_format": {
       "knowledge_base": "KB-NNNN (4-digit zero-padded, e.g., KB-0033)",
@@ -121,10 +165,15 @@
     },
     "date_format": {
       "rule": "Use 'date' as the field name universally. Format: YYYY-MM-DD. This resolves INC-005 (5 different date field names).",
-      "deprecated_names": ["collected_at", "run_date", "analysis_date", "added", "generated (in entry context)"]
+      "deprecated_names": [
+        "collected_at",
+        "run_date",
+        "analysis_date",
+        "added",
+        "generated (in entry context)"
+      ]
     }
   },
-
   "cross_reference_format": {
     "standard_format": {
       "type": "KB | SCR | SOP | DATA | SRC | TOOL",
@@ -132,15 +181,28 @@
       "path": "Optional. JSON dot-notation path to specific section within the target (e.g., 'contention_analysis.results')"
     },
     "examples": [
-      {"type": "DATA", "id": "DATA-0002", "path": "categories.team_performance.team_analysis"},
-      {"type": "SCR", "id": "SCR-0051"},
-      {"type": "SOP", "id": "SOP-034", "path": "key_findings.contention_curve"},
-      {"type": "KB", "id": "KB-0032"}
+      {
+        "type": "DATA",
+        "id": "DATA-0002",
+        "path": "categories.team_performance.team_analysis"
+      },
+      {
+        "type": "SCR",
+        "id": "SCR-0051"
+      },
+      {
+        "type": "SOP",
+        "id": "SOP-034",
+        "path": "key_findings.contention_curve"
+      },
+      {
+        "type": "KB",
+        "id": "KB-0032"
+      }
     ],
     "rule": "All cross-references MUST use this format. Deprecated formats (bare ID arrays, path strings, dot-notation without type) must be migrated. See SCH-004.",
     "validation": "The referenced ID must exist in the target subsystem's index.json. Orphaned cross-references must be flagged by automated validation."
   },
-
   "procedures": [
     {
       "step": 1,
@@ -202,7 +264,6 @@
       "output": "Validation report: pass/fail per check"
     }
   ],
-
   "decision_tree": {
     "title": "Index Update Decision Tree",
     "step_1": {
@@ -261,7 +322,6 @@
       "rationale": "For bulk operations, regenerating derived tiers from source of truth is more reliable than incremental updates."
     }
   },
-
   "anti_patterns": [
     {
       "name": "Update One Tier Only",
@@ -300,17 +360,43 @@
       "fix": "Superseded entries keep their original ID with status 'superseded'. New versions get new IDs, or use version suffix (SOP-012-v2)."
     }
   ],
-
   "references": [
-    {"source": "storage/data/efficiency_report.json", "section": "summary", "data_points": "4/10 score, 35% overhead, 8 duplications, 12 inconsistencies, 6 orphaned references"},
-    {"source": "storage/data/efficiency_report.json", "section": "duplications", "data_points": "8 duplication instances with severity and recommendations"},
-    {"source": "storage/data/efficiency_report.json", "section": "inconsistencies", "data_points": "12 inconsistency instances across count mismatches, schema issues, and naming"},
-    {"source": "storage/data/efficiency_report.json", "section": "orphaned_references", "data_points": "6 orphaned reference instances including 12+ unregistered files"},
-    {"source": "storage/data/efficiency_report.json", "section": "schema_issues", "data_points": "4 schema issues: no shared schema, duplicate IDs, no tier spec, inconsistent crossrefs"},
-    {"source": "storage/data/efficiency_report.json", "section": "recommendations", "data_points": "10 prioritized recommendations for fixing data management issues"},
-    {"source": "storage/data/final_analysis.json", "section": "cross_cutting_insights[4]", "data_points": "Token efficiency: 90.2% reduction enables 11.7x more I/O per context window, making index reads cheap"}
+    {
+      "source": "storage/data/efficiency_report.json",
+      "section": "summary",
+      "data_points": "4/10 score, 35% overhead, 8 duplications, 12 inconsistencies, 6 orphaned references"
+    },
+    {
+      "source": "storage/data/efficiency_report.json",
+      "section": "duplications",
+      "data_points": "8 duplication instances with severity and recommendations"
+    },
+    {
+      "source": "storage/data/efficiency_report.json",
+      "section": "inconsistencies",
+      "data_points": "12 inconsistency instances across count mismatches, schema issues, and naming"
+    },
+    {
+      "source": "storage/data/efficiency_report.json",
+      "section": "orphaned_references",
+      "data_points": "6 orphaned reference instances including 12+ unregistered files"
+    },
+    {
+      "source": "storage/data/efficiency_report.json",
+      "section": "schema_issues",
+      "data_points": "4 schema issues: no shared schema, duplicate IDs, no tier spec, inconsistent crossrefs"
+    },
+    {
+      "source": "storage/data/efficiency_report.json",
+      "section": "recommendations",
+      "data_points": "10 prioritized recommendations for fixing data management issues"
+    },
+    {
+      "source": "storage/data/final_analysis.json",
+      "section": "cross_cutting_insights[4]",
+      "data_points": "Token efficiency: 90.2% reduction enables 11.7x more I/O per context window, making index reads cheap"
+    }
   ],
-
   "metrics": {
     "compliance_indicators": [
       "All three index tiers updated together for every entry change",
@@ -332,5 +418,6 @@
       "null_categories": 0
     },
     "measurement_method": "Run efficiency_report.json-equivalent audit monthly. Track score, overhead, and issue counts over time. Flag any regression from previous audit."
-  }
+  },
+  "date": "2026-03-11"
 }

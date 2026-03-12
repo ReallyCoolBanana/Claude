@@ -1,6 +1,5 @@
 {
   "version": "2.0",
-  "last_updated": "2026-03-10",
   "verified_by": "TEAM-2",
   "updated_by": "TEAM-3-iteration-2",
   "methods": [
@@ -10,7 +9,9 @@
       "file": "method_websearch.py",
       "description": "Generates 5 variant search queries from the input, searches DuckDuckGo HTML for each, parses and deduplicates results by URL.",
       "category": "web-search",
-      "data_sources": ["DuckDuckGo HTML"],
+      "data_sources": [
+        "DuckDuckGo HTML"
+      ],
       "requires_api_key": false,
       "avg_duration_seconds": 4.86,
       "status": "functional",
@@ -35,7 +36,9 @@
       "file": "method_wikipedia.py",
       "description": "Uses Wikipedia API to search articles, extract summaries, sections, references, and categories. Follows 'See also' links for breadth.",
       "category": "api-based",
-      "data_sources": ["Wikipedia API"],
+      "data_sources": [
+        "Wikipedia API"
+      ],
       "requires_api_key": false,
       "avg_duration_seconds": 1.47,
       "status": "partially functional — returns limited results",
@@ -43,7 +46,10 @@
       "verification": {
         "iteration": 1,
         "results_count": 0,
-        "bugs": ["Silent HTTP 403 error", "Non-compliant User-Agent"]
+        "bugs": [
+          "Silent HTTP 403 error",
+          "Non-compliant User-Agent"
+        ]
       },
       "iteration2_benchmark": {
         "speed_seconds": 1.47,
@@ -58,7 +64,9 @@
       "file": "method_arxiv.py",
       "description": "Uses arXiv API to find academic papers, extracts titles, authors, abstracts, categories, and dates.",
       "category": "api-based",
-      "data_sources": ["arXiv API"],
+      "data_sources": [
+        "arXiv API"
+      ],
       "requires_api_key": false,
       "avg_duration_seconds": 2.66,
       "status": "functional",
@@ -66,7 +74,10 @@
       "verification": {
         "iteration": 1,
         "results_count": 0,
-        "bugs": ["HTTP instead of HTTPS", "No rate limiting"]
+        "bugs": [
+          "HTTP instead of HTTPS",
+          "No rate limiting"
+        ]
       },
       "iteration2_benchmark": {
         "speed_seconds": 2.66,
@@ -81,14 +92,26 @@
       "file": "method_hybrid.py",
       "description": "Combines all 5 methods (web search, Wikipedia, arXiv, OpenAlex, Wikidata) into a parallel pipeline. Cross-references findings, applies credibility tiers, corroboration scoring, and TF-IDF deduplication.",
       "category": "hybrid",
-      "data_sources": ["DuckDuckGo HTML", "Wikipedia API", "arXiv API", "OpenAlex API", "Wikidata API"],
+      "data_sources": [
+        "DuckDuckGo HTML",
+        "Wikipedia API",
+        "arXiv API",
+        "OpenAlex API",
+        "Wikidata API"
+      ],
       "requires_api_key": false,
       "avg_duration_seconds": 5.11,
       "status": "functional — 4 of 5 sub-sources active",
       "created": "2026-03-10",
       "updated": "2026-03-10",
       "iteration": 2,
-      "improvements": ["parallel execution via ThreadPoolExecutor", "5 sources (up from 3)", "credibility tiers", "TF-IDF deduplication", "weighted corroboration scoring"],
+      "improvements": [
+        "parallel execution via ThreadPoolExecutor",
+        "5 sources (up from 3)",
+        "credibility tiers",
+        "TF-IDF deduplication",
+        "weighted corroboration scoring"
+      ],
       "iteration2_benchmark": {
         "speed_seconds": 5.11,
         "data_points": 46,
@@ -102,7 +125,9 @@
       "file": "method_iterative.py",
       "description": "Does 3 rounds of progressively deeper DuckDuckGo searching. Each round analyzes results to generate focused follow-up queries.",
       "category": "ai-enhanced",
-      "data_sources": ["DuckDuckGo HTML"],
+      "data_sources": [
+        "DuckDuckGo HTML"
+      ],
       "requires_api_key": false,
       "avg_duration_seconds": 7.88,
       "status": "functional",
@@ -119,7 +144,9 @@
       "file": "method_openalex.py",
       "description": "Uses the OpenAlex API to search 250M+ academic works. Extracts titles, authors, publication year, abstract, citation count, DOI, and open access URL. Sorted by citation count.",
       "category": "api-based",
-      "data_sources": ["OpenAlex API"],
+      "data_sources": [
+        "OpenAlex API"
+      ],
       "requires_api_key": false,
       "avg_duration_seconds": 0.5,
       "status": "functional",
@@ -138,7 +165,9 @@
       "file": "method_semantic_scholar.py",
       "description": "Uses Semantic Scholar Academic Graph API to search papers. Extracts titles, authors, abstracts, AI-generated TLDRs, citation counts, fields of study, external IDs (DOI, ArXiv), and open access PDF links. Respects 1 req/sec rate limit.",
       "category": "api-based",
-      "data_sources": ["Semantic Scholar API"],
+      "data_sources": [
+        "Semantic Scholar API"
+      ],
       "requires_api_key": false,
       "avg_duration_seconds": null,
       "status": "new",
@@ -151,7 +180,9 @@
       "file": "method_wikidata.py",
       "description": "Two-phase Wikidata search: finds entities via wbsearchentities, then fetches full details including labels, descriptions, aliases, instance_of/subclass_of claims, and Wikipedia sitelinks.",
       "category": "api-based",
-      "data_sources": ["Wikidata API"],
+      "data_sources": [
+        "Wikidata API"
+      ],
       "requires_api_key": false,
       "avg_duration_seconds": null,
       "status": "new",
@@ -164,7 +195,9 @@
       "file": "method_github.py",
       "description": "Searches GitHub repositories sorted by stars and code via REST API. Extracts full_name, description, stars, language, topics, license, forks, and open issues. Handles 403 rate limits gracefully.",
       "category": "api-based",
-      "data_sources": ["GitHub API"],
+      "data_sources": [
+        "GitHub API"
+      ],
       "requires_api_key": false,
       "avg_duration_seconds": null,
       "status": "new",
@@ -189,10 +222,24 @@
     }
   ],
   "categories": {
-    "web-search": ["DG-0001"],
+    "web-search": [
+      "DG-0001"
+    ],
     "web-scraping": [],
-    "api-based": ["DG-0002", "DG-0003", "DG-0006", "DG-0007", "DG-0008", "DG-0009"],
-    "hybrid": ["DG-0004"],
-    "ai-enhanced": ["DG-0005"]
-  }
+    "api-based": [
+      "DG-0002",
+      "DG-0003",
+      "DG-0006",
+      "DG-0007",
+      "DG-0008",
+      "DG-0009"
+    ],
+    "hybrid": [
+      "DG-0004"
+    ],
+    "ai-enhanced": [
+      "DG-0005"
+    ]
+  },
+  "date": "2026-03-10"
 }

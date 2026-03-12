@@ -4,9 +4,7 @@
   "title": "Unified Entry Schema",
   "description": "Shared metadata schema for all repository resource types. Backwards-compatible: old entries missing optional fields are still valid.",
   "version": "1.0",
-  "created": "2026-03-12",
   "team": "TEAM-GAMMA",
-
   "definitions": {
     "iso_date": {
       "type": "string",
@@ -20,20 +18,44 @@
     },
     "status_enum": {
       "type": "string",
-      "enum": ["active", "draft", "validated", "superseded", "deprecated"]
+      "enum": [
+        "active",
+        "draft",
+        "validated",
+        "superseded",
+        "deprecated"
+      ]
     },
     "confidence_enum": {
       "type": "string",
-      "enum": ["low", "medium", "high", "very-high"]
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "very-high"
+      ]
     },
     "resource_type_enum": {
       "type": "string",
-      "enum": ["KB", "SCR", "SOP", "DATA", "SRC", "TOOL", "TEAM"]
+      "enum": [
+        "KB",
+        "SCR",
+        "SOP",
+        "DATA",
+        "SRC",
+        "TOOL",
+        "TEAM"
+      ]
     }
   },
-
   "type": "object",
-  "required": ["id", "title", "date", "type", "status"],
+  "required": [
+    "id",
+    "title",
+    "date",
+    "type",
+    "status"
+  ],
   "properties": {
     "id": {
       "$ref": "#/definitions/id_format",
@@ -64,7 +86,10 @@
     },
     "tags": {
       "type": "array",
-      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      },
       "description": "Lowercase kebab-case tags for discovery."
     },
     "category": {
@@ -77,7 +102,9 @@
     },
     "builds_on": {
       "type": "array",
-      "items": { "$ref": "#/definitions/id_format" },
+      "items": {
+        "$ref": "#/definitions/id_format"
+      },
       "description": "IDs of entries this one extends or depends on."
     },
     "description": {
@@ -87,7 +114,9 @@
     },
     "cross_references": {
       "type": "array",
-      "items": { "$ref": "#/definitions/id_format" },
+      "items": {
+        "$ref": "#/definitions/id_format"
+      },
       "description": "IDs of related entries across subsystems."
     },
     "version": {
@@ -96,13 +125,18 @@
       "description": "Semantic version (e.g., 1.0, 2.1)."
     }
   },
-
   "subsystem_extensions": {
     "KB": {
       "description": "Knowledge base entries (Markdown + YAML frontmatter)",
       "additional_fields": {
-        "role": { "type": "string", "description": "Role of the authoring agent." },
-        "content": { "type": "string", "description": "Markdown body content (in file, not index)." }
+        "role": {
+          "type": "string",
+          "description": "Role of the authoring agent."
+        },
+        "content": {
+          "type": "string",
+          "description": "Markdown body content (in file, not index)."
+        }
       },
       "id_pattern": "KB-NNNN",
       "filename_pattern": "KB-NNNN.md",
@@ -111,10 +145,28 @@
     "SCR": {
       "description": "Scripts with JSON metadata in index",
       "additional_fields": {
-        "language": { "type": "string", "enum": ["python", "bash", "javascript", "typescript"] },
-        "filename": { "type": "string", "description": "Path to script file relative to storage/scripts/." },
-        "dependencies": { "type": "array", "items": { "type": "string" } },
-        "added_by_team": { "type": "string" }
+        "language": {
+          "type": "string",
+          "enum": [
+            "python",
+            "bash",
+            "javascript",
+            "typescript"
+          ]
+        },
+        "filename": {
+          "type": "string",
+          "description": "Path to script file relative to storage/scripts/."
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added_by_team": {
+          "type": "string"
+        }
       },
       "id_pattern": "SCR-NNNN",
       "filename_pattern": "snake_case.py",
@@ -123,9 +175,16 @@
     "SOP": {
       "description": "Standard operating procedures (JSON)",
       "additional_fields": {
-        "purpose": { "type": "string" },
-        "scope": { "type": "string" },
-        "supersedes": { "type": "string", "description": "ID of the SOP this one replaces." }
+        "purpose": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "supersedes": {
+          "type": "string",
+          "description": "ID of the SOP this one replaces."
+        }
       },
       "id_pattern": "SOP-NNN",
       "filename_pattern": "sop_NNN_descriptive_name.json",
@@ -134,10 +193,27 @@
     "DATA": {
       "description": "Data files (JSON)",
       "additional_fields": {
-        "format": { "type": "string", "enum": ["json", "sqlite", "csv", "tsv"] },
-        "size_estimate": { "type": "string" },
-        "data_points": { "type": "integer" },
-        "sources": { "type": "array", "items": { "type": "string" } }
+        "format": {
+          "type": "string",
+          "enum": [
+            "json",
+            "sqlite",
+            "csv",
+            "tsv"
+          ]
+        },
+        "size_estimate": {
+          "type": "string"
+        },
+        "data_points": {
+          "type": "integer"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       },
       "id_pattern": "DATA-NNNN",
       "filename_pattern": "descriptive_name.json",
@@ -146,17 +222,56 @@
     "SRC": {
       "description": "API source definitions (JSON)",
       "additional_fields": {
-        "url": { "type": "string", "format": "uri" },
-        "base_url": { "type": "string", "format": "uri" },
-        "api_docs_url": { "type": "string", "format": "uri" },
-        "data_types": { "type": "array", "items": { "type": "string" } },
-        "access_type": { "type": "string", "enum": ["free", "freemium", "paid", "api-key"] },
-        "auth_method": { "type": "string" },
-        "rate_limits": { "type": "string" },
-        "response_format": { "type": "string" },
-        "reliability": { "type": "string", "enum": ["low", "medium", "high"] },
-        "last_verified": { "$ref": "#/definitions/iso_date" },
-        "added_by_team": { "type": "string" }
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "base_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "api_docs_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "data_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "access_type": {
+          "type": "string",
+          "enum": [
+            "free",
+            "freemium",
+            "paid",
+            "api-key"
+          ]
+        },
+        "auth_method": {
+          "type": "string"
+        },
+        "rate_limits": {
+          "type": "string"
+        },
+        "response_format": {
+          "type": "string"
+        },
+        "reliability": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "last_verified": {
+          "$ref": "#/definitions/iso_date"
+        },
+        "added_by_team": {
+          "type": "string"
+        }
       },
       "id_pattern": "SRC-NNNN",
       "filename_pattern": "SRC-NNNN-descriptive-name.json",
@@ -165,18 +280,36 @@
     "TEAM": {
       "description": "Team session logs (Markdown + YAML frontmatter)",
       "additional_fields": {
-        "team_id": { "type": "string" },
-        "members": { "type": "array", "items": { "type": "string" } },
-        "objective": { "type": "string" },
-        "parent_team": { "type": ["string", "null"] },
-        "builds_on_knowledge": { "type": "array", "items": { "type": "string" } }
+        "team_id": {
+          "type": "string"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "objective": {
+          "type": "string"
+        },
+        "parent_team": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "builds_on_knowledge": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       },
       "id_pattern": "TEAM-NNNN",
       "filename_pattern": "TEAM-NNNN.md",
       "directory": "teams/sessions/"
     }
   },
-
   "date_field_mapping": {
     "description": "Legacy date field names and their canonical replacement. All should map to 'date'.",
     "canonical": "date",
@@ -192,11 +325,11 @@
       "last_verified": "last_verified (keep as secondary field for SRC)"
     }
   },
-
   "naming_conventions": {
     "python_files": "snake_case.py",
     "id_format": "UPPER-NNNN (4-digit zero-padded, SOP uses 3-digit)",
     "tags": "lowercase-kebab-case",
     "categories": "lowercase-kebab-case"
-  }
+  },
+  "date": "2026-03-12"
 }

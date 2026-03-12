@@ -7,7 +7,10 @@
       "name": "DeepLOB Order Book Modeling",
       "description": "Convolutional + recurrent architecture for predicting short-term price movements from limit order book snapshots. Proposed by Zhang et al. (2019). Captures spatial structure of LOB levels and temporal dynamics.",
       "key_reference": "https://arxiv.org/abs/1808.03668",
-      "tools": ["PyTorch", "TensorFlow"],
+      "tools": [
+        "PyTorch",
+        "TensorFlow"
+      ],
       "verified": true,
       "verification_notes": "DeepLOB paper confirmed. Original reference is arxiv 1808.03668 (corrected from 1906.04404 by Team 3). AUC scores of 0.70-0.75 consistent with reported results."
     },
@@ -15,7 +18,10 @@
       "name": "RL Optimal Execution",
       "description": "Reinforcement learning for minimizing market impact during order execution. Learns adaptive strategies outperforming TWAP and VWAP benchmarks by 5-15 basis points.",
       "key_reference": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3478781",
-      "tools": ["FinRL", "Stable Baselines3"],
+      "tools": [
+        "FinRL",
+        "Stable Baselines3"
+      ],
       "verified": true,
       "verification_notes": "RL for optimal execution is well-documented. Basis point improvement varies by market and order size."
     },
@@ -23,7 +29,10 @@
       "name": "GAN Synthetic Order Flow Generation",
       "description": "Generative adversarial networks for creating realistic synthetic order flow data for strategy testing and augmentation. Addresses scarcity of labeled HFT training data.",
       "key_reference": "https://arxiv.org/abs/2101.07107",
-      "tools": ["PyTorch", "TensorFlow"],
+      "tools": [
+        "PyTorch",
+        "TensorFlow"
+      ],
       "verified": true,
       "verification_notes": "GAN-based financial data generation is an active research area."
     },
@@ -31,7 +40,12 @@
       "name": "FPGA/ASIC Hardware Acceleration",
       "description": "Custom hardware (FPGAs, ASICs) for sub-microsecond ML model inference in HFT. Knowledge distillation and model quantization reduce model complexity for deployment on specialized hardware.",
       "key_reference": "https://ieeexplore.ieee.org/document/8949596",
-      "tools": ["Xilinx FPGAs", "CUDA", "TensorRT", "ONNX Runtime"],
+      "tools": [
+        "Xilinx FPGAs",
+        "CUDA",
+        "TensorRT",
+        "ONNX Runtime"
+      ],
       "verified": true,
       "verification_notes": "FPGA-based inference for HFT is established practice at major firms (Citadel, Two Sigma, Jane Street)."
     },
@@ -39,11 +53,17 @@
       "name": "Online Learning / Adaptive Algorithms",
       "description": "Continuously adapting algorithms that update without full retraining, essential for non-stationary HFT environments. Includes online gradient descent and bandit algorithms.",
       "key_reference": "https://arxiv.org/abs/1906.04404",
-      "tools": ["River (online ML)", "scikit-multiflow"],
+      "tools": [
+        "River (online ML)",
+        "scikit-multiflow"
+      ],
       "verified": true,
       "verification_notes": "Online learning for financial applications is well-documented in market microstructure literature."
     }
   ],
-  "last_updated": "2026-03-10",
-  "contributing_teams": ["TEAM-1", "TEAM-4"]
+  "contributing_teams": [
+    "TEAM-1",
+    "TEAM-4"
+  ],
+  "date": "2026-03-10"
 }

@@ -1,11 +1,14 @@
 {
   "id": "SOP-014",
   "version": "1.0",
-  "created": "2026-03-11",
   "team": "TEAM-0026-central-command",
   "title": "Simultaneous Multi-Project Management Protocol",
   "purpose": "Enables a central commander to run multiple independent projects simultaneously using hub-and-spoke monitoring. Covers project decomposition, team group management, cross-project resource sharing, and parallel progress tracking.",
-  "builds_on": ["SOP-011", "SOP-012", "SOP-013"],
+  "builds_on": [
+    "SOP-011",
+    "SOP-012",
+    "SOP-013"
+  ],
   "motivation": {
     "problem": "Previous operations ran a single project at a time. Users often need multiple workstreams running simultaneously (e.g., indexing + bug testing + documentation). Without formal project isolation, teams from different projects interfere, share resources without coordination, and overwhelm the coordinator.",
     "evidence": [
@@ -15,35 +18,55 @@
     ],
     "goal": "Enable coordinators to manage 2-5 simultaneous projects, each with their own team groups, output paths, and progress tracking, all monitored from a single commander dashboard."
   },
-
   "section_1_project_decomposition": {
     "title": "Project Decomposition and Grouping",
     "description": "How to break a multi-project request into isolated project groups that can run simultaneously.",
-
     "step_1_identify_projects": {
       "action": "Parse the user request for distinct project objectives. Each objective that produces independent deliverables is a separate project.",
       "examples": [
         {
           "user_request": "Mass indexing, inventory, bug testing, and documentation",
           "projects": [
-            {"id": "PROJ-A", "name": "Mass Indexing & Inventory", "objective": "Create comprehensive file index and tool inventory"},
-            {"id": "PROJ-B", "name": "Bug Testing & Fixing", "objective": "Identify and fix bugs across all systems"},
-            {"id": "PROJ-C", "name": "Documentation & SOP Creation", "objective": "Create system documentation and new SOPs"}
+            {
+              "id": "PROJ-A",
+              "name": "Mass Indexing & Inventory",
+              "objective": "Create comprehensive file index and tool inventory"
+            },
+            {
+              "id": "PROJ-B",
+              "name": "Bug Testing & Fixing",
+              "objective": "Identify and fix bugs across all systems"
+            },
+            {
+              "id": "PROJ-C",
+              "name": "Documentation & SOP Creation",
+              "objective": "Create system documentation and new SOPs"
+            }
           ]
         }
       ]
     },
-
     "step_2_assign_team_groups": {
       "action": "For each project, assign a team group. Each group operates independently with its own output directory.",
       "naming_convention": "Group-{LETTER}-{purpose}",
       "example": {
-        "Group-A-indexing": {"teams": 2, "agents_per_team": 3, "total": 6},
-        "Group-B-bugfix": {"teams": 2, "agents_per_team": 3, "total": 6},
-        "Group-C-docs": {"teams": 2, "agents_per_team": 4, "total": 8}
+        "Group-A-indexing": {
+          "teams": 2,
+          "agents_per_team": 3,
+          "total": 6
+        },
+        "Group-B-bugfix": {
+          "teams": 2,
+          "agents_per_team": 3,
+          "total": 6
+        },
+        "Group-C-docs": {
+          "teams": 2,
+          "agents_per_team": 4,
+          "total": 8
+        }
       }
     },
-
     "step_3_isolate_output_paths": {
       "action": "Each project group gets its own output directory. No cross-writing allowed.",
       "directory_pattern": "storage/coordination/hub/{project-slug}/",
@@ -53,7 +76,6 @@
         "Group-C": "storage/coordination/hub/infrastructure-documentation.json"
       }
     },
-
     "step_4_identify_cross_project_dependencies": {
       "action": "Apply the Hard Dependency Test (SOP-011) across projects, not just within them.",
       "common_false_dependencies": [
@@ -67,11 +89,9 @@
       ]
     }
   },
-
   "section_2_central_commander_protocol": {
     "title": "Central Commander Protocol for Multi-Project Operations",
     "description": "The coordinator acts as central commander, maintaining visibility across all projects without micromanaging individual teams.",
-
     "commander_responsibilities": [
       "Deploy all project groups simultaneously (per SOP-011 anti-sequential rules)",
       "Monitor progress across all projects using hub dashboard",
@@ -79,7 +99,6 @@
       "Redistribute resources when one project finishes early",
       "Aggregate final outputs across all projects into unified deliverables"
     ],
-
     "dashboard_view": {
       "description": "The commander should maintain a mental model of project-level progress, not agent-level details.",
       "project_health_indicators": {
@@ -95,7 +114,6 @@
         "CP-5_final_gathering": "All projects complete, begin consolidation"
       }
     },
-
     "resource_rebalancing": {
       "trigger": "One project group finishes while another has significant remaining work",
       "action": "Deploy completed group's agents as reinforcements to the lagging project",
@@ -106,11 +124,9 @@
       ]
     }
   },
-
   "section_3_scaling_guidelines": {
     "title": "Scaling Guidelines for Large Operations",
     "description": "Rules for determining optimal team sizes and project groupings for operations with 10-30 sub-agents.",
-
     "agent_count_tiers": {
       "small": {
         "agents": "4-8",
@@ -131,40 +147,65 @@
         "coordinator_overhead": "High. Monitor at project level. Use project leads (senior agents) for team-level oversight."
       }
     },
-
     "diminishing_returns_warning": {
       "threshold": 10,
       "description": "Beyond 10 teams, coordination overhead increases non-linearly. Prefer fewer, larger teams over many small teams at this scale.",
       "mitigation": "Use project leads - one agent per project group that coordinates its own sub-agents, reducing coordinator's span of control."
     },
-
     "file_assignment_rules": {
       "principle": "No two agents from different project groups should write to the same file.",
       "enforcement": "Commander creates a master file allocation table before launch.",
       "exception": "Append-only JSONL files (status, findings) can accept concurrent writers safely."
     }
   },
-
   "section_4_simultaneous_project_checklist": {
     "title": "Pre-Launch Checklist for Simultaneous Projects",
     "checklist": [
-      {"id": "SIM-01", "check": "User request decomposed into distinct projects with clear boundaries"},
-      {"id": "SIM-02", "check": "Each project has a team group with assigned agents"},
-      {"id": "SIM-03", "check": "Output paths are unique across ALL projects (no cross-project collisions)"},
-      {"id": "SIM-04", "check": "Cross-project dependencies identified and documented (should be near zero)"},
-      {"id": "SIM-05", "check": "All teams launched in a single message (per SOP-011 ASR-006)"},
-      {"id": "SIM-06", "check": "Commander has project-level health dashboard ready"},
-      {"id": "SIM-07", "check": "Resource rebalancing plan defined for early finishers"},
-      {"id": "SIM-08", "check": "Master file allocation table created"},
-      {"id": "SIM-09", "check": "Each agent prompt includes project group ID for status tracking"},
-      {"id": "SIM-10", "check": "Consolidation strategy defined for merging cross-project outputs"}
+      {
+        "id": "SIM-01",
+        "check": "User request decomposed into distinct projects with clear boundaries"
+      },
+      {
+        "id": "SIM-02",
+        "check": "Each project has a team group with assigned agents"
+      },
+      {
+        "id": "SIM-03",
+        "check": "Output paths are unique across ALL projects (no cross-project collisions)"
+      },
+      {
+        "id": "SIM-04",
+        "check": "Cross-project dependencies identified and documented (should be near zero)"
+      },
+      {
+        "id": "SIM-05",
+        "check": "All teams launched in a single message (per SOP-011 ASR-006)"
+      },
+      {
+        "id": "SIM-06",
+        "check": "Commander has project-level health dashboard ready"
+      },
+      {
+        "id": "SIM-07",
+        "check": "Resource rebalancing plan defined for early finishers"
+      },
+      {
+        "id": "SIM-08",
+        "check": "Master file allocation table created"
+      },
+      {
+        "id": "SIM-09",
+        "check": "Each agent prompt includes project group ID for status tracking"
+      },
+      {
+        "id": "SIM-10",
+        "check": "Consolidation strategy defined for merging cross-project outputs"
+      }
     ]
   },
-
   "section_5_post_operation_consolidation": {
     "title": "Cross-Project Result Consolidation",
     "description": "After all projects complete, the commander must merge outputs into unified deliverables.",
-
     "consolidation_steps": [
       {
         "step": 1,
@@ -198,7 +239,6 @@
       }
     ]
   },
-
   "quick_reference": {
     "one_sentence": "Decompose into isolated projects, assign non-overlapping team groups, launch all simultaneously, monitor at project level, rebalance resources as projects complete, consolidate outputs.",
     "key_rules": [
@@ -212,5 +252,6 @@
       "TEAM-0025": "14 agents, 1 project, 38 bugs fixed, 263 tests passing",
       "TEAM-0026": "20 agents, 3 project groups, simultaneous indexing + bug testing + documentation"
     }
-  }
+  },
+  "date": "2026-03-11"
 }

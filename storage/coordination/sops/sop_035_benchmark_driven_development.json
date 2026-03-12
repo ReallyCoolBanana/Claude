@@ -3,18 +3,33 @@
   "title": "Benchmark-Driven Development Process",
   "version": "1.0",
   "status": "active",
-  "created_date": "2026-03-11",
   "category": "development-process",
   "purpose": "Establish a repeatable process for using benchmarks to validate changes, detect regressions, and drive optimization decisions. Based on the repository's empirical benchmark infrastructure (tool_benchmarker.py, tool_tester.py, coord_stress_bench.py) which has produced 3,247 data points across 17 sources and validated 45 tool tests with zero failures.",
   "scope": "All changes to coordination infrastructure, tools, scripts, and communication primitives. Applies to any code that could affect latency, throughput, correctness, or token efficiency.",
-  "builds_on": ["SOP-020", "SOP-025", "SOP-034"],
-
+  "builds_on": [
+    "SOP-020",
+    "SOP-025",
+    "SOP-034"
+  ],
   "key_findings": {
     "benchmark_coverage": {
       "tools_tested": 12,
       "total_tests": 45,
       "pass_rate": "100% (45/45)",
-      "tool_suites": ["auto_index", "cross_ref_checker", "finding_dedup", "import_to_db", "kb_validator", "pattern_analyzer", "quality_scorer", "query_kb", "smart_read", "smart_search", "smart_write", "validate_naming"]
+      "tool_suites": [
+        "auto_index",
+        "cross_ref_checker",
+        "finding_dedup",
+        "import_to_db",
+        "kb_validator",
+        "pattern_analyzer",
+        "quality_scorer",
+        "query_kb",
+        "smart_read",
+        "smart_search",
+        "smart_write",
+        "validate_naming"
+      ]
     },
     "performance_baselines": {
       "query_kb_mean_ms": 41.28,
@@ -34,7 +49,6 @@
       "lesson": "Second iteration of benchmarks always shows massive gains. Always iterate."
     }
   },
-
   "procedures": [
     {
       "step": 1,
@@ -127,7 +141,15 @@
       "storage_format": {
         "filename_pattern": "YYYYMMDD_HHMMSS_<suite>_results.json",
         "location": "storage/scripts/ (for tool and coordination benchmarks), storage/scripts/data-gathering/benchmarks/ (for data gathering)",
-        "required_fields": ["run_date", "suite_name", "total_tests", "passed", "failed", "timings", "comparison_to_baseline"],
+        "required_fields": [
+          "run_date",
+          "suite_name",
+          "total_tests",
+          "passed",
+          "failed",
+          "timings",
+          "comparison_to_baseline"
+        ],
         "retention": "Keep all results. They form the historical trend used to detect gradual regressions."
       },
       "output": "Benchmark results archived with timestamps"
@@ -145,7 +167,6 @@
       "output": "Updated baseline values documented"
     }
   ],
-
   "when_to_benchmark": {
     "always_before_and_after": [
       "Changes to any coordination module (coordinator_hub.py, help_protocol.py, direct_channels.py, work_stealing.py)",
@@ -166,7 +187,6 @@
       "Per data-gathering session: Run method benchmarks to track external API availability and performance"
     ]
   },
-
   "anti_patterns": [
     {
       "name": "Ship Without Benchmarking",
@@ -193,16 +213,38 @@
       "fix": "Track token consumption as a first-class metric alongside latency and throughput."
     }
   ],
-
   "references": [
-    {"source": "storage/data/empirical_benchmarks.json", "section": "tool_regression", "data_points": "45 tests across 12 tools, query_kb and smart_read benchmarks"},
-    {"source": "storage/data/empirical_benchmarks.json", "section": "contention_analysis", "data_points": "SQLite contention baselines across 1-32 threads"},
-    {"source": "storage/data/unified_benchmarks.json", "section": "data_gathering_benchmarks", "data_points": "2 iterations of method benchmarks showing 371% improvement"},
-    {"source": "storage/data/unified_benchmarks.json", "section": "token_efficiency", "data_points": "11 token efficiency benchmarks, 90.2% average reduction"},
-    {"source": "storage/data/unified_benchmarks.json", "section": "coordination_benchmarks", "data_points": "2880 coordination measurements across all primitives"},
-    {"source": "storage/data/final_analysis.json", "section": "cross_cutting_insights", "data_points": "Token efficiency and iteration improvement insights"}
+    {
+      "source": "storage/data/empirical_benchmarks.json",
+      "section": "tool_regression",
+      "data_points": "45 tests across 12 tools, query_kb and smart_read benchmarks"
+    },
+    {
+      "source": "storage/data/empirical_benchmarks.json",
+      "section": "contention_analysis",
+      "data_points": "SQLite contention baselines across 1-32 threads"
+    },
+    {
+      "source": "storage/data/unified_benchmarks.json",
+      "section": "data_gathering_benchmarks",
+      "data_points": "2 iterations of method benchmarks showing 371% improvement"
+    },
+    {
+      "source": "storage/data/unified_benchmarks.json",
+      "section": "token_efficiency",
+      "data_points": "11 token efficiency benchmarks, 90.2% average reduction"
+    },
+    {
+      "source": "storage/data/unified_benchmarks.json",
+      "section": "coordination_benchmarks",
+      "data_points": "2880 coordination measurements across all primitives"
+    },
+    {
+      "source": "storage/data/final_analysis.json",
+      "section": "cross_cutting_insights",
+      "data_points": "Token efficiency and iteration improvement insights"
+    }
   ],
-
   "metrics": {
     "compliance_indicators": [
       "Baseline benchmarks run before every infrastructure change",
@@ -220,5 +262,6 @@
       "sqlite_1_thread_ops_per_sec": "> 3400"
     },
     "measurement_method": "Compare post-change metrics against stored baselines. Flag any metric exceeding regression thresholds. Track trends over time to detect gradual degradation."
-  }
+  },
+  "date": "2026-03-11"
 }

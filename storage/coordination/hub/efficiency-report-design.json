@@ -1,7 +1,6 @@
 {
   "agent_id": "efficiency-2",
   "scope": "system design and redundancy",
-  "timestamp": "2026-03-11",
   "redundancies": [
     {
       "id": "R-01",
@@ -229,42 +228,67 @@
       "title": "Extract bus_core.py",
       "effort": "small",
       "description": "Create storage/coordination/bus_core.py with: Message dataclass, bus_write(), bus_read(), _sanitize_channel(), _retry_on_busy(). Update all 6+ modules to import from it. This is the highest-ROI change.",
-      "files_affected": ["coordinator_hub.py", "help_protocol.py", "direct_channels.py", "bus_cli.py", "multi_team_runner.py"]
+      "files_affected": [
+        "coordinator_hub.py",
+        "help_protocol.py",
+        "direct_channels.py",
+        "bus_cli.py",
+        "multi_team_runner.py"
+      ]
     },
     {
       "phase": 2,
       "title": "Unify SQLite schema and db_open",
       "effort": "small",
       "description": "Create a single db_utils.py with open_db() function and the canonical schema. Eliminate the duplicated schema definitions in bus_cli.py and multi_team_runner.py. Merge the bus_cli/runner schema with coordinator_hub schema into one coherent database.",
-      "files_affected": ["coordinator_hub.py", "bus_cli.py", "multi_team_runner.py", "dashboard.py"]
+      "files_affected": [
+        "coordinator_hub.py",
+        "bus_cli.py",
+        "multi_team_runner.py",
+        "dashboard.py"
+      ]
     },
     {
       "phase": 3,
       "title": "Consolidate status tracking",
       "effort": "medium",
       "description": "Remove team_status from help_protocol and progress from direct_channels. Extend coordinator_hub.agent_status with optional team-level fields. Update dashboard.py to read from the unified schema.",
-      "files_affected": ["coordinator_hub.py", "help_protocol.py", "direct_channels.py", "dashboard.py"]
+      "files_affected": [
+        "coordinator_hub.py",
+        "help_protocol.py",
+        "direct_channels.py",
+        "dashboard.py"
+      ]
     },
     {
       "phase": 4,
       "title": "Simplify direct_channels",
       "effort": "medium",
       "description": "Remove the SQLite channel registry, presence table, and read_offsets table. Keep only the send_direct/read_direct methods using the bus_core functions. Channels do not need to be registered in SQLite to work.",
-      "files_affected": ["direct_channels.py"]
+      "files_affected": [
+        "direct_channels.py"
+      ]
     },
     {
       "phase": 5,
       "title": "Fold help_protocol into coordinator_hub",
       "effort": "medium",
       "description": "Move work_items, help_requests, and team_capabilities tables into coordinator_hub's schema. Add help management methods to CoordinatorDashboard. Remove help_protocol.py as a standalone module. Update bus_cli.py help commands to use coordinator_hub.",
-      "files_affected": ["coordinator_hub.py", "help_protocol.py", "bus_cli.py"]
+      "files_affected": [
+        "coordinator_hub.py",
+        "help_protocol.py",
+        "bus_cli.py"
+      ]
     },
     {
       "phase": 6,
       "title": "Remove dead schema",
       "effort": "trivial",
       "description": "Remove the 'messages', 'rate_limits', and 'rate_limit_config' table definitions that are never used.",
-      "files_affected": ["bus_cli.py", "multi_team_runner.py"]
+      "files_affected": [
+        "bus_cli.py",
+        "multi_team_runner.py"
+      ]
     }
   ],
   "summary_statistics": {
@@ -278,5 +302,6 @@
     "distinct_retry_decorators": 3,
     "communication_paths": 5,
     "dead_schema_tables": 3
-  }
+  },
+  "date": "2026-03-11"
 }

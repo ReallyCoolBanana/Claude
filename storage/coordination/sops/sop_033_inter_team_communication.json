@@ -3,23 +3,35 @@
   "title": "Inter-Team Communication Protocol",
   "version": "1.0",
   "status": "active",
-  "created_date": "2026-03-11",
   "category": "communication",
   "purpose": "Define when to use hub-and-spoke vs direct channels vs broadcast for inter-team communication, based on empirical benchmarks showing hub is 1.9x faster for single-thread coordinator ops (0.264ms median) while channels deliver 1.9x better p95 tail latency under concurrent load (55ms vs 105ms). Communication overhead is negligible (<0.05% of runtime) regardless of pattern, so the choice is about latency profile, not cost.",
   "scope": "All multi-agent operations requiring inter-team or intra-team communication. Covers coordinator-to-agent, agent-to-agent, and broadcast patterns.",
-  "builds_on": ["SOP-011", "SOP-025", "SOP-028", "SOP-032"],
-
+  "builds_on": [
+    "SOP-011",
+    "SOP-025",
+    "SOP-028",
+    "SOP-032"
+  ],
   "key_findings": {
     "hub_single_thread": {
       "median_ms": 0.264,
       "p95_ms": 1.189,
-      "strengths": ["Registration (0.93ms/agent)", "Status updates (0.33ms)", "Dashboard reads (0.09ms)", "Instructions (0.28ms)"],
+      "strengths": [
+        "Registration (0.93ms/agent)",
+        "Status updates (0.33ms)",
+        "Dashboard reads (0.09ms)",
+        "Instructions (0.28ms)"
+      ],
       "best_for": "Single-writer coordinator operations where one entity reads/writes and p95 <2ms is acceptable"
     },
     "channels_concurrent": {
       "median_ms": 0.492,
       "p95_ms": 55.463,
-      "strengths": ["Progress broadcast (0.32ms)", "Bottleneck detection (0.012ms)", "Concurrent messaging with 8+ threads (p95 55ms vs hub 105ms)"],
+      "strengths": [
+        "Progress broadcast (0.32ms)",
+        "Bottleneck detection (0.012ms)",
+        "Concurrent messaging with 8+ threads (p95 55ms vs hub 105ms)"
+      ],
       "best_for": "Inter-agent messaging under concurrent load, multi-consumer broadcast, scenarios with >4 simultaneous writers"
     },
     "overall_overhead": "Communication overhead is 0.047% of runtime (15.9ms over 34s in live test). Pattern choice affects latency profile, not total cost.",
@@ -29,7 +41,6 @@
       "recommendation": "Use Proto A (JSONL+SQLite WAL) as default. Consider Proto B for latency-sensitive paths where rate limiter issues are a concern."
     }
   },
-
   "decision_tree": {
     "title": "Communication Pattern Selection",
     "step_1": {
@@ -43,7 +54,13 @@
       "scenario": "Single writer (coordinator)",
       "recommendation": "Use Hub",
       "rationale": "Hub median is 0.264ms vs channels 0.492ms. 1.9x faster for single-writer ops. All coordinator dashboard, status, registration, and instruction operations should use hub.",
-      "operations": ["Agent registration", "Status updates", "Dashboard reads", "Instruction broadcast", "Idle detection (0.04ms median)"]
+      "operations": [
+        "Agent registration",
+        "Status updates",
+        "Dashboard reads",
+        "Instruction broadcast",
+        "Idle detection (0.04ms median)"
+      ]
     },
     "step_2b": {
       "question": "How many simultaneous writers expected?",
@@ -56,7 +73,11 @@
         "5_plus_writers": {
           "recommendation": "Use Direct Channels",
           "rationale": "At 8+ simultaneous senders, channels p95 is 55ms vs hub 105ms. Channels handle concurrent writes with 1.9x better tail latency.",
-          "operations": ["Inter-team work stealing notifications", "Progress broadcasting to multiple consumers", "Team-to-team data handoffs"]
+          "operations": [
+            "Inter-team work stealing notifications",
+            "Progress broadcasting to multiple consumers",
+            "Team-to-team data handoffs"
+          ]
         }
       }
     },
@@ -76,7 +97,6 @@
       }
     }
   },
-
   "procedures": [
     {
       "step": 1,
@@ -101,7 +121,13 @@
       "title": "Configure Channels for Inter-Team Messaging",
       "action": "Create direct channels for team-to-team communication, progress broadcasting, and work stealing notifications. Use topic-based channel naming for broadcast patterns.",
       "channel_types": {
-        "topic_channels": ["think-tank-findings", "research-findings", "dev-progress", "blockers-global", "phase-signals"],
+        "topic_channels": [
+          "think-tank-findings",
+          "research-findings",
+          "dev-progress",
+          "blockers-global",
+          "phase-signals"
+        ],
         "direct_channels": "Create as needed using format '<team-a>--<team-b>'",
         "work_queues": "Separate from messaging channels. Use WorkStealing module for queue operations."
       },
@@ -134,7 +160,6 @@
       "output": "Communication health metrics logged per phase"
     }
   ],
-
   "connection_topology_guidelines": {
     "small_team_3_agents": {
       "topology": "Hub only",
@@ -157,7 +182,6 @@
       "sqlite_partitioning": "1 hub database per sub-coordinator. Max 4 writers per database."
     }
   },
-
   "anti_patterns": [
     {
       "name": "Hub for Everything",
@@ -178,15 +202,33 @@
       "fix": "Use single-consumer work stealing when possible. Reserve multi-consumer for when p95 >80ms is acceptable."
     }
   ],
-
   "references": [
-    {"source": "storage/data/final_analysis.json", "section": "optimal_connections", "data_points": "Hub vs channels A/B comparison, 50+ measurements per condition"},
-    {"source": "storage/data/empirical_benchmarks.json", "section": "connection_patterns", "data_points": "Hub and channel throughput benchmarks"},
-    {"source": "storage/data/unified_benchmarks.json", "section": "coordination_benchmarks", "data_points": "2880 coordination measurements"},
-    {"source": "storage/data/unified_benchmarks.json", "section": "prototype_benchmarks.live_tests", "data_points": "Proto A/B live test comparison"},
-    {"source": "storage/coordination/teams/think-tank-convergence.json", "section": "finding_4_real_use_cases", "data_points": "Production-readiness validation"}
+    {
+      "source": "storage/data/final_analysis.json",
+      "section": "optimal_connections",
+      "data_points": "Hub vs channels A/B comparison, 50+ measurements per condition"
+    },
+    {
+      "source": "storage/data/empirical_benchmarks.json",
+      "section": "connection_patterns",
+      "data_points": "Hub and channel throughput benchmarks"
+    },
+    {
+      "source": "storage/data/unified_benchmarks.json",
+      "section": "coordination_benchmarks",
+      "data_points": "2880 coordination measurements"
+    },
+    {
+      "source": "storage/data/unified_benchmarks.json",
+      "section": "prototype_benchmarks.live_tests",
+      "data_points": "Proto A/B live test comparison"
+    },
+    {
+      "source": "storage/coordination/teams/think-tank-convergence.json",
+      "section": "finding_4_real_use_cases",
+      "data_points": "Production-readiness validation"
+    }
   ],
-
   "metrics": {
     "compliance_indicators": [
       "Hub used for all coordinator-centric operations",
@@ -203,5 +245,6 @@
       "bus_file_size_mb": "< 1"
     },
     "measurement_method": "Log p95 latency for hub and channel operations per phase. Compare against budgets. Flag any communication path exceeding 2x its budget."
-  }
+  },
+  "date": "2026-03-11"
 }

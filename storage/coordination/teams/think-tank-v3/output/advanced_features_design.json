@@ -1,20 +1,21 @@
 {
   "design_id": "THINK-TANK-V3-ADVANCED-FEATURES",
-  "timestamp": "2026-03-11T04:00:00Z",
   "team": "think-tank-v3",
-  "agents": ["think-v3-lead", "think-v3-protocols", "think-v3-perf", "think-v3-ux"],
+  "agents": [
+    "think-v3-lead",
+    "think-v3-protocols",
+    "think-v3-perf",
+    "think-v3-ux"
+  ],
   "mission": "Design advanced productivity features for multi-agent coordination",
   "complements": "Think Tank V2 (help requests and idle reassignment)",
-
   "features": {
-
     "A_work_stealing": {
       "name": "Work Stealing Protocol",
       "description": "Idle agents proactively pull work from busy teams' queues without being asked. Uses atomic SQLite claims to prevent double-assignment.",
       "complexity": "medium",
       "priority": "must-have",
       "dependencies": [],
-
       "sql_schema": [
         "CREATE TABLE IF NOT EXISTS work_queue (",
         "    id INTEGER PRIMARY KEY AUTOINCREMENT,",
@@ -39,7 +40,6 @@
         "CREATE INDEX IF NOT EXISTS idx_work_queue_status ON work_queue(status, steal_eligible, priority DESC);",
         "CREATE INDEX IF NOT EXISTS idx_work_queue_claimed ON work_queue(claimed_by, status);"
       ],
-
       "bus_messages": {
         "work-available": {
           "type": "info",
@@ -81,7 +81,6 @@
           }
         }
       },
-
       "protocol_flow": [
         "1. Team coordinator inserts work items into work_queue with status='available' and steal_eligible=1.",
         "2. Coordinator broadcasts 'work-available' on global channel so idle agents are notified.",
@@ -93,7 +92,6 @@
         "8. Items with attempt_count >= 3 are set to status='failed' permanently.",
         "9. Expired items (expires_at < now AND status IN ('available','claimed')) are reclaimed by cleanup."
       ],
-
       "cli_commands": [
         "bus_cli.py work-add <team> <title> <payload_json> [--priority N] [--steal-eligible] [--expires-in SECS]",
         "bus_cli.py work-claim <agent_id>                 # claims highest-priority available item",
@@ -102,17 +100,16 @@
         "bus_cli.py work-list [--status STATUS] [--team TEAM]",
         "bus_cli.py work-stats                            # summary counts by status"
       ],
-
       "conflict_resolution": "The BEGIN IMMEDIATE transaction ensures only one agent can claim a given work_id. Losers simply retry with the next item. No locks, no retries on the same item -- just move to next."
     },
-
     "B_pipeline_chaining": {
       "name": "Pipeline Chaining",
       "description": "Team A's output automatically triggers Team B's input. Pipelines are defined as DAGs; the system auto-notifies downstream teams when upstream output is ready.",
       "complexity": "large",
       "priority": "should-have",
-      "dependencies": ["A_work_stealing"],
-
+      "dependencies": [
+        "A_work_stealing"
+      ],
       "sql_schema": [
         "CREATE TABLE IF NOT EXISTS pipeline_definitions (",
         "    pipeline_id TEXT PRIMARY KEY,",
@@ -148,7 +145,6 @@
         "CREATE INDEX IF NOT EXISTS idx_pipeline_stages_status ON pipeline_stages(pipeline_id, status);",
         "CREATE INDEX IF NOT EXISTS idx_pipeline_edges_from ON pipeline_edges(pipeline_id, from_stage_id);"
       ],
-
       "bus_messages": {
         "pipeline-created": {
           "type": "info",
@@ -156,8 +152,16 @@
             "event": "pipeline-created",
             "pipeline_id": "<uuid>",
             "name": "<string>",
-            "stages": ["<stage_id>", "..."],
-            "edges": [{"from": "<stage_id>", "to": "<stage_id>"}]
+            "stages": [
+              "<stage_id>",
+              "..."
+            ],
+            "edges": [
+              {
+                "from": "<stage_id>",
+                "to": "<stage_id>"
+              }
+            ]
           }
         },
         "stage-ready": {
@@ -167,7 +171,9 @@
             "pipeline_id": "<uuid>",
             "stage_id": "<string>",
             "assigned_team": "<team or null>",
-            "input_keys": ["<scratchpad keys available>"]
+            "input_keys": [
+              "<scratchpad keys available>"
+            ]
           }
         },
         "stage-completed": {
@@ -189,7 +195,6 @@
           }
         }
       },
-
       "protocol_flow": [
         "1. Define pipeline: INSERT into pipeline_definitions, pipeline_stages, pipeline_edges.",
         "2. Identify root stages (stages with no incoming edges). Set their status='ready'.",
@@ -203,7 +208,6 @@
         "10. When last stage completes, set pipeline status='completed' and broadcast 'pipeline-completed'.",
         "11. The trigger check uses: SELECT COUNT(*) FROM pipeline_edges e JOIN pipeline_stages s ON e.from_stage_id=s.stage_id WHERE e.to_stage_id=? AND s.status != 'completed'. If count=0, stage is ready."
       ],
-
       "cli_commands": [
         "bus_cli.py pipeline-create <name> <dag_json>     # dag_json: {stages: [...], edges: [...]}",
         "bus_cli.py pipeline-status <pipeline_id>",
@@ -212,14 +216,12 @@
         "bus_cli.py stage-complete <pipeline_id> <stage_id> <agent_id> <output_key>"
       ]
     },
-
     "C_shared_scratchpad": {
       "name": "Shared Scratchpad",
       "description": "Teams share intermediate results via a namespaced key-value store in SQLite. Any team can read; writes scoped by team. TTL for auto-cleanup.",
       "complexity": "small",
       "priority": "must-have",
       "dependencies": [],
-
       "sql_schema": [
         "CREATE TABLE IF NOT EXISTS scratchpad (",
         "    key TEXT PRIMARY KEY,              -- format: <namespace>/<name> e.g. 'alpha/partial-results'",
@@ -238,7 +240,6 @@
         "CREATE INDEX IF NOT EXISTS idx_scratchpad_team ON scratchpad(owner_team);",
         "CREATE INDEX IF NOT EXISTS idx_scratchpad_expires ON scratchpad(expires_at) WHERE expires_at IS NOT NULL;"
       ],
-
       "bus_messages": {
         "scratch-write": {
           "type": "info",
@@ -247,7 +248,9 @@
             "key": "<namespace/name>",
             "owner_team": "<team>",
             "content_type": "json",
-            "tags": ["<tag>"],
+            "tags": [
+              "<tag>"
+            ],
             "ttl_seconds": 3600
           }
         },
@@ -260,7 +263,6 @@
           }
         }
       },
-
       "protocol_flow": [
         "1. WRITE: Agent calls scratch-write with key='<team>/<name>', value=JSON, ttl_seconds=N.",
         "2. INSERT OR REPLACE into scratchpad. Compute expires_at = now + ttl_seconds (or NULL if ttl=0).",
@@ -271,7 +273,6 @@
         "7. LIST: Agents can list all keys, optionally filtered by team or tags.",
         "8. WATCH: Agents poll for scratch-write bus messages matching keys they care about."
       ],
-
       "cli_commands": [
         "bus_cli.py scratch-write <team> <agent_id> <key> <value_json> [--ttl SECS] [--tags tag1,tag2]",
         "bus_cli.py scratch-read <key>",
@@ -279,7 +280,6 @@
         "bus_cli.py scratch-delete <team> <agent_id> <key>",
         "bus_cli.py scratch-cleanup                        # remove expired entries"
       ],
-
       "use_cases": [
         "Partial results: team posts intermediate findings before final output",
         "Coordination hints: 'I am working on X, skip it' signals",
@@ -287,14 +287,14 @@
         "Cross-team data sharing: team A discovers data useful to team B"
       ]
     },
-
     "D_priority_escalation": {
       "name": "Priority Escalation",
       "description": "Urgent tasks jump the queue and commandeer idle agents. Priority levels with interrupt semantics.",
       "complexity": "medium",
       "priority": "should-have",
-      "dependencies": ["A_work_stealing"],
-
+      "dependencies": [
+        "A_work_stealing"
+      ],
       "sql_schema": [
         "CREATE TABLE IF NOT EXISTS priority_escalations (",
         "    id INTEGER PRIMARY KEY AUTOINCREMENT,",
@@ -313,7 +313,6 @@
         "",
         "CREATE INDEX IF NOT EXISTS idx_escalations_status ON priority_escalations(status, priority_numeric DESC);"
       ],
-
       "priority_levels": {
         "routine": {
           "numeric": 25,
@@ -336,7 +335,6 @@
           "who_can_set": "coordinator role only"
         }
       },
-
       "bus_messages": {
         "priority-escalation": {
           "type": "request",
@@ -366,11 +364,12 @@
             "event": "escalation-resolved",
             "escalation_id": "<uuid>",
             "resolved_by": "<agent_id>",
-            "agents_can_resume": ["<agent_id>"]
+            "agents_can_resume": [
+              "<agent_id>"
+            ]
           }
         }
       },
-
       "protocol_flow": [
         "1. Coordinator detects urgent situation and creates escalation: INSERT into priority_escalations.",
         "2. If work_id provided, UPDATE work_queue SET priority=<numeric> WHERE work_id=?.",
@@ -382,7 +381,6 @@
         "8. Resumed agents re-claim their paused work items from work_queue.",
         "9. Escalations auto-expire after 30 minutes if not resolved (status='expired')."
       ],
-
       "cli_commands": [
         "bus_cli.py escalate <agent_id> <priority_level> <reason> [--work-id ID]",
         "bus_cli.py escalation-ack <escalation_id> <agent_id> <action>",
@@ -390,14 +388,15 @@
         "bus_cli.py escalation-list [--status STATUS]"
       ]
     },
-
     "E_team_merge_split": {
       "name": "Team Merging/Splitting",
       "description": "Dynamically resize teams during operation. Split a large team into two, or merge two small teams into one.",
       "complexity": "large",
       "priority": "nice-to-have",
-      "dependencies": ["A_work_stealing", "C_shared_scratchpad"],
-
+      "dependencies": [
+        "A_work_stealing",
+        "C_shared_scratchpad"
+      ],
       "sql_schema": [
         "CREATE TABLE IF NOT EXISTS team_registry (",
         "    team_id TEXT PRIMARY KEY,",
@@ -425,7 +424,6 @@
         "",
         "CREATE INDEX IF NOT EXISTS idx_team_registry_status ON team_registry(status);"
       ],
-
       "bus_messages": {
         "team-split-request": {
           "type": "request",
@@ -434,8 +432,20 @@
             "transition_id": "<uuid>",
             "source_team": "<team_id>",
             "new_teams": [
-              {"team_id": "<new_id_1>", "mission": "<string>", "agents": ["<agent_id>"]},
-              {"team_id": "<new_id_2>", "mission": "<string>", "agents": ["<agent_id>"]}
+              {
+                "team_id": "<new_id_1>",
+                "mission": "<string>",
+                "agents": [
+                  "<agent_id>"
+                ]
+              },
+              {
+                "team_id": "<new_id_2>",
+                "mission": "<string>",
+                "agents": [
+                  "<agent_id>"
+                ]
+              }
             ]
           }
         },
@@ -444,7 +454,10 @@
           "body": {
             "event": "team-merge-request",
             "transition_id": "<uuid>",
-            "source_teams": ["<team_id_1>", "<team_id_2>"],
+            "source_teams": [
+              "<team_id_1>",
+              "<team_id_2>"
+            ],
             "target_team": "<merged_team_id>",
             "target_mission": "<string>"
           }
@@ -455,7 +468,9 @@
             "event": "team-transition-complete",
             "transition_id": "<uuid>",
             "transition_type": "merge | split",
-            "result_teams": ["<team_id>"]
+            "result_teams": [
+              "<team_id>"
+            ]
           }
         },
         "agent-reassigned": {
@@ -469,7 +484,6 @@
           }
         }
       },
-
       "protocol_flow_split": [
         "1. Coordinator decides team X should split (too many agents, divergent sub-missions).",
         "2. Create transition record: INSERT into team_transitions with type='split'.",
@@ -483,7 +497,6 @@
         "10. Broadcast 'team-transition-complete'.",
         "11. New team coordinators begin independent operation."
       ],
-
       "protocol_flow_merge": [
         "1. Coordinator decides teams X and Y should merge (both underloaded).",
         "2. Create transition record: INSERT into team_transitions with type='merge'.",
@@ -496,7 +509,6 @@
         "9. Archive old bus channels (rename files with .archived suffix).",
         "10. Broadcast 'team-transition-complete'."
       ],
-
       "cli_commands": [
         "bus_cli.py team-split <source_team> <split_spec_json>    # {teams: [{id, mission, agents}]}",
         "bus_cli.py team-merge <team1> <team2> <target_team> <mission>",
@@ -504,14 +516,15 @@
         "bus_cli.py team-history <team_id>                        # show transitions"
       ]
     },
-
     "F_adaptive_load_balancing": {
       "name": "Adaptive Load Balancing",
       "description": "Real-time agent load monitoring with automatic work redistribution from overloaded to underloaded agents.",
       "complexity": "large",
       "priority": "should-have",
-      "dependencies": ["A_work_stealing", "C_shared_scratchpad"],
-
+      "dependencies": [
+        "A_work_stealing",
+        "C_shared_scratchpad"
+      ],
       "sql_schema": [
         "CREATE TABLE IF NOT EXISTS agent_metrics (",
         "    agent_id TEXT NOT NULL,",
@@ -544,15 +557,14 @@
         "CREATE INDEX IF NOT EXISTS idx_agent_metrics_latest ON agent_metrics(agent_id, ts DESC);",
         "CREATE INDEX IF NOT EXISTS idx_agent_metrics_load ON agent_metrics(ts, load_score);"
       ],
-
       "balancing_algorithm": {
         "name": "Threshold-based with hysteresis",
         "description": "Prevents oscillation by using high/low watermarks",
         "parameters": {
           "check_interval_seconds": 30,
           "overload_threshold": 0.85,
-          "underload_threshold": 0.20,
-          "hysteresis_band": 0.10,
+          "underload_threshold": 0.2,
+          "hysteresis_band": 0.1,
           "min_migration_interval_seconds": 60,
           "max_migrations_per_cycle": 3
         },
@@ -575,7 +587,6 @@
           "        migrations_this_cycle += 1"
         ]
       },
-
       "bus_messages": {
         "agent-metrics-report": {
           "type": "heartbeat",
@@ -612,7 +623,6 @@
           }
         }
       },
-
       "protocol_flow": [
         "1. Each agent reports metrics every heartbeat interval (30s) via bus_cli.py metrics-report.",
         "2. Metrics are INSERT'd into agent_metrics table (append-only time series).",
@@ -626,7 +636,6 @@
         "10. Balancer broadcasts 'load-balance-report' summarizing the cycle.",
         "11. Periodic cleanup: DELETE FROM agent_metrics WHERE ts < now - 3600 (keep 1h of history)."
       ],
-
       "cli_commands": [
         "bus_cli.py metrics-report <agent_id> <queue_depth> <load_score> [--est-completion TIMESTAMP]",
         "bus_cli.py metrics-view [--agent AGENT_ID]          # show latest metrics per agent",
@@ -634,14 +643,14 @@
         "bus_cli.py migrations-list [--agent AGENT_ID]       # show migration history"
       ]
     },
-
     "G_inter_operation_memory": {
       "name": "Inter-Operation Memory",
       "description": "Persistent knowledge that survives across multi-team operations. Tracks what worked, performance baselines, and optimal configurations.",
       "complexity": "medium",
       "priority": "should-have",
-      "dependencies": ["C_shared_scratchpad"],
-
+      "dependencies": [
+        "C_shared_scratchpad"
+      ],
       "sql_schema": [
         "CREATE TABLE IF NOT EXISTS operation_history (",
         "    operation_id TEXT PRIMARY KEY,",
@@ -694,7 +703,6 @@
         "CREATE INDEX IF NOT EXISTS idx_baselines_category ON performance_baselines(task_category, metric_name);",
         "CREATE INDEX IF NOT EXISTS idx_lessons_type ON operation_lessons(lesson_type, actionable);"
       ],
-
       "bus_messages": {
         "operation-started": {
           "type": "info",
@@ -737,7 +745,6 @@
           }
         }
       },
-
       "protocol_flow": [
         "1. At operation start: INSERT into operation_history with team config. Broadcast 'operation-started'.",
         "2. Query learned_parameters for relevant keys (e.g. optimal_team_size for this task category).",
@@ -751,15 +758,38 @@
         "10. Broadcast 'baseline-updated' and 'parameter-learned' for significant changes.",
         "11. Future operations query learned_parameters at startup to inform configuration."
       ],
-
       "example_learned_parameters": [
-        {"key": "optimal_team_size/data-collection", "value": "4", "confidence": 0.8, "data_points": 6},
-        {"key": "optimal_team_size/analysis", "value": "3", "confidence": 0.6, "data_points": 3},
-        {"key": "heartbeat_interval/high-load", "value": "15", "confidence": 0.7, "data_points": 4},
-        {"key": "work_steal_threshold/idle-seconds", "value": "10", "confidence": 0.5, "data_points": 2},
-        {"key": "best_agent_ratio/coordinator-to-worker", "value": "0.25", "confidence": 0.65, "data_points": 5}
+        {
+          "key": "optimal_team_size/data-collection",
+          "value": "4",
+          "confidence": 0.8,
+          "data_points": 6
+        },
+        {
+          "key": "optimal_team_size/analysis",
+          "value": "3",
+          "confidence": 0.6,
+          "data_points": 3
+        },
+        {
+          "key": "heartbeat_interval/high-load",
+          "value": "15",
+          "confidence": 0.7,
+          "data_points": 4
+        },
+        {
+          "key": "work_steal_threshold/idle-seconds",
+          "value": "10",
+          "confidence": 0.5,
+          "data_points": 2
+        },
+        {
+          "key": "best_agent_ratio/coordinator-to-worker",
+          "value": "0.25",
+          "confidence": 0.65,
+          "data_points": 5
+        }
       ],
-
       "cli_commands": [
         "bus_cli.py op-start <name> <team_config_json>",
         "bus_cli.py op-complete <operation_id> [--notes TEXT]",
@@ -773,34 +803,43 @@
       ]
     }
   },
-
   "implementation_order": [
     {
       "phase": 1,
-      "features": ["C_shared_scratchpad", "A_work_stealing"],
+      "features": [
+        "C_shared_scratchpad",
+        "A_work_stealing"
+      ],
       "rationale": "Scratchpad and work queue are foundational. No dependencies. Other features build on them.",
       "estimated_effort": "2-3 sessions"
     },
     {
       "phase": 2,
-      "features": ["D_priority_escalation", "G_inter_operation_memory"],
+      "features": [
+        "D_priority_escalation",
+        "G_inter_operation_memory"
+      ],
       "rationale": "Priority escalation extends work_stealing. Inter-op memory extends scratchpad. Medium complexity.",
       "estimated_effort": "2 sessions"
     },
     {
       "phase": 3,
-      "features": ["B_pipeline_chaining", "F_adaptive_load_balancing"],
+      "features": [
+        "B_pipeline_chaining",
+        "F_adaptive_load_balancing"
+      ],
       "rationale": "Both are large features that depend on phase 1 foundations. Pipeline chaining is the most architecturally complex.",
       "estimated_effort": "3-4 sessions"
     },
     {
       "phase": 4,
-      "features": ["E_team_merge_split"],
+      "features": [
+        "E_team_merge_split"
+      ],
       "rationale": "Most invasive feature -- changes agent identity at runtime. Should only be attempted after all other features are stable.",
       "estimated_effort": "2-3 sessions"
     }
   ],
-
   "cross_cutting_concerns": {
     "transaction_safety": "All claim/migration/escalation operations use BEGIN IMMEDIATE to prevent TOCTOU races. This is the same pattern proven in state.py's reserve_api_call().",
     "bus_message_size": "All bus messages must stay under 4096 bytes (POSIX atomic write limit). Large payloads go in scratchpad; bus messages reference them by key.",
@@ -809,7 +848,6 @@
     "error_handling": "All SQLite operations use the _retry_on_busy pattern from state.py. Bus writes use atomic POSIX appends. Failed operations are logged and retried.",
     "observability": "Every state change produces a bus message. The existing dashboard.py can be extended to show work queue depth, pipeline progress, load scores, and escalation status."
   },
-
   "new_bus_message_types_needed": {
     "note": "All designs use existing VALID_MSG_TYPES (info, request, response, heartbeat). No new message types required.",
     "mapping": {
@@ -819,9 +857,9 @@
       "agent-metrics-report": "type=heartbeat"
     }
   },
-
   "total_new_tables": 12,
   "total_new_indexes": 9,
   "total_new_cli_commands": 37,
-  "total_bus_message_schemas": 22
+  "total_bus_message_schemas": 22,
+  "date": "2026-03-11T04:00:00"
 }

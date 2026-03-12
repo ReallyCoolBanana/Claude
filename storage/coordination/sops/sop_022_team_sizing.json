@@ -1,17 +1,18 @@
 {
   "id": "SOP-022",
   "version": "1.0",
-  "created": "2026-03-11",
   "team": "ANALYSIS-001",
   "title": "Evidence-Based Team Sizing and Composition",
   "purpose": "Defines optimal team sizes and compositions based on empirical data from 28 team sessions with 132 agent instances. Prevents the recurring pattern of over-sized teams that lose 89% per-agent efficiency.",
-  "builds_on": ["SOP-011", "SOP-013", "ANALYSIS-001"],
+  "builds_on": [
+    "SOP-011",
+    "SOP-013",
+    "ANALYSIS-001"
+  ],
   "evidence_base": "Cross-team analysis of T01-T28 (see storage/analysis/cross-team-analysis-2026-03-11.md)",
-
   "section_1_sizing_rules": {
     "title": "Team Sizing Rules",
     "description": "Hard rules derived from empirical data. Violating these requires explicit justification.",
-
     "rules": [
       {
         "id": "SIZE-01",
@@ -80,50 +81,72 @@
       }
     ]
   },
-
   "section_2_composition_patterns": {
     "title": "Standard Team Compositions",
     "description": "Pre-validated team compositions for common operation types.",
-
     "patterns": [
       {
         "name": "Bug Hunt",
         "size": 5,
-        "composition": ["1 coordinator", "2 think-tank-bugs (find bugs)", "2 coding-fix (fix bugs)"],
+        "composition": [
+          "1 coordinator",
+          "2 think-tank-bugs (find bugs)",
+          "2 coding-fix (fix bugs)"
+        ],
         "evidence": "T25 found 14 bugs at 0.93/agent with this pattern",
         "workflow": "Think tanks find -> coding teams fix -> think tanks verify"
       },
       {
         "name": "Feature Build",
         "size": 7,
-        "composition": ["1 coordinator", "1 think-tank-design", "1 research-team", "3 coding-teams", "1 standby"],
+        "composition": [
+          "1 coordinator",
+          "1 think-tank-design",
+          "1 research-team",
+          "3 coding-teams",
+          "1 standby"
+        ],
         "evidence": "T02 pattern: think tank designs, research provides context, coding implements",
         "workflow": "Research + think tank in parallel -> coding teams implement -> standby helps stragglers"
       },
       {
         "name": "Audit & Analysis",
         "size": 5,
-        "composition": ["1 coordinator", "3 audit-teams (partitioned by subsystem)", "1 think-tank-convergence"],
+        "composition": [
+          "1 coordinator",
+          "3 audit-teams (partitioned by subsystem)",
+          "1 think-tank-convergence"
+        ],
         "evidence": "T27: full repo audit in 90s with this pattern",
         "workflow": "Audit teams scan in parallel -> think tank synthesizes findings"
       },
       {
         "name": "Data Pipeline",
         "size": 8,
-        "composition": ["1 coordinator", "3 data-gatherers", "2 sorter-archivers", "1 think-tank-quality", "1 programming-support"],
+        "composition": [
+          "1 coordinator",
+          "3 data-gatherers",
+          "2 sorter-archivers",
+          "1 think-tank-quality",
+          "1 programming-support"
+        ],
         "evidence": "Derived from TT-OBS-1 recommendations (1 sorter per 2 gatherers)",
         "workflow": "Gatherers produce -> sorters categorize -> think tank spot-checks quality"
       },
       {
         "name": "Market Research Sprint",
         "size": 5,
-        "composition": ["1 coordinator", "2 research-teams (different methods)", "1 analysis-team", "1 coding-team (tools)"],
+        "composition": [
+          "1 coordinator",
+          "2 research-teams (different methods)",
+          "1 analysis-team",
+          "1 coding-team (tools)"
+        ],
         "evidence": "Extrapolated from T03 competitive research pattern, right-sized per SIZE-03",
         "workflow": "Research teams gather independently -> analysis cross-validates -> coding builds tools if needed"
       }
     ]
   },
-
   "section_3_decision_flowchart": {
     "title": "Team Size Decision Flowchart",
     "steps": [
@@ -135,7 +158,6 @@
       "6. If unsure: start with 5 agents. Add more only if blocked."
     ]
   },
-
   "section_4_anti_patterns": {
     "title": "Team Sizing Anti-Patterns",
     "patterns": [
@@ -165,7 +187,6 @@
       }
     ]
   },
-
   "checklists": {
     "before_launch": [
       "Team size matches task complexity per SIZE-01 through SIZE-05",
@@ -174,5 +195,6 @@
       "Think tank to coding team ratio is ≤ 1:2",
       "Standby agent or pre-loaded work queue for teams of 7+"
     ]
-  }
+  },
+  "date": "2026-03-11"
 }
