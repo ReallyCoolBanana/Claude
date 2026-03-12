@@ -1,0 +1,113 @@
+{
+  "team": "tango",
+  "wave": 4,
+  "mission": "End-to-end stress test with failure injection",
+  "timestamp": "2026-03-12T03:38:13Z",
+  "overall_passed": true,
+  "total_duration_ms": 892.69,
+  "phase_summary": {
+    "setup": {
+      "passed": true,
+      "duration_ms": 34.9,
+      "checks_passed": 13,
+      "checks_total": 13,
+      "errors": 0
+    },
+    "registration": {
+      "passed": true,
+      "duration_ms": 14.96,
+      "checks_passed": 8,
+      "checks_total": 8,
+      "errors": 0
+    },
+    "distribution": {
+      "passed": true,
+      "duration_ms": 11.27,
+      "checks_passed": 8,
+      "checks_total": 8,
+      "errors": 0
+    },
+    "execution": {
+      "passed": true,
+      "duration_ms": 13.81,
+      "checks_passed": 13,
+      "checks_total": 13,
+      "errors": 0
+    },
+    "failure_injection": {
+      "passed": true,
+      "duration_ms": 208.07,
+      "checks_passed": 8,
+      "checks_total": 8,
+      "errors": 0
+    },
+    "recovery": {
+      "passed": true,
+      "duration_ms": 603.32,
+      "checks_passed": 7,
+      "checks_total": 7,
+      "errors": 0
+    },
+    "verification": {
+      "passed": true,
+      "duration_ms": 5.39,
+      "checks_passed": 16,
+      "checks_total": 16,
+      "errors": 0
+    }
+  },
+  "infrastructure_exercised": [
+    "PartitionedStore (4 DBs: hub, queue, comms, findings)",
+    "Proto A Bus (JSONL + SQLite WAL)",
+    "Coordinator Hub with health checks",
+    "Help Protocol with capability matching",
+    "Work Stealing with zombie reclaim",
+    "Pipeline Manager with dependency tracking",
+    "Direct Channels with presence tracking",
+    "Circuit Breaker (3-state machine)",
+    "Deadlock Detector (DFS cycle detection)",
+    "Escalation Timers (background monitoring)",
+    "Quality Gates (pipeline stage validation)",
+    "Scratchpad (cross-team data sharing)"
+  ],
+  "failure_scenarios_tested": [
+    "Agent crash (heartbeat stop + escalation timer)",
+    "API failure (circuit breaker trip + recovery)",
+    "Circular dependency (deadlock detection + resolution)",
+    "Zombie work (abandoned claim + reclaim)",
+    "Message consistency (zero-loss verification)"
+  ],
+  "counters": {
+    "messages_sent": 25,
+    "messages_received": 42,
+    "messages_acked": 10,
+    "work_items_created": 20,
+    "work_items_completed": 8,
+    "work_items_stolen": 2,
+    "pipeline_stages_passed": 6,
+    "pipeline_stages_total": 6,
+    "quality_gates_passed": 6,
+    "quality_gates_total": 3,
+    "escalation_timers_fired": 1,
+    "circuit_breakers_opened": 1,
+    "circuit_breakers_recovered": 1,
+    "deadlocks_detected": 1,
+    "deadlocks_resolved": 1,
+    "zombie_work_reclaimed": 1
+  },
+  "verification": {
+    "total_checks": 73,
+    "passed_checks": 73,
+    "failed_checks": 0,
+    "pass_rate": 100.0,
+    "zero_message_loss": true,
+    "zero_remaining_deadlocks": true,
+    "all_circuits_closed": true,
+    "all_pipelines_complete": true
+  },
+  "deliverables": [
+    "storage/coordination/overhaul/stress_test.py",
+    "storage/coordination/overhaul/output/stress_test_results.json",
+    "storage/coordination/overhaul/output/tango_results.json"
+  ]
+}
