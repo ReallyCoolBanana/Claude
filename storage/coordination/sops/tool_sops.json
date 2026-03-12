@@ -7,7 +7,14 @@
     "communication_layer": "JSONL append-only message bus (files in storage/coordination/bus/). Each channel is a .jsonl file. Messages are JSON objects with id, type, channel, team, agent_id, ts, ttl, body fields. POSIX atomic writes guarantee message integrity for payloads under 4096 bytes.",
     "state_layer": "SQLite database in WAL mode (storage/coordination/db/state.db). Provides agent registry, rate limiting, phase signals, findings, and proposals. All concurrent writes use BEGIN IMMEDIATE transactions with retry-on-busy decorators.",
     "coordination_layer": "Three orthogonal modules: help_protocol.py (who needs help), direct_channels.py (how to communicate), work_stealing.py (what work to do). Each uses both the bus and SQLite.",
-    "valid_message_types": ["info", "blocker", "phase-signal", "heartbeat", "request", "response"],
+    "valid_message_types": [
+      "info",
+      "blocker",
+      "phase-signal",
+      "heartbeat",
+      "request",
+      "response"
+    ],
     "key_paths": {
       "bus_dir": "storage/coordination/bus/",
       "db_path": "storage/coordination/db/state.db",
@@ -751,5 +758,14 @@
         }
       ]
     }
+  ],
+  "id": "SOP-G02",
+  "title": "Proto A Coordination Tools: Standard Operating Procedures",
+  "purpose": "Comprehensive SOPs for all Proto A coordination tools including help_protocol, direct_channels, work_stealing, bus_cli, coordinator_hub, and dashboard. Designed for AI teams unfamiliar with the codebase.",
+  "procedures": [
+    "Read architecture_overview section to understand the communication, state, and coordination layers",
+    "For each tool, follow the initialization, usage, and shutdown procedures in the corresponding SOP",
+    "Use bus_cli.py as the primary CLI interface for all coordination operations",
+    "Follow the valid_message_types for bus communication: info, blocker, phase-signal, heartbeat, request, response"
   ]
 }

@@ -3,18 +3,24 @@
   "version": "1.0",
   "created": "2026-03-12",
   "title": "Wikipedia Category Pull: End-to-End Collection & Enrichment",
-  "purpose": "Standard operating procedure for collecting, extracting, summarizing, tagging, scoring, and indexing all pages from any Wikipedia Category page. Designed to minimize WebSearch usage — only used for article summaries when DBpedia lacks coverage.",
+  "purpose": "Standard operating procedure for collecting, extracting, summarizing, tagging, scoring, and indexing all pages from any Wikipedia Category page. Designed to minimize WebSearch usage \u2014 only used for article summaries when DBpedia lacks coverage.",
   "trigger": "User provides a Wikipedia Category:[Category Name]",
   "reference": {
     "tools": {
-      "wikipedia_tools": "storage/scripts/wikipedia_tools.py (SCR-0043) — DBpedia SPARQL link/metadata extraction",
-      "wiki_text_extractor": "storage/scripts/wiki_text_extractor.py (SCR-0044) — article text/summary extraction",
-      "enrichment_plan": "storage/sources/wikipedia-ai/ENRICHMENT_PLAN.md — reference enrichment format"
+      "wikipedia_tools": "storage/scripts/wikipedia_tools.py (SCR-0043) \u2014 DBpedia SPARQL link/metadata extraction",
+      "wiki_text_extractor": "storage/scripts/wiki_text_extractor.py (SCR-0044) \u2014 article text/summary extraction",
+      "enrichment_plan": "storage/sources/wikipedia-ai/ENRICHMENT_PLAN.md \u2014 reference enrichment format"
     },
-    "related_sops": ["SOP-025 (research tool integration)", "SOP-026 (wikipedia toolkit usage)"],
-    "kb_entries": ["KB-0044 (papers catalog)", "KB-0045 (methodology)", "KB-0046 (process review)"]
+    "related_sops": [
+      "SOP-025 (research tool integration)",
+      "SOP-026 (wikipedia toolkit usage)"
+    ],
+    "kb_entries": [
+      "KB-0044 (papers catalog)",
+      "KB-0045 (methodology)",
+      "KB-0046 (process review)"
+    ]
   },
-
   "overview": {
     "phases": [
       "Phase 1: Discover all pages in the category (WebFetch, 1 request)",
@@ -24,14 +30,13 @@
       "Phase 5: Commit and push"
     ],
     "websearch_usage": {
-      "phase_1": "NONE — use WebFetch on PetScan or category page",
-      "phase_2": "NONE — DBpedia SPARQL only",
-      "phase_3": "MINIMAL — only for articles not in DBpedia Lookup (typically <40%)",
-      "phase_4": "NONE — all local data",
+      "phase_1": "NONE \u2014 use WebFetch on PetScan or category page",
+      "phase_2": "NONE \u2014 DBpedia SPARQL only",
+      "phase_3": "MINIMAL \u2014 only for articles not in DBpedia Lookup (typically <40%)",
+      "phase_4": "NONE \u2014 all local data",
       "phase_5": "NONE"
     }
   },
-
   "phase_1_discover_pages": {
     "title": "Phase 1: Discover All Pages in Category",
     "goal": "Get a complete list of article titles and URLs from the Wikipedia category",
@@ -47,7 +52,7 @@
       {
         "step": 2,
         "action": "Parse the response to extract page titles",
-        "detail": "PetScan returns JSON with page IDs and titles. Convert titles to Wikipedia URL format: spaces → underscores."
+        "detail": "PetScan returns JSON with page IDs and titles. Convert titles to Wikipedia URL format: spaces \u2192 underscores."
       },
       {
         "step": 3,
@@ -62,7 +67,10 @@
             "total_pages": "N",
             "description": "All pages directly in Category:{CategoryName}",
             "pages": [
-              {"title": "Human-readable title", "url": "https://en.wikipedia.org/wiki/Article_ID"}
+              {
+                "title": "Human-readable title",
+                "url": "https://en.wikipedia.org/wiki/Article_ID"
+              }
             ]
           }
         }
@@ -70,11 +78,12 @@
     ],
     "fallback": "If PetScan is down, use WebFetch on https://en.wikipedia.org/wiki/Category:{CategoryName} and parse the page list from the HTML."
   },
-
   "phase_2_extract_links": {
     "title": "Phase 2: Extract Links and Metadata via DBpedia SPARQL",
     "goal": "Collect external links, internal wiki links, and metadata for every article. NO WebSearch.",
-    "tools": ["storage/scripts/wikipedia_tools.py"],
+    "tools": [
+      "storage/scripts/wikipedia_tools.py"
+    ],
     "steps": [
       {
         "step": 1,
@@ -102,16 +111,17 @@
         "step": 4,
         "action": "Verify extraction completeness",
         "code": "python3 storage/scripts/wikipedia_tools.py stats --data-dir storage/sources/wikipedia-{slug}/",
-        "detail": "Check how many articles have links/metadata. Articles missing from DBpedia will have empty arrays — this is expected for newer articles."
+        "detail": "Check how many articles have links/metadata. Articles missing from DBpedia will have empty arrays \u2014 this is expected for newer articles."
       }
     ],
     "note": "Some articles won't exist in DBpedia (newer/obscure). Their cache files will contain empty arrays []. This is handled in Phase 3 and Phase 4."
   },
-
   "phase_3_write_summaries": {
     "title": "Phase 3: Write Article Summaries",
-    "goal": "Get a text summary for every article. Minimize WebSearch — use DBpedia Lookup first.",
-    "tools": ["storage/scripts/wiki_text_extractor.py"],
+    "goal": "Get a text summary for every article. Minimize WebSearch \u2014 use DBpedia Lookup first.",
+    "tools": [
+      "storage/scripts/wiki_text_extractor.py"
+    ],
     "steps": [
       {
         "step": 1,
@@ -122,7 +132,7 @@
       },
       {
         "step": 2,
-        "action": "Check gaps — which articles still need full summaries",
+        "action": "Check gaps \u2014 which articles still need full summaries",
         "code": "python3 storage/scripts/wiki_text_extractor.py gaps --data-dir storage/sources/wikipedia-{slug}/",
         "detail": "Lists articles without text in text-cache/. Typically 30-60% will need WebSearch fallback."
       },
@@ -147,10 +157,9 @@
       }
     ]
   },
-
   "phase_4_tag_and_index": {
     "title": "Phase 4: Tag, Score, Categorize, and Build Indexes",
-    "goal": "Enrich every article and build master indexes. NO WebSearch — purely local data.",
+    "goal": "Enrich every article and build master indexes. NO WebSearch \u2014 purely local data.",
     "websearch": false,
     "steps": [
       {
@@ -158,13 +167,13 @@
         "action": "Define category taxonomy for this collection",
         "detail": "Review a sample of article titles/summaries and define 8-15 categories relevant to the topic. Use the AI category set as a template but adapt to the specific domain.",
         "template_categories": [
-          "Core Concepts — foundational theory and definitions",
-          "Applications — real-world uses and products",
-          "History & People — historical events, pioneers",
-          "Methods & Techniques — algorithms, methodologies",
-          "Tools & Infrastructure — software, hardware, platforms",
-          "Policy & Society — regulation, social impact, ethics",
-          "Niche / Low-Value — peripheral, stubs, sparse data"
+          "Core Concepts \u2014 foundational theory and definitions",
+          "Applications \u2014 real-world uses and products",
+          "History & People \u2014 historical events, pioneers",
+          "Methods & Techniques \u2014 algorithms, methodologies",
+          "Tools & Infrastructure \u2014 software, hardware, platforms",
+          "Policy & Society \u2014 regulation, social impact, ethics",
+          "Niche / Low-Value \u2014 peripheral, stubs, sparse data"
         ]
       },
       {
@@ -190,8 +199,12 @@
           "title": "Human-readable title",
           "url": "https://en.wikipedia.org/wiki/{ID}",
           "summary": "Article summary text",
-          "tags": ["topic and quality tags"],
-          "categories": ["1-3 assigned categories"],
+          "tags": [
+            "topic and quality tags"
+          ],
+          "categories": [
+            "1-3 assigned categories"
+          ],
           "usefulness_score": 7.5,
           "usefulness_rationale": "Brief explanation of score",
           "research_tier": "A|B|C|D",
@@ -202,12 +215,22 @@
             "has_categories": true,
             "has_description": true
           },
-          "ext_links": ["full array of external URLs"],
-          "int_links": ["full array of internal wiki link IDs"],
-          "related_articles": ["IDs of related articles in collection"],
+          "ext_links": [
+            "full array of external URLs"
+          ],
+          "int_links": [
+            "full array of internal wiki link IDs"
+          ],
+          "related_articles": [
+            "IDs of related articles in collection"
+          ],
           "meta": {
-            "wiki_categories": ["from DBpedia"],
-            "see_also": ["from DBpedia"],
+            "wiki_categories": [
+              "from DBpedia"
+            ],
+            "see_also": [
+              "from DBpedia"
+            ],
             "description": "from DBpedia",
             "hypernym": "from DBpedia"
           },
@@ -236,7 +259,6 @@
       }
     ]
   },
-
   "phase_5_commit": {
     "title": "Phase 5: Commit and Push",
     "steps": [
@@ -261,7 +283,6 @@
       }
     ]
   },
-
   "output_directory_structure": {
     "description": "Final directory structure after a complete category pull",
     "tree": {
@@ -284,19 +305,17 @@
       }
     }
   },
-
   "agent_team_structure": {
     "recommended_team": {
       "phase_1": "1 agent (discovery)",
-      "phase_2": "1 agent (SPARQL extraction — already batched internally)",
+      "phase_2": "1 agent (SPARQL extraction \u2014 already batched internally)",
       "phase_3": "2-3 agents (WebSearch for gap-filling, split by batch)",
       "phase_4": "3 tagger agents (parallel) + 1 assembler agent (sequential after taggers)",
       "phase_5": "1 agent (commit/push)"
     },
     "total_agents": "6-8 agents across phases, max 3 concurrent",
-    "communication": "No inter-agent communication needed — each phase reads the previous phase's output files"
+    "communication": "No inter-agent communication needed \u2014 each phase reads the previous phase's output files"
   },
-
   "websearch_budget": {
     "description": "Expected WebSearch usage per category pull",
     "phase_1": "0 searches (WebFetch only)",
@@ -306,25 +325,31 @@
     "phase_5": "0 searches",
     "example_234_articles": "~70-140 WebSearch calls total (vs 234+ if searching everything)",
     "optimization_tips": [
-      "Always run DBpedia Lookup first — it covers 40-70% of articles",
+      "Always run DBpedia Lookup first \u2014 it covers 40-70% of articles",
       "Batch WebSearch gap-filling across parallel agents for speed",
-      "Cache aggressively — subsequent runs are nearly instant"
+      "Cache aggressively \u2014 subsequent runs are nearly instant"
     ]
   },
-
   "quick_reference": {
     "title": "Quick Reference: Run a Category Pull",
     "steps": [
       "1. User says: 'Pull Category:Machine_learning'",
       "2. mkdir -p storage/sources/wikipedia-machine-learning/{cache,text-cache,enriched}",
-      "3. WebFetch PetScan → write category-pages.json",
+      "3. WebFetch PetScan \u2192 write category-pages.json",
       "4. python3 storage/scripts/wikipedia_tools.py batch --type both --data-dir ...",
       "5. python3 storage/scripts/wikipedia_tools.py batch-meta --data-dir ...",
       "6. python3 storage/scripts/wiki_text_extractor.py fetch-dbpedia --data-dir ...",
-      "7. python3 storage/scripts/wiki_text_extractor.py gaps → fill with WebSearch agents",
-      "8. Launch 3 tagger agents → enriched/*.json",
-      "9. Launch assembler → index.json, links-index.json, categories.json",
+      "7. python3 storage/scripts/wiki_text_extractor.py gaps \u2192 fill with WebSearch agents",
+      "8. Launch 3 tagger agents \u2192 enriched/*.json",
+      "9. Launch assembler \u2192 index.json, links-index.json, categories.json",
       "10. git add, commit, push"
     ]
-  }
+  },
+  "procedures": [
+    "Phase 1: Discover pages via PetScan API (WebFetch, no WebSearch)",
+    "Phase 2: Extract links/metadata via DBpedia SPARQL (wikipedia_tools.py batch)",
+    "Phase 3: Write summaries via DBpedia Lookup + WebSearch fallback for gaps only",
+    "Phase 4: Tag, score, categorize with parallel tagger agents, build master indexes",
+    "Phase 5: Commit and push with structured commit messages"
+  ]
 }

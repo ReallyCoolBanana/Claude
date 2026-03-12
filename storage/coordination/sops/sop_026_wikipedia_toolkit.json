@@ -7,7 +7,10 @@
   "purpose": "Complete instructions for using wikipedia_tools.py (SCR-0043) to extract links, metadata, and citations from Wikipedia articles via DBpedia SPARQL.",
   "reference": {
     "script": "storage/scripts/wikipedia_tools.py",
-    "kb_entries": ["KB-0044 (papers catalog)", "KB-0045 (methodology)"],
+    "kb_entries": [
+      "KB-0044 (papers catalog)",
+      "KB-0045 (methodology)"
+    ],
     "data_dir": "storage/sources/wikipedia-ai/",
     "cache_dir": "storage/sources/wikipedia-ai/cache/"
   },
@@ -148,7 +151,7 @@
   },
   "url_compression_reference": {
     "title": "URL Prefix Compression Table",
-    "description": "Used in LLM and compact exports. Lossless — use decompress_url() to restore.",
+    "description": "Used in LLM and compact exports. Lossless \u2014 use decompress_url() to restore.",
     "prefixes": {
       "wa:": "https://web.archive.org/web/",
       "ar:": "https://archive.org/",
@@ -191,6 +194,13 @@
     "sparql_timeout": "Reduce batch size. Metadata queries are heavier than link queries.",
     "cache_corruption": "Run clear-cache and re-fetch.",
     "special_chars_in_title": "Tool handles / : ? automatically via _cache_safe(). If new chars appear, add to the method.",
-    "redirect_noise": "Tool filters results to only requested titles. If you see unexpected articles, it's a DBpedia redirect — the original article name is likely a redirect."
-  }
+    "redirect_noise": "Tool filters results to only requested titles. If you see unexpected articles, it's a DBpedia redirect \u2014 the original article name is likely a redirect."
+  },
+  "procedures": [
+    "Use quick_start commands for common operations (summary, batch, batch-meta, export, stats)",
+    "Import WikipediaTools class for Python API usage in agent scripts",
+    "Refer to cli_reference for full CLI command syntax",
+    "Check data_coverage for known gaps and gap-filling strategies",
+    "Use url_compression_reference to decode compressed URLs in exports"
+  ]
 }

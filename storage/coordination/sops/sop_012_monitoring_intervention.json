@@ -5,16 +5,19 @@
   "team": "TEAM-0025-sop-2",
   "title": "Real-Time Monitoring and Intervention Protocol",
   "purpose": "Provides the coordinator with structured procedures for monitoring simultaneous agent teams, detecting problems early, intervening when necessary, and handling completion. Replaces ad-hoc filesystem polling with a disciplined status-file-based approach.",
-  "builds_on": ["SOP-001", "SOP-010", "EFF-005", "EFF-001"],
+  "builds_on": [
+    "SOP-001",
+    "SOP-010",
+    "EFF-005",
+    "EFF-001"
+  ],
   "problem_statement": "The coordinator launches agents and has no visibility until they complete. Resorting to polling filesystem changes with find commands is noisy, inefficient, and provides no structured insight into agent health, progress, or blockers.",
-
   "section_1_status_file_design": {
     "title": "Status File Design",
     "description": "A shared JSONL file where each agent appends a status line on every significant state change. The coordinator reads this file to get a dashboard view of all agents.",
     "file_path": "storage/coordination/agent_status.jsonl",
     "format": "JSONL (one JSON object per line, append-only)",
     "rationale": "JSONL is chosen over a single JSON file because multiple agents can safely append concurrently (POSIX atomic writes under 4096 bytes). No file locking required. The coordinator reads the whole file and uses only the latest entry per agent_id.",
-
     "schema": {
       "agent_id": {
         "type": "string",
@@ -29,7 +32,15 @@
       "status": {
         "type": "string",
         "required": true,
-        "enum": ["starting", "working", "blocked", "waiting", "complete", "error", "killed"],
+        "enum": [
+          "starting",
+          "working",
+          "blocked",
+          "waiting",
+          "complete",
+          "error",
+          "killed"
+        ],
         "description": "Current operational status of the agent"
       },
       "progress_pct": {
@@ -78,7 +89,6 @@
         "description": "Error description if status is 'error'"
       }
     },
-
     "example_entry": {
       "agent_id": "coding-team-1",
       "team": "TEAM-0025",
@@ -89,11 +99,12 @@
       "started_ts": 1741698000,
       "blockers": [],
       "findings_count": 12,
-      "output_files": ["storage/coordination/stress-tests/test_stress_help_protocol.py"],
+      "output_files": [
+        "storage/coordination/stress-tests/test_stress_help_protocol.py"
+      ],
       "needs_input_from": [],
       "error_message": null
     },
-
     "agent_responsibilities": [
       {
         "step": 1,
@@ -120,26 +131,21 @@
         "when": "Last action before finishing"
       }
     ],
-
     "write_command": "echo '{\"agent_id\":\"AGENT_ID\",\"team\":\"TEAM_ID\",\"status\":\"working\",\"progress_pct\":50,\"current_task\":\"Description\",\"last_update_ts\":'$(date +%s)',\"started_ts\":START_TS,\"blockers\":[],\"findings_count\":5,\"output_files\":[],\"needs_input_from\":[],\"error_message\":null}' >> storage/coordination/agent_status.jsonl",
-
     "coordinator_read_command": {
       "description": "Parse the JSONL file and show the latest status per agent, formatted as a dashboard",
       "command": "python3 -c \"\nimport json, sys, time\nentries = {}\nfor line in open('storage/coordination/agent_status.jsonl'):\n    line = line.strip()\n    if not line: continue\n    try:\n        e = json.loads(line)\n        entries[e['agent_id']] = e\n    except: pass\nnow = time.time()\nprint(f'{\\\"Agent\\\":<25} {\\\"Status\\\":<12} {\\\"Progress\\\":<10} {\\\"Task\\\":<40} {\\\"Age (s)\\\":<10} {\\\"Blockers\\\"}')\nprint('-' * 120)\nfor aid, e in sorted(entries.items()):\n    age = int(now - e.get('last_update_ts', now))\n    blockers = ', '.join(e.get('blockers', [])) or '-'\n    print(f'{aid:<25} {e[\\\"status\\\"]:<12} {e[\\\"progress_pct\\\"]:>6.0f}%    {e.get(\\\"current_task\\\",\\\"\\\")[:40]:<40} {age:<10} {blockers}')\n\""
     }
   },
-
   "section_2_polling_strategy": {
     "title": "Polling Strategy",
     "description": "When and how the coordinator should check on agents. Balances situational awareness against wasted coordinator time.",
-
     "principles": [
       "Do not poll continuously -- the coordinator has its own work to do (aggregating results, planning next steps).",
       "Do not ignore agents until done -- you lose the ability to intervene early when intervention is cheap.",
       "Poll at natural transition points, not on fixed intervals.",
       "One efficient read of the status file gives a complete picture -- no need for per-agent checks."
     ],
-
     "polling_schedule": [
       {
         "checkpoint": "CP-1: Post-Launch",
@@ -198,7 +204,6 @@
         }
       }
     ],
-
     "efficient_single_check": {
       "description": "How to do one check that shows everything relevant in a single command",
       "commands": [
@@ -217,7 +222,6 @@
         }
       ]
     },
-
     "integration_with_existing_tools": {
       "description": "The status file approach works alongside existing Proto A coordination tools, not instead of them.",
       "help_protocol": "Agents should still use HelpProtocol for formal help requests. The status file is for coordinator visibility, not agent-to-agent coordination.",
@@ -226,11 +230,9 @@
       "when_to_use_which": "Use the status file for quick coordinator checks. Use the SQLite progress table when you need queries (e.g., get_slowest_team, get_teams_below_progress). Use HelpProtocol when you need to assign work."
     }
   },
-
   "section_3_intervention_triggers": {
     "title": "Intervention Triggers",
     "description": "Conditions that should cause the coordinator to stop monitoring and take action. Ordered by urgency.",
-
     "triggers": [
       {
         "id": "TRIG-01",
@@ -311,14 +313,11 @@
         "response": "See INTERVENTION-06 in Section 4"
       }
     ],
-
     "trigger_evaluation_order": "When multiple triggers fire simultaneously, evaluate in this order: TRIG-07 (resource conflict) > TRIG-06 (error) > TRIG-01 (blocker) > TRIG-02 (stale) > TRIG-05 (duplicate) > TRIG-04 (cross-agent opportunity) > TRIG-03 (overtime)."
   },
-
   "section_4_intervention_actions": {
     "title": "Intervention Actions",
     "description": "Concrete actions the coordinator can take when a trigger fires. Each intervention includes when to use it, how to execute it, and what to verify afterward.",
-
     "interventions": [
       {
         "id": "INTERVENTION-01",
@@ -422,7 +421,6 @@
         "limitations": "Some conflicts (like stdout contention in shared terminals) cannot be resolved without architectural changes."
       }
     ],
-
     "intervention_decision_flowchart": {
       "description": "Quick reference for choosing the right intervention",
       "rules": [
@@ -436,11 +434,9 @@
       ]
     }
   },
-
   "section_5_completion_handling": {
     "title": "Completion Handling",
     "description": "Procedures for handling agent completions, from the first finisher through final aggregation.",
-
     "early_finisher_protocol": {
       "description": "What to do when an agent completes while others are still working",
       "steps": [
@@ -472,7 +468,6 @@
         }
       ]
     },
-
     "result_aggregation": {
       "description": "How to combine outputs from all agents into a coherent result",
       "steps": [
@@ -499,7 +494,6 @@
         }
       ]
     },
-
     "incompleteness_detection": {
       "description": "How to detect if an agent produced incomplete or incorrect output",
       "checks": [
@@ -525,7 +519,6 @@
         }
       ]
     },
-
     "final_verification_checklist": {
       "description": "Run through this checklist before declaring the session complete",
       "items": [
@@ -562,13 +555,11 @@
       ]
     }
   },
-
   "appendix_a_agent_status_template": {
     "title": "Agent Status Write Template",
     "description": "Copy-paste template for agent instructions. Include this in every agent's launch instructions so they know how to report status.",
     "instruction_block": "STATUS REPORTING: Throughout your work, report your status by appending a JSON line to storage/coordination/agent_status.jsonl. Do this (1) immediately on startup, (2) after each significant milestone, (3) when blocked, and (4) on completion. Format: {\"agent_id\":\"YOUR_ID\",\"team\":\"TEAM_ID\",\"status\":\"working|blocked|complete|error\",\"progress_pct\":0-100,\"current_task\":\"what you are doing\",\"last_update_ts\":UNIX_TIMESTAMP,\"started_ts\":LAUNCH_TIMESTAMP,\"blockers\":[],\"findings_count\":0,\"output_files\":[],\"needs_input_from\":[],\"error_message\":null}. Use: echo 'JSON_LINE' >> storage/coordination/agent_status.jsonl"
   },
-
   "appendix_b_quick_reference": {
     "title": "Quick Reference Card",
     "monitor": "python3 -c \"import json,time;e={};[e.update({json.loads(l)['agent_id']:json.loads(l)}) for l in open('storage/coordination/agent_status.jsonl') if l.strip()];now=time.time();[print(f'{a:<22} {v[\\\"status\\\"]:<10} {v[\\\"progress_pct\\\"]:>5.0f}%  {int(now-v.get(\\\"last_update_ts\\\",now)):>4}s ago  {v.get(\\\"current_task\\\",\\\"\\\")[:45]}') for a,v in sorted(e.items())]\"",
@@ -576,5 +567,12 @@
     "count_complete": "grep '\"complete\"' storage/coordination/agent_status.jsonl | python3 -c \"import json,sys;ids={json.loads(l)['agent_id'] for l in sys.stdin if l.strip()};print(f'{len(ids)} agents complete')\"",
     "polling_rhythm": "CP-1 (30-60s post-launch) -> CP-2 (5-10min) -> CP-3 (30-50% elapsed) -> CP-4 (first completion) -> CP-5 (all done)",
     "intervention_escalation": "Clarify (INTERVENTION-01) -> Redirect (INTERVENTION-03) -> Helper (INTERVENTION-02) -> Kill+Relaunch (INTERVENTION-04)"
-  }
+  },
+  "procedures": [
+    "Agents append status to agent_status.jsonl on startup, milestones, blockers, and completion",
+    "Coordinator polls at 5 checkpoints: post-launch, early progress, mid-session, completion wave, final gathering",
+    "Monitor for 7 intervention triggers: blocker, stale status, overtime, cross-agent opportunity, duplicate work, error, resource conflict",
+    "Apply intervention actions: clarify, launch helper, redirect, kill+relaunch, post cross-agent data, resolve resource conflict",
+    "Handle completion: verify output, redistribute early finishers, aggregate results, run verification checklist"
+  ]
 }

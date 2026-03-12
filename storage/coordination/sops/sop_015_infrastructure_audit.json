@@ -5,12 +5,14 @@
   "team": "TEAM-0026-central-command",
   "title": "Infrastructure Audit and Mass Indexing Protocol",
   "purpose": "Standardized procedure for conducting comprehensive repository audits including mass file indexing, tool inventory, bug testing, and documentation generation. Ensures consistent, repeatable infrastructure assessment.",
-  "builds_on": ["SOP-011", "SOP-012", "SOP-014"],
-
+  "builds_on": [
+    "SOP-011",
+    "SOP-012",
+    "SOP-014"
+  ],
   "section_1_audit_scope": {
     "title": "Audit Scope Definition",
     "description": "Define what an infrastructure audit covers and how to scope it for different repository sizes.",
-
     "audit_dimensions": [
       {
         "dimension": "File Index",
@@ -50,11 +52,9 @@
       }
     ]
   },
-
   "section_2_indexing_methodology": {
     "title": "Mass File Indexing Methodology",
     "description": "How to systematically index every file in a repository.",
-
     "phase_1_discovery": {
       "action": "Use Glob to find all files by type",
       "patterns": [
@@ -67,7 +67,6 @@
         "**/*.jsonl - Append-only data files"
       ]
     },
-
     "phase_2_classification": {
       "action": "For each file, determine",
       "fields": {
@@ -81,7 +80,6 @@
         "status": "active, deprecated, draft, unknown"
       }
     },
-
     "phase_3_relationship_mapping": {
       "action": "Build dependency graph showing which files depend on which others",
       "methods": [
@@ -90,7 +88,6 @@
         "Check index.json references to discover file relationships"
       ]
     },
-
     "phase_4_statistics": {
       "action": "Generate summary statistics",
       "metrics": [
@@ -103,11 +100,9 @@
       ]
     }
   },
-
   "section_3_tool_inventory_methodology": {
     "title": "Tool Inventory Methodology",
     "description": "How to catalog and assess all software tools in a repository.",
-
     "tool_categories": {
       "validators": "Tools that check correctness (validate-storage.py, kb_validator.py, fast_validate)",
       "builders": "Tools that construct artifacts (index_rebuilder.py, build-cross-ref-index.py)",
@@ -118,7 +113,6 @@
       "stress_testers": "Tools for load testing (stress-test-*.py, test_stress_*.py)",
       "utilities": "Shared helper libraries (ddg_utils.py, request_cache.py, dedup_utils.py)"
     },
-
     "assessment_criteria": {
       "functionality": "Does the tool do what it claims? (run it and check)",
       "reliability": "Does it handle edge cases? (check error handling)",
@@ -128,7 +122,6 @@
       "dependencies": "What does it need? (check imports, requirements)",
       "maintenance": "When was it last updated? Is it actively used?"
     },
-
     "status_classification": {
       "working": "Tool runs successfully, produces correct output",
       "broken": "Tool fails with errors, produces incorrect output",
@@ -137,11 +130,9 @@
       "deprecated": "Tool has been superseded by another tool"
     }
   },
-
   "section_4_bug_audit_methodology": {
     "title": "Bug Audit Methodology",
     "description": "How to systematically identify, verify, and track bugs across the codebase.",
-
     "bug_identification_techniques": [
       {
         "technique": "Code review",
@@ -164,29 +155,33 @@
         "effective_for": "Systematic scanning for known bug patterns"
       }
     ],
-
     "bug_severity_scale": {
       "critical": "Data loss, security vulnerability, system crash under normal conditions",
       "high": "Race condition under concurrent use, incorrect results silently produced",
       "medium": "Error handling gap, edge case failure, performance degradation",
       "low": "Missing validation, cosmetic issue, documentation mismatch"
     },
-
     "bug_report_format": {
       "id": "BUG-{SUBSYSTEM}-{NNN}",
-      "fields": ["file", "line", "description", "severity", "category", "fix_plan", "fix_complexity", "verified_fixed"]
+      "fields": [
+        "file",
+        "line",
+        "description",
+        "severity",
+        "category",
+        "fix_plan",
+        "fix_complexity",
+        "verified_fixed"
+      ]
     },
-
     "verification_protocol": {
       "for_previously_reported_bugs": "Read the source code at the reported line. Check if the fix described in the report was applied. Mark as 'verified_fixed' or 'still_present'.",
       "for_new_bugs": "Provide line number, description, severity, category, and a concrete fix plan. Include code snippet showing the bug."
     }
   },
-
   "section_5_data_priority_rules": {
     "title": "Data Priority Rules",
     "description": "When multiple sources of information exist, how to prioritize them.",
-
     "priority_order": [
       {
         "rank": 1,
@@ -224,10 +219,8 @@
         "rationale": "Inline documentation is close to the code but may be stale. Trust code behavior over comments."
       }
     ],
-
     "conflict_resolution": "When two sources disagree, trust the higher-ranked source. When same-ranked sources disagree, trust the newer one. Always note the conflict in your report."
   },
-
   "quick_reference": {
     "audit_team_template": {
       "small_audit": "2 teams, 4-6 agents: 1 indexing/inventory team, 1 bug testing team",
@@ -241,5 +234,13 @@
       "infrastructure-tool-assessment.json - Tool test results",
       "infrastructure-documentation.json - Documentation and gap analysis"
     ]
-  }
+  },
+  "procedures": [
+    "Define audit scope across 5 dimensions: file index, tool inventory, bug audit, documentation audit, tool verification",
+    "Phase 1 Discovery: use Glob to find all files by type",
+    "Phase 2 Classification: classify each file by path, type, purpose, module, dependencies, status",
+    "Phase 3 Relationship Mapping: build dependency graph from imports and cross-references",
+    "Phase 4 Statistics: generate summary metrics by type, module, size, coverage",
+    "Follow data priority rules when multiple information sources conflict"
+  ]
 }

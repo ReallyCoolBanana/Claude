@@ -5,7 +5,12 @@
   "team": "TEAM-0025-sop-3",
   "title": "Agent Prompt Engineering and Context Distribution",
   "description": "Standardized procedures for crafting agent prompts and distributing context to maximize agent effectiveness in multi-team operations. Covers prompt templates, context rules, agent type templates, output coordination, and quality assurance.",
-  "builds_on": ["SOP-010", "SOP-001", "efficiency_guide.json", "future_team_data_strategy.json"],
+  "builds_on": [
+    "SOP-010",
+    "SOP-001",
+    "efficiency_guide.json",
+    "future_team_data_strategy.json"
+  ],
   "motivation": {
     "problem": "When the coordinator launches agents, the quality of their output depends heavily on how well they are prompted. Ad-hoc prompt writing leads to inconsistency, missing context, vague objectives, overlapping outputs, and wasted agent capacity.",
     "evidence": [
@@ -16,7 +21,6 @@
     ],
     "goal": "Enable any coordinator to launch agents with consistent, high-quality prompts using templates, checklists, and standardized context distribution rules."
   },
-
   "section_1_prompt_template_structure": {
     "title": "Prompt Template Structure",
     "description": "Every agent prompt must follow this six-part structure. Missing any section degrades agent effectiveness.",
@@ -27,25 +31,53 @@
         "role": {
           "description": "The agent's identity and function within the team.",
           "format": "{role_type} Team {team_number}",
-          "examples": ["Think Tank 1", "Coding Team 2", "Research Team", "SOP Team 3"],
+          "examples": [
+            "Think Tank 1",
+            "Coding Team 2",
+            "Research Team",
+            "SOP Team 3"
+          ],
           "why": "Gives the agent a clear identity that shapes its behavior. A 'Think Tank' agent approaches problems differently than a 'Coding Team' agent."
         },
         "team_id": {
           "description": "The parent operation identifier.",
           "format": "TEAM-XXXX",
-          "examples": ["TEAM-0024", "TEAM-0025"],
+          "examples": [
+            "TEAM-0024",
+            "TEAM-0025"
+          ],
           "why": "Links the agent to the shared status file and coordination infrastructure. Agents use this to register on the bus and post findings."
         },
         "objective_verb": {
           "description": "A single action verb describing what the agent does.",
-          "good_examples": ["design", "implement", "analyze", "research", "develop", "stress-test"],
-          "bad_examples": ["help with", "work on", "look at", "deal with"],
+          "good_examples": [
+            "design",
+            "implement",
+            "analyze",
+            "research",
+            "develop",
+            "stress-test"
+          ],
+          "bad_examples": [
+            "help with",
+            "work on",
+            "look at",
+            "deal with"
+          ],
           "why": "A concrete verb forces specificity. Vague verbs produce vague output."
         },
         "objective_target": {
           "description": "The specific thing the agent acts upon.",
-          "good_examples": ["a Standard Operating Procedure for agent prompt engineering", "stress tests for help_protocol.py", "external best practices for SQLite concurrency"],
-          "bad_examples": ["some stuff", "the code", "whatever is needed"],
+          "good_examples": [
+            "a Standard Operating Procedure for agent prompt engineering",
+            "stress tests for help_protocol.py",
+            "external best practices for SQLite concurrency"
+          ],
+          "bad_examples": [
+            "some stuff",
+            "the code",
+            "whatever is needed"
+          ],
           "why": "The target scopes the agent's work. Without it, agents drift into tangential areas."
         },
         "problem_statement": {
@@ -123,11 +155,9 @@
       "rule_of_thumb": "If the prompt takes more than 1500 words, split the work across two agents instead."
     }
   },
-
   "section_2_context_distribution_rules": {
     "title": "Context Distribution Rules",
     "description": "Rules governing what context to provide to agents, when to include it inline vs. telling agents to read files, and how to avoid context overload.",
-
     "universal_context": {
       "description": "Context that every agent receives regardless of role.",
       "items": [
@@ -153,7 +183,6 @@
         }
       ]
     },
-
     "role_specific_context": {
       "think_tank": {
         "always_include": [
@@ -207,7 +236,6 @@
         ]
       }
     },
-
     "context_volume_rules": {
       "minimum_viable_context": {
         "principle": "Give agents the least context needed for independence. More context is not always better.",
@@ -235,45 +263,38 @@
         ]
       }
     },
-
     "context_freshness": {
       "rule": "Always reference the most recent team session logs. Stale context causes agents to re-solve already-solved problems.",
       "how": "Check teams/sessions/ for the latest TEAM-XXXX.md. Include the last 2-3 session logs in the context for continuity-sensitive work."
     }
   },
-
   "section_3_agent_type_templates": {
     "title": "Agent Type Templates",
     "description": "Pre-built prompt templates for each agent role. Coordinators fill in the bracketed fields and can add task-specific sections.",
-
     "think_tank_template": {
       "role_type": "Think Tank",
       "purpose": "Analyze a problem space and produce a structured design document with recommendations, failure modes, and implementation guidance for coding teams.",
       "template": "You are Think Tank {number} for {team_id}. Your job is to {analyze|design|evaluate} {target_system_or_problem}.\n\n**THE PROBLEM:**\n{why_this_analysis_matters}\n\n**CONTEXT:**\nRead these files to understand the current state:\n- /home/user/Claude/CLAUDE.md\n- {source_file_1}\n- {source_file_2}\n- {prior_design_doc_if_any}\n\n**YOUR TASK:**\n{numbered_analysis_sections}\n\nCover:\n1. **{Analysis Area 1}** -- {what to analyze and what output to produce}\n2. **{Analysis Area 2}** -- {what to analyze and what output to produce}\n{...}\n\nWrite to: {output_path}\n\nStructure as JSON with the following top-level keys:\n- analysis_areas: array of {area, findings: [], recommendations: []}\n- failure_modes: array of {id, description, severity, mitigation}\n- implementation_guidance: array of {topic, steps: [], considerations: []}\n- priority_ranking: array of {item, priority, rationale}\n\n**CONSTRAINTS:**\n- Focus analysis on {scope_boundary}. Do not expand into {adjacent_areas}.\n- This is a design/analysis exercise. Do not write implementation code.\n\n**SUCCESS CRITERIA:**\n- At least {N} failure modes identified with severity ratings.\n- Each analysis area has concrete, actionable recommendations.\n- Output is valid JSON.",
       "example_filled": "You are Think Tank 1 for TEAM-0024. Your job is to analyze help_protocol.py for failure modes under stress.\n\n**THE PROBLEM:**\nhelp_protocol.py has never been stress-tested. We need to find failure modes before deploying it in production with 20+ concurrent agents.\n\n**CONTEXT:**\nRead these files to understand the current state:\n- /home/user/Claude/CLAUDE.md\n- /home/user/Claude/storage/coordination/help_protocol.py\n- /home/user/Claude/storage/coordination/tests/test_help_protocol.py\n- /home/user/Claude/teams/sessions/TEAM-0023.md\n\n**YOUR TASK:**\nAnalyze help_protocol.py for stress failure modes.\n\nCover:\n1. **Concurrency Failures** -- What breaks when 20+ agents call offer_help() simultaneously on the same request?\n2. **Volume Failures** -- What happens with 1000+ work items, 500+ help requests?\n3. **Race Conditions** -- Identify windows where concurrent operations produce incorrect state.\n4. **Error Handling Gaps** -- What inputs are not validated? What exceptions are not caught?\n\nWrite to: /home/user/Claude/storage/coordination/teams/think-tank-stress/output/help_protocol_stress_plan.json\n\nStructure as JSON with keys: failure_modes, stress_tests, missing_features, error_protection_gaps.\n\n**CONSTRAINTS:**\n- Focus on help_protocol.py only. Do not analyze direct_channels.py or work_stealing.py (other think tanks handle those).\n- Do not write test code. Coding teams will implement tests based on your analysis.\n\n**SUCCESS CRITERIA:**\n- At least 10 failure modes identified.\n- Each failure mode has a severity rating and proposed mitigation.\n- At least 10 stress test scenarios defined with expected behavior."
     },
-
     "coding_team_template": {
       "role_type": "Coding Team",
       "purpose": "Implement code, tests, or scripts based on specifications from think tanks or the coordinator.",
       "template": "You are Coding Team {number} for {team_id}. Your job is to {implement|build|create|fix} {implementation_target}.\n\n**THE PROBLEM:**\n{why_this_code_is_needed}\n\n**CONTEXT:**\nRead these files:\n- /home/user/Claude/CLAUDE.md\n- {source_file_to_modify_or_extend}\n- {test_file_that_must_pass}\n- {design_doc_or_spec}\n\n**YOUR TASK:**\n{detailed_implementation_instructions}\n\n1. **{Implementation Step 1}** -- {what to build, including function signatures or class names}\n2. **{Implementation Step 2}** -- {what to build}\n{...}\n\nWrite to: {output_file_path}\n\n**TECHNICAL REQUIREMENTS:**\n- {language_version_and_dependencies}\n- {coding_standards_to_follow}\n- {test_framework_and_conventions}\n\n**CONSTRAINTS:**\n- Do not modify {files_owned_by_other_teams}.\n- All existing tests must continue to pass.\n- {scope_limitations}\n\n**SUCCESS CRITERIA:**\n- All new tests pass.\n- All existing tests still pass.\n- Code follows {coding_standard}.\n- {specific_functional_requirements}.",
       "example_filled": "You are Coding Team 1 for TEAM-0024. Your job is to implement stress tests for help_protocol.py.\n\n**THE PROBLEM:**\nhelp_protocol.py has unit tests but no stress tests. We need to validate it works under concurrent load with 20+ agents.\n\n**CONTEXT:**\nRead these files:\n- /home/user/Claude/CLAUDE.md\n- /home/user/Claude/storage/coordination/help_protocol.py\n- /home/user/Claude/storage/coordination/tests/test_help_protocol.py\n- /home/user/Claude/storage/coordination/teams/think-tank-stress/output/help_protocol_stress_plan.json\n\n**YOUR TASK:**\nImplement stress tests based on Think Tank 1's analysis.\n\n1. **Concurrency Tests** -- 20+ threads calling offer_help() simultaneously. Verify exactly one thread wins.\n2. **Volume Tests** -- Create 1000 work items, 500 help requests. Verify system stays responsive.\n3. **Race Condition Tests** -- Simulate request-while-offering, complete-while-stealing scenarios.\n4. **Error Handling Tests** -- Invalid inputs, SQL injection, unicode, operations after close().\n\nWrite to: /home/user/Claude/storage/coordination/stress-tests/test_stress_help_protocol.py\n\n**TECHNICAL REQUIREMENTS:**\n- Python 3.x with pytest\n- Use threading for concurrency (not multiprocessing)\n- Each test must use a fresh temporary database (tmpdir fixture)\n- Follow existing test patterns in test_help_protocol.py\n\n**CONSTRAINTS:**\n- Do not modify help_protocol.py itself. Only write tests.\n- Do not write tests for direct_channels.py or work_stealing.py (other coding teams handle those).\n- All tests must be deterministic (no flaky tests).\n\n**SUCCESS CRITERIA:**\n- At least 25 stress tests.\n- All tests pass with `python -m pytest stress-tests/test_stress_help_protocol.py -v`.\n- Covers all four categories from the think tank analysis."
     },
-
     "research_team_template": {
       "role_type": "Research Team",
       "purpose": "Gather external information, best practices, and data relevant to the operation's goals.",
       "template": "You are Research Team for {team_id}. Your job is to research {research_domain}.\n\n**THE PROBLEM:**\n{why_this_research_is_needed}\n\n**CONTEXT:**\nRead these files to understand what we already know:\n- /home/user/Claude/CLAUDE.md\n- {relevant_kb_entries}\n- {relevant_session_logs}\n\n**RESEARCH QUESTIONS:**\n1. {specific_question_1}\n2. {specific_question_2}\n{...}\n\n**RESEARCH GUIDELINES:**\n- Use web search to find current best practices (not just your training data).\n- For each finding, note the source and assess reliability.\n- Focus on actionable recommendations, not academic theory.\n- Prioritize findings by relevance to our specific use case.\n\nWrite to: {output_path}\n\nStructure as JSON:\n{\n  \"topics\": [\n    {\n      \"topic\": \"string\",\n      \"question\": \"string\",\n      \"findings\": [\n        {\n          \"finding\": \"string\",\n          \"source\": \"string\",\n          \"reliability\": \"high|medium|low\",\n          \"actionable_recommendation\": \"string\"\n        }\n      ]\n    }\n  ],\n  \"cross_cutting_recommendations\": [\"string\"]\n}\n\n**CONSTRAINTS:**\n- Do not write code. Provide recommendations that coding teams can implement.\n- Do not duplicate research already captured in {prior_kb_entries}.\n- Focus on {scope} -- do not expand into {out_of_scope_areas}.\n\n**SUCCESS CRITERIA:**\n- At least {N} findings across {M} topics.\n- Each finding has a source and reliability assessment.\n- At least {K} actionable recommendations.",
       "notes": "Research teams benefit from specific questions rather than broad topics. 'What are best practices for SQLite concurrency under write-heavy loads?' produces better output than 'Research SQLite.'"
     },
-
     "sop_team_template": {
       "role_type": "SOP Team",
       "purpose": "Create Standard Operating Procedures that codify institutional knowledge into repeatable processes.",
       "template": "You are SOP Team {number} for {team_id}. Your job is to develop a Standard Operating Procedure for {sop_subject}.\n\n**THE PROBLEM:**\n{what_is_currently_inconsistent_or_undocumented}\n\n**CONTEXT:**\nRead these files to see how {the_process} was done in past operations:\n- /home/user/Claude/CLAUDE.md\n- {prior_session_logs}\n- {existing_sops_to_extend}\n- {relevant_source_files_or_tools}\n\n**YOUR TASK:**\nCreate SOP-{NNN}: {SOP_Title}\n\nCover:\n1. **{Section 1}** -- {what this section defines}\n2. **{Section 2}** -- {what this section defines}\n{...}\n\nWrite to: {output_path}\n\nStructure as a proper SOP with templates, checklists, and examples.\n\n**CONSTRAINTS:**\n- SOPs must be usable by an agent that has never seen this codebase before.\n- Include concrete examples, not just abstract principles.\n- Reference existing file paths and tools, not hypothetical ones.\n\n**SUCCESS CRITERIA:**\n- Each section contains actionable procedures, not just descriptions.\n- Templates are complete and ready to use (fill-in-the-blank, not vague guidelines).\n- Checklists have binary pass/fail criteria.",
       "notes": "SOP teams need access to both the tools being documented and examples of those tools being used in practice. Past session logs are more valuable than source code for SOP teams."
     },
-
     "standby_reserve_template": {
       "role_type": "Standby/Reserve",
       "purpose": "Available for reassignment to help teams that fall behind or encounter blockers.",
@@ -281,11 +302,9 @@
       "notes": "Standby agents should be given a small initial task (e.g., 'Review and summarize the last 3 team session logs') to keep them productive while waiting. An idle agent with no task at all may time out or lose context."
     }
   },
-
   "section_4_output_coordination": {
     "title": "Output Coordination",
     "description": "Rules for preventing agents from conflicting on output files, naming conventions, and aggregation strategies.",
-
     "file_path_allocation": {
       "principle": "Each agent gets exactly one primary output path. No two agents share an output path.",
       "directory_structure": {
@@ -299,26 +318,59 @@
       "path_allocation_table_example": {
         "description": "Include this table in the coordinator's planning notes before launching agents.",
         "example": [
-          {"agent": "Think Tank 1", "output_path": "storage/coordination/teams/think-tank-1/output/help_protocol_analysis.json"},
-          {"agent": "Think Tank 2", "output_path": "storage/coordination/teams/think-tank-2/output/direct_channels_analysis.json"},
-          {"agent": "Coding Team 1", "output_path": "storage/coordination/stress-tests/test_stress_help_protocol.py"},
-          {"agent": "Coding Team 2", "output_path": "storage/coordination/stress-tests/test_stress_direct_channels.py"},
-          {"agent": "Research Team", "output_path": "storage/coordination/teams/research/output/research_findings.json"},
-          {"agent": "SOP Team", "output_path": "storage/coordination/sops/sop_013_prompt_engineering.json"}
+          {
+            "agent": "Think Tank 1",
+            "output_path": "storage/coordination/teams/think-tank-1/output/help_protocol_analysis.json"
+          },
+          {
+            "agent": "Think Tank 2",
+            "output_path": "storage/coordination/teams/think-tank-2/output/direct_channels_analysis.json"
+          },
+          {
+            "agent": "Coding Team 1",
+            "output_path": "storage/coordination/stress-tests/test_stress_help_protocol.py"
+          },
+          {
+            "agent": "Coding Team 2",
+            "output_path": "storage/coordination/stress-tests/test_stress_direct_channels.py"
+          },
+          {
+            "agent": "Research Team",
+            "output_path": "storage/coordination/teams/research/output/research_findings.json"
+          },
+          {
+            "agent": "SOP Team",
+            "output_path": "storage/coordination/sops/sop_013_prompt_engineering.json"
+          }
         ]
       }
     },
-
     "naming_conventions": {
       "output_files": {
         "format": "{descriptive_noun}_{qualifier}.{ext}",
-        "good_examples": ["help_protocol_stress_plan.json", "test_stress_direct_channels.py", "research_findings.json", "sop_013_prompt_engineering.json"],
-        "bad_examples": ["output.json", "results.json", "data.json", "temp.py", "analysis.json"],
+        "good_examples": [
+          "help_protocol_stress_plan.json",
+          "test_stress_direct_channels.py",
+          "research_findings.json",
+          "sop_013_prompt_engineering.json"
+        ],
+        "bad_examples": [
+          "output.json",
+          "results.json",
+          "data.json",
+          "temp.py",
+          "analysis.json"
+        ],
         "rule": "A person seeing just the filename should know what team produced it and what it contains."
       },
       "team_directories": {
         "format": "{role}-{qualifier}/",
-        "examples": ["think-tank-stress/", "think-tank-v2/", "research-stress/", "coding-team-1/"]
+        "examples": [
+          "think-tank-stress/",
+          "think-tank-v2/",
+          "research-stress/",
+          "coding-team-1/"
+        ]
       },
       "knowledge_base_entries": {
         "format": "KB-XXXX.md (zero-padded sequential)",
@@ -329,7 +381,6 @@
         "rule": "Use the team_id assigned by the coordinator."
       }
     },
-
     "output_structure_for_aggregation": {
       "principle": "Agent outputs should be structured so the coordinator can merge them without manual reformatting.",
       "json_outputs": {
@@ -362,7 +413,6 @@
         }
       }
     },
-
     "shared_file_conflict_resolution": {
       "description": "When multiple agents need to write to the same file (rare but sometimes unavoidable).",
       "rules": [
@@ -385,11 +435,9 @@
       ]
     }
   },
-
   "section_5_quality_assurance": {
     "title": "Quality Assurance",
     "description": "Checklists and guidelines for ensuring agent prompts are high quality before launching.",
-
     "pre_launch_checklist": {
       "description": "The coordinator MUST verify each item before launching an agent. Any 'no' answer means the prompt needs revision.",
       "checklist": [
@@ -455,7 +503,6 @@
         }
       ]
     },
-
     "common_prompt_mistakes": {
       "description": "Mistakes observed across TEAM-0022 through TEAM-0024 operations.",
       "mistakes": [
@@ -517,7 +564,6 @@
         }
       ]
     },
-
     "prompt_testing_protocol": {
       "description": "How to validate a prompt template before deploying it at scale across multiple agents.",
       "steps": [
@@ -553,7 +599,6 @@
         }
       ]
     },
-
     "post_launch_validation": {
       "description": "What to check after agents complete their work.",
       "checks": [
@@ -566,7 +611,6 @@
       ]
     }
   },
-
   "appendix_a_coordinator_workflow": {
     "title": "Coordinator Workflow for Launching Agents",
     "description": "Step-by-step process the coordinator follows when setting up a multi-agent operation.",
@@ -623,7 +667,6 @@
       }
     ]
   },
-
   "appendix_b_context_budget_calculator": {
     "title": "Context Budget Calculator",
     "description": "Estimating whether an agent's total context load fits within available capacity.",
@@ -640,5 +683,14 @@
       "A single context file exceeds 30,000 words (consider extracting the relevant section).",
       "The prompt itself exceeds 1500 words."
     ]
-  }
+  },
+  "purpose": "Standardized procedures for crafting agent prompts and distributing context to maximize agent effectiveness in multi-team operations. Covers prompt templates, context rules, agent type templates, output coordination, and quality assurance.",
+  "procedures": [
+    "Use the six-part canonical prompt template for all agent prompts (section_1)",
+    "Apply context distribution rules: 3-8 files per agent, universal + role-specific (section_2)",
+    "Select appropriate agent type template: think_tank, coding_team, research, SOP, or standby (section_3)",
+    "Assign unique output paths per agent using the path allocation table (section_4)",
+    "Run the pre-launch QA checklist (QA-01 through QA-12) before launching (section_5)",
+    "Follow the coordinator workflow in appendix_a for end-to-end launch process"
+  ]
 }
