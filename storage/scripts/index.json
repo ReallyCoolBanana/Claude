@@ -441,16 +441,38 @@
       "dependencies": [],
       "added": "2026-03-11",
       "added_by_team": "TEAM-0001"
+    },
+    {
+      "id": "SCR-0041",
+      "name": "test-utilities",
+      "filename": "data-gathering/methods/test_utilities.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Test suite for data-gathering utility modules (ddg_utils, request_cache, dedup_utils). Covers rate limiter thread safety, config locks, cache operations, TOCTOU-safe reads, tokenization, similarity scoring, and deduplication.",
+      "dependencies": ["SCR-0021", "SCR-0022"],
+      "added": "2026-03-12",
+      "added_by_team": "TEAM-0026"
+    },
+    {
+      "id": "SCR-0042",
+      "name": "test-cross-references",
+      "filename": "test-cross-references.py",
+      "language": "python",
+      "category": "utility",
+      "description": "Cross-reference analysis test script. Populates index.json files with test entries and validates cross-referencing capabilities across scripts, API tools, and sources indexes.",
+      "dependencies": [],
+      "added": "2026-03-12",
+      "added_by_team": "TEAM-0004"
     }
   ],
   "categories": {
     "data-collection": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028"],
     "analysis": ["SCR-0004", "SCR-0005", "SCR-0011", "SCR-0031"],
     "automation": ["SCR-0029", "SCR-0030", "SCR-0033"],
-    "utility": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0015", "SCR-0016", "SCR-0017", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0032", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040"]
+    "utility": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0015", "SCR-0016", "SCR-0017", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0032", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040", "SCR-0041", "SCR-0042"]
   },
   "language_index": {
-    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028", "SCR-0029", "SCR-0030", "SCR-0031", "SCR-0032", "SCR-0033", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040"],
+    "python": ["SCR-0001", "SCR-0002", "SCR-0003", "SCR-0004", "SCR-0005", "SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010", "SCR-0011", "SCR-0012", "SCR-0013", "SCR-0014", "SCR-0018", "SCR-0019", "SCR-0020", "SCR-0021", "SCR-0022", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028", "SCR-0029", "SCR-0030", "SCR-0031", "SCR-0032", "SCR-0033", "SCR-0034", "SCR-0035", "SCR-0036", "SCR-0037", "SCR-0038", "SCR-0039", "SCR-0040", "SCR-0041", "SCR-0042"],
     "go": ["SCR-0015", "SCR-0016", "SCR-0017"]
   }
 }

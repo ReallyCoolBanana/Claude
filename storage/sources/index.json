@@ -1,132 +1,112 @@
 {
   "version": "1.0",
-  "last_updated": "2026-03-11",
+  "last_updated": "2026-03-12",
+  "entry_count": 41,
   "sources": [
     {
       "id": "SRC-0001",
-      "name": "Alpha Vantage",
-      "url": "https://www.alphavantage.co/query",
-      "data_types": ["financial"],
+      "name": "OpenAlex API",
+      "url": "https://api.openalex.org/",
+      "data_types": ["scientific"],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0002",
-      "name": "Yahoo Finance",
-      "url": "https://query1.finance.yahoo.com/v8/finance",
-      "data_types": ["financial"],
+      "name": "Semantic Scholar",
+      "url": "https://api.semanticscholar.org/graph/v1/",
+      "data_types": ["scientific"],
       "access_type": "free"
     },
     {
       "id": "SRC-0003",
-      "name": "FRED",
-      "url": "https://api.stlouisfed.org/fred",
-      "data_types": ["financial", "government"],
-      "access_type": "api-key-required"
+      "name": "arXiv API",
+      "url": "http://export.arxiv.org/api/query",
+      "data_types": ["scientific"],
+      "access_type": "free"
     },
     {
       "id": "SRC-0004",
-      "name": "CoinGecko",
-      "url": "https://api.coingecko.com/api/v3",
-      "data_types": ["financial"],
-      "access_type": "freemium"
+      "name": "Crossref REST API",
+      "url": "https://api.crossref.org/",
+      "data_types": ["scientific"],
+      "access_type": "free"
     },
     {
       "id": "SRC-0005",
-      "name": "Twelve Data",
-      "url": "https://api.twelvedata.com",
-      "data_types": ["financial"],
-      "access_type": "freemium"
-    },
-    {
-      "id": "SRC-0006",
-      "name": "Exchange Rates",
-      "url": "https://api.exchangerate.host",
-      "data_types": ["financial"],
-      "access_type": "free"
-    },
-    {
-      "id": "SRC-0007",
-      "name": "Finnhub",
-      "url": "https://finnhub.io/api/v1",
-      "data_types": ["financial"],
-      "access_type": "freemium"
-    },
-    {
-      "id": "SRC-0008",
-      "name": "NewsAPI",
-      "url": "https://newsapi.org/v2",
-      "data_types": ["news"],
-      "access_type": "freemium"
-    },
-    {
-      "id": "SRC-0009",
-      "name": "GNews",
-      "url": "https://gnews.io/api/v4",
-      "data_types": ["news"],
-      "access_type": "freemium"
-    },
-    {
-      "id": "SRC-0010",
-      "name": "The Guardian",
-      "url": "https://content.guardianapis.com",
-      "data_types": ["news"],
-      "access_type": "api-key-required"
-    },
-    {
-      "id": "SRC-0011",
-      "name": "Hacker News",
-      "url": "https://hacker-news.firebaseio.com/v0",
-      "data_types": ["news", "general"],
-      "access_type": "free"
-    },
-    {
-      "id": "SRC-0012",
-      "name": "OpenAlex",
-      "url": "https://api.openalex.org",
-      "data_types": ["scientific"],
-      "access_type": "free"
-    },
-    {
-      "id": "SRC-0013",
-      "name": "Semantic Scholar",
-      "url": "https://api.semanticscholar.org/graph/v1",
-      "data_types": ["scientific"],
-      "access_type": "free"
-    },
-    {
-      "id": "SRC-0014",
       "name": "Wikidata",
-      "url": "https://www.wikidata.org/w/api.php",
+      "url": "https://query.wikidata.org/sparql",
       "data_types": ["scientific", "general"],
       "access_type": "free"
     },
     {
-      "id": "SRC-0015",
+      "id": "SRC-0006",
+      "name": "Wikipedia / MediaWiki",
+      "url": "https://en.wikipedia.org/api/rest_v1/",
+      "data_types": ["general"],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0007",
       "name": "CORE",
-      "url": "https://api.core.ac.uk/v3",
+      "url": "https://api.core.ac.uk",
       "data_types": ["scientific"],
       "access_type": "api-key-required"
     },
     {
-      "id": "SRC-0016",
-      "name": "CrossRef",
-      "url": "https://api.crossref.org",
-      "data_types": ["scientific"],
-      "access_type": "free"
-    },
-    {
-      "id": "SRC-0017",
+      "id": "SRC-0008",
       "name": "DBpedia",
       "url": "https://dbpedia.org/sparql",
       "data_types": ["scientific", "general"],
       "access_type": "free"
     },
     {
-      "id": "SRC-0018",
-      "name": "Papers With Code",
-      "url": "https://paperswithcode.com/api/v1",
-      "data_types": ["scientific"],
+      "id": "SRC-0012",
+      "name": "NewsAPI",
+      "url": "https://newsapi.org/v2",
+      "data_types": ["news"],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0013",
+      "name": "The Guardian",
+      "url": "https://content.guardianapis.com",
+      "data_types": ["news"],
       "access_type": "free"
+    },
+    {
+      "id": "SRC-0014",
+      "name": "GNews",
+      "url": "https://gnews.io/api/v4",
+      "data_types": ["news"],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0015",
+      "name": "GDELT Project",
+      "url": "https://api.gdeltproject.org/api/v2",
+      "data_types": ["news", "geospatial"],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0016",
+      "name": "Mediastack",
+      "url": "https://api.mediastack.com/v1",
+      "data_types": ["news"],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0017",
+      "name": "rss2json",
+      "url": "https://api.rss2json.com/v1/api.json",
+      "data_types": ["news"],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0018",
+      "name": "FRED",
+      "url": "https://api.stlouisfed.org/fred/",
+      "data_types": ["financial", "government"],
+      "access_type": "api-key-required"
     },
     {
       "id": "SRC-0019",
@@ -137,92 +117,92 @@
     },
     {
       "id": "SRC-0020",
-      "name": "Data.gov CKAN",
-      "url": "https://catalog.data.gov/api/3",
+      "name": "BLS",
+      "url": "https://api.bls.gov/publicAPI/v2/timeseries/data/",
       "data_types": ["government"],
       "access_type": "free"
     },
     {
       "id": "SRC-0021",
-      "name": "Open-Meteo",
-      "url": "https://api.open-meteo.com/v1",
+      "name": "National Weather Service",
+      "url": "https://api.weather.gov",
       "data_types": ["geospatial"],
       "access_type": "free"
     },
     {
       "id": "SRC-0022",
-      "name": "OpenWeatherMap",
-      "url": "https://api.openweathermap.org/data/2.5",
+      "name": "Open-Meteo",
+      "url": "https://api.open-meteo.com/v1/forecast",
       "data_types": ["geospatial"],
-      "access_type": "freemium"
+      "access_type": "free"
     },
     {
       "id": "SRC-0023",
-      "name": "BLS",
-      "url": "https://api.bls.gov/publicAPI/v2",
+      "name": "World Bank",
+      "url": "https://api.worldbank.org/v2/",
       "data_types": ["government"],
       "access_type": "free"
     },
     {
       "id": "SRC-0024",
-      "name": "World Bank",
-      "url": "https://api.worldbank.org/v2",
-      "data_types": ["government"],
+      "name": "US Treasury Fiscal Data",
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/",
+      "data_types": ["financial", "government"],
       "access_type": "free"
     },
     {
       "id": "SRC-0025",
       "name": "GitHub REST API",
-      "url": "https://api.github.com",
+      "url": "https://api.github.com/",
       "data_types": ["general"],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0026",
-      "name": "PyPI",
-      "url": "https://pypi.org/pypi",
+      "name": "npm Registry",
+      "url": "https://registry.npmjs.org/",
       "data_types": ["general"],
       "access_type": "free"
     },
     {
       "id": "SRC-0027",
-      "name": "npm Registry",
-      "url": "https://registry.npmjs.org",
+      "name": "PyPI",
+      "url": "https://pypi.org/pypi/",
       "data_types": ["general"],
       "access_type": "free"
     },
     {
       "id": "SRC-0028",
-      "name": "Reddit",
-      "url": "https://www.reddit.com",
-      "data_types": ["social-media"],
-      "access_type": "free"
-    },
-    {
-      "id": "SRC-0029",
-      "name": "Stack Exchange",
-      "url": "https://api.stackexchange.com/2.3",
-      "data_types": ["general"],
-      "access_type": "free"
-    },
-    {
-      "id": "SRC-0030",
-      "name": "Nominatim",
-      "url": "https://nominatim.openstreetmap.org",
+      "name": "ip-api.com",
+      "url": "http://ip-api.com/json/",
       "data_types": ["geospatial"],
       "access_type": "free"
     },
     {
-      "id": "SRC-0031",
-      "name": "Hugging Face Hub",
-      "url": "https://huggingface.co/api",
-      "data_types": ["scientific", "general"],
+      "id": "SRC-0029",
+      "name": "Hacker News (Algolia)",
+      "url": "https://hn.algolia.com/api/v1/",
+      "data_types": ["news", "social-media"],
       "access_type": "free"
+    },
+    {
+      "id": "SRC-0030",
+      "name": "Hacker News (Firebase)",
+      "url": "https://hacker-news.firebaseio.com/v0/",
+      "data_types": ["news", "social-media"],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0031",
+      "name": "Stack Exchange",
+      "url": "https://api.stackexchange.com/2.3/",
+      "data_types": ["general"],
+      "access_type": "freemium"
     },
     {
       "id": "SRC-0032",
       "name": "Free Dictionary",
-      "url": "https://api.dictionaryapi.dev/api/v2/entries",
+      "url": "https://api.dictionaryapi.dev/api/v2/entries/en/",
       "data_types": ["general"],
       "access_type": "free"
     },
@@ -236,7 +216,7 @@
     {
       "id": "SRC-0034",
       "name": "ConceptNet",
-      "url": "https://api.conceptnet.io",
+      "url": "http://api.conceptnet.io",
       "data_types": ["scientific"],
       "access_type": "free"
     },
@@ -246,22 +226,85 @@
       "url": "https://router.huggingface.co/v1",
       "data_types": ["ai-ml"],
       "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0036",
+      "name": "Google Gemini Embeddings API",
+      "url": "https://generativelanguage.googleapis.com/v1beta/models/",
+      "data_types": ["ai-ml"],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0037",
+      "name": "Roboflow Inference API",
+      "url": "https://detect.roboflow.com",
+      "data_types": ["ai-ml"],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0038",
+      "name": "Alpha Vantage",
+      "url": "https://www.alphavantage.co/query",
+      "data_types": ["financial"],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0039",
+      "name": "FRED API (Federal Reserve Economic Data)",
+      "url": "https://api.stlouisfed.org/fred",
+      "data_types": ["financial", "government"],
+      "access_type": "api-key-required"
+    },
+    {
+      "id": "SRC-0040",
+      "name": "Finnhub",
+      "url": "https://finnhub.io/api/v1",
+      "data_types": ["financial"],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0041",
+      "name": "CoinGecko API",
+      "url": "https://api.coingecko.com/api/v3",
+      "data_types": ["financial"],
+      "access_type": "freemium"
+    },
+    {
+      "id": "SRC-0042",
+      "name": "ExchangeRate-API (Open Access)",
+      "url": "https://open.er-api.com/v6/latest",
+      "data_types": ["financial"],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0043",
+      "name": "fawazahmed0/exchange-api",
+      "url": "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1",
+      "data_types": ["financial"],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0044",
+      "name": "CoinPaprika API",
+      "url": "https://api.coinpaprika.com/v1",
+      "data_types": ["financial"],
+      "access_type": "free"
     }
   ],
   "by_data_type": {
-    "financial": ["SRC-0001", "SRC-0002", "SRC-0003", "SRC-0004", "SRC-0005", "SRC-0006", "SRC-0007"],
-    "news": ["SRC-0008", "SRC-0009", "SRC-0010", "SRC-0011"],
-    "social-media": ["SRC-0028"],
-    "government": ["SRC-0003", "SRC-0019", "SRC-0020", "SRC-0023", "SRC-0024"],
-    "scientific": ["SRC-0012", "SRC-0013", "SRC-0014", "SRC-0015", "SRC-0016", "SRC-0017", "SRC-0018", "SRC-0031", "SRC-0034"],
-    "ai-ml": ["SRC-0035"],
-    "geospatial": ["SRC-0021", "SRC-0022", "SRC-0030"],
-    "general": ["SRC-0011", "SRC-0014", "SRC-0017", "SRC-0025", "SRC-0026", "SRC-0027", "SRC-0029", "SRC-0031", "SRC-0032", "SRC-0033"]
+    "financial": ["SRC-0018", "SRC-0024", "SRC-0038", "SRC-0039", "SRC-0040", "SRC-0041", "SRC-0042", "SRC-0043", "SRC-0044"],
+    "news": ["SRC-0012", "SRC-0013", "SRC-0014", "SRC-0015", "SRC-0016", "SRC-0017", "SRC-0029", "SRC-0030"],
+    "social-media": ["SRC-0029", "SRC-0030"],
+    "government": ["SRC-0018", "SRC-0019", "SRC-0020", "SRC-0023", "SRC-0024", "SRC-0039"],
+    "scientific": ["SRC-0001", "SRC-0002", "SRC-0003", "SRC-0004", "SRC-0005", "SRC-0007", "SRC-0008", "SRC-0034"],
+    "ai-ml": ["SRC-0035", "SRC-0036", "SRC-0037"],
+    "geospatial": ["SRC-0015", "SRC-0021", "SRC-0022", "SRC-0028"],
+    "general": ["SRC-0005", "SRC-0006", "SRC-0008", "SRC-0025", "SRC-0026", "SRC-0027", "SRC-0031", "SRC-0032", "SRC-0033"]
   },
   "by_access_type": {
-    "free": ["SRC-0002", "SRC-0006", "SRC-0011", "SRC-0012", "SRC-0013", "SRC-0014", "SRC-0016", "SRC-0017", "SRC-0018", "SRC-0020", "SRC-0021", "SRC-0023", "SRC-0024", "SRC-0026", "SRC-0027", "SRC-0028", "SRC-0029", "SRC-0030", "SRC-0031", "SRC-0032", "SRC-0033", "SRC-0034"],
-    "freemium": ["SRC-0001", "SRC-0004", "SRC-0005", "SRC-0007", "SRC-0008", "SRC-0009", "SRC-0022", "SRC-0025", "SRC-0035"],
+    "free": ["SRC-0002", "SRC-0003", "SRC-0004", "SRC-0005", "SRC-0006", "SRC-0008", "SRC-0013", "SRC-0015", "SRC-0020", "SRC-0021", "SRC-0022", "SRC-0023", "SRC-0024", "SRC-0026", "SRC-0027", "SRC-0028", "SRC-0029", "SRC-0030", "SRC-0032", "SRC-0033", "SRC-0034", "SRC-0042", "SRC-0043", "SRC-0044"],
+    "freemium": ["SRC-0001", "SRC-0012", "SRC-0014", "SRC-0016", "SRC-0017", "SRC-0025", "SRC-0031", "SRC-0035", "SRC-0036", "SRC-0037", "SRC-0038", "SRC-0040", "SRC-0041"],
     "paid": [],
-    "api-key-required": ["SRC-0003", "SRC-0010", "SRC-0015", "SRC-0019"]
+    "api-key-required": ["SRC-0007", "SRC-0018", "SRC-0019", "SRC-0039"]
   }
 }
