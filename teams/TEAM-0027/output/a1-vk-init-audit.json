@@ -1,0 +1,274 @@
+{
+  "metadata": {
+    "team": "TEAM-0027",
+    "agent": "a1-vk-init-audit",
+    "task": "vulkan-error-review",
+    "date": "2026-03-12",
+    "focus_area": "Vulkan initialization, device setup, queue creation",
+    "files_reviewed": [
+      "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "vulkan-orbiting-spheres/src/vulkan_app.h",
+      "vulkan-orbiting-spheres/src/main.cpp"
+    ],
+    "completion_status": "complete"
+  },
+  "findings": [
+    {
+      "id": "MISSING_VALIDATION-VK-001",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "Present queue index not retrieved or validated",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 198,
+      "description": "When obtaining the present queue, the code falls back to the graphics queue if get_queue fails, but never retrieves the present queue family index. The m_graphicsQueueFamily is used for the command pool, but if the present queue were on a different family, there would be no record of it. Additionally, the fallback silently hides a potential issue where the selected physical device might not support presentation on the graphics queue family.",
+      "evidence": "auto pqRet = vkbDev.get_queue(vkb::QueueType::present);\nm_presentQueue = pqRet ? pqRet.value() : m_graphicsQueue;",
+      "recommendation": "Check and store the present queue family index. If the present queue family differs from the graphics queue family, buffer sharing mode must be set to VK_SHARING_MODE_CONCURRENT for swapchain images, or ownership transfers must be performed. Also log a warning when falling back.",
+      "vulkan_spec_reference": "Vulkan Spec 1.2, Section 33.10 - WSI Swapchain (queue family ownership)"
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-002",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "Depth format hardcoded without checking device support",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.h",
+      "line": 63,
+      "description": "The depth format is hardcoded to VK_FORMAT_D32_SFLOAT without querying the physical device for supported depth formats via vkGetPhysicalDeviceFormatProperties. While VK_FORMAT_D32_SFLOAT is widely supported, the Vulkan specification does not guarantee it. VK_FORMAT_D16_UNORM is the only depth format guaranteed by the spec to support depth attachment usage.",
+      "evidence": "VkFormat m_depthFormat = VK_FORMAT_D32_SFLOAT;",
+      "recommendation": "Query vkGetPhysicalDeviceFormatProperties for VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, and VK_FORMAT_D24_UNORM_S8_UINT, selecting the first one that supports VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT with optimal tiling.",
+      "vulkan_spec_reference": "Vulkan Spec 1.2, Table 70 - Mandatory Format Support"
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-003",
+      "category": "missing_validation",
+      "severity": "high",
+      "title": "Missing error check on vmaCreateImage for depth image",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 252,
+      "description": "The VkResult returned by vmaCreateImage when creating the depth image is not checked. If the allocation fails (e.g., out of device memory), the application will proceed with a null/invalid image handle, leading to undefined behavior or crashes later.",
+      "evidence": "vmaCreateImage(m_allocator, &imgInfo, &allocInfo,\n               &m_depthImage.image, &m_depthImage.allocation, nullptr);",
+      "recommendation": "Check the VkResult return value and throw an exception on failure, consistent with the error handling pattern used elsewhere in the codebase.",
+      "vulkan_spec_reference": "Vulkan Spec 1.2, Section 12.1 - Image Creation"
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-004",
+      "category": "missing_validation",
+      "severity": "high",
+      "title": "Missing error check on vkCreateImageView for depth image view",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 266,
+      "description": "The VkResult returned by vkCreateImageView for the depth image view is not checked. A failure would leave m_depthImage.view in an invalid state, causing crashes when used in framebuffer creation.",
+      "evidence": "vkCreateImageView(m_device, &viewInfo, nullptr, &m_depthImage.view);",
+      "recommendation": "Check the VkResult return value: if (vkCreateImageView(...) != VK_SUCCESS) { throw std::runtime_error(\"Failed to create depth image view\"); }",
+      "vulkan_spec_reference": "Vulkan Spec 1.2, Section 12.5 - Image Views"
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-005",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "Missing error check on vmaCreateBuffer in createBuffer helper",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 703,
+      "description": "The createBuffer helper function does not check the VkResult return value from vmaCreateBuffer. This helper is used to create uniform buffers, staging buffers, and device-local geometry buffers. Any allocation failure will silently produce invalid handles.",
+      "evidence": "vmaCreateBuffer(m_allocator, &bufInfo, &allocInfo,\n                &buffer.buffer, &buffer.allocation, nullptr);\nreturn buffer;",
+      "recommendation": "Check the VkResult return value and throw an exception on failure.",
+      "vulkan_spec_reference": "Vulkan Spec 1.2, Section 12.7 - Resource Memory Association"
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-006",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "Missing error checks on multiple Vulkan calls in uploadBuffer",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 730,
+      "description": "In the uploadBuffer function, the return values of vkAllocateCommandBuffers (line 730), vkBeginCommandBuffer (line 735), vkEndCommandBuffer (line 741), and vkQueueSubmit (line 748) are not checked. Failures in any of these operations would silently produce incorrect results or undefined behavior.",
+      "evidence": "vkAllocateCommandBuffers(m_device, &allocInfo, &cmd);\n...\nvkBeginCommandBuffer(cmd, &beginInfo);\n...\nvkEndCommandBuffer(cmd);\n...\nvkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);",
+      "recommendation": "Check VkResult return values for all four calls and handle errors appropriately.",
+      "vulkan_spec_reference": "Vulkan Spec 1.2, Section 6.4 - Command Buffer Recording"
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-007",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "Missing error checks on vmaMapMemory calls",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 428,
+      "description": "The vmaMapMemory calls at line 428 (uniform buffers) and line 715 (staging buffer in uploadBuffer) do not check return values. If mapping fails, the returned pointer will be invalid and memcpy to it will crash or corrupt memory.",
+      "evidence": "vmaMapMemory(m_allocator, m_uniformBuffers[i].allocation, &m_uniformBuffersMapped[i]);\n...\nvmaMapMemory(m_allocator, staging.allocation, &mapped);",
+      "recommendation": "Check the VkResult return value from vmaMapMemory and handle failure.",
+      "vulkan_spec_reference": "Vulkan Spec 1.2, Section 12.3 - Host Access to Device Memory Objects"
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-008",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "Missing error check on vkBeginCommandBuffer and vkEndCommandBuffer in recordCommandBuffer",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 579,
+      "description": "The return values of vkBeginCommandBuffer (line 579) and vkEndCommandBuffer (line 657) are not checked in the recordCommandBuffer function. While failures here are rare, spec compliance requires checking them.",
+      "evidence": "vkBeginCommandBuffer(cmd, &beginInfo);\n...\nvkEndCommandBuffer(cmd);",
+      "recommendation": "Check VkResult return values for both calls.",
+      "vulkan_spec_reference": "Vulkan Spec 1.2, Section 6.4 - Command Buffer Recording"
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-009",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "Missing glfwInit return value check",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 61,
+      "description": "glfwInit() returns GLFW_FALSE on failure, but the return value is not checked. If GLFW initialization fails, subsequent GLFW calls will have undefined behavior.",
+      "evidence": "glfwInit();",
+      "recommendation": "Check the return value: if (!glfwInit()) { throw std::runtime_error(\"Failed to initialize GLFW\"); }",
+      "vulkan_spec_reference": null
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-010",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "Missing null check on glfwCreateWindow return",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 63,
+      "description": "glfwCreateWindow returns nullptr on failure, but the return value is not checked. Using a null window handle with subsequent GLFW and Vulkan surface creation calls will cause crashes.",
+      "evidence": "m_window = glfwCreateWindow(WIDTH, HEIGHT, \"Vulkan Orbiting Spheres\", nullptr, nullptr);",
+      "recommendation": "Check for nullptr: if (!m_window) { throw std::runtime_error(\"Failed to create GLFW window\"); }",
+      "vulkan_spec_reference": null
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-011",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "Unchecked .value() call on present queue index retrieval",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 196,
+      "description": "The graphics queue family index is retrieved using .value() without checking if the optional has a value first. If get_queue_index fails, this will throw std::bad_optional_access or cause undefined behavior depending on the vk-bootstrap implementation.",
+      "evidence": "m_graphicsQueueFamily = vkbDev.get_queue_index(vkb::QueueType::graphics).value();",
+      "recommendation": "Check the return value before calling .value(), similar to how get_queue is checked on line 193-194.",
+      "vulkan_spec_reference": null
+    },
+    {
+      "id": "DESIGN-VK-012",
+      "category": "design",
+      "severity": "low",
+      "title": "Swapchain uses hardcoded extent instead of querying actual surface capabilities",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 219,
+      "description": "The swapchain builder uses the hardcoded WIDTH/HEIGHT (1280x720) as the desired extent via set_desired_extent. While vk-bootstrap will clamp this to the surface capabilities, this means the initial swapchain may not match the actual window size if the OS DPI scaling or window manager modifies the framebuffer size. This is partially mitigated by the swapchain recreation on resize.",
+      "evidence": ".set_desired_extent(WIDTH, HEIGHT)",
+      "recommendation": "Query the actual framebuffer size from GLFW using glfwGetFramebufferSize and pass those dimensions instead of the compile-time constants.",
+      "vulkan_spec_reference": "Vulkan Spec 1.2, Section 33.9.1 - Surface Capabilities"
+    },
+    {
+      "id": "DESIGN-VK-013",
+      "category": "design",
+      "severity": "low",
+      "title": "Swapchain recreation does not pass old swapchain for efficient recycling",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 670,
+      "description": "During swapchain recreation, the old swapchain is destroyed before creating a new one. The Vulkan spec recommends passing the old swapchain handle to VkSwapchainCreateInfoKHR.oldSwapchain to allow the implementation to reuse resources. By destroying first, a brief period exists with no valid swapchain, and resource reuse opportunities are lost.",
+      "evidence": "cleanupSwapchain();\ncreateSwapchain();",
+      "recommendation": "Store the old swapchain handle, pass it as oldSwapchain to the swapchain builder, then destroy the old swapchain after the new one is created. vk-bootstrap's SwapchainBuilder supports .set_old_swapchain().",
+      "vulkan_spec_reference": "Vulkan Spec 1.2, Section 33.10 - VkSwapchainCreateInfoKHR::oldSwapchain"
+    },
+    {
+      "id": "RESOURCE_LEAK-VK-014",
+      "category": "resource_leak",
+      "severity": "medium",
+      "title": "Uniform buffer memory not unmapped before destruction",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 107,
+      "description": "Uniform buffers are persistently mapped via vmaMapMemory in createUniformBuffers (line 428), but vmaUnmapMemory is never called before vmaDestroyBuffer in cleanup (lines 107-109). While VMA typically handles this internally during buffer destruction, it is best practice to unmap before destroying, and some VMA configurations or debug modes may report this as an error.",
+      "evidence": "for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {\n    vmaDestroyBuffer(m_allocator, m_uniformBuffers[i].buffer, m_uniformBuffers[i].allocation);\n}",
+      "recommendation": "Call vmaUnmapMemory(m_allocator, m_uniformBuffers[i].allocation) before vmaDestroyBuffer for each uniform buffer.",
+      "vulkan_spec_reference": "Vulkan Spec 1.2, Section 12.3 - Host Access to Device Memory Objects"
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-015",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "Swapchain image views and images .value() called without error check",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 229,
+      "description": "The get_images() and get_image_views() calls on the vk-bootstrap swapchain object use .value() without first checking if the result was successful. If either fails, this will throw an uncaught exception from the optional/result type rather than a descriptive error.",
+      "evidence": "m_swapchainImages = vkbSc.get_images().value();\nm_swapchainImageViews = vkbSc.get_image_views().value();",
+      "recommendation": "Check the return value before calling .value(), and throw a descriptive runtime_error on failure.",
+      "vulkan_spec_reference": null
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-016",
+      "category": "missing_validation",
+      "severity": "high",
+      "title": "vkWaitForFences return value not checked in drawFrame",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 502,
+      "description": "The vkWaitForFences call in drawFrame does not check its return value. While UINT64_MAX timeout makes VK_TIMEOUT unlikely, it can still return VK_ERROR_DEVICE_LOST which indicates a fatal GPU error. Ignoring this means the application will continue issuing commands to a lost device, potentially causing crashes or hangs.",
+      "evidence": "vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX);",
+      "recommendation": "Check the return value. On VK_ERROR_DEVICE_LOST, throw an exception or gracefully exit.",
+      "vulkan_spec_reference": "Vulkan Spec 1.2, Section 7.3 - Fences"
+    },
+    {
+      "id": "MISSING_VALIDATION-VK-017",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "vkResetFences return value not checked",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 516,
+      "description": "vkResetFences return value is not checked. While it is unlikely to fail, robust code should verify success.",
+      "evidence": "vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);",
+      "recommendation": "Check the VkResult return value.",
+      "vulkan_spec_reference": "Vulkan Spec 1.2, Section 7.3 - Fences"
+    },
+    {
+      "id": "BUG-VK-018",
+      "category": "bug",
+      "severity": "medium",
+      "title": "PhysicalDeviceSelector constructed with temporary vkb::Instance bypasses lifetime management",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 170,
+      "description": "The PhysicalDeviceSelector is constructed with a temporary vkb::Instance{m_instance, m_debugMessenger} object. This is a manual reconstruction of the vkb::Instance that was originally built by InstanceBuilder. In some versions of vk-bootstrap, this temporary may not correctly propagate all state (such as enabled instance extensions or API version) which could affect device selection criteria. The original vkbInst from createInstance() should be stored and reused.",
+      "evidence": "vkb::PhysicalDeviceSelector selector{vkb::Instance{m_instance, m_debugMessenger}};",
+      "recommendation": "Store the vkb::Instance returned from createInstance() as a class member, and pass it to the PhysicalDeviceSelector instead of reconstructing it from raw handles.",
+      "vulkan_spec_reference": null
+    },
+    {
+      "id": "DESIGN-VK-019",
+      "category": "design",
+      "severity": "low",
+      "title": "Validation layers requested unconditionally in release builds",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 150,
+      "description": "request_validation_layers(true) is called unconditionally, meaning validation layers will be enabled even in release/production builds. Validation layers add significant CPU overhead and should typically only be enabled in debug builds.",
+      "evidence": ".request_validation_layers(true)",
+      "recommendation": "Gate validation layer requests behind a preprocessor check: #ifdef NDEBUG request_validation_layers(false) #else request_validation_layers(true) #endif, or use a runtime flag.",
+      "vulkan_spec_reference": null
+    },
+    {
+      "id": "PERFORMANCE-VK-020",
+      "category": "performance",
+      "severity": "low",
+      "title": "Command buffer uses ONE_TIME_SUBMIT_BIT on reusable render command buffers",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 578,
+      "description": "The recordCommandBuffer function sets VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT on command buffers that are reset and re-recorded every frame. While semantically correct (each recording is submitted once before reset), some drivers may not optimize for repeated reset-record-submit patterns when this flag is set. This is a minor concern and the flag is not incorrect per spec.",
+      "evidence": "beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;",
+      "recommendation": "This is acceptable usage. The flag correctly indicates each recording is submitted once. No change strictly needed, but removing the flag is also valid if re-submission were desired.",
+      "vulkan_spec_reference": "Vulkan Spec 1.2, Section 6.5 - Command Buffer Usage"
+    }
+  ],
+  "summary": {
+    "total_findings": 20,
+    "by_severity": {
+      "critical": 0,
+      "high": 3,
+      "medium": 7,
+      "low": 7,
+      "performance": 1,
+      "design": 2
+    },
+    "top_concerns": [
+      "Widespread missing VkResult error checking on Vulkan API calls (depth image creation, buffer creation, command buffer operations, fence waits) - 10+ instances across the codebase",
+      "PhysicalDeviceSelector constructed with temporary vkb::Instance may miss instance-level state, and the original vkb::Instance is discarded after createInstance()",
+      "Present queue family index never stored; if present and graphics queues differ, swapchain image sharing mode is incorrect",
+      "Depth format hardcoded to VK_FORMAT_D32_SFLOAT without verifying physical device support"
+    ]
+  }
+}

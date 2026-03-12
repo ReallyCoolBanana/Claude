@@ -1,0 +1,164 @@
+{
+  "metadata": {
+    "team": "TEAM-0027",
+    "agent": "a3-vk-swapchain-audit",
+    "task": "vulkan-error-review",
+    "date": "2026-03-12",
+    "focus_area": "Swapchain creation, recreation, presentation, resize handling",
+    "files_reviewed": [
+      "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "vulkan-orbiting-spheres/src/vulkan_app.h"
+    ],
+    "completion_status": "complete"
+  },
+  "findings": [
+    {
+      "id": "SWAP-VK-001",
+      "category": "performance",
+      "severity": "medium",
+      "title": "Old swapchain not passed to vkCreateSwapchainKHR during recreation",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 670,
+      "description": "In recreateSwapchain(), cleanupSwapchain() destroys the old swapchain (line 686) before createSwapchain() creates a new one (line 671). The old swapchain handle is never passed as oldSwapchain to the SwapchainBuilder. The Vulkan spec recommends passing the old swapchain to vkCreateSwapchainKHR so the driver can reuse internal resources. By destroying first, this optimization is impossible.",
+      "evidence": "void VulkanApp::recreateSwapchain() {\n    ...\n    cleanupSwapchain();    // destroys m_swapchain\n    createSwapchain();     // creates fresh, never sees old handle\n    ...\n}\n\nvoid VulkanApp::createSwapchain() {\n    vkb::SwapchainBuilder scBuilder{m_physicalDevice, m_device, m_surface};\n    // no .set_old_swapchain(m_swapchain) call\n    ...\n}",
+      "recommendation": "Save the old swapchain handle before cleanup, pass it to SwapchainBuilder via .set_old_swapchain(), and destroy the old swapchain after the new one is successfully created.",
+      "vulkan_spec_reference": "VkSwapchainCreateInfoKHR::oldSwapchain"
+    },
+    {
+      "id": "SWAP-VK-002",
+      "category": "bug",
+      "severity": "medium",
+      "title": "Swapchain extent uses hardcoded WIDTH/HEIGHT instead of actual framebuffer size",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 219,
+      "description": "createSwapchain() always passes the compile-time constants WIDTH (1280) and HEIGHT (720) to set_desired_extent(). After a window resize, the actual framebuffer size differs from these constants. While vk-bootstrap may clamp to surface capabilities, the desired extent should reflect the current window size to ensure correct behavior across all drivers and platforms.",
+      "evidence": ".set_desired_extent(WIDTH, HEIGHT)",
+      "recommendation": "Query the current framebuffer size via glfwGetFramebufferSize() and pass those dimensions to set_desired_extent(). Alternatively, pass the width/height as parameters to createSwapchain().",
+      "vulkan_spec_reference": "VkSwapchainCreateInfoKHR::imageExtent"
+    },
+    {
+      "id": "SWAP-VK-003",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "No error checking on vmaCreateImage for depth buffer",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 252,
+      "description": "The call to vmaCreateImage() for the depth buffer does not check the return value. If the allocation fails (e.g., out of GPU memory during swapchain recreation), the application will proceed with invalid handles and likely crash later with an obscure error.",
+      "evidence": "vmaCreateImage(m_allocator, &imgInfo, &allocInfo,\n               &m_depthImage.image, &m_depthImage.allocation, nullptr);",
+      "recommendation": "Check the VkResult return value and throw a descriptive error on failure.",
+      "vulkan_spec_reference": ""
+    },
+    {
+      "id": "SWAP-VK-004",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "No error checking on vkCreateImageView for depth image view",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 266,
+      "description": "The call to vkCreateImageView() for the depth image view does not check its return value.",
+      "evidence": "vkCreateImageView(m_device, &viewInfo, nullptr, &m_depthImage.view);",
+      "recommendation": "Check the VkResult return value and throw a descriptive error on failure.",
+      "vulkan_spec_reference": ""
+    },
+    {
+      "id": "SWAP-VK-005",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "No error checking on swapchain image/view retrieval from vk-bootstrap",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 229,
+      "description": "The return values from vkbSc.get_images() and vkbSc.get_image_views() are accessed with .value() without checking whether they succeeded. If either call fails, this will throw an uncontrolled exception or invoke undefined behavior depending on the vk-bootstrap version.",
+      "evidence": "m_swapchainImages = vkbSc.get_images().value();\nm_swapchainImageViews = vkbSc.get_image_views().value();",
+      "recommendation": "Check the return values before calling .value(), or handle the potential exception from .value() gracefully.",
+      "vulkan_spec_reference": ""
+    },
+    {
+      "id": "SWAP-VK-006",
+      "category": "bug",
+      "severity": "high",
+      "title": "Division by zero if swapchain extent height is zero in updateUniformBuffer",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 563,
+      "description": "updateUniformBuffer() computes the aspect ratio by dividing width by height using m_swapchainExtent. Although recreateSwapchain() blocks on zero-size framebuffer, there is a theoretical window where m_swapchainExtent could have height=0 if the minimization handling were bypassed. More importantly, the minimization loop in recreateSwapchain() (line 665) only checks glfwGetFramebufferSize, but the swapchain extent set at line 219 uses hardcoded values rather than the queried size, so there is a disconnect between the guard and the actual extent used.",
+      "evidence": "float aspect = static_cast<float>(m_swapchainExtent.width) /\n               static_cast<float>(m_swapchainExtent.height);",
+      "recommendation": "Add a guard against zero height before the division: if (m_swapchainExtent.height == 0) return;",
+      "vulkan_spec_reference": ""
+    },
+    {
+      "id": "SWAP-VK-007",
+      "category": "design",
+      "severity": "low",
+      "title": "Render pass and pipeline not recreated on swapchain format change",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 662,
+      "description": "recreateSwapchain() recreates the swapchain, depth resources, and framebuffers, but does not recreate the render pass or graphics pipeline. If the swapchain format changes during recreation (which is possible on some platforms/drivers), the render pass will reference a stale format, causing validation errors or undefined rendering.",
+      "evidence": "void VulkanApp::recreateSwapchain() {\n    ...\n    cleanupSwapchain();\n    createSwapchain();\n    createDepthResources();\n    createFramebuffers();\n    // No createRenderPass() or createGraphicsPipeline()\n}",
+      "recommendation": "Either recreate the render pass and pipeline when the swapchain format changes, or verify the format remains the same after recreation and handle the mismatch case.",
+      "vulkan_spec_reference": "VkRenderPassCreateInfo - attachment format must match framebuffer image view format"
+    },
+    {
+      "id": "SWAP-VK-008",
+      "category": "design",
+      "severity": "medium",
+      "title": "Hardcoded depth format without checking physical device support",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.h",
+      "line": 64,
+      "description": "The depth format is hardcoded to VK_FORMAT_D32_SFLOAT without querying the physical device for supported depth formats via vkGetPhysicalDeviceFormatProperties. While D32_SFLOAT is widely supported, it is not guaranteed on all devices. The Vulkan spec requires querying format support.",
+      "evidence": "VkFormat m_depthFormat = VK_FORMAT_D32_SFLOAT;",
+      "recommendation": "Query vkGetPhysicalDeviceFormatProperties for D32_SFLOAT, D32_SFLOAT_S8_UINT, and D24_UNORM_S8_UINT and select the first supported format with VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT.",
+      "vulkan_spec_reference": "vkGetPhysicalDeviceFormatProperties"
+    },
+    {
+      "id": "SWAP-VK-009",
+      "category": "performance",
+      "severity": "low",
+      "title": "vkDeviceWaitIdle used for swapchain recreation synchronization",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 669,
+      "description": "recreateSwapchain() calls vkDeviceWaitIdle() which stalls the entire device. A more granular approach would wait only on the in-flight fences for frames currently using the swapchain resources, reducing stalls.",
+      "evidence": "vkDeviceWaitIdle(m_device);",
+      "recommendation": "Instead of vkDeviceWaitIdle, wait on each in-flight fence individually. This is a minor optimization; vkDeviceWaitIdle is acceptable for simplicity in small applications.",
+      "vulkan_spec_reference": ""
+    },
+    {
+      "id": "SWAP-VK-010",
+      "category": "bug",
+      "severity": "medium",
+      "title": "createImageViews() is a no-op but called during init; swapchain image views created only in createSwapchain",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 233,
+      "description": "createImageViews() is an empty function that says 'Already done by vk-bootstrap in createSwapchain'. This is fine architecturally, but it means the image views are tightly coupled to createSwapchain(). During recreateSwapchain(), the image views from the old swapchain are destroyed in cleanupSwapchain(), and new ones are created inside createSwapchain(). This works correctly but is fragile: if createSwapchain() were ever changed to not call get_image_views(), the image views would be silently missing.",
+      "evidence": "void VulkanApp::createImageViews() {\n    // Already done by vk-bootstrap in createSwapchain\n}",
+      "recommendation": "Either move the get_image_views() call into createImageViews() for clarity, or add a comment/assert in recreateSwapchain() noting the dependency.",
+      "vulkan_spec_reference": ""
+    },
+    {
+      "id": "SWAP-VK-011",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "No validation that swapchain image count matches framebuffer/image view counts",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 229,
+      "description": "After creating the swapchain, the code retrieves images and image views but never verifies that these counts are consistent with each other or with the number of framebuffers created. The actual image count returned by the driver can differ from the requested count (minImageCount). If the counts were mismatched, index-out-of-bounds access would occur during rendering.",
+      "evidence": "m_swapchainImages = vkbSc.get_images().value();\nm_swapchainImageViews = vkbSc.get_image_views().value();\n// No assertion that sizes match\n...\nm_framebuffers.resize(m_swapchainImageViews.size());",
+      "recommendation": "Add an assertion or check that m_swapchainImages.size() == m_swapchainImageViews.size() after retrieval.",
+      "vulkan_spec_reference": "vkGetSwapchainImagesKHR"
+    }
+  ],
+  "summary": {
+    "total_findings": 11,
+    "by_severity": {
+      "critical": 0,
+      "high": 1,
+      "medium": 5,
+      "low": 5
+    },
+    "top_concerns": [
+      "Swapchain extent uses hardcoded WIDTH/HEIGHT instead of querying current framebuffer size on recreation, meaning the swapchain may be created at the wrong resolution after resize",
+      "Old swapchain handle is destroyed before new one is created, missing the oldSwapchain optimization",
+      "Render pass and pipeline not recreated if swapchain format changes",
+      "Depth format hardcoded without querying device support",
+      "Multiple missing error checks on Vulkan/VMA calls in the swapchain path"
+    ]
+  }
+}

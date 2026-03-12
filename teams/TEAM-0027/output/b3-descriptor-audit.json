@@ -1,0 +1,122 @@
+{
+  "metadata": {
+    "team": "TEAM-0027",
+    "agent": "b3-descriptor-audit",
+    "task": "vulkan-error-review",
+    "date": "2026-03-12",
+    "focus_area": "Descriptor sets, UBO layout/alignment, push constants",
+    "files_reviewed": [
+      "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "vulkan-orbiting-spheres/src/vulkan_app.h",
+      "vulkan-orbiting-spheres/src/types.h",
+      "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "vulkan-orbiting-spheres/shaders/shader.vert",
+      "vulkan-orbiting-spheres/shaders/shader.frag"
+    ],
+    "completion_status": "complete"
+  },
+  "findings": [
+    {
+      "id": "DESC-VK-001",
+      "category": "design",
+      "severity": "low",
+      "title": "Descriptor set layout stage flags broader than needed",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 351,
+      "description": "The descriptor set layout binding for the UBO specifies VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, but only the vertex shader (shader.vert) declares and uses the UBO. The fragment shader does not declare a uniform block at all. While this is not a Vulkan spec violation (extra stage flags are allowed), it is misleading and causes the driver to unnecessarily make the UBO visible to the fragment stage.",
+      "evidence": "vulkan_app.cpp:351: uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;\nshader.vert: layout(binding = 0) uniform UniformBufferObject { ... } ubo;\nshader.frag: no uniform block declared",
+      "recommendation": "Change stageFlags to VK_SHADER_STAGE_VERTEX_BIT only, unless the fragment shader is intended to use the UBO in the future.",
+      "vulkan_spec_reference": "Vulkan 1.2 Spec, Section 14.2.1 - Descriptor Set Layout"
+    },
+    {
+      "id": "DESC-VK-002",
+      "category": "design",
+      "severity": "low",
+      "title": "GLSL uniform block missing explicit std140 layout qualifier",
+      "file": "vulkan-orbiting-spheres/shaders/shader.vert",
+      "line": 3,
+      "description": "The UBO in the vertex shader is declared as 'layout(binding = 0) uniform UniformBufferObject' without an explicit 'std140' layout qualifier. While GLSL 450 defaults to std140 for uniform blocks, omitting it reduces code clarity and makes it harder to verify that the C++ struct layout matches the GLSL layout. An explicit qualifier protects against accidental misinterpretation during code review.",
+      "evidence": "shader.vert:3: layout(binding = 0) uniform UniformBufferObject {",
+      "recommendation": "Change to: layout(std140, binding = 0) uniform UniformBufferObject {",
+      "vulkan_spec_reference": "GLSL 4.50 Specification, Section 4.4.5"
+    },
+    {
+      "id": "DESC-VK-003",
+      "category": "performance",
+      "severity": "low",
+      "title": "Inverse-transpose of model matrix computed per-vertex in shader",
+      "file": "vulkan-orbiting-spheres/shaders/shader.vert",
+      "line": 27,
+      "description": "The vertex shader computes 'mat3(transpose(inverse(push.model)))' per vertex to transform normals. The inverse() function is expensive (involves matrix cofactors/determinant). Since push.model is uniform across all vertices in a draw call, this computation is redundant for every vertex. This is a performance issue, not a descriptor issue per se, but it relates to the push constant data being insufficient (a normal matrix could be precomputed on the CPU and passed as an additional push constant or UBO member).",
+      "evidence": "shader.vert:27: fragNormal = mat3(transpose(inverse(push.model))) * inNormal;",
+      "recommendation": "Precompute the normal matrix (inverse-transpose of model mat3) on the CPU and pass it via push constants or the UBO. This avoids per-vertex matrix inversion. Add a mat4 normalMatrix to PushConstants (would bring push constants to 128 bytes, still within spec minimum guarantee).",
+      "vulkan_spec_reference": "N/A (performance recommendation)"
+    },
+    {
+      "id": "DESC-VK-004",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "No validation of VkResult from vmaMapMemory during uniform buffer creation",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 428,
+      "description": "The call to vmaMapMemory() on line 428 does not check its return value. If mapping fails (e.g., out of memory, invalid allocation), the application will proceed with a null or invalid pointer in m_uniformBuffersMapped[i], leading to undefined behavior when memcpy is called in updateUniformBuffer().",
+      "evidence": "vulkan_app.cpp:428: vmaMapMemory(m_allocator, m_uniformBuffers[i].allocation, &m_uniformBuffersMapped[i]);\n// No VK_SUCCESS check",
+      "recommendation": "Check the return value: if (vmaMapMemory(...) != VK_SUCCESS) { throw std::runtime_error(\"Failed to map uniform buffer memory\"); }",
+      "vulkan_spec_reference": "VMA documentation - vmaMapMemory return value"
+    },
+    {
+      "id": "DESC-VK-005",
+      "category": "resource_leak",
+      "severity": "medium",
+      "title": "Uniform buffers persistently mapped but never unmapped before destruction",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 107,
+      "description": "In createUniformBuffers() (line 428), each uniform buffer allocation is mapped via vmaMapMemory, but in cleanup() (lines 107-109), the buffers are destroyed via vmaDestroyBuffer without first calling vmaUnmapMemory. While VMA may handle this internally when destroying the buffer, the VMA documentation recommends calling vmaUnmapMemory for each vmaMapMemory call to maintain proper reference counting. Failing to do so could cause issues with debug layers or future VMA versions.",
+      "evidence": "vulkan_app.cpp:428: vmaMapMemory(m_allocator, m_uniformBuffers[i].allocation, &m_uniformBuffersMapped[i]);\nvulkan_app.cpp:107-109: for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {\n    vmaDestroyBuffer(m_allocator, m_uniformBuffers[i].buffer, m_uniformBuffers[i].allocation);\n}\n// No vmaUnmapMemory call before destroy",
+      "recommendation": "Call vmaUnmapMemory(m_allocator, m_uniformBuffers[i].allocation) before vmaDestroyBuffer in the cleanup loop.",
+      "vulkan_spec_reference": "VMA documentation - Persistently mapped memory"
+    },
+    {
+      "id": "DESC-VK-006",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "No validation of VkResult from vmaCreateBuffer for uniform buffers",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 703,
+      "description": "The createBuffer() helper function calls vmaCreateBuffer() without checking its return value for VK_SUCCESS. This function is used to create uniform buffers, staging buffers, and device-local buffers. A failed allocation would return a null buffer handle, leading to crashes or validation errors downstream.",
+      "evidence": "vulkan_app.cpp:703-704: vmaCreateBuffer(m_allocator, &bufInfo, &allocInfo,\n                    &buffer.buffer, &buffer.allocation, nullptr);\n// No VK_SUCCESS check",
+      "recommendation": "Check the return value: if (vmaCreateBuffer(...) != VK_SUCCESS) { throw std::runtime_error(\"Failed to create buffer\"); }",
+      "vulkan_spec_reference": "VMA documentation - vmaCreateBuffer"
+    },
+    {
+      "id": "DESC-VK-007",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "No validation of VkResult from vmaCreateImage for depth resources",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 252,
+      "description": "The vmaCreateImage() call for creating the depth image does not check its return value. A failed image creation would result in null handles passed to subsequent vkCreateImageView, causing validation errors or crashes.",
+      "evidence": "vulkan_app.cpp:252-253: vmaCreateImage(m_allocator, &imgInfo, &allocInfo,\n                   &m_depthImage.image, &m_depthImage.allocation, nullptr);\n// No VK_SUCCESS check",
+      "recommendation": "Check the return value and throw on failure.",
+      "vulkan_spec_reference": "VMA documentation - vmaCreateImage"
+    }
+  ],
+  "summary": {
+    "total_findings": 7,
+    "by_severity": {
+      "critical": 0,
+      "high": 0,
+      "medium": 3,
+      "low": 4
+    },
+    "top_concerns": [
+      "Missing VkResult validation on VMA allocation and mapping calls (DESC-VK-004, DESC-VK-006, DESC-VK-007) - could lead to silent failures and crashes",
+      "Persistent memory mapping without corresponding unmap before destruction (DESC-VK-005) - violates VMA best practices",
+      "UBO std140 layout is correct: C++ struct UniformBufferObject (with explicit _pad[3]) matches GLSL std140 layout exactly at 160 bytes",
+      "Descriptor pool sizing is correct: pool has exactly MAX_FRAMES_IN_FLIGHT (2) UBO descriptors and 2 max sets",
+      "Push constants are within spec limits: PushConstants (mat4 = 64 bytes) is well under the 128-byte minimum guarantee",
+      "Descriptor set allocation, writes, and binding order are all correct",
+      "No descriptor set layout / shader binding mismatches detected"
+    ]
+  }
+}
