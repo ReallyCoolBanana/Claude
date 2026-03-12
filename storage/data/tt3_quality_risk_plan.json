@@ -1,0 +1,694 @@
+{
+  "id": "TT3-QUALITY-RISK-PLAN",
+  "created": "2026-03-11",
+  "author": "TT-3 (Quality & Risk Management)",
+  "based_on": [
+    "ROADMAP-5-SESSIONS",
+    "DATA-AGENT-3 Risk Intelligence Report",
+    "TT-GAMMA-HEALTH-AUDIT-2026-03-11",
+    "SOP-023 Anti-Recursion Protocol",
+    "SOP-022 Team Sizing",
+    "SOP-020 Bug Fix Workflow"
+  ],
+
+  "quality_framework": {
+    "pick_quality_checklist": [
+      {
+        "criterion": "Business Clarity",
+        "minimum_standard": "One-sentence description of what the company does, its sector, and primary revenue source",
+        "measurement": "Present in pick file under 'business_description' field; reviewable by any non-expert"
+      },
+      {
+        "criterion": "Profitability Metrics",
+        "minimum_standard": "ROCE >= 15% (5-year avg) OR justified exception for growth-stage companies; FCF yield >= 2%",
+        "measurement": "Numeric values cited with source and date; pass/fail recorded in pick file"
+      },
+      {
+        "criterion": "Financial Health",
+        "minimum_standard": "EPS growth trend documented (positive or explained); debt-to-equity reasonable for industry (stated with industry benchmark)",
+        "measurement": "Quantitative data from at least 1 financial data source; trend direction explicitly stated"
+      },
+      {
+        "criterion": "Competitive Moat",
+        "minimum_standard": "At least one durable competitive advantage identified and explained (brand, network effect, cost advantage, switching costs, IP)",
+        "measurement": "Moat type named; 2-3 sentence justification present in pick file"
+      },
+      {
+        "criterion": "Management Quality",
+        "minimum_standard": "CEO tenure and track record noted; any insider buying/selling in last 90 days documented",
+        "measurement": "Management section present in pick file with at least insider transaction data"
+      },
+      {
+        "criterion": "Growth Catalysts",
+        "minimum_standard": "At least one specific near-term catalyst identified (earnings, product launch, regulatory change, macro tailwind)",
+        "measurement": "Catalyst described with expected timeline; not a generic 'market growth' statement"
+      },
+      {
+        "criterion": "Valuation Assessment",
+        "minimum_standard": "P/E ratio compared to sector median; at least one valuation method applied (DCF, relative, earnings yield)",
+        "measurement": "Numeric valuation metric present; explicit statement of overvalued/fairly valued/undervalued"
+      },
+      {
+        "criterion": "Risk Assessment",
+        "minimum_standard": "At least 2 specific risks identified; stop-loss level or maximum drawdown tolerance stated",
+        "measurement": "Risk section present with concrete risks (not generic 'market risk'); numeric stop-loss price"
+      },
+      {
+        "criterion": "Multi-Source Data Validation",
+        "minimum_standard": "Key financial data cross-referenced from at least 2 independent sources",
+        "measurement": "Sources cited in pick file; data_sources array has >= 2 entries"
+      },
+      {
+        "criterion": "Data Freshness",
+        "minimum_standard": "All financial data no older than 5 trading days; price data from current or previous trading day",
+        "measurement": "data_timestamp field present; timestamps within acceptable staleness window"
+      }
+    ],
+
+    "kb_entry_quality_checklist": [
+      {
+        "criterion": "YAML Frontmatter Complete",
+        "minimum_standard": "All required fields present: id, title, created, author, tags, builds_on",
+        "measurement": "Automated check: YAML parse succeeds, all 6 fields non-empty"
+      },
+      {
+        "criterion": "Title in Both Locations",
+        "minimum_standard": "Title field in YAML frontmatter matches title in index.json (prevents dual-store drift)",
+        "measurement": "Automated diff: frontmatter title == index.json title for same ID"
+      },
+      {
+        "criterion": "Domain vs Infrastructure Classification",
+        "minimum_standard": "Entry tagged as 'domain' or 'infrastructure'; domain entries must relate to market research, data analysis, or external tools",
+        "measurement": "Tag present; domain entries do not reference coordination system internals"
+      },
+      {
+        "criterion": "Actionable Content",
+        "minimum_standard": "Entry contains at least one concrete finding, method, or recommendation usable by future teams",
+        "measurement": "Reviewer can identify at least one 'next team should do X' statement or equivalent"
+      },
+      {
+        "criterion": "Index Registration",
+        "minimum_standard": "Entry appears in knowledge-base/index.json with correct ID, title, and tags",
+        "measurement": "Automated check: ID exists in index with matching metadata"
+      },
+      {
+        "criterion": "Minimum Substance",
+        "minimum_standard": "Entry body >= 200 words (excluding frontmatter); not a stub or placeholder",
+        "measurement": "Word count check on markdown body"
+      }
+    ],
+
+    "code_quality_checklist": [
+      {
+        "criterion": "Naming Convention Compliance",
+        "minimum_standard": "Python files use snake_case per SOP-029; no kebab-case filenames",
+        "measurement": "Filename regex check: ^[a-z][a-z0-9_]*\\.py$"
+      },
+      {
+        "criterion": "Index Registration",
+        "minimum_standard": "Every new script added to storage/scripts/index.json with id, name, description, path",
+        "measurement": "Script path appears in index.json; no orphaned scripts"
+      },
+      {
+        "criterion": "Error Handling",
+        "minimum_standard": "Functions that perform I/O or API calls have try/except blocks; errors logged, not silently swallowed",
+        "measurement": "Code review: no bare except; API calls wrapped in error handling"
+      },
+      {
+        "criterion": "Transaction Safety (SQLite)",
+        "minimum_standard": "All SELECT-then-UPDATE patterns use BEGIN IMMEDIATE; WHERE guards on UPDATE to prevent stale-read races",
+        "measurement": "Code review: no raw cursor.execute('UPDATE') without preceding BEGIN IMMEDIATE in same transaction"
+      },
+      {
+        "criterion": "Test Coverage for Bug Fixes",
+        "minimum_standard": "Every bug fix has a regression test that fails without the fix and passes with it",
+        "measurement": "Test file exists; test references bug ID; test passes in CI"
+      },
+      {
+        "criterion": "SOP-020 Compliance for Bug Fixes",
+        "minimum_standard": "Root cause documented before code change; fix is minimal and targeted; no unrelated refactoring",
+        "measurement": "Bug fix summary includes bug_id, severity, root_cause, files_modified, tests_added"
+      }
+    ],
+
+    "session_quality_scorecard": {
+      "metrics": [
+        {
+          "name": "Domain Output Ratio",
+          "weight": 30,
+          "scoring": "actual_domain_percent / target_domain_percent * 100, capped at 100",
+          "target": "Per-session target from roadmap sop_023_compliance"
+        },
+        {
+          "name": "Deliverable Completion",
+          "weight": 25,
+          "scoring": "completed_deliverables / planned_deliverables * 100",
+          "target": "All deliverables listed in roadmap session entry"
+        },
+        {
+          "name": "Pick Quality Score",
+          "weight": 20,
+          "scoring": "average pick_checklist_pass_rate across all picks produced",
+          "target": "Each pick passes >= 8 of 10 checklist items"
+        },
+        {
+          "name": "Data Hygiene Delta",
+          "weight": 10,
+          "scoring": "data_issues_resolved / data_issues_at_session_start * 100",
+          "target": "Net reduction in data hygiene issues per session"
+        },
+        {
+          "name": "Anti-Recursion Compliance",
+          "weight": 10,
+          "scoring": "Binary: 100 if all SOP-023 rules met, 0 if any violated",
+          "target": "AR-01, AR-02, AR-03 all satisfied; no FREEZE violations"
+        },
+        {
+          "name": "Knowledge Continuity",
+          "weight": 5,
+          "scoring": "Binary: 100 if session log + KB entry produced, 0 otherwise",
+          "target": "Session log written; at least 1 KB entry created"
+        }
+      ],
+      "grading": "A: >= 90 (excellent), B: 75-89 (good), C: 60-74 (acceptable), D: 40-59 (below expectations), F: < 40 (session failure). Weighted sum of metric scores. Sessions scoring D or F trigger mandatory retrospective before next session launch."
+    }
+  },
+
+  "risk_registry": [
+    {
+      "id": "RISK-001",
+      "category": "behavioral",
+      "description": "Infrastructure recursion trap: teams drift from domain work into building coordination infrastructure, repeating the pattern that produced zero domain output across Teams 22-28 (7 consecutive sessions)",
+      "likelihood": "HIGH",
+      "impact": "HIGH",
+      "affected_sessions": [1, 2, 3, 4, 5],
+      "mitigation_strategy": "Enforce SOP-023 at every session: pre-launch agent tally (AR-01 >= 60% domain), mid-session drift check at checkpoint 3, post-session audit of actual domain/infra split. Coordinator must immediately redirect any agent proposing new coordination modules.",
+      "detection_method": "Pre-launch: domain agent count < 60%. Mid-session: any agent working in storage/coordination/ on non-bug-fix tasks. Post-session: session log shows < 60% domain work or zero domain artifacts.",
+      "escalation_path": "Coordinator halts infrastructure work immediately. If coordinator is the source, any agent can invoke SOP-023 Section 3 warning sign protocol. Session log must document the drift event."
+    },
+    {
+      "id": "RISK-002",
+      "category": "scope",
+      "description": "Session 1 fails to produce any market picks, extending the zero-output streak to 15+ sessions. This is the single most important risk across the entire roadmap.",
+      "likelihood": "MEDIUM",
+      "impact": "HIGH",
+      "affected_sessions": [1],
+      "mitigation_strategy": "Session 1 has ZERO prerequisites and ZERO infrastructure dependencies. All tools exist (WebSearch, WebFetch). Methods documented in market-research/methods/. TEMPLATE.md ready. Coordinator enforces zero infrastructure work. Time-box: sector screening 10 min, stock screening 15 min.",
+      "detection_method": "30 minutes into session: if no candidate stocks identified, trigger escalation. 60 minutes: if no pick file started, session is failing.",
+      "escalation_path": "Reduce scope to 1-2 high-conviction picks. Drop multi-method validation. Use a single method (fundamental.md) on obvious large-cap candidates. Better 1 adequate pick than 0 perfect picks."
+    },
+    {
+      "id": "RISK-003",
+      "category": "data",
+      "description": "Pick quality too low to be useful: first-ever picks lack rigor, contain stale data, or have unsupported theses, undermining credibility of the entire market research capability",
+      "likelihood": "MEDIUM",
+      "impact": "HIGH",
+      "affected_sessions": [1, 2, 3],
+      "mitigation_strategy": "Apply 10-point pick quality checklist from quality_framework. Every pick must pass at least 8 of 10 criteria. Cross-reference data from 2+ sources. Include data timestamps. Coordinator quality-gates picks before final logging.",
+      "detection_method": "Writer/Indexer runs pick quality checklist on each pick before committing. Any pick failing < 8/10 criteria is flagged for revision.",
+      "escalation_path": "Pick failing quality gate goes back to research team for remediation. If data unavailable, document gap explicitly and reduce confidence score. Never log a pick that fails business clarity, valuation, or risk assessment gates."
+    },
+    {
+      "id": "RISK-004",
+      "category": "technical",
+      "description": "Critical TOCTOU bugs (WS-001, HP-001) cause silent data loss during multi-agent coordination, corrupting work results or leaving inconsistent help request state",
+      "likelihood": "MEDIUM",
+      "impact": "HIGH",
+      "affected_sessions": [2, 3, 4],
+      "mitigation_strategy": "Session 1 uses pure research workflow (no work_stealing or help_protocol). Fix WS-001 and HP-001 in Session 4 (roadmap schedule). Until fixed, avoid multi-agent patterns that trigger complete_work or fulfill_help race conditions.",
+      "detection_method": "Monitor for ValueErrors or unexpected state in work_stealing and help_protocol logs. Run stress tests (test_toctou_fixes.py pattern) after each fix.",
+      "escalation_path": "If data loss detected: stop multi-agent ops, switch to single-agent mode per SOP-021. Apply fix immediately per SOP-020 bug fix workflow. Write regression test before fix."
+    },
+    {
+      "id": "RISK-005",
+      "category": "data",
+      "description": "Data hygiene debt misleads future teams: 15 orphaned scripts, 34 missing KB titles, unindexed session, and duplicate FRED source cause teams to miss available tools or make decisions based on stale information",
+      "likelihood": "HIGH",
+      "impact": "MEDIUM",
+      "affected_sessions": [1, 2, 3, 4],
+      "mitigation_strategy": "Session 4 is dedicated to data hygiene sprint. Quick fixes (BF-001 orphaned scripts, BF-005 TEAM-0032 indexing) can be done opportunistically in earlier sessions if time allows. KB title backfill is scriptable.",
+      "detection_method": "Run validate_naming.py and auto_index.py to detect orphans and drift. Compare filesystem against index.json entry counts.",
+      "escalation_path": "If data hygiene blocks domain work (e.g., team cannot find needed tool), fix immediately as emergency maintenance. Otherwise queue for Session 4."
+    },
+    {
+      "id": "RISK-006",
+      "category": "technical",
+      "description": "API rate limit exhaustion during market research: Alpha Vantage reduced to 25 calls/day, Finnhub at 60/min, no cost tracking exists to monitor consumption",
+      "likelihood": "MEDIUM",
+      "impact": "MEDIUM",
+      "affected_sessions": [2, 3, 5],
+      "mitigation_strategy": "Session 1 uses WebSearch/WebFetch (no rate limits). Session 2 adopts MCP servers with fallback to WebSearch. Yahoo Finance Stockflow has no auth requirement. Stagger API calls. Cache results within session.",
+      "detection_method": "HTTP 429 responses from APIs. Track API call count manually until cost_tracker built.",
+      "escalation_path": "On rate limit hit: switch to alternative source (WebSearch, different MCP server). Use exponential backoff per SOP-021. If all sources exhausted, use cached data from earlier in session and document staleness."
+    },
+    {
+      "id": "RISK-007",
+      "category": "behavioral",
+      "description": "Duplicate work across sessions: teams re-research stocks already analyzed, create duplicate KB entries, or rebuild tools that already exist",
+      "likelihood": "MEDIUM",
+      "impact": "MEDIUM",
+      "affected_sessions": [2, 3, 4, 5],
+      "mitigation_strategy": "Pre-session: search existing picks by ticker, search KB by topic, check scripts index. Use dedup_checker (TB-006) when available. Each session starts by reviewing prior session outputs.",
+      "detection_method": "Pre-session search of market-research/picks/ for ticker symbols under consideration. KB search for topic overlap.",
+      "escalation_path": "If duplicate detected pre-creation: merge new data into existing entry. If duplicate detected post-creation: merge and delete duplicate, update indexes."
+    },
+    {
+      "id": "RISK-008",
+      "category": "scope",
+      "description": "MCP server installation fails or returns unusable data, blocking Session 2's financial data integration objective",
+      "likelihood": "MEDIUM",
+      "impact": "MEDIUM",
+      "affected_sessions": [2],
+      "mitigation_strategy": "Yahoo Finance Stockflow requires no auth and is simplest to adopt. Time-box MCP setup to 15 minutes. Fall back to WebSearch (proven in Session 1) if MCP setup stalls. Do not build custom API scripts.",
+      "detection_method": "MCP server returns valid data for test ticker within 15 minutes of setup start.",
+      "escalation_path": "15 min timeout: abandon problematic server, try next one. 30 min with no working server: abort MCP integration, use WebSearch for this session, retry MCP in Session 3."
+    },
+    {
+      "id": "RISK-009",
+      "category": "technical",
+      "description": "SEC EDGAR XBRL parsing complexity exceeds single-session scope, causing Session 3 coding agent to consume all time on tool building with no domain output",
+      "likelihood": "MEDIUM",
+      "impact": "MEDIUM",
+      "affected_sessions": [3],
+      "mitigation_strategy": "Start with simple JSON endpoints (company search, recent filings list). XBRL parsing is stretch goal, not required. Core value is filing access, not full data extraction. Time-box to 45 minutes.",
+      "detection_method": "45 minutes: if tool cannot fetch basic filing list for a test ticker, scope is too ambitious.",
+      "escalation_path": "Ship minimal tool (filing list + metadata only, no XBRL parsing). Domain teams use WebSearch to read actual filing content. Iterate on XBRL in future session."
+    },
+    {
+      "id": "RISK-010",
+      "category": "scope",
+      "description": "Infrastructure bug fixes in Session 4 expand in scope beyond the planned 5 items, consuming domain work capacity",
+      "likelihood": "MEDIUM",
+      "impact": "MEDIUM",
+      "affected_sessions": [4],
+      "mitigation_strategy": "Limit to exactly the items listed in roadmap: 15 orphaned scripts, TEAM-0032 indexing, 34 KB titles, TOCTOU-WS-001, TOCTOU-HP-001, TOCTOU-MTR-004, FRED duplicate merge. No scope expansion. One infrastructure agent only.",
+      "detection_method": "Infrastructure agent modifying files not in the approved fix list. Infrastructure agent still working on fixes past 60-minute mark.",
+      "escalation_path": "Coordinator halts scope expansion. Remaining items go to deferred backlog. Infrastructure agent reassigned to domain work if fixes complete early."
+    },
+    {
+      "id": "RISK-011",
+      "category": "data",
+      "description": "Stale or incorrect market data leads to picks with wrong entry prices, outdated financials, or invalidated theses",
+      "likelihood": "LOW",
+      "impact": "HIGH",
+      "affected_sessions": [1, 2, 3, 5],
+      "mitigation_strategy": "Cross-reference every key metric from 2+ independent sources. Include data_timestamp in pick file. Flag any data older than 5 trading days. Use real-time data from MCP servers when available (Session 2+).",
+      "detection_method": "Pick quality checklist items 9 (Multi-Source) and 10 (Data Freshness). Session 4 portfolio review catches stale data in earlier picks.",
+      "escalation_path": "If data discrepancy found between sources: use more conservative figure, document discrepancy, note reduced confidence."
+    },
+    {
+      "id": "RISK-012",
+      "category": "behavioral",
+      "description": "Efficiency collapse from team oversizing: per-agent efficiency drops 89% at scale (4.0 solo vs 0.44 at 27 agents) per historical data",
+      "likelihood": "LOW",
+      "impact": "MEDIUM",
+      "affected_sessions": [1, 2, 3, 4, 5],
+      "mitigation_strategy": "All sessions use 5-agent teams per SOP-022 SIZE-03. No session exceeds 8 agents. Think tank to coding ratio <= 1:2. Pre-launch sizing check.",
+      "detection_method": "Pre-launch: team size check against SOP-022. Mid-session: idle agent detection via heartbeat monitoring.",
+      "escalation_path": "Idle agents get reassigned to domain work or standby queue. If 2+ agents idle simultaneously, reduce team size for next session."
+    },
+    {
+      "id": "RISK-013",
+      "category": "scope",
+      "description": "Agent Skill format (Session 5) is poorly documented, causing packaging effort to exceed budget and steal time from domain work",
+      "likelihood": "LOW",
+      "impact": "MEDIUM",
+      "affected_sessions": [5],
+      "mitigation_strategy": "Agent Skill is a .skill.md file with structured instructions per agentskills.io standard. Low complexity. Time-box to 30 minutes. If format unclear, write a plain markdown workflow document instead.",
+      "detection_method": "30 minutes into packaging: if no draft .skill.md exists, format research is taking too long.",
+      "escalation_path": "Abandon .skill.md format. Package as a detailed markdown guide in storage/skills/. Functional equivalence without format compliance."
+    },
+    {
+      "id": "RISK-014",
+      "category": "technical",
+      "description": "TOCTOU bug fixes introduce regressions in coordination system, breaking previously working multi-agent operations",
+      "likelihood": "LOW",
+      "impact": "HIGH",
+      "affected_sessions": [4],
+      "mitigation_strategy": "Write regression test BEFORE implementing fix (test-first). Run full test suite after each fix. Fixes are small and targeted (add BEGIN IMMEDIATE + WHERE guards). Follow SOP-020 minimal fix principle.",
+      "detection_method": "Full test suite run after each fix. Stress tests (threading.Barrier pattern from test_toctou_fixes.py) for concurrency fixes.",
+      "escalation_path": "If regression detected: revert fix immediately. Analyze why regression occurred. Re-implement with smaller scope. Never ship a fix that breaks existing tests."
+    }
+  ],
+
+  "anti_recursion_enforcement": {
+    "per_session_checks": [
+      {
+        "checkpoint": "PRE-LAUNCH",
+        "checks": [
+          "Count agents by category: domain >= 60%, infrastructure <= 30% (max 3), overhead ~10%",
+          "Verify at least one domain deliverable defined in session objectives",
+          "Confirm no new SOP creation planned (FREEZE-01 test: can you cite a novel failure mode?)",
+          "Confirm no new coordination module planned (FREEZE-02 test: is a domain team blocked?)",
+          "Verify team size matches SOP-022 pattern for session type",
+          "Check think-tank to coding-team ratio <= 1:2"
+        ]
+      },
+      {
+        "checkpoint": "MID-SESSION (30 min)",
+        "checks": [
+          "Domain agents are producing domain artifacts (not drifting to infrastructure)",
+          "No agent has started modifying files in storage/coordination/ except approved bug fixes",
+          "No agent has proposed a new SOP, protocol, or coordination module",
+          "At least one domain artifact in progress (pick draft, report section, tool output)",
+          "Infrastructure agent (if any) is on-track with time-boxed deliverable"
+        ]
+      },
+      {
+        "checkpoint": "POST-SESSION",
+        "checks": [
+          "Count actual domain artifacts produced (picks, domain KB entries, external tools)",
+          "Calculate actual domain/infra/overhead time split from session log",
+          "If zero domain artifacts: flag as AR violation, document root cause",
+          "Session scorecard grade >= C (60) or mandatory retrospective triggered",
+          "No unapproved infrastructure was built"
+        ]
+      }
+    ],
+    "red_flags": [
+      "Any agent says 'we need to build a tool first before we can do research' in Session 1 (all tools exist)",
+      "Think tank prompt contains 'coordination', 'protocol', 'bus', 'SOP', 'infrastructure' as primary analysis target",
+      "Coding team output path is storage/coordination/ and task is not a bug fix from the approved list",
+      "Research team studying multi-agent patterns, agent communication, or orchestration instead of market data",
+      "Session log has zero domain artifacts and >50% infrastructure work",
+      "New SOP proposed without citing a specific incident where existing 13+ SOPs were insufficient",
+      "Agent proposes 'one more refactor' or 'quick improvement' to coordination code",
+      "Discussion of LightRAG, context_budget_monitor, or other deferred items before Session 5 completes",
+      "More time spent discussing methodology than executing methodology"
+    ],
+    "coordinator_intervention_triggers": [
+      {
+        "trigger": "Any agent proposes building new coordination infrastructure",
+        "action": "Immediate redirect. Ask: 'Which domain task is blocked without this?' If no answer, the work is not needed.",
+        "severity": "HIGH"
+      },
+      {
+        "trigger": "30 minutes into session with no domain artifact in progress",
+        "action": "Pause all work. Reassign all agents to domain tasks. Infrastructure can wait.",
+        "severity": "CRITICAL"
+      },
+      {
+        "trigger": "Infrastructure agent exceeds time-box (15 min for MCP setup, 45 min for tool build, 60 min for bug fixes)",
+        "action": "Ship what exists. Reassign agent to domain work. Document incomplete items for next session.",
+        "severity": "MEDIUM"
+      },
+      {
+        "trigger": "Session is on track to produce zero domain output",
+        "action": "Emergency scope reduction. All agents switch to producing at least 1 pick using WebSearch only. Minimum viable output.",
+        "severity": "CRITICAL"
+      },
+      {
+        "trigger": "Think tank to coding team ratio exceeds 1:2",
+        "action": "Reassign excess think tank capacity to research or writing roles.",
+        "severity": "MEDIUM"
+      }
+    ]
+  },
+
+  "data_hygiene_plan": {
+    "session_4_items": [
+      {
+        "item": "Index 15 orphaned scripts",
+        "target": "storage/scripts/index.json",
+        "scripts": ["auto_index.py", "generate_registry.py", "import_to_db.py", "mcp_kb_server.py", "query_kb.py", "semantic_indexer.py", "semantic_search.py", "smart_read.py", "smart_search.py", "smart_write.py", "test-cross-references.py", "validate_naming.py", "benchmark_runner.py", "dedup_utils.py", "test_utilities.py"],
+        "effort": "5 minutes",
+        "verification": "Count of scripts on disk matches count in index.json for storage/scripts/"
+      },
+      {
+        "item": "Add TEAM-0032 to sessions index",
+        "target": "teams/sessions/index.json",
+        "effort": "2 minutes",
+        "verification": "session_count matches actual file count on disk; TEAM-0032 entry present"
+      },
+      {
+        "item": "Backfill titles into 34 KB entries",
+        "target": "knowledge-base/entries/KB-*.md (34 files)",
+        "source": "knowledge-base/index.json title field for each entry",
+        "effort": "10 minutes (scriptable)",
+        "verification": "Every KB entry YAML frontmatter has 'title' field matching index.json"
+      },
+      {
+        "item": "Fix TOCTOU-WS-001 (complete_work race condition)",
+        "target": "storage/coordination/work_stealing.py lines 294-318",
+        "fix_pattern": "BEGIN IMMEDIATE + WHERE claimed_by=? AND status='claimed' + rowcount check",
+        "effort": "30 minutes including test",
+        "verification": "TestCompleteWorkAtomicity passes (15 threads, 5 rounds, exactly 1 success)"
+      },
+      {
+        "item": "Fix TOCTOU-HP-001 (fulfill_help crash consistency)",
+        "target": "storage/coordination/help_protocol.py lines 573-613",
+        "fix_pattern": "BEGIN IMMEDIATE wrapping both UPDATEs + WHERE status='accepted' AND accepted_by_team=? guard",
+        "effort": "30 minutes including test",
+        "verification": "TestFulfillHelpAtomicity passes (12 threads, 5 rounds, consistent DB state)"
+      },
+      {
+        "item": "Fix TOCTOU-MTR-004 (double stop guard)",
+        "target": "storage/coordination/multi_team_runner.py lines 491-508",
+        "fix_pattern": "threading.Event or atomic flag; if not self._stopped.is_set(): self._stopped.set() else: return",
+        "effort": "15 minutes including test",
+        "verification": "Double invocation of stop() does not crash or send duplicate shutdown messages"
+      },
+      {
+        "item": "Merge duplicate FRED source entries",
+        "target": "storage/sources/ (SRC-0018 + SRC-0039)",
+        "action": "Keep SRC-0018 as canonical, merge data_types from SRC-0039, delete SRC-0039, update by_data_type and by_access_type indexes",
+        "effort": "10 minutes",
+        "verification": "Single FRED entry in sources/index.json; no orphaned SRC-0039 file"
+      }
+    ],
+    "ongoing_maintenance": [
+      {
+        "practice": "Zero-orphan policy",
+        "rule": "Every new script, KB entry, pick, or source file must be indexed before session ends",
+        "enforcement": "Writer/Indexer agent runs filesystem-vs-index count check as final session task"
+      },
+      {
+        "practice": "Dual-store sync",
+        "rule": "When updating index.json metadata, also update the corresponding file's YAML frontmatter (and vice versa)",
+        "enforcement": "Quality gate: title in frontmatter == title in index for any modified entry"
+      },
+      {
+        "practice": "Pre-creation duplicate check",
+        "rule": "Before creating any new file, search index for existing entries with same subject/ticker/topic",
+        "enforcement": "SOP-029 FC-01 compliance; dedup_checker when available"
+      },
+      {
+        "practice": "Session count reconciliation",
+        "rule": "At end of each session, verify teams/sessions/index.json session_count matches actual file count",
+        "enforcement": "Writer/Indexer validates before writing session log"
+      },
+      {
+        "practice": "Naming convention enforcement",
+        "rule": "All new Python files use snake_case; all new SOPs use sop_NNN_name.json pattern",
+        "enforcement": "validate_naming.py run on new files; PR-style review by coordinator"
+      }
+    ]
+  },
+
+  "toctou_fix_plan": {
+    "bugs_to_fix": [
+      {
+        "id": "TOCTOU-WS-001",
+        "severity": "Critical",
+        "session": 4,
+        "file": "storage/coordination/work_stealing.py",
+        "function": "complete_work",
+        "lines": "294-318",
+        "root_cause": "SELECT to check authorization followed by UPDATE without BEGIN IMMEDIATE. Between check and update, another process can reclaim and reassign the work item.",
+        "impact": "Work results silently lost. One team's output overwrites another's."
+      },
+      {
+        "id": "TOCTOU-HP-001",
+        "severity": "Critical",
+        "session": 4,
+        "file": "storage/coordination/help_protocol.py",
+        "function": "fulfill_help",
+        "lines": "573-613",
+        "root_cause": "Two separate UPDATEs (help_requests + work_items) not wrapped in BEGIN IMMEDIATE. Crash between them leaves inconsistent state.",
+        "impact": "Help request marked fulfilled but work item not completed, or vice versa."
+      },
+      {
+        "id": "TOCTOU-MTR-004",
+        "severity": "High",
+        "session": 4,
+        "file": "storage/coordination/multi_team_runner.py",
+        "function": "MultiTeamRunner.stop",
+        "lines": "491-508",
+        "root_cause": "No guard against double invocation from signal handler + main thread.",
+        "impact": "Double _close_connection call and duplicate shutdown messages."
+      }
+    ],
+    "fix_patterns": [
+      {
+        "pattern": "Atomic SELECT-UPDATE",
+        "applies_to": ["TOCTOU-WS-001"],
+        "implementation": "Replace separate SELECT + UPDATE with BEGIN IMMEDIATE transaction. Add WHERE clause to UPDATE that includes the expected current state (claimed_by=? AND status='claimed'). Check cursor.rowcount == 1 after UPDATE. ROLLBACK and raise ValueError if rowcount != 1.",
+        "example_sql": "BEGIN IMMEDIATE; UPDATE work_items SET status='completed', result=? WHERE id=? AND claimed_by=? AND status='claimed'; -- check rowcount; COMMIT;"
+      },
+      {
+        "pattern": "Multi-Statement Transaction",
+        "applies_to": ["TOCTOU-HP-001"],
+        "implementation": "Wrap both UPDATEs in a single BEGIN IMMEDIATE transaction. Add WHERE guards to each UPDATE. Check rowcount after each. ROLLBACK entire transaction if any check fails.",
+        "example_sql": "BEGIN IMMEDIATE; UPDATE help_requests SET status='fulfilled' WHERE id=? AND status='accepted' AND accepted_by_team=?; -- check rowcount; UPDATE work_items SET status='completed' WHERE id=?; -- check rowcount; COMMIT;"
+      },
+      {
+        "pattern": "Double-Invocation Guard",
+        "applies_to": ["TOCTOU-MTR-004"],
+        "implementation": "Add threading.Event self._stopped. At entry to stop(): if self._stopped.is_set(): return. Otherwise self._stopped.set() and proceed. Initialize self._stopped = threading.Event() in __init__.",
+        "example_python": "def stop(self):\n    if self._stopped.is_set():\n        return\n    self._stopped.set()\n    # ... existing stop logic"
+      }
+    ],
+    "test_requirements": [
+      {
+        "bug_id": "TOCTOU-WS-001",
+        "test_class": "TestCompleteWorkAtomicity",
+        "approach": "Threading stress test with Barrier. 15 threads attempt to complete the same work item simultaneously. Exactly 1 must succeed, N-1 must get ValueError. No silent data loss.",
+        "rounds": 5,
+        "thread_count": 15,
+        "assertions": ["exactly_one_success", "n_minus_one_errors", "result_matches_winner"]
+      },
+      {
+        "bug_id": "TOCTOU-HP-001",
+        "test_class": "TestFulfillHelpAtomicity",
+        "approach": "Threading stress test with Barrier. 12 threads attempt to fulfill the same help request. Exactly 1 must succeed. DB state must be consistent (both help_requests and work_items updated or neither).",
+        "rounds": 5,
+        "thread_count": 12,
+        "assertions": ["exactly_one_success", "consistent_db_state", "no_partial_updates"]
+      },
+      {
+        "bug_id": "TOCTOU-MTR-004",
+        "test_class": "TestStopDoubleInvocation",
+        "approach": "Call stop() from two threads simultaneously using Barrier. Verify _close_connection called exactly once. Verify no duplicate shutdown messages.",
+        "rounds": 5,
+        "thread_count": 2,
+        "assertions": ["single_close_connection", "no_duplicate_shutdown", "no_exception"]
+      }
+    ]
+  },
+
+  "success_metrics": {
+    "session_1": {
+      "primary": "Break the zero-output streak",
+      "must_have": [
+        {"metric": "pick_count", "target": ">= 3", "measurement": "Count files in market-research/picks/ created this session"},
+        {"metric": "pick_quality", "target": ">= 8/10 checklist items per pick", "measurement": "Run pick quality checklist on each pick"},
+        {"metric": "domain_ratio", "target": ">= 80%", "measurement": "Agent allocation: 4/5 on domain work"},
+        {"metric": "infrastructure_work", "target": "= 0%", "measurement": "Zero agents on infrastructure tasks"}
+      ],
+      "nice_to_have": [
+        {"metric": "pick_count", "target": "5", "measurement": "Stretch goal from roadmap"},
+        {"metric": "macro_backdrop", "target": ">= 200 words", "measurement": "Word count of market conditions analysis"},
+        {"metric": "kb_entry", "target": "1 domain KB entry", "measurement": "KB entry about research methodology/results"}
+      ],
+      "failure_criteria": "Fewer than 3 pick files created. Any infrastructure work performed. Session scorecard grade < C."
+    },
+    "session_2": {
+      "primary": "Financial data integration with continued domain output",
+      "must_have": [
+        {"metric": "mcp_servers", "target": ">= 1 working", "measurement": "At least 1 MCP server in .mcp.json returning valid financial data"},
+        {"metric": "pick_logger", "target": "functional", "measurement": "pick_logger.py creates structured pick entries and updates index.json"},
+        {"metric": "new_picks", "target": ">= 3", "measurement": "New pick files created this session"},
+        {"metric": "session_1_validation", "target": "all Session 1 picks reviewed", "measurement": "Each Session 1 pick has review note with current data"},
+        {"metric": "domain_ratio", "target": ">= 60%", "measurement": "3/5 agents on domain work"}
+      ],
+      "nice_to_have": [
+        {"metric": "mcp_servers", "target": "2-3 working", "measurement": "Multiple financial data sources integrated"},
+        {"metric": "new_picks", "target": "5", "measurement": "Stretch goal"},
+        {"metric": "kb_entry", "target": "1 domain KB on MCP financial tools", "measurement": "Evaluation of financial data MCP servers"}
+      ],
+      "failure_criteria": "Zero MCP servers working AND zero additional picks. pick_logger.py not functional. Domain ratio < 60%."
+    },
+    "session_3": {
+      "primary": "SEC EDGAR integration with deep sector analysis",
+      "must_have": [
+        {"metric": "sec_edgar_tool", "target": "fetches filing data for test tickers", "measurement": "method_sec_edgar.py returns filing list for at least 3 tickers"},
+        {"metric": "sector_analysis", "target": "1 sector deep-dive report", "measurement": "KB entry comparing 5-8 companies across valuation, growth, profitability"},
+        {"metric": "new_picks", "target": ">= 3", "measurement": "Picks from deep-dive analysis with SEC data backing"},
+        {"metric": "domain_ratio", "target": ">= 60%", "measurement": "3/5 agents on domain work"},
+        {"metric": "cumulative_picks", "target": ">= 9", "measurement": "Total picks across Sessions 1-3"}
+      ],
+      "nice_to_have": [
+        {"metric": "xbrl_parsing", "target": "extracts revenue/earnings from XBRL", "measurement": "Stretch goal for SEC EDGAR tool"},
+        {"metric": "research_quality_grade", "target": "SCR-0004 grade applied", "measurement": "Graded by grade_research.py"},
+        {"metric": "session_1_2_pick_validation", "target": "all prior picks still valid", "measurement": "Performance check against current prices"}
+      ],
+      "failure_criteria": "SEC EDGAR tool non-functional AND zero new picks. Sector analysis not produced. Domain ratio < 60%."
+    },
+    "session_4": {
+      "primary": "Data hygiene resolution with portfolio performance review",
+      "must_have": [
+        {"metric": "orphaned_scripts_indexed", "target": "15/15", "measurement": "All 15 scripts from Gamma audit in storage/scripts/index.json"},
+        {"metric": "kb_titles_backfilled", "target": "34/34", "measurement": "All KB entries have title in YAML frontmatter"},
+        {"metric": "toctou_critical_fixed", "target": "2/2", "measurement": "TOCTOU-WS-001 and TOCTOU-HP-001 fixed with passing regression tests"},
+        {"metric": "toctou_high_fixed", "target": ">= 1", "measurement": "TOCTOU-MTR-004 fixed at minimum"},
+        {"metric": "fred_duplicate_merged", "target": "done", "measurement": "Single FRED entry in sources/index.json"},
+        {"metric": "team_032_indexed", "target": "done", "measurement": "TEAM-0032 in sessions/index.json"},
+        {"metric": "portfolio_review", "target": "all prior picks reviewed", "measurement": "Performance data for all 9-15 picks from Sessions 1-3"},
+        {"metric": "domain_ratio", "target": ">= 60%", "measurement": "3/5 agents on domain work (portfolio review = domain)"}
+      ],
+      "nice_to_have": [
+        {"metric": "new_picks", "target": "1-2", "measurement": "New picks from updated analysis"},
+        {"metric": "methodology_improvements", "target": "documented", "measurement": "Lessons learned from portfolio review documented for Session 5"}
+      ],
+      "failure_criteria": "Fewer than 5 of 7 data hygiene items completed. Portfolio review not performed. Critical TOCTOU bugs remain unfixed."
+    },
+    "session_5": {
+      "primary": "Agent Skill packaging, FRED tool, expanded domain output, and retrospective",
+      "must_have": [
+        {"metric": "fred_tool", "target": "functional", "measurement": "method_fred.py fetches GDP, CPI, UNRATE, DFF, T10Y2Y series"},
+        {"metric": "agent_skill", "target": "packaged", "measurement": ".skill.md file or equivalent markdown workflow guide exists"},
+        {"metric": "economic_report", "target": "1 KB entry", "measurement": "Economic analysis with labor, inflation, rates data"},
+        {"metric": "new_picks", "target": ">= 3", "measurement": "Multi-method picks with FRED macro context"},
+        {"metric": "retrospective", "target": "1 KB entry", "measurement": "5-session retrospective documenting what worked, what failed"},
+        {"metric": "next_roadmap_draft", "target": "exists", "measurement": "storage/data/roadmap_sessions_6_10.json created"},
+        {"metric": "domain_ratio", "target": ">= 60%", "measurement": "3/5 agents on domain work"}
+      ],
+      "nice_to_have": [
+        {"metric": "cumulative_picks", "target": ">= 15", "measurement": "Total picks across all 5 sessions"},
+        {"metric": "all_picks_performance_tracked", "target": "done", "measurement": "Every pick has performance data from Session 4 review + this session"}
+      ],
+      "failure_criteria": "FRED tool non-functional AND zero new picks. No retrospective. No next roadmap draft. Domain ratio < 60%."
+    },
+    "cumulative": {
+      "total_picks": {
+        "minimum": 15,
+        "target": 20,
+        "stretch": 27,
+        "measurement": "Count of pick files in market-research/picks/"
+      },
+      "pick_quality_average": {
+        "target": ">= 8/10 checklist items across all picks",
+        "measurement": "Average pass rate on 10-item pick quality checklist"
+      },
+      "tools_built": {
+        "target": 3,
+        "items": ["pick_logger.py", "method_sec_edgar.py", "method_fred.py"],
+        "measurement": "Tools exist, are indexed, and return valid output for test inputs"
+      },
+      "tools_adopted": {
+        "target": "2-3 MCP servers",
+        "measurement": "MCP servers in .mcp.json returning valid financial data"
+      },
+      "domain_kb_entries": {
+        "target": "6-8",
+        "measurement": "KB entries tagged 'domain' (not infrastructure/coordination)"
+      },
+      "data_hygiene_debt": {
+        "target": "< 5 remaining issues from Gamma audit",
+        "measurement": "Count of unresolved items from tt_gamma_health_audit.json priority matrix"
+      },
+      "anti_recursion_compliance": {
+        "target": "100% session compliance",
+        "measurement": "All 5 sessions meet SOP-023 AR-01 (60% domain) and AR-02 (30% max infra)"
+      },
+      "session_scorecard_average": {
+        "target": ">= B (75)",
+        "measurement": "Average of 5 session scorecard grades (weighted metric scores)"
+      },
+      "zero_output_streak": {
+        "target": "BROKEN in Session 1",
+        "measurement": "At least 1 domain artifact (pick file) produced in Session 1. Non-negotiable."
+      }
+    }
+  }
+}

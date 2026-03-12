@@ -1,0 +1,698 @@
+{
+  "id": "DATA-AGENT-1-MARKET-INTEL",
+  "version": "1.0",
+  "date": "2026-03-11",
+  "agent": "DATA-AGENT-1",
+  "purpose": "Comprehensive market & domain intelligence for Think Tank 1 (Execution Strategy) to plan 5 market research sessions",
+
+  "section_1_market_research_methods": {
+    "fundamental": {
+      "file": "market-research/methods/fundamental.md",
+      "overview": "Estimates intrinsic value by examining financial health, earnings power, growth prospects, and competitive position. Core question: is the stock trading below what the business is actually worth?",
+      "key_metrics": {
+        "valuation_ratios": ["P/E Ratio", "Forward P/E", "P/B Ratio", "P/S Ratio", "EV/EBITDA", "PEG Ratio"],
+        "growth_metrics": ["Revenue growth (YoY, QoQ)", "Earnings growth (EPS trajectory)", "Free cash flow growth", "Gross margin trend"],
+        "balance_sheet_health": ["Debt-to-equity ratio", "Current ratio", "Interest coverage", "Cash position"],
+        "profitability": ["ROE", "ROIC", "Net margin", "Operating margin"]
+      },
+      "qualitative_factors": {
+        "competitive_moat": ["Network effects", "Switching costs", "Cost advantages", "Intangible assets", "Efficient scale"],
+        "management_quality": ["Insider ownership", "Capital allocation track record", "Transparency", "Compensation alignment"],
+        "industry_position": ["Market share", "Competitive dynamics", "Regulatory environment", "Secular trends"]
+      },
+      "dcf_template_steps": [
+        "Project free cash flows for 5-10 years",
+        "Estimate terminal value (2-3% growth rate or exit multiple)",
+        "Discount back to present value using WACC",
+        "Compare intrinsic value per share to current market price",
+        "Apply margin of safety (20-30% discount)"
+      ],
+      "checklist": [
+        "Valuation attractive relative to peers and historical range",
+        "Revenue and earnings growing or have clear catalyst",
+        "Balance sheet healthy enough to weather downturns",
+        "ROIC exceeds cost of capital",
+        "Identifiable competitive moat",
+        "Management competent and aligned",
+        "Clear thesis for mispricing",
+        "Defined margin of safety"
+      ]
+    },
+    "technical": {
+      "file": "market-research/methods/technical.md",
+      "overview": "Studies price action and volume to identify trends, reversals, and optimal entry/exit points. Assumes all known information is reflected in price and historical patterns repeat. Best for timing trades and managing risk.",
+      "trend_indicators": {
+        "moving_averages": ["SMA 50 (medium-term)", "SMA 200 (long-term bull/bear dividing line)", "EMA 20 (short-term)", "Golden Cross (50>200 bullish)", "Death Cross (50<200 bearish)"],
+        "macd": ["Signal line crossover", "Zero line crossover", "Divergence warning"]
+      },
+      "momentum_indicators": {
+        "rsi": "Range 0-100; Above 70 = overbought, Below 30 = oversold, Divergence = trend exhaustion",
+        "stochastic": "Overbought >80, Oversold <20, %K/%D crossovers generate signals",
+        "volume": ["Rising price + rising volume = confirmation", "Rising price + falling volume = weakening", "Volume spikes = reversals/breakouts", "OBV for cumulative flow"]
+      },
+      "support_resistance": ["Previous swing highs/lows", "Round numbers", "Moving averages as dynamic S/R", "Volume profile nodes", "Fibonacci levels (23.6%, 38.2%, 50%, 61.8%)"],
+      "chart_patterns": {
+        "continuation": ["Flags and pennants", "Triangles (ascending, descending, symmetrical)", "Cup and handle"],
+        "reversal": ["Head and shoulders", "Inverse head and shoulders", "Double top/bottom", "Rounding bottom"]
+      },
+      "checklist": [
+        "Identify primary trend",
+        "Confirm with multiple indicators",
+        "Identify key S/R levels",
+        "Check momentum for extremes",
+        "Look for divergences",
+        "Identify chart patterns",
+        "Define entry price",
+        "Set stop loss",
+        "Calculate risk-reward (min 2:1)",
+        "Confirm with volume"
+      ]
+    },
+    "sentiment": {
+      "file": "market-research/methods/sentiment.md",
+      "overview": "Gauges mood and positioning of market participants to identify mispricings. Works as contrarian tool (extremes mark turning points) and catalyst detector (sentiment shifts precede price moves).",
+      "data_sources": {
+        "news_sentiment": ["Earnings call tone", "Analyst reports/ratings", "Financial news frequency/tone", "Press releases"],
+        "social_retail": ["Reddit/WallStreetBets", "Twitter/X finance", "StockTwits bullish/bearish ratios", "Google Trends search volume"],
+        "insider_activity": {
+          "signals": {
+            "cluster_buying": "Strong bullish - insiders see value",
+            "ceo_cfo_buying": "Particularly meaningful",
+            "insider_selling": "Often routine, less informative alone",
+            "selling_after_long_hold": "More concerning"
+          },
+          "filing": "Form 4 within 2 business days"
+        },
+        "institutional": ["13F filings (quarterly hedge fund holdings)", "Short interest", "Put/call ratio", "Fund flows into/out of sector ETFs"]
+      },
+      "indicators": {
+        "fear_greed": ["VIX (>30 = fear, <15 = complacency)", "CNN Fear & Greed Index", "AAII Sentiment Survey"],
+        "contrarian": ["Extreme bullish consensus precedes corrections", "Extreme bearish consensus precedes rallies", "Magazine cover indicator"]
+      },
+      "checklist": [
+        "Identify prevailing sentiment",
+        "Quantify sentiment (put/call, short interest, social volume)",
+        "Determine if at extreme",
+        "Check insider activity",
+        "Identify catalysts for sentiment shift",
+        "Assess if price already reflects sentiment",
+        "Define expected sentiment shift and trigger",
+        "Set risk management rules"
+      ]
+    },
+    "quantitative": {
+      "file": "market-research/methods/quantitative.md",
+      "overview": "Applies mathematical and statistical models to identify mispricings, systematic edges, and risk-adjusted return opportunities. Relies on data not narrative, repeatable processes not one-off judgments.",
+      "factor_models": {
+        "common_factors": {
+          "value": "Book-to-market ratio, earnings yield",
+          "momentum": "12-month return minus last month",
+          "size": "Market capitalization (small caps outperform)",
+          "quality": "ROE, earnings stability, low leverage",
+          "low_volatility": "Historical standard deviation",
+          "growth": "Revenue/earnings growth rate"
+        },
+        "multi_factor_approach": [
+          "Score each stock on multiple factors",
+          "Combine scores (equal or optimized weighting)",
+          "Rank universe, go long top decile",
+          "Rebalance monthly or quarterly"
+        ]
+      },
+      "strategies": {
+        "pairs_trading": {
+          "steps": ["Identify correlated stocks (>0.8)", "Calculate spread", "Compute z-score", "Enter when z>2", "Exit when z approaches 0"],
+          "metrics": ["Correlation coefficient", "Cointegration test", "Half-life", "Spread z-score"]
+        },
+        "mean_reversion": "Prices deviating from historical average tend to revert. Apply to: individual stock vs MA, valuation multiples vs history, sector vs market, volatility vs history.",
+        "momentum": {
+          "price": "Rank by trailing 12m return excl last month, long top/short bottom",
+          "earnings": "Track revision trends, post-earnings-announcement drift"
+        }
+      },
+      "risk_management": {
+        "position_sizing": ["Kelly criterion", "Volatility targeting", "Equal risk contribution"],
+        "portfolio_construction": ["Diversification", "Correlation monitoring", "Drawdown limits", "Regime detection"]
+      },
+      "checklist": [
+        "Define quantitative signal/model",
+        "Document backtest results (win rate, Sharpe, max drawdown)",
+        "Specify data sources and lookback period",
+        "Confirm signal is currently active",
+        "Calculate position size",
+        "Set systematic exit rules",
+        "Identify model invalidation conditions",
+        "Note correlation with existing positions"
+      ]
+    },
+    "ai_quant_techniques": {
+      "directory": "market-research/methods/ai-quant-techniques/",
+      "index_file": "market-research/methods/ai-quant-techniques/index.json",
+      "total_techniques": 47,
+      "total_references": 72,
+      "total_tools": 50,
+      "categories": [
+        {"id": "ml-trading", "name": "Machine Learning Trading Strategies", "techniques": 6, "file": "categories/ml-trading.json"},
+        {"id": "portfolio-opt", "name": "AI Portfolio Optimization", "techniques": 7, "file": "categories/portfolio-opt.json"},
+        {"id": "risk-mgmt", "name": "AI Risk Management", "techniques": 5, "file": "categories/risk-mgmt.json"},
+        {"id": "data-infra", "name": "Data Pipelines & Infrastructure", "techniques": 6, "file": "categories/data-infra.json"},
+        {"id": "alt-data", "name": "Alternative Data Sources", "techniques": 6, "file": "categories/alt-data.json"},
+        {"id": "hft", "name": "High-Frequency Trading", "techniques": 5, "file": "categories/hft.json"},
+        {"id": "nlp-sentiment", "name": "NLP & Sentiment Analysis", "techniques": 4, "file": "categories/nlp-sentiment.json"},
+        {"id": "xai-governance", "name": "Explainable AI & Governance", "techniques": 8, "file": "categories/xai-governance.json"}
+      ],
+      "analysis_files": ["analysis/technique-comparison.md", "analysis/performance-tracker.json"],
+      "status_note": "Per TT-Alpha assessment: comparison template is empty/unpopulated. NOT READY for use in first picks. Skip for initial sessions."
+    }
+  },
+
+  "section_2_pick_template_and_index": {
+    "template": {
+      "file": "market-research/picks/TEMPLATE.md",
+      "frontmatter_fields": {
+        "pick_id": "PICK-XXXX",
+        "date": "YYYY-MM-DD",
+        "team": "TEAM-XXXX",
+        "ticker": "",
+        "company": "",
+        "direction": "long|short",
+        "method": "fundamental|technical|sentiment|quantitative|macro-sector",
+        "entry_price": null,
+        "target_price": null,
+        "stop_loss": null,
+        "timeframe": "short-term|medium-term|long-term",
+        "confidence": "high|medium|low",
+        "status": "active|closed|watchlist",
+        "builds_on": ["KB-XXXX", "PICK-XXXX"]
+      },
+      "sections": ["Thesis", "Analysis (Method Applied, Key Metrics/Signals, Risk Factors)", "Exit Criteria", "Outcome (Actual Return, What Worked, What Didn't, Knowledge Entry)"]
+    },
+    "index": {
+      "file": "market-research/picks/index.json",
+      "total_picks": 0,
+      "picks": [],
+      "by_method": {"fundamental": [], "technical": [], "sentiment": [], "quantitative": [], "macro-sector": []},
+      "by_status": {"active": [], "closed": [], "watchlist": []},
+      "performance_summary": {"total_picks": 0, "win_rate": null, "avg_return": null}
+    },
+    "watchlist": {
+      "file": "market-research/watchlist.json",
+      "watchlist": [],
+      "sectors_of_interest": [],
+      "macro_themes": [],
+      "status": "EMPTY - needs population"
+    }
+  },
+
+  "section_3_sop_018": {
+    "file": "storage/coordination/sops/sop_018_market_research_operations.json",
+    "id": "SOP-018",
+    "title": "Market Research Operations",
+    "purpose": "Standard procedure for conducting market research, selecting analysis methods, logging stock picks, tracking performance, and maintaining the picks index.",
+    "sections": {
+      "method_selection": {
+        "steps": [
+          "List available methods (ls market-research/methods/)",
+          "Read method file to understand criteria, inputs, scoring",
+          "Select method matching research objective",
+          "Document method selection and rationale"
+        ],
+        "method_guidelines": {
+          "fundamental": "Long-term value investing, earnings-based",
+          "technical": "Pattern-based, momentum, timing",
+          "quantitative": "Filtering large universes",
+          "hybrid": "Combining multiple (recommended for comprehensive)"
+        }
+      },
+      "research_workflow": {
+        "steps": [
+          "Gather data using SOP-017 (hybrid method for investment-grade)",
+          "Apply selected method scoring criteria to data",
+          "Rank candidates - only top 20% should be logged as picks",
+          "Write thesis for each pick",
+          "Cross-validate against at least one alternative method"
+        ]
+      },
+      "logging_picks": {
+        "required_fields": [
+          "Ticker symbol", "Date of pick", "Entry price (current at time of pick)",
+          "Target price and timeframe", "Stop-loss level",
+          "Method used (reference to methods/)", "Thesis (2-5 sentences)",
+          "Key risks (at least 2)", "Confidence level (high/medium/low)"
+        ],
+        "naming_convention": "market-research/picks/<YYYY-MM-DD>_<ticker>.md"
+      },
+      "performance_tracking": {
+        "checkpoints": ["1 week", "1 month", "3 months", "target/stop-loss hit"],
+        "update_fields": ["Current price", "Return percentage", "Status (open/closed/stopped-out)", "Notes on material developments"],
+        "return_formula": "((exit_price - entry_price) / entry_price) * 100",
+        "lessons_learned": "What method got right, what it missed, what to improve"
+      },
+      "index_update": {
+        "entry_format": {
+          "ticker": "<SYMBOL>",
+          "date": "<YYYY-MM-DD>",
+          "method": "<method_name>",
+          "entry_price": "<number>",
+          "target_price": "<number>",
+          "status": "open",
+          "file": "<YYYY-MM-DD>_<ticker>.md",
+          "confidence": "high|medium|low"
+        },
+        "validation": "python -c \"import json; json.load(open('market-research/picks/index.json'))\""
+      }
+    },
+    "checklists": {
+      "before_research": [
+        "Review available methods",
+        "Select and document analysis method",
+        "Verify data gathering tools working",
+        "Check existing picks to avoid duplicates"
+      ],
+      "during_research": [
+        "Apply scoring criteria consistently",
+        "Document rationale for each score",
+        "Cross-validate top candidates",
+        "Write thesis for each candidate"
+      ],
+      "after_research": [
+        "Log each pick using TEMPLATE.md with all required fields",
+        "Update picks/index.json",
+        "Validate index.json well-formed",
+        "Record method and team in pick file",
+        "Set calendar reminders for performance checks"
+      ]
+    }
+  },
+
+  "section_4_available_data_sources": {
+    "financial_market_data": {
+      "alpha_vantage": {
+        "id": "SRC-0038",
+        "name": "Alpha Vantage",
+        "url": "https://www.alphavantage.co/query",
+        "docs": "https://www.alphavantage.co/documentation/",
+        "data_types": ["stock-prices-realtime", "stock-prices-historical", "forex-rates", "cryptocurrency-prices", "technical-indicators", "commodity-prices", "economic-indicators"],
+        "access": "freemium, api-key required",
+        "rate_limits": "Free: 25 requests/day, 5/minute. Premium: 75-1200/min.",
+        "notes": "Official NASDAQ-licensed data provider. 50+ technical indicators. JSON/CSV output. Good for AI multi-asset coverage.",
+        "critical_for": ["technical", "quantitative"],
+        "has_mcp_server": true,
+        "mcp_url": "https://mcp.alphavantage.co/"
+      },
+      "finnhub": {
+        "id": "SRC-0040",
+        "name": "Finnhub",
+        "url": "https://finnhub.io/api/v1",
+        "docs": "https://finnhub.io/docs/api",
+        "data_types": ["stock-prices-realtime", "stock-prices-historical", "company-fundamentals", "financial-statements", "earnings-estimates", "forex-rates", "cryptocurrency-prices", "economic-calendar", "news-sentiment", "insider-transactions", "sec-filings"],
+        "access": "freemium, api-key required",
+        "rate_limits": "Free: 60 requests/minute, 30/second",
+        "notes": "Most generous free tier. Real-time US quotes, historical candles, fundamentals, earnings, news, alt data. Free WebSocket for 50 symbols.",
+        "critical_for": ["fundamental", "sentiment"]
+      },
+      "coingecko": {
+        "id": "SRC-0041",
+        "name": "CoinGecko API",
+        "url": "https://api.coingecko.com/api/v3",
+        "docs": "https://docs.coingecko.com/v3.0.1/reference/introduction",
+        "data_types": ["cryptocurrency-prices-realtime", "cryptocurrency-prices-historical", "market-cap", "trading-volume", "exchange-data", "defi-data", "nft-data", "trending-coins", "categories"],
+        "access": "freemium, api-key optional",
+        "rate_limits": "Demo: 30/min, 10K/month. Public (no key): 5-15/min",
+        "notes": "Most comprehensive free crypto. 10K+ coins, 600+ exchanges. 12 years history with 5-min granularity.",
+        "critical_for": ["crypto picks"]
+      },
+      "coinpaprika": {
+        "id": "SRC-0044",
+        "name": "CoinPaprika API",
+        "url": "https://api.coinpaprika.com/v1",
+        "docs": "https://docs.coinpaprika.com/",
+        "data_types": ["cryptocurrency-prices-realtime", "cryptocurrency-prices-historical", "market-cap", "trading-volume", "exchange-data", "ohlcv-candles", "coin-events", "global-market-data"],
+        "access": "free, no key required",
+        "rate_limits": "25K requests/month, no API key needed",
+        "notes": "Strong free crypto alternative. 2500+ coins, 300+ exchanges. OHLCV, tickers, events, global stats.",
+        "critical_for": ["crypto picks backup"]
+      }
+    },
+    "economic_data": {
+      "fred": {
+        "id": "SRC-0018/SRC-0039",
+        "name": "FRED API (Federal Reserve Economic Data)",
+        "url": "https://api.stlouisfed.org/fred",
+        "data_types": ["economic-indicators", "gdp", "inflation-cpi", "unemployment-rate", "interest-rates", "money-supply", "consumer-sentiment", "housing-data", "trade-balance", "industrial-production"],
+        "access": "api-key-required (free to obtain)",
+        "critical_for": ["macro backdrop for all picks"]
+      },
+      "bls": {
+        "id": "SRC-0020",
+        "name": "Bureau of Labor Statistics",
+        "url": "https://api.bls.gov/publicAPI/v2/timeseries/data/",
+        "data_types": ["employment", "unemployment", "inflation", "CPI", "wages", "productivity", "occupational-data"],
+        "access": "free, no key needed for basic"
+      },
+      "treasury": {
+        "id": "SRC-0024",
+        "name": "US Treasury Fiscal Data",
+        "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/",
+        "data_types": ["federal-debt", "federal-revenue", "federal-spending", "treasury-securities", "interest-rates", "currency-exchange-rates"],
+        "access": "free, no key needed"
+      },
+      "world_bank": {
+        "id": "SRC-0023",
+        "name": "World Bank Indicators",
+        "url": "https://api.worldbank.org/v2/",
+        "data_types": ["economic-indicators", "development", "demographics", "health", "education", "trade"],
+        "access": "free, no key needed"
+      }
+    },
+    "news_and_sentiment": {
+      "gdelt": {
+        "id": "SRC-0015",
+        "name": "GDELT Project",
+        "url": "https://api.gdeltproject.org/api/v2",
+        "data_types": ["news-articles", "global-events", "sentiment-analysis", "geospatial-data", "tv-news", "themes", "entity-extraction"],
+        "access": "free, no key needed",
+        "critical_for": ["sentiment analysis"]
+      },
+      "guardian": {
+        "id": "SRC-0013",
+        "name": "Guardian Open Platform",
+        "url": "https://content.guardianapis.com",
+        "data_types": ["news-articles", "full-text-content", "tags", "sections"],
+        "access": "free with developer key"
+      },
+      "newsapi": {
+        "id": "SRC-0012",
+        "name": "NewsAPI.org",
+        "url": "https://newsapi.org/v2",
+        "data_types": ["news-headlines", "news-articles", "news-sources", "search"],
+        "access": "freemium"
+      },
+      "hacker_news": {
+        "id": "SRC-0029/SRC-0030",
+        "name": "Hacker News (Algolia + Firebase)",
+        "access": "free, no key needed",
+        "useful_for": "Tech sector sentiment"
+      }
+    },
+    "forex_and_currency": {
+      "exchangerate_api": {"id": "SRC-0042", "access": "free, no key", "url": "https://open.er-api.com/v6/latest"},
+      "fawazahmed0": {"id": "SRC-0043", "access": "free, no key", "provides": "Forex, crypto, precious metals, historical rates"}
+    },
+    "immediately_usable_no_key": [
+      "SRC-0015 GDELT", "SRC-0020 BLS", "SRC-0024 US Treasury",
+      "SRC-0023 World Bank", "SRC-0029 HN Algolia", "SRC-0030 HN Firebase",
+      "SRC-0042 ExchangeRate-API", "SRC-0043 fawazahmed0",
+      "SRC-0044 CoinPaprika"
+    ],
+    "need_free_api_key": [
+      "SRC-0038 Alpha Vantage", "SRC-0040 Finnhub", "SRC-0041 CoinGecko",
+      "SRC-0013 Guardian", "SRC-0012 NewsAPI", "SRC-0018/0039 FRED"
+    ],
+    "sec_edgar": {
+      "note": "NOT YET IN SOURCES INDEX - should be added",
+      "official_api": {
+        "url": "https://data.sec.gov",
+        "access": "completely free, no auth required",
+        "rate_limit": "10 requests/second",
+        "endpoints": {
+          "submissions": "https://data.sec.gov/submissions/CIK##########.json - filing history per entity",
+          "company_concept": "XBRL disclosures from single company + concept as JSON",
+          "xbrl_frames": "Aggregated facts across all companies for calendar period",
+          "bulk_downloads": "companyfacts.zip and submissions.zip recompiled nightly"
+        },
+        "critical_for": ["fundamental analysis - SEC filings, financial statements, insider transactions"]
+      },
+      "mcp_server": {
+        "url": "https://github.com/stefanoamorelli/sec-edgar-mcp",
+        "description": "MCP server connecting AI assistants to EDGAR filings, financial statements, insider trading data"
+      }
+    }
+  },
+
+  "section_5_existing_scripts_for_market_research": {
+    "data_collection_scripts": [
+      {"id": "SCR-0006", "name": "data-gathering-websearch", "file": "data-gathering/methods/method_websearch.py", "useful_for": "General market/company research via DuckDuckGo multi-query"},
+      {"id": "SCR-0007", "name": "data-gathering-wikipedia", "file": "data-gathering/methods/method_wikipedia.py", "useful_for": "Company/industry background, deep extraction with See Also links"},
+      {"id": "SCR-0009", "name": "data-gathering-hybrid", "file": "data-gathering/methods/method_hybrid.py", "useful_for": "Multi-source aggregation (web+wiki+arXiv) with corroboration scoring"},
+      {"id": "SCR-0010", "name": "data-gathering-iterative", "file": "data-gathering/methods/method_iterative.py", "useful_for": "Deep research with 3 rounds of progressive query refinement"},
+      {"id": "SCR-0024", "name": "data-gathering-hackernews", "file": "data-gathering/methods/method_hackernews.py", "useful_for": "Tech sentiment, trending tech topics via Algolia + Firebase"},
+      {"id": "SCR-0025", "name": "data-gathering-guardian", "file": "data-gathering/methods/method_guardian.py", "useful_for": "News sentiment from Guardian with DuckDuckGo fallback"},
+      {"id": "SCR-0028", "name": "data-gathering-github", "file": "data-gathering/methods/method_github.py", "useful_for": "Tech company open-source activity, repo stars, code search"}
+    ],
+    "supporting_scripts": [
+      {"id": "SCR-0021", "name": "ddg-utils", "file": "data-gathering/methods/ddg_utils.py", "useful_for": "Shared DuckDuckGo search utilities with rate limiting"},
+      {"id": "SCR-0022", "name": "request-cache", "file": "data-gathering/methods/request_cache.py", "useful_for": "HTTP response caching to avoid redundant API calls"},
+      {"id": "SCR-0046", "name": "doc-fetcher", "file": "doc_fetcher.py", "useful_for": "Structured content extraction from URLs, HTML to Markdown"},
+      {"id": "SCR-0047", "name": "version-tracker", "file": "version_tracker.py", "useful_for": "Software version tracking via PyPI/npm/GitHub - tech sector analysis"}
+    ],
+    "analysis_scripts": [
+      {"id": "SCR-0004", "name": "grade-research", "file": "grade_research.py", "useful_for": "Quality scoring research across 5 dimensions before making picks"},
+      {"id": "SCR-0005", "name": "merge-research", "file": "merge_research.py", "useful_for": "Merging team research with deduplication and gap detection"},
+      {"id": "SCR-0041", "name": "finding-dedup", "file": "finding_dedup.py", "useful_for": "Dedup findings across teams using fuzzy matching"},
+      {"id": "SCR-0042", "name": "quality-scorer", "file": "quality_scorer.py", "useful_for": "Score data entries on authority, freshness, completeness, citations"},
+      {"id": "SCR-0043", "name": "archive-formatter", "file": "archive_formatter.py", "useful_for": "Convert research findings to KB entries with YAML frontmatter"},
+      {"id": "SCR-0050", "name": "pattern-analyzer", "file": "pattern_analyzer.py", "useful_for": "Code pattern analysis (less relevant for market research)"}
+    ],
+    "critical_gap": "NO existing scripts fetch stock prices, financial statements, or technical indicators from Alpha Vantage or Finnhub. All data-gathering scripts are oriented toward academic/news/web research. For financial market data, must use Claude's WebSearch/WebFetch or write new API wrapper scripts."
+  },
+
+  "section_6_tt_alpha_domain_strategy": {
+    "file": "storage/data/tt_alpha_domain_strategy.json",
+    "executive_summary": "The repository has COMPLETE infrastructure for market research but ZERO execution. All four analysis methods have detailed guides. SOP-018 defines the full workflow. 41 data sources cataloged with 16 data-collection scripts. The only missing piece is DOING THE WORK. The primary blocker is not tooling - it is the recursive pattern of building more infrastructure instead of using what exists.",
+    "readiness_by_method": {
+      "fundamental": {"status": "READY", "confidence": "HIGH", "data_sources": ["Finnhub", "Alpha Vantage"]},
+      "technical": {"status": "READY WITH LIMITATIONS", "confidence": "MEDIUM", "limitation": "Cannot render charts, must use numerical indicators"},
+      "sentiment": {"status": "READY", "confidence": "HIGH", "data_sources": ["Finnhub news/insider", "GDELT", "HN", "Guardian", "NewsAPI"]},
+      "quantitative": {"status": "PARTIALLY READY", "confidence": "LOW-MEDIUM", "limitation": "Full factor models need batch data; simplified screening possible"},
+      "ai_quant": {"status": "NOT READY", "note": "Empty comparison template, skip for first picks"}
+    },
+    "execution_plan": {
+      "strategy": "Use Claude WebSearch/WebFetch as primary data gathering, supplemented by scripts for news/sentiment. Produce 3-5 picks using SIMPLEST method first (fundamental + sentiment hybrid).",
+      "steps": [
+        {"step": 1, "action": "Macro backdrop - current market conditions", "time": "5 min"},
+        {"step": 2, "action": "Sector screening - 2-3 sectors with catalysts", "time": "10 min"},
+        {"step": 3, "action": "Stock screening within target sectors", "time": "15 min"},
+        {"step": 4, "action": "Deep analysis of top 5 candidates", "time": "15 min"},
+        {"step": 5, "action": "Generate 3-5 formal picks using TEMPLATE.md", "time": "10 min"},
+        {"step": 6, "action": "Update index and create KB entry", "time": "5 min"}
+      ],
+      "estimated_total": "60 minutes"
+    },
+    "recommended_team_composition": {
+      "size": 5,
+      "roles": [
+        "Coordinator (1) - manages workflow, SOP-018 compliance, pick quality",
+        "Research Team A (1) - fundamental + macro analysis",
+        "Research Team B (1) - sentiment + news analysis",
+        "Analysis / Cross-Validation (1) - merge findings, score candidates",
+        "Writer / Indexer (1) - produce pick files, update index, create KB entries"
+      ],
+      "domain_ratio": "80% domain work, 0% infrastructure, 20% documentation"
+    },
+    "blockers": [
+      {"blocker": "No API keys for Alpha Vantage/Finnhub", "severity": "LOW", "workaround": "Use WebSearch/WebFetch for financial websites (Yahoo Finance, MarketWatch, Google Finance)"},
+      {"blocker": "No financial-data-specific scripts", "severity": "LOW", "workaround": "WebSearch/WebFetch sufficient for 3-5 picks"},
+      {"blocker": "Cannot render charts", "severity": "MEDIUM", "workaround": "Use numerical indicator values, focus on fundamental+sentiment"},
+      {"blocker": "Rate limiting on free tiers", "severity": "LOW", "workaround": "Not binding for 3-5 picks"},
+      {"blocker": "Recursive infrastructure trap", "severity": "CRITICAL", "workaround": "STOP BUILDING. USE WHAT EXISTS. Execute the plan."}
+    ],
+    "critical_insight": "This repo has been stuck in recursive loop for 14+ sessions. Infrastructure is DONE. 54 scripts, 41 sources, 28+ SOPs, 41 KB entries, complete multi-agent coordination. ZERO domain output. One single pick file would represent more domain output than the last 14 teams combined."
+  },
+
+  "section_7_web_research": {
+    "free_stock_market_apis": {
+      "search_query": "free stock market data APIs 2025 2026",
+      "apis_found": [
+        {
+          "name": "Alpha Vantage",
+          "url": "https://www.alphavantage.co/",
+          "status": "ALREADY IN SOURCES (SRC-0038)",
+          "notes": "Free tier: stocks, forex, crypto, 50+ technical indicators. JSON/CSV. Popular with beginners."
+        },
+        {
+          "name": "Finnhub",
+          "url": "https://finnhub.io/",
+          "status": "ALREADY IN SOURCES (SRC-0040)",
+          "notes": "Real-time stock prices, fundamentals, estimates, alternative data."
+        },
+        {
+          "name": "Marketstack",
+          "url": "https://marketstack.com/",
+          "status": "NEW - NOT IN SOURCES",
+          "free_tier": "Free stock data API for real-time and historical data across global exchanges. Updates every 1.5 and 15 minutes.",
+          "recommendation": "Add as SRC-0045"
+        },
+        {
+          "name": "Financial Modeling Prep (FMP)",
+          "url": "https://site.financialmodelingprep.com/developer/docs",
+          "status": "NEW - NOT IN SOURCES",
+          "free_tier": "Free stock market APIs for real-time prices, financial statements, historical data. 70K+ data points. Has MCP server.",
+          "paid": "$19/month for unlimited REST + WebSocket",
+          "recommendation": "Add as SRC-0046. Strong candidate - has MCP server for direct Claude integration."
+        },
+        {
+          "name": "Twelve Data",
+          "url": "https://twelvedata.com/",
+          "status": "NEW - NOT IN SOURCES",
+          "free_tier": "Stock, forex, crypto, fundamental data. Real-time, historical, EOD.",
+          "recommendation": "Add as SRC-0047"
+        },
+        {
+          "name": "EODHD (EOD Historical Data)",
+          "url": "https://eodhd.com/",
+          "status": "NEW - NOT IN SOURCES",
+          "free_tier": "Historical end-of-day, intraday, US options, real-time. 150K+ tickers. Has MCP server.",
+          "recommendation": "Add as SRC-0048. Has MCP server for AI integration."
+        },
+        {
+          "name": "Polygon.io",
+          "url": "https://polygon.io/",
+          "status": "NEW - NOT IN SOURCES",
+          "free_tier": "5 calls/min. WebSocket streaming, minute data. Paid: $199/month.",
+          "recommendation": "Add as SRC-0049 (limited free tier)"
+        }
+      ],
+      "key_warning": "IEX Cloud shut down August 2024 - provider stability matters. Most 'real-time' APIs on free tiers are actually 15-20 min delayed."
+    },
+    "sec_edgar_api": {
+      "search_query": "SEC EDGAR API free access programmatic filings",
+      "official_api": {
+        "url": "https://data.sec.gov",
+        "developer_resources": "https://www.sec.gov/about/developer-resources",
+        "access_rules": "Completely free, NO authentication or API keys required",
+        "rate_limit": "10 requests/second",
+        "key_endpoints": {
+          "submissions": "https://data.sec.gov/submissions/CIK##########.json - entity filing history",
+          "company_concept": "XBRL disclosures from single company + concept as JSON",
+          "xbrl_frames": "Aggregated facts across all companies for calendar period",
+          "bulk_downloads": {
+            "companyfacts_zip": "All company facts recompiled nightly",
+            "submissions_zip": "All submissions recompiled nightly"
+          }
+        },
+        "index_files": "Daily and quarterly EDGAR index files in HTML, XML, JSON. Four types: company, form, master indexes."
+      },
+      "third_party": {
+        "sec_api_io": {
+          "url": "https://sec-api.io/",
+          "description": "18M+ filings, 8K+ companies since 1993. Full-text search, real-time stream, XBRL-to-JSON.",
+          "access": "Commercial with free trial"
+        },
+        "sec_api_python": {
+          "github": "https://github.com/janlukasschroeder/sec-api-python",
+          "pypi": "https://pypi.org/project/sec-api/"
+        }
+      },
+      "mcp_server": {
+        "name": "sec-edgar-mcp",
+        "github": "https://github.com/stefanoamorelli/sec-edgar-mcp",
+        "description": "MCP server connecting AI assistants to EDGAR filings, financial statements, insider trading data with exact numeric precision. Built on edgartools."
+      },
+      "recommendation": "Add SEC EDGAR as SRC-0050 in sources. The official API is completely free, no keys, 10 req/sec. Critical for fundamental analysis (10-K, 10-Q filings, insider transactions)."
+    },
+    "financial_mcp_servers": {
+      "search_query": "financial MCP servers Claude AI stock market data",
+      "servers_found": [
+        {
+          "name": "Financial Datasets MCP Server",
+          "url": "https://github.com/financial-datasets/mcp-server",
+          "docs": "https://docs.financialdatasets.ai/mcp-server",
+          "features": ["Price snapshots", "Income statements", "Balance sheets", "Cash flow statements", "Financial metrics (P/E, EV, market cap, dividend yield)"],
+          "auth": "OAuth 2.1 for interactive clients (Claude, Claude Code, Cursor)",
+          "recommendation": "PRIMARY MCP SERVER for market research. Covers all fundamental data needs."
+        },
+        {
+          "name": "Alpha Vantage MCP Server",
+          "url": "https://mcp.alphavantage.co/",
+          "features": ["Real-time and historical stock data", "Forex, crypto, fundamentals", "Progressive Tool Discovery for token optimization"],
+          "recommendation": "SECONDARY MCP SERVER - broad market data, structured format."
+        },
+        {
+          "name": "Financial Modeling Prep (FMP) MCP Server",
+          "url": "https://site.financialmodelingprep.com/developer/docs/mcp-server",
+          "features": ["70K+ stock data points", "Zero glue code - direct data access", "REST + WebSocket"],
+          "recommendation": "ALTERNATIVE - strong for comprehensive stock data without coding."
+        },
+        {
+          "name": "SEC EDGAR MCP Server",
+          "url": "https://github.com/stefanoamorelli/sec-edgar-mcp",
+          "features": ["Company filings", "Financial statements", "Insider trading data", "Exact numeric precision"],
+          "recommendation": "CRITICAL for fundamental analysis - direct SEC filing access."
+        },
+        {
+          "name": "Stock Market Tracker (osamadev)",
+          "url": "https://mcpservers.org/servers/osamadev/financial_mcp_server",
+          "features": ["Real-time monitoring", "Portfolio management", "Telegram alerts", "Global market summaries"],
+          "recommendation": "OPTIONAL - useful for monitoring active picks."
+        },
+        {
+          "name": "EODHD MCP Server",
+          "url": "https://eodhd.com/financial-apis/mcp-server-for-financial-data-by-eodhd",
+          "features": ["Real-time and historical data", "Fundamental datasets", "Intraday quotes"],
+          "recommendation": "ALTERNATIVE - good historical data coverage."
+        },
+        {
+          "name": "Claude Stock MCP (Stock Analysis)",
+          "url": "https://mcpservers.org/servers/flying3615/claude-stock-mcp",
+          "features": ["Chip distribution", "Pattern analysis", "Trend reversal detection", "Market scanning"],
+          "recommendation": "OPTIONAL - technical analysis focused."
+        },
+        {
+          "name": "LSEG MCP Server",
+          "url": "https://www.lseg.com/en/insights/supercharge-claudes-financial-skills-with-lseg-data",
+          "features": ["Bonds, yield curves, FX, swaps, options, equities, vol surfaces, time series, news, fixed income"],
+          "note": "Enterprise-grade, requires LSEG data entitlements (paid)",
+          "recommendation": "SKIP for now - enterprise paid service."
+        }
+      ],
+      "priority_installation_order": [
+        "1. Financial Datasets MCP Server (core fundamentals)",
+        "2. Alpha Vantage MCP Server (broad market data)",
+        "3. SEC EDGAR MCP Server (filings and insider data)",
+        "4. FMP MCP Server (alternative if above insufficient)"
+      ]
+    }
+  },
+
+  "summary_for_think_tank": {
+    "infrastructure_readiness": "COMPLETE. All methods documented, SOP-018 defines workflow, 41+ data sources cataloged, 54 scripts available.",
+    "total_picks_to_date": 0,
+    "recommended_session_plan": {
+      "session_1": {
+        "focus": "First Picks - Fundamental + Sentiment Hybrid",
+        "method": "fundamental + sentiment cross-validation per SOP-018",
+        "target_output": "3-5 stock picks with full TEMPLATE.md formatting",
+        "data_approach": "WebSearch/WebFetch for financial data, existing scripts for news sentiment",
+        "prerequisite": "None - can execute immediately"
+      },
+      "session_2": {
+        "focus": "MCP Server Setup + Technical Analysis Picks",
+        "method": "Install Financial Datasets + Alpha Vantage MCP servers, then produce technical analysis picks",
+        "target_output": "MCP servers configured + 3-5 technical picks",
+        "data_approach": "MCP servers for structured API data, numerical indicator analysis"
+      },
+      "session_3": {
+        "focus": "Macro-Economic Analysis + Sector Rotation Picks",
+        "method": "Use FRED/BLS/Treasury data for macro backdrop, sector screening",
+        "target_output": "Macro report + 3-5 sector-rotation picks",
+        "data_approach": "Economic APIs (FRED, BLS, Treasury) + WebSearch"
+      },
+      "session_4": {
+        "focus": "Crypto Market Analysis",
+        "method": "Use CoinGecko + CoinPaprika for crypto screening",
+        "target_output": "3-5 crypto picks with full analysis",
+        "data_approach": "CoinGecko API (no key needed for basic), CoinPaprika (free), WebSearch for sentiment"
+      },
+      "session_5": {
+        "focus": "Performance Review + Quantitative Screening",
+        "method": "Review all prior picks, apply quant factor screening to expand watchlist",
+        "target_output": "Performance update on all picks, 5+ new watchlist entries, quant screening methodology documented",
+        "data_approach": "Alpha Vantage for historical data, build simplified factor scoring"
+      }
+    },
+    "new_sources_to_add": ["Marketstack", "Financial Modeling Prep", "Twelve Data", "EODHD", "Polygon.io", "SEC EDGAR (official)"],
+    "mcp_servers_to_install": ["Financial Datasets MCP", "Alpha Vantage MCP", "SEC EDGAR MCP"],
+    "critical_gap": "No scripts for financial market API data fetching (stock prices, financials, indicators). All existing scripts oriented toward academic/news/web. WebSearch/WebFetch is the workaround for first session."
+  }
+}
