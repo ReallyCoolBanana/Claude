@@ -234,16 +234,28 @@ def extract_patterns():
             sum(r.get("total_weight", 0) for r in successful) / max(len(successful), 1), 1
         )
 
+        # Score routes by count * success_rate (enhancement #4)
+        route_counts = Counter(route_strs)
+        scored_routes = []
+        for route_str, count in route_counts.most_common():
+            route_records = [r for r in task_records if " -> ".join(r["route"]) == route_str]
+            route_successes = sum(1 for r in route_records if r.get("outcome") == "success")
+            route_success_rate = route_successes / max(len(route_records), 1)
+            score = count * route_success_rate
+            scored_routes.append((route_str, count, score, round(route_success_rate * 100, 1)))
+        scored_routes.sort(key=lambda x: x[2], reverse=True)
+
         patterns["task_patterns"][task] = {
             "total_attempts": len(task_records),
             "success_count": len(successful),
             "success_rate": round(len(successful) / max(len(task_records), 1) * 100, 1),
             "avg_weight_on_success": avg_weight,
             "common_routes": [
-                {"route": route, "count": count}
-                for route, count in common_routes
+                {"route": route, "count": count, "score": score,
+                 "route_success_rate": sr}
+                for route, count, score, sr in scored_routes[:3]
             ],
-            "recommended_route": common_routes[0][0] if common_routes else None,
+            "recommended_route": scored_routes[0][0] if scored_routes else None,
             "strengths_on_success": dict(Counter(
                 s for r in successful
                 for s in r.get("strengths_used", [])
@@ -281,39 +293,93 @@ def get_top_routes(entry_node: str):
 
 
 def recommend_route(task: str, entry_node: str = None):
-    """Recommend a pointer route for a given task, based on history."""
+    """Recommend a pointer route for a given task, based on history.
+
+    Bug fixes applied:
+    - #1: When entry_node is provided, filter pattern routes to those starting
+          from entry_node. Fall back to strength-based routing if none match.
+    - #2: Add 'related' as a third fallback tier in strength-based routing.
+    - #3: When entry_node is None and no patterns exist, search all SOP nodes
+          for primary/supporting pointers and suggest the best-connected one.
+    - #4: Routes are scored by count * success_rate (see extract_patterns).
+    """
+    # Check pattern-based recommendations
     if ROUTES_PATTERNS.exists():
         with open(ROUTES_PATTERNS) as f:
             patterns = json.load(f)
         if task in patterns.get("task_patterns", {}):
             tp = patterns["task_patterns"][task]
-            if tp.get("recommended_route"):
+            common_routes = tp.get("common_routes", [])
+
+            if entry_node and common_routes:
+                # Fix #1: Filter to routes starting from entry_node
+                matching = [r for r in common_routes
+                            if r["route"].startswith(entry_node)]
+                if matching:
+                    # Pick the highest-scored matching route
+                    best = max(matching, key=lambda r: r.get("score", r.get("count", 0)))
+                    print(f"Recommended route for '{task}' from {entry_node}: {best['route']}")
+                    print(f"  (score={best.get('score', 'N/A')}, "
+                          f"based on {tp['total_attempts']} attempts, "
+                          f"{tp['success_rate']}% overall success rate)")
+                    return best["route"]
+                # No pattern matches entry_node — fall through to strength-based
+            elif not entry_node and tp.get("recommended_route"):
+                # No entry_node specified, return global best
                 print(f"Recommended route for '{task}': {tp['recommended_route']}")
                 print(f"  (based on {tp['total_attempts']} attempts, "
                       f"{tp['success_rate']}% success rate)")
                 return tp["recommended_route"]
 
     # Fallback: use pointer network strength to suggest a path
-    if entry_node:
-        try:
-            with open(POINTER_NETWORK) as f:
-                pn = json.load(f)
-            node = pn.get("nodes", {}).get(entry_node, {})
-            primary = [p for p in node.get("pointers", [])
-                       if p.get("strength") == "primary"]
-            supporting = [p for p in node.get("pointers", [])
-                          if p.get("strength") == "supporting"]
+    try:
+        with open(POINTER_NETWORK) as f:
+            pn = json.load(f)
+    except Exception:
+        pn = {"nodes": {}}
 
-            if primary:
-                targets = [p["to"] for p in primary]
-                print(f"No history for '{task}'. Primary tools from {entry_node}: {targets}")
-                return targets
-            elif supporting:
-                targets = [p["to"] for p in supporting]
-                print(f"No history for '{task}'. Supporting tools from {entry_node}: {targets}")
-                return targets
-        except Exception:
-            pass
+    if entry_node:
+        node = pn.get("nodes", {}).get(entry_node, {})
+        primary = [p for p in node.get("pointers", [])
+                   if p.get("strength") == "primary"]
+        supporting = [p for p in node.get("pointers", [])
+                      if p.get("strength") == "supporting"]
+        # Fix #2: Add 'related' as third fallback tier
+        related = [p for p in node.get("pointers", [])
+                   if p.get("strength") == "related"]
+
+        if primary:
+            targets = [p["to"] for p in primary]
+            print(f"No history for '{task}'. Primary tools from {entry_node}: {targets}")
+            return targets
+        elif supporting:
+            targets = [p["to"] for p in supporting]
+            print(f"No history for '{task}'. Supporting tools from {entry_node}: {targets}")
+            return targets
+        elif related:
+            targets = [p["to"] for p in related]
+            print(f"No history for '{task}'. Related tools from {entry_node}: {targets}")
+            return targets
+    else:
+        # Fix #3: When entry_node is None and no patterns, search all SOP nodes
+        best_node = None
+        best_count = 0
+        for node_id, node_data in pn.get("nodes", {}).items():
+            if not node_id.startswith("SOP-"):
+                continue
+            pointers = node_data.get("pointers", [])
+            relevant = [p for p in pointers
+                        if p.get("strength") in ("primary", "supporting")]
+            if len(relevant) > best_count:
+                best_count = len(relevant)
+                best_node = node_id
+        if best_node:
+            node_data = pn["nodes"][best_node]
+            targets = [p["to"] for p in node_data.get("pointers", [])
+                       if p.get("strength") in ("primary", "supporting")]
+            print(f"No history for '{task}'. Best-connected SOP: {best_node} "
+                  f"with {best_count} primary/supporting pointers: {targets}")
+            return targets
 
     print(f"No route recommendation available for task='{task}', entry='{entry_node}'")
     return None

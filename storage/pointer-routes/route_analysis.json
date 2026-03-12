@@ -1,96 +1,229 @@
 {
-  "generated": "2026-03-12T21:42:09.898373Z",
-  "total_routes": 4,
-  "total_hops": 8,
-  "avg_hops_per_route": 2.0,
+  "generated": "2026-03-12T22:16:22.995464Z",
+  "total_routes": 95,
+  "total_hops": 144,
+  "avg_hops_per_route": 1.52,
   "outcome_distribution": {
-    "success": 4
+    "success": 65,
+    "failure": 18,
+    "partial": 12
   },
   "strength_usage": {
-    "primary": 2,
-    "unknown": 3,
-    "unclassified": 1,
-    "related": 1,
-    "supporting": 1
+    "primary": 52,
+    "unknown": 28,
+    "unclassified": 35,
+    "related": 16,
+    "supporting": 10,
+    "tangential": 3
   },
   "top_entry_nodes": {
-    "SOP-027": 1,
-    "SOP-023": 1,
-    "SOP-011": 1,
-    "SOP-012": 1
+    "SOP-027": 19,
+    "SOP-023": 11,
+    "SOP-029": 10,
+    "SOP-011": 7,
+    "SOP-012": 7,
+    "SOP-017": 7,
+    "SOP-013": 2,
+    "SOP-014": 2,
+    "SOP-015": 2,
+    "SOP-016": 2,
+    "SOP-018": 2,
+    "SOP-019": 2,
+    "SOP-020": 2,
+    "SOP-021": 2,
+    "SOP-022": 2
   },
   "top_exit_nodes": {
-    "SCR-0044": 1,
-    "SRC-0001": 1,
-    "SCR-0052": 1,
-    "SCR-0019": 1
+    "SCR-0044": 17,
+    "SCR-0023": 9,
+    "SCR-0019": 8,
+    "SCR-0033": 8,
+    "SRC-0001": 7,
+    "SCR-0057": 7,
+    "SCR-0052": 4,
+    "SOP-023": 4,
+    "SCR-0043": 3,
+    "SOP-027": 3,
+    "SOP-028": 2,
+    "SCR-0032": 2,
+    "SCR-0020": 2,
+    "pointer-network": 2,
+    "SOP-014": 1
   },
   "top_edges": [
     {
       "edge": "SOP-027 -> SCR-0043",
-      "traversals": 1,
+      "traversals": 19,
       "outcomes": {
-        "success": 1,
-        "failure": 0,
-        "partial": 0
+        "success": 15,
+        "failure": 2,
+        "partial": 2
       }
     },
     {
       "edge": "SCR-0043 -> SCR-0044",
-      "traversals": 1,
+      "traversals": 17,
       "outcomes": {
-        "success": 1,
-        "failure": 0,
-        "partial": 0
+        "success": 14,
+        "failure": 1,
+        "partial": 2
       }
     },
     {
       "edge": "SOP-023 -> SCR-0023",
-      "traversals": 1,
+      "traversals": 11,
       "outcomes": {
-        "success": 1,
-        "failure": 0,
+        "success": 5,
+        "failure": 6,
         "partial": 0
       }
     },
     {
-      "edge": "SCR-0023 -> SRC-0001",
-      "traversals": 1,
+      "edge": "SOP-029 -> SCR-0057",
+      "traversals": 8,
       "outcomes": {
-        "success": 1,
-        "failure": 0,
+        "success": 4,
+        "failure": 2,
+        "partial": 2
+      }
+    },
+    {
+      "edge": "SCR-0023 -> SRC-0001",
+      "traversals": 7,
+      "outcomes": {
+        "success": 6,
+        "failure": 1,
+        "partial": 0
+      }
+    },
+    {
+      "edge": "SOP-017 -> SCR-0023",
+      "traversals": 7,
+      "outcomes": {
+        "success": 6,
+        "failure": 1,
         "partial": 0
       }
     },
     {
       "edge": "SOP-011 -> SCR-0033",
-      "traversals": 1,
+      "traversals": 5,
       "outcomes": {
-        "success": 1,
-        "failure": 0,
+        "success": 2,
+        "failure": 2,
+        "partial": 1
+      }
+    },
+    {
+      "edge": "SOP-012 -> SCR-0032",
+      "traversals": 4,
+      "outcomes": {
+        "success": 2,
+        "failure": 2,
         "partial": 0
       }
     },
     {
       "edge": "SCR-0033 -> SCR-0052",
-      "traversals": 1,
+      "traversals": 3,
       "outcomes": {
-        "success": 1,
-        "failure": 0,
-        "partial": 0
-      }
-    },
-    {
-      "edge": "SOP-012 -> SCR-0032",
-      "traversals": 1,
-      "outcomes": {
-        "success": 1,
-        "failure": 0,
+        "success": 2,
+        "failure": 1,
         "partial": 0
       }
     },
     {
       "edge": "SCR-0032 -> SCR-0019",
+      "traversals": 3,
+      "outcomes": {
+        "success": 2,
+        "failure": 1,
+        "partial": 0
+      }
+    },
+    {
+      "edge": "SOP-012 -> SCR-0019",
+      "traversals": 3,
+      "outcomes": {
+        "success": 2,
+        "failure": 0,
+        "partial": 1
+      }
+    },
+    {
+      "edge": "SOP-014 -> SCR-0033",
+      "traversals": 2,
+      "outcomes": {
+        "success": 1,
+        "failure": 0,
+        "partial": 1
+      }
+    },
+    {
+      "edge": "SOP-019 -> SCR-0033",
+      "traversals": 2,
+      "outcomes": {
+        "success": 1,
+        "failure": 0,
+        "partial": 1
+      }
+    },
+    {
+      "edge": "SOP-025 -> SCR-0043",
+      "traversals": 2,
+      "outcomes": {
+        "success": 2,
+        "failure": 0,
+        "partial": 0
+      }
+    },
+    {
+      "edge": "SOP-026 -> SCR-0043",
+      "traversals": 2,
+      "outcomes": {
+        "success": 2,
+        "failure": 0,
+        "partial": 0
+      }
+    },
+    {
+      "edge": "SCR-0043 -> KB-0045",
+      "traversals": 2,
+      "outcomes": {
+        "success": 2,
+        "failure": 0,
+        "partial": 0
+      }
+    },
+    {
+      "edge": "SCR-0019 -> SCR-0020",
+      "traversals": 2,
+      "outcomes": {
+        "success": 2,
+        "failure": 0,
+        "partial": 0
+      }
+    },
+    {
+      "edge": "SCR-0043 -> SOP-027",
+      "traversals": 2,
+      "outcomes": {
+        "success": 2,
+        "failure": 0,
+        "partial": 0
+      }
+    },
+    {
+      "edge": "SOP-029 -> pointer-network",
+      "traversals": 2,
+      "outcomes": {
+        "success": 2,
+        "failure": 0,
+        "partial": 0
+      }
+    },
+    {
+      "edge": "SOP-011 -> SOP-014",
       "traversals": 1,
       "outcomes": {
         "success": 1,
@@ -100,25 +233,45 @@
     }
   ],
   "route_signatures": {
-    "SOP-027 -> SCR-0044": 1,
-    "SOP-023 -> SRC-0001": 1,
-    "SOP-011 -> SCR-0052": 1,
-    "SOP-012 -> SCR-0019": 1
+    "SOP-027 -> SCR-0044": 17,
+    "SOP-029 -> SCR-0057": 7,
+    "SOP-012 -> SCR-0019": 6,
+    "SOP-023 -> SCR-0023": 6,
+    "SOP-023 -> SRC-0001": 4,
+    "SOP-011 -> SCR-0052": 3,
+    "SOP-017 -> SCR-0023": 3,
+    "SOP-017 -> SRC-0001": 3,
+    "SOP-014 -> SCR-0033": 2,
+    "SOP-019 -> SCR-0033": 2,
+    "SOP-024 -> SOP-023": 2,
+    "SOP-011 -> SCR-0033": 2,
+    "SOP-029 -> pointer-network": 2,
+    "SOP-011 -> SOP-014": 1,
+    "SOP-013 -> SOP-G01": 1,
+    "SOP-015 -> SOP-028": 1,
+    "SOP-016 -> SOP-013": 1,
+    "SOP-018 -> KB-0002": 1,
+    "SOP-020 -> KB-0025": 1,
+    "SOP-021 -> TEAM-0024": 1
   },
-  "agents_tracked": 4,
-  "tasks_tracked": 4,
+  "agents_tracked": 26,
+  "tasks_tracked": 16,
   "strength_effectiveness": {
     "primary": {
-      "total_uses": 2,
-      "success_rate": 100.0
+      "total_uses": 52,
+      "success_rate": 71.2
     },
     "supporting": {
-      "total_uses": 1,
-      "success_rate": 100.0
+      "total_uses": 10,
+      "success_rate": 60.0
     },
     "related": {
-      "total_uses": 1,
-      "success_rate": 100.0
+      "total_uses": 16,
+      "success_rate": 56.2
+    },
+    "tangential": {
+      "total_uses": 3,
+      "success_rate": 66.7
     }
   }
 }
