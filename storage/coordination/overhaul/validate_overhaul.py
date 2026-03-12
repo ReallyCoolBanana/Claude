@@ -447,9 +447,9 @@ def validate_bus(repo_root: str) -> ValidationResult:
         else:
             result.add_fail("bus_concurrent_read_all", f"Expected 40, got {len(all_msgs)}")
 
-        # Test bus compaction (check if Alpha added compaction)
+        # Test bus compaction using BusCompactor from prototype.agent_comm.compactor
         try:
-            from storage.coordination.bus_core import bus_compact
+            from prototype.agent_comm.compactor import BusCompactor, OffsetStore
             # If compaction exists, test it
             compact_channel = "test-compact"
             for i in range(20):
@@ -462,7 +462,10 @@ def validate_bus(repo_root: str) -> ValidationResult:
             before_size = os.path.getsize(
                 os.path.join(bus_dir, f"{sanitize_channel(compact_channel)}.jsonl")
             )
-            bus_compact(bus_dir, compact_channel)
+            offset_db = os.path.join(bus_dir, ".offsets.db")
+            offset_store = OffsetStore(offset_db)
+            compactor = BusCompactor(bus_dir, offset_store, default_ttl=300)
+            compactor.compact_channel(compact_channel)
             after_size = os.path.getsize(
                 os.path.join(bus_dir, f"{sanitize_channel(compact_channel)}.jsonl")
             )
@@ -483,8 +486,9 @@ def validate_bus(repo_root: str) -> ValidationResult:
             else:
                 result.add_fail("bus_compaction_preserves_live",
                                 f"Expected >=5 live messages, got {len(live_msgs)}")
+            offset_store.close()
         except ImportError:
-            result.add_skip("bus_compaction", "bus_compact not available (ALPHA may not have added it yet)")
+            result.add_skip("bus_compaction", "BusCompactor not available (ALPHA may not have added it yet)")
             result.add_skip("bus_compaction_preserves_live", "Depends on bus_compaction")
 
     result.stop()
@@ -507,8 +511,6 @@ def validate_rate_limiter(repo_root: str) -> ValidationResult:
     rate_limiter_source = None
 
     for module_path, class_name in [
-        ("prototype.agent_comm.state", "RateLimiter"),
-        ("storage.coordination.rate_limiter", "RateLimiter"),
         ("prototype.agent_comm.rate_limiter", "RateLimiter"),
     ]:
         try:
@@ -521,22 +523,9 @@ def validate_rate_limiter(repo_root: str) -> ValidationResult:
             continue
 
     if rate_limiter_class is None:
-        # Try to find any rate limiter in the proto A state module
-        try:
-            from prototype.agent_comm import state
-            # Look for rate limiting functions/classes
-            for attr_name in dir(state):
-                obj = getattr(state, attr_name)
-                if callable(obj) and "rate" in attr_name.lower():
-                    rate_limiter_source = f"prototype.agent_comm.state.{attr_name}"
-                    break
-        except ImportError:
-            pass
-
-    if rate_limiter_class is None:
         result.add_skip("rate_limiter_import",
                          "No RateLimiter class found. ALPHA team may not have deployed fix yet. "
-                         "Checked: prototype.agent_comm.state, storage.coordination.rate_limiter")
+                         "Checked: prototype.agent_comm.rate_limiter")
         result.stop()
         return result
 
@@ -544,18 +533,21 @@ def validate_rate_limiter(repo_root: str) -> ValidationResult:
 
     with tempfile.TemporaryDirectory(prefix="overhaul_rl_") as tmpdir:
         try:
+            db_path = os.path.join(tmpdir, "rate_limiter.db")
+
             # Test basic rate limiting - should allow requests within limit
-            rl = rate_limiter_class(
-                max_requests=100,
-                window_seconds=10,
-            )
+            # RateLimiter uses SQLite-backed per-agent per-endpoint limiting:
+            #   RateLimiter(db_path) -> .configure(endpoint, max_calls, window_seconds)
+            #   -> .check_and_reserve(endpoint, agent_id) returns bool
+            rl = rate_limiter_class(db_path)
+            rl.configure("test-endpoint", max_calls=100, window_seconds=10)
 
             # Single-threaded: all requests within limit should be allowed
             false_denials = 0
             total_checks = 0
             for i in range(50):  # well under 100/10s limit
                 total_checks += 1
-                allowed = rl.check("test-agent-1")
+                allowed = rl.check_and_reserve("test-endpoint", "test-agent-1")
                 if not allowed:
                     false_denials += 1
 
@@ -583,14 +575,16 @@ def validate_rate_limiter(repo_root: str) -> ValidationResult:
                 local_total = 0
                 for j in range(10):  # 4 workers x 10 = 40, well under 100
                     local_total += 1
-                    allowed = rl_instance.check(f"agent-{worker_id}")
+                    allowed = rl_instance.check_and_reserve("test-endpoint", f"agent-{worker_id}")
                     if not allowed:
                         local_denials += 1
                 with lock:
                     concurrent_false_denials += local_denials
                     concurrent_total += local_total
 
-            rl2 = rate_limiter_class(max_requests=100, window_seconds=10)
+            db_path2 = os.path.join(tmpdir, "rate_limiter2.db")
+            rl2 = rate_limiter_class(db_path2)
+            rl2.configure("test-endpoint", max_calls=100, window_seconds=10)
             threads = [
                 threading.Thread(target=rate_check_worker, args=(i, rl2))
                 for i in range(4)
@@ -612,14 +606,20 @@ def validate_rate_limiter(repo_root: str) -> ValidationResult:
                                 f"({denial_rate:.2f}%) - target <1%")
 
             # Test that actual over-limit requests ARE denied
-            rl3 = rate_limiter_class(max_requests=5, window_seconds=60)
+            db_path3 = os.path.join(tmpdir, "rate_limiter3.db")
+            rl3 = rate_limiter_class(db_path3)
+            rl3.configure("test-endpoint", max_calls=5, window_seconds=60)
             for _ in range(5):
-                rl3.check("overload-agent")
-            denied = not rl3.check("overload-agent")
+                rl3.check_and_reserve("test-endpoint", "overload-agent")
+            denied = not rl3.check_and_reserve("test-endpoint", "overload-agent")
             if denied:
                 result.add_pass("rl_over_limit_denied", "Over-limit request correctly denied")
             else:
                 result.add_fail("rl_over_limit_denied", "Over-limit request was incorrectly allowed")
+
+            rl.close()
+            rl2.close()
+            rl3.close()
 
         except TypeError as exc:
             result.add_skip("rate_limiter_tests",
@@ -643,16 +643,14 @@ def validate_db_partitions(repo_root: str) -> ValidationResult:
 
     sys.path.insert(0, repo_root)
 
-    # Try to import partition manager
+    # Try to import partition manager (DELTA team named it PartitionedStore)
     partition_mgr = None
     for module_path in [
-        "storage.coordination.db_partitions",
-        "storage.coordination.db_utils",
-        "storage.coordination.partition_manager",
+        "storage.coordination.db_partition",
     ]:
         try:
-            mod = __import__(module_path, fromlist=["PartitionManager"])
-            partition_mgr = getattr(mod, "PartitionManager", None)
+            mod = __import__(module_path, fromlist=["PartitionedStore"])
+            partition_mgr = getattr(mod, "PartitionedStore", None)
             if partition_mgr:
                 result.add_pass("partition_import", f"Found at {module_path}")
                 break
@@ -836,10 +834,10 @@ def validate_db_partitions(repo_root: str) -> ValidationResult:
 
     # If partition manager exists, test it
     if partition_mgr:
-        result.add_pass("partition_manager_available", "PartitionManager class found")
+        result.add_pass("partition_manager_available", "PartitionedStore class found")
     else:
         result.add_skip("partition_manager_available",
-                         "No PartitionManager class found (DELTA team may not have deployed yet)")
+                         "No PartitionedStore class found (DELTA team may not have deployed yet)")
 
     result.stop()
     return result
