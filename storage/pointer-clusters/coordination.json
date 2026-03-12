@@ -1,6 +1,6 @@
 {
   "tag": "coordination",
-  "node_count": 33,
+  "node_count": 39,
   "domains": [
     "knowledge-base",
     "scripts",
@@ -117,6 +117,36 @@
       "pointer_count": 20
     },
     {
+      "id": "SCR-0052",
+      "domain": "scripts",
+      "title": "bus-core",
+      "pointer_count": 10
+    },
+    {
+      "id": "SCR-0053",
+      "domain": "scripts",
+      "title": "db-utils",
+      "pointer_count": 10
+    },
+    {
+      "id": "SCR-0054",
+      "domain": "scripts",
+      "title": "direct-channels",
+      "pointer_count": 10
+    },
+    {
+      "id": "SCR-0055",
+      "domain": "scripts",
+      "title": "help-protocol",
+      "pointer_count": 10
+    },
+    {
+      "id": "SCR-0056",
+      "domain": "scripts",
+      "title": "work-stealing",
+      "pointer_count": 10
+    },
+    {
       "id": "SOP-011",
       "domain": "sops",
       "title": "Central Commander Launch Protocol",
@@ -156,6 +186,12 @@
       "id": "SOP-022",
       "domain": "sops",
       "title": "Sub-Agent Delegation: When to Use and When Not To",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-028",
+      "domain": "sops",
+      "title": "Pointer Network Operations: Query, Add, Remove, Rebuild",
       "pointer_count": 20
     },
     {
@@ -2740,6 +2776,46 @@
     },
     {
       "from": "TEAM-0025",
+      "to": "SOP-G03",
+      "weight": 1
+    },
+    {
+      "from": "SOP-028",
+      "to": "SOP-G02",
+      "weight": 4
+    },
+    {
+      "from": "SOP-G02",
+      "to": "SOP-028",
+      "weight": 4
+    },
+    {
+      "from": "SOP-028",
+      "to": "SOP-023",
+      "weight": 2
+    },
+    {
+      "from": "SOP-028",
+      "to": "SOP-011",
+      "weight": 1
+    },
+    {
+      "from": "SOP-028",
+      "to": "SOP-012",
+      "weight": 1
+    },
+    {
+      "from": "SOP-028",
+      "to": "SOP-016",
+      "weight": 1
+    },
+    {
+      "from": "SOP-028",
+      "to": "SOP-G01",
+      "weight": 1
+    },
+    {
+      "from": "SOP-028",
       "to": "SOP-G03",
       "weight": 1
     }

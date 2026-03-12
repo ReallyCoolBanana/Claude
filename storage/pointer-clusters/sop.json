@@ -1,6 +1,6 @@
 {
   "tag": "sop",
-  "node_count": 24,
+  "node_count": 25,
   "domains": [
     "knowledge-base",
     "sops",
@@ -119,6 +119,12 @@
       "id": "SOP-027",
       "domain": "sops",
       "title": "Wikipedia Category Pull: End-to-End Collection & Enrichment",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-028",
+      "domain": "sops",
+      "title": "Pointer Network Operations: Query, Add, Remove, Rebuild",
       "pointer_count": 20
     },
     {
@@ -866,6 +872,61 @@
     {
       "from": "TEAM-0025",
       "to": "SOP-G03",
+      "weight": 1
+    },
+    {
+      "from": "SOP-028",
+      "to": "SOP-027",
+      "weight": 5
+    },
+    {
+      "from": "SOP-027",
+      "to": "SOP-028",
+      "weight": 5
+    },
+    {
+      "from": "SOP-028",
+      "to": "SOP-G02",
+      "weight": 4
+    },
+    {
+      "from": "SOP-G02",
+      "to": "SOP-028",
+      "weight": 4
+    },
+    {
+      "from": "SOP-028",
+      "to": "SOP-015",
+      "weight": 4
+    },
+    {
+      "from": "SOP-015",
+      "to": "SOP-028",
+      "weight": 4
+    },
+    {
+      "from": "SOP-028",
+      "to": "SOP-025",
+      "weight": 2
+    },
+    {
+      "from": "SOP-028",
+      "to": "SOP-024",
+      "weight": 2
+    },
+    {
+      "from": "SOP-028",
+      "to": "SOP-023",
+      "weight": 2
+    },
+    {
+      "from": "SOP-028",
+      "to": "KB-0024",
+      "weight": 1
+    },
+    {
+      "from": "SOP-028",
+      "to": "KB-0025",
       "weight": 1
     }
   ]

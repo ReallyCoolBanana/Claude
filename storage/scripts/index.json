@@ -2,7 +2,7 @@
   "schema_version": "2.0",
   "domain": "scripts",
   "last_updated": "2026-03-12",
-  "entry_count": 44,
+  "entry_count": 56,
   "entries": [
     {
       "id": "SCR-0001",
@@ -1728,6 +1728,317 @@
       "language": "python",
       "description": "Wikipedia article text extractor for egress-restricted environments. Uses DBpedia Lookup API for short descriptions and WebSearch for full summaries. Caches per-article, exports as markdown/JSON/LLM format with token-efficient compact keys. Generates agent task batches for parallel extraction. See KB-0046.",
       "added_by_team": "team-beta"
+    },
+    {
+      "id": "SCR-0045",
+      "title": "dedup-utils",
+      "date": "2026-03-12",
+      "category": "data-collection",
+      "tags": [
+        "deduplication",
+        "data-gathering",
+        "python",
+        "nlp"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "path": "storage/scripts/data-gathering/methods/dedup_utils.py",
+      "language": "python",
+      "description": "TF-IDF-based deduplication utilities for data gathering methods. Provides similarity scoring, result deduplication, and source merging for combining results across multiple data gathering methods. No external dependencies."
+    },
+    {
+      "id": "SCR-0046",
+      "title": "method-ckan",
+      "date": "2026-03-12",
+      "category": "data-collection",
+      "tags": [
+        "data-gathering",
+        "public-api",
+        "python",
+        "search"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0045"
+        ],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "path": "storage/scripts/data-gathering/methods/method_ckan.py",
+      "language": "python",
+      "description": "CKAN/DKAN open data portal search method (DG-0010). Searches multiple government open data portals (data.gov, data.gov.uk, EU, Canada, Australia) using the CKAN Action API v3 package_search endpoint. No API key required."
+    },
+    {
+      "id": "SCR-0047",
+      "title": "data-pipeline",
+      "date": "2026-03-12",
+      "category": "automation",
+      "tags": [
+        "automation",
+        "indexing",
+        "validation",
+        "search",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0013",
+          "SCR-0035"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0013",
+          "SCR-0035"
+        ]
+      },
+      "path": "storage/scripts/data_pipeline.py",
+      "language": "python",
+      "description": "Data pipeline automation tool for the research-to-storage workflow. Automates KB ingestion, validation, search, and health checks. Orchestrates rebuild_unified_index.py, kb_validator.py, and unified_search.py."
+    },
+    {
+      "id": "SCR-0048",
+      "title": "graph-query",
+      "date": "2026-03-12",
+      "category": "search",
+      "tags": [
+        "search",
+        "analysis",
+        "python",
+        "indexing"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "path": "storage/scripts/graph_query.py",
+      "language": "python",
+      "description": "Cross-reference relationship graph query tool. Queries the relationship_graph.json to find node neighbors, orphan entries, hub entries, shortest paths between nodes, and graph statistics."
+    },
+    {
+      "id": "SCR-0049",
+      "title": "rebuild-unified-index",
+      "date": "2026-03-12",
+      "category": "indexing",
+      "tags": [
+        "indexing",
+        "search",
+        "automation",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0013"
+        ]
+      },
+      "path": "storage/scripts/rebuild_unified_index.py",
+      "language": "python",
+      "description": "Rebuilds the unified search index from all 5 domain index.json files (knowledge-base, scripts, sources, api-tools, sessions). Normalizes entries to a common schema and writes storage/unified_index.json with an inverted tag index."
+    },
+    {
+      "id": "SCR-0050",
+      "title": "unified-search",
+      "date": "2026-03-12",
+      "category": "search",
+      "tags": [
+        "search",
+        "python",
+        "indexing"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [
+          "SCR-0049"
+        ],
+        "uses_scripts": [
+          "SCR-0049"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0035"
+        ]
+      },
+      "path": "storage/scripts/unified_search.py",
+      "language": "python",
+      "description": "Unified search across all repository domains. Searches knowledge-base, scripts, sources, api-tools, and sessions from unified_index.json. Supports text queries, tag filtering, domain filtering, and related-entry lookup."
+    },
+    {
+      "id": "SCR-0051",
+      "title": "upgrade-indexes-v2",
+      "date": "2026-03-12",
+      "category": "indexing",
+      "tags": [
+        "indexing",
+        "automation",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0013"
+        ]
+      },
+      "path": "storage/scripts/upgrade_indexes_v2.py",
+      "language": "python",
+      "description": "Schema migration script that upgrades knowledge-base/index.json and teams/sessions/index.json to schema v2.0 format. Computes cross-references between KB entries, scripts, and team sessions."
+    },
+    {
+      "id": "SCR-0052",
+      "title": "bus-core",
+      "date": "2026-03-12",
+      "category": "coordination",
+      "tags": [
+        "coordination",
+        "sqlite",
+        "message-bus",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0053",
+          "SCR-0054",
+          "SCR-0055",
+          "SCR-0056"
+        ]
+      },
+      "path": "storage/coordination/bus_core.py",
+      "language": "python",
+      "description": "Canonical shared primitives for the Proto A coordination bus and SQLite layer. Provides retry_on_busy decorator, WAL-mode connection init, POSIX-atomic JSONL bus append/read, channel name sanitization, and valid message type constants. Single source of truth for patterns previously duplicated across coordination modules."
+    },
+    {
+      "id": "SCR-0053",
+      "title": "db-utils",
+      "date": "2026-03-12",
+      "category": "coordination",
+      "tags": [
+        "coordination",
+        "sqlite",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [
+          "SCR-0052"
+        ],
+        "uses_scripts": [
+          "SCR-0052"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0052"
+        ]
+      },
+      "path": "storage/coordination/db_utils.py",
+      "language": "python",
+      "description": "Common database utilities for the Proto A coordination layer. Provides reusable helpers for SQLite WAL connection management, idempotent schema creation, and atomic read-modify-write transactions. Complements bus_core.init_db with higher-level patterns."
+    },
+    {
+      "id": "SCR-0054",
+      "title": "direct-channels",
+      "date": "2026-03-12",
+      "category": "coordination",
+      "tags": [
+        "coordination",
+        "multi-agent",
+        "communication",
+        "sqlite",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [
+          "SCR-0052"
+        ],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0052",
+          "SCR-0055",
+          "SCR-0056"
+        ]
+      },
+      "path": "storage/coordination/direct_channels.py",
+      "language": "python",
+      "description": "Direct team-to-team channels, presence tracking, and work progress broadcasting. Provides named channels (direct, topic, team, broadcast), team presence indicators, and progress broadcasting with bottleneck detection using SQLite WAL and JSONL bus."
+    },
+    {
+      "id": "SCR-0055",
+      "title": "help-protocol",
+      "date": "2026-03-12",
+      "category": "coordination",
+      "tags": [
+        "coordination",
+        "multi-agent",
+        "communication",
+        "sqlite",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [
+          "SCR-0052"
+        ],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0052",
+          "SCR-0054",
+          "SCR-0056"
+        ]
+      },
+      "path": "storage/coordination/help_protocol.py",
+      "language": "python",
+      "description": "Team help protocol and idle detection for Proto A. Provides work-item tracking, help-request/offer/accept flow, idle detection, capability matching, and automatic assignment of idle teams to busy teams. Uses SQLite WAL with BEGIN IMMEDIATE for atomic operations."
+    },
+    {
+      "id": "SCR-0056",
+      "title": "work-stealing",
+      "date": "2026-03-12",
+      "category": "coordination",
+      "tags": [
+        "coordination",
+        "multi-agent",
+        "sqlite",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [
+          "SCR-0052"
+        ],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0052",
+          "SCR-0054",
+          "SCR-0055"
+        ]
+      },
+      "path": "storage/coordination/work_stealing.py",
+      "language": "python",
+      "description": "Work stealing, pipeline chaining, and shared scratchpad for Proto A. Provides a shared work queue with atomic steal, multi-stage pipeline manager with dependency tracking and bus notifications, and a namespaced key-value scratchpad with TTL expiration."
     }
   ],
   "secondary_indexes": {
@@ -1748,7 +2059,8 @@
         "SCR-0042"
       ],
       "automation": [
-        "SCR-0003"
+        "SCR-0003",
+        "SCR-0047"
       ],
       "analysis": [
         "SCR-0004",
@@ -1771,16 +2083,22 @@
         "SCR-0027",
         "SCR-0028",
         "SCR-0043",
-        "SCR-0044"
+        "SCR-0044",
+        "SCR-0045",
+        "SCR-0046"
       ],
       "indexing": [
         "SCR-0013",
-        "SCR-0034"
+        "SCR-0034",
+        "SCR-0049",
+        "SCR-0051"
       ],
       "search": [
         "SCR-0015",
         "SCR-0018",
-        "SCR-0035"
+        "SCR-0035",
+        "SCR-0048",
+        "SCR-0050"
       ],
       "caching": [
         "SCR-0017"
@@ -1790,7 +2108,12 @@
         "SCR-0029",
         "SCR-0030",
         "SCR-0032",
-        "SCR-0033"
+        "SCR-0033",
+        "SCR-0052",
+        "SCR-0053",
+        "SCR-0054",
+        "SCR-0055",
+        "SCR-0056"
       ]
     },
     "by_tag": {
@@ -1805,7 +2128,8 @@
         "SCR-0020",
         "SCR-0034",
         "SCR-0041",
-        "SCR-0042"
+        "SCR-0042",
+        "SCR-0047"
       ],
       "storage": [
         "SCR-0001",
@@ -1860,11 +2184,26 @@
         "SCR-0041",
         "SCR-0042",
         "SCR-0043",
-        "SCR-0044"
+        "SCR-0044",
+        "SCR-0045",
+        "SCR-0046",
+        "SCR-0047",
+        "SCR-0048",
+        "SCR-0049",
+        "SCR-0050",
+        "SCR-0051",
+        "SCR-0052",
+        "SCR-0053",
+        "SCR-0054",
+        "SCR-0055",
+        "SCR-0056"
       ],
       "automation": [
         "SCR-0003",
-        "SCR-0013"
+        "SCR-0013",
+        "SCR-0047",
+        "SCR-0049",
+        "SCR-0051"
       ],
       "stock-analysis": [
         "SCR-0004"
@@ -1872,7 +2211,8 @@
       "deduplication": [
         "SCR-0005",
         "SCR-0009",
-        "SCR-0031"
+        "SCR-0031",
+        "SCR-0045"
       ],
       "multi-agent": [
         "SCR-0005",
@@ -1880,7 +2220,10 @@
         "SCR-0030",
         "SCR-0031",
         "SCR-0032",
-        "SCR-0033"
+        "SCR-0033",
+        "SCR-0054",
+        "SCR-0055",
+        "SCR-0056"
       ],
       "data-gathering": [
         "SCR-0006",
@@ -1899,7 +2242,9 @@
         "SCR-0028",
         "SCR-0041",
         "SCR-0043",
-        "SCR-0044"
+        "SCR-0044",
+        "SCR-0045",
+        "SCR-0046"
       ],
       "search": [
         "SCR-0006",
@@ -1916,10 +2261,16 @@
         "SCR-0026",
         "SCR-0027",
         "SCR-0028",
-        "SCR-0035"
+        "SCR-0035",
+        "SCR-0046",
+        "SCR-0047",
+        "SCR-0048",
+        "SCR-0049",
+        "SCR-0050"
       ],
       "public-api": [
-        "SCR-0007"
+        "SCR-0007",
+        "SCR-0046"
       ],
       "arxiv": [
         "SCR-0008"
@@ -1934,7 +2285,12 @@
         "SCR-0015",
         "SCR-0016",
         "SCR-0034",
-        "SCR-0042"
+        "SCR-0042",
+        "SCR-0047",
+        "SCR-0048",
+        "SCR-0049",
+        "SCR-0050",
+        "SCR-0051"
       ],
       "go": [
         "SCR-0015",
@@ -1946,14 +2302,20 @@
         "SCR-0022"
       ],
       "nlp": [
-        "SCR-0018"
+        "SCR-0018",
+        "SCR-0045"
       ],
       "coordination": [
         "SCR-0019",
         "SCR-0030",
         "SCR-0031",
         "SCR-0032",
-        "SCR-0033"
+        "SCR-0033",
+        "SCR-0052",
+        "SCR-0053",
+        "SCR-0054",
+        "SCR-0055",
+        "SCR-0056"
       ],
       "monitoring": [
         "SCR-0019",
@@ -1980,10 +2342,13 @@
         "SCR-0028"
       ],
       "message-bus": [
-        "SCR-0029"
+        "SCR-0029",
+        "SCR-0052"
       ],
       "communication": [
-        "SCR-0029"
+        "SCR-0029",
+        "SCR-0054",
+        "SCR-0055"
       ],
       "jsonl": [
         "SCR-0029"
@@ -1992,7 +2357,12 @@
         "SCR-0033"
       ],
       "sqlite": [
-        "SCR-0033"
+        "SCR-0033",
+        "SCR-0052",
+        "SCR-0053",
+        "SCR-0054",
+        "SCR-0055",
+        "SCR-0056"
       ],
       "stress-test": [
         "SCR-0036",
@@ -2022,6 +2392,9 @@
       ],
       "text-extraction": [
         "SCR-0044"
+      ],
+      "analysis": [
+        "SCR-0048"
       ]
     },
     "by_language": {
