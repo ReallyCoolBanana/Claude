@@ -1,233 +1,354 @@
 {
   "version": "1.0",
-  "last_updated": "2026-03-11",
-  "sop_count": 28,
-  "sops": [
+  "last_updated": "2026-03-12",
+  "count": 25,
+  "entries": [
     {
       "id": "SOP-011",
       "title": "Central Commander Launch Protocol",
-      "filename": "sop_011_central_commander_launch.json",
-      "version": "1.0",
+      "file": "sop_011_central_commander_launch.json",
+      "date": "2026-03-11",
+      "team": "sop-team-1",
+      "tags": [],
       "status": "active",
-      "description": "Ensure the coordinator always maximizes parallelism when launching agent teams. Eliminates the sequential-wave anti-pattern."
+      "version": "1.0",
+      "builds_on": []
     },
     {
       "id": "SOP-012",
       "title": "Real-Time Monitoring and Intervention Protocol",
-      "filename": "sop_012_monitoring_intervention.json",
+      "file": "sop_012_monitoring_intervention.json",
+      "date": "2026-03-11",
+      "team": "TEAM-0025-sop-2",
+      "tags": [],
+      "status": "active",
       "version": "1.0",
-      "status": "superseded",
-      "superseded_by": "SOP-012 v2",
-      "description": "Provides the coordinator with structured procedures for monitoring simultaneous agent teams, detecting problems early, and intervening."
+      "builds_on": [
+        "SOP-001",
+        "SOP-010",
+        "EFF-005",
+        "EFF-001"
+      ]
     },
     {
-      "id": "SOP-012",
+      "id": "SOP-012-v2",
       "title": "Real-Time Monitoring and Intervention Protocol (v2)",
-      "filename": "sop_012_monitoring_intervention_v2.json",
-      "version": "2.0",
+      "file": "sop_012_monitoring_intervention_v2.json",
+      "date": "2026-03-11",
+      "team": "unknown",
+      "tags": [],
       "status": "active",
-      "description": "Version 2 of the monitoring and intervention protocol with updated procedures."
+      "version": "2.0",
+      "builds_on": [
+        "SOP-001",
+        "SOP-010",
+        "EFF-005",
+        "EFF-001"
+      ]
     },
     {
       "id": "SOP-013",
       "title": "Agent Prompt Engineering and Context Distribution",
-      "filename": "sop_013_prompt_engineering.json",
-      "version": "1.0",
+      "file": "sop_013_prompt_engineering.json",
+      "date": "2026-03-11",
+      "team": "TEAM-0025-sop-3",
+      "tags": [],
       "status": "active",
-      "description": "Standardized procedures for crafting agent prompts and distributing context to maximize agent effectiveness in multi-team operations."
+      "version": "1.0",
+      "builds_on": [
+        "SOP-010",
+        "SOP-001",
+        "efficiency_guide.json",
+        "future_team_data_strategy.json"
+      ]
     },
     {
       "id": "SOP-014",
       "title": "Simultaneous Multi-Project Management Protocol",
-      "filename": "sop_014_simultaneous_project_management.json",
-      "version": "1.0",
+      "file": "sop_014_simultaneous_project_management.json",
+      "date": "2026-03-11",
+      "team": "TEAM-0026-central-command",
+      "tags": [],
       "status": "active",
-      "description": "Enables a central commander to run multiple independent projects simultaneously using hub-and-spoke monitoring."
+      "version": "1.0",
+      "builds_on": [
+        "SOP-011",
+        "SOP-012",
+        "SOP-013"
+      ]
     },
     {
       "id": "SOP-015",
       "title": "Infrastructure Audit and Mass Indexing Protocol",
-      "filename": "sop_015_infrastructure_audit.json",
-      "version": "1.0",
+      "file": "sop_015_infrastructure_audit.json",
+      "date": "2026-03-11",
+      "team": "TEAM-0026-central-command",
+      "tags": [],
       "status": "active",
-      "description": "Standardized procedure for conducting comprehensive repository audits including mass file indexing, tool inventory, bug tracking, and gap analysis."
+      "version": "1.0",
+      "builds_on": [
+        "SOP-011",
+        "SOP-012",
+        "SOP-014"
+      ]
     },
     {
       "id": "SOP-016",
       "title": "Cross-Team Data Flow and Report Consolidation",
-      "filename": "sop_016_cross_team_data_flow.json",
+      "file": "sop_016_cross_team_data_flow.json",
+      "date": "2026-03-11",
+      "team": "TEAM-0026-central-command",
+      "tags": [],
+      "status": "active",
       "version": "1.0",
-      "status": "superseded",
-      "superseded_by": "SOP-016 v2",
-      "description": "Defines how data flows between teams within and across simultaneous projects. Covers report formats, consolidation pipelines, and handoff protocols."
+      "builds_on": [
+        "SOP-013",
+        "SOP-014",
+        "SOP-015"
+      ]
     },
     {
-      "id": "SOP-016",
+      "id": "SOP-016-v2",
       "title": "Cross-Team Data Flow, Handoff Protocol, and Quality Gates (v2)",
-      "filename": "sop_016_cross_team_data_flow_v2.json",
-      "version": "2.0",
+      "file": "sop_016_cross_team_data_flow_v2.json",
+      "date": "2026-03-11",
+      "team": "unknown",
+      "tags": [],
       "status": "active",
-      "description": "Version 2 with expanded handoff protocol and quality gates for cross-team data flow."
+      "version": "2.0",
+      "builds_on": [
+        "SOP-013",
+        "SOP-014",
+        "SOP-015",
+        "SOP-016-v1"
+      ]
     },
     {
       "id": "SOP-017",
       "title": "Data Gathering Operations",
-      "filename": "sop_017_data_gathering_operations.json",
-      "version": "1.0",
+      "file": "sop_017_data_gathering_operations.json",
+      "date": "2026-03-11",
+      "team": "doc-team-4",
+      "tags": [],
       "status": "active",
-      "description": "Standard procedure for selecting, configuring, and running data-gathering methods. Covers method selection, rate limiting, and validation."
+      "version": "1.0",
+      "builds_on": []
     },
     {
       "id": "SOP-018",
       "title": "Market Research Operations",
-      "filename": "sop_018_market_research_operations.json",
-      "version": "1.0",
+      "file": "sop_018_market_research_operations.json",
+      "date": "2026-03-11",
+      "team": "doc-team-4",
+      "tags": [],
       "status": "active",
-      "description": "Standard procedure for conducting market research, selecting analysis methods, logging stock picks, and tracking performance."
+      "version": "1.0",
+      "builds_on": []
     },
     {
       "id": "SOP-019",
       "title": "Environment Setup for Fresh Deployment",
-      "filename": "sop_019_environment_setup.json",
-      "version": "1.0",
+      "file": "sop_019_environment_setup.json",
+      "date": "2026-03-11",
+      "team": "doc-team-4",
+      "tags": [],
       "status": "active",
-      "description": "Standard procedure for setting up a fresh environment from scratch. Covers Python installation, dependency management, and Git configuration."
+      "version": "1.0",
+      "builds_on": []
     },
     {
       "id": "SOP-020",
       "title": "Systematic Bug Fix Workflow",
-      "filename": "sop_020_bug_fix_workflow.json",
-      "version": "1.0",
+      "file": "sop_020_bug_fix_workflow.json",
+      "date": "2026-03-11",
+      "team": "doc-team-4",
+      "tags": [],
       "status": "active",
-      "description": "Standard procedure for receiving bug reports, prioritizing them, making targeted fixes, verifying with tests, and documenting resolutions."
+      "version": "1.0",
+      "builds_on": []
     },
     {
       "id": "SOP-021",
       "title": "Failure Recovery Runbook",
-      "filename": "sop_021_failure_recovery_runbook.json",
-      "version": "1.0",
+      "file": "sop_021_failure_recovery_runbook.json",
+      "date": "2026-03-11",
+      "team": "doc-team-4",
+      "tags": [],
       "status": "active",
-      "description": "Comprehensive runbook for recovering from common failure modes in the multi-agent coordination system. Covers agent crashes, deadlocks, and data corruption."
+      "version": "1.0",
+      "builds_on": []
     },
     {
       "id": "SOP-022",
       "title": "Evidence-Based Team Sizing and Composition",
-      "filename": "sop_022_team_sizing.json",
-      "version": "1.0",
+      "file": "sop_022_team_sizing.json",
+      "date": "2026-03-11",
+      "team": "ANALYSIS-001",
+      "tags": [],
       "status": "active",
-      "description": "Defines optimal team sizes and compositions based on empirical data from 28 team sessions with 132 agent instances."
+      "version": "1.0",
+      "builds_on": [
+        "SOP-011",
+        "SOP-013",
+        "ANALYSIS-001"
+      ]
     },
     {
       "id": "SOP-023",
       "title": "Anti-Recursion Protocol: Preventing Inward-Facing Gravity",
-      "filename": "sop_023_anti_recursion.json",
-      "version": "1.0",
+      "file": "sop_023_anti_recursion.json",
+      "date": "2026-03-11",
+      "team": "ANALYSIS-001",
+      "tags": [],
       "status": "active",
-      "description": "Prevents the pattern where teams spend their time building coordination infrastructure to build more coordination infrastructure."
+      "version": "1.0",
+      "builds_on": [
+        "SOP-011",
+        "SOP-014",
+        "ANALYSIS-001"
+      ]
     },
     {
       "id": "SOP-024",
       "title": "SOP Lifecycle Management: Creation, Review, Retirement",
-      "filename": "sop_024_sop_lifecycle.json",
-      "version": "1.0",
+      "file": "sop_024_sop_lifecycle.json",
+      "date": "2026-03-11",
+      "team": "ANALYSIS-001",
+      "tags": [],
       "status": "active",
-      "description": "Prevents SOP proliferation by defining when SOPs should be created, updated, and retired."
+      "version": "1.0",
+      "builds_on": [
+        "SOP-023",
+        "ANALYSIS-001"
+      ]
     },
     {
       "id": "SOP-025",
       "title": "Proto A Development Pipeline: Programming, Testing, Bug Fixing",
-      "filename": "sop_025_proto_a_dev_pipeline.json",
-      "version": "1.0",
+      "file": "sop_025_proto_a_dev_pipeline.json",
+      "date": "2026-03-12",
+      "team": "unknown",
+      "tags": [],
       "status": "active",
-      "description": "Define a repeatable pipeline for using Prototype A (JSONL + SQLite WAL) coordination to drive actual development work."
-    },
-    {
-      "id": "SOP-026",
-      "title": "Efficiency Patterns for Multi-Team Coordination",
-      "filename": "efficiency_guide.json",
       "version": "1.0",
-      "status": "active",
-      "description": "Efficiency patterns and anti-patterns for multi-team AI coordination using Proto A. Based on observations from TEAM-0022 and prior sessions."
-    },
-    {
-      "id": "SOP-027",
-      "title": "Future Team Data Strategy and Knowledge Transfer",
-      "filename": "future_team_data_strategy.json",
-      "version": "1.0",
-      "status": "active",
-      "description": "Data storage strategy and knowledge transfer protocol for future AI teams. Defines what data to store, where to store it, and handoff checklists."
-    },
-    {
-      "id": "SOP-028",
-      "title": "Proto A Coordination Tool SOPs",
-      "filename": "tool_sops.json",
-      "version": "1.0",
-      "status": "active",
-      "description": "Standard Operating Procedures for all Proto A coordination tools. Designed for AI teams who have never seen the system before."
+      "builds_on": []
     },
     {
       "id": "SOP-029",
       "title": "File Creation & Naming Standards",
-      "filename": "sop_029_file_naming.json",
-      "version": "1.0",
+      "file": "sop_029_file_naming.json",
+      "date": "2026-03-11",
+      "team": "A1-Gamma",
+      "tags": [],
       "status": "active",
-      "description": "Establishes mandatory naming patterns, directory placement rules, and file size budgets for all repository resources. Addresses naming inconsistencies found in repository audit."
+      "version": "1.0",
+      "builds_on": [
+        "SOP-024",
+        "SOP-023"
+      ]
     },
     {
       "id": "SOP-030",
       "title": "Index Management & Maintenance",
-      "filename": "sop_030_index_management.json",
-      "version": "1.0",
+      "file": "sop_030_index_management.json",
+      "date": "2026-03-11",
+      "team": "A1-Gamma",
+      "tags": [],
       "status": "active",
-      "description": "Defines the universal index.json schema, mandates that indexes are generated artifacts, and establishes validation rules for consistent index structure."
+      "version": "1.0",
+      "builds_on": [
+        "SOP-029",
+        "SOP-024"
+      ]
     },
     {
       "id": "SOP-031",
       "title": "AI-Efficient Language Guide",
-      "filename": "sop_031_ai_language.json",
-      "version": "1.0",
+      "file": "sop_031_ai_language.json",
+      "date": "2026-03-11",
+      "team": "A1-Gamma",
+      "tags": [],
       "status": "active",
-      "description": "Defines controlled vocabulary, abbreviation dictionary, tag taxonomy, and token-efficient writing conventions to minimize boilerplate and use canonical terms."
+      "version": "1.0",
+      "builds_on": [
+        "SOP-029",
+        "SOP-030"
+      ]
     },
     {
       "id": "SOP-032",
       "title": "Optimal Team Sizing Protocol",
-      "filename": "sop_032_optimal_team_sizing.json",
-      "version": "1.0",
+      "file": "sop_032_optimal_team_sizing.json",
+      "date": "2026-03-11",
+      "team": "unknown",
+      "tags": [],
       "status": "active",
-      "description": "Data-driven decision framework for selecting team sizes based on empirically validated power law E=4.0*N^(-0.75). Translates 3247 data points into actionable sizing rules."
+      "version": "1.0",
+      "builds_on": [
+        "SOP-022",
+        "SOP-011"
+      ]
     },
     {
       "id": "SOP-033",
       "title": "Inter-Team Communication Protocol",
-      "filename": "sop_033_inter_team_communication.json",
-      "version": "1.0",
+      "file": "sop_033_inter_team_communication.json",
+      "date": "2026-03-11",
+      "team": "unknown",
+      "tags": [],
       "status": "active",
-      "description": "Defines when to use hub-and-spoke vs direct channels vs broadcast based on empirical data: hub 1.9x faster single-thread, channels 1.9x better p95 under concurrency."
+      "version": "1.0",
+      "builds_on": [
+        "SOP-011",
+        "SOP-025",
+        "SOP-028",
+        "SOP-032"
+      ]
     },
     {
       "id": "SOP-034",
       "title": "SQLite Contention Management",
-      "filename": "sop_034_sqlite_contention_management.json",
-      "version": "1.0",
+      "file": "sop_034_sqlite_contention_management.json",
+      "date": "2026-03-11",
+      "team": "unknown",
+      "tags": [],
       "status": "active",
-      "description": "Prevents SQLite WAL write contention from becoming the coordination bottleneck. Defines max 4 concurrent writers per database, partitioning strategies, backoff procedures, and monitoring thresholds based on empirical contention curve (96% throughput loss at 32 threads)."
+      "version": "1.0",
+      "builds_on": [
+        "SOP-032",
+        "SOP-033",
+        "SOP-021"
+      ]
     },
     {
       "id": "SOP-035",
       "title": "Benchmark-Driven Development Process",
-      "filename": "sop_035_benchmark_driven_development.json",
-      "version": "1.0",
+      "file": "sop_035_benchmark_driven_development.json",
+      "date": "2026-03-11",
+      "team": "unknown",
+      "tags": [],
       "status": "active",
-      "description": "Establishes repeatable benchmarking process: baseline before changes, regression detection thresholds (correctness 0-tolerance, latency p95 <20% increase, throughput <15% decrease, tokens <10% increase), and result archival."
+      "version": "1.0",
+      "builds_on": [
+        "SOP-020",
+        "SOP-025",
+        "SOP-034"
+      ]
     },
     {
       "id": "SOP-036",
       "title": "Data Collection and Indexing Standards",
-      "filename": "sop_036_data_collection_indexing.json",
-      "version": "1.0",
+      "file": "sop_036_data_collection_indexing.json",
+      "date": "2026-03-11",
+      "team": "unknown",
+      "tags": [],
       "status": "active",
-      "description": "Standardizes three-tier index system (SUMMARY 79 tokens, INDEX_COMPACT 50 tokens/entry, full index 6093 tokens). Defines required metadata fields, naming conventions, cross-reference requirements, and data quality standards enabling 90.2% token savings."
+      "version": "1.0",
+      "builds_on": [
+        "SOP-026",
+        "SOP-027",
+        "SOP-028"
+      ]
     }
   ]
 }

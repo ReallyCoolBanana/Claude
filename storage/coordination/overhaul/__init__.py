@@ -1,1 +1,1 @@
-# Overhaul validation and benchmark tools for the data storage overhaul operation.
+# Overhaul validation and benchmarking tools for the data storage overhaul operation.

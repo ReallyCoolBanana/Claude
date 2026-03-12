@@ -1,0 +1,123 @@
+{
+  "team": "TEAM-GAMMA",
+  "mission": "Unified Schema + Deduplication + Data Normalization",
+  "completed_at": "2026-03-12",
+  "status": "complete",
+
+  "deliverables": {
+    "schema_json": {
+      "path": "storage/data/schema.json",
+      "status": "pre-existing, verified",
+      "description": "Unified JSON Schema (draft-07) defining universal required fields (id, title, date, type, status), universal optional fields (team, tags, category, confidence, builds_on, description, cross_references, version), and per-subsystem extensions for KB, SCR, SOP, DATA, SRC, TEAM. Includes date_field_mapping and naming_conventions.",
+      "version": "1.0"
+    },
+    "schema_validator": {
+      "path": "storage/scripts/schema_validator.py",
+      "status": "created",
+      "description": "Validates entries against unified schema. Handles YAML frontmatter (KB, TEAM), JSON files (SRC, SOP), and index.json arrays (SCR, DATA). Reports missing required fields, type mismatches, legacy date warnings. Supports --json, --errors-only, --type filtering, recursive directory scan.",
+      "line_count": 281
+    },
+    "dedup_checker": {
+      "path": "storage/scripts/dedup_checker.py",
+      "status": "created",
+      "description": "Detects duplicates via title similarity (trigram Jaccard), content fingerprinting (5-word shingling), ID collision, and same-API-host detection for SRC entries. Outputs confidence scores and keep recommendations.",
+      "line_count": 319
+    },
+    "normalize_dates": {
+      "path": "storage/scripts/normalize_dates.py",
+      "status": "created",
+      "description": "Migrates 7 legacy date field variants (created, created_date, modified, generated, timestamp, added, last_updated, run_date) to canonical 'date' field. Supports --dry-run and --apply modes. Handles JSON and Markdown YAML frontmatter.",
+      "line_count": 268
+    }
+  },
+
+  "schema_audit": {
+    "subsystems_audited": 6,
+    "subsystems": ["KB", "SCR", "SOP", "DATA", "SRC", "TEAM"],
+    "universal_required_fields": ["id", "title", "date", "type", "status"],
+    "universal_optional_fields": ["team", "tags", "category", "confidence", "builds_on", "description", "cross_references", "version"],
+    "legacy_date_fields_found": {
+      "last_updated": 64,
+      "created": 64,
+      "timestamp": 28,
+      "generated": 12,
+      "created_date": 10,
+      "added": 4,
+      "run_date": 2
+    },
+    "total_legacy_date_occurrences": 184,
+    "files_with_legacy_dates": 89
+  },
+
+  "validation_findings": {
+    "total_entries_validated": 166,
+    "passed": 84,
+    "failed": 82,
+    "total_warnings": 462,
+    "total_errors": 88,
+    "common_issues": [
+      "Missing 'type' field (inferred from directory path)",
+      "Missing 'status' field (defaults to active)",
+      "Missing 'title' field (some use 'name' instead)",
+      "Legacy date fields present instead of canonical 'date'",
+      "Tags not in lowercase-kebab-case"
+    ]
+  },
+
+  "dedup_findings": {
+    "total_entries_scanned": 155,
+    "duplicates_found": 6,
+    "high_confidence": 6,
+    "medium_confidence": 0,
+    "by_type": {
+      "title_similarity": 2,
+      "content_similarity": 1,
+      "duplicate_id": 2,
+      "same_api_host": 1
+    },
+    "specific_duplicates": [
+      {
+        "type": "title_similarity + same_api_host",
+        "entries": ["SRC-0018", "SRC-0039"],
+        "detail": "Both describe FRED API (api.stlouisfed.org)",
+        "confidence": "high"
+      },
+      {
+        "type": "content_similarity",
+        "entries": ["KB-0012", "KB-0013"],
+        "detail": "78% content overlap",
+        "confidence": "high"
+      },
+      {
+        "type": "duplicate_id",
+        "entries": ["SOP-012 (v1 and v2)"],
+        "detail": "sop_012_monitoring_intervention.json and sop_012_monitoring_intervention_v2.json share ID SOP-012",
+        "confidence": "high"
+      },
+      {
+        "type": "duplicate_id",
+        "entries": ["SOP-016 (v1 and v2)"],
+        "detail": "sop_016_cross_team_data_flow.json and sop_016_cross_team_data_flow_v2.json share ID SOP-016",
+        "confidence": "high"
+      }
+    ]
+  },
+
+  "date_normalization": {
+    "mode": "dry-run (ready to apply)",
+    "files_scanned": 386,
+    "files_requiring_changes": 89,
+    "total_field_changes_pending": 184,
+    "apply_command": "python3 storage/scripts/normalize_dates.py --apply"
+  },
+
+  "recommendations": [
+    "Run normalize_dates.py --apply to migrate all 184 legacy date fields to canonical 'date'",
+    "Resolve SOP-012 and SOP-016 duplicate IDs (assign v2 versions new IDs like SOP-012a or SOP-037/038)",
+    "Merge KB-0012 and KB-0013 (78% content overlap) into single entry",
+    "Merge SRC-0018 and SRC-0039 (both FRED API) into single source entry",
+    "Add 'type' and 'status' fields to all entries missing them",
+    "Integrate schema_validator.py into pre-commit hooks to prevent schema drift",
+    "Integrate dedup_checker.py into entry creation workflow per SOP-029"
+  ]
+}
