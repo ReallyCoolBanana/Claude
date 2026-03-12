@@ -4,9 +4,14 @@
   "description": "Catalog of MCP (Model Context Protocol) servers for extending AI capabilities",
   "registries": [
     {
+      "name": "Official MCP Registry",
+      "url": "https://registry.modelcontextprotocol.io/",
+      "description": "Official registry maintained by MCP project (Linux Foundation), ~2000 entries"
+    },
+    {
       "name": "Glama.ai",
       "url": "https://glama.ai/mcp/servers",
-      "description": "Most comprehensive MCP server registry, updated daily"
+      "description": "Most comprehensive MCP server registry, updated daily, sortable by usage"
     },
     {
       "name": "Smithery.ai",
@@ -14,9 +19,29 @@
       "description": "MCP server registry and hosting platform with OAuth support"
     },
     {
-      "name": "Official MCP Registry",
-      "url": "https://github.com/modelcontextprotocol",
-      "description": "Official Anthropic MCP organization and reference implementations"
+      "name": "PulseMCP",
+      "url": "https://www.pulsemcp.com/",
+      "description": "MCP server directory with search and filtering"
+    },
+    {
+      "name": "mcpservers.org",
+      "url": "https://mcpservers.org/",
+      "description": "Web directory synced with awesome-mcp-servers GitHub repo"
+    },
+    {
+      "name": "mcp.so",
+      "url": "https://mcp.so/",
+      "description": "Community MCP server directory"
+    },
+    {
+      "name": "mcp-awesome.com",
+      "url": "https://mcp-awesome.com/",
+      "description": "1200+ quality-verified MCP servers with install guides"
+    },
+    {
+      "name": "punkpeye/awesome-mcp-servers",
+      "url": "https://github.com/punkpeye/awesome-mcp-servers",
+      "description": "Largest curated GitHub awesome list for MCP servers"
     }
   ],
   "servers": [
@@ -459,18 +484,165 @@
       "category": "dev-tool",
       "official": true,
       "install": "npx -y @modelcontextprotocol/server-git"
+    },
+    {
+      "name": "aws-mcp-servers",
+      "description": "AWS suite: 60+ servers spanning S3, Lambda, EC2, Bedrock, CloudWatch, CDK, cost analysis",
+      "source": "https://awslabs.github.io/mcp/",
+      "category": "cloud",
+      "official": false,
+      "install": "uvx awslabs.core-mcp-server"
+    },
+    {
+      "name": "azure",
+      "description": "Azure MCP Server: 40+ tools for compute, containers, databases, AI/ML, storage, DevOps",
+      "source": "https://github.com/Azure/azure-mcp",
+      "category": "cloud",
+      "official": false,
+      "install": "npx -y @azure/mcp"
+    },
+    {
+      "name": "azure-devops",
+      "description": "Azure DevOps work items, pipelines, repos, and boards",
+      "source": "https://github.com/microsoft/azure-devops-mcp",
+      "category": "dev-tool",
+      "official": false,
+      "install": "npx -y @microsoft/azure-devops-mcp"
+    },
+    {
+      "name": "microsoft-365",
+      "description": "Outlook, Teams, SharePoint, OneDrive, Calendar, Copilot Search",
+      "source": "https://learn.microsoft.com/en-us/microsoft-agent-365/tooling-servers-overview",
+      "category": "productivity",
+      "official": false,
+      "install": "See Microsoft docs"
+    },
+    {
+      "name": "google-cloud",
+      "description": "Google Cloud: BigQuery, Compute Engine, GKE, Cloud SQL, Spanner, AlloyDB",
+      "source": "https://cloud.google.com/products/mcp",
+      "category": "cloud",
+      "official": false,
+      "install": "See Google Cloud docs"
+    },
+    {
+      "name": "playwright-official",
+      "description": "Official Microsoft Playwright browser automation, screenshots, testing",
+      "source": "https://github.com/microsoft/playwright-mcp",
+      "category": "web",
+      "official": false,
+      "install": "npx -y @playwright/mcp"
+    },
+    {
+      "name": "atlassian",
+      "description": "Official Atlassian Jira + Confluence remote MCP server",
+      "source": "https://github.com/atlassian/atlassian-mcp-server",
+      "category": "productivity",
+      "official": false,
+      "install": "npx -y @atlassian/mcp-server"
+    },
+    {
+      "name": "figma",
+      "description": "Figma design files, components, variables, styles, screenshots",
+      "source": "https://github.com/figma/figma-mcp-server",
+      "category": "design",
+      "official": false,
+      "install": "npx -y @figma/mcp-server"
+    },
+    {
+      "name": "google-workspace",
+      "description": "Gmail, Calendar, Docs, Sheets, Slides, Chat, Forms, Tasks, Drive",
+      "source": "https://github.com/nickhild/google-workspace-mcp-server",
+      "category": "productivity",
+      "official": false,
+      "install": "npx -y google-workspace-mcp"
+    },
+    {
+      "name": "honeycomb",
+      "description": "Honeycomb observability: query data, alerts, dashboards",
+      "source": "https://github.com/honeycombio/honeycomb-mcp",
+      "category": "monitoring",
+      "official": false,
+      "install": "npx -y @honeycombio/mcp"
+    },
+    {
+      "name": "hubspot",
+      "description": "HubSpot CRM data management and interaction",
+      "source": "https://github.com/HubSpot/mcp-server",
+      "category": "crm",
+      "official": false,
+      "install": "npx -y @hubspot/mcp-server"
+    },
+    {
+      "name": "salesforce",
+      "description": "Salesforce CRM connector for data and workflows",
+      "source": "https://github.com/salesforce/mcp-server",
+      "category": "crm",
+      "official": false,
+      "install": "npx -y @salesforce/mcp"
+    },
+    {
+      "name": "context7",
+      "description": "Real-time API documentation injection from OpenAPI specs",
+      "source": "https://github.com/context7/context7-mcp",
+      "category": "dev-tool",
+      "official": false,
+      "install": "npx -y context7-mcp"
+    },
+    {
+      "name": "desktop-commander",
+      "description": "Enhanced terminal execution, diff-based file editing, process management",
+      "source": "https://github.com/wonderwhy-er/DesktopCommanderMCP",
+      "category": "dev-tool",
+      "official": false,
+      "install": "npx -y desktop-commander-mcp"
+    },
+    {
+      "name": "browserbase",
+      "description": "Cloud browser automation via Stagehand, multi-browser support",
+      "source": "https://github.com/browserbase/mcp-server-browserbase",
+      "category": "web",
+      "official": false,
+      "install": "npx -y @browserbase/mcp-server"
+    },
+    {
+      "name": "algolia",
+      "description": "Algolia search and discovery platform integration",
+      "source": "https://github.com/algolia/mcp-server",
+      "category": "search",
+      "official": false,
+      "install": "npx -y @algolia/mcp-server"
+    },
+    {
+      "name": "turso",
+      "description": "SQLite database management with schema exploration and vector search",
+      "source": "https://github.com/turso-extended/mcp-turso",
+      "category": "database",
+      "official": false,
+      "install": "npx -y mcp-turso"
+    },
+    {
+      "name": "actionkit-paragon",
+      "description": "Connect to 130+ SaaS integrations via single MCP server",
+      "source": "https://github.com/useparagon/actionkit-mcp",
+      "category": "integration",
+      "official": false,
+      "install": "npx -y @paragon/actionkit-mcp"
     }
   ],
   "categories": {
-    "database": ["postgres", "sqlite", "redis", "mysql", "qdrant", "neo4j", "mongodb", "bigquery", "snowflake", "supabase", "neon"],
-    "dev-tool": ["github", "gitlab", "sentry", "docker", "kubernetes", "terraform", "cli", "git"],
-    "search": ["brave-search", "elasticsearch", "exa", "tavily", "perplexity"],
-    "web": ["puppeteer", "fetch", "playwright", "firecrawl"],
-    "productivity": ["google-drive", "linear", "notion", "obsidian", "todoist", "raycast", "jira", "confluence"],
+    "database": ["postgres", "sqlite", "redis", "mysql", "qdrant", "neo4j", "mongodb", "bigquery", "snowflake", "supabase", "neon", "turso"],
+    "dev-tool": ["github", "gitlab", "sentry", "docker", "kubernetes", "terraform", "cli", "git", "azure-devops", "context7", "desktop-commander"],
+    "search": ["brave-search", "elasticsearch", "exa", "tavily", "perplexity", "algolia"],
+    "web": ["puppeteer", "fetch", "playwright", "firecrawl", "playwright-official", "browserbase"],
+    "productivity": ["google-drive", "linear", "notion", "obsidian", "todoist", "raycast", "jira", "confluence", "microsoft-365", "atlassian", "google-workspace"],
     "communication": ["slack", "discord", "email", "twilio"],
-    "cloud": ["aws-kb-retrieval", "cloudflare", "aws-cdk", "vercel"],
-    "monitoring": ["grafana", "datadog", "axiom"],
+    "cloud": ["aws-kb-retrieval", "cloudflare", "aws-cdk", "vercel", "aws-mcp-servers", "azure", "google-cloud"],
+    "monitoring": ["grafana", "datadog", "axiom", "honeycomb"],
     "api": ["stripe", "shopify"],
+    "crm": ["hubspot", "salesforce"],
+    "design": ["figma"],
+    "integration": ["actionkit-paragon"],
     "geospatial": ["google-maps"],
     "knowledge": ["memory"],
     "ai-ml": ["everart"],
@@ -479,9 +651,10 @@
     "filesystem": ["filesystem"]
   },
   "stats": {
-    "total_servers": 55,
+    "total_servers": 74,
     "official_count": 20,
-    "community_count": 35,
-    "category_count": 15
+    "community_count": 54,
+    "category_count": 18,
+    "registries_count": 8
   }
 }
