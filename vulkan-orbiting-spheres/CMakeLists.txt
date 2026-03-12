@@ -20,15 +20,18 @@ endif()
 # --- Fetch dependencies ---
 include(FetchContent)
 
+# GLFW options must be set before FetchContent_Declare
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+
 FetchContent_Declare(
     glfw
     GIT_REPOSITORY https://github.com/glfw/glfw.git
     GIT_TAG        3.4
     GIT_SHALLOW    TRUE
 )
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
     glm
@@ -100,8 +103,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     GPUOpen::VulkanMemoryAllocator
 )
 
+# Use relative shader path so exe finds shaders next to itself
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-    SHADER_DIR="${SHADER_BIN_DIR}"
+    SHADER_DIR="shaders"
     GLM_FORCE_RADIANS
     GLM_FORCE_DEPTH_ZERO_TO_ONE
 )
@@ -109,6 +113,14 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 if(GLSLC_EXECUTABLE)
     add_dependencies(${PROJECT_NAME} shaders)
 endif()
+
+# Copy compiled shaders next to the executable
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${SHADER_BIN_DIR}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders"
+    COMMENT "Copying shaders to output directory"
+)
 
 # On Windows, use console subsystem for easier debugging
 if(WIN32)
