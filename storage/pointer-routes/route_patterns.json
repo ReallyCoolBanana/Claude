@@ -1,27 +1,27 @@
 {
   "generated": "2026-03-12T23:20:33.624543Z",
-  "total_patterns": 18,
+  "total_patterns": 19,
   "task_patterns": {
     "task1": {
       "total_attempts": 2,
-      "success_count": 1,
-      "success_rate": 50.0,
+      "success_count": 0,
+      "success_rate": 0.0,
       "avg_weight_on_success": 0.0,
       "common_routes": [
-        {
-          "route": "",
-          "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
-        },
         {
           "route": "A -> B",
           "count": 1,
           "score": 0.0,
           "route_success_rate": 0.0
+        },
+        {
+          "route": "",
+          "count": 1,
+          "score": 0.0,
+          "route_success_rate": 0.0
         }
       ],
-      "recommended_route": "",
+      "recommended_route": "A -> B",
       "strengths_on_success": {}
     },
     "bug-hunting": {
@@ -75,15 +75,15 @@
     },
     "test": {
       "total_attempts": 2,
-      "success_count": 2,
-      "success_rate": 100.0,
+      "success_count": 1,
+      "success_rate": 50.0,
       "avg_weight_on_success": 0.0,
       "common_routes": [
         {
           "route": "SINGLE-NODE",
           "count": 1,
-          "score": 1.0,
-          "route_success_rate": 100.0
+          "score": 0.0,
+          "route_success_rate": 0.0
         },
         {
           "route": "A -> B",
@@ -440,6 +440,39 @@
       "strengths_on_success": {
         "unclassified": 1,
         "unknown": 1
+      }
+    },
+    "tag-pathfinding": {
+      "total_attempts": 20,
+      "success_count": 20,
+      "success_rate": 100.0,
+      "avg_weight_on_success": 14.2,
+      "common_routes": [
+        {
+          "route": "SOP-011 -> KB-0038 -> TEAM-0020 -> KB-0043 -> TEAM-0002 -> SCR-0043",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        },
+        {
+          "route": "SOP-011 -> SCR-0019 -> SRC-0051",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        },
+        {
+          "route": "SOP-012 -> SOP-029 -> SCR-0057",
+          "count": 1,
+          "score": 1.0,
+          "route_success_rate": 100.0
+        }
+      ],
+      "recommended_route": "SOP-011 -> KB-0038 -> TEAM-0020 -> KB-0043 -> TEAM-0002 -> SCR-0043",
+      "strengths_on_success": {
+        "unclassified": 57,
+        "primary": 11,
+        "supporting": 12,
+        "related": 3
       }
     }
   }
