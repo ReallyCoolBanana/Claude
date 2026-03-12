@@ -1,0 +1,219 @@
+{
+  "metadata": {
+    "team": "TEAM-0027",
+    "agent": "c3-perf-audit",
+    "task": "vulkan-error-review",
+    "date": "2026-03-12",
+    "focus_area": "Performance anti-patterns, optimization opportunities",
+    "files_reviewed": [
+      "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "vulkan-orbiting-spheres/src/vulkan_app.h",
+      "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "vulkan-orbiting-spheres/src/sphere.cpp",
+      "vulkan-orbiting-spheres/src/camera.cpp",
+      "vulkan-orbiting-spheres/src/types.h",
+      "vulkan-orbiting-spheres/src/sphere.h",
+      "vulkan-orbiting-spheres/shaders/shader.vert",
+      "vulkan-orbiting-spheres/shaders/shader.frag"
+    ],
+    "completion_status": "complete"
+  },
+  "findings": [
+    {
+      "id": "PERF-VK-001",
+      "category": "performance",
+      "severity": "high",
+      "title": "Expensive inverse(model) computed per-vertex in vertex shader",
+      "file": "vulkan-orbiting-spheres/shaders/shader.vert",
+      "line": 27,
+      "description": "The normal matrix is computed as mat3(transpose(inverse(push.model))) inside the vertex shader. The inverse() operation is expensive (cofactor expansion) and is recomputed identically for every single vertex. For the central sphere with 32x64 = 2145 vertices, this is 2145 redundant inverse computations per frame.",
+      "evidence": "fragNormal = mat3(transpose(inverse(push.model))) * inNormal;",
+      "recommendation": "Precompute the normal matrix (mat3) on the CPU and pass it via push constants or UBO. For uniform scaling (which both spheres use), the normal matrix is simply the upper-left 3x3 of the model matrix. If non-uniform scaling is needed, compute transpose(inverse(model)) once on CPU and send it as a mat3 push constant.",
+      "estimated_impact": "High GPU compute savings. inverse() on GPU expands to many ALU operations per vertex. With ~2700 total vertices across both spheres, this is thousands of wasted matrix inversions per frame."
+    },
+    {
+      "id": "PERF-VK-002",
+      "category": "performance",
+      "severity": "medium",
+      "title": "No pipeline cache used for graphics pipeline creation",
+      "file": "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "line": 163,
+      "description": "vkCreateGraphicsPipelines is called with VK_NULL_HANDLE as the pipeline cache parameter. Without a pipeline cache, shader compilation results cannot be reused across application runs, leading to longer startup times.",
+      "evidence": "vkCreateGraphicsPipelines(config.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &result.pipeline)",
+      "recommendation": "Create a VkPipelineCache at startup (loading from disk if available), pass it to vkCreateGraphicsPipelines, and save it to disk on shutdown. This can reduce pipeline creation time from hundreds of milliseconds to near-zero on subsequent launches.",
+      "estimated_impact": "Startup time improvement on subsequent runs. First run compiles shaders; subsequent runs reuse cached results. Practical impact: 50-500ms faster startup depending on driver."
+    },
+    {
+      "id": "PERF-VK-003",
+      "category": "design",
+      "severity": "medium",
+      "title": "Separate vertex/index buffers for spheres instead of shared buffer with offsets",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 481,
+      "description": "The application creates 4 separate GPU buffers (2 vertex + 2 index) for the two spheres. This means 4 separate VMA allocations, 4 separate staging uploads, and 2 separate vkCmdBindVertexBuffers/vkCmdBindIndexBuffer calls during rendering. Both spheres could share a single vertex buffer and a single index buffer using offsets.",
+      "evidence": "m_centralSphereVB, m_centralSphereIB, m_orbitingSphereVB, m_orbitingSphereIB are all separate AllocatedBuffer instances",
+      "recommendation": "Combine both sphere meshes into a single vertex buffer and a single index buffer. Use vkCmdDrawIndexed with vertexOffset and firstIndex parameters to draw each sphere from the shared buffers. This halves the number of buffer bind calls and reduces memory allocation overhead.",
+      "estimated_impact": "Minor per-frame savings from fewer buffer bind state changes. More significant savings in memory allocation overhead (fewer VMA allocations, less fragmentation). With only 2 draw calls the practical impact is small."
+    },
+    {
+      "id": "PERF-VK-004",
+      "category": "design",
+      "severity": "medium",
+      "title": "Per-vertex color attribute wastes bandwidth when color is uniform per-sphere",
+      "file": "vulkan-orbiting-spheres/src/sphere.cpp",
+      "line": 25,
+      "description": "Each vertex stores a vec3 color (12 bytes), but the color is identical for all vertices of a given sphere (blue for central, orange for orbiting). This wastes 12 bytes per vertex of GPU memory bandwidth. The central sphere has (32+1)*(64+1) = 2145 vertices, wasting 25.7 KB; the orbiting sphere has (16+1)*(32+1) = 561 vertices, wasting 6.7 KB.",
+      "evidence": "vertex.color = color; // Same color value assigned to every vertex in the sphere",
+      "recommendation": "Move the per-sphere color to push constants alongside the model matrix. Remove the color attribute from the vertex layout to reduce vertex stride from 36 bytes (3*vec3) to 24 bytes (2*vec3), saving 33% of vertex bandwidth.",
+      "estimated_impact": "Reduces vertex buffer size by 33% and GPU vertex fetch bandwidth by 33%. For this scene size the absolute savings are small (~32 KB), but the pattern is architecturally cleaner."
+    },
+    {
+      "id": "PERF-VK-005",
+      "category": "performance",
+      "severity": "medium",
+      "title": "Central sphere mesh density excessive at 32 stacks x 64 slices",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 483,
+      "description": "The central sphere uses 32 stacks and 64 slices, producing 2145 vertices and 12,288 indices (4096 triangles). For a simple demo with Blinn-Phong shading, 16 stacks x 32 slices (1088 triangles) would be visually nearly identical, especially since the lighting model smooths out the surface normals through interpolation.",
+      "evidence": "auto central = generateUVSphere(1.0f, 32, 64, {0.2f, 0.4f, 0.9f});",
+      "recommendation": "Reduce central sphere to 24 stacks x 48 slices (or even 16x32). The per-pixel Blinn-Phong lighting with interpolated normals hides tessellation artifacts effectively. This would reduce triangle count by 50-75%.",
+      "estimated_impact": "Reduces vertex processing and rasterization load by up to 75%. Practical impact is minimal on modern GPUs for this scene size, but follows best practice of right-sizing geometry."
+    },
+    {
+      "id": "PERF-VK-006",
+      "category": "performance",
+      "severity": "low",
+      "title": "Redundant time computation in recordCommandBuffer duplicates updateUniformBuffer",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 616,
+      "description": "The elapsed time is computed independently in both updateUniformBuffer (line 560-561) and recordCommandBuffer (line 616-617) using separate high_resolution_clock::now() calls. This creates a minor time inconsistency between the UBO time and the model matrix animation, and wastes a syscall.",
+      "evidence": "auto currentTime = std::chrono::high_resolution_clock::now();\nfloat time = std::chrono::duration<float>(currentTime - startTime).count();",
+      "recommendation": "Compute time once in drawFrame() and pass it to both updateUniformBuffer() and recordCommandBuffer() as a parameter. This eliminates the redundant clock call and ensures time consistency.",
+      "estimated_impact": "Negligible performance impact (one fewer syscall per frame). Primary benefit is correctness -- both the UBO and model matrix should use the same timestamp."
+    },
+    {
+      "id": "PERF-VK-007",
+      "category": "design",
+      "severity": "medium",
+      "title": "Two draw calls could be replaced with instanced rendering",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 619,
+      "description": "The two spheres are drawn with separate vkCmdDrawIndexed calls, each with its own push constants, vertex buffer bind, and index buffer bind. If both spheres shared the same mesh (or if the meshes were combined), instanced rendering with a per-instance buffer for model matrices and colors could reduce this to a single draw call.",
+      "evidence": "Two separate draw blocks at lines 620-631 and 634-654, each with push constants, buffer binds, and draw calls.",
+      "recommendation": "For only 2 objects, instanced rendering adds complexity without major gains. However, if the scene were to grow (e.g., multiple orbiting spheres), instancing with a per-instance SSBO containing model matrices would be significantly more efficient. Consider designing for this extensibility now.",
+      "estimated_impact": "Minimal for 2 objects. Would become significant (10x+ improvement) if scene grows to tens or hundreds of spheres, as it would reduce draw calls and state changes from N to 1."
+    },
+    {
+      "id": "PERF-VK-008",
+      "category": "performance",
+      "severity": "low",
+      "title": "FIFO present mode caps framerate to display refresh rate",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 218,
+      "description": "VK_PRESENT_MODE_FIFO_KHR is used, which provides V-Sync and caps rendering to the display refresh rate (typically 60 Hz). While this is power-efficient and prevents tearing, it introduces up to one frame of input latency compared to MAILBOX mode.",
+      "evidence": ".set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)",
+      "recommendation": "FIFO is actually the correct choice for a demo application -- it saves power, prevents tearing, and is universally supported. If lower latency is desired, VK_PRESENT_MODE_MAILBOX_KHR (triple buffering) would reduce latency at the cost of higher GPU power consumption. No change needed unless latency is a concern.",
+      "estimated_impact": "No performance issue per se. FIFO adds ~16ms latency vs MAILBOX but saves significant GPU power. This is a design trade-off, not a bug."
+    },
+    {
+      "id": "PERF-VK-009",
+      "category": "performance",
+      "severity": "low",
+      "title": "Command pool uses RESET_COMMAND_BUFFER_BIT instead of pool-level reset",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 378,
+      "description": "The command pool is created with VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, and individual command buffers are reset with vkResetCommandBuffer (line 520). Resetting the entire pool at once with vkResetCommandPool is generally more efficient as it allows the driver to reclaim all memory in one operation.",
+      "evidence": "poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;\n...\nvkResetCommandBuffer(m_commandBuffers[m_currentFrame], 0);",
+      "recommendation": "Use per-frame command pools (one per frame-in-flight) without RESET_COMMAND_BUFFER_BIT. Reset the entire pool with vkResetCommandPool at the start of each frame. This is the pattern recommended by GPU vendors (ARM, AMD, NVIDIA) for optimal command buffer memory reuse.",
+      "estimated_impact": "Minor driver overhead reduction. Per-pool reset allows driver to batch-free command buffer memory. With only 2 frames in flight and simple command buffers, the practical savings are minimal."
+    },
+    {
+      "id": "PERF-VK-010",
+      "category": "performance",
+      "severity": "low",
+      "title": "Upload buffer function uses vkQueueWaitIdle for synchronization",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 749,
+      "description": "The uploadBuffer helper uses vkQueueWaitIdle to wait for the staging buffer copy to complete. This stalls the entire graphics queue. While this is only called during initialization (not per-frame), it prevents overlapping multiple uploads.",
+      "evidence": "vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);\nvkQueueWaitIdle(m_graphicsQueue);",
+      "recommendation": "Use a fence per upload and batch all uploads into a single command buffer, or use a dedicated transfer queue if available. Since this is init-only code, the practical impact is negligible, but it would matter if dynamic geometry loading were added later.",
+      "estimated_impact": "Negligible since uploads only happen at startup. With 4 buffers uploaded sequentially, each stalling the queue, total init overhead is ~4 round-trips to GPU. Could be reduced to 1 by batching."
+    },
+    {
+      "id": "PERF-VK-011",
+      "category": "performance",
+      "severity": "low",
+      "title": "Validation layers enabled in production builds",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 150,
+      "description": "Validation layers are unconditionally requested with request_validation_layers(true). Validation layers add significant CPU overhead (10-30% in some scenarios) by intercepting every Vulkan API call for error checking.",
+      "evidence": ".request_validation_layers(true)",
+      "recommendation": "Gate validation layers behind a debug/release build flag (#ifdef NDEBUG or a CMake option). Only enable validation during development. Use: .request_validation_layers(enableValidation) where enableValidation is a build-time constant.",
+      "estimated_impact": "10-30% CPU overhead from validation layer interception. In a simple 2-sphere scene this translates to perhaps 0.1-0.5ms per frame, but it is wasteful in release builds."
+    },
+    {
+      "id": "PERF-VK-012",
+      "category": "performance",
+      "severity": "low",
+      "title": "Fragment shader viewDir computation assumes camera at origin",
+      "file": "vulkan-orbiting-spheres/shaders/shader.frag",
+      "line": 13,
+      "description": "The view direction is computed as normalize(-fragWorldPos), which assumes the camera is at the world origin. This is incorrect when the camera orbits around the scene -- the specular highlights will be computed relative to the origin rather than the actual eye position. While technically a correctness issue, it also represents wasted computation since the specular highlights are wrong.",
+      "evidence": "vec3 viewDir = normalize(-fragWorldPos);",
+      "recommendation": "Pass the camera/eye position via the UBO and compute viewDir as normalize(cameraPos - fragWorldPos). This fixes the specular highlights and costs only an additional vec3 in the UBO.",
+      "estimated_impact": "Zero performance impact (same number of ALU ops). Fixes incorrect specular lighting which is a visual quality issue."
+    },
+    {
+      "id": "PERF-VK-013",
+      "category": "performance",
+      "severity": "low",
+      "title": "fragLightPos passed per-vertex instead of using UBO directly in fragment shader",
+      "file": "vulkan-orbiting-spheres/shaders/shader.vert",
+      "line": 29,
+      "description": "The light position is read from the UBO in the vertex shader, written to a varying (fragLightPos), interpolated across the triangle by the rasterizer, and then read in the fragment shader. Since the UBO is already bound in the fragment stage (stageFlags includes VK_SHADER_STAGE_FRAGMENT_BIT), the fragment shader could read ubo.lightPos directly, avoiding the interpolation overhead.",
+      "evidence": "Vertex shader: fragLightPos = ubo.lightPos.xyz;\nFragment shader: vec3 lightDir = normalize(fragLightPos - fragWorldPos);\nDescriptor binding: uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;",
+      "recommendation": "Remove the fragLightPos varying. In the fragment shader, declare and access the UBO directly and read ubo.lightPos.xyz. This eliminates one vec3 varying output from vertex shader and its interpolation across rasterized fragments.",
+      "estimated_impact": "Minor bandwidth savings from removing one varying (vec3 interpolation across all rasterized fragments). For the ~4000 triangles in this scene, savings are negligible but the pattern is cleaner."
+    },
+    {
+      "id": "PERF-VK-014",
+      "category": "design",
+      "severity": "low",
+      "title": "Swapchain not reusing old swapchain during recreation",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 670,
+      "description": "During swapchain recreation, cleanupSwapchain() destroys the old swapchain before createSwapchain() creates a new one. The Vulkan spec allows passing the old swapchain as oldSwapchain in VkSwapchainCreateInfoKHR, which allows the driver to reuse internal resources and enables a smoother transition.",
+      "evidence": "cleanupSwapchain(); // destroys old swapchain\ncreateSwapchain(); // creates new one from scratch",
+      "recommendation": "Refactor to pass the old swapchain handle to the swapchain builder (set_old_swapchain) before destroying it. Destroy the old swapchain after the new one is created. This allows the driver to reuse presentation resources internally.",
+      "estimated_impact": "Faster swapchain recreation during window resizing. May reduce visual glitches during resize. Only affects resize events, not steady-state rendering."
+    },
+    {
+      "id": "PERF-VK-015",
+      "category": "performance",
+      "severity": "medium",
+      "title": "UBO contains unused time field in fragment shader",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 570,
+      "description": "The UniformBufferObject includes a 'time' field (plus 12 bytes of padding to align to 16 bytes) that is set every frame but never used by either shader. The vertex shader declares the UBO with the time field but doesn't reference it, and the fragment shader doesn't declare the UBO at all. This wastes 16 bytes of UBO space and a memcpy write per frame.",
+      "evidence": "ubo.time = time; // Set but never read in shaders\nstruct UniformBufferObject { ... float time; float _pad[3]; };",
+      "recommendation": "Remove the time field and padding from UniformBufferObject (saving 16 bytes per UBO). The animation time is already used via push constants (model matrix). If time is needed in shaders in the future, add it back then.",
+      "estimated_impact": "Negligible per-frame savings (16 bytes less memcpy). Primary benefit is code cleanliness and reduced UBO size from 144 bytes to 128 bytes, which keeps it aligned to a common cache line size."
+    }
+  ],
+  "summary": {
+    "total_findings": 15,
+    "by_severity": {
+      "critical": 0,
+      "high": 1,
+      "medium": 5,
+      "low": 9
+    },
+    "top_concerns": [
+      "PERF-VK-001: GPU-side inverse(model) computed per-vertex is the most impactful fix -- precompute normal matrix on CPU",
+      "PERF-VK-002: Missing pipeline cache increases startup time on every launch",
+      "PERF-VK-004: Per-vertex color wastes 33% of vertex bandwidth when color is uniform per-sphere",
+      "PERF-VK-011: Validation layers unconditionally enabled add 10-30% CPU overhead in release",
+      "PERF-VK-003: Separate vertex/index buffers could be consolidated to reduce allocations and state changes"
+    ]
+  }
+}

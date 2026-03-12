@@ -1,0 +1,422 @@
+{
+  "metadata": {
+    "team": "TEAM-0027",
+    "agent": "c2-lifecycle-audit",
+    "task": "vulkan-error-review",
+    "date": "2026-03-12",
+    "focus_area": "Resource creation/destruction lifecycle, leak detection",
+    "files_reviewed": [
+      "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "vulkan-orbiting-spheres/src/vulkan_app.h",
+      "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "vulkan-orbiting-spheres/src/pipeline.h"
+    ],
+    "completion_status": "complete"
+  },
+  "findings": [
+    {
+      "id": "LIFECYCLE-VK-001",
+      "category": "resource_leak",
+      "severity": "medium",
+      "title": "No error-path cleanup in initVulkan — partial initialization leaks resources",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 71,
+      "description": "initVulkan() calls 20 creation functions sequentially. If any function throws (e.g., createGraphicsPipeline at step 12), all resources created by steps 1-11 are leaked because cleanup() is never called. The run() method calls cleanup() only after mainLoop(), so an exception from initVulkan() bypasses cleanup entirely.",
+      "evidence": "void VulkanApp::run() {\n    initWindow();\n    initVulkan();  // if this throws, cleanup() is never called\n    mainLoop();\n    cleanup();\n}",
+      "recommendation": "Wrap initVulkan() in a try-catch in run() that calls cleanup() on failure, or use RAII wrappers / a destruction stack that tracks which resources have been created. Alternatively, make cleanup() safe against VK_NULL_HANDLE (most vkDestroy* functions accept VK_NULL_HANDLE as a no-op per spec) and call it in the catch handler."
+    },
+    {
+      "id": "LIFECYCLE-VK-002",
+      "category": "resource_leak",
+      "severity": "medium",
+      "title": "Swapchain recreation does not pass oldSwapchain — missed optimization and potential transient leak",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 662,
+      "description": "recreateSwapchain() destroys the old swapchain in cleanupSwapchain() (line 686) and then creates a new one in createSwapchain() (line 214). The SwapchainBuilder is not given the old swapchain handle via set_old_swapchain(). While functionally correct (old is destroyed first), this misses the Vulkan optimization where passing oldSwapchain allows the implementation to reuse resources. More critically, there is a window where no swapchain exists at all.",
+      "evidence": "void VulkanApp::recreateSwapchain() {\n    ...\n    cleanupSwapchain();   // destroys old swapchain\n    createSwapchain();    // creates new without old handle\n    ...\n}\n\nvoid VulkanApp::createSwapchain() {\n    vkb::SwapchainBuilder scBuilder{m_physicalDevice, m_device, m_surface};\n    // no .set_old_swapchain(m_swapchain) call\n    ...\n}",
+      "recommendation": "Save the old swapchain handle before cleanup, pass it to SwapchainBuilder via .set_old_swapchain(oldSwapchain), and destroy the old swapchain after creating the new one.",
+      "vulkan_spec_reference": "VkSwapchainCreateInfoKHR::oldSwapchain"
+    },
+    {
+      "id": "LIFECYCLE-VK-003",
+      "category": "resource_leak",
+      "severity": "high",
+      "title": "Uniform buffer memory mapped but never unmapped before destruction",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 107,
+      "description": "In createUniformBuffers() (line 428), each uniform buffer allocation is mapped via vmaMapMemory and the pointer stored in m_uniformBuffersMapped. In cleanup() (line 107-109), the buffers are destroyed via vmaDestroyBuffer without first calling vmaUnmapMemory. While VMA may handle this internally during buffer destruction, it is not guaranteed by the VMA API contract and leaving memory mapped when destroying is technically undefined behavior per the Vulkan spec for non-persistently-mapped memory.",
+      "evidence": "// Creation (line 428):\nvmaMapMemory(m_allocator, m_uniformBuffers[i].allocation, &m_uniformBuffersMapped[i]);\n\n// Destruction (line 107-109) - no vmaUnmapMemory call:\nfor (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {\n    vmaDestroyBuffer(m_allocator, m_uniformBuffers[i].buffer, m_uniformBuffers[i].allocation);\n}",
+      "recommendation": "Call vmaUnmapMemory(m_allocator, m_uniformBuffers[i].allocation) before vmaDestroyBuffer for each uniform buffer. Alternatively, use VMA_ALLOCATION_CREATE_MAPPED_BIT for persistent mapping which is explicitly safe.",
+      "vulkan_spec_reference": "vkUnmapMemory must be called before freeing memory"
+    },
+    {
+      "id": "LIFECYCLE-VK-004",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "vmaCreateImage return value not checked in createDepthResources",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 252,
+      "description": "The call to vmaCreateImage() on line 252 does not check the return value. If this fails (e.g., out of GPU memory), the application will continue with invalid handles, leading to undefined behavior when creating the depth image view and framebuffers.",
+      "evidence": "vmaCreateImage(m_allocator, &imgInfo, &allocInfo,\n               &m_depthImage.image, &m_depthImage.allocation, nullptr);\n// No VK_SUCCESS check",
+      "recommendation": "Check the return value: if (vmaCreateImage(...) != VK_SUCCESS) { throw std::runtime_error(\"Failed to create depth image\"); }"
+    },
+    {
+      "id": "LIFECYCLE-VK-005",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "vkCreateImageView return value not checked for depth image view",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 266,
+      "description": "The call to vkCreateImageView() on line 266 does not check the return value.",
+      "evidence": "vkCreateImageView(m_device, &viewInfo, nullptr, &m_depthImage.view);\n// No VK_SUCCESS check",
+      "recommendation": "Check the return value and throw on failure."
+    },
+    {
+      "id": "LIFECYCLE-VK-006",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "vmaCreateBuffer return value not checked in createBuffer helper",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 703,
+      "description": "The createBuffer() helper calls vmaCreateBuffer() without checking the return value. This helper is used for uniform buffers, staging buffers, and geometry buffers.",
+      "evidence": "vmaCreateBuffer(m_allocator, &bufInfo, &allocInfo,\n                &buffer.buffer, &buffer.allocation, nullptr);\n// No VK_SUCCESS check",
+      "recommendation": "Check the return value and throw on failure."
+    },
+    {
+      "id": "LIFECYCLE-VK-007",
+      "category": "resource_leak",
+      "severity": "medium",
+      "title": "Pipeline layout leaked if vkCreateGraphicsPipelines fails in createGraphicsPipeline",
+      "file": "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "line": 163,
+      "description": "In createGraphicsPipeline(), the pipeline layout is created at line 142. If vkCreateGraphicsPipelines fails at line 163, the function throws but the already-created pipeline layout is never destroyed. The shader modules are also leaked in this path.",
+      "evidence": "if (vkCreatePipelineLayout(config.device, &layoutInfo, nullptr, &result.pipelineLayout) != VK_SUCCESS) {\n    throw std::runtime_error(\"Failed to create pipeline layout\");\n}\n// ...\nif (vkCreateGraphicsPipelines(config.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &result.pipeline) != VK_SUCCESS) {\n    throw std::runtime_error(\"Failed to create graphics pipeline\");\n    // result.pipelineLayout leaked, vertModule and fragModule leaked\n}",
+      "recommendation": "Destroy the pipeline layout and shader modules before throwing, or use a cleanup scope guard."
+    },
+    {
+      "id": "LIFECYCLE-VK-008",
+      "category": "resource_leak",
+      "severity": "medium",
+      "title": "Shader modules leaked if pipeline layout creation fails",
+      "file": "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "line": 142,
+      "description": "If vkCreatePipelineLayout fails on line 142, the two shader modules (vertModule, fragModule) created on lines 37-38 are never destroyed.",
+      "evidence": "VkShaderModule vertModule = createShaderModule(config.device, vertCode);\nVkShaderModule fragModule = createShaderModule(config.device, fragCode);\n// ...\nif (vkCreatePipelineLayout(config.device, &layoutInfo, nullptr, &result.pipelineLayout) != VK_SUCCESS) {\n    throw std::runtime_error(\"Failed to create pipeline layout\");\n    // vertModule and fragModule leaked\n}",
+      "recommendation": "Destroy shader modules in all error paths, or use RAII wrappers."
+    },
+    {
+      "id": "LIFECYCLE-VK-009",
+      "category": "design",
+      "severity": "low",
+      "title": "Sync objects created before uniform buffers — minor ordering concern in cleanup",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 85,
+      "description": "In initVulkan(), createSyncObjects() is called at line 86 (step 15), before createUniformBuffers() at line 87 (step 16). In cleanup(), uniform buffers are destroyed first (line 107-109), then sync objects (lines 122-126). This is fine because these resources are independent, but the cleanup order does not perfectly mirror a reverse-creation order. This is not a bug but a minor deviation from best practice.",
+      "evidence": "initVulkan order: ... createSyncObjects(), createUniformBuffers(), createDescriptorPool(), createDescriptorSets(), createGeometry()\ncleanup order: cleanupSwapchain(), uniformBuffers, geometry, descriptorPool, descriptorSetLayout, pipeline, pipelineLayout, renderPass, syncObjects, commandPool, allocator, device, surface, debugMessenger, instance",
+      "recommendation": "No action required. The ordering is safe because these resources are independent. Note for reference only."
+    },
+    {
+      "id": "LIFECYCLE-VK-010",
+      "category": "resource_leak",
+      "severity": "high",
+      "title": "Swapchain image views created by vk-bootstrap are leaked on swapchain recreation if createImageViews is a no-op",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 230,
+      "description": "createSwapchain() stores image views from vk-bootstrap on line 230 into m_swapchainImageViews. The createImageViews() function on line 233-235 is an empty no-op (comment says 'Already done by vk-bootstrap'). During recreateSwapchain(), createImageViews() is NOT called again (line 662-674), but that is correct because createSwapchain() already populates image views. However, cleanupSwapchain() properly destroys them (line 683-685). This is actually CORRECT behavior — noting for completeness of the audit. No finding here.",
+      "evidence": "void VulkanApp::recreateSwapchain() {\n    ...\n    cleanupSwapchain();     // destroys image views at line 683-685\n    createSwapchain();      // vk-bootstrap creates new image views at line 230\n    createDepthResources();\n    createFramebuffers();\n    // createImageViews() NOT called - correct, already done in createSwapchain()\n}",
+      "recommendation": "No action needed. Noting for audit completeness that this path is correct."
+    },
+    {
+      "id": "LIFECYCLE-VK-011",
+      "category": "resource_leak",
+      "severity": "low",
+      "title": "Descriptor sets not explicitly freed before descriptor pool destruction",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 116,
+      "description": "Descriptor sets (m_descriptorSets) are allocated from m_descriptorPool but never explicitly freed with vkFreeDescriptorSets. They are implicitly freed when the descriptor pool is destroyed at line 116. This is valid per the Vulkan spec since the pool was not created with VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT, but it means individual descriptor set freeing is not possible.",
+      "evidence": "vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);\n// Descriptor sets are implicitly freed with the pool",
+      "recommendation": "No action required. Destroying the pool implicitly frees all allocated sets. This is the standard pattern."
+    },
+    {
+      "id": "LIFECYCLE-VK-012",
+      "category": "resource_leak",
+      "severity": "low",
+      "title": "Command buffers not explicitly freed before command pool destruction",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 127,
+      "description": "The main command buffers (m_commandBuffers) allocated from m_commandPool are never explicitly freed. They are implicitly freed when the command pool is destroyed at line 127. This is valid per the Vulkan spec.",
+      "evidence": "vkDestroyCommandPool(m_device, m_commandPool, nullptr);\n// m_commandBuffers implicitly freed with pool",
+      "recommendation": "No action required. Destroying the pool implicitly frees all command buffers. The temporary command buffers in uploadBuffer() are correctly freed explicitly at line 751."
+    },
+    {
+      "id": "LIFECYCLE-VK-013",
+      "category": "resource_leak",
+      "severity": "medium",
+      "title": "uploadBuffer temporary command buffer leaked if vkQueueSubmit fails",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 748,
+      "description": "In uploadBuffer(), a temporary command buffer is allocated at line 730. If vkQueueSubmit (line 748) fails (return value not checked), or if any operation between allocation and the explicit free (line 751) throws, the command buffer is leaked. Additionally, the staging buffer would be leaked. However, since none of the intermediate calls throw and the return values are unchecked, this is mainly a concern if those calls fail silently.",
+      "evidence": "VkCommandBuffer cmd;\nvkAllocateCommandBuffers(m_device, &allocInfo, &cmd);\n// ... operations with no error checking ...\nvkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);  // return unchecked\nvkQueueWaitIdle(m_graphicsQueue);\nvkFreeCommandBuffers(m_device, m_commandPool, 1, &cmd);\nvmaDestroyBuffer(m_allocator, staging.buffer, staging.allocation);",
+      "recommendation": "Check return values of vkQueueSubmit and other Vulkan calls. Use a scope guard to ensure the command buffer and staging buffer are freed on all paths."
+    },
+    {
+      "id": "LIFECYCLE-VK-014",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "Multiple Vulkan calls in uploadBuffer have unchecked return values",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 730,
+      "description": "In uploadBuffer(), vkAllocateCommandBuffers (730), vmaMapMemory (715), vkBeginCommandBuffer (735), vkEndCommandBuffer (741), vkQueueSubmit (748), and vkQueueWaitIdle (749) all have unchecked return values.",
+      "evidence": "vkAllocateCommandBuffers(m_device, &allocInfo, &cmd);  // unchecked\nvmaMapMemory(m_allocator, staging.allocation, &mapped);  // unchecked\nvkBeginCommandBuffer(cmd, &beginInfo);  // unchecked\nvkEndCommandBuffer(cmd);  // unchecked\nvkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);  // unchecked\nvkQueueWaitIdle(m_graphicsQueue);  // unchecked",
+      "recommendation": "Check all return values and handle errors appropriately."
+    }
+  ],
+  "resource_inventory": {
+    "note": "Complete inventory of every Vulkan/VMA object created and its corresponding destruction. Lines refer to vulkan_app.cpp unless otherwise noted.",
+    "resources": [
+      {
+        "resource": "VkInstance",
+        "member": "m_instance",
+        "created_at": "line 159 (createInstance, via vkb::InstanceBuilder)",
+        "destroyed_at": "line 139 (cleanup, vkDestroyInstance)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkDebugUtilsMessengerEXT",
+        "member": "m_debugMessenger",
+        "created_at": "line 160 (createInstance, via vkb use_default_debug_messenger)",
+        "destroyed_at": "lines 133-137 (cleanup, via vkDestroyDebugUtilsMessengerEXT)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkSurfaceKHR",
+        "member": "m_surface",
+        "created_at": "line 164 (createSurface, glfwCreateWindowSurface)",
+        "destroyed_at": "line 131 (cleanup, vkDestroySurfaceKHR)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkDevice",
+        "member": "m_device",
+        "created_at": "line 191 (createLogicalDevice, via vkb::DeviceBuilder)",
+        "destroyed_at": "line 130 (cleanup, vkDestroyDevice)",
+        "status": "OK"
+      },
+      {
+        "resource": "VmaAllocator",
+        "member": "m_allocator",
+        "created_at": "line 209 (createAllocator, vmaCreateAllocator)",
+        "destroyed_at": "line 129 (cleanup, vmaDestroyAllocator)",
+        "status": "OK — destroyed before device, after all VMA allocations"
+      },
+      {
+        "resource": "VkSwapchainKHR",
+        "member": "m_swapchain",
+        "created_at": "line 226 (createSwapchain, via vkb::SwapchainBuilder)",
+        "destroyed_at": "line 686 (cleanupSwapchain, vkDestroySwapchainKHR)",
+        "status": "OK — destroyed after image views and framebuffers"
+      },
+      {
+        "resource": "VkImageView[] (swapchain)",
+        "member": "m_swapchainImageViews",
+        "created_at": "line 230 (createSwapchain, via vkb get_image_views)",
+        "destroyed_at": "lines 683-685 (cleanupSwapchain)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkImage (depth)",
+        "member": "m_depthImage.image",
+        "created_at": "line 252 (createDepthResources, vmaCreateImage)",
+        "destroyed_at": "line 678 (cleanupSwapchain, vmaDestroyImage)",
+        "status": "OK"
+      },
+      {
+        "resource": "VmaAllocation (depth)",
+        "member": "m_depthImage.allocation",
+        "created_at": "line 252 (createDepthResources, vmaCreateImage)",
+        "destroyed_at": "line 678 (cleanupSwapchain, vmaDestroyImage)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkImageView (depth)",
+        "member": "m_depthImage.view",
+        "created_at": "line 266 (createDepthResources, vkCreateImageView)",
+        "destroyed_at": "line 677 (cleanupSwapchain, vkDestroyImageView)",
+        "status": "OK — destroyed before depth image"
+      },
+      {
+        "resource": "VkRenderPass",
+        "member": "m_renderPass",
+        "created_at": "line 321 (createRenderPass, vkCreateRenderPass)",
+        "destroyed_at": "line 120 (cleanup, vkDestroyRenderPass)",
+        "status": "OK — destroyed after framebuffers and pipeline"
+      },
+      {
+        "resource": "VkFramebuffer[] (N swapchain images)",
+        "member": "m_framebuffers",
+        "created_at": "line 340 (createFramebuffers, vkCreateFramebuffer loop)",
+        "destroyed_at": "lines 680-682 (cleanupSwapchain)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkDescriptorSetLayout",
+        "member": "m_descriptorSetLayout",
+        "created_at": "line 358 (createDescriptorSetLayout, vkCreateDescriptorSetLayout)",
+        "destroyed_at": "line 117 (cleanup, vkDestroyDescriptorSetLayout)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkPipelineLayout",
+        "member": "m_pipelineLayout",
+        "created_at": "pipeline.cpp line 142 (createGraphicsPipeline, vkCreatePipelineLayout)",
+        "destroyed_at": "line 119 (cleanup, vkDestroyPipelineLayout)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkPipeline",
+        "member": "m_graphicsPipeline",
+        "created_at": "pipeline.cpp line 163 (createGraphicsPipeline, vkCreateGraphicsPipelines)",
+        "destroyed_at": "line 118 (cleanup, vkDestroyPipeline)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkShaderModule (vert)",
+        "member": "local vertModule in pipeline.cpp",
+        "created_at": "pipeline.cpp line 37 (createShaderModule)",
+        "destroyed_at": "pipeline.cpp line 168 (vkDestroyShaderModule)",
+        "status": "OK — destroyed after pipeline creation"
+      },
+      {
+        "resource": "VkShaderModule (frag)",
+        "member": "local fragModule in pipeline.cpp",
+        "created_at": "pipeline.cpp line 38 (createShaderModule)",
+        "destroyed_at": "pipeline.cpp line 167 (vkDestroyShaderModule)",
+        "status": "OK — destroyed after pipeline creation"
+      },
+      {
+        "resource": "VkCommandPool",
+        "member": "m_commandPool",
+        "created_at": "line 381 (createCommandPool, vkCreateCommandPool)",
+        "destroyed_at": "line 127 (cleanup, vkDestroyCommandPool)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkCommandBuffer[] (MAX_FRAMES_IN_FLIGHT)",
+        "member": "m_commandBuffers",
+        "created_at": "line 394 (createCommandBuffers, vkAllocateCommandBuffers)",
+        "destroyed_at": "Implicitly freed with command pool at line 127",
+        "status": "OK — implicit free is valid per spec"
+      },
+      {
+        "resource": "VkSemaphore[] (imageAvailable, MAX_FRAMES_IN_FLIGHT)",
+        "member": "m_imageAvailableSemaphores",
+        "created_at": "line 412 (createSyncObjects, vkCreateSemaphore loop)",
+        "destroyed_at": "line 124 (cleanup, vkDestroySemaphore loop)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkSemaphore[] (renderFinished, MAX_FRAMES_IN_FLIGHT)",
+        "member": "m_renderFinishedSemaphores",
+        "created_at": "line 413 (createSyncObjects, vkCreateSemaphore loop)",
+        "destroyed_at": "line 123 (cleanup, vkDestroySemaphore loop)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkFence[] (MAX_FRAMES_IN_FLIGHT)",
+        "member": "m_inFlightFences",
+        "created_at": "line 414 (createSyncObjects, vkCreateFence loop)",
+        "destroyed_at": "line 125 (cleanup, vkDestroyFence loop)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkBuffer + VmaAllocation (uniform, x MAX_FRAMES_IN_FLIGHT)",
+        "member": "m_uniformBuffers[]",
+        "created_at": "line 426 (createUniformBuffers, via createBuffer/vmaCreateBuffer)",
+        "destroyed_at": "lines 107-109 (cleanup, vmaDestroyBuffer loop)",
+        "status": "WARNING — mapped memory not unmapped before destruction (see LIFECYCLE-VK-003)"
+      },
+      {
+        "resource": "VkDescriptorPool",
+        "member": "m_descriptorPool",
+        "created_at": "line 443 (createDescriptorPool, vkCreateDescriptorPool)",
+        "destroyed_at": "line 116 (cleanup, vkDestroyDescriptorPool)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkDescriptorSet[] (MAX_FRAMES_IN_FLIGHT)",
+        "member": "m_descriptorSets",
+        "created_at": "line 458 (createDescriptorSets, vkAllocateDescriptorSets)",
+        "destroyed_at": "Implicitly freed with descriptor pool at line 116",
+        "status": "OK — implicit free is valid per spec"
+      },
+      {
+        "resource": "VkBuffer + VmaAllocation (centralSphereVB)",
+        "member": "m_centralSphereVB",
+        "created_at": "line 485 (createGeometry, via uploadBuffer)",
+        "destroyed_at": "line 111 (cleanup, vmaDestroyBuffer)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkBuffer + VmaAllocation (centralSphereIB)",
+        "member": "m_centralSphereIB",
+        "created_at": "line 487 (createGeometry, via uploadBuffer)",
+        "destroyed_at": "line 112 (cleanup, vmaDestroyBuffer)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkBuffer + VmaAllocation (orbitingSphereVB)",
+        "member": "m_orbitingSphereVB",
+        "created_at": "line 493 (createGeometry, via uploadBuffer)",
+        "destroyed_at": "line 113 (cleanup, vmaDestroyBuffer)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkBuffer + VmaAllocation (orbitingSphereIB)",
+        "member": "m_orbitingSphereIB",
+        "created_at": "line 495 (createGeometry, via uploadBuffer)",
+        "destroyed_at": "line 114 (cleanup, vmaDestroyBuffer)",
+        "status": "OK"
+      },
+      {
+        "resource": "VkBuffer + VmaAllocation (staging buffers in uploadBuffer, x4)",
+        "member": "local 'staging' in uploadBuffer()",
+        "created_at": "line 711 (uploadBuffer, via createBuffer)",
+        "destroyed_at": "line 752 (uploadBuffer, vmaDestroyBuffer)",
+        "status": "OK — transient, created and destroyed within uploadBuffer()"
+      },
+      {
+        "resource": "VkCommandBuffer (temporary in uploadBuffer, x4)",
+        "member": "local 'cmd' in uploadBuffer()",
+        "created_at": "line 730 (uploadBuffer, vkAllocateCommandBuffers)",
+        "destroyed_at": "line 751 (uploadBuffer, vkFreeCommandBuffers)",
+        "status": "OK — transient, explicitly freed"
+      },
+      {
+        "resource": "GLFWwindow",
+        "member": "m_window",
+        "created_at": "line 63 (initWindow, glfwCreateWindow)",
+        "destroyed_at": "line 140 (cleanup, glfwDestroyWindow)",
+        "status": "OK"
+      }
+    ]
+  },
+  "summary": {
+    "total_findings": 14,
+    "by_severity": {
+      "critical": 0,
+      "high": 2,
+      "medium": 4,
+      "low": 8
+    },
+    "top_concerns": [
+      "Uniform buffers are mapped but never unmapped before destruction (LIFECYCLE-VK-003) — technically undefined behavior",
+      "No error-path cleanup: if initVulkan() fails partway, all already-created resources are leaked (LIFECYCLE-VK-001)",
+      "Pipeline creation error paths leak shader modules and/or pipeline layout (LIFECYCLE-VK-007, LIFECYCLE-VK-008)",
+      "Swapchain recreation does not use oldSwapchain optimization (LIFECYCLE-VK-002)",
+      "Multiple unchecked return values from Vulkan/VMA calls (LIFECYCLE-VK-004/005/006/014)"
+    ],
+    "destruction_order_assessment": "The cleanup() destruction order is correct: swapchain resources first (via cleanupSwapchain), then device-owned resources (buffers, descriptors, pipeline, render pass, sync objects, command pool), then VMA allocator, then device, then instance-owned resources (surface, debug messenger), then instance. All VMA allocations are destroyed before the allocator. The device is destroyed before the instance. No ordering violations detected.",
+    "swapchain_recreation_assessment": "cleanupSwapchain() correctly destroys depth image view, depth image+allocation, framebuffers, swapchain image views, and swapchain. recreateSwapchain() then recreates swapchain (which also creates new image views via vk-bootstrap), depth resources, and framebuffers. The only issue is not passing the old swapchain handle for reuse optimization.",
+    "leaked_handles_assessment": "No handle overwrite leaks detected in normal code paths. All member variables holding Vulkan handles are only assigned once during initialization and destroyed during cleanup. The swapchain recreation path properly destroys old resources before creating new ones."
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "metadata": {
+    "team": "TEAM-0027",
+    "agent": "c1-memory-audit",
+    "task": "vulkan-error-review",
+    "date": "2026-03-12",
+    "focus_area": "VMA usage, buffer creation, staging patterns, memory types",
+    "files_reviewed": [
+      "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "vulkan-orbiting-spheres/src/vulkan_app.h",
+      "vulkan-orbiting-spheres/src/types.h"
+    ],
+    "completion_status": "complete"
+  },
+  "findings": [
+    {
+      "id": "PERF-VK-001",
+      "category": "performance",
+      "severity": "medium",
+      "title": "Deprecated VMA_MEMORY_USAGE enums used instead of VMA_MEMORY_USAGE_AUTO",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 691,
+      "description": "The createBuffer() helper uses the legacy VMA memory usage enums (VMA_MEMORY_USAGE_CPU_TO_GPU, VMA_MEMORY_USAGE_CPU_ONLY, VMA_MEMORY_USAGE_GPU_ONLY) which are deprecated since VMA v3. The new VMA_MEMORY_USAGE_AUTO combined with host access flags allows VMA to make smarter memory type decisions, especially on hardware with unified memory or ReBAR support.",
+      "evidence": "AllocatedBuffer VulkanApp::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,\n                                         VmaMemoryUsage memoryUsage) {\n    ...\n    allocInfo.usage = memoryUsage;\n    ...\n}\n\nCalled with VMA_MEMORY_USAGE_CPU_TO_GPU (line 427), VMA_MEMORY_USAGE_CPU_ONLY (line 711), VMA_MEMORY_USAGE_GPU_ONLY (line 720).",
+      "recommendation": "Replace legacy usage enums with VMA_MEMORY_USAGE_AUTO plus appropriate VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT or VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT flags. Refactor createBuffer() to accept VmaAllocationCreateFlags as well.",
+      "vulkan_spec_reference": "VMA documentation: Choosing memory type"
+    },
+    {
+      "id": "PERF-VK-002",
+      "category": "performance",
+      "severity": "low",
+      "title": "Staging buffer missing VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT flag",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 711,
+      "description": "The staging buffer in uploadBuffer() is created with VMA_MEMORY_USAGE_CPU_ONLY but does not set VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT. While the deprecated CPU_ONLY still works, the modern flag enables VMA to pick the optimal memory type for sequential write access patterns (the pattern used here with memcpy).",
+      "evidence": "auto staging = createBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);",
+      "recommendation": "Use VMA_MEMORY_USAGE_AUTO with VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT for staging buffers.",
+      "vulkan_spec_reference": "VMA documentation: Recommended usage patterns - Staging copy"
+    },
+    {
+      "id": "PERF-VK-003",
+      "category": "performance",
+      "severity": "low",
+      "title": "Uniform buffers use VMA_MEMORY_USAGE_CPU_TO_GPU without HOST_ACCESS flags",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 427,
+      "description": "Uniform buffers are created with VMA_MEMORY_USAGE_CPU_TO_GPU and then persistently mapped. The modern recommended approach is VMA_MEMORY_USAGE_AUTO with VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT and VMA_ALLOCATION_CREATE_MAPPED_BIT, which may also allow VMA to use device-local + host-visible memory (BAR) when available.",
+      "evidence": "m_uniformBuffers[i] = createBuffer(bufferSize,\n    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);\nvmaMapMemory(m_allocator, m_uniformBuffers[i].allocation, &m_uniformBuffersMapped[i]);",
+      "recommendation": "Use VMA_MEMORY_USAGE_AUTO with VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT. With MAPPED_BIT, VMA returns the persistently mapped pointer in VmaAllocationInfo::pMappedData, eliminating the need for a separate vmaMapMemory call.",
+      "vulkan_spec_reference": "VMA documentation: Recommended usage patterns - Advanced data uploading"
+    },
+    {
+      "id": "PERF-VK-004",
+      "category": "performance",
+      "severity": "low",
+      "title": "Uniform buffers not unmapped during cleanup",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 107,
+      "description": "The uniform buffers are persistently mapped via vmaMapMemory() in createUniformBuffers() (line 428) but vmaUnmapMemory() is never called before destruction. While VMA handles this gracefully during vmaDestroyBuffer(), it is not clean practice. The mapping count may not match.",
+      "evidence": "// In createUniformBuffers (line 428):\nvmaMapMemory(m_allocator, m_uniformBuffers[i].allocation, &m_uniformBuffersMapped[i]);\n\n// In cleanup (line 107-109):\nfor (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {\n    vmaDestroyBuffer(m_allocator, m_uniformBuffers[i].buffer, m_uniformBuffers[i].allocation);\n}",
+      "recommendation": "Either call vmaUnmapMemory() before vmaDestroyBuffer() for each uniform buffer, or use VMA_ALLOCATION_CREATE_MAPPED_BIT so VMA manages the persistent mapping lifecycle automatically.",
+      "vulkan_spec_reference": "VMA documentation: Memory mapping"
+    },
+    {
+      "id": "MISSING-VK-005",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "Missing pipeline barrier after staging buffer transfer to device-local memory",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 739,
+      "description": "In uploadBuffer(), after vkCmdCopyBuffer() completes the transfer from staging to device-local buffer, there is no pipeline memory barrier inserted to ensure the transfer write is visible before subsequent vertex/index buffer reads. The code relies on vkQueueWaitIdle() for host synchronization, but there is no device-side barrier for the buffer's memory to transition from TRANSFER_WRITE to VERTEX_ATTRIBUTE_READ / INDEX_READ. In practice this works because all geometry uploads happen during initialization before any rendering, and vkQueueWaitIdle provides an implicit full pipeline barrier. However, if uploadBuffer() were ever called during rendering, this would be a synchronization bug.",
+      "evidence": "vkCmdCopyBuffer(cmd, staging.buffer, dst.buffer, 1, &copyRegion);\nvkEndCommandBuffer(cmd);\n// No VkBufferMemoryBarrier with srcAccessMask=VK_ACCESS_TRANSFER_WRITE_BIT,\n// dstAccessMask=VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT|VK_ACCESS_INDEX_READ_BIT",
+      "recommendation": "Insert a VkBufferMemoryBarrier after vkCmdCopyBuffer with srcStageMask=VK_PIPELINE_STAGE_TRANSFER_BIT, dstStageMask=VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, srcAccessMask=VK_ACCESS_TRANSFER_WRITE_BIT, dstAccessMask=VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT|VK_ACCESS_INDEX_READ_BIT. This makes the transfer safe even if called at runtime.",
+      "vulkan_spec_reference": "Vulkan spec 7.7.2 - Buffer Memory Barriers"
+    },
+    {
+      "id": "MISSING-VK-006",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "No error checking on vmaCreateBuffer and vmaCreateImage return values",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 703,
+      "description": "The createBuffer() helper does not check the VkResult returned by vmaCreateBuffer(). Similarly, createDepthResources() (line 252) does not check the result of vmaCreateImage(). If allocation fails (e.g., out of GPU memory), the code will proceed with null/invalid handles, leading to undefined behavior or crashes.",
+      "evidence": "// createBuffer (line 703):\nvmaCreateBuffer(m_allocator, &bufInfo, &allocInfo,\n                &buffer.buffer, &buffer.allocation, nullptr);\nreturn buffer;\n\n// createDepthResources (line 252):\nvmaCreateImage(m_allocator, &imgInfo, &allocInfo,\n               &m_depthImage.image, &m_depthImage.allocation, nullptr);",
+      "recommendation": "Check the VkResult returned by vmaCreateBuffer() and vmaCreateImage() and throw a std::runtime_error on failure, consistent with other Vulkan call sites in the codebase.",
+      "vulkan_spec_reference": "VMA documentation: vmaCreateBuffer, vmaCreateImage"
+    },
+    {
+      "id": "MISSING-VK-007",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "No error checking on vmaMapMemory return value",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 428,
+      "description": "The vmaMapMemory() calls in createUniformBuffers() (line 428) and uploadBuffer() (line 715) do not check the returned VkResult. If mapping fails, the code would use a null/garbage pointer for memcpy, causing undefined behavior.",
+      "evidence": "vmaMapMemory(m_allocator, m_uniformBuffers[i].allocation, &m_uniformBuffersMapped[i]);\n\nvmaMapMemory(m_allocator, staging.allocation, &mapped);",
+      "recommendation": "Check return value of vmaMapMemory() and throw on failure.",
+      "vulkan_spec_reference": "VMA documentation: vmaMapMemory"
+    },
+    {
+      "id": "PERF-VK-008",
+      "category": "performance",
+      "severity": "medium",
+      "title": "vkQueueWaitIdle used for staging transfer synchronization instead of fence",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 749,
+      "description": "uploadBuffer() uses vkQueueWaitIdle() to wait for the transfer to complete. This stalls the entire graphics queue, blocking any other pending work. For initialization-only uploads this is acceptable, but it serializes all 4 buffer uploads (2 vertex + 2 index) unnecessarily. A single batch submission with a fence, or using a dedicated transfer queue, would be more efficient.",
+      "evidence": "vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);\nvkQueueWaitIdle(m_graphicsQueue);",
+      "recommendation": "Batch all geometry uploads into a single command buffer or use a VkFence for per-transfer synchronization. For init-time uploads, a single command buffer with all copies followed by one vkQueueWaitIdle would be more efficient than 4 separate submit-and-wait cycles.",
+      "vulkan_spec_reference": "Vulkan spec 5.6 - Queue Submission"
+    },
+    {
+      "id": "PERF-VK-009",
+      "category": "performance",
+      "severity": "low",
+      "title": "Depth image created with deprecated VMA_MEMORY_USAGE_GPU_ONLY without dedicated allocation flag",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 250,
+      "description": "The depth image uses VMA_MEMORY_USAGE_GPU_ONLY (deprecated) and does not set VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT. The VMA documentation recommends dedicated allocations for large, frequently recreated resources like render targets and depth buffers. The depth image is recreated on every swapchain resize.",
+      "evidence": "VmaAllocationCreateInfo allocInfo{};\nallocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;\n\nvmaCreateImage(m_allocator, &imgInfo, &allocInfo,\n               &m_depthImage.image, &m_depthImage.allocation, nullptr);",
+      "recommendation": "Use VMA_MEMORY_USAGE_AUTO with VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT for the depth image, as recommended by VMA docs for render targets that are frequently recreated.",
+      "vulkan_spec_reference": "VMA documentation: Recommended usage patterns - GPU-only resources"
+    },
+    {
+      "id": "DESIGN-VK-010",
+      "category": "design",
+      "severity": "low",
+      "title": "Single command pool used for both rendering and transfer operations",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 730,
+      "description": "uploadBuffer() allocates one-time transfer command buffers from m_commandPool, the same pool used for rendering command buffers. The rendering pool uses VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT. Using a separate transient command pool with VK_COMMAND_POOL_CREATE_TRANSIENT_BIT for short-lived transfer commands would allow the driver to optimize memory allocation for those command buffers.",
+      "evidence": "allocInfo.commandPool = m_commandPool;  // Same pool as rendering\nallocInfo.commandBufferCount = 1;\n\nVkCommandBuffer cmd;\nvkAllocateCommandBuffers(m_device, &allocInfo, &cmd);",
+      "recommendation": "Create a separate command pool with VK_COMMAND_POOL_CREATE_TRANSIENT_BIT for one-time transfer command buffers.",
+      "vulkan_spec_reference": "Vulkan spec 6.2 - Command Pools"
+    },
+    {
+      "id": "MISSING-VK-011",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "AllocatedBuffer and AllocatedImage structs have uninitialized members",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.h",
+      "line": 14,
+      "description": "The AllocatedBuffer and AllocatedImage structs do not initialize their members to null/zero by default. While VulkanApp initializes them with {} (value-initialization), if these structs are used elsewhere without value-initialization, the handles would contain garbage values, making error detection and conditional cleanup unreliable.",
+      "evidence": "struct AllocatedBuffer {\n    VkBuffer buffer;\n    VmaAllocation allocation;\n};\n\nstruct AllocatedImage {\n    VkImage image;\n    VmaAllocation allocation;\n    VkImageView view;\n};",
+      "recommendation": "Initialize members to VK_NULL_HANDLE/nullptr: VkBuffer buffer = VK_NULL_HANDLE; VmaAllocation allocation = VK_NULL_HANDLE; etc.",
+      "vulkan_spec_reference": ""
+    },
+    {
+      "id": "MISSING-VK-012",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "No error checking on vkQueueSubmit in uploadBuffer",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 748,
+      "description": "The vkQueueSubmit() call in uploadBuffer() does not check the return VkResult, unlike the same call in drawFrame() (line 536) which does check. If submission fails, the code proceeds to wait on the queue and destroy the staging buffer without the transfer having occurred.",
+      "evidence": "vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);  // No error check\nvkQueueWaitIdle(m_graphicsQueue);",
+      "recommendation": "Check the return value of vkQueueSubmit() and throw on failure, consistent with the drawFrame() error handling pattern.",
+      "vulkan_spec_reference": "Vulkan spec 5.6 - vkQueueSubmit"
+    }
+  ],
+  "summary": {
+    "total_findings": 12,
+    "by_severity": {
+      "critical": 0,
+      "high": 0,
+      "medium": 3,
+      "low": 9
+    },
+    "top_concerns": [
+      "All VMA memory usage enums are deprecated (VMA_MEMORY_USAGE_CPU_TO_GPU, CPU_ONLY, GPU_ONLY) -- should migrate to VMA_MEMORY_USAGE_AUTO with appropriate host access flags",
+      "Missing pipeline barrier after buffer transfer could cause synchronization issues if uploadBuffer is used at runtime",
+      "No error checking on vmaCreateBuffer, vmaCreateImage, vmaMapMemory, and vkQueueSubmit in transfer path -- silent failures lead to undefined behavior",
+      "Four separate submit-and-wait cycles for geometry upload is suboptimal; batching would improve init time"
+    ]
+  }
+}
