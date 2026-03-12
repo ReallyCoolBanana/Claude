@@ -213,10 +213,13 @@ void VulkanApp::createAllocator() {
 
 void VulkanApp::createSwapchain() {
     vkb::SwapchainBuilder scBuilder{m_physicalDevice, m_device, m_surface};
+    int fbWidth = 0, fbHeight = 0;
+    glfwGetFramebufferSize(m_window, &fbWidth, &fbHeight);
+
     auto scRet = scBuilder
         .set_desired_format({VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR})
         .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
-        .set_desired_extent(WIDTH, HEIGHT)
+        .set_desired_extent(static_cast<uint32_t>(fbWidth), static_cast<uint32_t>(fbHeight))
         .build();
 
     if (!scRet) {
@@ -249,8 +252,10 @@ void VulkanApp::createDepthResources() {
     VmaAllocationCreateInfo allocInfo{};
     allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    vmaCreateImage(m_allocator, &imgInfo, &allocInfo,
-                   &m_depthImage.image, &m_depthImage.allocation, nullptr);
+    if (vmaCreateImage(m_allocator, &imgInfo, &allocInfo,
+                       &m_depthImage.image, &m_depthImage.allocation, nullptr) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create depth image");
+    }
 
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -263,7 +268,9 @@ void VulkanApp::createDepthResources() {
     viewInfo.subresourceRange.baseArrayLayer = 0;
     viewInfo.subresourceRange.layerCount = 1;
 
-    vkCreateImageView(m_device, &viewInfo, nullptr, &m_depthImage.view);
+    if (vkCreateImageView(m_device, &viewInfo, nullptr, &m_depthImage.view) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create depth image view");
+    }
 }
 
 void VulkanApp::createRenderPass() {
@@ -425,7 +432,9 @@ void VulkanApp::createUniformBuffers() {
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         m_uniformBuffers[i] = createBuffer(bufferSize,
             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
-        vmaMapMemory(m_allocator, m_uniformBuffers[i].allocation, &m_uniformBuffersMapped[i]);
+        if (vmaMapMemory(m_allocator, m_uniformBuffers[i].allocation, &m_uniformBuffersMapped[i]) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to map uniform buffer memory");
+        }
     }
 }
 
@@ -576,7 +585,9 @@ void VulkanApp::recordCommandBuffer(VkCommandBuffer cmd, uint32_t imageIndex) {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &beginInfo);
+    if (vkBeginCommandBuffer(cmd, &beginInfo) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to begin recording command buffer");
+    }
 
     VkClearValue clearValues[2];
     clearValues[0].color = {{0.05f, 0.05f, 0.08f, 1.0f}};
@@ -654,7 +665,9 @@ void VulkanApp::recordCommandBuffer(VkCommandBuffer cmd, uint32_t imageIndex) {
     }
 
     vkCmdEndRenderPass(cmd);
-    vkEndCommandBuffer(cmd);
+    if (vkEndCommandBuffer(cmd) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to record command buffer");
+    }
 }
 
 // --- Swapchain recreation ---
@@ -700,8 +713,10 @@ AllocatedBuffer VulkanApp::createBuffer(VkDeviceSize size, VkBufferUsageFlags us
     allocInfo.usage = memoryUsage;
 
     AllocatedBuffer buffer{};
-    vmaCreateBuffer(m_allocator, &bufInfo, &allocInfo,
-                    &buffer.buffer, &buffer.allocation, nullptr);
+    if (vmaCreateBuffer(m_allocator, &bufInfo, &allocInfo,
+                        &buffer.buffer, &buffer.allocation, nullptr) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create buffer");
+    }
     return buffer;
 }
 
@@ -727,25 +742,33 @@ void VulkanApp::uploadBuffer(AllocatedBuffer& dst, const void* data, VkDeviceSiz
     allocInfo.commandBufferCount = 1;
 
     VkCommandBuffer cmd;
-    vkAllocateCommandBuffers(m_device, &allocInfo, &cmd);
+    if (vkAllocateCommandBuffers(m_device, &allocInfo, &cmd) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to allocate command buffer for upload");
+    }
 
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &beginInfo);
+    if (vkBeginCommandBuffer(cmd, &beginInfo) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to begin command buffer for upload");
+    }
 
     VkBufferCopy copyRegion{};
     copyRegion.size = size;
     vkCmdCopyBuffer(cmd, staging.buffer, dst.buffer, 1, &copyRegion);
 
-    vkEndCommandBuffer(cmd);
+    if (vkEndCommandBuffer(cmd) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to end command buffer for upload");
+    }
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &cmd;
 
-    vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+    if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to submit upload command buffer");
+    }
     vkQueueWaitIdle(m_graphicsQueue);
 
     vkFreeCommandBuffers(m_device, m_commandPool, 1, &cmd);

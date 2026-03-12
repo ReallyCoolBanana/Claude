@@ -34,12 +34,12 @@ SphereMesh generateUVSphere(float radius, uint32_t stacks, uint32_t slices, glm:
             uint32_t second = first + slices + 1;
 
             mesh.indices.push_back(first);
-            mesh.indices.push_back(second);
             mesh.indices.push_back(first + 1);
+            mesh.indices.push_back(second);
 
             mesh.indices.push_back(second);
-            mesh.indices.push_back(second + 1);
             mesh.indices.push_back(first + 1);
+            mesh.indices.push_back(second + 1);
         }
     }
 
