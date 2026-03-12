@@ -46,8 +46,9 @@ from typing import Optional
 
 SPARQL_ENDPOINT = "https://dbpedia.org/sparql"
 DEFAULT_GRAPH = "http://dbpedia.org"
-CATEGORY_PAGES = Path(__file__).parent.parent / "sources" / "wikipedia-ai" / "category-pages.json"
-CACHE_DIR = Path(__file__).parent.parent / "sources" / "wikipedia-ai" / "cache"
+DEFAULT_DATA_DIR = Path(__file__).parent.parent / "sources" / "wikipedia-ai"
+CATEGORY_PAGES = DEFAULT_DATA_DIR / "category-pages.json"
+CACHE_DIR = DEFAULT_DATA_DIR / "cache"
 BATCH_SIZE = 40  # articles per SPARQL query (tested safe at 50, use 40 for margin)
 
 # URL compression — ordered longest-prefix-first for correct matching
@@ -87,8 +88,15 @@ _URL_DECOMPRESS_MAP = {short: full for full, short in reversed(_URL_PREFIX_MAP)}
 class WikipediaTools:
     """Core toolkit for Wikipedia research in egress-restricted environments."""
 
-    def __init__(self, cache_dir: Optional[Path] = None):
-        self.cache_dir = cache_dir or CACHE_DIR
+    def __init__(self, cache_dir: Optional[Path] = None, data_dir: Optional[Path] = None):
+        if data_dir:
+            self.data_dir = Path(data_dir)
+            self.cache_dir = self.data_dir / "cache"
+            self.category_pages = self.data_dir / "category-pages.json"
+        else:
+            self.data_dir = DEFAULT_DATA_DIR
+            self.cache_dir = cache_dir or CACHE_DIR
+            self.category_pages = CATEGORY_PAGES
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self._stats = {"sparql_calls": 0, "cache_hits": 0, "total_links": 0}
 
@@ -408,9 +416,10 @@ class WikipediaTools:
 
     def load_category_pages(self) -> list[dict]:
         """Load the article index from category-pages.json."""
-        if not CATEGORY_PAGES.exists():
-            raise FileNotFoundError(f"Category pages not found: {CATEGORY_PAGES}")
-        data = json.loads(CATEGORY_PAGES.read_text())
+        cp = self.category_pages
+        if not cp.exists():
+            raise FileNotFoundError(f"Category pages not found: {cp}")
+        data = json.loads(cp.read_text())
         return data["pages"]
 
     def get_all_titles(self) -> list[str]:
@@ -537,7 +546,6 @@ def cli():
         sys.exit(0)
 
     cmd = sys.argv[1]
-    wt = WikipediaTools()
     args = sys.argv[2:]
 
     def get_arg(flag: str, default: str = "") -> str:
@@ -545,6 +553,9 @@ def cli():
             if a == flag and i + 1 < len(args):
                 return args[i + 1]
         return default
+
+    data_dir = get_arg("--data-dir", "")
+    wt = WikipediaTools(data_dir=Path(data_dir) if data_dir else None)
 
     if cmd == "links":
         title = args[0] if args else "Artificial_intelligence"

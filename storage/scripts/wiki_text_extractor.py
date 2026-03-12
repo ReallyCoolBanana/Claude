@@ -53,9 +53,10 @@ import urllib.parse
 from pathlib import Path
 from typing import Optional
 
-CACHE_DIR = Path(__file__).parent.parent / "sources" / "wikipedia-ai" / "text-cache"
-CATEGORY_PAGES = Path(__file__).parent.parent / "sources" / "wikipedia-ai" / "category-pages.json"
-OUTPUT_DIR = Path(__file__).parent.parent / "sources" / "wikipedia-ai" / "exports"
+DEFAULT_DATA_DIR = Path(__file__).parent.parent / "sources" / "wikipedia-ai"
+CACHE_DIR = DEFAULT_DATA_DIR / "text-cache"
+CATEGORY_PAGES = DEFAULT_DATA_DIR / "category-pages.json"
+OUTPUT_DIR = DEFAULT_DATA_DIR / "exports"
 DBPEDIA_LOOKUP = "https://lookup.dbpedia.org/api/search"
 
 # Rate limiting
@@ -68,8 +69,17 @@ RETRY_BACKOFF = 2.0
 class WikiTextExtractor:
     """Extract and cache Wikipedia article text via WebSearch."""
 
-    def __init__(self, cache_dir: Optional[Path] = None):
-        self.cache_dir = cache_dir or CACHE_DIR
+    def __init__(self, cache_dir: Optional[Path] = None, data_dir: Optional[Path] = None):
+        if data_dir:
+            self.data_dir = Path(data_dir)
+            self.cache_dir = self.data_dir / "text-cache"
+            self.category_pages = self.data_dir / "category-pages.json"
+            self.output_dir = self.data_dir / "exports"
+        else:
+            self.data_dir = DEFAULT_DATA_DIR
+            self.cache_dir = cache_dir or CACHE_DIR
+            self.category_pages = CATEGORY_PAGES
+            self.output_dir = OUTPUT_DIR
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self._stats = {
             "searches": 0,
@@ -238,9 +248,10 @@ class WikiTextExtractor:
 
     def get_all_titles(self) -> list[str]:
         """Get all article titles from category-pages.json."""
-        if not CATEGORY_PAGES.exists():
-            raise FileNotFoundError(f"Category pages not found: {CATEGORY_PAGES}")
-        data = json.loads(CATEGORY_PAGES.read_text())
+        cp = self.category_pages
+        if not cp.exists():
+            raise FileNotFoundError(f"Category pages not found: {cp}")
+        data = json.loads(cp.read_text())
         return [p["title"].replace(" ", "_") for p in data["pages"]]
 
     def get_cached_titles(self) -> list[str]:
@@ -391,7 +402,6 @@ def cli():
         sys.exit(0)
 
     cmd = sys.argv[1]
-    wte = WikiTextExtractor()
     args = sys.argv[2:]
 
     def get_arg(flag: str, default: str = "") -> str:
@@ -399,6 +409,9 @@ def cli():
             if a == flag and i + 1 < len(args):
                 return args[i + 1]
         return default
+
+    data_dir = get_arg("--data-dir", "")
+    wte = WikiTextExtractor(data_dir=Path(data_dir) if data_dir else None)
 
     if cmd == "extract":
         title = args[0] if args else "Artificial_intelligence"
