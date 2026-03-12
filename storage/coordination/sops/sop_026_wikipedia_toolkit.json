@@ -1,0 +1,196 @@
+{
+  "id": "SOP-026",
+  "version": "1.0",
+  "created": "2026-03-12",
+  "team": "team-beta",
+  "title": "Wikipedia Research Toolkit: Usage Guide",
+  "purpose": "Complete instructions for using wikipedia_tools.py (SCR-0043) to extract links, metadata, and citations from Wikipedia articles via DBpedia SPARQL.",
+  "reference": {
+    "script": "storage/scripts/wikipedia_tools.py",
+    "kb_entries": ["KB-0044 (papers catalog)", "KB-0045 (methodology)"],
+    "data_dir": "storage/sources/wikipedia-ai/",
+    "cache_dir": "storage/sources/wikipedia-ai/cache/"
+  },
+  "quick_start": {
+    "title": "Quick Start (5 commands to know)",
+    "commands": [
+      {
+        "use_case": "Get everything for one article",
+        "command": "python3 storage/scripts/wikipedia_tools.py summary Artificial_intelligence",
+        "returns": "Description, categories, link counts, top citation domains, see-also articles"
+      },
+      {
+        "use_case": "Get all links for all 234 articles",
+        "command": "python3 storage/scripts/wikipedia_tools.py batch --type both",
+        "returns": "Per-article link counts. First run: ~58s. Cached: 42ms"
+      },
+      {
+        "use_case": "Get metadata for all articles",
+        "command": "python3 storage/scripts/wikipedia_tools.py batch-meta",
+        "returns": "Categories, descriptions, labels. First run: ~8min. Cached: instant"
+      },
+      {
+        "use_case": "Export for agent consumption (token-efficient)",
+        "command": "python3 storage/scripts/wikipedia_tools.py export --format llm",
+        "returns": "Newline format with compressed URLs. ~31% fewer tokens than JSON"
+      },
+      {
+        "use_case": "Check what's cached",
+        "command": "python3 storage/scripts/wikipedia_tools.py stats",
+        "returns": "Cache counts, session stats"
+      }
+    ]
+  },
+  "python_api": {
+    "title": "Python API for Agent Scripts",
+    "import": "from storage.scripts.wikipedia_tools import WikipediaTools",
+    "examples": [
+      {
+        "use_case": "Initialize",
+        "code": "wt = WikipediaTools()"
+      },
+      {
+        "use_case": "Get external citation links for one article",
+        "code": "links = wt.get_external_links('Artificial_intelligence')\n# Returns: ['http://artint.info/index.html', 'http://cogprints.org/...', ...]"
+      },
+      {
+        "use_case": "Get internal wiki links for one article",
+        "code": "links = wt.get_internal_links('Artificial_intelligence')\n# Returns: ['2001:_A_Space_Odyssey', 'AI_alignment', 'AAAI', ...]"
+      },
+      {
+        "use_case": "Get metadata (categories, description, seeAlso)",
+        "code": "meta = wt.get_metadata('Game_theory')\n# Returns: {'categories': ['Artificial_intelligence', 'Game_theory', ...], 'description': 'branch of mathematics...', 'label': 'Game theory', 'seeAlso': [...], 'hypernym': ''}"
+      },
+      {
+        "use_case": "Batch query all 234 articles",
+        "code": "titles = wt.get_all_titles()\ndata = wt.batch_links(titles, link_type='both')\nmeta = wt.batch_metadata(titles)"
+      },
+      {
+        "use_case": "Export for LLM consumption",
+        "code": "llm_text = wt.export_llm(data, meta=meta)\n# ~31% fewer tokens than JSON"
+      },
+      {
+        "use_case": "Decompress a shortened URL",
+        "code": "full = WikipediaTools.decompress_url('wa:20110426161749/http:/world.std.com/~rjs/indinf56.pdf')\n# Returns: 'https://web.archive.org/web/20110426161749/http:/world.std.com/~rjs/indinf56.pdf'"
+      }
+    ]
+  },
+  "cli_reference": {
+    "title": "Full CLI Reference",
+    "commands": {
+      "links": {
+        "syntax": "python3 wikipedia_tools.py links <Article_Title>",
+        "description": "Get external + internal links for one article. Returns JSON.",
+        "example": "python3 wikipedia_tools.py links Ethics_of_artificial_intelligence"
+      },
+      "metadata": {
+        "syntax": "python3 wikipedia_tools.py metadata <Article_Title>",
+        "description": "Get categories, description, seeAlso, label, hypernym. Returns JSON.",
+        "example": "python3 wikipedia_tools.py metadata Deep_learning"
+      },
+      "batch": {
+        "syntax": "python3 wikipedia_tools.py batch [--type external|internal|both] [--limit N]",
+        "description": "Batch process articles from category-pages.json. Prints per-article summary.",
+        "options": {
+          "--type": "external, internal, or both (default: both)",
+          "--limit": "Process only first N articles (default: all 234)"
+        }
+      },
+      "batch-meta": {
+        "syntax": "python3 wikipedia_tools.py batch-meta [--limit N]",
+        "description": "Batch fetch metadata for all articles."
+      },
+      "summary": {
+        "syntax": "python3 wikipedia_tools.py summary <Article_Title>",
+        "description": "Rich overview: description, categories, link counts, top domains, seeAlso."
+      },
+      "export": {
+        "syntax": "python3 wikipedia_tools.py export [--format compact|full|llm]",
+        "description": "Export all cached data. Use 'llm' for agent prompts, 'compact' for storage, 'full' for debugging.",
+        "format_sizes": {
+          "full": "245 KB (~82K tokens)",
+          "compact": "177 KB (~59K tokens, -28%)",
+          "llm": "170 KB (~57K tokens, -31%)"
+        }
+      },
+      "stats": {
+        "syntax": "python3 wikipedia_tools.py stats",
+        "description": "Show cache counts and session statistics."
+      },
+      "clear-cache": {
+        "syntax": "python3 wikipedia_tools.py clear-cache",
+        "description": "Delete all cached data. Next queries will hit DBpedia fresh."
+      }
+    }
+  },
+  "data_coverage": {
+    "title": "Current Data Coverage (as of 2026-03-12)",
+    "total_articles": 234,
+    "links": {
+      "articles_with_external_links": "88 (38%)",
+      "articles_with_internal_links": "145 (62%)",
+      "total_external_links": 734,
+      "total_internal_links": 5861
+    },
+    "metadata": {
+      "articles_with_categories": "35 (15%)",
+      "articles_with_descriptions": "24 (10%)",
+      "articles_with_labels": "35 (15%)"
+    },
+    "known_gaps": [
+      "98/234 articles not in DBpedia (newer/obscure articles)",
+      "ChatGPT, recent AI companies have 0 links",
+      "External links heavily skewed toward major articles (AI=200, most others=0-15)",
+      "No article body text available (dbo:abstract not on public endpoint)",
+      "No citation context (which claim each URL supports)"
+    ],
+    "gap_filling_strategy": "Use WebSearch for articles missing from DBpedia. See KB-0045 Pass 2."
+  },
+  "url_compression_reference": {
+    "title": "URL Prefix Compression Table",
+    "description": "Used in LLM and compact exports. Lossless — use decompress_url() to restore.",
+    "prefixes": {
+      "wa:": "https://web.archive.org/web/",
+      "ar:": "https://archive.org/",
+      "ard:": "https://archive.org/details/",
+      "bbc:": "https://www.bbc.co.uk/",
+      "nyt:": "https://www.nytimes.com/",
+      "gdn:": "https://www.theguardian.com/",
+      "wp:": "https://www.washingtonpost.com/",
+      "atl:": "https://www.theatlantic.com/",
+      "econ:": "https://www.economist.com/",
+      "fbs:": "https://www.forbes.com/",
+      "gb:": "https://books.google.com/",
+      "doi:": "https://doi.org/",
+      "axa:": "https://arxiv.org/abs/",
+      "axp:": "https://arxiv.org/pdf/",
+      "ax:": "https://arxiv.org/",
+      "rgp:": "https://www.researchgate.net/publication/",
+      "rg:": "https://www.researchgate.net/",
+      "ssrn:": "https://papers.ssrn.com/",
+      "acm:": "https://dl.acm.org/doi/",
+      "spr:": "https://link.springer.com/",
+      "nat:": "https://www.nature.com/",
+      "sci:": "https://www.science.org/",
+      "h:": "http://",
+      "s:": "https://"
+    }
+  },
+  "performance_benchmarks": {
+    "batch_234_links_uncached": "58 seconds",
+    "batch_234_links_cached": "42 milliseconds (120x faster)",
+    "batch_234_metadata_uncached": "~8 minutes",
+    "batch_234_metadata_cached": "58 milliseconds",
+    "single_article_uncached": "~1 second",
+    "single_article_cached": "~0.04 milliseconds",
+    "sparql_batches_for_links": "6 queries (40 articles each)",
+    "sparql_batches_for_metadata": "16 queries (15 articles each)"
+  },
+  "troubleshooting": {
+    "empty_results": "Article may not exist in DBpedia. Try WebSearch as fallback.",
+    "sparql_timeout": "Reduce batch size. Metadata queries are heavier than link queries.",
+    "cache_corruption": "Run clear-cache and re-fetch.",
+    "special_chars_in_title": "Tool handles / : ? automatically via _cache_safe(). If new chars appear, add to the method.",
+    "redirect_noise": "Tool filters results to only requested titles. If you see unexpected articles, it's a DBpedia redirect — the original article name is likely a redirect."
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "description": "Registry of domains blocked by egress policy. Check before building tools for external APIs.",
+  "last_updated": "2026-03-12",
+  "how_to_use": "Before developing a new research tool, check if the target domain is listed here. If blocked, check the workaround field.",
+  "blocked": [
+    {
+      "domain": "en.wikipedia.org",
+      "tested": "2026-03-12",
+      "method": "curl + WebFetch",
+      "error": "403 Forbidden / Blocked by egress policy",
+      "endpoints_tested": ["/wiki/", "/w/api.php", "/api/rest_v1/"],
+      "workaround": "Use DBpedia SPARQL (dbpedia.org/sparql) — see KB-0045, SOP-026"
+    },
+    {
+      "domain": "en.m.wikipedia.org",
+      "tested": "2026-03-12",
+      "method": "WebFetch",
+      "error": "403 Forbidden",
+      "workaround": "Same as en.wikipedia.org"
+    },
+    {
+      "domain": "www.wikidata.org",
+      "tested": "2026-03-12",
+      "method": "curl",
+      "error": "Blocked by egress policy",
+      "workaround": "Use DBpedia owl:sameAs cross-references"
+    },
+    {
+      "domain": "dumps.wikimedia.org",
+      "tested": "2026-03-12",
+      "method": "curl",
+      "error": "Blocked by egress policy",
+      "workaround": "None — use DBpedia SPARQL instead"
+    },
+    {
+      "domain": "www.wikimedia.org",
+      "tested": "2026-03-12",
+      "method": "WebFetch",
+      "error": "403 Forbidden",
+      "workaround": "None"
+    },
+    {
+      "domain": "www.wikiwand.com",
+      "tested": "2026-03-12",
+      "method": "WebFetch",
+      "error": "403 Forbidden",
+      "workaround": "None"
+    },
+    {
+      "domain": "wiki2.org",
+      "tested": "2026-03-12",
+      "method": "curl",
+      "error": "Cloudflare challenge",
+      "workaround": "None"
+    },
+    {
+      "domain": "web.archive.org",
+      "tested": "2026-03-12",
+      "method": "WebFetch",
+      "error": "Explicitly blocked by WebFetch",
+      "workaround": "None (but URLs from this domain are in DBpedia citation data)"
+    },
+    {
+      "domain": "www.nature.com",
+      "tested": "2026-03-12",
+      "method": "WebFetch",
+      "error": "303 redirect then fails",
+      "workaround": "Use doi.org or Semantic Scholar for paper metadata"
+    }
+  ],
+  "accessible": [
+    {
+      "domain": "dbpedia.org",
+      "tested": "2026-03-12",
+      "notes": "SPARQL endpoint and page views both work. Primary data source for Wikipedia tools.",
+      "rate_limits": "100 req/s, 10K rows/query, 120s timeout"
+    },
+    {
+      "domain": "lookup.dbpedia.org",
+      "tested": "2026-03-12",
+      "notes": "Search API returns article descriptions. Useful for summaries."
+    },
+    {
+      "domain": "petscan.wmcloud.org",
+      "tested": "2026-03-12",
+      "notes": "Category listing tool. Used to get all 231 article titles."
+    }
+  ]
+}
