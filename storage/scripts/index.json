@@ -2,7 +2,7 @@
   "schema_version": "2.0",
   "domain": "scripts",
   "last_updated": "2026-03-12",
-  "entry_count": 56,
+  "entry_count": 57,
   "entries": [
     {
       "id": "SCR-0001",
@@ -2039,6 +2039,31 @@
       "path": "storage/coordination/work_stealing.py",
       "language": "python",
       "description": "Work stealing, pipeline chaining, and shared scratchpad for Proto A. Provides a shared work queue with atomic steal, multi-stage pipeline manager with dependency tracking and bus notifications, and a namespaced key-value scratchpad with TTL expiration."
+    },
+    {
+      "id": "SCR-0057",
+      "title": "route-tracker",
+      "date": "2026-03-12",
+      "category": "coordination",
+      "tags": [
+        "coordination",
+        "monitoring",
+        "indexing",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0033",
+          "SCR-0032"
+        ]
+      },
+      "path": "storage/coordination/route_tracker.py",
+      "language": "python",
+      "description": "Agent route tracker for pointer network traversals. Logs which paths agents follow through the pointer network, analyzes route patterns, computes strength effectiveness, and recommends optimal routes for task types."
     }
   ],
   "secondary_indexes": {
@@ -2113,7 +2138,8 @@
         "SCR-0053",
         "SCR-0054",
         "SCR-0055",
-        "SCR-0056"
+        "SCR-0056",
+        "SCR-0057"
       ]
     },
     "by_tag": {
@@ -2290,7 +2316,8 @@
         "SCR-0048",
         "SCR-0049",
         "SCR-0050",
-        "SCR-0051"
+        "SCR-0051",
+        "SCR-0057"
       ],
       "go": [
         "SCR-0015",
@@ -2315,10 +2342,12 @@
         "SCR-0053",
         "SCR-0054",
         "SCR-0055",
-        "SCR-0056"
+        "SCR-0056",
+        "SCR-0057"
       ],
       "monitoring": [
         "SCR-0019",
+        "SCR-0057",
         "SCR-0020",
         "SCR-0030",
         "SCR-0032"

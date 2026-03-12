@@ -2,7 +2,7 @@
   "schema_version": "2.0",
   "domain": "sops",
   "last_updated": "2026-03-12",
-  "entry_count": 21,
+  "entry_count": 22,
   "entries": [
     {
       "id": "SOP-011",
@@ -472,6 +472,34 @@
       }
     },
     {
+      "id": "SOP-029",
+      "title": "Agent Route Tracking: Log, Analyze, and Optimize Pointer Traversals",
+      "date": "2026-03-12",
+      "category": "infrastructure",
+      "tags": [
+        "coordination",
+        "monitoring",
+        "indexing",
+        "sop"
+      ],
+      "status": "active",
+      "filename": "sop_029_agent_route_tracking.json",
+      "trigger": "When agents traverse pointer network paths during tasks, or when analyzing/optimizing pointer network routing.",
+      "references": {
+        "builds_on": [
+          "SOP-028"
+        ],
+        "uses_scripts": [
+          "SCR-0057"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SOP-012",
+          "SOP-028"
+        ]
+      }
+    },
+    {
       "id": "SOP-G01",
       "title": "Multi-Team Efficiency Patterns and Anti-Patterns",
       "date": "2026-03-11",
@@ -572,6 +600,7 @@
         "SOP-015",
         "SOP-019",
         "SOP-028",
+        "SOP-029",
         "SOP-G02"
       ],
       "data-gathering": [
@@ -596,6 +625,7 @@
         "SOP-021",
         "SOP-022",
         "SOP-028",
+        "SOP-029",
         "SOP-G01",
         "SOP-G02",
         "SOP-G03"
@@ -631,6 +661,7 @@
         "SOP-026",
         "SOP-027",
         "SOP-028",
+        "SOP-029",
         "SOP-G01",
         "SOP-G02",
         "SOP-G03"
@@ -638,7 +669,8 @@
       "monitoring": [
         "SOP-012",
         "SOP-015",
-        "SOP-024"
+        "SOP-024",
+        "SOP-029"
       ],
       "hub-spoke": [
         "SOP-014",
@@ -651,6 +683,7 @@
         "SOP-025",
         "SOP-027",
         "SOP-028",
+        "SOP-029",
         "SOP-G02"
       ],
       "validation": [
