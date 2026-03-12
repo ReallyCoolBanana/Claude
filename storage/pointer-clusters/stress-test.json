@@ -1,0 +1,253 @@
+{
+  "tag": "stress-test",
+  "node_count": 10,
+  "domains": [
+    "knowledge-base",
+    "scripts",
+    "teams"
+  ],
+  "nodes": [
+    {
+      "id": "KB-0001",
+      "domain": "knowledge-base",
+      "title": "Storage System Stress Test & Improvement Results",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0024",
+      "domain": "knowledge-base",
+      "title": "Stress Testing, SOPs, and Knowledge Preservation for Coordination System",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0042",
+      "domain": "knowledge-base",
+      "title": "Multi-Process Sandbox Prototyping Framework",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0036",
+      "domain": "scripts",
+      "title": "stress-test-setup-reads",
+      "pointer_count": 11
+    },
+    {
+      "id": "SCR-0037",
+      "domain": "scripts",
+      "title": "stress-test-reads-category",
+      "pointer_count": 11
+    },
+    {
+      "id": "SCR-0038",
+      "domain": "scripts",
+      "title": "stress-test-reads-cross",
+      "pointer_count": 11
+    },
+    {
+      "id": "SCR-0039",
+      "domain": "scripts",
+      "title": "stress-test-reads-id",
+      "pointer_count": 11
+    },
+    {
+      "id": "SCR-0040",
+      "domain": "scripts",
+      "title": "stress-test-writes",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0001",
+      "domain": "teams",
+      "title": "Stress test the storage system across all dimensions (writes, reads, integrity, cross-references) and implement improvements",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0024",
+      "domain": "teams",
+      "title": "Stress test all coordination features, develop SOPs for all tools, maximize efficiency, preserve data for future AI teams",
+      "pointer_count": 20
+    }
+  ],
+  "internal_edges": [
+    {
+      "from": "SCR-0036",
+      "to": "TEAM-0001",
+      "weight": 6
+    },
+    {
+      "from": "SCR-0037",
+      "to": "TEAM-0001",
+      "weight": 6
+    },
+    {
+      "from": "SCR-0038",
+      "to": "TEAM-0001",
+      "weight": 6
+    },
+    {
+      "from": "SCR-0039",
+      "to": "TEAM-0001",
+      "weight": 6
+    },
+    {
+      "from": "SCR-0040",
+      "to": "TEAM-0001",
+      "weight": 6
+    },
+    {
+      "from": "KB-0001",
+      "to": "TEAM-0001",
+      "weight": 4
+    },
+    {
+      "from": "KB-0024",
+      "to": "TEAM-0024",
+      "weight": 4
+    },
+    {
+      "from": "KB-0042",
+      "to": "SCR-0040",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0001",
+      "to": "SCR-0036",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0001",
+      "to": "SCR-0037",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0001",
+      "to": "SCR-0038",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0001",
+      "to": "SCR-0039",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0001",
+      "to": "SCR-0040",
+      "weight": 3
+    },
+    {
+      "from": "KB-0001",
+      "to": "SCR-0036",
+      "weight": 2
+    },
+    {
+      "from": "KB-0001",
+      "to": "SCR-0037",
+      "weight": 2
+    },
+    {
+      "from": "KB-0001",
+      "to": "SCR-0038",
+      "weight": 2
+    },
+    {
+      "from": "KB-0001",
+      "to": "SCR-0039",
+      "weight": 2
+    },
+    {
+      "from": "KB-0001",
+      "to": "SCR-0040",
+      "weight": 2
+    },
+    {
+      "from": "KB-0024",
+      "to": "SCR-0036",
+      "weight": 2
+    },
+    {
+      "from": "KB-0024",
+      "to": "SCR-0037",
+      "weight": 2
+    },
+    {
+      "from": "KB-0024",
+      "to": "SCR-0038",
+      "weight": 2
+    },
+    {
+      "from": "KB-0024",
+      "to": "SCR-0039",
+      "weight": 2
+    },
+    {
+      "from": "KB-0024",
+      "to": "SCR-0040",
+      "weight": 2
+    },
+    {
+      "from": "KB-0024",
+      "to": "TEAM-0001",
+      "weight": 2
+    },
+    {
+      "from": "KB-0042",
+      "to": "SCR-0036",
+      "weight": 2
+    },
+    {
+      "from": "KB-0042",
+      "to": "SCR-0037",
+      "weight": 2
+    },
+    {
+      "from": "KB-0042",
+      "to": "SCR-0038",
+      "weight": 2
+    },
+    {
+      "from": "KB-0042",
+      "to": "SCR-0039",
+      "weight": 2
+    },
+    {
+      "from": "KB-0042",
+      "to": "TEAM-0001",
+      "weight": 2
+    },
+    {
+      "from": "KB-0001",
+      "to": "TEAM-0024",
+      "weight": 1
+    },
+    {
+      "from": "KB-0042",
+      "to": "TEAM-0024",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0036",
+      "to": "TEAM-0024",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0037",
+      "to": "TEAM-0024",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0038",
+      "to": "TEAM-0024",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0039",
+      "to": "TEAM-0024",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0040",
+      "to": "TEAM-0024",
+      "weight": 1
+    }
+  ]
+}

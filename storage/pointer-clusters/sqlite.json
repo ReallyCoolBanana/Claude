@@ -1,0 +1,345 @@
+{
+  "tag": "sqlite",
+  "node_count": 11,
+  "domains": [
+    "knowledge-base",
+    "scripts",
+    "sops",
+    "teams"
+  ],
+  "nodes": [
+    {
+      "id": "KB-0016",
+      "domain": "knowledge-base",
+      "title": "SQLite WAL Shared State: Technical Reference for Inter-Agent Coordination",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0017",
+      "domain": "knowledge-base",
+      "title": "Failure Mode Analysis: JSONL Bus + SQLite Shared State",
+      "pointer_count": 18
+    },
+    {
+      "id": "KB-0018",
+      "domain": "knowledge-base",
+      "title": "Multi-Agent Communication Prototype: Dual Implementation & Test Results",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0019",
+      "domain": "knowledge-base",
+      "title": "Architecture & Integration Analysis: Live Communication System",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0031",
+      "domain": "knowledge-base",
+      "title": "Multi-Agent Coordination: Academic Research Survey (6 Areas)",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0035",
+      "domain": "knowledge-base",
+      "title": "Coordination Improvement Patterns: Implementation-Ready Research",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0033",
+      "domain": "scripts",
+      "title": "coordinator-hub",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-019",
+      "domain": "sops",
+      "title": "Environment Setup for Fresh Deployment",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-021",
+      "domain": "sops",
+      "title": "Failure Recovery Runbook",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0018",
+      "domain": "teams",
+      "title": "Build and test two competing multi-agent communication prototypes (JSONL+SQLite vs mmap+FIFO), fix bugs through iterative test-fix cycles",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0019",
+      "domain": "teams",
+      "title": "Architecture and integration analysis for live inter-agent communication system",
+      "pointer_count": 20
+    }
+  ],
+  "internal_edges": [
+    {
+      "from": "KB-0016",
+      "to": "TEAM-0018",
+      "weight": 7
+    },
+    {
+      "from": "KB-0018",
+      "to": "TEAM-0018",
+      "weight": 6
+    },
+    {
+      "from": "KB-0017",
+      "to": "TEAM-0018",
+      "weight": 6
+    },
+    {
+      "from": "KB-0016",
+      "to": "TEAM-0019",
+      "weight": 5
+    },
+    {
+      "from": "KB-0019",
+      "to": "TEAM-0019",
+      "weight": 4
+    },
+    {
+      "from": "KB-0016",
+      "to": "SCR-0033",
+      "weight": 3
+    },
+    {
+      "from": "KB-0017",
+      "to": "TEAM-0019",
+      "weight": 3
+    },
+    {
+      "from": "KB-0031",
+      "to": "SCR-0033",
+      "weight": 3
+    },
+    {
+      "from": "KB-0019",
+      "to": "TEAM-0018",
+      "weight": 3
+    },
+    {
+      "from": "SCR-0033",
+      "to": "SOP-019",
+      "weight": 3
+    },
+    {
+      "from": "SCR-0033",
+      "to": "SOP-021",
+      "weight": 3
+    },
+    {
+      "from": "SCR-0033",
+      "to": "TEAM-0019",
+      "weight": 3
+    },
+    {
+      "from": "KB-0017",
+      "to": "KB-0016",
+      "weight": 3
+    },
+    {
+      "from": "KB-0016",
+      "to": "KB-0017",
+      "weight": 3
+    },
+    {
+      "from": "KB-0018",
+      "to": "KB-0016",
+      "weight": 3
+    },
+    {
+      "from": "KB-0016",
+      "to": "KB-0018",
+      "weight": 3
+    },
+    {
+      "from": "KB-0018",
+      "to": "KB-0017",
+      "weight": 3
+    },
+    {
+      "from": "KB-0017",
+      "to": "KB-0018",
+      "weight": 3
+    },
+    {
+      "from": "KB-0019",
+      "to": "KB-0016",
+      "weight": 3
+    },
+    {
+      "from": "KB-0016",
+      "to": "KB-0019",
+      "weight": 3
+    },
+    {
+      "from": "KB-0035",
+      "to": "KB-0031",
+      "weight": 3
+    },
+    {
+      "from": "KB-0031",
+      "to": "KB-0035",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0018",
+      "to": "KB-0016",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0018",
+      "to": "KB-0017",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0019",
+      "to": "KB-0016",
+      "weight": 3
+    },
+    {
+      "from": "KB-0016",
+      "to": "SOP-021",
+      "weight": 2
+    },
+    {
+      "from": "KB-0017",
+      "to": "SOP-021",
+      "weight": 2
+    },
+    {
+      "from": "KB-0018",
+      "to": "SCR-0033",
+      "weight": 2
+    },
+    {
+      "from": "KB-0018",
+      "to": "TEAM-0019",
+      "weight": 2
+    },
+    {
+      "from": "KB-0019",
+      "to": "SCR-0033",
+      "weight": 2
+    },
+    {
+      "from": "KB-0031",
+      "to": "SOP-021",
+      "weight": 2
+    },
+    {
+      "from": "KB-0031",
+      "to": "TEAM-0018",
+      "weight": 2
+    },
+    {
+      "from": "KB-0035",
+      "to": "SCR-0033",
+      "weight": 2
+    },
+    {
+      "from": "KB-0035",
+      "to": "SOP-021",
+      "weight": 2
+    },
+    {
+      "from": "SCR-0033",
+      "to": "TEAM-0018",
+      "weight": 2
+    },
+    {
+      "from": "KB-0016",
+      "to": "SOP-019",
+      "weight": 1
+    },
+    {
+      "from": "KB-0017",
+      "to": "SCR-0033",
+      "weight": 1
+    },
+    {
+      "from": "KB-0017",
+      "to": "SOP-019",
+      "weight": 1
+    },
+    {
+      "from": "KB-0018",
+      "to": "SOP-019",
+      "weight": 1
+    },
+    {
+      "from": "KB-0018",
+      "to": "SOP-021",
+      "weight": 1
+    },
+    {
+      "from": "KB-0019",
+      "to": "SOP-019",
+      "weight": 1
+    },
+    {
+      "from": "KB-0019",
+      "to": "SOP-021",
+      "weight": 1
+    },
+    {
+      "from": "KB-0031",
+      "to": "SOP-019",
+      "weight": 1
+    },
+    {
+      "from": "KB-0031",
+      "to": "TEAM-0019",
+      "weight": 1
+    },
+    {
+      "from": "KB-0035",
+      "to": "SOP-019",
+      "weight": 1
+    },
+    {
+      "from": "KB-0035",
+      "to": "TEAM-0018",
+      "weight": 1
+    },
+    {
+      "from": "KB-0035",
+      "to": "TEAM-0019",
+      "weight": 1
+    },
+    {
+      "from": "SOP-019",
+      "to": "TEAM-0018",
+      "weight": 1
+    },
+    {
+      "from": "SOP-019",
+      "to": "TEAM-0019",
+      "weight": 1
+    },
+    {
+      "from": "SOP-021",
+      "to": "TEAM-0018",
+      "weight": 1
+    },
+    {
+      "from": "SOP-021",
+      "to": "TEAM-0019",
+      "weight": 1
+    },
+    {
+      "from": "TEAM-0019",
+      "to": "SOP-019",
+      "weight": 1
+    },
+    {
+      "from": "TEAM-0019",
+      "to": "SOP-021",
+      "weight": 1
+    }
+  ]
+}

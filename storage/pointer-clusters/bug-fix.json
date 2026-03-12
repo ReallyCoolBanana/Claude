@@ -1,0 +1,83 @@
+{
+  "tag": "bug-fix",
+  "node_count": 5,
+  "domains": [
+    "knowledge-base",
+    "sops",
+    "teams"
+  ],
+  "nodes": [
+    {
+      "id": "KB-0007",
+      "domain": "knowledge-base",
+      "title": "Research Team Configuration Testing & System Improvements",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0025",
+      "domain": "knowledge-base",
+      "title": "Bug Fixes, Coordinator Hub, and Central Commander SOPs",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-020",
+      "domain": "sops",
+      "title": "Systematic Bug Fix Workflow",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0007",
+      "domain": "teams",
+      "title": "Test research team configurations with varying agent counts, build archive tools, fix system inefficiencies",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0025",
+      "domain": "teams",
+      "title": "Bug fixes, coordinator hub implementation, central commander SOPs, anti-sequential pattern enforcement",
+      "pointer_count": 20
+    }
+  ],
+  "internal_edges": [
+    {
+      "from": "KB-0025",
+      "to": "TEAM-0025",
+      "weight": 5
+    },
+    {
+      "from": "KB-0007",
+      "to": "TEAM-0007",
+      "weight": 4
+    },
+    {
+      "from": "KB-0007",
+      "to": "TEAM-0025",
+      "weight": 2
+    },
+    {
+      "from": "KB-0025",
+      "to": "SOP-020",
+      "weight": 2
+    },
+    {
+      "from": "KB-0025",
+      "to": "TEAM-0007",
+      "weight": 2
+    },
+    {
+      "from": "SOP-020",
+      "to": "TEAM-0025",
+      "weight": 2
+    },
+    {
+      "from": "KB-0007",
+      "to": "SOP-020",
+      "weight": 1
+    },
+    {
+      "from": "SOP-020",
+      "to": "TEAM-0007",
+      "weight": 1
+    }
+  ]
+}

@@ -1,0 +1,180 @@
+{
+  "tag": "jsonl",
+  "node_count": 7,
+  "domains": [
+    "knowledge-base",
+    "scripts",
+    "teams"
+  ],
+  "nodes": [
+    {
+      "id": "KB-0015",
+      "domain": "knowledge-base",
+      "title": "JSONL Message Bus: Technical Reference for Inter-Agent Communication",
+      "pointer_count": 17
+    },
+    {
+      "id": "KB-0017",
+      "domain": "knowledge-base",
+      "title": "Failure Mode Analysis: JSONL Bus + SQLite Shared State",
+      "pointer_count": 18
+    },
+    {
+      "id": "KB-0018",
+      "domain": "knowledge-base",
+      "title": "Multi-Agent Communication Prototype: Dual Implementation & Test Results",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0019",
+      "domain": "knowledge-base",
+      "title": "Architecture & Integration Analysis: Live Communication System",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0029",
+      "domain": "scripts",
+      "title": "bus-cli",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0018",
+      "domain": "teams",
+      "title": "Build and test two competing multi-agent communication prototypes (JSONL+SQLite vs mmap+FIFO), fix bugs through iterative test-fix cycles",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0019",
+      "domain": "teams",
+      "title": "Architecture and integration analysis for live inter-agent communication system",
+      "pointer_count": 20
+    }
+  ],
+  "internal_edges": [
+    {
+      "from": "KB-0018",
+      "to": "TEAM-0018",
+      "weight": 6
+    },
+    {
+      "from": "KB-0015",
+      "to": "TEAM-0018",
+      "weight": 6
+    },
+    {
+      "from": "KB-0017",
+      "to": "TEAM-0018",
+      "weight": 6
+    },
+    {
+      "from": "KB-0015",
+      "to": "TEAM-0019",
+      "weight": 5
+    },
+    {
+      "from": "KB-0019",
+      "to": "TEAM-0019",
+      "weight": 4
+    },
+    {
+      "from": "KB-0015",
+      "to": "SCR-0029",
+      "weight": 3
+    },
+    {
+      "from": "KB-0017",
+      "to": "TEAM-0019",
+      "weight": 3
+    },
+    {
+      "from": "KB-0019",
+      "to": "TEAM-0018",
+      "weight": 3
+    },
+    {
+      "from": "SCR-0029",
+      "to": "TEAM-0019",
+      "weight": 3
+    },
+    {
+      "from": "KB-0017",
+      "to": "KB-0015",
+      "weight": 3
+    },
+    {
+      "from": "KB-0015",
+      "to": "KB-0017",
+      "weight": 3
+    },
+    {
+      "from": "KB-0018",
+      "to": "KB-0015",
+      "weight": 3
+    },
+    {
+      "from": "KB-0015",
+      "to": "KB-0018",
+      "weight": 3
+    },
+    {
+      "from": "KB-0018",
+      "to": "KB-0017",
+      "weight": 3
+    },
+    {
+      "from": "KB-0017",
+      "to": "KB-0018",
+      "weight": 3
+    },
+    {
+      "from": "KB-0019",
+      "to": "KB-0015",
+      "weight": 3
+    },
+    {
+      "from": "KB-0015",
+      "to": "KB-0019",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0018",
+      "to": "KB-0015",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0018",
+      "to": "KB-0017",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0019",
+      "to": "KB-0015",
+      "weight": 3
+    },
+    {
+      "from": "KB-0017",
+      "to": "SCR-0029",
+      "weight": 2
+    },
+    {
+      "from": "KB-0018",
+      "to": "TEAM-0019",
+      "weight": 2
+    },
+    {
+      "from": "KB-0019",
+      "to": "SCR-0029",
+      "weight": 2
+    },
+    {
+      "from": "KB-0018",
+      "to": "SCR-0029",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0029",
+      "to": "TEAM-0018",
+      "weight": 1
+    }
+  ]
+}

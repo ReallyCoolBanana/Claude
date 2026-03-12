@@ -1,0 +1,135 @@
+{
+  "tag": "openalex",
+  "node_count": 6,
+  "domains": [
+    "knowledge-base",
+    "scripts",
+    "sources",
+    "teams"
+  ],
+  "nodes": [
+    {
+      "id": "KB-0005",
+      "domain": "knowledge-base",
+      "title": "Data Gathering Iteration 2: Parallel Hybrid Methods & Academic APIs",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0014",
+      "domain": "knowledge-base",
+      "title": "Operation 4: Public Data API Tool Development",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0023",
+      "domain": "scripts",
+      "title": "data-gathering-openalex",
+      "pointer_count": 20
+    },
+    {
+      "id": "SRC-0001",
+      "domain": "sources",
+      "title": "OpenAlex API",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0005",
+      "domain": "teams",
+      "title": "Iteration 2 improvements to data gathering methods based on Team 1 research findings",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0014",
+      "domain": "teams",
+      "title": "Operation 4: Build data-gathering tools for public APIs to enable AI access to structured data",
+      "pointer_count": 20
+    }
+  ],
+  "internal_edges": [
+    {
+      "from": "SCR-0023",
+      "to": "SRC-0001",
+      "weight": 7
+    },
+    {
+      "from": "KB-0014",
+      "to": "TEAM-0014",
+      "weight": 5
+    },
+    {
+      "from": "KB-0005",
+      "to": "TEAM-0014",
+      "weight": 5
+    },
+    {
+      "from": "SRC-0001",
+      "to": "SCR-0023",
+      "weight": 5
+    },
+    {
+      "from": "KB-0005",
+      "to": "TEAM-0005",
+      "weight": 4
+    },
+    {
+      "from": "SCR-0023",
+      "to": "TEAM-0005",
+      "weight": 3
+    },
+    {
+      "from": "SCR-0023",
+      "to": "TEAM-0014",
+      "weight": 3
+    },
+    {
+      "from": "KB-0014",
+      "to": "KB-0005",
+      "weight": 3
+    },
+    {
+      "from": "KB-0005",
+      "to": "KB-0014",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0014",
+      "to": "KB-0005",
+      "weight": 3
+    },
+    {
+      "from": "KB-0005",
+      "to": "SCR-0023",
+      "weight": 2
+    },
+    {
+      "from": "KB-0014",
+      "to": "SCR-0023",
+      "weight": 2
+    },
+    {
+      "from": "KB-0014",
+      "to": "SRC-0001",
+      "weight": 2
+    },
+    {
+      "from": "KB-0014",
+      "to": "TEAM-0005",
+      "weight": 2
+    },
+    {
+      "from": "SRC-0001",
+      "to": "TEAM-0014",
+      "weight": 2
+    },
+    {
+      "from": "KB-0005",
+      "to": "SRC-0001",
+      "weight": 1
+    },
+    {
+      "from": "SRC-0001",
+      "to": "TEAM-0005",
+      "weight": 1
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "tag": "wikipedia",
+  "node_count": 5,
+  "domains": [
+    "knowledge-base",
+    "scripts"
+  ],
+  "nodes": [
+    {
+      "id": "KB-0044",
+      "domain": "knowledge-base",
+      "title": "AI Academic Papers Catalog: 85 Papers from Wikipedia Citations",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0045",
+      "domain": "knowledge-base",
+      "title": "Wikipedia Crawl Method Efficiency Testing: Egress-Restricted Environments",
+      "pointer_count": 4
+    },
+    {
+      "id": "KB-0046",
+      "domain": "knowledge-base",
+      "title": "Wikipedia Scraping Project: Process Review, Deficiencies, and Improvement Plan",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0043",
+      "domain": "scripts",
+      "title": "wikipedia-tools",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0044",
+      "domain": "scripts",
+      "title": "wiki-text-extractor",
+      "pointer_count": 20
+    }
+  ],
+  "internal_edges": [
+    {
+      "from": "KB-0045",
+      "to": "SCR-0043",
+      "weight": 9
+    },
+    {
+      "from": "KB-0046",
+      "to": "SCR-0044",
+      "weight": 7
+    },
+    {
+      "from": "SCR-0043",
+      "to": "KB-0045",
+      "weight": 6
+    },
+    {
+      "from": "SCR-0044",
+      "to": "KB-0046",
+      "weight": 6
+    },
+    {
+      "from": "KB-0045",
+      "to": "KB-0044",
+      "weight": 3
+    },
+    {
+      "from": "KB-0044",
+      "to": "KB-0045",
+      "weight": 3
+    },
+    {
+      "from": "KB-0046",
+      "to": "KB-0044",
+      "weight": 3
+    },
+    {
+      "from": "KB-0044",
+      "to": "KB-0046",
+      "weight": 3
+    },
+    {
+      "from": "KB-0046",
+      "to": "KB-0045",
+      "weight": 3
+    },
+    {
+      "from": "KB-0045",
+      "to": "KB-0046",
+      "weight": 3
+    },
+    {
+      "from": "KB-0044",
+      "to": "SCR-0043",
+      "weight": 2
+    },
+    {
+      "from": "KB-0044",
+      "to": "SCR-0044",
+      "weight": 2
+    },
+    {
+      "from": "KB-0045",
+      "to": "SCR-0044",
+      "weight": 2
+    },
+    {
+      "from": "KB-0046",
+      "to": "SCR-0043",
+      "weight": 1
+    }
+  ]
+}

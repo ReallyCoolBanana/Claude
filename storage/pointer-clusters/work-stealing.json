@@ -1,0 +1,338 @@
+{
+  "tag": "work-stealing",
+  "node_count": 10,
+  "domains": [
+    "knowledge-base",
+    "sops",
+    "teams"
+  ],
+  "nodes": [
+    {
+      "id": "KB-0023",
+      "domain": "knowledge-base",
+      "title": "Dynamic Team Coordination: Help Protocol, Work Stealing, Direct Channels",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0026",
+      "domain": "knowledge-base",
+      "title": "Multi-Agent Coordination System Benchmark Results",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0027",
+      "domain": "knowledge-base",
+      "title": "Large-Team Efficiency Experiment: 8 Strategies Compared (10x Improvement Found)",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0028",
+      "domain": "knowledge-base",
+      "title": "Think Tank Debate: 7 Coordination Strategies Benchmarked (External Research)",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0031",
+      "domain": "knowledge-base",
+      "title": "Multi-Agent Coordination: Academic Research Survey (6 Areas)",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0032",
+      "domain": "knowledge-base",
+      "title": "Concurrent Work Distribution Patterns: Deep Research Survey",
+      "pointer_count": 16
+    },
+    {
+      "id": "KB-0035",
+      "domain": "knowledge-base",
+      "title": "Coordination Improvement Patterns: Implementation-Ready Research",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-G01",
+      "domain": "sops",
+      "title": "Multi-Team Efficiency Patterns and Anti-Patterns",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-G03",
+      "domain": "sops",
+      "title": "Proto A Coordination Tool SOPs",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0023",
+      "domain": "teams",
+      "title": "Design and implement dynamic team coordination features: help protocol, direct channels, work stealing, pipeline chaining, and scratchpad",
+      "pointer_count": 20
+    }
+  ],
+  "internal_edges": [
+    {
+      "from": "KB-0023",
+      "to": "TEAM-0023",
+      "weight": 5
+    },
+    {
+      "from": "KB-0023",
+      "to": "SOP-G01",
+      "weight": 4
+    },
+    {
+      "from": "KB-0023",
+      "to": "SOP-G03",
+      "weight": 4
+    },
+    {
+      "from": "KB-0026",
+      "to": "SOP-G01",
+      "weight": 4
+    },
+    {
+      "from": "KB-0026",
+      "to": "SOP-G03",
+      "weight": 3
+    },
+    {
+      "from": "KB-0026",
+      "to": "TEAM-0023",
+      "weight": 3
+    },
+    {
+      "from": "KB-0027",
+      "to": "SOP-G01",
+      "weight": 3
+    },
+    {
+      "from": "KB-0027",
+      "to": "SOP-G03",
+      "weight": 3
+    },
+    {
+      "from": "KB-0031",
+      "to": "SOP-G01",
+      "weight": 3
+    },
+    {
+      "from": "KB-0031",
+      "to": "SOP-G03",
+      "weight": 3
+    },
+    {
+      "from": "SOP-G01",
+      "to": "TEAM-0023",
+      "weight": 3
+    },
+    {
+      "from": "SOP-G03",
+      "to": "TEAM-0023",
+      "weight": 3
+    },
+    {
+      "from": "KB-0026",
+      "to": "KB-0023",
+      "weight": 3
+    },
+    {
+      "from": "KB-0023",
+      "to": "KB-0026",
+      "weight": 3
+    },
+    {
+      "from": "KB-0027",
+      "to": "KB-0026",
+      "weight": 3
+    },
+    {
+      "from": "KB-0026",
+      "to": "KB-0027",
+      "weight": 3
+    },
+    {
+      "from": "KB-0028",
+      "to": "KB-0026",
+      "weight": 3
+    },
+    {
+      "from": "KB-0026",
+      "to": "KB-0028",
+      "weight": 3
+    },
+    {
+      "from": "KB-0028",
+      "to": "KB-0027",
+      "weight": 3
+    },
+    {
+      "from": "KB-0027",
+      "to": "KB-0028",
+      "weight": 3
+    },
+    {
+      "from": "KB-0031",
+      "to": "KB-0026",
+      "weight": 3
+    },
+    {
+      "from": "KB-0026",
+      "to": "KB-0031",
+      "weight": 3
+    },
+    {
+      "from": "KB-0031",
+      "to": "KB-0027",
+      "weight": 3
+    },
+    {
+      "from": "KB-0027",
+      "to": "KB-0031",
+      "weight": 3
+    },
+    {
+      "from": "KB-0031",
+      "to": "KB-0028",
+      "weight": 3
+    },
+    {
+      "from": "KB-0028",
+      "to": "KB-0031",
+      "weight": 3
+    },
+    {
+      "from": "KB-0032",
+      "to": "KB-0026",
+      "weight": 3
+    },
+    {
+      "from": "KB-0026",
+      "to": "KB-0032",
+      "weight": 3
+    },
+    {
+      "from": "KB-0032",
+      "to": "KB-0027",
+      "weight": 3
+    },
+    {
+      "from": "KB-0027",
+      "to": "KB-0032",
+      "weight": 3
+    },
+    {
+      "from": "KB-0032",
+      "to": "KB-0028",
+      "weight": 3
+    },
+    {
+      "from": "KB-0028",
+      "to": "KB-0032",
+      "weight": 3
+    },
+    {
+      "from": "KB-0035",
+      "to": "KB-0031",
+      "weight": 3
+    },
+    {
+      "from": "KB-0031",
+      "to": "KB-0035",
+      "weight": 3
+    },
+    {
+      "from": "KB-0035",
+      "to": "KB-0032",
+      "weight": 3
+    },
+    {
+      "from": "KB-0032",
+      "to": "KB-0035",
+      "weight": 3
+    },
+    {
+      "from": "KB-0035",
+      "to": "KB-0026",
+      "weight": 3
+    },
+    {
+      "from": "KB-0026",
+      "to": "KB-0035",
+      "weight": 3
+    },
+    {
+      "from": "KB-0035",
+      "to": "KB-0027",
+      "weight": 3
+    },
+    {
+      "from": "KB-0027",
+      "to": "KB-0035",
+      "weight": 3
+    },
+    {
+      "from": "KB-0027",
+      "to": "TEAM-0023",
+      "weight": 2
+    },
+    {
+      "from": "KB-0028",
+      "to": "SOP-G01",
+      "weight": 2
+    },
+    {
+      "from": "KB-0028",
+      "to": "SOP-G03",
+      "weight": 2
+    },
+    {
+      "from": "KB-0028",
+      "to": "TEAM-0023",
+      "weight": 2
+    },
+    {
+      "from": "KB-0031",
+      "to": "TEAM-0023",
+      "weight": 2
+    },
+    {
+      "from": "KB-0035",
+      "to": "SOP-G01",
+      "weight": 2
+    },
+    {
+      "from": "KB-0035",
+      "to": "SOP-G03",
+      "weight": 2
+    },
+    {
+      "from": "KB-0035",
+      "to": "TEAM-0023",
+      "weight": 2
+    },
+    {
+      "from": "KB-0032",
+      "to": "SOP-G01",
+      "weight": 1
+    },
+    {
+      "from": "KB-0032",
+      "to": "SOP-G03",
+      "weight": 1
+    },
+    {
+      "from": "KB-0032",
+      "to": "TEAM-0023",
+      "weight": 1
+    },
+    {
+      "from": "TEAM-0023",
+      "to": "SOP-G01",
+      "weight": 1
+    },
+    {
+      "from": "TEAM-0023",
+      "to": "SOP-G03",
+      "weight": 1
+    }
+  ]
+}
