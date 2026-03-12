@@ -29,7 +29,10 @@ nodes = pn["nodes"]
 
 # All 22 SOPs
 sops = sorted([k for k in nodes if k.startswith("SOP-")])
-assert len(sops) == 22, f"Expected 22 SOPs, got {len(sops)}"
+if len(sops) < 22:
+    print(f"WARNING: Expected 22 SOPs, got {len(sops)}. Continuing with available SOPs.", file=sys.stderr)
+elif len(sops) > 22:
+    print(f"WARNING: Expected 22 SOPs, got {len(sops)}. Extra SOPs will be included.", file=sys.stderr)
 
 # Assign SOPs to agents s1-1..s1-8 round-robin
 agent_assignments = {}

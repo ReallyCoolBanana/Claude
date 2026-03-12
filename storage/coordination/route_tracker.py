@@ -233,7 +233,7 @@ def extract_patterns():
 
     for task, task_records in task_routes.items():
         # Find the most common route for this task
-        route_strs = [" -> ".join(r["route"]) for r in task_records]
+        route_strs = [" -> ".join(r.get("route", [])) for r in task_records]
         common_routes = Counter(route_strs).most_common(3)
 
         successful = [r for r in task_records if r.get("outcome") == "success"]
@@ -242,12 +242,17 @@ def extract_patterns():
         )
 
         # Score routes by count * success_rate (enhancement #4)
-        route_counts = Counter(route_strs)
+        # Use hash-based grouping instead of pairwise comparison (BUG-B1-006)
+        route_groups = defaultdict(list)
+        for r in task_records:
+            route_str = " -> ".join(r.get("route", []))
+            route_groups[route_str].append(r)
+
         scored_routes = []
-        for route_str, count in route_counts.most_common():
-            route_records = [r for r in task_records if " -> ".join(r["route"]) == route_str]
+        for route_str, route_records in route_groups.items():
+            count = len(route_records)
             route_successes = sum(1 for r in route_records if r.get("outcome") == "success")
-            route_success_rate = route_successes / max(len(route_records), 1)
+            route_success_rate = route_successes / max(count, 1)
             score = count * route_success_rate
             scored_routes.append((route_str, count, score, round(route_success_rate * 100, 1)))
         scored_routes.sort(key=lambda x: x[2], reverse=True)

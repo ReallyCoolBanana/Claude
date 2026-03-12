@@ -2,6 +2,10 @@
 """
 Pathfinder P1 — Maximum-weight pathfinding across the pointer network.
 
+NOTE: This file uses a standard Dijkstra with visited set and predecessor
+reconstruction. For a simple-path-aware variant that tracks full paths in
+the heap (with cycle avoidance and max_hops), see pathfind_p1.py.
+
 Uses a modified Dijkstra's algorithm that finds MAXIMUM weight paths
 instead of minimum (strongest routes, not shortest).
 
