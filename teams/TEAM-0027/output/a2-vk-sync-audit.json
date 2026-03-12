@@ -1,0 +1,150 @@
+{
+  "metadata": {
+    "team": "TEAM-0027",
+    "agent": "a2-vk-sync-audit",
+    "task": "vulkan-error-review",
+    "date": "2026-03-12",
+    "focus_area": "Synchronization primitives, fences, semaphores, frame-in-flight",
+    "files_reviewed": [
+      "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "vulkan-orbiting-spheres/src/vulkan_app.h"
+    ],
+    "completion_status": "complete"
+  },
+  "findings": [
+    {
+      "id": "SYNC-VK-001",
+      "category": "race_condition",
+      "severity": "high",
+      "title": "Semaphore signaled by vkAcquireNextImageKHR left dangling on VK_ERROR_OUT_OF_DATE_KHR early return",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 505,
+      "description": "When vkAcquireNextImageKHR returns VK_ERROR_OUT_OF_DATE_KHR, the function returns early at line 510 without resetting the fence (line 516 is skipped). The fence was already waited on at line 502 and is currently unsignaled, so the next call to drawFrame will wait on an unsignaled fence that will never be signaled, causing a deadlock. Additionally, the semaphore m_imageAvailableSemaphores[m_currentFrame] may or may not have been signaled depending on the driver behavior with OUT_OF_DATE, leaving it in an indeterminate state. However, the critical issue is the fence: after vkWaitForFences succeeds, the fence is unsignaled. If we return early without submitting work that signals it, the next iteration blocks forever.",
+      "evidence": "Line 502: vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX);\nLine 505-510: vkAcquireNextImageKHR returns VK_ERROR_OUT_OF_DATE_KHR -> recreateSwapchain() -> return;\nLine 516 (skipped): vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);\nLine 536 (skipped): vkQueueSubmit(..., m_inFlightFences[m_currentFrame]) which would re-signal the fence.",
+      "recommendation": "Move vkResetFences to after the vkAcquireNextImageKHR check, just before vkQueueSubmit. This way, if vkAcquireNextImageKHR fails and we return early, the fence remains signaled and the next drawFrame iteration won't deadlock. The standard pattern is: wait fence -> acquire -> reset fence -> submit. Currently the code does: wait fence -> acquire (may early-return) -> reset fence -> submit.",
+      "vulkan_spec_reference": "Vulkan 1.2 Spec, Section 7.3.1 - Fence Signaling & Waiting"
+    },
+    {
+      "id": "SYNC-VK-002",
+      "category": "bug",
+      "severity": "medium",
+      "title": "No depth image layout transition before first use",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 237,
+      "description": "The depth image is created in createDepthResources() but no explicit layout transition from VK_IMAGE_LAYOUT_UNDEFINED to VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL is performed via a pipeline barrier. The render pass specifies initialLayout = VK_IMAGE_LAYOUT_UNDEFINED for the depth attachment (line 287), which means the render pass will perform an implicit transition. While this is technically valid because VK_IMAGE_LAYOUT_UNDEFINED as initialLayout means the contents are discarded, it works correctly in this case since the depth buffer is cleared each frame (loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR). However, on some drivers the implicit transition from UNDEFINED on every frame may have a minor performance cost compared to transitioning once and using DEPTH_STENCIL_ATTACHMENT_OPTIMAL as initialLayout on subsequent frames.",
+      "evidence": "Line 287: depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;\nLine 288: depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;\nNo vkCmdPipelineBarrier for depth image layout transition anywhere in the code.",
+      "recommendation": "This is functionally correct since loadOp is CLEAR, which discards prior contents. For optimal performance on some hardware, consider adding an explicit layout transition after creating the depth image, then setting initialLayout to VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL in the render pass. This avoids repeated implicit transitions.",
+      "vulkan_spec_reference": "Vulkan 1.2 Spec, Section 8.1 - Render Pass, Attachment descriptions"
+    },
+    {
+      "id": "SYNC-VK-003",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "uploadBuffer submits to graphics queue without fence, relies on vkQueueWaitIdle",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 748,
+      "description": "The uploadBuffer function submits a copy command to the graphics queue with VK_NULL_HANDLE as the fence parameter, then calls vkQueueWaitIdle to synchronize. While this works correctly during initialization (createGeometry is the last init step and no rendering is happening yet), it is a heavyweight synchronization that stalls the entire queue. If uploadBuffer were ever called during rendering (e.g., for dynamic geometry updates), it would stall all in-flight rendering work on the graphics queue. Additionally, the return value of vkQueueSubmit is unchecked.",
+      "evidence": "Line 748: vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);\nLine 749: vkQueueWaitIdle(m_graphicsQueue);",
+      "recommendation": "Check the return value of vkQueueSubmit. For the current initialization-only use, vkQueueWaitIdle is acceptable. If uploadBuffer is ever used during rendering, switch to a fence-based wait to avoid stalling other in-flight work.",
+      "vulkan_spec_reference": "Vulkan 1.2 Spec, Section 6.5 - Queue Submission"
+    },
+    {
+      "id": "SYNC-VK-004",
+      "category": "race_condition",
+      "severity": "medium",
+      "title": "Single command pool shared across frames-in-flight without external synchronization",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 375,
+      "description": "A single VkCommandPool (m_commandPool) is used for all frames-in-flight command buffers. VkCommandPool is not thread-safe, but since this application is single-threaded, that is not an issue. However, the command pool is also used by uploadBuffer (line 730) which allocates and frees command buffers from the same pool. If uploadBuffer were ever called concurrently or during rendering, this would be unsafe. The current code is safe because uploadBuffer is only called during init. The VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag (line 378) correctly allows individual command buffer resets (line 520).",
+      "evidence": "Line 378: poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;\nLine 730: vkAllocateCommandBuffers(m_device, &allocInfo, &cmd); // same m_commandPool\nLine 520: vkResetCommandBuffer(m_commandBuffers[m_currentFrame], 0);",
+      "recommendation": "Consider using a separate command pool for transient upload operations (with VK_COMMAND_POOL_CREATE_TRANSIENT_BIT). This separates concerns and allows the driver to optimize memory allocation for short-lived command buffers.",
+      "vulkan_spec_reference": "Vulkan 1.2 Spec, Section 6.2 - Command Pools"
+    },
+    {
+      "id": "SYNC-VK-005",
+      "category": "performance",
+      "severity": "low",
+      "title": "Uniform buffer update lacks explicit memory flush for non-coherent memory",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 572,
+      "description": "The uniform buffer is updated via memcpy to a persistently mapped pointer (line 572). VMA_MEMORY_USAGE_CPU_TO_GPU typically allocates HOST_VISIBLE | HOST_COHERENT memory, so no explicit flush is needed. However, the code does not verify coherence and does not call vmaFlushAllocation. If the memory were allocated without HOST_COHERENT (possible on some devices when VMA falls back to different memory types), the GPU could read stale data.",
+      "evidence": "Line 427: m_uniformBuffers[i] = createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);\nLine 572: memcpy(m_uniformBuffersMapped[frameIndex], &ubo, sizeof(ubo)); // no flush",
+      "recommendation": "Either verify at allocation time that HOST_COHERENT is set, or call vmaFlushAllocation after the memcpy as a safety measure. VMA provides vmaFlushAllocation which is a no-op for coherent memory, making it safe to call unconditionally.",
+      "vulkan_spec_reference": "Vulkan 1.2 Spec, Section 11.2.4 - Host Access to Device Memory"
+    },
+    {
+      "id": "SYNC-VK-006",
+      "category": "design",
+      "severity": "low",
+      "title": "No per-swapchain-image fence tracking for out-of-order image acquisition",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 501,
+      "description": "The code uses MAX_FRAMES_IN_FLIGHT=2 fences indexed by m_currentFrame, but does not track which fence is associated with which swapchain image. If the swapchain has more than 2 images (common with mailbox present mode, though FIFO is used here), it is possible for vkAcquireNextImageKHR to return the same image index for two consecutive frames before the first frame's GPU work completes. Since the code uses FIFO present mode, the swapchain typically provides exactly the minimum number of images, and image reuse within the in-flight window is unlikely. However, the absence of an imagesInFlight fence array is a design weakness that would become a bug if the present mode or min image count were changed.",
+      "evidence": "Line 218: .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)\nLine 36: static constexpr int MAX_FRAMES_IN_FLIGHT = 2;\nNo imagesInFlight[] array or equivalent tracking.",
+      "recommendation": "Add a std::vector<VkFence> imagesInFlight (one per swapchain image). Before using a swapchain image, wait on its associated fence to ensure prior GPU work on that image is complete. This is the pattern recommended in the Vulkan Tutorial and makes the code robust against any present mode or swapchain image count.",
+      "vulkan_spec_reference": "Vulkan 1.2 Spec, Section 33.10 - WSI Swapchain"
+    },
+    {
+      "id": "SYNC-VK-007",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "Missing error checks on multiple Vulkan calls",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 252,
+      "description": "Several Vulkan calls that can fail have their return values ignored: vmaCreateImage (line 252), vkCreateImageView (line 266), vkBeginCommandBuffer (line 579), vkEndCommandBuffer (line 657), vkWaitForFences (line 502), vkResetFences (line 516), vkResetCommandBuffer (line 520), vkQueueSubmit in uploadBuffer (line 748). While not strictly synchronization bugs, unchecked return values from synchronization functions (vkWaitForFences, vkResetFences) could mask timeout or device-lost conditions.",
+      "evidence": "Line 502: vkWaitForFences(...) - return value unchecked\nLine 516: vkResetFences(...) - return value unchecked\nLine 748: vkQueueSubmit(...) - return value unchecked in uploadBuffer",
+      "recommendation": "Check return values of all Vulkan calls, especially synchronization primitives. vkWaitForFences can return VK_TIMEOUT (even with UINT64_MAX on some platforms) or VK_ERROR_DEVICE_LOST, both of which should be handled.",
+      "vulkan_spec_reference": "Vulkan 1.2 Spec, Section 6.5 and 7.3"
+    },
+    {
+      "id": "SYNC-VK-008",
+      "category": "design",
+      "severity": "low",
+      "title": "recreateSwapchain does not recreate image views separately",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 662,
+      "description": "recreateSwapchain calls vkDeviceWaitIdle (line 669) which is correct and ensures all GPU work is complete before destroying resources. The synchronization here is sound. However, createImageViews() is empty (line 233-235) since vk-bootstrap creates image views inside createSwapchain(). This means cleanupSwapchain correctly destroys the old views (line 683-685) and createSwapchain creates new ones. The synchronization with vkDeviceWaitIdle is correct.",
+      "evidence": "Line 669: vkDeviceWaitIdle(m_device);\nLine 670: cleanupSwapchain();\nLine 671-673: createSwapchain(); createDepthResources(); createFramebuffers();",
+      "recommendation": "No synchronization fix needed. The vkDeviceWaitIdle approach is correct but heavy-handed. For smoother resizing, consider using the oldSwapchain parameter in VkSwapchainCreateInfoKHR to allow the driver to reuse resources.",
+      "vulkan_spec_reference": "Vulkan 1.2 Spec, Section 33.10 - WSI Swapchain"
+    },
+    {
+      "id": "SYNC-VK-009",
+      "category": "race_condition",
+      "severity": "high",
+      "title": "Swapchain recreation after VK_SUBOPTIMAL present does not handle in-flight semaphore state",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 549,
+      "description": "When vkQueuePresentKHR returns VK_SUBOPTIMAL_KHR (line 549), recreateSwapchain is called which invokes vkDeviceWaitIdle. At this point, the submit and present for the current frame have already been issued. vkDeviceWaitIdle will wait for completion, which is correct. However, m_currentFrame is not advanced (line 556 is reached after recreateSwapchain returns), so the same frame index will be used next iteration. The fence for m_currentFrame was signaled by the completed vkQueueSubmit, and vkWaitForFences at the top of the next drawFrame will succeed. The semaphores for m_currentFrame were consumed by the submit/present pair, so they are in unsignaled state. The next iteration will signal m_imageAvailableSemaphores[m_currentFrame] via vkAcquireNextImageKHR and wait on it in vkQueueSubmit, which is correct. This path appears safe due to vkDeviceWaitIdle resetting all GPU state to quiescent.",
+      "evidence": "Line 548-554: result = vkQueuePresentKHR(...); if (result == VK_SUBOPTIMAL_KHR ...) recreateSwapchain();\nLine 556: m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT; // still executed after recreate",
+      "recommendation": "While currently safe due to vkDeviceWaitIdle, consider returning early after recreateSwapchain() to avoid the m_currentFrame increment, keeping the frame index consistent. Alternatively, reset m_currentFrame to 0 after swapchain recreation.",
+      "vulkan_spec_reference": "Vulkan 1.2 Spec, Section 33.10.1 - Full Screen Exclusive"
+    },
+    {
+      "id": "SYNC-VK-010",
+      "category": "design",
+      "severity": "low",
+      "title": "Present queue may differ from graphics queue without proper synchronization",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 199,
+      "description": "If the present queue is different from the graphics queue (line 199: fallback assigns m_graphicsQueue), the swapchain images would need VK_SHARING_MODE_CONCURRENT or explicit queue family ownership transfers. The vk-bootstrap SwapchainBuilder likely handles this, but the code does not verify. If they are different queues in the same family, no issue. If different families, missing ownership transfer barriers would be a synchronization bug.",
+      "evidence": "Line 199: m_presentQueue = pqRet ? pqRet.value() : m_graphicsQueue;\nLine 548: vkQueuePresentKHR(m_presentQueue, &presentInfo); // may be different queue",
+      "recommendation": "Verify that vk-bootstrap configures the swapchain with concurrent sharing mode when graphics and present queues are in different families, or add explicit queue family ownership transfer barriers. If they are always the same queue family (common on desktop GPUs), document this assumption.",
+      "vulkan_spec_reference": "Vulkan 1.2 Spec, Section 12.7.7 - Queue Family Ownership Transfer"
+    }
+  ],
+  "summary": {
+    "total_findings": 10,
+    "by_severity": {
+      "critical": 0,
+      "high": 2,
+      "medium": 3,
+      "low": 5
+    },
+    "top_concerns": [
+      "SYNC-VK-001: Fence deadlock potential when vkAcquireNextImageKHR returns VK_ERROR_OUT_OF_DATE_KHR - the fence is waited on but never re-signaled because the early return skips vkQueueSubmit",
+      "SYNC-VK-006: No per-swapchain-image fence tracking - could cause GPU resource conflicts if swapchain image count exceeds MAX_FRAMES_IN_FLIGHT",
+      "SYNC-VK-003: Unchecked vkQueueSubmit return and reliance on vkQueueWaitIdle in uploadBuffer"
+    ]
+  }
+}
