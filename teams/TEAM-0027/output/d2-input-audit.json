@@ -1,0 +1,212 @@
+{
+  "metadata": {
+    "team": "TEAM-0027",
+    "agent": "d2-input-audit",
+    "task": "vulkan-error-review",
+    "date": "2026-03-12",
+    "focus_area": "Input handling, camera, window management, main loop",
+    "files_reviewed": [
+      "vulkan-orbiting-spheres/src/main.cpp",
+      "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "vulkan-orbiting-spheres/src/vulkan_app.h",
+      "vulkan-orbiting-spheres/src/camera.cpp",
+      "vulkan-orbiting-spheres/src/camera.h",
+      "vulkan-orbiting-spheres/src/types.h"
+    ],
+    "completion_status": "complete"
+  },
+  "findings": [
+    {
+      "id": "INIT-VK-001",
+      "category": "missing_validation",
+      "severity": "high",
+      "title": "glfwInit() return value not checked",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 61,
+      "description": "glfwInit() returns GLFW_FALSE on failure, but the return value is discarded. If GLFW fails to initialize (e.g., no display server on headless Linux), the subsequent glfwCreateWindow call will crash or return nullptr, which is then used without null-checking.",
+      "evidence": "glfwInit();  // line 61 - return value ignored\nm_window = glfwCreateWindow(WIDTH, HEIGHT, ...);  // line 63 - m_window not null-checked",
+      "recommendation": "Check glfwInit() return value and throw std::runtime_error on failure. Also check m_window for nullptr after glfwCreateWindow()."
+    },
+    {
+      "id": "INIT-VK-002",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "No GLFW error callback registered",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 60,
+      "description": "glfwSetErrorCallback() is never called. GLFW errors (e.g., window creation failure, extension loading issues) will be silently lost, making debugging difficult.",
+      "evidence": "initWindow() sets framebuffer, mouse, cursor, and scroll callbacks but never calls glfwSetErrorCallback().",
+      "recommendation": "Register a GLFW error callback via glfwSetErrorCallback() before glfwInit() to log errors to stderr."
+    },
+    {
+      "id": "INIT-VK-003",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "glfwCreateWindow() result not null-checked",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 63,
+      "description": "glfwCreateWindow() can return nullptr on failure (e.g., unsupported Vulkan, headless environment). The nullptr is immediately passed to glfwSetWindowUserPointer() and later to all Vulkan surface creation, leading to undefined behavior or segfault.",
+      "evidence": "m_window = glfwCreateWindow(WIDTH, HEIGHT, \"Vulkan Orbiting Spheres\", nullptr, nullptr);\nglfwSetWindowUserPointer(m_window, this);  // m_window could be null",
+      "recommendation": "Add a null check: if (!m_window) { glfwTerminate(); throw std::runtime_error(\"Failed to create GLFW window\"); }"
+    },
+    {
+      "id": "INPUT-VK-004",
+      "category": "design",
+      "severity": "low",
+      "title": "No key callback registered; ESC handled via polling",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 96,
+      "description": "ESC key is handled via glfwGetKey() polling in the main loop rather than through a key callback. While functional, this means key press events can be missed if the frame takes a long time, and other useful keys (e.g., F11 for fullscreen, R for reset camera, P for pause) have no infrastructure to be added.",
+      "evidence": "if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {\n    glfwSetWindowShouldClose(m_window, GLFW_TRUE);\n}",
+      "recommendation": "Register a glfwSetKeyCallback() for cleaner key handling and extensibility. Polling is fine for ESC but a callback is better practice."
+    },
+    {
+      "id": "INPUT-VK-005",
+      "category": "bug",
+      "severity": "low",
+      "title": "Camera state members are public, exposing internal state",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.h",
+      "line": 30,
+      "description": "camera, mousePressed, lastMouseX, lastMouseY, and m_framebufferResized are all public members of VulkanApp, accessible to anyone with a pointer to the object. The GLFW callbacks use reinterpret_cast to access these. While this works, it violates encapsulation and makes it possible for external code to corrupt state.",
+      "evidence": "// GLFW callbacks need access\nCamera camera;\nbool mousePressed = false;\ndouble lastMouseX = 0.0, lastMouseY = 0.0;\nbool m_framebufferResized = false;",
+      "recommendation": "Make these private and declare the callback functions as friends, or use a separate InputState struct passed through the user pointer."
+    },
+    {
+      "id": "CAMERA-VK-006",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "Division by zero in aspect ratio calculation when window is minimized",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 563,
+      "description": "When computing the aspect ratio for the projection matrix, the code divides swapchainExtent.width by swapchainExtent.height. If the swapchain extent height is 0 (which can happen transiently during minimize before recreateSwapchain's wait loop catches it), this produces a division by zero resulting in inf, which propagates through the projection matrix.",
+      "evidence": "float aspect = static_cast<float>(m_swapchainExtent.width) /\n               static_cast<float>(m_swapchainExtent.height);",
+      "recommendation": "Guard against zero height: float aspect = (m_swapchainExtent.height > 0) ? static_cast<float>(m_swapchainExtent.width) / static_cast<float>(m_swapchainExtent.height) : 1.0f;"
+    },
+    {
+      "id": "CAMERA-VK-007",
+      "category": "design",
+      "severity": "low",
+      "title": "Camera yaw can grow unbounded over time",
+      "file": "vulkan-orbiting-spheres/src/camera.cpp",
+      "line": 29,
+      "description": "m_yaw is incremented by dx * SENSITIVITY with no wrapping. Over extended use sessions with continuous mouse dragging, m_yaw can grow to very large floating point values, eventually losing precision. At extreme values (millions of degrees), the cos/sin calculations will lose precision.",
+      "evidence": "m_yaw += dx * SENSITIVITY;  // no modulo or wrapping applied\n// m_pitch is clamped but m_yaw is not",
+      "recommendation": "Wrap m_yaw to the range [0, 360) or [-180, 180) using fmod after each update."
+    },
+    {
+      "id": "CAMERA-VK-008",
+      "category": "design",
+      "severity": "low",
+      "title": "Camera lookAt can degenerate near poles",
+      "file": "vulkan-orbiting-spheres/src/camera.cpp",
+      "line": 19,
+      "description": "At pitch = +/-89 degrees, the camera direction is nearly parallel to the up vector (0,1,0) used in glm::lookAt. While the 89-degree clamp prevents exact gimbal lock, at 89 degrees cos(89 deg) = 0.0175, making the camera position very close to directly above/below the target. The lookAt function can produce jittery results when the view direction approaches the up vector.",
+      "evidence": "return glm::lookAt(m_position, m_target, glm::vec3(0.0f, 1.0f, 0.0f));\n// At pitch=89, position is nearly (0, distance*0.9998, 0), making view direction ≈ -up",
+      "recommendation": "This is mitigated by the 89-degree clamp. For extra robustness, could reduce to 85 degrees or compute a perpendicular up vector, but current approach is acceptable for this application."
+    },
+    {
+      "id": "LOOP-VK-009",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "drawFrame() called while window is minimized (zero-size framebuffer)",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 99,
+      "description": "When the window is minimized, the framebuffer size becomes 0x0. The main loop calls drawFrame() unconditionally. While vkAcquireNextImageKHR will return VK_ERROR_OUT_OF_DATE_KHR and trigger recreateSwapchain (which waits for non-zero size), the code still wastes CPU cycles calling drawFrame, waiting on fences, and acquiring images every frame during minimize. More critically, if the driver does not return OUT_OF_DATE for a zero-size swapchain, the code proceeds to render with a 0x0 extent.",
+      "evidence": "while (!glfwWindowShouldClose(m_window)) {\n    glfwPollEvents();\n    ...\n    drawFrame();  // called unconditionally, even when minimized\n}",
+      "recommendation": "Check framebuffer size before calling drawFrame. If width or height is 0, call glfwWaitEvents() instead to avoid busy-waiting: int w, h; glfwGetFramebufferSize(m_window, &w, &h); if (w == 0 || h == 0) { glfwWaitEvents(); continue; }"
+    },
+    {
+      "id": "LOOP-VK-010",
+      "category": "design",
+      "severity": "low",
+      "title": "Static startTime variable is module-scoped, not reset on app restart",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 15,
+      "description": "startTime is a file-static variable initialized at program load time. If VulkanApp::run() were ever called multiple times in the same process, the time reference would not reset. Also, the time value will eventually lose float precision after running for extended periods (hours). After ~16,777 seconds (~4.66 hours), a 32-bit float loses sub-millisecond precision.",
+      "evidence": "static auto startTime = std::chrono::high_resolution_clock::now();",
+      "recommendation": "Move startTime to be a member variable of VulkanApp, initialized in run() or initWindow(). For very long sessions, consider using fmod to wrap the time value."
+    },
+    {
+      "id": "CLEANUP-VK-011",
+      "category": "bug",
+      "severity": "high",
+      "title": "Exception during initVulkan() leaks GLFW resources and partially-created Vulkan objects",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 51,
+      "description": "If any step in initVulkan() throws an exception (e.g., createInstance, pickPhysicalDevice, createSwapchain), the exception propagates out of run() without calling cleanup(). The GLFW window and any Vulkan objects created before the failure are leaked. glfwTerminate() is never called. This is because run() calls initWindow(), initVulkan(), mainLoop(), cleanup() sequentially — an exception in initVulkan() skips cleanup().",
+      "evidence": "void VulkanApp::run() {\n    initWindow();\n    initVulkan();  // if this throws...\n    mainLoop();\n    cleanup();     // ...this is never called\n}",
+      "recommendation": "Use RAII wrappers or a try-catch in run() that calls cleanup(). Alternatively, cleanup() should be safe to call with partially-initialized state (checking each handle before destroying). Consider making cleanup() the destructor."
+    },
+    {
+      "id": "CLEANUP-VK-012",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "cleanup() is not safe to call with partially initialized Vulkan state",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 104,
+      "description": "cleanup() unconditionally destroys all Vulkan objects without checking if they were actually created. If initVulkan() fails partway through (e.g., after createInstance but before createSwapchain), cleanup() will attempt to destroy uninitialized handles, causing Vulkan validation errors or crashes. For example, if createSwapchain fails, m_framebuffers and m_swapchainImageViews are empty vectors so that part is safe, but m_uniformBuffers vector would be empty yet accessed in a loop with MAX_FRAMES_IN_FLIGHT iterations.",
+      "evidence": "for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {\n    vmaDestroyBuffer(m_allocator, m_uniformBuffers[i].buffer, m_uniformBuffers[i].allocation);\n}  // m_uniformBuffers might be empty if createUniformBuffers was never called",
+      "recommendation": "Check vector sizes and null handles before destroying objects in cleanup(). Guard each section: if (!m_uniformBuffers.empty()) { ... }. Check each VK handle != VK_NULL_HANDLE before calling destroy."
+    },
+    {
+      "id": "INPUT-VK-013",
+      "category": "design",
+      "severity": "low",
+      "title": "Mouse drag only supports left button; no middle-button pan or right-button alternative",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 25,
+      "description": "The mouse button callback only handles GLFW_MOUSE_BUTTON_LEFT for orbit rotation. There is no support for middle-button pan (camera target translation) or right-button zoom, which are conventional 3D viewport controls.",
+      "evidence": "if (button == GLFW_MOUSE_BUTTON_LEFT) {\n    app->mousePressed = (action == GLFW_PRESS);\n    ...\n}",
+      "recommendation": "Consider adding middle-button drag for panning and right-button drag for zooming to provide standard 3D viewport interaction."
+    },
+    {
+      "id": "SWAPCHAIN-VK-014",
+      "category": "missing_validation",
+      "severity": "medium",
+      "title": "createSwapchain uses hardcoded WIDTH/HEIGHT instead of actual framebuffer size",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 219,
+      "description": "set_desired_extent(WIDTH, HEIGHT) uses the initial constant dimensions (1280x720) every time the swapchain is created, including during recreation after resize. While vk-bootstrap's SwapchainBuilder will clamp this to the surface capabilities (so the actual extent will match the window), explicitly querying the current framebuffer size and passing it would be clearer and more correct.",
+      "evidence": ".set_desired_extent(WIDTH, HEIGHT)  // Always passes 1280x720",
+      "recommendation": "Query glfwGetFramebufferSize() and pass the actual current dimensions to set_desired_extent() in createSwapchain, especially since it is called from recreateSwapchain after a resize."
+    },
+    {
+      "id": "THREAD-VK-015",
+      "category": "design",
+      "severity": "low",
+      "title": "framebufferResized flag is not atomic but is safe in single-threaded GLFW usage",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.h",
+      "line": 33,
+      "description": "m_framebufferResized is a plain bool written in the framebuffer resize callback and read/written in drawFrame(). Since GLFW callbacks execute on the main thread and drawFrame is also called from the main thread (via mainLoop), this is not a data race in the current architecture. However, if the rendering were ever moved to a separate thread, this would become a data race. The bool is not std::atomic.",
+      "evidence": "bool m_framebufferResized = false;  // plain bool, not atomic\n// Written in framebufferResizeCallback, read in drawFrame line 549",
+      "recommendation": "For future-proofing, consider making this std::atomic<bool>. Current single-threaded usage is safe."
+    },
+    {
+      "id": "INPUT-VK-016",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "No bounds check on scroll offset magnitude",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 44,
+      "description": "The scroll callback passes yoffset directly to camera.processScroll() without clamping the input. While processScroll clamps m_distance to [MIN_DISTANCE, MAX_DISTANCE], some mice or trackpads can produce very large scroll offsets in a single event (e.g., high-speed scroll wheels reporting values > 10). The large delta is effectively absorbed by the clamp, but it means a single scroll event could jump from min to max distance.",
+      "evidence": "app->camera.processScroll(static_cast<float>(yoffset));  // raw yoffset, could be large\nm_distance -= offset * ZOOM_SPEED;  // large offset * 0.5 could overshoot",
+      "recommendation": "Clamp yoffset to a reasonable range (e.g., [-3, 3]) before passing to processScroll, or apply a non-linear curve to prevent jarring zoom jumps."
+    }
+  ],
+  "summary": {
+    "total_findings": 16,
+    "by_severity": {
+      "critical": 0,
+      "high": 2,
+      "medium": 5,
+      "low": 9
+    },
+    "top_concerns": [
+      "INIT-VK-001: glfwInit() return value not checked — if GLFW fails, subsequent calls will crash",
+      "CLEANUP-VK-011: Exception during initVulkan() leaks GLFW resources and all partially-created Vulkan objects because cleanup() is never called",
+      "CLEANUP-VK-012: cleanup() is unsafe to call with partially initialized state — will access empty vectors",
+      "CAMERA-VK-006: Division by zero in aspect ratio when swapchain extent height is 0 during minimize transition",
+      "LOOP-VK-009: drawFrame() called unconditionally even when minimized, wasting CPU and risking rendering to 0x0 framebuffer"
+    ]
+  }
+}

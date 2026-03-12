@@ -1,0 +1,227 @@
+{
+  "metadata": {
+    "team": "TEAM-0027",
+    "agent": "d3-build-audit",
+    "task": "vulkan-error-review",
+    "date": "2026-03-12",
+    "focus_area": "CMake build system, shader compilation, cross-platform, dependencies",
+    "files_reviewed": [
+      "vulkan-orbiting-spheres/CMakeLists.txt",
+      "vulkan-orbiting-spheres/PLAN.md",
+      "vulkan-orbiting-spheres/README.md",
+      "vulkan-orbiting-spheres/.gitignore",
+      "vulkan-orbiting-spheres/shaders/compile_shaders.bat",
+      "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "vulkan-orbiting-spheres/src/vulkan_app.h",
+      "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "vulkan-orbiting-spheres/src/types.h"
+    ],
+    "completion_status": "complete"
+  },
+  "findings": [
+    {
+      "id": "BUILD-VK-001",
+      "category": "design",
+      "severity": "medium",
+      "title": "No compiler warning flags configured",
+      "file": "vulkan-orbiting-spheres/CMakeLists.txt",
+      "line": 4,
+      "description": "The CMakeLists.txt sets C++17 standard but does not enable any compiler warnings. Missing -Wall, -Wextra, -Wpedantic for GCC/Clang and /W4 for MSVC. This means potential issues like unused variables, implicit conversions, and missing return statements will go unnoticed during compilation.",
+      "evidence": "Lines 4-5 set CMAKE_CXX_STANDARD but no target_compile_options or add_compile_options call exists anywhere in the file.",
+      "recommendation": "Add compiler warning flags after the executable target: target_compile_options(${PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>)"
+    },
+    {
+      "id": "BUILD-VK-002",
+      "category": "design",
+      "severity": "medium",
+      "title": "No default build type set for single-config generators",
+      "file": "vulkan-orbiting-spheres/CMakeLists.txt",
+      "line": 1,
+      "description": "When using single-configuration generators like Makefiles or Ninja, CMAKE_BUILD_TYPE defaults to empty string, resulting in no optimization flags and no debug info. This leads to unoptimized release builds or debug builds without symbols depending on expectations.",
+      "evidence": "No CMAKE_BUILD_TYPE check or default anywhere in CMakeLists.txt. The README shows Ninja usage with explicit -DCMAKE_BUILD_TYPE=Release, but if omitted, the build type will be empty.",
+      "recommendation": "Add after project(): if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES) set(CMAKE_BUILD_TYPE Release CACHE STRING \"Build type\" FORCE) endif()"
+    },
+    {
+      "id": "BUILD-VK-003",
+      "category": "design",
+      "severity": "high",
+      "title": "Missing compile_shaders.sh for Linux/macOS - no cross-platform manual shader compilation",
+      "file": "vulkan-orbiting-spheres/shaders/compile_shaders.bat",
+      "line": 1,
+      "description": "The PLAN.md (line 36) explicitly lists compile_shaders.sh as a planned file for Linux/macOS convenience, but only compile_shaders.bat exists. The .bat file uses Windows-specific syntax (%VULKAN_SDK%\\Bin\\glslc.exe) and will not work on Linux or macOS. While CMake handles shader compilation during builds, the manual compilation script is needed for users who want to compile shaders independently.",
+      "evidence": "Only compile_shaders.bat exists. PLAN.md line 36: 'compile_shaders.sh      # Linux/macOS script (convenience)'. Glob search confirmed no .sh file exists.",
+      "recommendation": "Create shaders/compile_shaders.sh with: #!/bin/bash\nglslc shader.vert -o shader.vert.spv\nglslc shader.frag -o shader.frag.spv\nand make it executable."
+    },
+    {
+      "id": "BUILD-VK-004",
+      "category": "design",
+      "severity": "low",
+      "title": "glslc shader compilation lacks optimization and target environment flags",
+      "file": "vulkan-orbiting-spheres/CMakeLists.txt",
+      "line": 76,
+      "description": "The glslc invocation in both CMakeLists.txt (line 76) and compile_shaders.bat (lines 3-4) uses no flags beyond input/output. Missing --target-env=vulkan1.2 to match the Vulkan 1.2 requirement, and missing -O for release optimization. Also no -Werror to catch shader warnings as errors.",
+      "evidence": "CMakeLists.txt line 76: COMMAND ${GLSLC_EXECUTABLE} ${SHADER_SRC} -o ${SHADER_OUT}. compile_shaders.bat line 3: %VULKAN_SDK%\\Bin\\glslc.exe shader.vert -o shader.vert.spv",
+      "recommendation": "Add flags: ${GLSLC_EXECUTABLE} --target-env=vulkan1.2 -O ${SHADER_SRC} -o ${SHADER_OUT}. Consider adding -Werror for stricter validation."
+    },
+    {
+      "id": "BUILD-VK-005",
+      "category": "design",
+      "severity": "low",
+      "title": "FetchContent dependencies use tags not commit hashes - no integrity verification",
+      "file": "vulkan-orbiting-spheres/CMakeLists.txt",
+      "line": 29,
+      "description": "All four FetchContent dependencies use GIT_TAG with version tags (3.4, 1.0.1, v1.3.296, v3.1.0) rather than pinned commit hashes. Git tags are mutable and can be force-pushed to point to different commits. There is also no hash verification of downloaded content. This is a supply-chain security concern, though low-severity for a demo project.",
+      "evidence": "Lines 32, 39, 46, 53: GIT_TAG values are all version tags, not SHA-1 hashes.",
+      "recommendation": "For production projects, pin to specific commit SHAs. For this demo, the current approach with version tags and HTTPS is acceptable but worth documenting the risk."
+    },
+    {
+      "id": "BUILD-VK-006",
+      "category": "design",
+      "severity": "medium",
+      "title": "Shader path relative to working directory, not executable location",
+      "file": "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "line": 33,
+      "description": "The SHADER_DIR compile definition is set to the relative path 'shaders' (CMakeLists.txt line 108). In pipeline.cpp line 33-35, this is used as: shaderDir + '/shader.vert.spv'. This path is relative to the current working directory, not the executable location. If the application is launched from a different directory (e.g., double-clicking from file manager vs running from terminal in a different folder), shaders will not be found and the application will crash with 'Failed to open shader file'.",
+      "evidence": "CMakeLists.txt line 108: SHADER_DIR=\"shaders\". pipeline.cpp line 33-35: std::string shaderDir = SHADER_DIR; auto vertCode = readShaderFile(shaderDir + \"/shader.vert.spv\");",
+      "recommendation": "Resolve shader path relative to the executable using platform APIs or std::filesystem. For example: auto exePath = std::filesystem::canonical(\"/proc/self/exe\").parent_path(); or use argv[0] based resolution. Alternatively, use a fallback chain checking multiple locations."
+    },
+    {
+      "id": "BUILD-VK-007",
+      "category": "missing_validation",
+      "severity": "low",
+      "title": "No input validation on shader file size in readShaderFile",
+      "file": "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "line": 6,
+      "description": "The readShaderFile function opens a file in ate|binary mode and reads the entire contents with no size limit check. While not a typical attack vector for a local desktop app, a maliciously crafted or corrupted .spv file could cause excessive memory allocation. The function also does not verify the SPIR-V magic number (0x07230203).",
+      "evidence": "pipeline.cpp lines 6-16: readShaderFile opens file, gets size via tellg(), allocates buffer of that size, reads entire file. No size limit, no magic number check.",
+      "recommendation": "Add a reasonable upper bound check on fileSize (e.g., 10MB) and optionally validate the SPIR-V magic number in the first 4 bytes."
+    },
+    {
+      "id": "BUILD-VK-008",
+      "category": "design",
+      "severity": "medium",
+      "title": "Validation layers always requested including in Release builds",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 150,
+      "description": "The vkb::InstanceBuilder always calls request_validation_layers(true) (line 150) regardless of build type. Validation layers add significant overhead and are intended for development only. The README claims 'Vulkan validation layers enabled in debug builds' but the code enables them unconditionally.",
+      "evidence": "vulkan_app.cpp line 150: .request_validation_layers(true) - no #ifdef NDEBUG or similar guard. README.md line 49: 'Vulkan validation layers enabled in debug builds'",
+      "recommendation": "Guard with build type: #ifdef NDEBUG .request_validation_layers(false) #else .request_validation_layers(true) #endif"
+    },
+    {
+      "id": "BUILD-VK-009",
+      "category": "design",
+      "severity": "low",
+      "title": "PLAN.md version mismatch: vk-bootstrap listed as 0.7+ but actually using v1.3.296",
+      "file": "vulkan-orbiting-spheres/PLAN.md",
+      "line": 46,
+      "description": "The PLAN.md dependency table lists vk-bootstrap version as '0.7+' but CMakeLists.txt pins to v1.3.296 which is a much newer version with potentially different API. This documentation inconsistency could confuse contributors.",
+      "evidence": "PLAN.md line 46: 'vk-bootstrap | Vulkan init boilerplate | 0.7+'. CMakeLists.txt line 46: GIT_TAG v1.3.296",
+      "recommendation": "Update PLAN.md to reflect actual version v1.3.296."
+    },
+    {
+      "id": "BUILD-VK-010",
+      "category": "design",
+      "severity": "low",
+      "title": ".gitignore missing common IDE and OS artifact patterns",
+      "file": "vulkan-orbiting-spheres/.gitignore",
+      "line": 1,
+      "description": "The .gitignore covers build/, cmake-build-*/, .vs/, .vscode/, *.spv, out/, and CMakeUserPresets.json but is missing several common patterns: .idea/ (JetBrains CLion), *.suo *.user (Visual Studio user files), .DS_Store (macOS), Thumbs.db (Windows), *.swp (vim), compile_commands.json (clangd), and .cache/ (clangd).",
+      "evidence": "Full .gitignore content: build/\ncmake-build-*/\n.vs/\n.vscode/\n*.spv\nout/\nCMakeUserPresets.json",
+      "recommendation": "Add: .idea/\n*.suo\n*.user\n.DS_Store\nThumbs.db\n*.swp\ncompile_commands.json\n.cache/"
+    },
+    {
+      "id": "BUILD-VK-011",
+      "category": "design",
+      "severity": "low",
+      "title": "Swapchain creation uses hardcoded initial WIDTH/HEIGHT instead of querying actual window size",
+      "file": "vulkan-orbiting-spheres/src/vulkan_app.cpp",
+      "line": 219,
+      "description": "createSwapchain() passes the compile-time WIDTH and HEIGHT constants to set_desired_extent (line 219), rather than querying the actual framebuffer size from GLFW. On high-DPI displays, the framebuffer size can differ from the window size specified in glfwCreateWindow. While recreateSwapchain is called on resize, the initial swapchain creation could have incorrect dimensions on HiDPI screens.",
+      "evidence": "vulkan_app.cpp line 219: .set_desired_extent(WIDTH, HEIGHT) where WIDTH=1280, HEIGHT=720 are compile-time constants.",
+      "recommendation": "Query actual framebuffer size: int w, h; glfwGetFramebufferSize(m_window, &w, &h); and pass those to set_desired_extent."
+    },
+    {
+      "id": "BUILD-VK-012",
+      "category": "design",
+      "severity": "medium",
+      "title": "README build instructions are Windows-only despite README claiming cross-platform support",
+      "file": "vulkan-orbiting-spheres/README.md",
+      "line": 8,
+      "description": "The README says 'Windows 11 (or any OS with Vulkan support)' in prerequisites and lists 'Visual Studio 2022 (or any C++17 compiler)'. However, the 'Run' section only shows Windows-style path with backslashes: 'build\\Release\\vulkan-orbiting-spheres.exe'. No Linux or macOS run instructions are provided. The Ninja build example is cross-platform but the run instructions are not.",
+      "evidence": "README.md line 8: '(or any OS with Vulkan support)'. Line 33: 'build\\Release\\vulkan-orbiting-spheres.exe'",
+      "recommendation": "Add platform-specific run instructions or use forward slashes. Add a note about Linux dependencies (libglfw3-dev, vulkan-tools, etc.)."
+    },
+    {
+      "id": "BUILD-VK-013",
+      "category": "bug",
+      "severity": "medium",
+      "title": "compile_shaders.bat hardcodes Windows-specific Vulkan SDK path format",
+      "file": "vulkan-orbiting-spheres/shaders/compile_shaders.bat",
+      "line": 3,
+      "description": "The batch script uses %VULKAN_SDK%\\Bin\\glslc.exe with backslashes and .exe extension. Even on Windows, the VULKAN_SDK path structure may vary by SDK version. The script also assumes glslc is in a 'Bin' subdirectory (capital B) which is correct for Windows but should be noted. If a user has glslc on PATH already, the full path is unnecessarily restrictive.",
+      "evidence": "compile_shaders.bat line 3: %VULKAN_SDK%\\Bin\\glslc.exe shader.vert -o shader.vert.spv",
+      "recommendation": "Use just 'glslc' if it's on PATH, or add a fallback: where glslc >nul 2>nul && (set GLSLC=glslc) || (set GLSLC=%VULKAN_SDK%\\Bin\\glslc.exe)"
+    },
+    {
+      "id": "BUILD-VK-014",
+      "category": "design",
+      "severity": "low",
+      "title": "CMake glslc detection limited to VULKAN_SDK environment variable hints",
+      "file": "vulkan-orbiting-spheres/CMakeLists.txt",
+      "line": 12,
+      "description": "find_program for glslc only hints at $ENV{VULKAN_SDK}/Bin and $ENV{VULKAN_SDK}/bin. If VULKAN_SDK is not set (common on Linux where vulkan-tools is installed via package manager and glslc is at /usr/bin/glslc), the HINTS won't help. However, find_program searches PATH by default, so glslc will still be found if it's on PATH. The Vulkan::glslc_exe imported target from find_package(Vulkan) could be used instead for more reliable detection.",
+      "evidence": "CMakeLists.txt lines 12-15: find_program(GLSLC_EXECUTABLE glslc HINTS \"$ENV{VULKAN_SDK}/Bin\" \"$ENV{VULKAN_SDK}/bin\")",
+      "recommendation": "Use Vulkan::glslc imported target if available (CMake 3.19+): if(TARGET Vulkan::glslc) get_property(GLSLC_EXECUTABLE TARGET Vulkan::glslc PROPERTY IMPORTED_LOCATION) endif(). Fall back to find_program."
+    },
+    {
+      "id": "BUILD-VK-015",
+      "category": "design",
+      "severity": "low",
+      "title": "Vulkan version mismatch between PLAN.md and actual code",
+      "file": "vulkan-orbiting-spheres/PLAN.md",
+      "line": 10,
+      "description": "PLAN.md line 10 states 'Graphics API: Vulkan 1.3+' as the target, but the actual code requests Vulkan 1.2: require_api_version(1, 2, 0) in vulkan_app.cpp line 152, set_minimum_version(1, 2) at line 172, and VK_API_VERSION_1_2 at line 207. This mismatch is benign (1.2 is less restrictive) but the documentation is inaccurate.",
+      "evidence": "PLAN.md line 10: 'Vulkan 1.3+'. vulkan_app.cpp line 152: require_api_version(1, 2, 0). README.md line 12: 'GPU with Vulkan 1.2+ support'.",
+      "recommendation": "Update PLAN.md to say 'Vulkan 1.2+' to match the code and README."
+    },
+    {
+      "id": "BUILD-VK-016",
+      "category": "security",
+      "severity": "low",
+      "title": "Shader files loaded from relative path without path sanitization",
+      "file": "vulkan-orbiting-spheres/src/pipeline.cpp",
+      "line": 33,
+      "description": "SHADER_DIR is a compile-time constant ('shaders') and the filenames are hardcoded ('shader.vert.spv', 'shader.frag.spv'), so there is no user-controlled input in the path construction. However, SHADER_DIR is defined via a compile definition and could theoretically be overridden at build time to contain path traversal sequences. This is extremely low risk for a local desktop application.",
+      "evidence": "CMakeLists.txt line 108: SHADER_DIR=\"shaders\". pipeline.cpp lines 33-35: std::string shaderDir = SHADER_DIR; auto vertCode = readShaderFile(shaderDir + \"/shader.vert.spv\");",
+      "recommendation": "No action needed for a demo project. For production, consider using std::filesystem::canonical() to resolve and validate the path."
+    },
+    {
+      "id": "BUILD-VK-017",
+      "category": "design",
+      "severity": "medium",
+      "title": "No CXX_EXTENSIONS OFF setting allows compiler extensions",
+      "file": "vulkan-orbiting-spheres/CMakeLists.txt",
+      "line": 4,
+      "description": "CMAKE_CXX_STANDARD is set to 17 and CMAKE_CXX_STANDARD_REQUIRED is ON, but CMAKE_CXX_EXTENSIONS is not explicitly set to OFF. This means GCC/Clang will use -std=gnu++17 instead of -std=c++17, enabling GNU extensions that may reduce portability across compilers.",
+      "evidence": "CMakeLists.txt lines 4-5: set(CMAKE_CXX_STANDARD 17) set(CMAKE_CXX_STANDARD_REQUIRED ON). No set(CMAKE_CXX_EXTENSIONS OFF).",
+      "recommendation": "Add: set(CMAKE_CXX_EXTENSIONS OFF) after CMAKE_CXX_STANDARD_REQUIRED."
+    }
+  ],
+  "summary": {
+    "total_findings": 17,
+    "by_severity": {
+      "critical": 0,
+      "high": 1,
+      "medium": 6,
+      "low": 10
+    },
+    "top_concerns": [
+      "Missing compile_shaders.sh for Linux/macOS despite being listed in PLAN.md (HIGH)",
+      "Shader path resolution is relative to CWD, not executable location - will fail if launched from different directory (MEDIUM)",
+      "Validation layers always enabled including Release builds despite README claiming debug-only (MEDIUM)",
+      "No compiler warning flags configured - bugs may go undetected (MEDIUM)",
+      "No default CMAKE_BUILD_TYPE for single-config generators (MEDIUM)",
+      "README build/run instructions are Windows-centric despite claiming cross-platform support (MEDIUM)"
+    ]
+  }
+}
