@@ -46,6 +46,16 @@ import time
 import uuid
 
 # ---------------------------------------------------------------------------
+# Bus compaction — optional integration from prototype.agent_comm.compactor
+# ---------------------------------------------------------------------------
+
+try:
+    from prototype.agent_comm.compactor import BusCompactor, OffsetStore
+    _HAS_COMPACTOR = True
+except ImportError:
+    _HAS_COMPACTOR = False
+
+# ---------------------------------------------------------------------------
 # Paths — resolve relative to this script's location
 # ---------------------------------------------------------------------------
 
@@ -402,10 +412,14 @@ class MultiTeamRunner:
         self.heartbeat_interval: float = config.get("heartbeat_interval", 30.0)
         self.dead_agent_timeout: float = config.get("dead_agent_timeout", 120.0)
         self.cleanup_interval: float = config.get("cleanup_interval", 600.0)
+        self.compaction_interval: float = config.get("compaction_interval", 0.0)
 
         self._stop_event = threading.Event()
         self._hb_thread: threading.Thread | None = None
         self._cleanup_thread: threading.Thread | None = None
+        self._compaction_thread: threading.Thread | None = None
+        self._compactor: BusCompactor | None = None
+        self._offset_store: OffsetStore | None = None
         self._started_at: float | None = None
         self._phase = "init"
 

@@ -184,22 +184,10 @@ def benchmark_rate_limiter(repo_root: str, iterations: int = 5) -> dict:
     """Measure denial rate under load. Target: <1% false denials."""
     sys.path.insert(0, repo_root)
 
-    rate_limiter_class = None
-    for module_path, class_name in [
-        ("prototype.agent_comm.state", "RateLimiter"),
-        ("storage.coordination.rate_limiter", "RateLimiter"),
-        ("prototype.agent_comm.rate_limiter", "RateLimiter"),
-    ]:
-        try:
-            mod = __import__(module_path, fromlist=[class_name])
-            rate_limiter_class = getattr(mod, class_name, None)
-            if rate_limiter_class:
-                break
-        except (ImportError, AttributeError):
-            continue
-
-    if rate_limiter_class is None:
-        return {"error": "No RateLimiter class found", "benchmarks": {}}
+    try:
+        from prototype.agent_comm.rate_limiter import RateLimiter
+    except ImportError as exc:
+        return {"error": f"Cannot import RateLimiter from prototype.agent_comm.rate_limiter: {exc}", "benchmarks": {}}
 
     results = {}
     thread_counts = [1, 4, 8, 16]
@@ -211,44 +199,46 @@ def benchmark_rate_limiter(repo_root: str, iterations: int = 5) -> dict:
         false_denials = 0  # denials when under the limit
 
         for iteration in range(iterations):
-            try:
+            with tempfile.TemporaryDirectory(prefix="bench_rl_") as tmpdir:
+                db_path = os.path.join(tmpdir, "rate_limiter.db")
+                rl = RateLimiter(db_path)
                 # Set limit high enough that requests WITHIN limit should never be denied
-                rl = rate_limiter_class(max_requests=1000, window_seconds=60)
-            except TypeError:
-                return {"error": "RateLimiter constructor incompatible", "benchmarks": {}}
+                # 20 requests/thread * 16 threads = 320, well under 1000 limit
+                rl.configure("bench_endpoint", max_calls=1000, window_seconds=60)
 
-            requests_per_thread = 20  # 20 * 16 = 320, well under 1000 limit
-            barrier = threading.Barrier(num_threads)
-            lock = threading.Lock()
-            local_times: list[float] = []
-            local_denials = [0]
-            local_total = [0]
+                requests_per_thread = 20
+                barrier = threading.Barrier(num_threads)
+                lock = threading.Lock()
+                local_times: list[float] = []
+                local_denials = [0]
+                local_total = [0]
 
-            def checker(tid: int):
-                try:
-                    barrier.wait(timeout=10)
-                except threading.BrokenBarrierError:
-                    return
-                for j in range(requests_per_thread):
-                    start = time.perf_counter()
-                    allowed = rl.check(f"agent-{tid}")
-                    elapsed = (time.perf_counter() - start) * 1000
-                    with lock:
-                        local_times.append(elapsed)
-                        local_total[0] += 1
-                        if not allowed:
-                            local_denials[0] += 1
+                def checker(tid: int):
+                    try:
+                        barrier.wait(timeout=10)
+                    except threading.BrokenBarrierError:
+                        return
+                    for j in range(requests_per_thread):
+                        start = time.perf_counter()
+                        allowed = rl.check_and_reserve("bench_endpoint", f"agent-{tid}")
+                        elapsed = (time.perf_counter() - start) * 1000
+                        with lock:
+                            local_times.append(elapsed)
+                            local_total[0] += 1
+                            if not allowed:
+                                local_denials[0] += 1
 
-            threads = [threading.Thread(target=checker, args=(i,)) for i in range(num_threads)]
-            for t in threads:
-                t.start()
-            for t in threads:
-                t.join(timeout=15)
+                threads = [threading.Thread(target=checker, args=(i,)) for i in range(num_threads)]
+                for t in threads:
+                    t.start()
+                for t in threads:
+                    t.join(timeout=15)
 
-            check_times.extend(local_times)
-            total_checks += local_total[0]
-            false_denials += local_denials[0]
-            total_denials += local_denials[0]
+                check_times.extend(local_times)
+                total_checks += local_total[0]
+                false_denials += local_denials[0]
+                total_denials += local_denials[0]
+                rl.close()
 
         denial_rate = (false_denials / total_checks * 100) if total_checks > 0 else 0
         stats = compute_stats(check_times)
