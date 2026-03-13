@@ -88,14 +88,11 @@ def load_network():
                 if reason.startswith("shared_tags:"):
                     for t in reason.split(":", 1)[1].split(","):
                         tags.add(t.strip())
-            adj[node_id].append({
-                "to": ptr["to"],
-                "weight": ptr.get("weight", 0),
-                "strength": ptr.get("strength", "unclassified"),
-                "reasons": ptr.get("reasons", []),
-            })
+            # Use tuples instead of dicts for memory efficiency
+            adj[node_id].append((ptr["to"], ptr.get("weight", 0), ptr.get("strength", "unclassified")))
         node_tags[node_id] = tags
 
+    del data  # Free the raw JSON immediately
     return adj, node_domains, node_tags
 
 
@@ -133,16 +130,15 @@ def strength_dijkstra(adj, source, target):
             strengths.reverse()
             return path, strengths, -neg_w, len(path) - 1
 
-        for edge in adj.get(node, []):
-            nb = edge["to"]
+        for nb, w, s in adj.get(node, []):
             if nb in settled:
                 continue
-            tier = STRENGTH_COST.get(edge["strength"], 4)
-            new_cost = (str_sum + tier, neg_w - edge["weight"])
+            tier = STRENGTH_COST.get(s, 4)
+            new_cost = (str_sum + tier, neg_w - w)
             old = best_cost.get(nb)
             if old is None or new_cost < old:
                 best_cost[nb] = new_cost
-                prev[nb] = (node, edge["strength"])
+                prev[nb] = (node, s)
                 heapq.heappush(heap, (new_cost[0], new_cost[1], counter, nb))
                 counter += 1
 
@@ -170,13 +166,12 @@ def max_weight_dijkstra(adj, source, target):
         current_w = -neg_w
         if u == target:
             break
-        for edge in adj.get(u, []):
-            nb = edge["to"]
-            nw = current_w + edge["weight"]
+        for nb, w, s in adj.get(u, []):
+            nw = current_w + w
             if nw > dist[nb]:
                 dist[nb] = nw
                 prev[nb] = u
-                edge_str[nb] = edge["strength"]
+                edge_str[nb] = s
                 heapq.heappush(heap, (-nw, counter, nb))
                 counter += 1
 
