@@ -1,0 +1,883 @@
+{
+  "run": "run-006",
+  "division": "6A",
+  "task": "Deep Network Analysis",
+  "generated": "2026-03-12",
+  "network_stats": {
+    "total_nodes": 310,
+    "total_edges": 4809,
+    "unique_edges": 4809,
+    "edge_type_counts": {
+      "shared_tags": 4426,
+      "explicit_reference": 1093,
+      "category_affinity": 708,
+      "backlink": 33,
+      "tag_upgrade": 6
+    }
+  },
+  "node_type_counts": {
+    "KB": 46,
+    "SCR": 57,
+    "SOP": 22,
+    "SRC": 48,
+    "TEAM": 22,
+    "TOOL": 1,
+    "wiki": 114
+  },
+  "analyses": {
+    "dna1_community_detection": {
+      "agent": "DNA-1",
+      "task": "community_detection_label_propagation",
+      "iterations_run": 5,
+      "converged": true,
+      "num_communities": 4,
+      "community_sizes": [
+        143,
+        61,
+        58,
+        48
+      ],
+      "top_communities": [
+        {
+          "community_id": 69,
+          "size": 143,
+          "type_distribution": {
+            "KB": 12,
+            "SCR": 26,
+            "SOP": 6,
+            "SRC": 45,
+            "TEAM": 6,
+            "wiki": 48
+          },
+          "dominant_type": "wiki",
+          "dominant_count": 48,
+          "sample_members": [
+            "KB-0002",
+            "KB-0004",
+            "KB-0005",
+            "KB-0010",
+            "KB-0012",
+            "KB-0013",
+            "KB-0014",
+            "KB-0020"
+          ]
+        },
+        {
+          "community_id": 104,
+          "size": 61,
+          "type_distribution": {
+            "KB": 24,
+            "SCR": 14,
+            "SOP": 13,
+            "TEAM": 9,
+            "TOOL": 1
+          },
+          "dominant_type": "KB",
+          "dominant_count": 24,
+          "sample_members": [
+            "KB-0003",
+            "KB-0015",
+            "KB-0016",
+            "KB-0017",
+            "KB-0018",
+            "KB-0019",
+            "KB-0021",
+            "KB-0022"
+          ]
+        },
+        {
+          "community_id": 177,
+          "size": 58,
+          "type_distribution": {
+            "KB": 10,
+            "SCR": 17,
+            "SOP": 3,
+            "TEAM": 5,
+            "wiki": 23
+          },
+          "dominant_type": "wiki",
+          "dominant_count": 23,
+          "sample_members": [
+            "KB-0001",
+            "KB-0006",
+            "KB-0007",
+            "KB-0008",
+            "KB-0009",
+            "KB-0011",
+            "KB-0030",
+            "KB-0033"
+          ]
+        },
+        {
+          "community_id": 152,
+          "size": 48,
+          "type_distribution": {
+            "SRC": 3,
+            "TEAM": 2,
+            "wiki": 43
+          },
+          "dominant_type": "wiki",
+          "dominant_count": 43,
+          "sample_members": [
+            "SRC-0032",
+            "SRC-0033",
+            "SRC-0034",
+            "TEAM-0005",
+            "TEAM-0012",
+            "wiki-ai:AI-complete",
+            "wiki-ai:AI_anthropomorphism",
+            "wiki-ai:ASR-complete"
+          ]
+        }
+      ],
+      "isolated_nodes": []
+    },
+    "dna2_pagerank": {
+      "agent": "DNA-2",
+      "task": "pagerank_analysis",
+      "damping": 0.85,
+      "iterations": 50,
+      "top_20": [
+        {
+          "node": "SCR-0018",
+          "pagerank": 0.01780931,
+          "degree": 124,
+          "type": "SCR"
+        },
+        {
+          "node": "KB-0010",
+          "pagerank": 0.01763098,
+          "degree": 127,
+          "type": "KB"
+        },
+        {
+          "node": "SCR-0007",
+          "pagerank": 0.01603039,
+          "degree": 125,
+          "type": "SCR"
+        },
+        {
+          "node": "KB-0005",
+          "pagerank": 0.01530445,
+          "degree": 109,
+          "type": "KB"
+        },
+        {
+          "node": "SCR-0006",
+          "pagerank": 0.01237745,
+          "degree": 95,
+          "type": "SCR"
+        },
+        {
+          "node": "TEAM-0012",
+          "pagerank": 0.01229864,
+          "degree": 85,
+          "type": "TEAM"
+        },
+        {
+          "node": "SCR-0009",
+          "pagerank": 0.01210957,
+          "degree": 93,
+          "type": "SCR"
+        },
+        {
+          "node": "SCR-0008",
+          "pagerank": 0.01199348,
+          "degree": 92,
+          "type": "SCR"
+        },
+        {
+          "node": "KB-0004",
+          "pagerank": 0.01195106,
+          "degree": 100,
+          "type": "KB"
+        },
+        {
+          "node": "SCR-0010",
+          "pagerank": 0.01185426,
+          "degree": 91,
+          "type": "SCR"
+        },
+        {
+          "node": "SCR-0015",
+          "pagerank": 0.01105055,
+          "degree": 84,
+          "type": "SCR"
+        },
+        {
+          "node": "SRC-0033",
+          "pagerank": 0.01070477,
+          "degree": 69,
+          "type": "SRC"
+        },
+        {
+          "node": "TEAM-0005",
+          "pagerank": 0.00983307,
+          "degree": 66,
+          "type": "TEAM"
+        },
+        {
+          "node": "SRC-0032",
+          "pagerank": 0.00947332,
+          "degree": 62,
+          "type": "SRC"
+        },
+        {
+          "node": "SRC-0034",
+          "pagerank": 0.009407,
+          "degree": 62,
+          "type": "SRC"
+        },
+        {
+          "node": "SCR-0021",
+          "pagerank": 0.00937507,
+          "degree": 73,
+          "type": "SCR"
+        },
+        {
+          "node": "KB-0014",
+          "pagerank": 0.00917024,
+          "degree": 75,
+          "type": "KB"
+        },
+        {
+          "node": "SCR-0024",
+          "pagerank": 0.00905012,
+          "degree": 70,
+          "type": "SCR"
+        },
+        {
+          "node": "SCR-0023",
+          "pagerank": 0.00903482,
+          "degree": 70,
+          "type": "SCR"
+        },
+        {
+          "node": "KB-0043",
+          "pagerank": 0.00891367,
+          "degree": 73,
+          "type": "KB"
+        }
+      ],
+      "bottom_20": [
+        {
+          "node": "wiki-ai:List_of_artificial_intelligence_journals",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "wiki-ai:Lists_of_open-source_artificial_intelligence_software",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "wiki-ai:MAUVE_(metric)",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "wiki-ai:Machine_perception",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "wiki-ai:MindsDB",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "wiki-ai:Mode_collapse",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "wiki-ai:Non-human",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "wiki-ai:Pattern_theory",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "wiki-ai:Personoid",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "wiki-ai:Principle_of_rationality",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "wiki-ai:Reasoning_model",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "wiki-ai:Resisting_AI",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "wiki-ai:Situated",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "wiki-ai:Software_agent",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "wiki-ai:Sparkles_emoji",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "wiki-ai:TensorFlow_Hub",
+          "pagerank": 0.00148364,
+          "degree": 8,
+          "type": "wiki"
+        },
+        {
+          "node": "KB-0030",
+          "pagerank": 0.00146768,
+          "degree": 4,
+          "type": "KB"
+        },
+        {
+          "node": "KB-0037",
+          "pagerank": 0.00106416,
+          "degree": 3,
+          "type": "KB"
+        },
+        {
+          "node": "KB-0034",
+          "pagerank": 0.00094947,
+          "degree": 2,
+          "type": "KB"
+        },
+        {
+          "node": "KB-0045",
+          "pagerank": 0.00094687,
+          "degree": 4,
+          "type": "KB"
+        }
+      ],
+      "spearman_pr_vs_degree": 0.986,
+      "top20_overlap_count": 20,
+      "top20_overlap_nodes": [
+        "KB-0004",
+        "KB-0005",
+        "KB-0010",
+        "KB-0014",
+        "KB-0043",
+        "SCR-0006",
+        "SCR-0007",
+        "SCR-0008",
+        "SCR-0009",
+        "SCR-0010",
+        "SCR-0015",
+        "SCR-0018",
+        "SCR-0021",
+        "SCR-0023",
+        "SCR-0024",
+        "SRC-0032",
+        "SRC-0033",
+        "SRC-0034",
+        "TEAM-0005",
+        "TEAM-0012"
+      ],
+      "correlation_analysis": "high"
+    },
+    "dna3_path_redundancy": {
+      "agent": "DNA-3",
+      "task": "path_redundancy_analysis",
+      "pairs_analyzed": 20,
+      "pairs_with_paths": 20,
+      "total_paths_found": 2409122,
+      "avg_redundancy": 120456.1,
+      "most_redundant_pair": {
+        "source": "SOP-017",
+        "target": "SCR-0025",
+        "num_paths": 458776,
+        "path_lengths": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "shortest": 1
+      },
+      "least_redundant_pair": {
+        "source": "wiki-ai:Automated_Mathematician",
+        "target": "wiki-ai:GOLOG",
+        "num_paths": 18381,
+        "path_lengths": [
+          3,
+          4,
+          5
+        ],
+        "shortest": 3
+      },
+      "bottleneck_nodes": [],
+      "top_intermediate_nodes": [
+        {
+          "node": "KB-0004",
+          "appearances": 403451
+        },
+        {
+          "node": "SCR-0007",
+          "appearances": 344409
+        },
+        {
+          "node": "KB-0005",
+          "appearances": 278901
+        },
+        {
+          "node": "KB-0010",
+          "appearances": 264484
+        },
+        {
+          "node": "KB-0014",
+          "appearances": 261020
+        },
+        {
+          "node": "SCR-0009",
+          "appearances": 237319
+        },
+        {
+          "node": "SCR-0006",
+          "appearances": 233115
+        },
+        {
+          "node": "SCR-0010",
+          "appearances": 219376
+        },
+        {
+          "node": "SCR-0008",
+          "appearances": 218760
+        },
+        {
+          "node": "KB-0043",
+          "appearances": 196098
+        },
+        {
+          "node": "SCR-0018",
+          "appearances": 186639
+        },
+        {
+          "node": "SCR-0021",
+          "appearances": 167538
+        },
+        {
+          "node": "SCR-0023",
+          "appearances": 153174
+        },
+        {
+          "node": "TEAM-0014",
+          "appearances": 147693
+        },
+        {
+          "node": "SCR-0024",
+          "appearances": 147359
+        }
+      ],
+      "pair_details": [
+        {
+          "source": "SRC-0020",
+          "target": "wiki-ai:Character_computing",
+          "num_paths": 82064,
+          "path_lengths": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 2
+        },
+        {
+          "source": "wiki-ai:Automated_Mathematician",
+          "target": "wiki-ai:GOLOG",
+          "num_paths": 18381,
+          "path_lengths": [
+            3,
+            4,
+            5
+          ],
+          "shortest": 3
+        },
+        {
+          "source": "wiki-ai:Character_computing",
+          "target": "wiki-ai:Artificial_intelligence_arms_race",
+          "num_paths": 49394,
+          "path_lengths": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 2
+        },
+        {
+          "source": "SRC-0020",
+          "target": "SOP-019",
+          "num_paths": 97933,
+          "path_lengths": [
+            3,
+            4,
+            5
+          ],
+          "shortest": 3
+        },
+        {
+          "source": "wiki-ai:Intelligent_decision_support_system",
+          "target": "SCR-0013",
+          "num_paths": 87795,
+          "path_lengths": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 1
+        },
+        {
+          "source": "TEAM-0006",
+          "target": "wiki-ai:Automated_negotiation",
+          "num_paths": 91121,
+          "path_lengths": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 2
+        },
+        {
+          "source": "SCR-0011",
+          "target": "SRC-0026",
+          "num_paths": 231192,
+          "path_lengths": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 2
+        },
+        {
+          "source": "wiki-ai:Universal_psychometrics",
+          "target": "wiki-ai:Galaxy_AI",
+          "num_paths": 55288,
+          "path_lengths": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 2
+        },
+        {
+          "source": "wiki-ai:Lifelong_Planning_A*",
+          "target": "SRC-0038",
+          "num_paths": 96609,
+          "path_lengths": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 2
+        },
+        {
+          "source": "KB-0024",
+          "target": "SOP-021",
+          "num_paths": 117798,
+          "path_lengths": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 1
+        },
+        {
+          "source": "wiki-ai:AI_safety",
+          "target": "wiki-ai:Workplace_impact_of_artificial_intelligence",
+          "num_paths": 32788,
+          "path_lengths": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 2
+        },
+        {
+          "source": "KB-0029",
+          "target": "KB-0004",
+          "num_paths": 43230,
+          "path_lengths": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 2
+        },
+        {
+          "source": "SOP-013",
+          "target": "SRC-0035",
+          "num_paths": 105660,
+          "path_lengths": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 2
+        },
+        {
+          "source": "SOP-017",
+          "target": "SCR-0025",
+          "num_paths": 458776,
+          "path_lengths": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 1
+        },
+        {
+          "source": "SRC-0008",
+          "target": "SRC-0029",
+          "num_paths": 242733,
+          "path_lengths": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 2
+        },
+        {
+          "source": "SRC-0048",
+          "target": "SCR-0016",
+          "num_paths": 87739,
+          "path_lengths": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 2
+        },
+        {
+          "source": "KB-0004",
+          "target": "wiki-ai:Hierarchical_control_system",
+          "num_paths": 129921,
+          "path_lengths": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 2
+        },
+        {
+          "source": "wiki-ai:Automated_negotiation",
+          "target": "SCR-0044",
+          "num_paths": 67763,
+          "path_lengths": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 2
+        },
+        {
+          "source": "SCR-0021",
+          "target": "wiki-ai:AI-assisted_software_development",
+          "num_paths": 214051,
+          "path_lengths": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 2
+        },
+        {
+          "source": "wiki-ai:Lists_of_open-source_artificial_intelligence_software",
+          "target": "SOP-026",
+          "num_paths": 98886,
+          "path_lengths": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "shortest": 2
+        }
+      ]
+    },
+    "dna4_temporal_evolution": {
+      "agent": "DNA-4",
+      "task": "temporal_evolution_simulation",
+      "type_addition_order": [
+        "SOP",
+        "KB",
+        "SCR",
+        "SRC",
+        "TEAM",
+        "TOOL",
+        "wiki"
+      ],
+      "stages": [
+        {
+          "stage": 1,
+          "added_type": "SOP",
+          "added_type_label": "SOPs (procedures)",
+          "nodes_added": 22,
+          "total_nodes": 22,
+          "stats": {
+            "nodes": 22,
+            "edges": 41,
+            "density": 0.177489,
+            "avg_degree": 3.73,
+            "largest_component": 19,
+            "num_components": 4,
+            "diameter_estimate": 4
+          }
+        },
+        {
+          "stage": 2,
+          "added_type": "KB",
+          "added_type_label": "Knowledge Base",
+          "nodes_added": 46,
+          "total_nodes": 68,
+          "stats": {
+            "nodes": 68,
+            "edges": 343,
+            "density": 0.150571,
+            "avg_degree": 10.09,
+            "largest_component": 68,
+            "num_components": 1,
+            "diameter_estimate": 5
+          }
+        },
+        {
+          "stage": 3,
+          "added_type": "SCR",
+          "added_type_label": "Scripts",
+          "nodes_added": 57,
+          "total_nodes": 125,
+          "stats": {
+            "nodes": 125,
+            "edges": 1154,
+            "density": 0.148903,
+            "avg_degree": 18.46,
+            "largest_component": 125,
+            "num_components": 1,
+            "diameter_estimate": 4
+          }
+        },
+        {
+          "stage": 4,
+          "added_type": "SRC",
+          "added_type_label": "Sources",
+          "nodes_added": 48,
+          "total_nodes": 173,
+          "stats": {
+            "nodes": 173,
+            "edges": 1884,
+            "density": 0.12663,
+            "avg_degree": 21.78,
+            "largest_component": 173,
+            "num_components": 1,
+            "diameter_estimate": 4
+          }
+        },
+        {
+          "stage": 5,
+          "added_type": "TEAM",
+          "added_type_label": "Team logs",
+          "nodes_added": 22,
+          "total_nodes": 195,
+          "stats": {
+            "nodes": 195,
+            "edges": 2543,
+            "density": 0.134444,
+            "avg_degree": 26.08,
+            "largest_component": 195,
+            "num_components": 1,
+            "diameter_estimate": 4
+          }
+        },
+        {
+          "stage": 6,
+          "added_type": "TOOL",
+          "added_type_label": "Tools",
+          "nodes_added": 1,
+          "total_nodes": 196,
+          "stats": {
+            "nodes": 196,
+            "edges": 2566,
+            "density": 0.134275,
+            "avg_degree": 26.18,
+            "largest_component": 196,
+            "num_components": 1,
+            "diameter_estimate": 4
+          }
+        },
+        {
+          "stage": 7,
+          "added_type": "wiki",
+          "added_type_label": "Wiki entries",
+          "nodes_added": 114,
+          "total_nodes": 310,
+          "stats": {
+            "nodes": 310,
+            "edges": 3624,
+            "density": 0.075666,
+            "avg_degree": 23.38,
+            "largest_component": 310,
+            "num_components": 1,
+            "diameter_estimate": 4
+          }
+        }
+      ],
+      "key_observations": [
+        "Adding KB caused large component growth: 19 -> 68",
+        "Adding KB increased connectivity: avg_deg 3.73 -> 10.09",
+        "Adding SCR caused large component growth: 68 -> 125",
+        "Adding SCR increased connectivity: avg_deg 10.09 -> 18.46",
+        "Adding wiki caused large component growth: 196 -> 310"
+      ]
+    }
+  }
+}
