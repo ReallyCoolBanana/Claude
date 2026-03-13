@@ -1,0 +1,3387 @@
+{
+  "run_id": "run006",
+  "timestamp": "2026-03-13T00:11:54.994993Z",
+  "mission": "Explore all unvisited nodes in the pointer network",
+  "summary": {
+    "total_network_nodes": 310,
+    "unvisited_before_run": 134,
+    "visited_before_run": 176,
+    "successfully_reached": 134,
+    "failed_to_reach": 0,
+    "coverage_before": 56.8,
+    "coverage_after": 100.0,
+    "nodes_still_unvisited_in_network": 0,
+    "truly_unreachable_nodes": 0
+  },
+  "methodology": {
+    "inbound_strategy": "48 nodes reachable via BFS from SOP nodes (SOP -> intermediate -> target)",
+    "outbound_strategy": "86 wiki-ai nodes with zero incoming edges navigated outbound (wiki -> known node)",
+    "note": "All 86 wiki-ai nodes are source-only (no incoming edges from any network node). They were visited by starting FROM them and navigating to known nodes.",
+    "pathfinding": "BFS with max depth 15"
+  },
+  "node_categories": {
+    "inbound_reachable": {
+      "count": 48,
+      "description": "Nodes reachable from SOP nodes via forward edges",
+      "domains": {
+        "knowledge-base": 2,
+        "scripts": 6,
+        "sources": 26,
+        "wikipedia": 14
+      }
+    },
+    "outbound_only": {
+      "count": 86,
+      "description": "Wiki-ai nodes with no incoming edges; navigated outbound to known nodes",
+      "all_wikipedia": true
+    }
+  },
+  "domain_breakdown": {
+    "knowledge-base": 3,
+    "scripts": 6,
+    "sources": 23,
+    "wikipedia": 102
+  },
+  "interesting_paths": {
+    "longest": [
+      {
+        "path": [
+          "SOP-023",
+          "SCR-0047",
+          "SCR-0035",
+          "SRC-0016"
+        ],
+        "target": "SRC-0016",
+        "hop_count": 3,
+        "total_weight": 13,
+        "direction": "inbound"
+      },
+      {
+        "path": [
+          "SOP-017",
+          "KB-0004",
+          "KB-0012",
+          "SRC-0022"
+        ],
+        "target": "SRC-0022",
+        "hop_count": 3,
+        "total_weight": 10,
+        "direction": "inbound"
+      },
+      {
+        "path": [
+          "SOP-017",
+          "KB-0004",
+          "KB-0013",
+          "SRC-0044"
+        ],
+        "target": "SRC-0044",
+        "hop_count": 3,
+        "total_weight": 10,
+        "direction": "inbound"
+      },
+      {
+        "path": [
+          "SOP-023",
+          "SCR-0045",
+          "SRC-0032",
+          "wiki-ai:AI-assisted_software_development"
+        ],
+        "target": "wiki-ai:AI-assisted_software_development",
+        "hop_count": 3,
+        "total_weight": 6,
+        "direction": "inbound"
+      },
+      {
+        "path": [
+          "SOP-023",
+          "SCR-0048",
+          "SCR-0018",
+          "wiki-ai:Artificial_intelligence_in_physical_therapy"
+        ],
+        "target": "wiki-ai:Artificial_intelligence_in_physical_therapy",
+        "hop_count": 3,
+        "total_weight": 8,
+        "direction": "inbound"
+      }
+    ],
+    "heaviest": [
+      {
+        "path": [
+          "SOP-023",
+          "SCR-0047",
+          "SCR-0035",
+          "SRC-0016"
+        ],
+        "target": "SRC-0016",
+        "hop_count": 3,
+        "total_weight": 13,
+        "direction": "inbound"
+      },
+      {
+        "path": [
+          "SOP-017",
+          "KB-0004",
+          "KB-0012",
+          "SRC-0022"
+        ],
+        "target": "SRC-0022",
+        "hop_count": 3,
+        "total_weight": 10,
+        "direction": "inbound"
+      },
+      {
+        "path": [
+          "SOP-017",
+          "KB-0004",
+          "KB-0013",
+          "SRC-0044"
+        ],
+        "target": "SRC-0044",
+        "hop_count": 3,
+        "total_weight": 10,
+        "direction": "inbound"
+      },
+      {
+        "path": [
+          "SOP-017",
+          "KB-0004",
+          "KB-0012",
+          "SRC-0027"
+        ],
+        "target": "SRC-0027",
+        "hop_count": 3,
+        "total_weight": 10,
+        "direction": "inbound"
+      },
+      {
+        "path": [
+          "SOP-017",
+          "KB-0004",
+          "KB-0010",
+          "SRC-0036"
+        ],
+        "target": "SRC-0036",
+        "hop_count": 3,
+        "total_weight": 10,
+        "direction": "inbound"
+      }
+    ]
+  },
+  "agent_summaries": {
+    "exp-1": {
+      "total_assigned": 34,
+      "reached": 34,
+      "failed": 0,
+      "total_hops": 51,
+      "total_weight": 104,
+      "routes": [
+        {
+          "target": "KB-0012",
+          "domain": "knowledge-base",
+          "path": [
+            "SOP-017",
+            "KB-0004",
+            "KB-0012"
+          ],
+          "hop_count": 2,
+          "total_weight": 8,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-017",
+              "to": "KB-0004",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "KB-0004",
+              "to": "KB-0012",
+              "weight": 6,
+              "strength": "supporting"
+            }
+          ]
+        },
+        {
+          "target": "SCR-0015",
+          "domain": "scripts",
+          "path": [
+            "SOP-023",
+            "SCR-0015"
+          ],
+          "hop_count": 1,
+          "total_weight": 2,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0015",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SCR-0048",
+          "domain": "scripts",
+          "path": [
+            "SOP-023",
+            "SCR-0048"
+          ],
+          "hop_count": 1,
+          "total_weight": 3,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0048",
+              "weight": 3,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0016",
+          "domain": "sources",
+          "path": [
+            "SOP-023",
+            "SCR-0047",
+            "SCR-0035",
+            "SRC-0016"
+          ],
+          "hop_count": 3,
+          "total_weight": 13,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0047",
+              "weight": 4,
+              "strength": "supporting"
+            },
+            {
+              "from": "SCR-0047",
+              "to": "SCR-0035",
+              "weight": 8,
+              "strength": "primary"
+            },
+            {
+              "from": "SCR-0035",
+              "to": "SRC-0016",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0022",
+          "domain": "sources",
+          "path": [
+            "SOP-017",
+            "KB-0004",
+            "KB-0012",
+            "SRC-0022"
+          ],
+          "hop_count": 3,
+          "total_weight": 10,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-017",
+              "to": "KB-0004",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "KB-0004",
+              "to": "KB-0012",
+              "weight": 6,
+              "strength": "supporting"
+            },
+            {
+              "from": "KB-0012",
+              "to": "SRC-0022",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0034",
+          "domain": "sources",
+          "path": [
+            "SOP-016",
+            "KB-0005",
+            "SRC-0034"
+          ],
+          "hop_count": 2,
+          "total_weight": 3,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-016",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            },
+            {
+              "from": "KB-0005",
+              "to": "SRC-0034",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0039",
+          "domain": "sources",
+          "path": [
+            "SOP-018",
+            "KB-0043",
+            "SRC-0039"
+          ],
+          "hop_count": 2,
+          "total_weight": 3,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-018",
+              "to": "KB-0043",
+              "weight": 1,
+              "strength": "tangential"
+            },
+            {
+              "from": "KB-0043",
+              "to": "SRC-0039",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0044",
+          "domain": "sources",
+          "path": [
+            "SOP-017",
+            "KB-0004",
+            "KB-0013",
+            "SRC-0044"
+          ],
+          "hop_count": 3,
+          "total_weight": 10,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-017",
+              "to": "KB-0004",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "KB-0004",
+              "to": "KB-0013",
+              "weight": 6,
+              "strength": "supporting"
+            },
+            {
+              "from": "KB-0013",
+              "to": "SRC-0044",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:AI-assisted_software_development",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0045",
+            "SRC-0032",
+            "wiki-ai:AI-assisted_software_development"
+          ],
+          "hop_count": 3,
+          "total_weight": 6,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0045",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0045",
+              "to": "SRC-0032",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "SRC-0032",
+              "to": "wiki-ai:AI-assisted_software_development",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Artificial_intelligence_in_physical_therapy",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0048",
+            "SCR-0018",
+            "wiki-ai:Artificial_intelligence_in_physical_therapy"
+          ],
+          "hop_count": 3,
+          "total_weight": 8,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0048",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0048",
+              "to": "SCR-0018",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0018",
+              "to": "wiki-ai:Artificial_intelligence_in_physical_therapy",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Knowledge_cutoff",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0048",
+            "SCR-0018",
+            "wiki-ai:Knowledge_cutoff"
+          ],
+          "hop_count": 3,
+          "total_weight": 8,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0048",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0048",
+              "to": "SCR-0018",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0018",
+              "to": "wiki-ai:Knowledge_cutoff",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Perusall",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0048",
+            "SCR-0018",
+            "wiki-ai:Perusall"
+          ],
+          "hop_count": 3,
+          "total_weight": 8,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0048",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0048",
+              "to": "SCR-0018",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0018",
+              "to": "wiki-ai:Perusall",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:AI_Overviews",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:AI_Overviews",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:AI_Overviews",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Admissible_heuristic",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Admissible_heuristic",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Admissible_heuristic",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Artificial_intelligence_and_elections",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Artificial_intelligence_and_elections",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Artificial_intelligence_and_elections",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Automated_Mathematician",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Automated_Mathematician",
+            "KB-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Automated_Mathematician",
+              "to": "KB-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Business_process_automation",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Business_process_automation",
+            "KB-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Business_process_automation",
+              "to": "KB-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Cognitive_philology",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Cognitive_philology",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Cognitive_philology",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Computer_audition",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Computer_audition",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Computer_audition",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Dynamic_epistemic_logic",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Dynamic_epistemic_logic",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Dynamic_epistemic_logic",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Epistemic_modal_logic",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Epistemic_modal_logic",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Epistemic_modal_logic",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:GOLOG",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:GOLOG",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:GOLOG",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Hierarchical_control_system",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Hierarchical_control_system",
+            "KB-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Hierarchical_control_system",
+              "to": "KB-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Instance_(computer_science)",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Instance_(computer_science)",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Instance_(computer_science)",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Intelligent_decision_support_system",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Intelligent_decision_support_system",
+            "KB-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Intelligent_decision_support_system",
+              "to": "KB-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Learnable_function",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Learnable_function",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Learnable_function",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:List_of_programming_languages_for_artificial_intelligence",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:List_of_programming_languages_for_artificial_intelligence",
+            "KB-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:List_of_programming_languages_for_artificial_intelligence",
+              "to": "KB-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Means-ends_analysis",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Means-ends_analysis",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Means-ends_analysis",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Neural_scaling_law",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Neural_scaling_law",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Neural_scaling_law",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Personoid",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Personoid",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Personoid",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Reasoning_model",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Reasoning_model",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Reasoning_model",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Situated",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Situated",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Situated",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Superintelligence_ban",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Superintelligence_ban",
+            "KB-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Superintelligence_ban",
+              "to": "KB-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Workplace_impact_of_artificial_intelligence",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Workplace_impact_of_artificial_intelligence",
+            "KB-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Workplace_impact_of_artificial_intelligence",
+              "to": "KB-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        }
+      ]
+    },
+    "exp-2": {
+      "total_assigned": 34,
+      "reached": 34,
+      "failed": 0,
+      "total_hops": 52,
+      "total_weight": 102,
+      "routes": [
+        {
+          "target": "KB-0036",
+          "domain": "knowledge-base",
+          "path": [
+            "SOP-020",
+            "KB-0033",
+            "KB-0036"
+          ],
+          "hop_count": 2,
+          "total_weight": 7,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-020",
+              "to": "KB-0033",
+              "weight": 1,
+              "strength": "tangential"
+            },
+            {
+              "from": "KB-0033",
+              "to": "KB-0036",
+              "weight": 6,
+              "strength": "supporting"
+            }
+          ]
+        },
+        {
+          "target": "SCR-0028",
+          "domain": "scripts",
+          "path": [
+            "SOP-017",
+            "SCR-0028"
+          ],
+          "hop_count": 1,
+          "total_weight": 2,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-017",
+              "to": "SCR-0028",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0007",
+          "domain": "sources",
+          "path": [
+            "SOP-017",
+            "SCR-0007",
+            "SRC-0007"
+          ],
+          "hop_count": 2,
+          "total_weight": 4,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-017",
+              "to": "SCR-0007",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0007",
+              "to": "SRC-0007",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0018",
+          "domain": "sources",
+          "path": [
+            "SOP-018",
+            "KB-0043",
+            "SRC-0018"
+          ],
+          "hop_count": 2,
+          "total_weight": 3,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-018",
+              "to": "KB-0043",
+              "weight": 1,
+              "strength": "tangential"
+            },
+            {
+              "from": "KB-0043",
+              "to": "SRC-0018",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0027",
+          "domain": "sources",
+          "path": [
+            "SOP-017",
+            "KB-0004",
+            "KB-0012",
+            "SRC-0027"
+          ],
+          "hop_count": 3,
+          "total_weight": 10,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-017",
+              "to": "KB-0004",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "KB-0004",
+              "to": "KB-0012",
+              "weight": 6,
+              "strength": "supporting"
+            },
+            {
+              "from": "KB-0012",
+              "to": "SRC-0027",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0036",
+          "domain": "sources",
+          "path": [
+            "SOP-017",
+            "KB-0004",
+            "KB-0010",
+            "SRC-0036"
+          ],
+          "hop_count": 3,
+          "total_weight": 10,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-017",
+              "to": "KB-0004",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "KB-0004",
+              "to": "KB-0010",
+              "weight": 6,
+              "strength": "supporting"
+            },
+            {
+              "from": "KB-0010",
+              "to": "SRC-0036",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0041",
+          "domain": "sources",
+          "path": [
+            "SOP-017",
+            "KB-0004",
+            "KB-0013",
+            "SRC-0041"
+          ],
+          "hop_count": 3,
+          "total_weight": 10,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-017",
+              "to": "KB-0004",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "KB-0004",
+              "to": "KB-0013",
+              "weight": 6,
+              "strength": "supporting"
+            },
+            {
+              "from": "KB-0013",
+              "to": "SRC-0041",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0046",
+          "domain": "sources",
+          "path": [
+            "SOP-018",
+            "KB-0043",
+            "SRC-0046"
+          ],
+          "hop_count": 2,
+          "total_weight": 4,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-018",
+              "to": "KB-0043",
+              "weight": 1,
+              "strength": "tangential"
+            },
+            {
+              "from": "KB-0043",
+              "to": "SRC-0046",
+              "weight": 3,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:AI-complete",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0045",
+            "SRC-0032",
+            "wiki-ai:AI-complete"
+          ],
+          "hop_count": 3,
+          "total_weight": 6,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0045",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0045",
+              "to": "SRC-0032",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "SRC-0032",
+              "to": "wiki-ai:AI-complete",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Dia_(web_browser)",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0048",
+            "SCR-0018",
+            "wiki-ai:Dia_(web_browser)"
+          ],
+          "hop_count": 3,
+          "total_weight": 8,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0048",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0048",
+              "to": "SCR-0018",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0018",
+              "to": "wiki-ai:Dia_(web_browser)",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Neuro-symbolic_AI",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0048",
+            "SCR-0018",
+            "wiki-ai:Neuro-symbolic_AI"
+          ],
+          "hop_count": 3,
+          "total_weight": 8,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0048",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0048",
+              "to": "SCR-0018",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0018",
+              "to": "wiki-ai:Neuro-symbolic_AI",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Schema-agnostic_databases",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0048",
+            "SCR-0018",
+            "wiki-ai:Schema-agnostic_databases"
+          ],
+          "hop_count": 3,
+          "total_weight": 8,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0048",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0048",
+              "to": "SCR-0018",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0018",
+              "to": "wiki-ai:Schema-agnostic_databases",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:AI_alignment",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:AI_alignment",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:AI_alignment",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Alexander_Y._Tetelbaum",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Alexander_Y._Tetelbaum",
+            "KB-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Alexander_Y._Tetelbaum",
+              "to": "KB-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Artificial_intelligence_in_the_2024_United_States_presidential_election",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Artificial_intelligence_in_the_2024_United_States_presidential_election",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Artificial_intelligence_in_the_2024_United_States_presidential_election",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Automated_medical_scribe",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Automated_medical_scribe",
+            "KB-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Automated_medical_scribe",
+              "to": "KB-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:CHAOS_(chess)",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:CHAOS_(chess)",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:CHAOS_(chess)",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Commonsense_knowledge_(artificial_intelligence)",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Commonsense_knowledge_(artificial_intelligence)",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Commonsense_knowledge_(artificial_intelligence)",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Data_annotation",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Data_annotation",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Data_annotation",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Earkick",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Earkick",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Earkick",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Explainable_artificial_intelligence",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Explainable_artificial_intelligence",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Explainable_artificial_intelligence",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Genie_(AI_model)",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Genie_(AI_model)",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Genie_(AI_model)",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Human-centered_AI",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Human-centered_AI",
+            "KB-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Human-centered_AI",
+              "to": "KB-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Intelligent_agent",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Intelligent_agent",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Intelligent_agent",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Intelligent_word_recognition",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Intelligent_word_recognition",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Intelligent_word_recognition",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Liar's_dividend",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Liar's_dividend",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Liar's_dividend",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Lists_of_open-source_artificial_intelligence_software",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Lists_of_open-source_artificial_intelligence_software",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Lists_of_open-source_artificial_intelligence_software",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Military_applications_of_artificial_intelligence",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Military_applications_of_artificial_intelligence",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Military_applications_of_artificial_intelligence",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Neurocomputing_(journal)",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Neurocomputing_(journal)",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Neurocomputing_(journal)",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Principle_of_rationality",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Principle_of_rationality",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Principle_of_rationality",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Resisting_AI",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Resisting_AI",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Resisting_AI",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Situated_approach_(artificial_intelligence)",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Situated_approach_(artificial_intelligence)",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Situated_approach_(artificial_intelligence)",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:TensorFlow_Hub",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:TensorFlow_Hub",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:TensorFlow_Hub",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Wumpus_world",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Wumpus_world",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Wumpus_world",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        }
+      ]
+    },
+    "exp-3": {
+      "total_assigned": 33,
+      "reached": 33,
+      "failed": 0,
+      "total_hops": 52,
+      "total_weight": 103,
+      "routes": [
+        {
+          "target": "KB-0037",
+          "domain": "knowledge-base",
+          "path": [
+            "SOP-020",
+            "KB-0033",
+            "KB-0037"
+          ],
+          "hop_count": 2,
+          "total_weight": 7,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-020",
+              "to": "KB-0033",
+              "weight": 1,
+              "strength": "tangential"
+            },
+            {
+              "from": "KB-0033",
+              "to": "KB-0037",
+              "weight": 6,
+              "strength": "supporting"
+            }
+          ]
+        },
+        {
+          "target": "SCR-0038",
+          "domain": "scripts",
+          "path": [
+            "SOP-015",
+            "KB-0001",
+            "SCR-0038"
+          ],
+          "hop_count": 2,
+          "total_weight": 4,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-015",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "KB-0001",
+              "to": "SCR-0038",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0012",
+          "domain": "sources",
+          "path": [
+            "SOP-017",
+            "SCR-0007",
+            "SRC-0012"
+          ],
+          "hop_count": 2,
+          "total_weight": 4,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-017",
+              "to": "SCR-0007",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0007",
+              "to": "SRC-0012",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0019",
+          "domain": "sources",
+          "path": [
+            "SOP-018",
+            "KB-0043",
+            "SRC-0019"
+          ],
+          "hop_count": 2,
+          "total_weight": 3,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-018",
+              "to": "KB-0043",
+              "weight": 1,
+              "strength": "tangential"
+            },
+            {
+              "from": "KB-0043",
+              "to": "SRC-0019",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0028",
+          "domain": "sources",
+          "path": [
+            "SOP-017",
+            "KB-0004",
+            "KB-0012",
+            "SRC-0028"
+          ],
+          "hop_count": 3,
+          "total_weight": 10,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-017",
+              "to": "KB-0004",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "KB-0004",
+              "to": "KB-0012",
+              "weight": 6,
+              "strength": "supporting"
+            },
+            {
+              "from": "KB-0012",
+              "to": "SRC-0028",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0037",
+          "domain": "sources",
+          "path": [
+            "SOP-017",
+            "KB-0004",
+            "KB-0010",
+            "SRC-0037"
+          ],
+          "hop_count": 3,
+          "total_weight": 10,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-017",
+              "to": "KB-0004",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "KB-0004",
+              "to": "KB-0010",
+              "weight": 6,
+              "strength": "supporting"
+            },
+            {
+              "from": "KB-0010",
+              "to": "SRC-0037",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0042",
+          "domain": "sources",
+          "path": [
+            "SOP-017",
+            "KB-0004",
+            "KB-0013",
+            "SRC-0042"
+          ],
+          "hop_count": 3,
+          "total_weight": 10,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-017",
+              "to": "KB-0004",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "KB-0004",
+              "to": "KB-0013",
+              "weight": 6,
+              "strength": "supporting"
+            },
+            {
+              "from": "KB-0013",
+              "to": "SRC-0042",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0047",
+          "domain": "sources",
+          "path": [
+            "SOP-018",
+            "KB-0043",
+            "SRC-0047"
+          ],
+          "hop_count": 2,
+          "total_weight": 4,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-018",
+              "to": "KB-0043",
+              "weight": 1,
+              "strength": "tangential"
+            },
+            {
+              "from": "KB-0043",
+              "to": "SRC-0047",
+              "weight": 3,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:AI_anthropomorphism",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0045",
+            "SRC-0032",
+            "wiki-ai:AI_anthropomorphism"
+          ],
+          "hop_count": 3,
+          "total_weight": 6,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0045",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0045",
+              "to": "SRC-0032",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "SRC-0032",
+              "to": "wiki-ai:AI_anthropomorphism",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Galaxy_AI",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0048",
+            "SCR-0018",
+            "wiki-ai:Galaxy_AI"
+          ],
+          "hop_count": 3,
+          "total_weight": 8,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0048",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0048",
+              "to": "SCR-0018",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0018",
+              "to": "wiki-ai:Galaxy_AI",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Operational_artificial_intelligence",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0048",
+            "SCR-0018",
+            "wiki-ai:Operational_artificial_intelligence"
+          ],
+          "hop_count": 3,
+          "total_weight": 8,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0048",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0048",
+              "to": "SCR-0018",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0018",
+              "to": "wiki-ai:Operational_artificial_intelligence",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Universal_psychometrics",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0048",
+            "SCR-0018",
+            "wiki-ai:Universal_psychometrics"
+          ],
+          "hop_count": 3,
+          "total_weight": 8,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0048",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0048",
+              "to": "SCR-0018",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0018",
+              "to": "wiki-ai:Universal_psychometrics",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:AI_browser",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:AI_browser",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:AI_browser",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:And-or_tree",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:And-or_tree",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:And-or_tree",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Artificial_wisdom",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Artificial_wisdom",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Artificial_wisdom",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Automated_negotiation",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Automated_negotiation",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Automated_negotiation",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Case-based_reasoning",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Case-based_reasoning",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Case-based_reasoning",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Competition_in_artificial_intelligence",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Competition_in_artificial_intelligence",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Competition_in_artificial_intelligence",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Deadbot",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Deadbot",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Deadbot",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Embodied_agent",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Embodied_agent",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Embodied_agent",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Figure_AI",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Figure_AI",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Figure_AI",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Google_AI_Mode",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Google_AI_Mode",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Google_AI_Mode",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Human_Problem_Solving",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Human_Problem_Solving",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Human_Problem_Solving",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Intelligent_control",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Intelligent_control",
+            "KB-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Intelligent_control",
+              "to": "KB-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Intrinsic_motivation_(artificial_intelligence)",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Intrinsic_motivation_(artificial_intelligence)",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Intrinsic_motivation_(artificial_intelligence)",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Lifelong_Planning_A*",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Lifelong_Planning_A*",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Lifelong_Planning_A*",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:MAUVE_(metric)",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:MAUVE_(metric)",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:MAUVE_(metric)",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:MindsDB",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:MindsDB",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:MindsDB",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Non-human",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Non-human",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Non-human",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Progress_in_artificial_intelligence",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Progress_in_artificial_intelligence",
+            "KB-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Progress_in_artificial_intelligence",
+              "to": "KB-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Robotic_process_automation",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Robotic_process_automation",
+            "KB-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Robotic_process_automation",
+              "to": "KB-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Software_agent",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Software_agent",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Software_agent",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:The_AI_Con",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:The_AI_Con",
+            "KB-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:The_AI_Con",
+              "to": "KB-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        }
+      ]
+    },
+    "exp-4": {
+      "total_assigned": 33,
+      "reached": 33,
+      "failed": 0,
+      "total_hops": 50,
+      "total_weight": 91,
+      "routes": [
+        {
+          "target": "SCR-0004",
+          "domain": "scripts",
+          "path": [
+            "SOP-018",
+            "SCR-0004"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-018",
+              "to": "SCR-0004",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "SCR-0039",
+          "domain": "scripts",
+          "path": [
+            "SOP-011",
+            "KB-0024",
+            "SCR-0039"
+          ],
+          "hop_count": 2,
+          "total_weight": 4,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-011",
+              "to": "KB-0024",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "KB-0024",
+              "to": "SCR-0039",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0014",
+          "domain": "sources",
+          "path": [
+            "SOP-017",
+            "SCR-0007",
+            "SRC-0014"
+          ],
+          "hop_count": 2,
+          "total_weight": 4,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-017",
+              "to": "SCR-0007",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0007",
+              "to": "SRC-0014",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0021",
+          "domain": "sources",
+          "path": [
+            "SOP-018",
+            "KB-0043",
+            "SRC-0021"
+          ],
+          "hop_count": 2,
+          "total_weight": 3,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-018",
+              "to": "KB-0043",
+              "weight": 1,
+              "strength": "tangential"
+            },
+            {
+              "from": "KB-0043",
+              "to": "SRC-0021",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0031",
+          "domain": "sources",
+          "path": [
+            "SOP-017",
+            "KB-0004",
+            "KB-0012",
+            "SRC-0031"
+          ],
+          "hop_count": 3,
+          "total_weight": 10,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-017",
+              "to": "KB-0004",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "KB-0004",
+              "to": "KB-0012",
+              "weight": 6,
+              "strength": "supporting"
+            },
+            {
+              "from": "KB-0012",
+              "to": "SRC-0031",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0038",
+          "domain": "sources",
+          "path": [
+            "SOP-018",
+            "SCR-0004",
+            "SRC-0038"
+          ],
+          "hop_count": 2,
+          "total_weight": 2,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-018",
+              "to": "SCR-0004",
+              "weight": 1,
+              "strength": "tangential"
+            },
+            {
+              "from": "SCR-0004",
+              "to": "SRC-0038",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0043",
+          "domain": "sources",
+          "path": [
+            "SOP-017",
+            "KB-0004",
+            "KB-0013",
+            "SRC-0043"
+          ],
+          "hop_count": 3,
+          "total_weight": 10,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-017",
+              "to": "KB-0004",
+              "weight": 2,
+              "strength": "related"
+            },
+            {
+              "from": "KB-0004",
+              "to": "KB-0013",
+              "weight": 6,
+              "strength": "supporting"
+            },
+            {
+              "from": "KB-0013",
+              "to": "SRC-0043",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "SRC-0048",
+          "domain": "sources",
+          "path": [
+            "SOP-018",
+            "KB-0043",
+            "SRC-0048"
+          ],
+          "hop_count": 2,
+          "total_weight": 4,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-018",
+              "to": "KB-0043",
+              "weight": 1,
+              "strength": "tangential"
+            },
+            {
+              "from": "KB-0043",
+              "to": "SRC-0048",
+              "weight": 3,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:AZFinText",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0048",
+            "SCR-0018",
+            "wiki-ai:AZFinText"
+          ],
+          "hop_count": 3,
+          "total_weight": 8,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0048",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0048",
+              "to": "SCR-0018",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0018",
+              "to": "wiki-ai:AZFinText",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Gender_digital_divide",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0048",
+            "SCR-0018",
+            "wiki-ai:Gender_digital_divide"
+          ],
+          "hop_count": 3,
+          "total_weight": 8,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0048",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0048",
+              "to": "SCR-0018",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0018",
+              "to": "wiki-ai:Gender_digital_divide",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Personality_computing",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0048",
+            "SCR-0018",
+            "wiki-ai:Personality_computing"
+          ],
+          "hop_count": 3,
+          "total_weight": 8,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0048",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0048",
+              "to": "SCR-0018",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0018",
+              "to": "wiki-ai:Personality_computing",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Web_intelligence",
+          "domain": "wikipedia",
+          "path": [
+            "SOP-023",
+            "SCR-0048",
+            "SCR-0018",
+            "wiki-ai:Web_intelligence"
+          ],
+          "hop_count": 3,
+          "total_weight": 8,
+          "reached": true,
+          "direction": "inbound",
+          "hops": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0048",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0048",
+              "to": "SCR-0018",
+              "weight": 3,
+              "strength": "related"
+            },
+            {
+              "from": "SCR-0018",
+              "to": "wiki-ai:Web_intelligence",
+              "weight": 2,
+              "strength": "related"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:ASR-complete",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:ASR-complete",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:ASR-complete",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Artificial_general_intelligence",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Artificial_general_intelligence",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Artificial_general_intelligence",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Attributional_calculus",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Attributional_calculus",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Attributional_calculus",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Brain_technology",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Brain_technology",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Brain_technology",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Character_computing",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Character_computing",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Character_computing",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Computational_heuristic_intelligence",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Computational_heuristic_intelligence",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Computational_heuristic_intelligence",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Diella_(AI_system)",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Diella_(AI_system)",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Diella_(AI_system)",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Enterprise_cognitive_system",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Enterprise_cognitive_system",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Enterprise_cognitive_system",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:GMind_AI",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:GMind_AI",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:GMind_AI",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Grammar_systems_theory",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Grammar_systems_theory",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Grammar_systems_theory",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Incremental_heuristic_search",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Incremental_heuristic_search",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Incremental_heuristic_search",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Intelligent_database",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Intelligent_database",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Intelligent_database",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Knowledge-based_recommender_system",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Knowledge-based_recommender_system",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Knowledge-based_recommender_system",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:List_of_artificial_intelligence_journals",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:List_of_artificial_intelligence_journals",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:List_of_artificial_intelligence_journals",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Machine_perception",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Machine_perception",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Machine_perception",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Mode_collapse",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Mode_collapse",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Mode_collapse",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Pattern_theory",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Pattern_theory",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Pattern_theory",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Quantum_artificial_life",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Quantum_artificial_life",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Quantum_artificial_life",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Singularity_studies",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Singularity_studies",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Singularity_studies",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Sparkles_emoji",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Sparkles_emoji",
+            "KB-0005"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Sparkles_emoji",
+              "to": "KB-0005",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        },
+        {
+          "target": "wiki-ai:Wetware_(brain)",
+          "domain": "wikipedia",
+          "path": [
+            "wiki-ai:Wetware_(brain)",
+            "SCR-0006"
+          ],
+          "hop_count": 1,
+          "total_weight": 1,
+          "reached": true,
+          "direction": "outbound",
+          "hops": [
+            {
+              "from": "wiki-ai:Wetware_(brain)",
+              "to": "SCR-0006",
+              "weight": 1,
+              "strength": "tangential"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "remaining_unvisited": []
+}
