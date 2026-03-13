@@ -240,13 +240,11 @@ def hybrid_dijkstra(adj, node_tags, source, target, alpha_w, alpha_s, alpha_t, m
         if hops >= max_hops:
             continue
 
-        for edge in adj.get(node, []):
-            nb = edge["to"]
+        for nb, w, s in adj.get(node, []):
             if nb in visited:
                 continue
 
-            w = edge["weight"]
-            s_bonus = STRENGTH_BONUS.get(edge["strength"], 2)
+            s_bonus = STRENGTH_BONUS.get(s, 2)
             t_coh = tag_coherence(node_tags, nb, target)
             e_score = alpha_w * w + alpha_s * s_bonus + alpha_t * t_coh
 
@@ -255,7 +253,7 @@ def hybrid_dijkstra(adj, node_tags, source, target, alpha_w, alpha_s, alpha_t, m
                 best_score[nb] = new_score
                 prev[nb] = (node, {
                     "from": node, "to": nb,
-                    "weight": w, "strength": edge["strength"],
+                    "weight": w, "strength": s,
                     "tag_coherence": round(t_coh, 3),
                     "edge_score": round(e_score, 3),
                 })
