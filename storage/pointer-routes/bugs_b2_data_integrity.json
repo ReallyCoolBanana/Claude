@@ -1,0 +1,1437 @@
+{
+  "scanner": "Bug Hunter B2 - Data Integrity",
+  "timestamp": "2026-03-12",
+  "file_scanned": "storage/pointer-network.json",
+  "actual_stats": {
+    "total_nodes": 310,
+    "total_edges": 4820,
+    "unique_edges": 4809,
+    "edge_type_counts": {
+      "shared_tags": 4197,
+      "explicit_reference": 1093,
+      "category_affinity": 708,
+      "tag_bridge": 240,
+      "backlink": 33,
+      "tag_upgrade": 6
+    }
+  },
+  "reported_stats": {
+    "total_nodes": 310,
+    "total_edges": 4820,
+    "unique_edges": 4820,
+    "edge_type_counts": {
+      "shared_tags": 4377,
+      "explicit_reference": 1093,
+      "category_affinity": 708,
+      "backlink": 33
+    }
+  },
+  "bug_counts": {
+    "total": 49,
+    "by_category": {
+      "schema_validation": 39,
+      "strength_weight_mismatch": 1,
+      "missing_strength": 1,
+      "duplicate_edges": 1,
+      "duplicate_edges_same_weight": 1,
+      "reason_validation": 1,
+      "tag_consistency": 1,
+      "stats_validation": 4
+    },
+    "by_severity": {
+      "medium": 45,
+      "low": 3,
+      "high": 1
+    }
+  },
+  "bugs": [
+    {
+      "id": "B2-0001",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node KB-0045 pointer[0] weight out of range: 15"
+    },
+    {
+      "id": "B2-0002",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node KB-0046 pointer[0] weight out of range: 13"
+    },
+    {
+      "id": "B2-0003",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0007 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0004",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0008 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0005",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0009 pointer[0] weight out of range: 11"
+    },
+    {
+      "id": "B2-0006",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0009 pointer[1] weight out of range: 11"
+    },
+    {
+      "id": "B2-0007",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0023 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0008",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0024 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0009",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0024 pointer[1] weight out of range: 11"
+    },
+    {
+      "id": "B2-0010",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0025 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0011",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0026 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0012",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0027 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0013",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0027 pointer[1] weight out of range: 11"
+    },
+    {
+      "id": "B2-0014",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0028 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0015",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0043 pointer[0] weight out of range: 15"
+    },
+    {
+      "id": "B2-0016",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0044 pointer[0] weight out of range: 13"
+    },
+    {
+      "id": "B2-0017",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0052 pointer[10] weight out of range: 14"
+    },
+    {
+      "id": "B2-0018",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0052 pointer[11] weight out of range: 11"
+    },
+    {
+      "id": "B2-0019",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0052 pointer[12] weight out of range: 11"
+    },
+    {
+      "id": "B2-0020",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0052 pointer[13] weight out of range: 11"
+    },
+    {
+      "id": "B2-0021",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0053 pointer[0] weight out of range: 16"
+    },
+    {
+      "id": "B2-0022",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0054 pointer[0] weight out of range: 13"
+    },
+    {
+      "id": "B2-0023",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0055 pointer[0] weight out of range: 13"
+    },
+    {
+      "id": "B2-0024",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0055 pointer[1] weight out of range: 12"
+    },
+    {
+      "id": "B2-0025",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0056 pointer[0] weight out of range: 13"
+    },
+    {
+      "id": "B2-0026",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0056 pointer[1] weight out of range: 11"
+    },
+    {
+      "id": "B2-0027",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SCR-0056 pointer[2] weight out of range: 11"
+    },
+    {
+      "id": "B2-0028",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SRC-0001 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0029",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SRC-0002 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0030",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SRC-0003 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0031",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SRC-0003 pointer[1] weight out of range: 11"
+    },
+    {
+      "id": "B2-0032",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SRC-0005 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0033",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SRC-0006 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0034",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SRC-0006 pointer[1] weight out of range: 11"
+    },
+    {
+      "id": "B2-0035",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SRC-0006 pointer[2] weight out of range: 11"
+    },
+    {
+      "id": "B2-0036",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SRC-0013 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0037",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SRC-0025 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0038",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SRC-0029 pointer[0] weight out of range: 12"
+    },
+    {
+      "id": "B2-0039",
+      "category": "schema_validation",
+      "severity": "medium",
+      "description": "Node SRC-0030 pointer[0] weight out of range: 11"
+    },
+    {
+      "id": "B2-0040",
+      "category": "strength_weight_mismatch",
+      "severity": "medium",
+      "description": "Found 127 edges where strength doesn't match weight rules",
+      "details": {
+        "mismatches": [
+          {
+            "node": "SOP-011",
+            "pointer_index": 5,
+            "to": "SCR-0019",
+            "weight": 3,
+            "strength": "primary",
+            "expected_strength": "related"
+          },
+          {
+            "node": "SOP-012",
+            "pointer_index": 3,
+            "to": "SCR-0019",
+            "weight": 4,
+            "strength": "primary",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SOP-013",
+            "pointer_index": 15,
+            "to": "SCR-0019",
+            "weight": 2,
+            "strength": "primary",
+            "expected_strength": "related"
+          },
+          {
+            "node": "SOP-014",
+            "pointer_index": 7,
+            "to": "SCR-0033",
+            "weight": 4,
+            "strength": "primary",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SOP-015",
+            "pointer_index": 6,
+            "to": "SCR-0012",
+            "weight": 2,
+            "strength": "primary",
+            "expected_strength": "related"
+          },
+          {
+            "node": "SOP-016",
+            "pointer_index": 12,
+            "to": "SCR-0031",
+            "weight": 2,
+            "strength": "primary",
+            "expected_strength": "related"
+          },
+          {
+            "node": "SOP-018",
+            "pointer_index": 10,
+            "to": "SCR-0004",
+            "weight": 1,
+            "strength": "primary",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SOP-019",
+            "pointer_index": 0,
+            "to": "SCR-0033",
+            "weight": 3,
+            "strength": "primary",
+            "expected_strength": "related"
+          },
+          {
+            "node": "SOP-020",
+            "pointer_index": 10,
+            "to": "SCR-0001",
+            "weight": 1,
+            "strength": "primary",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SOP-021",
+            "pointer_index": 2,
+            "to": "SCR-0033",
+            "weight": 3,
+            "strength": "primary",
+            "expected_strength": "related"
+          },
+          {
+            "node": "SOP-022",
+            "pointer_index": 3,
+            "to": "SCR-0019",
+            "weight": 3,
+            "strength": "primary",
+            "expected_strength": "related"
+          },
+          {
+            "node": "SOP-024",
+            "pointer_index": 1,
+            "to": "SCR-0009",
+            "weight": 3,
+            "strength": "primary",
+            "expected_strength": "related"
+          },
+          {
+            "node": "SOP-028",
+            "pointer_index": 10,
+            "to": "SCR-0013",
+            "weight": 3,
+            "strength": "primary",
+            "expected_strength": "related"
+          },
+          {
+            "node": "SOP-G01",
+            "pointer_index": 9,
+            "to": "SCR-0019",
+            "weight": 3,
+            "strength": "primary",
+            "expected_strength": "related"
+          },
+          {
+            "node": "SOP-G02",
+            "pointer_index": 10,
+            "to": "SCR-0019",
+            "weight": 2,
+            "strength": "primary",
+            "expected_strength": "related"
+          },
+          {
+            "node": "SOP-G03",
+            "pointer_index": 3,
+            "to": "SCR-0033",
+            "weight": 4,
+            "strength": "primary",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 20,
+            "to": "SCR-0006",
+            "weight": 1,
+            "strength": "related",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 21,
+            "to": "SCR-0010",
+            "weight": 1,
+            "strength": "related",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 22,
+            "to": "SCR-0021",
+            "weight": 1,
+            "strength": "related",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 24,
+            "to": "SCR-0047",
+            "weight": 1,
+            "strength": "related",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 25,
+            "to": "SCR-0048",
+            "weight": 1,
+            "strength": "related",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 26,
+            "to": "SCR-0049",
+            "weight": 1,
+            "strength": "related",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 27,
+            "to": "SCR-0050",
+            "weight": 1,
+            "strength": "related",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 28,
+            "to": "SCR-0001",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 29,
+            "to": "SCR-0002",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 30,
+            "to": "SCR-0012",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 31,
+            "to": "SCR-0014",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 32,
+            "to": "SCR-0016",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 34,
+            "to": "SCR-0020",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 35,
+            "to": "SCR-0036",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 36,
+            "to": "SCR-0037",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 37,
+            "to": "SCR-0038",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 38,
+            "to": "SCR-0039",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 39,
+            "to": "SCR-0040",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0001",
+            "pointer_index": 40,
+            "to": "SCR-0042",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0002",
+            "pointer_index": 20,
+            "to": "SCR-0006",
+            "weight": 1,
+            "strength": "related",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SRC-0002",
+            "pointer_index": 21,
+            "to": "SCR-0010",
+            "weight": 1,
+            "strength": "related",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SRC-0002",
+            "pointer_index": 22,
+            "to": "SCR-0021",
+            "weight": 1,
+            "strength": "related",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SRC-0002",
+            "pointer_index": 24,
+            "to": "SCR-0047",
+            "weight": 1,
+            "strength": "related",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SRC-0002",
+            "pointer_index": 25,
+            "to": "SCR-0048",
+            "weight": 1,
+            "strength": "related",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SRC-0002",
+            "pointer_index": 26,
+            "to": "SCR-0049",
+            "weight": 1,
+            "strength": "related",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SRC-0002",
+            "pointer_index": 27,
+            "to": "SCR-0050",
+            "weight": 1,
+            "strength": "related",
+            "expected_strength": "tangential"
+          },
+          {
+            "node": "SRC-0002",
+            "pointer_index": 28,
+            "to": "SCR-0001",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0002",
+            "pointer_index": 29,
+            "to": "SCR-0002",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0002",
+            "pointer_index": 30,
+            "to": "SCR-0012",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0002",
+            "pointer_index": 31,
+            "to": "SCR-0014",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0002",
+            "pointer_index": 32,
+            "to": "SCR-0016",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0002",
+            "pointer_index": 33,
+            "to": "SCR-0020",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0002",
+            "pointer_index": 34,
+            "to": "SCR-0037",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "SRC-0002",
+            "pointer_index": 35,
+            "to": "SCR-0038",
+            "weight": 4,
+            "strength": "related",
+            "expected_strength": "supporting"
+          }
+        ],
+        "total": 127,
+        "note": "Showing first 50"
+      }
+    },
+    {
+      "id": "B2-0041",
+      "category": "missing_strength",
+      "severity": "low",
+      "description": "Found 3931 edges missing 'strength' field",
+      "details": {
+        "sample": [
+          {
+            "node": "KB-0001",
+            "pointer_index": 3,
+            "to": "KB-0002",
+            "weight": 6,
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 4,
+            "to": "KB-0003",
+            "weight": 6,
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 5,
+            "to": "KB-0006",
+            "weight": 6,
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 6,
+            "to": "KB-0008",
+            "weight": 6,
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 7,
+            "to": "TEAM-0002",
+            "weight": 6,
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 8,
+            "to": "TEAM-0003",
+            "weight": 6,
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 9,
+            "to": "TEAM-0001",
+            "weight": 4,
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 10,
+            "to": "SCR-0001",
+            "weight": 2,
+            "expected_strength": "related"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 11,
+            "to": "SCR-0002",
+            "weight": 2,
+            "expected_strength": "related"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 12,
+            "to": "SCR-0003",
+            "weight": 2,
+            "expected_strength": "related"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 13,
+            "to": "SCR-0012",
+            "weight": 2,
+            "expected_strength": "related"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 14,
+            "to": "SCR-0014",
+            "weight": 2,
+            "expected_strength": "related"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 15,
+            "to": "SCR-0016",
+            "weight": 2,
+            "expected_strength": "related"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 16,
+            "to": "SCR-0034",
+            "weight": 2,
+            "expected_strength": "related"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 17,
+            "to": "SCR-0036",
+            "weight": 2,
+            "expected_strength": "related"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 18,
+            "to": "SCR-0037",
+            "weight": 2,
+            "expected_strength": "related"
+          },
+          {
+            "node": "KB-0001",
+            "pointer_index": 19,
+            "to": "SCR-0038",
+            "weight": 2,
+            "expected_strength": "related"
+          },
+          {
+            "node": "KB-0002",
+            "pointer_index": 2,
+            "to": "KB-0001",
+            "weight": 6,
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "KB-0002",
+            "pointer_index": 3,
+            "to": "KB-0003",
+            "weight": 6,
+            "expected_strength": "supporting"
+          },
+          {
+            "node": "KB-0002",
+            "pointer_index": 4,
+            "to": "TEAM-0002",
+            "weight": 3,
+            "expected_strength": "related"
+          }
+        ],
+        "total": 3931,
+        "note": "Showing first 20"
+      }
+    },
+    {
+      "id": "B2-0042",
+      "category": "duplicate_edges",
+      "severity": "high",
+      "description": "Found 11 exact duplicate edges (same source, target, weight)",
+      "details": {
+        "duplicates": [
+          {
+            "source": "SRC-0001",
+            "target": "SCR-0006",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0001",
+            "target": "SCR-0010",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0001",
+            "target": "SCR-0021",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0002",
+            "target": "SCR-0006",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0002",
+            "target": "SCR-0010",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0002",
+            "target": "SCR-0021",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0003",
+            "target": "SCR-0006",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0003",
+            "target": "SCR-0010",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0003",
+            "target": "SCR-0021",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0017",
+            "target": "SCR-0011",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0017",
+            "target": "SCR-0022",
+            "weight": 1,
+            "count": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "B2-0043",
+      "category": "duplicate_edges_same_weight",
+      "severity": "medium",
+      "description": "Found 11 source/target pairs with multiple identical-weight edges",
+      "details": {
+        "duplicates": [
+          {
+            "source": "SRC-0001",
+            "target": "SCR-0006",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0001",
+            "target": "SCR-0010",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0001",
+            "target": "SCR-0021",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0002",
+            "target": "SCR-0006",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0002",
+            "target": "SCR-0010",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0002",
+            "target": "SCR-0021",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0003",
+            "target": "SCR-0006",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0003",
+            "target": "SCR-0010",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0003",
+            "target": "SCR-0021",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0017",
+            "target": "SCR-0011",
+            "weight": 1,
+            "count": 2
+          },
+          {
+            "source": "SRC-0017",
+            "target": "SCR-0022",
+            "weight": 1,
+            "count": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "B2-0044",
+      "category": "reason_validation",
+      "severity": "medium",
+      "description": "Found 246 malformed or unknown reason types",
+      "details": {
+        "bad_reasons": [
+          {
+            "node": "SCR-0001",
+            "pointer_index": 20,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0001",
+            "pointer_index": 21,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0001",
+            "pointer_index": 22,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0002",
+            "pointer_index": 20,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0002",
+            "pointer_index": 21,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0002",
+            "pointer_index": 22,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0003",
+            "pointer_index": 20,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0003",
+            "pointer_index": 21,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0003",
+            "pointer_index": 22,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0005",
+            "pointer_index": 20,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0005",
+            "pointer_index": 21,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0005",
+            "pointer_index": 22,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0006",
+            "pointer_index": 20,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0006",
+            "pointer_index": 21,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0006",
+            "pointer_index": 22,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0010",
+            "pointer_index": 20,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0010",
+            "pointer_index": 21,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0010",
+            "pointer_index": 22,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0011",
+            "pointer_index": 20,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0012",
+            "pointer_index": 20,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0012",
+            "pointer_index": 21,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0012",
+            "pointer_index": 22,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0013",
+            "pointer_index": 23,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0013",
+            "pointer_index": 24,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0013",
+            "pointer_index": 25,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0014",
+            "pointer_index": 20,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0014",
+            "pointer_index": 21,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0014",
+            "pointer_index": 22,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0016",
+            "pointer_index": 20,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          },
+          {
+            "node": "SCR-0016",
+            "pointer_index": 21,
+            "reason_index": 0,
+            "reason": "tag_bridge:data_source",
+            "issue": "unknown reason type 'tag_bridge'"
+          }
+        ],
+        "total": 246,
+        "note": "Showing first 30"
+      }
+    },
+    {
+      "id": "B2-0045",
+      "category": "tag_consistency",
+      "severity": "medium",
+      "description": "Found 335 tag references that don't match node tags",
+      "details": {
+        "inconsistencies": [
+          {
+            "source": "KB-0003",
+            "target": "SOP-018",
+            "tag": "stock-analysis",
+            "issue": "tag 'stock-analysis' not found on target node"
+          },
+          {
+            "source": "KB-0004",
+            "target": "SOP-017",
+            "tag": "validation",
+            "issue": "tag 'validation' not found on target node"
+          },
+          {
+            "source": "KB-0005",
+            "target": "SOP-026",
+            "tag": "data-gathering",
+            "issue": "tag 'data-gathering' not found on target node"
+          },
+          {
+            "source": "KB-0005",
+            "target": "SOP-026",
+            "tag": "wikidata",
+            "issue": "tag 'wikidata' not found on target node"
+          },
+          {
+            "source": "KB-0005",
+            "target": "SOP-027",
+            "tag": "data-gathering",
+            "issue": "tag 'data-gathering' not found on target node"
+          },
+          {
+            "source": "KB-0005",
+            "target": "SOP-027",
+            "tag": "wikidata",
+            "issue": "tag 'wikidata' not found on target node"
+          },
+          {
+            "source": "KB-0006",
+            "target": "SOP-015",
+            "tag": "indexing",
+            "issue": "tag 'indexing' not found on target node"
+          },
+          {
+            "source": "KB-0006",
+            "target": "SOP-015",
+            "tag": "validation",
+            "issue": "tag 'validation' not found on target node"
+          },
+          {
+            "source": "KB-0006",
+            "target": "SOP-025",
+            "tag": "automation",
+            "issue": "tag 'automation' not found on target node"
+          },
+          {
+            "source": "KB-0009",
+            "target": "SOP-014",
+            "tag": "hub-spoke",
+            "issue": "tag 'hub-spoke' not found on target node"
+          },
+          {
+            "source": "KB-0009",
+            "target": "SOP-016",
+            "tag": "pipeline",
+            "issue": "tag 'pipeline' not found on target node"
+          },
+          {
+            "source": "KB-0010",
+            "target": "SOP-026",
+            "tag": "wikidata",
+            "issue": "tag 'wikidata' not found on target node"
+          },
+          {
+            "source": "KB-0011",
+            "target": "SOP-015",
+            "tag": "validation",
+            "issue": "tag 'validation' not found on target node"
+          },
+          {
+            "source": "KB-0011",
+            "target": "SOP-017",
+            "tag": "validation",
+            "issue": "tag 'validation' not found on target node"
+          },
+          {
+            "source": "KB-0015",
+            "target": "SOP-G03",
+            "tag": "message-bus",
+            "issue": "tag 'message-bus' not found on target node"
+          },
+          {
+            "source": "KB-0019",
+            "target": "SOP-014",
+            "tag": "hub-spoke",
+            "issue": "tag 'hub-spoke' not found on target node"
+          },
+          {
+            "source": "KB-0023",
+            "target": "SOP-G03",
+            "tag": "work-stealing",
+            "issue": "tag 'work-stealing' not found on target node"
+          },
+          {
+            "source": "KB-0023",
+            "target": "SOP-016",
+            "tag": "pipeline",
+            "issue": "tag 'pipeline' not found on target node"
+          },
+          {
+            "source": "KB-0025",
+            "target": "SOP-014",
+            "tag": "hub-spoke",
+            "issue": "tag 'hub-spoke' not found on target node"
+          },
+          {
+            "source": "KB-0026",
+            "target": "SOP-G03",
+            "tag": "work-stealing",
+            "issue": "tag 'work-stealing' not found on target node"
+          },
+          {
+            "source": "KB-0027",
+            "target": "SOP-G03",
+            "tag": "work-stealing",
+            "issue": "tag 'work-stealing' not found on target node"
+          },
+          {
+            "source": "KB-0028",
+            "target": "SOP-G03",
+            "tag": "work-stealing",
+            "issue": "tag 'work-stealing' not found on target node"
+          },
+          {
+            "source": "KB-0031",
+            "target": "SOP-G03",
+            "tag": "work-stealing",
+            "issue": "tag 'work-stealing' not found on target node"
+          },
+          {
+            "source": "KB-0032",
+            "target": "SOP-G03",
+            "tag": "work-stealing",
+            "issue": "tag 'work-stealing' not found on target node"
+          },
+          {
+            "source": "KB-0033",
+            "target": "SOP-015",
+            "tag": "validation",
+            "issue": "tag 'validation' not found on target node"
+          },
+          {
+            "source": "KB-0033",
+            "target": "SOP-017",
+            "tag": "validation",
+            "issue": "tag 'validation' not found on target node"
+          },
+          {
+            "source": "KB-0035",
+            "target": "SOP-G03",
+            "tag": "work-stealing",
+            "issue": "tag 'work-stealing' not found on target node"
+          },
+          {
+            "source": "KB-0038",
+            "target": "SOP-011",
+            "tag": "fan-out",
+            "issue": "tag 'fan-out' not found on target node"
+          },
+          {
+            "source": "KB-0040",
+            "target": "SOP-015",
+            "tag": "validation",
+            "issue": "tag 'validation' not found on target node"
+          },
+          {
+            "source": "KB-0040",
+            "target": "SOP-017",
+            "tag": "validation",
+            "issue": "tag 'validation' not found on target node"
+          }
+        ],
+        "total": 335,
+        "note": "Showing first 30"
+      }
+    },
+    {
+      "id": "B2-0046",
+      "category": "stats_validation",
+      "severity": "medium",
+      "description": "Stats unique_edges mismatch: reported=4820, actual=4809"
+    },
+    {
+      "id": "B2-0047",
+      "category": "stats_validation",
+      "severity": "medium",
+      "description": "Stats edge_type_counts['shared_tags'] mismatch: reported=4377, actual=4197"
+    },
+    {
+      "id": "B2-0048",
+      "category": "stats_validation",
+      "severity": "low",
+      "description": "Edge type 'tag_bridge' exists in data but not in stats.edge_type_counts (count=240)"
+    },
+    {
+      "id": "B2-0049",
+      "category": "stats_validation",
+      "severity": "low",
+      "description": "Edge type 'tag_upgrade' exists in data but not in stats.edge_type_counts (count=6)"
+    }
+  ]
+}

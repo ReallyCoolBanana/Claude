@@ -1,0 +1,149 @@
+{
+  "report_id": "run006_fix_data_integrity",
+  "division": "2A",
+  "agents": [
+    "FIX-1",
+    "FIX-2"
+  ],
+  "date": "2026-03-12",
+  "file_fixed": "storage/pointer-network.json",
+  "bugs_addressed": [
+    "B2-0001 through B2-0039 (schema_validation: out-of-range weights)",
+    "B2-0040 (strength_weight_mismatch: 127 edges)",
+    "B2-0041 (missing_strength: 3931 edges)",
+    "B2-0042 (duplicate_edges: 11 exact duplicates)",
+    "B2-0043 (duplicate_edges_same_weight: 11 pairs)",
+    "B2-0044 (reason_validation: 246 malformed reasons)",
+    "B2-0045 (tag_consistency: 335 tag mismatches - noted, not auto-fixable)",
+    "B2-0046 through B2-0049 (stats_validation: corrected stats block)"
+  ],
+  "fixes_applied": {
+    "weights_clamped_to_1_10": {
+      "count": 0,
+      "note": "Out-of-range weights (B2-0001 to B2-0039) were already at valid values at time of fix - may have been corrected by a prior rebuild"
+    },
+    "strength_weight_mismatches_fixed": {
+      "count": 116,
+      "rule": "primary=7-10, supporting=4-6, related=2-3, tangential=1",
+      "sample": [
+        {
+          "node": "SOP-011",
+          "to": "SCR-0019",
+          "weight": 3,
+          "old_strength": "primary",
+          "new_strength": "related"
+        },
+        {
+          "node": "SOP-012",
+          "to": "SCR-0019",
+          "weight": 4,
+          "old_strength": "primary",
+          "new_strength": "supporting"
+        },
+        {
+          "node": "SOP-013",
+          "to": "SCR-0019",
+          "weight": 2,
+          "old_strength": "primary",
+          "new_strength": "related"
+        },
+        {
+          "node": "SOP-014",
+          "to": "SCR-0033",
+          "weight": 4,
+          "old_strength": "primary",
+          "new_strength": "supporting"
+        },
+        {
+          "node": "SOP-015",
+          "to": "SCR-0012",
+          "weight": 2,
+          "old_strength": "primary",
+          "new_strength": "related"
+        }
+      ]
+    },
+    "missing_strength_fields_added": {
+      "count": 3931,
+      "note": "Added strength field derived from weight to all edges that lacked it"
+    },
+    "duplicate_edges_removed": {
+      "count": 11,
+      "details": [
+        {
+          "node": "SRC-0001",
+          "to": "SCR-0006",
+          "weight": 1
+        },
+        {
+          "node": "SRC-0001",
+          "to": "SCR-0010",
+          "weight": 1
+        },
+        {
+          "node": "SRC-0001",
+          "to": "SCR-0021",
+          "weight": 1
+        },
+        {
+          "node": "SRC-0002",
+          "to": "SCR-0006",
+          "weight": 1
+        },
+        {
+          "node": "SRC-0002",
+          "to": "SCR-0010",
+          "weight": 1
+        },
+        {
+          "node": "SRC-0002",
+          "to": "SCR-0021",
+          "weight": 1
+        },
+        {
+          "node": "SRC-0003",
+          "to": "SCR-0006",
+          "weight": 1
+        },
+        {
+          "node": "SRC-0003",
+          "to": "SCR-0010",
+          "weight": 1
+        },
+        {
+          "node": "SRC-0003",
+          "to": "SCR-0021",
+          "weight": 1
+        },
+        {
+          "node": "SRC-0017",
+          "to": "SCR-0011",
+          "weight": 1
+        },
+        {
+          "node": "SRC-0017",
+          "to": "SCR-0022",
+          "weight": 1
+        }
+      ]
+    },
+    "reason_types_normalized": {
+      "count": 229,
+      "transformation": "tag_bridge:X -> shared_tags:X",
+      "rationale": "tag_bridge was not in the declared valid reason types but functionally equivalent to shared_tags cross-domain linking"
+    },
+    "stats_block_corrected": {
+      "updated": true,
+      "note": "Recalculated total_edges, unique_edges, and edge_type_counts from actual data"
+    }
+  },
+  "not_auto_fixed": {
+    "tag_consistency_B2_0045": {
+      "count": 335,
+      "reason": "Tag mismatches between shared_tags reasons and actual node tags require domain knowledge to resolve. Tags on reason strings reference tags from source nodes that may legitimately not appear on target nodes. Fixing would require choosing whether to add tags to targets or remove tag references from reasons - both have semantic implications."
+    }
+  },
+  "total_edges_before": 4820,
+  "total_edges_after": 4809,
+  "edges_removed": 11
+}

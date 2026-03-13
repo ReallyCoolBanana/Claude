@@ -1,0 +1,355 @@
+{
+  "id": "SOP-027",
+  "version": "1.0",
+  "created": "2026-03-12",
+  "title": "Wikipedia Category Pull: End-to-End Collection & Enrichment",
+  "purpose": "Standard operating procedure for collecting, extracting, summarizing, tagging, scoring, and indexing all pages from any Wikipedia Category page. Designed to minimize WebSearch usage \u2014 only used for article summaries when DBpedia lacks coverage.",
+  "trigger": "User provides a Wikipedia Category:[Category Name]",
+  "reference": {
+    "tools": {
+      "wikipedia_tools": "storage/scripts/wikipedia_tools.py (SCR-0043) \u2014 DBpedia SPARQL link/metadata extraction",
+      "wiki_text_extractor": "storage/scripts/wiki_text_extractor.py (SCR-0044) \u2014 article text/summary extraction",
+      "enrichment_plan": "storage/sources/wikipedia-ai/ENRICHMENT_PLAN.md \u2014 reference enrichment format"
+    },
+    "related_sops": [
+      "SOP-025 (research tool integration)",
+      "SOP-026 (wikipedia toolkit usage)"
+    ],
+    "kb_entries": [
+      "KB-0044 (papers catalog)",
+      "KB-0045 (methodology)",
+      "KB-0046 (process review)"
+    ]
+  },
+  "overview": {
+    "phases": [
+      "Phase 1: Discover all pages in the category (WebFetch, 1 request)",
+      "Phase 2: Extract links and metadata via DBpedia SPARQL (no WebSearch)",
+      "Phase 3: Write summaries via DBpedia Lookup + WebSearch fallback",
+      "Phase 4: Tag, score, categorize, and build indexes (no WebSearch)",
+      "Phase 5: Commit and push"
+    ],
+    "websearch_usage": {
+      "phase_1": "NONE \u2014 use WebFetch on PetScan or category page",
+      "phase_2": "NONE \u2014 DBpedia SPARQL only",
+      "phase_3": "MINIMAL \u2014 only for articles not in DBpedia Lookup (typically <40%)",
+      "phase_4": "NONE \u2014 all local data",
+      "phase_5": "NONE"
+    }
+  },
+  "phase_1_discover_pages": {
+    "title": "Phase 1: Discover All Pages in Category",
+    "goal": "Get a complete list of article titles and URLs from the Wikipedia category",
+    "method": "PetScan API (preferred) or WebFetch on the category page",
+    "steps": [
+      {
+        "step": 1,
+        "action": "Use WebFetch on PetScan to get all pages in the category",
+        "detail": "PetScan URL format: https://petscan.wmcloud.org/?categories={CategoryName}&depth=0&format=json&doit=1",
+        "note": "depth=0 gets only direct pages, not subcategories. Increase depth if subcategories are wanted.",
+        "websearch": false
+      },
+      {
+        "step": 2,
+        "action": "Parse the response to extract page titles",
+        "detail": "PetScan returns JSON with page IDs and titles. Convert titles to Wikipedia URL format: spaces \u2192 underscores."
+      },
+      {
+        "step": 3,
+        "action": "Create the data directory and category-pages.json",
+        "detail": "Directory: storage/sources/wikipedia-{category_slug}/ with cache/, text-cache/, enriched/ subdirectories",
+        "output_format": {
+          "file": "category-pages.json",
+          "schema": {
+            "source": "https://en.wikipedia.org/wiki/Category:{CategoryName}",
+            "retrieved_via": "PetScan (petscan.wmcloud.org)",
+            "date": "YYYY-MM-DD",
+            "total_pages": "N",
+            "description": "All pages directly in Category:{CategoryName}",
+            "pages": [
+              {
+                "title": "Human-readable title",
+                "url": "https://en.wikipedia.org/wiki/Article_ID"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "fallback": "If PetScan is down, use WebFetch on https://en.wikipedia.org/wiki/Category:{CategoryName} and parse the page list from the HTML."
+  },
+  "phase_2_extract_links": {
+    "title": "Phase 2: Extract Links and Metadata via DBpedia SPARQL",
+    "goal": "Collect external links, internal wiki links, and metadata for every article. NO WebSearch.",
+    "tools": [
+      "storage/scripts/wikipedia_tools.py"
+    ],
+    "steps": [
+      {
+        "step": 1,
+        "action": "Initialize WikipediaTools with the new data directory",
+        "code": "python3 -c \"\nimport sys; sys.path.insert(0, '.')\nfrom storage.scripts.wikipedia_tools import WikipediaTools\nwt = WikipediaTools(data_dir='storage/sources/wikipedia-{slug}/')\ntitles = [p['url'].split('/wiki/')[-1] for p in __import__('json').load(open('storage/sources/wikipedia-{slug}/category-pages.json'))['pages']]\nprint(f'Loaded {len(titles)} titles')\n\"",
+        "websearch": false
+      },
+      {
+        "step": 2,
+        "action": "Batch extract external + internal links",
+        "code": "python3 storage/scripts/wikipedia_tools.py batch --type both --data-dir storage/sources/wikipedia-{slug}/",
+        "detail": "Queries DBpedia SPARQL in batches of 40. Rate limited at 0.5s between batches. Results cached to cache/ext_*.json and cache/int_*.json.",
+        "performance": "~58s for 234 articles uncached, 42ms cached",
+        "websearch": false
+      },
+      {
+        "step": 3,
+        "action": "Batch extract metadata (categories, descriptions, seeAlso, hypernym)",
+        "code": "python3 storage/scripts/wikipedia_tools.py batch-meta --data-dir storage/sources/wikipedia-{slug}/",
+        "detail": "Queries DBpedia SPARQL in batches of 15. Results cached to cache/meta_*.json.",
+        "performance": "~8min for 234 articles uncached, 58ms cached",
+        "websearch": false
+      },
+      {
+        "step": 4,
+        "action": "Verify extraction completeness",
+        "code": "python3 storage/scripts/wikipedia_tools.py stats --data-dir storage/sources/wikipedia-{slug}/",
+        "detail": "Check how many articles have links/metadata. Articles missing from DBpedia will have empty arrays \u2014 this is expected for newer articles."
+      }
+    ],
+    "note": "Some articles won't exist in DBpedia (newer/obscure). Their cache files will contain empty arrays []. This is handled in Phase 3 and Phase 4."
+  },
+  "phase_3_write_summaries": {
+    "title": "Phase 3: Write Article Summaries",
+    "goal": "Get a text summary for every article. Minimize WebSearch \u2014 use DBpedia Lookup first.",
+    "tools": [
+      "storage/scripts/wiki_text_extractor.py"
+    ],
+    "steps": [
+      {
+        "step": 1,
+        "action": "Fetch descriptions from DBpedia Lookup API (no WebSearch)",
+        "code": "python3 storage/scripts/wiki_text_extractor.py fetch-dbpedia --data-dir storage/sources/wikipedia-{slug}/",
+        "detail": "Hits lookup.dbpedia.org for short descriptions (100-200 chars). Fast, no rate limiting concerns.",
+        "websearch": false
+      },
+      {
+        "step": 2,
+        "action": "Check gaps \u2014 which articles still need full summaries",
+        "code": "python3 storage/scripts/wiki_text_extractor.py gaps --data-dir storage/sources/wikipedia-{slug}/",
+        "detail": "Lists articles without text in text-cache/. Typically 30-60% will need WebSearch fallback."
+      },
+      {
+        "step": 3,
+        "action": "Fill gaps with WebSearch (only for missing articles)",
+        "detail": "For articles not covered by DBpedia Lookup, use WebSearch as fallback. This is the ONLY step that uses WebSearch.",
+        "method": "Parallel agents",
+        "agent_strategy": {
+          "description": "Split missing articles across 2-3 agents. Each agent uses WebSearch to find the Wikipedia article summary, then stores it.",
+          "rate_limit": "2s between WebSearch queries to avoid throttling",
+          "agent_instruction": "For each article: WebSearch '{Article_Title} Wikipedia', extract the first 1-3 paragraph summary, store via wiki_text_extractor.py store command",
+          "code_per_article": "python3 storage/scripts/wiki_text_extractor.py store \"{Article_ID}\" \"{summary_text}\""
+        },
+        "websearch": true,
+        "minimization": "Only articles missing from DBpedia Lookup are searched. Typically saves 50-70% of WebSearch calls vs searching everything."
+      },
+      {
+        "step": 4,
+        "action": "Verify all articles have summaries",
+        "code": "python3 storage/scripts/wiki_text_extractor.py stats --data-dir storage/sources/wikipedia-{slug}/"
+      }
+    ]
+  },
+  "phase_4_tag_and_index": {
+    "title": "Phase 4: Tag, Score, Categorize, and Build Indexes",
+    "goal": "Enrich every article and build master indexes. NO WebSearch \u2014 purely local data.",
+    "websearch": false,
+    "steps": [
+      {
+        "step": 1,
+        "action": "Define category taxonomy for this collection",
+        "detail": "Review a sample of article titles/summaries and define 8-15 categories relevant to the topic. Use the AI category set as a template but adapt to the specific domain.",
+        "template_categories": [
+          "Core Concepts \u2014 foundational theory and definitions",
+          "Applications \u2014 real-world uses and products",
+          "History & People \u2014 historical events, pioneers",
+          "Methods & Techniques \u2014 algorithms, methodologies",
+          "Tools & Infrastructure \u2014 software, hardware, platforms",
+          "Policy & Society \u2014 regulation, social impact, ethics",
+          "Niche / Low-Value \u2014 peripheral, stubs, sparse data"
+        ]
+      },
+      {
+        "step": 2,
+        "action": "Run parallel tagger agents (3 agents recommended)",
+        "detail": "Split article list into 3 equal batches. Each agent reads text + meta + link files and writes enriched JSON.",
+        "agent_instruction": "For each article, read text_*.json, meta_*.json, ext_*.json, int_*.json. Compute usefulness score using the rubric. Assign tags, categories, and research tier. Write enriched JSON to enriched/{ID}.json.",
+        "scoring_rubric": {
+          "text_richness": "0 chars=0, <500=1, <1000=2, 1000+=3 (max 3)",
+          "link_richness": "0 total=0, <20=1, <100=2, 100+=3 (max 3)",
+          "metadata_quality": "has categories +1, has description +1 (max 2)",
+          "topic_centrality": "core topic=2, related=1, peripheral=0 (max 2)",
+          "total": "1-10 scale"
+        },
+        "tiers": {
+          "A": "8-10 (essential, rich data)",
+          "B": "6-7.9 (solid, relevant)",
+          "C": "4-5.9 (useful but narrow/sparse)",
+          "D": "1-3.9 (peripheral, stub-like)"
+        },
+        "enriched_file_schema": {
+          "id": "Article_ID",
+          "title": "Human-readable title",
+          "url": "https://en.wikipedia.org/wiki/{ID}",
+          "summary": "Article summary text",
+          "tags": [
+            "topic and quality tags"
+          ],
+          "categories": [
+            "1-3 assigned categories"
+          ],
+          "usefulness_score": 7.5,
+          "usefulness_rationale": "Brief explanation of score",
+          "research_tier": "A|B|C|D",
+          "data_richness": {
+            "summary_length": 1234,
+            "ext_links_count": 50,
+            "int_links_count": 200,
+            "has_categories": true,
+            "has_description": true
+          },
+          "ext_links": [
+            "full array of external URLs"
+          ],
+          "int_links": [
+            "full array of internal wiki link IDs"
+          ],
+          "related_articles": [
+            "IDs of related articles in collection"
+          ],
+          "meta": {
+            "wiki_categories": [
+              "from DBpedia"
+            ],
+            "see_also": [
+              "from DBpedia"
+            ],
+            "description": "from DBpedia",
+            "hypernym": "from DBpedia"
+          },
+          "extracted": "YYYY-MM-DD",
+          "enriched": "YYYY-MM-DD"
+        }
+      },
+      {
+        "step": 3,
+        "action": "Run assembler agent to build master indexes",
+        "detail": "After all taggers complete, one agent builds 3 index files.",
+        "outputs": {
+          "index.json": {
+            "description": "Master article index sorted by usefulness score",
+            "contents": "All articles with id, title, tags, categories, score, tier, link counts. Plus aggregate summaries (tier counts, category counts, tag counts)."
+          },
+          "links-index.json": {
+            "description": "Global link registry with back-pointers",
+            "contents": "Every external URL and internal wiki link across all articles, deduplicated, with arrays of which articles reference each link. External links include extracted domain. Internal links include is_in_collection flag."
+          },
+          "categories.json": {
+            "description": "Category taxonomy with grouped articles",
+            "contents": "Each category with description, article count, and articles sorted by usefulness score."
+          }
+        }
+      }
+    ]
+  },
+  "phase_5_commit": {
+    "title": "Phase 5: Commit and Push",
+    "steps": [
+      {
+        "step": 1,
+        "action": "Commit category-pages.json and cache files",
+        "message_template": "Add {CategoryName} Wikipedia category: {N} pages with links and metadata"
+      },
+      {
+        "step": 2,
+        "action": "Commit enriched files",
+        "message_template": "Add enriched article files for {CategoryName} ({N} articles tagged/scored)"
+      },
+      {
+        "step": 3,
+        "action": "Commit index files",
+        "message_template": "Add master indexes for {CategoryName}: article index, links registry, category taxonomy"
+      },
+      {
+        "step": 4,
+        "action": "Push to branch"
+      }
+    ]
+  },
+  "output_directory_structure": {
+    "description": "Final directory structure after a complete category pull",
+    "tree": {
+      "storage/sources/wikipedia-{slug}/": {
+        "category-pages.json": "Page list from PetScan (Phase 1)",
+        "index.json": "Master article index (Phase 4)",
+        "links-index.json": "Global link registry with back-pointers (Phase 4)",
+        "categories.json": "Category taxonomy (Phase 4)",
+        "cache/": {
+          "ext_{ID}.json": "External links per article (Phase 2)",
+          "int_{ID}.json": "Internal wiki links per article (Phase 2)",
+          "meta_{ID}.json": "Metadata per article (Phase 2)"
+        },
+        "text-cache/": {
+          "text_{ID}.json": "Article summary (Phase 3)"
+        },
+        "enriched/": {
+          "{ID}.json": "Full enriched article with tags, score, links, pointers (Phase 4)"
+        }
+      }
+    }
+  },
+  "agent_team_structure": {
+    "recommended_team": {
+      "phase_1": "1 agent (discovery)",
+      "phase_2": "1 agent (SPARQL extraction \u2014 already batched internally)",
+      "phase_3": "2-3 agents (WebSearch for gap-filling, split by batch)",
+      "phase_4": "3 tagger agents (parallel) + 1 assembler agent (sequential after taggers)",
+      "phase_5": "1 agent (commit/push)"
+    },
+    "total_agents": "6-8 agents across phases, max 3 concurrent",
+    "communication": "No inter-agent communication needed \u2014 each phase reads the previous phase's output files"
+  },
+  "websearch_budget": {
+    "description": "Expected WebSearch usage per category pull",
+    "phase_1": "0 searches (WebFetch only)",
+    "phase_2": "0 searches (DBpedia SPARQL)",
+    "phase_3": "~30-60% of article count (only gap-filling)",
+    "phase_4": "0 searches (local data only)",
+    "phase_5": "0 searches",
+    "example_234_articles": "~70-140 WebSearch calls total (vs 234+ if searching everything)",
+    "optimization_tips": [
+      "Always run DBpedia Lookup first \u2014 it covers 40-70% of articles",
+      "Batch WebSearch gap-filling across parallel agents for speed",
+      "Cache aggressively \u2014 subsequent runs are nearly instant"
+    ]
+  },
+  "quick_reference": {
+    "title": "Quick Reference: Run a Category Pull",
+    "steps": [
+      "1. User says: 'Pull Category:Machine_learning'",
+      "2. mkdir -p storage/sources/wikipedia-machine-learning/{cache,text-cache,enriched}",
+      "3. WebFetch PetScan \u2192 write category-pages.json",
+      "4. python3 storage/scripts/wikipedia_tools.py batch --type both --data-dir ...",
+      "5. python3 storage/scripts/wikipedia_tools.py batch-meta --data-dir ...",
+      "6. python3 storage/scripts/wiki_text_extractor.py fetch-dbpedia --data-dir ...",
+      "7. python3 storage/scripts/wiki_text_extractor.py gaps \u2192 fill with WebSearch agents",
+      "8. Launch 3 tagger agents \u2192 enriched/*.json",
+      "9. Launch assembler \u2192 index.json, links-index.json, categories.json",
+      "10. git add, commit, push"
+    ]
+  },
+  "procedures": [
+    "Phase 1: Discover pages via PetScan API (WebFetch, no WebSearch)",
+    "Phase 2: Extract links/metadata via DBpedia SPARQL (wikipedia_tools.py batch)",
+    "Phase 3: Write summaries via DBpedia Lookup + WebSearch fallback for gaps only",
+    "Phase 4: Tag, score, categorize with parallel tagger agents, build master indexes",
+    "Phase 5: Commit and push with structured commit messages"
+  ]
+}

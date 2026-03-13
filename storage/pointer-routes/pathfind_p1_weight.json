@@ -1,0 +1,1253 @@
+{
+  "task": "weight-optimal-pathfinding",
+  "agent": "Pathfinder P1",
+  "timestamp": "2026-03-12",
+  "algorithm": "Modified Dijkstra (max-weight via negated min-heap)",
+  "network_stats": {
+    "nodes": 310,
+    "edges": 4820,
+    "node_types": {
+      "SOP": 22,
+      "SCR": 57,
+      "SRC": 48,
+      "KB": 46,
+      "TEAM": 22,
+      "wiki": 114
+    }
+  },
+  "scenarios": [
+    {
+      "scenario": 1,
+      "source": "SOP-011",
+      "target": "SCR-0043",
+      "description": "cross-domain SOP to SCR",
+      "status": "success",
+      "total_weight": 96,
+      "hops": 15,
+      "path": [
+        "SOP-011",
+        "SOP-014",
+        "SOP-012",
+        "SOP-G01",
+        "SOP-013",
+        "SOP-G02",
+        "SOP-028",
+        "SOP-029",
+        "SCR-0057",
+        "SCR-0032",
+        "TEAM-0025",
+        "SCR-0033",
+        "SRC-0050",
+        "SCR-0005",
+        "TEAM-0005",
+        "SCR-0043"
+      ],
+      "path_str": "SOP-011 -> SOP-014 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> SOP-028 -> SOP-029 -> SCR-0057 -> SCR-0032 -> TEAM-0025 -> SCR-0033 -> SRC-0050 -> SCR-0005 -> TEAM-0005 -> SCR-0043",
+      "strengths_used": [
+        "supporting",
+        "supporting",
+        "supporting",
+        "supporting",
+        "supporting",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "supporting",
+        "related",
+        "secondary",
+        "secondary"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 2,
+      "source": "SOP-012",
+      "target": "SCR-0057",
+      "description": "monitoring to route tracker",
+      "status": "success",
+      "total_weight": 41,
+      "hops": 6,
+      "path": [
+        "SOP-012",
+        "SOP-G01",
+        "SOP-013",
+        "SOP-G02",
+        "SOP-028",
+        "SOP-029",
+        "SCR-0057"
+      ],
+      "path_str": "SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> SOP-028 -> SOP-029 -> SCR-0057",
+      "strengths_used": [
+        "supporting",
+        "supporting",
+        "supporting",
+        "primary",
+        "primary",
+        "primary"
+      ],
+      "intuitive": true
+    },
+    {
+      "scenario": 3,
+      "source": "SOP-027",
+      "target": "SRC-0001",
+      "description": "wikipedia SOP to data source",
+      "status": "success",
+      "total_weight": 128,
+      "hops": 15,
+      "path": [
+        "SOP-027",
+        "SCR-0043",
+        "KB-0045",
+        "KB-0044",
+        "KB-0046",
+        "SCR-0044",
+        "SRC-0006",
+        "SCR-0007",
+        "SCR-0009",
+        "SRC-0003",
+        "SCR-0008",
+        "SCR-0011",
+        "SCR-0006",
+        "TEAM-0003",
+        "SCR-0001",
+        "SRC-0001"
+      ],
+      "path_str": "SOP-027 -> SCR-0043 -> KB-0045 -> KB-0044 -> KB-0046 -> SCR-0044 -> SRC-0006 -> SCR-0007 -> SCR-0009 -> SRC-0003 -> SCR-0008 -> SCR-0011 -> SCR-0006 -> TEAM-0003 -> SCR-0001 -> SRC-0001",
+      "strengths_used": [
+        "primary",
+        "primary",
+        "secondary",
+        "secondary",
+        "primary",
+        "primary",
+        "primary",
+        "secondary",
+        "primary",
+        "primary",
+        "secondary",
+        "secondary",
+        "secondary",
+        "secondary",
+        "supporting"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 4,
+      "source": "SOP-023",
+      "target": "SRC-0001",
+      "description": "data gathering reach (first SRC)",
+      "status": "success",
+      "total_weight": 21,
+      "hops": 2,
+      "path": [
+        "SOP-023",
+        "SCR-0023",
+        "SRC-0001"
+      ],
+      "path_str": "SOP-023 -> SCR-0023 -> SRC-0001",
+      "strengths_used": [
+        "primary",
+        "primary"
+      ],
+      "intuitive": true
+    },
+    {
+      "scenario": 5,
+      "source": "SOP-015",
+      "target": "SCR-0001",
+      "description": "stress-test SOP to first script",
+      "status": "success",
+      "total_weight": 103,
+      "hops": 15,
+      "path": [
+        "SOP-015",
+        "SOP-028",
+        "SOP-029",
+        "SOP-012",
+        "SOP-G01",
+        "SOP-013",
+        "SOP-G02",
+        "TEAM-0022",
+        "KB-0016",
+        "TEAM-0018",
+        "KB-0015",
+        "TEAM-0019",
+        "KB-0009",
+        "TEAM-0026",
+        "KB-0006",
+        "SCR-0001"
+      ],
+      "path_str": "SOP-015 -> SOP-028 -> SOP-029 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> TEAM-0022 -> KB-0016 -> TEAM-0018 -> KB-0015 -> TEAM-0019 -> KB-0009 -> TEAM-0026 -> KB-0006 -> SCR-0001",
+      "strengths_used": [
+        "primary",
+        "primary",
+        "primary",
+        "supporting",
+        "supporting",
+        "supporting",
+        "secondary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "secondary"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 6,
+      "source": "SOP-016",
+      "target": "SCR-0025",
+      "description": "coordination SOP to mid script",
+      "status": "success",
+      "total_weight": 92,
+      "hops": 15,
+      "path": [
+        "SOP-016",
+        "SOP-013",
+        "SOP-G01",
+        "SOP-012",
+        "SOP-014",
+        "SOP-011",
+        "SOP-015",
+        "SOP-028",
+        "SOP-029",
+        "SCR-0057",
+        "SCR-0032",
+        "TEAM-0025",
+        "SCR-0033",
+        "SRC-0050",
+        "KB-0044",
+        "SCR-0025"
+      ],
+      "path_str": "SOP-016 -> SOP-013 -> SOP-G01 -> SOP-012 -> SOP-014 -> SOP-011 -> SOP-015 -> SOP-028 -> SOP-029 -> SCR-0057 -> SCR-0032 -> TEAM-0025 -> SCR-0033 -> SRC-0050 -> KB-0044 -> SCR-0025",
+      "strengths_used": [
+        "supporting",
+        "supporting",
+        "supporting",
+        "supporting",
+        "supporting",
+        "supporting",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "supporting",
+        "secondary",
+        "secondary"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 7,
+      "source": "SOP-019",
+      "target": "SCR-0032",
+      "description": "work-stealing SOP to script",
+      "status": "success",
+      "total_weight": 98,
+      "hops": 15,
+      "path": [
+        "SOP-019",
+        "SCR-0033",
+        "TEAM-0025",
+        "SCR-0030",
+        "SRC-0050",
+        "SCR-0005",
+        "TEAM-0005",
+        "KB-0004",
+        "TEAM-0014",
+        "KB-0005",
+        "TEAM-0012",
+        "KB-0008",
+        "KB-0001",
+        "TEAM-0008",
+        "KB-0007",
+        "SCR-0032"
+      ],
+      "path_str": "SOP-019 -> SCR-0033 -> TEAM-0025 -> SCR-0030 -> SRC-0050 -> SCR-0005 -> TEAM-0005 -> KB-0004 -> TEAM-0014 -> KB-0005 -> TEAM-0012 -> KB-0008 -> KB-0001 -> TEAM-0008 -> KB-0007 -> SCR-0032",
+      "strengths_used": [
+        "primary",
+        "primary",
+        "primary",
+        "supporting",
+        "related",
+        "secondary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "secondary",
+        "primary",
+        "primary",
+        "secondary"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 8,
+      "source": "SOP-G01",
+      "target": "SCR-0010",
+      "description": "governance SOP to script",
+      "status": "success",
+      "total_weight": 90,
+      "hops": 14,
+      "path": [
+        "SOP-G01",
+        "SOP-012",
+        "SOP-014",
+        "SOP-011",
+        "SOP-015",
+        "SOP-028",
+        "SOP-029",
+        "SCR-0057",
+        "SCR-0032",
+        "TEAM-0025",
+        "SCR-0033",
+        "SRC-0050",
+        "SCR-0005",
+        "TEAM-0005",
+        "SCR-0010"
+      ],
+      "path_str": "SOP-G01 -> SOP-012 -> SOP-014 -> SOP-011 -> SOP-015 -> SOP-028 -> SOP-029 -> SCR-0057 -> SCR-0032 -> TEAM-0025 -> SCR-0033 -> SRC-0050 -> SCR-0005 -> TEAM-0005 -> SCR-0010",
+      "strengths_used": [
+        "supporting",
+        "supporting",
+        "supporting",
+        "supporting",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "supporting",
+        "related",
+        "secondary",
+        "secondary"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 9,
+      "source": "SOP-014",
+      "target": "SRC-0020",
+      "description": "hub-spoke SOP to source",
+      "status": "success",
+      "total_weight": 88,
+      "hops": 15,
+      "path": [
+        "SOP-014",
+        "SOP-011",
+        "SOP-015",
+        "SOP-028",
+        "SOP-029",
+        "SOP-012",
+        "SOP-G01",
+        "SOP-013",
+        "SOP-G02",
+        "TEAM-0022",
+        "KB-0016",
+        "TEAM-0018",
+        "KB-0015",
+        "SRC-0030",
+        "TEAM-0013",
+        "SRC-0020"
+      ],
+      "path_str": "SOP-014 -> SOP-011 -> SOP-015 -> SOP-028 -> SOP-029 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> TEAM-0022 -> KB-0016 -> TEAM-0018 -> KB-0015 -> SRC-0030 -> TEAM-0013 -> SRC-0020",
+      "strengths_used": [
+        "supporting",
+        "supporting",
+        "primary",
+        "primary",
+        "primary",
+        "supporting",
+        "supporting",
+        "supporting",
+        "secondary",
+        "primary",
+        "primary",
+        "primary",
+        "secondary",
+        "secondary",
+        "secondary"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 10,
+      "source": "SOP-021",
+      "target": "SRC-0035",
+      "description": "think-tank SOP to source",
+      "status": "success",
+      "total_weight": 95,
+      "hops": 15,
+      "path": [
+        "SOP-021",
+        "TEAM-0024",
+        "KB-0022",
+        "TEAM-0023",
+        "KB-0023",
+        "KB-0024",
+        "TEAM-0025",
+        "SCR-0033",
+        "SRC-0050",
+        "SCR-0005",
+        "TEAM-0005",
+        "KB-0004",
+        "TEAM-0014",
+        "KB-0005",
+        "TEAM-0012",
+        "SRC-0035"
+      ],
+      "path_str": "SOP-021 -> TEAM-0024 -> KB-0022 -> TEAM-0023 -> KB-0023 -> KB-0024 -> TEAM-0025 -> SCR-0033 -> SRC-0050 -> SCR-0005 -> TEAM-0005 -> KB-0004 -> TEAM-0014 -> KB-0005 -> TEAM-0012 -> SRC-0035",
+      "strengths_used": [
+        "secondary",
+        "primary",
+        "primary",
+        "secondary",
+        "secondary",
+        "primary",
+        "primary",
+        "supporting",
+        "related",
+        "secondary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "secondary"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 11,
+      "source": "SOP-025",
+      "target": "SRC-0006",
+      "description": "API tools SOP to source",
+      "status": "success",
+      "total_weight": 57,
+      "hops": 6,
+      "path": [
+        "SOP-025",
+        "SCR-0043",
+        "KB-0045",
+        "KB-0044",
+        "KB-0046",
+        "SCR-0044",
+        "SRC-0006"
+      ],
+      "path_str": "SOP-025 -> SCR-0043 -> KB-0045 -> KB-0044 -> KB-0046 -> SCR-0044 -> SRC-0006",
+      "strengths_used": [
+        "primary",
+        "primary",
+        "secondary",
+        "secondary",
+        "primary",
+        "primary"
+      ],
+      "intuitive": true
+    },
+    {
+      "scenario": 12,
+      "source": "SOP-028",
+      "target": "SRC-0050",
+      "description": "late SOP to late source",
+      "status": "success",
+      "total_weight": 82,
+      "hops": 15,
+      "path": [
+        "SOP-028",
+        "SOP-029",
+        "SOP-012",
+        "SOP-G01",
+        "SOP-013",
+        "SOP-G02",
+        "TEAM-0022",
+        "KB-0016",
+        "TEAM-0018",
+        "KB-0015",
+        "SCR-0040",
+        "SRC-0004",
+        "SCR-0018",
+        "SRC-0033",
+        "SCR-0005",
+        "SRC-0050"
+      ],
+      "path_str": "SOP-028 -> SOP-029 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> TEAM-0022 -> KB-0016 -> TEAM-0018 -> KB-0015 -> SCR-0040 -> SRC-0004 -> SCR-0018 -> SRC-0033 -> SCR-0005 -> SRC-0050",
+      "strengths_used": [
+        "primary",
+        "primary",
+        "supporting",
+        "supporting",
+        "supporting",
+        "secondary",
+        "primary",
+        "primary",
+        "primary",
+        "secondary",
+        "supporting",
+        "secondary",
+        "secondary",
+        "related",
+        "supporting"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 13,
+      "source": "SOP-013",
+      "target": "KB-0020",
+      "description": "SOP to knowledge base",
+      "status": "success",
+      "total_weight": 89,
+      "hops": 14,
+      "path": [
+        "SOP-013",
+        "SOP-G01",
+        "SOP-012",
+        "SOP-014",
+        "SOP-011",
+        "SOP-015",
+        "SOP-028",
+        "SOP-029",
+        "SCR-0057",
+        "SCR-0032",
+        "TEAM-0025",
+        "SCR-0033",
+        "SRC-0050",
+        "SCR-0005",
+        "KB-0020"
+      ],
+      "path_str": "SOP-013 -> SOP-G01 -> SOP-012 -> SOP-014 -> SOP-011 -> SOP-015 -> SOP-028 -> SOP-029 -> SCR-0057 -> SCR-0032 -> TEAM-0025 -> SCR-0033 -> SRC-0050 -> SCR-0005 -> KB-0020",
+      "strengths_used": [
+        "supporting",
+        "supporting",
+        "supporting",
+        "supporting",
+        "supporting",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "supporting",
+        "related",
+        "secondary"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 14,
+      "source": "SOP-017",
+      "target": "TEAM-0010",
+      "description": "SOP to team log",
+      "status": "success",
+      "total_weight": 113,
+      "hops": 15,
+      "path": [
+        "SOP-017",
+        "SCR-0023",
+        "SRC-0001",
+        "SCR-0001",
+        "TEAM-0003",
+        "KB-0002",
+        "TEAM-0004",
+        "SCR-0042",
+        "SRC-0003",
+        "SCR-0008",
+        "SCR-0009",
+        "SRC-0006",
+        "SCR-0007",
+        "SCR-0046",
+        "SCR-0024",
+        "TEAM-0010"
+      ],
+      "path_str": "SOP-017 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0007 -> SCR-0046 -> SCR-0024 -> TEAM-0010",
+      "strengths_used": [
+        "primary",
+        "primary",
+        "related",
+        "secondary",
+        "primary",
+        "primary",
+        "primary",
+        "supporting",
+        "primary",
+        "secondary",
+        "primary",
+        "primary",
+        "secondary",
+        "secondary",
+        "primary"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 15,
+      "source": "SOP-022",
+      "target": "KB-0046",
+      "description": "SOP to knowledge base entry",
+      "status": "success",
+      "total_weight": 116,
+      "hops": 14,
+      "path": [
+        "SOP-022",
+        "SOP-023",
+        "SCR-0023",
+        "SRC-0001",
+        "SCR-0001",
+        "TEAM-0003",
+        "KB-0002",
+        "TEAM-0004",
+        "SCR-0042",
+        "SRC-0003",
+        "SCR-0008",
+        "SCR-0009",
+        "SRC-0006",
+        "SCR-0044",
+        "KB-0046"
+      ],
+      "path_str": "SOP-022 -> SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0044 -> KB-0046",
+      "strengths_used": [
+        "supporting",
+        "primary",
+        "primary",
+        "related",
+        "secondary",
+        "primary",
+        "primary",
+        "primary",
+        "supporting",
+        "primary",
+        "secondary",
+        "primary",
+        "primary",
+        "primary"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 16,
+      "source": "SOP-029",
+      "target": "TEAM-0004",
+      "description": "SOP to team log",
+      "status": "success",
+      "total_weight": 125,
+      "hops": 14,
+      "path": [
+        "SOP-029",
+        "SOP-028",
+        "SOP-027",
+        "SCR-0043",
+        "KB-0045",
+        "KB-0044",
+        "KB-0046",
+        "SCR-0044",
+        "SRC-0006",
+        "SCR-0007",
+        "SCR-0009",
+        "SRC-0003",
+        "SCR-0008",
+        "SCR-0011",
+        "TEAM-0004"
+      ],
+      "path_str": "SOP-029 -> SOP-028 -> SOP-027 -> SCR-0043 -> KB-0045 -> KB-0044 -> KB-0046 -> SCR-0044 -> SRC-0006 -> SCR-0007 -> SCR-0009 -> SRC-0003 -> SCR-0008 -> SCR-0011 -> TEAM-0004",
+      "strengths_used": [
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "secondary",
+        "secondary",
+        "primary",
+        "primary",
+        "primary",
+        "secondary",
+        "primary",
+        "primary",
+        "secondary",
+        "secondary"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 17,
+      "source": "SOP-011",
+      "target": "SRC-0051",
+      "description": "SOP-011 to last source",
+      "status": "success",
+      "total_weight": 93,
+      "hops": 14,
+      "path": [
+        "SOP-011",
+        "SOP-014",
+        "SOP-012",
+        "SOP-G01",
+        "SOP-013",
+        "SOP-G02",
+        "SOP-028",
+        "SOP-029",
+        "SCR-0057",
+        "SCR-0032",
+        "TEAM-0025",
+        "SCR-0033",
+        "SRC-0050",
+        "SCR-0005",
+        "SRC-0051"
+      ],
+      "path_str": "SOP-011 -> SOP-014 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> SOP-028 -> SOP-029 -> SCR-0057 -> SCR-0032 -> TEAM-0025 -> SCR-0033 -> SRC-0050 -> SCR-0005 -> SRC-0051",
+      "strengths_used": [
+        "supporting",
+        "supporting",
+        "supporting",
+        "supporting",
+        "supporting",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "supporting",
+        "related",
+        "supporting"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 18,
+      "source": "SOP-G03",
+      "target": "SCR-0030",
+      "description": "governance to mid-range script",
+      "status": "success",
+      "total_weight": 94,
+      "hops": 15,
+      "path": [
+        "SOP-G03",
+        "TEAM-0025",
+        "SCR-0033",
+        "SRC-0050",
+        "SCR-0005",
+        "TEAM-0005",
+        "KB-0004",
+        "TEAM-0014",
+        "KB-0005",
+        "TEAM-0012",
+        "KB-0008",
+        "KB-0001",
+        "TEAM-0008",
+        "SCR-0016",
+        "KB-0022",
+        "SCR-0030"
+      ],
+      "path_str": "SOP-G03 -> TEAM-0025 -> SCR-0033 -> SRC-0050 -> SCR-0005 -> TEAM-0005 -> KB-0004 -> TEAM-0014 -> KB-0005 -> TEAM-0012 -> KB-0008 -> KB-0001 -> TEAM-0008 -> SCR-0016 -> KB-0022 -> SCR-0030",
+      "strengths_used": [
+        "secondary",
+        "primary",
+        "supporting",
+        "related",
+        "secondary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "secondary",
+        "primary",
+        "primary",
+        "secondary",
+        "secondary"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 19,
+      "source": "SOP-020",
+      "target": "SCR-0055",
+      "description": "direct-channels SOP to late script",
+      "status": "success",
+      "total_weight": 91,
+      "hops": 15,
+      "path": [
+        "SOP-020",
+        "KB-0025",
+        "KB-0024",
+        "TEAM-0025",
+        "SCR-0033",
+        "SRC-0050",
+        "SCR-0005",
+        "TEAM-0005",
+        "KB-0004",
+        "TEAM-0014",
+        "KB-0005",
+        "TEAM-0012",
+        "KB-0008",
+        "KB-0010",
+        "SRC-0035",
+        "SCR-0055"
+      ],
+      "path_str": "SOP-020 -> KB-0025 -> KB-0024 -> TEAM-0025 -> SCR-0033 -> SRC-0050 -> SCR-0005 -> TEAM-0005 -> KB-0004 -> TEAM-0014 -> KB-0005 -> TEAM-0012 -> KB-0008 -> KB-0010 -> SRC-0035 -> SCR-0055",
+      "strengths_used": [
+        "secondary",
+        "secondary",
+        "primary",
+        "primary",
+        "supporting",
+        "related",
+        "secondary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "primary",
+        "secondary",
+        "secondary",
+        "related"
+      ],
+      "intuitive": false
+    },
+    {
+      "scenario": 20,
+      "source": "SOP-024",
+      "target": "SRC-0004",
+      "description": "knowledge-curation SOP to source",
+      "status": "success",
+      "total_weight": 107,
+      "hops": 14,
+      "path": [
+        "SOP-024",
+        "SOP-023",
+        "SCR-0023",
+        "SRC-0001",
+        "SCR-0001",
+        "TEAM-0003",
+        "KB-0002",
+        "TEAM-0004",
+        "SCR-0042",
+        "SRC-0003",
+        "SCR-0008",
+        "SCR-0009",
+        "SRC-0006",
+        "SCR-0007",
+        "SRC-0004"
+      ],
+      "path_str": "SOP-024 -> SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0007 -> SRC-0004",
+      "strengths_used": [
+        "supporting",
+        "primary",
+        "primary",
+        "related",
+        "secondary",
+        "primary",
+        "primary",
+        "primary",
+        "supporting",
+        "primary",
+        "secondary",
+        "primary",
+        "primary",
+        "secondary"
+      ],
+      "intuitive": false
+    }
+  ],
+  "sop023_full_reach": {
+    "summary": {
+      "total_src_nodes": 48,
+      "reachable": 28,
+      "unreachable": 20,
+      "max_weight_seen": 118
+    },
+    "details": [
+      {
+        "target": "SRC-0001",
+        "total_weight": 21,
+        "hops": 2,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001"
+      },
+      {
+        "target": "SRC-0002",
+        "total_weight": 113,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0007 -> SCR-0011 -> SCR-0006 -> SRC-0002"
+      },
+      {
+        "target": "SRC-0003",
+        "total_weight": 58,
+        "hops": 8,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003"
+      },
+      {
+        "target": "SRC-0004",
+        "total_weight": 101,
+        "hops": 13,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0007 -> SRC-0004"
+      },
+      {
+        "target": "SRC-0005",
+        "total_weight": 114,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0007 -> SRC-0004 -> SCR-0027 -> SRC-0005"
+      },
+      {
+        "target": "SRC-0006",
+        "total_weight": 87,
+        "hops": 11,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006"
+      },
+      {
+        "target": "SRC-0007",
+        "total_weight": 101,
+        "hops": 13,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0007 -> SRC-0007"
+      },
+      {
+        "target": "SRC-0008",
+        "total_weight": 104,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0007 -> SRC-0004 -> SCR-0027 -> SRC-0008"
+      },
+      {
+        "target": "SRC-0012",
+        "total_weight": 101,
+        "hops": 13,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0007 -> SRC-0012"
+      },
+      {
+        "target": "SRC-0013",
+        "total_weight": 118,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0007 -> SCR-0046 -> SCR-0025 -> SRC-0013"
+      },
+      {
+        "target": "SRC-0014",
+        "total_weight": 101,
+        "hops": 13,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0007 -> SRC-0014"
+      },
+      {
+        "target": "SRC-0015",
+        "total_weight": 107,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0013 -> SCR-0047 -> SCR-0035 -> SRC-0015"
+      },
+      {
+        "target": "SRC-0016",
+        "total_weight": 107,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0013 -> SCR-0047 -> SCR-0035 -> SRC-0016"
+      },
+      {
+        "target": "SRC-0017",
+        "total_weight": 107,
+        "hops": 14,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0007 -> SCR-0011 -> SRC-0017"
+      },
+      {
+        "target": "SRC-0018",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0019",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0020",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0021",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0022",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0023",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0024",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0025",
+        "total_weight": 114,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0007 -> SRC-0004 -> SCR-0028 -> SRC-0025"
+      },
+      {
+        "target": "SRC-0026",
+        "total_weight": 96,
+        "hops": 13,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0013 -> SRC-0026"
+      },
+      {
+        "target": "SRC-0027",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0028",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0029",
+        "total_weight": 118,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0007 -> SCR-0046 -> SCR-0024 -> SRC-0029"
+      },
+      {
+        "target": "SRC-0030",
+        "total_weight": 117,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0007 -> SCR-0046 -> SCR-0024 -> SRC-0030"
+      },
+      {
+        "target": "SRC-0031",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0032",
+        "total_weight": 111,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0043 -> SRC-0008 -> KB-0010 -> SRC-0032"
+      },
+      {
+        "target": "SRC-0033",
+        "total_weight": 104,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0007 -> SRC-0004 -> SCR-0018 -> SRC-0033"
+      },
+      {
+        "target": "SRC-0034",
+        "total_weight": 112,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0043 -> SRC-0008 -> KB-0010 -> SRC-0034"
+      },
+      {
+        "target": "SRC-0035",
+        "total_weight": 111,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0043 -> SRC-0008 -> KB-0010 -> SRC-0035"
+      },
+      {
+        "target": "SRC-0036",
+        "total_weight": 111,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0043 -> SRC-0008 -> KB-0010 -> SRC-0036"
+      },
+      {
+        "target": "SRC-0037",
+        "total_weight": 111,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0043 -> SRC-0008 -> KB-0010 -> SRC-0037"
+      },
+      {
+        "target": "SRC-0038",
+        "total_weight": 94,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0013 -> KB-0040 -> SCR-0004 -> SRC-0038"
+      },
+      {
+        "target": "SRC-0039",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0040",
+        "total_weight": 94,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0013 -> KB-0040 -> SCR-0004 -> SRC-0040"
+      },
+      {
+        "target": "SRC-0041",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0042",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0043",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0044",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0045",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0046",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0047",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0048",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0049",
+        "total_weight": null,
+        "hops": null,
+        "path": null
+      },
+      {
+        "target": "SRC-0050",
+        "total_weight": 111,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0043 -> SRC-0008 -> KB-0010 -> SRC-0050"
+      },
+      {
+        "target": "SRC-0051",
+        "total_weight": 111,
+        "hops": 15,
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0001 -> TEAM-0003 -> KB-0002 -> TEAM-0004 -> SCR-0042 -> SRC-0003 -> SCR-0008 -> SCR-0009 -> SRC-0006 -> SCR-0043 -> SRC-0008 -> KB-0010 -> SRC-0051"
+      }
+    ]
+  },
+  "bottleneck_analysis": {
+    "description": "Nodes that appear most frequently as intermediates across the 20 test paths",
+    "top_bottlenecks": [
+      {
+        "node": "SOP-028",
+        "path_appearances": 9,
+        "domain": "sops"
+      },
+      {
+        "node": "SOP-029",
+        "path_appearances": 9,
+        "domain": "sops"
+      },
+      {
+        "node": "TEAM-0025",
+        "path_appearances": 9,
+        "domain": "teams"
+      },
+      {
+        "node": "SCR-0033",
+        "path_appearances": 9,
+        "domain": "scripts"
+      },
+      {
+        "node": "SRC-0050",
+        "path_appearances": 9,
+        "domain": "sources"
+      },
+      {
+        "node": "SCR-0005",
+        "path_appearances": 9,
+        "domain": "scripts"
+      },
+      {
+        "node": "SOP-012",
+        "path_appearances": 8,
+        "domain": "sops"
+      },
+      {
+        "node": "SOP-G01",
+        "path_appearances": 8,
+        "domain": "sops"
+      },
+      {
+        "node": "SOP-013",
+        "path_appearances": 7,
+        "domain": "sops"
+      },
+      {
+        "node": "SOP-G02",
+        "path_appearances": 6,
+        "domain": "sops"
+      },
+      {
+        "node": "TEAM-0005",
+        "path_appearances": 6,
+        "domain": "teams"
+      },
+      {
+        "node": "SOP-014",
+        "path_appearances": 5,
+        "domain": "sops"
+      },
+      {
+        "node": "SCR-0057",
+        "path_appearances": 5,
+        "domain": "scripts"
+      },
+      {
+        "node": "SCR-0032",
+        "path_appearances": 5,
+        "domain": "scripts"
+      },
+      {
+        "node": "SRC-0006",
+        "path_appearances": 5,
+        "domain": "sources"
+      }
+    ]
+  },
+  "observations": [
+    "All 20/20 scenarios found valid paths.",
+    "Average max-weight: 91.0, average hops: 13.2.",
+    "Highest weight path: scenario 3 (SOP-027 -> SRC-0001) with weight 128.",
+    "Lowest weight path: scenario 4 (SOP-023 -> SRC-0001) with weight 21.",
+    "3/20 paths are intuitive (follow logical domain progression without backtracking).",
+    "Top bottleneck node: SOP-028 (appears in 9 paths).",
+    "SOP-023 can reach 28/48 SRC nodes, showing partial data gathering connectivity."
+  ]
+}

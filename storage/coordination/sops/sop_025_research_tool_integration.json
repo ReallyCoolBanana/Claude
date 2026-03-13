@@ -1,0 +1,203 @@
+{
+  "id": "SOP-025",
+  "version": "1.0",
+  "created": "2026-03-12",
+  "team": "team-beta",
+  "title": "Research Tool Integration: Building and Using Data Extraction Tools",
+  "purpose": "Standardize how research tools are built, tested, indexed, and used by agent teams. Ensures tools are discoverable, token-efficient, and integrated into research pipelines.",
+  "sections": {
+    "tool_discovery": {
+      "title": "Step 1: Find Existing Tools Before Building New Ones",
+      "overview": "Before writing any data extraction code, check what tools already exist.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Check the scripts index for existing tools",
+          "command": "python3 -c \"import json; idx=json.load(open('storage/scripts/index.json')); [print(f'{s[\"id\"]}: {s[\"name\"]} — {s[\"description\"][:80]}') for s in idx['scripts'] if s['category']=='data-collection']\"",
+          "rationale": "Avoid rebuilding tools that already exist."
+        },
+        {
+          "step": 2,
+          "action": "Check knowledge base for prior research on the data source",
+          "command": "python3 storage/scripts/kb_search.py '<data source name>'",
+          "rationale": "Previous teams may have documented API access patterns, rate limits, or workarounds."
+        },
+        {
+          "step": 3,
+          "action": "Check the sources catalog for API definitions",
+          "command": "ls storage/sources/",
+          "rationale": "Data source definitions with endpoints and schemas may already exist."
+        }
+      ]
+    },
+    "tool_development_checklist": {
+      "title": "Step 2: Tool Development Standards",
+      "overview": "All research tools must meet these standards before being committed.",
+      "requirements": [
+        {
+          "id": "REQ-01",
+          "requirement": "Dual interface: CLI for manual use + Python API for agent import",
+          "example": "python3 tool.py <command> [args]  AND  from tool import ToolClass; t = ToolClass()"
+        },
+        {
+          "id": "REQ-02",
+          "requirement": "File-based caching with cache-safe filenames",
+          "details": "All network queries must be cached locally. Filenames must handle special chars (/ : ? etc). Cache must be clearable.",
+          "pattern": "cache_dir / f\"{prefix}_{sanitize(key)}.json\""
+        },
+        {
+          "id": "REQ-03",
+          "requirement": "Batch query support",
+          "details": "If the API supports batch queries, the tool must implement them. Single-item queries should be a convenience wrapper around batch.",
+          "rationale": "Batch queries are typically 10-100x more efficient than individual queries."
+        },
+        {
+          "id": "REQ-04",
+          "requirement": "Token-efficient export formats",
+          "details": "Provide at minimum: full JSON (for programmatic use), compact JSON (short keys, no whitespace), and LLM format (newline-separated, compressed URLs).",
+          "format_guide": {
+            "compact_json": "Short keys (e: external, i: internal, c: categories), separators=(',',':')",
+            "llm_format": "=== Title ===\\nd: description\\nc: cat1|cat2\\ne: compressed_url\\ni: link1|link2",
+            "url_compression": "Use prefix shorthand (wa: for web.archive.org, ax: for arxiv.org, doi: for doi.org, etc.)"
+          }
+        },
+        {
+          "id": "REQ-05",
+          "requirement": "Stats tracking",
+          "details": "Track API calls, cache hits, total items processed. Report via stats command or get_stats() method."
+        },
+        {
+          "id": "REQ-06",
+          "requirement": "Redirect and error handling",
+          "details": "Handle HTTP redirects, API errors, empty responses, and malformed data gracefully. Never crash on bad input — return empty results."
+        },
+        {
+          "id": "REQ-07",
+          "requirement": "Rate limiting respect",
+          "details": "Include sleep delays between batch queries. Document known rate limits in the tool's docstring and KB entry."
+        }
+      ]
+    },
+    "tool_registration": {
+      "title": "Step 3: Registering a New Tool",
+      "overview": "Every tool must be indexed in three places for discoverability.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Add to storage/scripts/index.json",
+          "fields": ["id (SCR-XXXX)", "name", "filename", "language", "category (data-collection)", "description", "tags", "dependencies", "added", "added_by_team"]
+        },
+        {
+          "step": 2,
+          "action": "Create a knowledge base entry (KB-XXXX.md)",
+          "fields": ["Methodology used", "API endpoints", "Rate limits", "Data coverage", "Performance benchmarks", "Known limitations"],
+          "template": "knowledge-base/TEMPLATE.md"
+        },
+        {
+          "step": 3,
+          "action": "Update knowledge-base/index.json with the new KB entry"
+        },
+        {
+          "step": 4,
+          "action": "Add usage instructions to the SOP catalog if the tool is complex",
+          "when": "If the tool has >3 commands or requires specific workflow knowledge"
+        }
+      ]
+    },
+    "using_tools_in_research": {
+      "title": "Step 4: Using Tools in Research Routines",
+      "overview": "Standard workflow for research teams using data extraction tools.",
+      "workflow": [
+        {
+          "phase": "Discovery",
+          "actions": [
+            "Identify the data source and check for existing tools (Step 1)",
+            "If tool exists: use it. If not: build one following Step 2 standards"
+          ]
+        },
+        {
+          "phase": "Extraction",
+          "actions": [
+            "Run batch extraction first (covers the most ground fastest)",
+            "Use cached data for subsequent operations",
+            "Export in LLM format when feeding data to agents (saves ~30% tokens)",
+            "Export in full JSON when data needs programmatic processing"
+          ]
+        },
+        {
+          "phase": "Analysis",
+          "actions": [
+            "Use compact/LLM exports to stay within agent context limits",
+            "Cross-reference with existing KB entries",
+            "Document gaps in coverage for future runs"
+          ]
+        },
+        {
+          "phase": "Storage",
+          "actions": [
+            "Commit cache files (enables instant re-use by future teams)",
+            "Create/update KB entry with methodology and findings",
+            "Update indexes"
+          ]
+        }
+      ]
+    },
+    "token_efficiency_mandate": {
+      "title": "Token Efficiency Requirements for All Research Tools",
+      "overview": "Agents MUST use token-efficient formats when passing data between agents or injecting data into prompts.",
+      "rules": [
+        "ALWAYS use LLM export format when feeding data into agent prompts",
+        "ALWAYS use compact JSON when storing intermediate results",
+        "NEVER use full/pretty JSON in agent-to-agent communication",
+        "URL compression is MANDATORY for any tool that handles URLs",
+        "Internal link lists should use pipe-separated format (title1|title2) not JSON arrays",
+        "Metadata should use single-letter keys in compact exports (d: description, c: categories, e: external, i: internal)"
+      ],
+      "token_savings_reference": {
+        "full_json_to_compact": "~28% fewer tokens",
+        "full_json_to_llm": "~31% fewer tokens",
+        "url_compression_alone": "~17% fewer tokens on URLs"
+      }
+    },
+    "egress_testing_protocol": {
+      "title": "Pre-Development Egress Testing",
+      "overview": "Before building a tool for any external API, test accessibility first.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Test direct curl access",
+          "command": "curl -sL --max-time 10 '<api_url>' | head -c 500"
+        },
+        {
+          "step": 2,
+          "action": "Test WebFetch access",
+          "note": "Some URLs work via WebFetch but not curl, and vice versa"
+        },
+        {
+          "step": 3,
+          "action": "Document results in a test matrix before committing to development",
+          "example_matrix": "| Method | Status | Data Quality | Notes |"
+        },
+        {
+          "step": 4,
+          "action": "If blocked: check for alternative endpoints, mirrors, or SPARQL interfaces",
+          "known_workarounds": {
+            "wikipedia": "Use DBpedia SPARQL (dbpedia.org/sparql) — see KB-0045",
+            "wikidata": "Blocked by egress — use DBpedia owl:sameAs cross-refs instead",
+            "nature.com": "Blocked — use doi.org or Semantic Scholar for paper metadata"
+          }
+        }
+      ]
+    }
+  },
+  "available_tools": {
+    "wikipedia_tools": {
+      "id": "SCR-0043",
+      "file": "storage/scripts/wikipedia_tools.py",
+      "kb_entry": "KB-0045",
+      "sop": "SOP-026",
+      "capabilities": ["external links", "internal links", "categories", "descriptions", "batch queries", "caching", "LLM export"],
+      "data_source": "DBpedia SPARQL (dbpedia.org)"
+    }
+  }
+}

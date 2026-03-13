@@ -1,0 +1,498 @@
+{
+  "tag": "communication",
+  "node_count": 14,
+  "domains": [
+    "knowledge-base",
+    "scripts",
+    "sops",
+    "teams"
+  ],
+  "nodes": [
+    {
+      "id": "KB-0015",
+      "domain": "knowledge-base",
+      "title": "JSONL Message Bus: Technical Reference for Inter-Agent Communication",
+      "pointer_count": 17
+    },
+    {
+      "id": "KB-0016",
+      "domain": "knowledge-base",
+      "title": "SQLite WAL Shared State: Technical Reference for Inter-Agent Coordination",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0017",
+      "domain": "knowledge-base",
+      "title": "Failure Mode Analysis: JSONL Bus + SQLite Shared State",
+      "pointer_count": 18
+    },
+    {
+      "id": "KB-0019",
+      "domain": "knowledge-base",
+      "title": "Architecture & Integration Analysis: Live Communication System",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0020",
+      "domain": "knowledge-base",
+      "title": "Live Prototype Testing: Data Gathering Benchmark Results",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0021",
+      "domain": "knowledge-base",
+      "title": "Think Tank Efficiency Analysis: Proto A Communication vs No Communication",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0023",
+      "domain": "knowledge-base",
+      "title": "Dynamic Team Coordination: Help Protocol, Work Stealing, Direct Channels",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0041",
+      "domain": "knowledge-base",
+      "title": "Distributed Agent Coordination Protocols",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0029",
+      "domain": "scripts",
+      "title": "bus-cli",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-G03",
+      "domain": "sops",
+      "title": "Proto A Coordination Tool SOPs",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0019",
+      "domain": "teams",
+      "title": "Architecture and integration analysis for live inter-agent communication system",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0020",
+      "domain": "teams",
+      "title": "Live prototype testing: 3 think tank teams + 3 data gathering teams + automated benchmark comparing Proto A, Proto B, and baseline",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0021",
+      "domain": "teams",
+      "title": "Proto A efficiency analysis via 3 think tanks using Proto A communication; archive Proto B, mark Proto A production",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0023",
+      "domain": "teams",
+      "title": "Design and implement dynamic team coordination features: help protocol, direct channels, work stealing, pipeline chaining, and scratchpad",
+      "pointer_count": 20
+    }
+  ],
+  "internal_edges": [
+    {
+      "from": "KB-0020",
+      "to": "TEAM-0021",
+      "weight": 7
+    },
+    {
+      "from": "KB-0020",
+      "to": "TEAM-0020",
+      "weight": 5
+    },
+    {
+      "from": "KB-0023",
+      "to": "TEAM-0023",
+      "weight": 5
+    },
+    {
+      "from": "KB-0015",
+      "to": "TEAM-0019",
+      "weight": 5
+    },
+    {
+      "from": "KB-0016",
+      "to": "TEAM-0019",
+      "weight": 5
+    },
+    {
+      "from": "KB-0019",
+      "to": "TEAM-0020",
+      "weight": 5
+    },
+    {
+      "from": "KB-0019",
+      "to": "TEAM-0021",
+      "weight": 5
+    },
+    {
+      "from": "KB-0019",
+      "to": "TEAM-0019",
+      "weight": 4
+    },
+    {
+      "from": "KB-0021",
+      "to": "TEAM-0020",
+      "weight": 4
+    },
+    {
+      "from": "KB-0021",
+      "to": "TEAM-0021",
+      "weight": 4
+    },
+    {
+      "from": "KB-0023",
+      "to": "SOP-G03",
+      "weight": 4
+    },
+    {
+      "from": "KB-0015",
+      "to": "SCR-0029",
+      "weight": 3
+    },
+    {
+      "from": "KB-0016",
+      "to": "SOP-G03",
+      "weight": 3
+    },
+    {
+      "from": "KB-0016",
+      "to": "TEAM-0023",
+      "weight": 3
+    },
+    {
+      "from": "KB-0017",
+      "to": "TEAM-0019",
+      "weight": 3
+    },
+    {
+      "from": "KB-0041",
+      "to": "SOP-G03",
+      "weight": 3
+    },
+    {
+      "from": "SOP-G03",
+      "to": "TEAM-0023",
+      "weight": 3
+    },
+    {
+      "from": "KB-0016",
+      "to": "TEAM-0020",
+      "weight": 3
+    },
+    {
+      "from": "KB-0016",
+      "to": "TEAM-0021",
+      "weight": 3
+    },
+    {
+      "from": "KB-0023",
+      "to": "TEAM-0020",
+      "weight": 3
+    },
+    {
+      "from": "KB-0023",
+      "to": "TEAM-0021",
+      "weight": 3
+    },
+    {
+      "from": "SCR-0029",
+      "to": "SOP-G03",
+      "weight": 3
+    },
+    {
+      "from": "SCR-0029",
+      "to": "TEAM-0019",
+      "weight": 3
+    },
+    {
+      "from": "KB-0017",
+      "to": "KB-0015",
+      "weight": 3
+    },
+    {
+      "from": "KB-0015",
+      "to": "KB-0017",
+      "weight": 3
+    },
+    {
+      "from": "KB-0017",
+      "to": "KB-0016",
+      "weight": 3
+    },
+    {
+      "from": "KB-0016",
+      "to": "KB-0017",
+      "weight": 3
+    },
+    {
+      "from": "KB-0019",
+      "to": "KB-0015",
+      "weight": 3
+    },
+    {
+      "from": "KB-0015",
+      "to": "KB-0019",
+      "weight": 3
+    },
+    {
+      "from": "KB-0019",
+      "to": "KB-0016",
+      "weight": 3
+    },
+    {
+      "from": "KB-0016",
+      "to": "KB-0019",
+      "weight": 3
+    },
+    {
+      "from": "KB-0020",
+      "to": "KB-0019",
+      "weight": 3
+    },
+    {
+      "from": "KB-0019",
+      "to": "KB-0020",
+      "weight": 3
+    },
+    {
+      "from": "KB-0021",
+      "to": "KB-0020",
+      "weight": 3
+    },
+    {
+      "from": "KB-0020",
+      "to": "KB-0021",
+      "weight": 3
+    },
+    {
+      "from": "KB-0021",
+      "to": "KB-0019",
+      "weight": 3
+    },
+    {
+      "from": "KB-0019",
+      "to": "KB-0021",
+      "weight": 3
+    },
+    {
+      "from": "KB-0041",
+      "to": "KB-0023",
+      "weight": 3
+    },
+    {
+      "from": "KB-0023",
+      "to": "KB-0041",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0019",
+      "to": "KB-0015",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0019",
+      "to": "KB-0016",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0020",
+      "to": "KB-0019",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0021",
+      "to": "KB-0020",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0021",
+      "to": "KB-0019",
+      "weight": 3
+    },
+    {
+      "from": "KB-0015",
+      "to": "SOP-G03",
+      "weight": 2
+    },
+    {
+      "from": "KB-0017",
+      "to": "SCR-0029",
+      "weight": 2
+    },
+    {
+      "from": "KB-0019",
+      "to": "SCR-0029",
+      "weight": 2
+    },
+    {
+      "from": "KB-0019",
+      "to": "SOP-G03",
+      "weight": 2
+    },
+    {
+      "from": "KB-0020",
+      "to": "SOP-G03",
+      "weight": 2
+    },
+    {
+      "from": "KB-0021",
+      "to": "SOP-G03",
+      "weight": 2
+    },
+    {
+      "from": "KB-0041",
+      "to": "TEAM-0020",
+      "weight": 2
+    },
+    {
+      "from": "KB-0041",
+      "to": "TEAM-0021",
+      "weight": 2
+    },
+    {
+      "from": "KB-0041",
+      "to": "TEAM-0023",
+      "weight": 2
+    },
+    {
+      "from": "SOP-G03",
+      "to": "TEAM-0019",
+      "weight": 2
+    },
+    {
+      "from": "SOP-G03",
+      "to": "TEAM-0020",
+      "weight": 2
+    },
+    {
+      "from": "SOP-G03",
+      "to": "TEAM-0021",
+      "weight": 2
+    },
+    {
+      "from": "KB-0015",
+      "to": "TEAM-0020",
+      "weight": 2
+    },
+    {
+      "from": "KB-0015",
+      "to": "TEAM-0021",
+      "weight": 2
+    },
+    {
+      "from": "KB-0017",
+      "to": "TEAM-0020",
+      "weight": 2
+    },
+    {
+      "from": "KB-0017",
+      "to": "TEAM-0021",
+      "weight": 2
+    },
+    {
+      "from": "SCR-0029",
+      "to": "TEAM-0023",
+      "weight": 2
+    },
+    {
+      "from": "KB-0015",
+      "to": "TEAM-0023",
+      "weight": 1
+    },
+    {
+      "from": "KB-0016",
+      "to": "SCR-0029",
+      "weight": 1
+    },
+    {
+      "from": "KB-0017",
+      "to": "SOP-G03",
+      "weight": 1
+    },
+    {
+      "from": "KB-0017",
+      "to": "TEAM-0023",
+      "weight": 1
+    },
+    {
+      "from": "KB-0019",
+      "to": "TEAM-0023",
+      "weight": 1
+    },
+    {
+      "from": "KB-0020",
+      "to": "SCR-0029",
+      "weight": 1
+    },
+    {
+      "from": "KB-0020",
+      "to": "TEAM-0019",
+      "weight": 1
+    },
+    {
+      "from": "KB-0020",
+      "to": "TEAM-0023",
+      "weight": 1
+    },
+    {
+      "from": "KB-0021",
+      "to": "SCR-0029",
+      "weight": 1
+    },
+    {
+      "from": "KB-0021",
+      "to": "TEAM-0019",
+      "weight": 1
+    },
+    {
+      "from": "KB-0021",
+      "to": "TEAM-0023",
+      "weight": 1
+    },
+    {
+      "from": "KB-0023",
+      "to": "SCR-0029",
+      "weight": 1
+    },
+    {
+      "from": "KB-0023",
+      "to": "TEAM-0019",
+      "weight": 1
+    },
+    {
+      "from": "KB-0041",
+      "to": "SCR-0029",
+      "weight": 1
+    },
+    {
+      "from": "KB-0041",
+      "to": "TEAM-0019",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0029",
+      "to": "TEAM-0020",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0029",
+      "to": "TEAM-0021",
+      "weight": 1
+    },
+    {
+      "from": "TEAM-0019",
+      "to": "SOP-G03",
+      "weight": 1
+    },
+    {
+      "from": "TEAM-0023",
+      "to": "SOP-G03",
+      "weight": 1
+    }
+  ]
+}

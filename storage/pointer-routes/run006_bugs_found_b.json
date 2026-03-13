@@ -1,0 +1,396 @@
+{
+  "run": "006",
+  "division": "3B",
+  "agents": ["BF-5", "BF-6", "BF-7", "BF-8"],
+  "date": "2026-03-12",
+  "description": "Bug finding across pointer-routes scripts, route_tracker stress testing, and index completeness audit",
+  "total_bugs_found": 30,
+  "bugs": [
+    {
+      "id": "BF6-0001",
+      "agent": "BF-5",
+      "severity": "medium",
+      "category": "hardcoded-path",
+      "file": "storage/pointer-routes/pathfind_p1.py",
+      "lines": [22, 291],
+      "description": "Hardcoded absolute paths instead of Path(__file__)-relative paths",
+      "detail": "Line 22: open(\"/home/user/Claude/storage/pointer-network.json\"), Line 291: report_path = \"/home/user/Claude/storage/pointer-routes/pathfind_p1_weight.json\". Should use Path(__file__).parent / ... for portability.",
+      "fix": "Replace hardcoded strings with Path(__file__).parent.parent / 'pointer-network.json' and Path(__file__).parent / 'pathfind_p1_weight.json'"
+    },
+    {
+      "id": "BF6-0002",
+      "agent": "BF-5",
+      "severity": "medium",
+      "category": "hardcoded-path",
+      "file": "storage/pointer-routes/pathfind_p2_strength.py",
+      "lines": [18, 19, 20],
+      "description": "Three hardcoded absolute paths instead of Path(__file__)-relative paths",
+      "detail": "NETWORK_PATH, REPORT_PATH, and ROUTE_TRACKER all use hardcoded /home/user/Claude/... strings.",
+      "fix": "Replace with Path(__file__)-based relative paths"
+    },
+    {
+      "id": "BF6-0003",
+      "agent": "BF-5",
+      "severity": "medium",
+      "category": "hardcoded-path",
+      "file": "storage/pointer-routes/pathfind_p3_tags.py",
+      "lines": [11, 12, 13],
+      "description": "Three hardcoded absolute paths instead of Path(__file__)-relative paths",
+      "detail": "NETWORK_PATH, REPORT_PATH, and ROUTE_TRACKER all use hardcoded /home/user/Claude/... strings.",
+      "fix": "Replace with Path(__file__)-based relative paths"
+    },
+    {
+      "id": "BF6-0004",
+      "agent": "BF-6",
+      "severity": "low",
+      "category": "deprecated-api",
+      "file": "storage/pointer-routes/audit_a1.py",
+      "lines": [260],
+      "description": "Uses deprecated datetime.utcnow()",
+      "detail": "Line 260: datetime.utcnow().isoformat() + 'Z'. datetime.utcnow() is deprecated since Python 3.12.",
+      "fix": "Replace with datetime.now(timezone.utc).isoformat()"
+    },
+    {
+      "id": "BF6-0005",
+      "agent": "BF-6",
+      "severity": "low",
+      "category": "deprecated-api",
+      "file": "storage/pointer-routes/p7_failure_aware_pathfinding.py",
+      "lines": [148, 677],
+      "description": "Uses deprecated datetime.utcnow() in two places",
+      "detail": "Lines 148 and 677: datetime.utcnow().isoformat() + 'Z'. datetime.utcnow() is deprecated since Python 3.12.",
+      "fix": "Replace with datetime.now(timezone.utc).isoformat()"
+    },
+    {
+      "id": "BF6-0006",
+      "agent": "BF-6",
+      "severity": "low",
+      "category": "deprecated-api",
+      "file": "storage/pointer-routes/stress_s8_simulate.py",
+      "lines": [449],
+      "description": "Uses deprecated datetime.utcnow()",
+      "detail": "Line 449: datetime.utcnow().isoformat() + 'Z'. datetime.utcnow() is deprecated since Python 3.12.",
+      "fix": "Replace with datetime.now(timezone.utc).isoformat()"
+    },
+    {
+      "id": "BF6-0007",
+      "agent": "BF-6",
+      "severity": "low",
+      "category": "deprecated-api",
+      "file": "storage/pointer-routes/benchmark_c1.py",
+      "lines": [360],
+      "description": "Uses deprecated datetime.utcnow() via __import__",
+      "detail": "Line 360: __import__('datetime').datetime.utcnow().isoformat() + 'Z'. datetime.utcnow() is deprecated since Python 3.12.",
+      "fix": "Replace with datetime.now(timezone.utc).isoformat()"
+    },
+    {
+      "id": "BF6-0008",
+      "agent": "BF-6",
+      "severity": "low",
+      "category": "deprecated-api",
+      "file": "storage/pointer-routes/gamma_benchmark.py",
+      "lines": [628],
+      "description": "Uses deprecated datetime.utcnow()",
+      "detail": "Line 628: datetime.utcnow().isoformat() + 'Z'. datetime.utcnow() is deprecated since Python 3.12.",
+      "fix": "Replace with datetime.now(timezone.utc).isoformat()"
+    },
+    {
+      "id": "BF6-0009",
+      "agent": "BF-6",
+      "severity": "low",
+      "category": "deprecated-api",
+      "file": "storage/pointer-routes/stress_s5_analysis.py",
+      "lines": [434],
+      "description": "Uses deprecated datetime.utcnow() via __import__",
+      "detail": "Line 434: __import__('datetime').datetime.utcnow().isoformat() + 'Z'. datetime.utcnow() is deprecated since Python 3.12.",
+      "fix": "Replace with datetime.now(timezone.utc).isoformat()"
+    },
+    {
+      "id": "BF6-0010",
+      "agent": "BF-5",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/pathfind_p1.py",
+      "lines": [22],
+      "description": "No error handling for file I/O when loading pointer network",
+      "detail": "open() call at line 22 has no try/except for FileNotFoundError or JSONDecodeError.",
+      "fix": "Wrap in try/except with informative error message and graceful exit"
+    },
+    {
+      "id": "BF6-0011",
+      "agent": "BF-5",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/pathfind_p1_weight.py",
+      "lines": [33],
+      "description": "load_network() has no error handling for file I/O",
+      "detail": "No try/except around json.load() for FileNotFoundError or JSONDecodeError.",
+      "fix": "Add try/except with informative error message"
+    },
+    {
+      "id": "BF6-0012",
+      "agent": "BF-5",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/pathfind_p2_strength.py",
+      "lines": [23],
+      "description": "load_network() has no error handling for file I/O",
+      "detail": "No try/except around json.load() for FileNotFoundError or JSONDecodeError.",
+      "fix": "Add try/except with informative error message"
+    },
+    {
+      "id": "BF6-0013",
+      "agent": "BF-5",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/pathfind_p3_tags.py",
+      "lines": [16],
+      "description": "load_data() has no error handling for file I/O",
+      "detail": "No try/except around json.load() for FileNotFoundError or JSONDecodeError.",
+      "fix": "Add try/except with informative error message"
+    },
+    {
+      "id": "BF6-0014",
+      "agent": "BF-5",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/p4_hybrid_pathfinder.py",
+      "lines": [54],
+      "description": "load_network() has no error handling for file I/O",
+      "detail": "No try/except around json.load() for FileNotFoundError or JSONDecodeError.",
+      "fix": "Add try/except with informative error message"
+    },
+    {
+      "id": "BF6-0015",
+      "agent": "BF-5",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/pathfind_p5.py",
+      "lines": [30],
+      "description": "load_network() has no error handling for file I/O",
+      "detail": "No try/except around json.load() for FileNotFoundError or JSONDecodeError.",
+      "fix": "Add try/except with informative error message"
+    },
+    {
+      "id": "BF6-0016",
+      "agent": "BF-5",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/pathfind_p6_multistop.py",
+      "lines": [30],
+      "description": "load_network() has no error handling for file I/O",
+      "detail": "No try/except around json.load() for FileNotFoundError or JSONDecodeError.",
+      "fix": "Add try/except with informative error message"
+    },
+    {
+      "id": "BF6-0017",
+      "agent": "BF-5",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/audit_a1.py",
+      "lines": [20],
+      "description": "main() opens pointer network without error handling",
+      "detail": "No try/except around file open for FileNotFoundError or JSONDecodeError.",
+      "fix": "Add try/except with informative error message"
+    },
+    {
+      "id": "BF6-0018",
+      "agent": "BF-5",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/p7_failure_aware_pathfinding.py",
+      "lines": [30],
+      "description": "load_network() has no error handling for file I/O",
+      "detail": "No try/except around json.load() for FileNotFoundError or JSONDecodeError.",
+      "fix": "Add try/except with informative error message"
+    },
+    {
+      "id": "BF6-0019",
+      "agent": "BF-5",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/stress_s5_analysis.py",
+      "lines": [20],
+      "description": "load_network() has no error handling for file I/O",
+      "detail": "No try/except around json.load() for FileNotFoundError or JSONDecodeError.",
+      "fix": "Add try/except with informative error message"
+    },
+    {
+      "id": "BF6-0020",
+      "agent": "BF-5",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/stress_s6_benchmark.py",
+      "lines": [28],
+      "description": "load_network() has no error handling for file I/O",
+      "detail": "No try/except around json.load() for FileNotFoundError or JSONDecodeError.",
+      "fix": "Add try/except with informative error message"
+    },
+    {
+      "id": "BF6-0021",
+      "agent": "BF-5",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/stress_s3.py",
+      "lines": [16],
+      "description": "load_network() has no error handling for file I/O",
+      "detail": "No try/except around json.load() for FileNotFoundError or JSONDecodeError.",
+      "fix": "Add try/except with informative error message"
+    },
+    {
+      "id": "BF6-0022",
+      "agent": "BF-6",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/beta_analysis.py",
+      "lines": [10, 11],
+      "description": "Module-level file load with no error handling",
+      "detail": "Lines 10-11 load pointer network at module import time with no try/except. Script crashes on import if file missing.",
+      "fix": "Move file load into a function with error handling, or wrap in try/except"
+    },
+    {
+      "id": "BF6-0023",
+      "agent": "BF-6",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/bugs_b2_scan.py",
+      "lines": [11, 12],
+      "description": "Module-level file load with no error handling",
+      "detail": "Lines 11-12 load pointer network at module import time with no try/except. Script crashes on import if file missing.",
+      "fix": "Move file load into a function with error handling, or wrap in try/except"
+    },
+    {
+      "id": "BF6-0024",
+      "agent": "BF-6",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/p8_exploration.py",
+      "lines": [22, 23, 44],
+      "description": "Module-level file load with no error handling; load_routes also unprotected",
+      "detail": "Lines 22-23 load pointer network at module import time. Line 44 build_visit_frequency() calls json.loads(line) without try/except for JSONDecodeError on corrupt JSONL lines.",
+      "fix": "Add try/except around module-level load and around json.loads in build_visit_frequency"
+    },
+    {
+      "id": "BF6-0025",
+      "agent": "BF-6",
+      "severity": "medium",
+      "category": "missing-error-handling",
+      "file": "storage/pointer-routes/p7_failure_aware_pathfinding.py",
+      "lines": [39, 40, 41, 42, 43, 44, 45, 46, 47],
+      "description": "load_routes() does not handle corrupt JSONL lines",
+      "detail": "p7's own load_routes() function reads JSONL but does not wrap json.loads() in try/except JSONDecodeError. Unlike route_tracker.py's load_routes() which properly handles corrupt lines, this version will crash on malformed input.",
+      "fix": "Add try/except JSONDecodeError around json.loads(line) with continue on error"
+    },
+    {
+      "id": "BF6-0026",
+      "agent": "BF-7",
+      "severity": "low",
+      "category": "missing-error-handling",
+      "file": "storage/coordination/route_tracker.py",
+      "lines": [98],
+      "description": "log_route() missing write error handling",
+      "detail": "log_route() opens file for append and writes JSON but has no try/except for IOError/PermissionError on write failure. Read operations in load_routes() are properly protected.",
+      "fix": "Add try/except around file write with informative error message"
+    },
+    {
+      "id": "BF6-0027",
+      "agent": "BF-6",
+      "severity": "low",
+      "category": "portability",
+      "file": "storage/pointer-routes/pathfind_p6_multistop.py",
+      "lines": [222],
+      "description": "Uses hardcoded 'python3' string instead of sys.executable",
+      "detail": "log_route() at line 222 uses string 'python3' in subprocess call instead of sys.executable, which may fail in virtual environments or non-standard Python installations.",
+      "fix": "Replace 'python3' with sys.executable"
+    },
+    {
+      "id": "BF6-0028",
+      "agent": "BF-8",
+      "severity": "medium",
+      "category": "index-completeness",
+      "file": "teams/sessions/index.json",
+      "lines": [],
+      "description": "Three team session files exist on disk but are missing from index.json",
+      "detail": "TEAM-0015.md, TEAM-0016.md, and TEAM-0017.md exist in teams/sessions/ but are not listed in teams/sessions/index.json (which has 22 entries). The entry_count should be 25.",
+      "fix": "Add entries for TEAM-0015, TEAM-0016, TEAM-0017 to teams/sessions/index.json and update entry_count"
+    },
+    {
+      "id": "BF6-0029",
+      "agent": "BF-8",
+      "severity": "low",
+      "category": "schema-inconsistency",
+      "file": "market-research/methods/ai-quant-techniques/index.json",
+      "lines": [],
+      "description": "Index file uses non-standard schema (missing schema_version field)",
+      "detail": "Main domain indexes (knowledge-base, teams, scripts, sources, api-tools, sops) use schema_version: '2.0' with entries[] arrays. This methods index uses a different structure without schema_version, entry_count, or entries[] fields.",
+      "fix": "Consider migrating to standard schema or documenting the variant schema"
+    },
+    {
+      "id": "BF6-0030",
+      "agent": "BF-8",
+      "severity": "low",
+      "category": "schema-inconsistency",
+      "file": "storage/scripts/data-gathering/methods/index.json",
+      "lines": [],
+      "description": "Index file uses non-standard schema (missing schema_version field)",
+      "detail": "Uses a different schema structure than the main domain indexes. Missing schema_version, entry_count, and entries[] fields that are standard in other index files.",
+      "fix": "Consider migrating to standard schema or documenting the variant schema"
+    }
+  ],
+  "summary": {
+    "by_agent": {
+      "BF-5": {
+        "task": "Script regression testing (syntax, imports, hardcoded paths, deprecated APIs, error handling)",
+        "scripts_checked": 19,
+        "syntax_errors": 0,
+        "import_errors": 0,
+        "bugs_found": 15
+      },
+      "BF-6": {
+        "task": "Script regression testing (continued) — deprecated datetime, error handling, portability",
+        "scripts_checked": 19,
+        "bugs_found": 10
+      },
+      "BF-7": {
+        "task": "Route tracker stress testing",
+        "file": "storage/coordination/route_tracker.py",
+        "tests": {
+          "load_routes_handles_corrupt_jsonl": "PASS — try/except JSONDecodeError at line 112",
+          "analyze_handles_unknown_outcomes": "PASS — maps to 'other' at line 147",
+          "recommend_filters_zero_success": "PASS — filters at lines 329-331 and 344-350",
+          "analyze_command_runs": "PASS — 156 routes, 780 hops analyzed without crash"
+        },
+        "bugs_found": 1,
+        "note": "route_tracker.py is well-written; only minor issue is missing write error handling in log_route()"
+      },
+      "BF-8": {
+        "task": "Index completeness audit",
+        "indexes_checked": 11,
+        "missing_entries_found": 3,
+        "stale_entries_found": 0,
+        "schema_inconsistencies": 2,
+        "bugs_found": 3
+      }
+    },
+    "by_category": {
+      "hardcoded-path": 3,
+      "deprecated-api": 6,
+      "missing-error-handling": 16,
+      "portability": 1,
+      "index-completeness": 1,
+      "schema-inconsistency": 2
+    },
+    "by_severity": {
+      "medium": 20,
+      "low": 10
+    },
+    "notable_passes": [
+      "All 19 Python scripts pass ast.parse syntax check",
+      "All 19 Python scripts have valid imports (all modules resolve)",
+      "4 scripts properly handle FileNotFoundError: stress_s1.py, stress_s8_simulate.py, benchmark_c1.py, gamma_benchmark.py",
+      "route_tracker.py correctly handles corrupt JSONL, unknown outcomes, and zero-success filtering",
+      "knowledge-base/index.json is 100% complete (46 entries, 46 files)",
+      "No stale entries found in any index (all indexed files exist on disk)"
+    ]
+  }
+}

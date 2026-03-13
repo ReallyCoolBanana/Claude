@@ -1,14 +1,32 @@
 {
-  "version": "1.0",
-  "tools": [
+  "schema_version": "2.0",
+  "domain": "api-tools",
+  "last_updated": "2026-03-12",
+  "entry_count": 1,
+  "entries": [
     {
       "id": "TOOL-0001",
-      "name": "Sonnet Research API",
-      "description": "Multi-agent research system using Claude Sonnet. Supports variable sub-agents, request queuing, priority scheduling, result sorting, and automated import into repo storage.",
-      "path": "sonnet-research-api/",
+      "title": "Sonnet Research API",
+      "date": "2026-03-11",
       "category": "integration",
+      "tags": [
+        "sonnet",
+        "research",
+        "multi-agent",
+        "api",
+        "queue"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "path": "sonnet-research-api/",
+      "entry_point": "orchestrator.py",
       "auth_type": "api-key",
-      "team": "TEAM-0002",
+      "description": "Multi-agent research system using Claude Sonnet. Supports variable sub-agents, request queuing, priority scheduling, result sorting, and automated import into repo storage.",
       "modules": [
         "client.py",
         "queue_manager.py",
@@ -17,20 +35,12 @@
         "sorter.py",
         "data_importer.py"
       ],
-      "entry_point": "orchestrator.py",
       "requires": [
         "anthropic"
       ],
-      "tags": [
-        "sonnet",
-        "research",
-        "multi-agent",
-        "api",
-        "queue"
-      ],
+      "team": "TEAM-0002",
       "last_used": "2026-03-11",
-      "usage_count": 0,
-      "date": "2026-03-11"
+      "usage_count": 0
     },
     {
       "id": "TOOL-0002",
@@ -57,23 +67,28 @@
       "date": "2026-03-11"
     }
   ],
-  "categories": {
-    "communication": [],
-    "analysis": [
-      "TOOL-0002"
-    ],
-    "integration": [
-      "TOOL-0001"
-    ],
-    "data-retrieval": []
-  },
-  "auth_types": {
-    "api-key": [
-      "TOOL-0001"
-    ],
-    "none": [
-      "TOOL-0002"
-    ]
-  },
-  "date": "2026-03-11"
+  "secondary_indexes": {
+    "by_category": {
+      "integration": [
+        "TOOL-0001"
+      ]
+    },
+    "by_tag": {
+      "sonnet": [
+        "TOOL-0001"
+      ],
+      "research": [
+        "TOOL-0001"
+      ],
+      "multi-agent": [
+        "TOOL-0001"
+      ],
+      "api": [
+        "TOOL-0001"
+      ],
+      "queue": [
+        "TOOL-0001"
+      ]
+    }
+  }
 }

@@ -41,7 +41,7 @@
       ],
       "requires_api_key": false,
       "avg_duration_seconds": 1.47,
-      "status": "partially functional — returns limited results",
+      "status": "partially functional \u2014 returns limited results",
       "created": "2026-03-10",
       "verification": {
         "iteration": 1,
@@ -83,7 +83,7 @@
         "speed_seconds": 2.66,
         "data_points": 9,
         "quality_score": 50,
-        "notes": "Now functional — improved from 0 to 9 results vs iteration 1"
+        "notes": "Now functional \u2014 improved from 0 to 9 results vs iteration 1"
       }
     },
     {
@@ -101,7 +101,7 @@
       ],
       "requires_api_key": false,
       "avg_duration_seconds": 5.11,
-      "status": "functional — 4 of 5 sub-sources active",
+      "status": "functional \u2014 4 of 5 sub-sources active",
       "created": "2026-03-10",
       "updated": "2026-03-10",
       "iteration": 2,
@@ -203,6 +203,26 @@
       "status": "new",
       "created": "2026-03-10",
       "iteration": 3
+    },
+    {
+      "id": "DG-0010",
+      "name": "CKAN/DKAN Open Data Search",
+      "file": "method_ckan.py",
+      "description": "Searches multiple CKAN-powered government open data portals in parallel. Supports US Data.gov, UK data.gov.uk, Canada, Australia, EU, Brazil, and openAFRICA. Uses CKAN Action API v3 package_search. Extracts titles, descriptions, organizations, tags, formats, resources, and licenses.",
+      "category": "api-based",
+      "data_sources": [
+        "CKAN API (Data.gov)",
+        "CKAN API (Canada)",
+        "CKAN API (Australia)",
+        "CKAN API (UK)",
+        "CKAN API (EU)"
+      ],
+      "requires_api_key": false,
+      "avg_duration_seconds": 5.0,
+      "status": "functional",
+      "created": "2026-03-12",
+      "iteration": 1,
+      "notes": "Parallel search across 4+ portals. US, Canada, Australia verified working. UK may timeout. No auth required."
     }
   ],
   "utilities": [
@@ -232,7 +252,8 @@
       "DG-0006",
       "DG-0007",
       "DG-0008",
-      "DG-0009"
+      "DG-0009",
+      "DG-0010"
     ],
     "hybrid": [
       "DG-0004"
@@ -240,6 +261,5 @@
     "ai-enhanced": [
       "DG-0005"
     ]
-  },
-  "date": "2026-03-10"
+  }
 }

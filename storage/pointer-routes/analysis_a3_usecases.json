@@ -1,0 +1,393 @@
+{
+  "report": "Analysis A3: Pointer Network Use Cases and Applications",
+  "agent": "analysis-3",
+  "date": "2026-03-12",
+  "route": "SOP-028 -> SOP-029 -> pointer-network",
+  "network_profile": {
+    "total_nodes": 310,
+    "total_edges": 4820,
+    "domains": {
+      "knowledge-base": 46,
+      "scripts": 57,
+      "sources": 48,
+      "sops": 22,
+      "teams": 22,
+      "wikipedia": 114,
+      "api-tools": 1
+    },
+    "strength_distribution": {
+      "unclassified": 3931,
+      "related": 412,
+      "primary": 230,
+      "supporting": 133,
+      "tangential": 114
+    },
+    "most_connected_nodes": ["SRC-0001 (41)", "SRC-0003 (40)", "SRC-0002 (37)", "SRC-0050 (31)", "SCR-0033 (27)"],
+    "cross_domain_hotspots": ["wikipedia->scripts (533)", "sources->scripts (401)", "scripts->knowledge-base (348)"]
+  },
+
+  "use_cases": {
+    "1_knowledge_discovery": {
+      "title": "Knowledge Discovery via Non-Obvious Network Traversal",
+      "feasibility": "high",
+      "current_gap": "Agents currently find knowledge via CLAUDE.md instructions or explicit file paths. They miss connections that span 2+ hops across domains.",
+      "scenarios": [
+        {
+          "name": "Cross-domain serendipity",
+          "description": "An agent working on a stress-test script (SCR-0036) follows shared_tags to KB-0001 (stress test results), which links via builds_on to TEAM-0008 and TEAM-0006. Those team logs reference SOP-015 (testing procedures). The agent discovers testing SOPs it would never have searched for directly.",
+          "traversal": "SCR-0036 -> KB-0001 (shared_tags:storage,stress-test) -> TEAM-0008 (primary, weight=9) -> SOP-015 (shared_tags)",
+          "value": "Agent discovers established testing procedures instead of inventing its own approach"
+        },
+        {
+          "name": "Wikipedia bridge pattern",
+          "description": "The network has 114 wikipedia nodes bridging conceptual knowledge to practical tools. An agent researching 'reinforcement learning' (wiki node) can traverse to ML trading scripts and relevant data sources without knowing they exist.",
+          "traversal": "wiki-ai:Reinforcement_learning -> SCR-* (shared_tags) -> SRC-* (related_to) -> market-research methods",
+          "value": "Conceptual research automatically surfaces practical implementations"
+        },
+        {
+          "name": "Indirect dependency discovery",
+          "description": "Source SRC-0001 (OpenAlex API, 41 pointers) connects to 7 related sources and SCR-0023. An agent using SCR-0023 can discover all alternative data sources it could swap to if OpenAlex is down.",
+          "traversal": "SCR-0023 -> SRC-0001 -> SRC-0002..SRC-0008 (related_to)",
+          "value": "Resilience through automatic alternative discovery"
+        }
+      ],
+      "algorithm": {
+        "name": "serendipity_walk",
+        "description": "BFS traversal that crosses domain boundaries at each hop, collecting nodes with weight >= threshold. Returns paths that touch >= 3 distinct domains.",
+        "pseudocode": [
+          "def serendipity_walk(start_node, min_weight=3, max_depth=4):",
+          "  queue = [(start_node, [start_node], {start_domain})]",
+          "  discoveries = []",
+          "  for (node, path, domains_seen) in BFS(queue):",
+          "    for ptr in node.pointers where ptr.weight >= min_weight:",
+          "      target_domain = get_domain(ptr.to)",
+          "      if target_domain not in domains_seen:",
+          "        new_path = path + [ptr.to]",
+          "        new_domains = domains_seen | {target_domain}",
+          "        if len(new_domains) >= 3:",
+          "          discoveries.append((new_path, new_domains, sum_weights(new_path)))",
+          "        if len(new_path) < max_depth:",
+          "          queue.append((ptr.to, new_path, new_domains))",
+          "  return sorted(discoveries, by=total_weight, descending=True)"
+        ]
+      }
+    },
+
+    "2_onboarding": {
+      "title": "Agent Onboarding via Network-as-Map",
+      "feasibility": "high",
+      "current_gap": "New agents read CLAUDE.md, then must manually explore directories. The pointer network could provide a structured 'tour' based on task type.",
+      "recommended_entry_points": {
+        "for_coding_tasks": {
+          "entry": "SOP-015",
+          "reason": "Most-used entry node (16 entries in route log). Links to testing SOPs and scripts.",
+          "first_hop_targets": ["SOP-028 (pointer network)", "SCR-0019", "SCR-0036"]
+        },
+        "for_research_tasks": {
+          "entry": "SOP-020",
+          "reason": "Second-most-used entry (15 entries). Connects to knowledge base and team logs.",
+          "first_hop_targets": ["KB-0025", "KB-0004", "TEAM-0008"]
+        },
+        "for_coordination_tasks": {
+          "entry": "SOP-011",
+          "reason": "Highly connected coordination SOP (15 entries). Bidirectional with SOP-014 and SOP-015.",
+          "first_hop_targets": ["SOP-014", "SOP-015", "SOP-012"]
+        },
+        "for_data_tasks": {
+          "entry": "SRC-0001",
+          "reason": "Highest-connected node in the network (41 pointers). Gateway to all data sources.",
+          "first_hop_targets": ["SRC-0002..SRC-0008", "SCR-0023"]
+        }
+      },
+      "onboarding_paths": [
+        {
+          "name": "The Grand Tour",
+          "description": "5-hop path touching all major domains. Gives agent a complete mental model.",
+          "path": "SOP-011 (coordination) -> SOP-015 (testing) -> SCR-0036 (stress-test script) -> KB-0001 (stress test knowledge) -> TEAM-0001 (team log) -> SRC-0001 (data sources)",
+          "domains_covered": ["sops", "scripts", "knowledge-base", "teams", "sources"]
+        },
+        {
+          "name": "Quick Orient",
+          "description": "3-hop path for agents that need to start working immediately.",
+          "path": "SOP-028 (pointer network SOP) -> SOP-029 (route tracking) -> relevant SOP for task type",
+          "domains_covered": ["sops", "scripts"]
+        }
+      ],
+      "implementation": {
+        "suggestion": "Add a 'recommend --task onboarding --entry SOP-028' mode to route_tracker.py that returns a curated tour path based on the agent's declared task type."
+      }
+    },
+
+    "3_impact_analysis": {
+      "title": "Change Impact Traversal Algorithm",
+      "feasibility": "high",
+      "current_gap": "When a script or SOP changes, there is no automated way to find what depends on it. The pointer network encodes these dependencies via explicit_reference and builds_on edges.",
+      "algorithm": {
+        "name": "impact_cascade",
+        "description": "Given a changed node, find all nodes that could be affected by traversing incoming edges (backlinks) and strong outgoing edges.",
+        "pseudocode": [
+          "def impact_cascade(changed_node, pointer_network):",
+          "  # Phase 1: Find all nodes pointing TO the changed node (reverse lookup)",
+          "  affected = set()",
+          "  reverse_index = build_reverse_index(pointer_network)",
+          "  ",
+          "  # Phase 2: BFS on reverse edges (who depends on this?)",
+          "  queue = [changed_node]",
+          "  while queue:",
+          "    node = queue.pop(0)",
+          "    for referrer in reverse_index[node]:",
+          "      if referrer not in affected:",
+          "        affected.add(referrer)",
+          "        edge = get_edge(referrer, node)",
+          "        # Only cascade if edge is primary or supporting (strong dependency)",
+          "        if edge.strength in ('primary', 'supporting'):",
+          "          queue.append(referrer)",
+          "  ",
+          "  # Phase 3: Forward edges with explicit_reference reason",
+          "  for ptr in changed_node.pointers:",
+          "    if 'explicit_reference' in any(ptr.reasons):",
+          "      affected.add(ptr.to)",
+          "  ",
+          "  # Phase 4: Classify impact severity",
+          "  impact_report = []",
+          "  for node_id in affected:",
+          "    edge = find_edge_between(node_id, changed_node) or find_edge_between(changed_node, node_id)",
+          "    severity = classify_severity(edge.strength, edge.weight, edge.reasons)",
+          "    impact_report.append({",
+          "      'node': node_id,",
+          "      'domain': get_domain(node_id),",
+          "      'severity': severity,  # 'breaking', 'needs-review', 'informational'",
+          "      'relationship': edge.reasons",
+          "    })",
+          "  return sorted(impact_report, by=severity)"
+        ],
+        "severity_rules": {
+          "breaking": "Edge has explicit_reference:builds_on AND weight >= 6 AND strength is primary",
+          "needs_review": "Edge has explicit_reference AND weight >= 4 OR strength is supporting",
+          "informational": "Edge is shared_tags only or weight < 4"
+        },
+        "example_scenario": {
+          "changed_node": "SCR-0001 (validate-storage.py)",
+          "related_to_in_index": ["SCR-0002", "SCR-0003", "SCR-0004", "SCR-0012", "SCR-0014", "SCR-0016", "SCR-0020", "SCR-0034..SCR-0042"],
+          "impact": "12 scripts reference SCR-0001. Changing validation logic could break SCR-0002 (edge cases), SCR-0003 (bulk test), and all stress-test scripts."
+        }
+      },
+      "reverse_index_note": "The current pointer network does not include pre-built reverse indexes. Adding a 'backlinks' field to each node (or building it at load time) would make impact analysis O(1) per lookup instead of O(N) full scan."
+    },
+
+    "4_quality_assurance": {
+      "title": "Network-Based Quality Assurance Checks",
+      "feasibility": "high",
+      "current_gap": "No automated staleness detection, orphan detection, or reference integrity checking is done against the pointer network itself.",
+      "checks": [
+        {
+          "name": "stale_knowledge_detection",
+          "description": "Knowledge entries (KB-*) that have no recent team logs pointing to them may be stale. Cross-reference KB node dates with TEAM node dates.",
+          "algorithm": "For each KB node: find all TEAM nodes it connects to. If the newest TEAM connection is > 30 days old and no route_log entries reference it, flag as potentially stale.",
+          "data_available": "Yes - knowledge-base/index.json has dates, teams/ has session dates"
+        },
+        {
+          "name": "orphaned_script_detection",
+          "description": "Scripts with no inbound pointers from SOPs or KB entries are likely orphaned (no procedure references them).",
+          "algorithm": "Build reverse index. For each SCR-* node, check if any SOP-* or KB-* node points to it. If none do, flag as orphaned.",
+          "current_finding": "KB-0034 has only 2 pointers — the least connected node in the network. It may be orphaned or incomplete."
+        },
+        {
+          "name": "broken_reference_detection",
+          "description": "Pointer targets that don't exist as nodes in the network indicate broken references.",
+          "algorithm": "For each pointer edge, verify ptr.to exists in nodes{}. Report any dangling pointers.",
+          "note": "The network builder (SCR-0057 likely) should already validate this, but a runtime check catches drift."
+        },
+        {
+          "name": "strength_classification_audit",
+          "description": "81.5% of edges (3931/4820) are 'unclassified'. This reduces the utility of strength-based routing.",
+          "recommendation": "Run a classification pass: edges with explicit_reference reasons should be primary/supporting. Edges with only shared_tags and weight < 3 should be tangential.",
+          "impact": "Would improve route_tracker.py recommend accuracy by providing strength signals on 3931 currently unclassified edges"
+        },
+        {
+          "name": "sop_tool_reference_validation",
+          "description": "SOPs reference specific scripts and tools. Verify that every tool/script mentioned in an SOP text exists as a node in the pointer network.",
+          "algorithm": "Parse SOP markdown files for SCR-* and SRC-* references. Cross-check against pointer-network.json nodes."
+        }
+      ],
+      "implementation_suggestion": "Create a QA script (e.g., SCR-0058 'pointer-network-qa.py') that runs all five checks and outputs a health report. Could be integrated into validate-storage.py."
+    },
+
+    "5_cross_project_applicability": {
+      "title": "Generalizing the Pointer Network Pattern",
+      "feasibility": "high",
+      "assessment": "The pointer network pattern is highly generalizable. Its core value proposition — making implicit relationships explicit and machine-traversable — applies to any codebase with multiple interrelated artifact types.",
+      "what_makes_it_generalizable": [
+        {
+          "property": "Domain-agnostic node schema",
+          "explanation": "Nodes only need an ID, a domain label, and a list of typed pointers. This fits any artifact: API endpoints, database tables, config files, test suites, documentation pages."
+        },
+        {
+          "property": "Weight-based edge ranking",
+          "explanation": "Numeric weights with human-readable reasons (shared_tags, explicit_reference) let both humans and algorithms prioritize edges. This works for any relationship type."
+        },
+        {
+          "property": "Strength classification",
+          "explanation": "The primary/supporting/related/tangential hierarchy maps naturally to any dependency system: npm packages, microservice dependencies, database foreign keys."
+        },
+        {
+          "property": "Route tracking as usage telemetry",
+          "explanation": "The route_tracker.py pattern of logging traversals and analyzing patterns is applicable to any graph-navigating system. It provides ground truth for optimizing the network."
+        }
+      ],
+      "target_codebases": [
+        {
+          "type": "Microservice architectures",
+          "nodes": "Services, API endpoints, shared libraries, config files, deployment manifests",
+          "value": "Impact analysis when changing a shared proto definition or config key. Onboarding engineers to service dependencies."
+        },
+        {
+          "type": "Monorepo with multiple packages",
+          "nodes": "Packages, modules, shared utilities, CI pipelines, documentation",
+          "value": "Detecting when a shared utility change breaks downstream packages. Finding related tests for changed code."
+        },
+        {
+          "type": "Data pipeline systems",
+          "nodes": "Data sources, ETL jobs, data models, dashboards, alerts",
+          "value": "Lineage tracking. When a source schema changes, traverse to find all downstream dashboards affected."
+        },
+        {
+          "type": "Documentation wikis",
+          "nodes": "Pages, categories, authors, external links",
+          "value": "Detecting stale documentation. Finding related pages that should be updated together."
+        },
+        {
+          "type": "AI/ML experiment tracking",
+          "nodes": "Datasets, models, hyperparameter configs, evaluation metrics, deployment artifacts",
+          "value": "Tracing which dataset version produced which model. Impact of data quality changes on downstream models."
+        }
+      ],
+      "minimum_viable_network": {
+        "required_components": [
+          "pointer-network.json (or equivalent graph store)",
+          "A builder script that extracts relationships from existing metadata (index.json, package.json, imports)",
+          "A route tracker for usage telemetry",
+          "A query interface (CLI or API)"
+        ],
+        "estimated_effort": "2-4 hours to build for a new codebase, assuming metadata files already exist"
+      }
+    },
+
+    "6_market_research_integration": {
+      "title": "Connecting Financial Analysis Methods to Data Sources via Pointer Network",
+      "feasibility": "medium-high",
+      "current_state": {
+        "market_research_exists": true,
+        "methods_cataloged": 47,
+        "categories": ["ml-trading", "portfolio-opt", "risk-mgmt", "data-infra", "alt-data", "hft", "nlp-sentiment", "xai-governance"],
+        "picks_made": 0,
+        "in_pointer_network": false,
+        "data_sources_in_network": 48
+      },
+      "gap_analysis": "Market research methods and picks are NOT currently represented in the pointer network. The 48 data sources (SRC-*) in the network include scientific APIs (OpenAlex, Semantic Scholar) but the connection to financial data sources in market-research/methods/ is missing.",
+      "integration_design": {
+        "new_node_types": [
+          {
+            "prefix": "MR-METHOD-",
+            "domain": "market-research",
+            "example": "MR-METHOD-ml-trading",
+            "source": "market-research/methods/ai-quant-techniques/categories/*.json"
+          },
+          {
+            "prefix": "MR-PICK-",
+            "domain": "market-research",
+            "example": "MR-PICK-001",
+            "source": "market-research/picks/index.json (when picks are made)"
+          },
+          {
+            "prefix": "MR-WATCH-",
+            "domain": "market-research",
+            "example": "MR-WATCH-001",
+            "source": "market-research/watchlist.json"
+          }
+        ],
+        "connection_strategies": [
+          {
+            "strategy": "Method-to-source linking",
+            "description": "Each method category (e.g., nlp-sentiment) should point to data sources that provide the required data type (e.g., news APIs, SEC filing APIs). Edges use shared_tags on data type.",
+            "example_edges": [
+              "MR-METHOD-nlp-sentiment -> SRC-* (news/text APIs)",
+              "MR-METHOD-alt-data -> SRC-* (satellite, geolocation APIs)",
+              "MR-METHOD-ml-trading -> SCR-* (ML scripts)"
+            ]
+          },
+          {
+            "strategy": "Method-to-knowledge linking",
+            "description": "KB entries about quantitative analysis (KB-0003 'Quantitative Stock Analysis with AI') should link to relevant method categories.",
+            "example_edges": [
+              "KB-0003 -> MR-METHOD-ml-trading (explicit_reference:builds_on)",
+              "KB-0003 -> MR-METHOD-risk-mgmt (shared_tags:quantitative)"
+            ]
+          },
+          {
+            "strategy": "Pick-to-method provenance",
+            "description": "When a stock pick is made, the pointer network records which method produced it, enabling performance attribution.",
+            "example_edges": [
+              "MR-PICK-001 -> MR-METHOD-nlp-sentiment (explicit_reference:produced_by)",
+              "MR-PICK-001 -> SRC-* (explicit_reference:data_source)"
+            ]
+          }
+        ],
+        "implementation_steps": [
+          "1. Add market-research node extraction to the pointer network builder (SCR-0057 or equivalent)",
+          "2. Define tag vocabulary overlap between market-research categories and existing SRC-* tags",
+          "3. Run network rebuild to generate MR-* nodes and cross-domain edges",
+          "4. Validate new edges with a QA pass",
+          "5. Update route_tracker.py recommend to handle MR-* entry nodes"
+        ]
+      },
+      "value_propositions": [
+        "An agent doing financial research can start at MR-METHOD-nlp-sentiment and discover all available text data sources, relevant scripts, and prior team knowledge in one traversal",
+        "Performance tracking: when a pick succeeds or fails, traverse back to the method and data source to attribute performance",
+        "Method gap detection: if a method category has no data source pointers, it indicates missing data infrastructure",
+        "Cross-pollination: wiki nodes about financial concepts can bridge to both market research methods AND existing KB entries"
+      ]
+    }
+  },
+
+  "synthesis": {
+    "highest_impact_use_cases": [
+      {
+        "rank": 1,
+        "use_case": "Impact Analysis (#3)",
+        "reason": "Directly prevents bugs. When SCR-0001 (validate-storage) changes, the network identifies 12+ affected scripts immediately. Currently this is done manually or not at all."
+      },
+      {
+        "rank": 2,
+        "use_case": "Quality Assurance (#4)",
+        "reason": "81.5% of edges are unclassified. Fixing this multiplies the value of all other use cases. Orphan and staleness detection prevents knowledge rot."
+      },
+      {
+        "rank": 3,
+        "use_case": "Knowledge Discovery (#1)",
+        "reason": "The serendipity_walk algorithm could surface connections agents miss. The wikipedia bridge (114 nodes) is a unique asset not being leveraged."
+      }
+    ],
+    "quick_wins": [
+      "Build reverse index (backlinks) into pointer-network.json — enables O(1) impact analysis",
+      "Classify the 3931 unclassified edges using simple rules (explicit_reference -> primary, shared_tags-only with weight < 3 -> tangential)",
+      "Add --onboard flag to route_tracker.py recommend for new agent orientation",
+      "Create pointer-network-qa.py script for automated health checks"
+    ],
+    "network_health_observations": {
+      "strengths": [
+        "310 nodes across 7 domains with 4820 edges — good coverage",
+        "Route tracking already operational with 155 logged routes",
+        "Hub nodes (SRC-0001 at 41 pointers) provide strong connectivity",
+        "Cross-domain edges are abundant (wikipedia->scripts alone has 533)"
+      ],
+      "weaknesses": [
+        "81.5% of edges lack strength classification",
+        "Market research domain is completely absent from the network",
+        "No reverse index / backlinks built into the network structure",
+        "KB-0034 is nearly isolated (2 pointers) — potential orphan",
+        "No automated QA or staleness detection currently exists"
+      ]
+    }
+  }
+}

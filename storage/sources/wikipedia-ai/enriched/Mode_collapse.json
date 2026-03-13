@@ -1,0 +1,40 @@
+{
+  "id": "Mode_collapse",
+  "title": "Mode collapse",
+  "url": "https://en.wikipedia.org/wiki/Mode_collapse",
+  "summary": "In machine learning, mode collapse is a failure mode observed in generative models, originally noted in Generative Adversarial Networks (GANs). It occurs when the model produces outputs that are less diverse than expected, effectively \"collapsing\" to generate only a few modes of the data distribution while ignoring others. This phenomenon undermines the goal of generative models to capture the full diversity of the training data. There are typically two times at which a model can collapse: either during training or during post-training finetuning.\n\nMode collapse reduces the utility of generative models in applications such as image synthesis (repetitive or near-identical images), data augmentation (limited diversity in synthetic data), and scientific simulations (failure to explore all plausible scenarios). In terms of learning a probability distribution, mode collapse corresponds to the collapse of the entire distribution to one or a few points, which may or may not correspond to points with high likelihood in the target distribution. Overfitting, on the other hand, corresponds to learning a distribution that is highly peaked around training data points.\n\nTraining-time mode collapse was originally noted and studied in GANs, where it arises primarily due to imbalances in the training dynamics between the generator and discriminator. In the original GAN paper, it was also called the \"Helvetica scenario.\" If the discriminator learns too slowly, the generator may exploit weaknesses by producing a narrow set of outputs that consistently fool the discriminator. Several GAN-specific mitigation strategies have been developed, including mini-batch discrimination, unrolled GANs, Wasserstein GAN using Earth Mover's distance, and regularization methods such as gradient penalty and spectral normalization.\n\nIn large language models, mode collapse may occur during finetuning, as the model learns to generate text that accomplishes the specific task but loses ability to generate other forms of text. It is hypothesized that there is a tradeoff between quality and diversity: more finetuning results in higher average task performance but less diverse outputs, while less finetuning results in lower average performance but more diverse outputs.",
+  "tags": [
+    "ml",
+    "neural-networks",
+    "nlp",
+    "vision",
+    "deep-dive",
+    "orphan",
+    "core-ai"
+  ],
+  "categories": [
+    "Machine Learning & Neural Networks",
+    "Natural Language & Vision"
+  ],
+  "usefulness_score": 5.0,
+  "usefulness_rationale": "rich summary text; no links; no metadata; core AI topic",
+  "research_tier": "C",
+  "data_richness": {
+    "summary_length": 2263,
+    "ext_links_count": 0,
+    "int_links_count": 0,
+    "has_categories": false,
+    "has_description": false
+  },
+  "ext_links": [],
+  "int_links": [],
+  "related_articles": [],
+  "meta": {
+    "wiki_categories": [],
+    "see_also": [],
+    "description": "",
+    "hypernym": ""
+  },
+  "extracted": "2026-03-12",
+  "enriched": "2026-03-12"
+}

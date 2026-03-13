@@ -1,0 +1,4572 @@
+{
+  "report": "run006_pathfinding_p2_p4",
+  "run": "Run-006",
+  "division": "4A",
+  "timestamp": "2026-03-13T00:20:45.241626+00:00",
+  "agents": [
+    "p2-1",
+    "p2-2",
+    "p4-1",
+    "p4-2"
+  ],
+  "scenarios_count": 20,
+  "scenarios_spec": "10 SOPs x 2 targets each (1 SCR + 1 SRC per SOP)",
+  "sops_tested": [
+    "SOP-011",
+    "SOP-012",
+    "SOP-015",
+    "SOP-017",
+    "SOP-023",
+    "SOP-025",
+    "SOP-027",
+    "SOP-028",
+    "SOP-029",
+    "SOP-G01"
+  ],
+  "p2_strength_priority": {
+    "algorithm": "Modified Dijkstra: minimize (strength_tier_sum, -weight_sum) lexicographic",
+    "edge_costs": {
+      "primary": 0,
+      "supporting": 1,
+      "related": 2,
+      "tangential": 3,
+      "unclassified": 4
+    },
+    "baseline": "Shortest-path BFS with max-weight tiebreaker",
+    "summary": {
+      "paths_found": {
+        "strength": 20,
+        "baseline": 20,
+        "both": 20
+      },
+      "same_path": 1,
+      "different_path": 19,
+      "strength_wins": {
+        "fewer_hops": 0,
+        "better_str_score": 19,
+        "higher_weight": 19
+      },
+      "strength_loses": {
+        "more_hops": 19
+      },
+      "averages": {
+        "sp_avg_hops": 9.95,
+        "mw_avg_hops": 2.6,
+        "sp_avg_weight": 77.6,
+        "mw_avg_weight": 12.0,
+        "sp_avg_str_cost": 0.134,
+        "mw_avg_str_cost": 1.279
+      },
+      "intuitive": {
+        "strength": 3,
+        "baseline": 19
+      },
+      "traps": {
+        "strength": 17,
+        "baseline": 2
+      },
+      "strength_dist": {
+        "sp": {
+          "supporting": 15,
+          "primary": 179,
+          "related": 5
+        },
+        "mw": {
+          "related": 23,
+          "supporting": 8,
+          "primary": 17,
+          "tangential": 4
+        }
+      }
+    },
+    "scenarios": [
+      {
+        "id": 1,
+        "src": "SOP-011",
+        "tgt": "SCR-0043",
+        "desc": "SOP-011 to cross-domain script",
+        "agent": "p2-1",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-011",
+            "SOP-015",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043"
+          ],
+          "strengths": [
+            "supporting",
+            "primary",
+            "primary",
+            "primary"
+          ],
+          "weight": 29,
+          "hops": 4,
+          "str_cost": 0.25,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts"
+          ],
+          "traps": []
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-011",
+            "KB-0031",
+            "TEAM-0002",
+            "SCR-0043"
+          ],
+          "strengths": [
+            "related",
+            "related",
+            "related"
+          ],
+          "weight": 6,
+          "hops": 3,
+          "str_cost": 2.0,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "knowledge-base",
+            "teams",
+            "scripts"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 1,
+          "w_diff": 23
+        }
+      },
+      {
+        "id": 2,
+        "src": "SOP-011",
+        "tgt": "SRC-0017",
+        "desc": "SOP-011 to source",
+        "agent": "p2-2",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-011",
+            "SOP-015",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0027",
+            "TEAM-0010",
+            "KB-0004",
+            "TEAM-0007",
+            "KB-0006",
+            "TEAM-0026",
+            "SCR-0041",
+            "SRC-0017"
+          ],
+          "strengths": [
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "related"
+          ],
+          "weight": 95,
+          "hops": 13,
+          "str_cost": 0.231,
+          "intuitive": false,
+          "revisits": 6,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "scripts",
+            "sources"
+          ],
+          "traps": [
+            "KB-0004"
+          ]
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-011",
+            "TEAM-0025",
+            "SCR-0029",
+            "SRC-0017"
+          ],
+          "strengths": [
+            "supporting",
+            "primary",
+            "related"
+          ],
+          "weight": 14,
+          "hops": 3,
+          "str_cost": 1.0,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "teams",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 10,
+          "w_diff": 81
+        }
+      },
+      {
+        "id": 3,
+        "src": "SOP-012",
+        "tgt": "SCR-0057",
+        "desc": "SOP-012 to route tracker script",
+        "agent": "p2-1",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-012",
+            "SOP-015",
+            "SOP-028",
+            "SOP-029",
+            "SCR-0057"
+          ],
+          "strengths": [
+            "supporting",
+            "primary",
+            "primary",
+            "primary"
+          ],
+          "weight": 29,
+          "hops": 4,
+          "str_cost": 0.25,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts"
+          ],
+          "traps": []
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-012",
+            "SOP-029",
+            "SCR-0057"
+          ],
+          "strengths": [
+            "supporting",
+            "primary"
+          ],
+          "weight": 13,
+          "hops": 2,
+          "str_cost": 0.5,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "sops",
+            "scripts"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 2,
+          "w_diff": 16
+        }
+      },
+      {
+        "id": 4,
+        "src": "SOP-012",
+        "tgt": "SRC-0020",
+        "desc": "SOP-012 to mid-range source",
+        "agent": "p2-2",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-012",
+            "SOP-015",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0027",
+            "TEAM-0010",
+            "KB-0004",
+            "TEAM-0013",
+            "SRC-0020"
+          ],
+          "strengths": [
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "related"
+          ],
+          "weight": 73,
+          "hops": 10,
+          "str_cost": 0.3,
+          "intuitive": false,
+          "revisits": 3,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "sources"
+          ],
+          "traps": [
+            "KB-0004"
+          ]
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-012",
+            "TEAM-0022",
+            "KB-0020",
+            "KB-0043",
+            "SRC-0020"
+          ],
+          "strengths": [
+            "related",
+            "primary",
+            "supporting",
+            "related"
+          ],
+          "weight": 19,
+          "hops": 4,
+          "str_cost": 1.25,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "teams",
+            "knowledge-base",
+            "knowledge-base",
+            "sources"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 6,
+          "w_diff": 54
+        }
+      },
+      {
+        "id": 5,
+        "src": "SOP-015",
+        "tgt": "SCR-0005",
+        "desc": "SOP-015 to low script",
+        "agent": "p2-1",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-015",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0027",
+            "TEAM-0010",
+            "KB-0004",
+            "TEAM-0005",
+            "SCR-0005"
+          ],
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "supporting"
+          ],
+          "weight": 70,
+          "hops": 9,
+          "str_cost": 0.111,
+          "intuitive": false,
+          "revisits": 3,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "scripts"
+          ],
+          "traps": [
+            "KB-0004"
+          ]
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-015",
+            "TEAM-0022",
+            "KB-0018",
+            "SCR-0005"
+          ],
+          "strengths": [
+            "related",
+            "primary",
+            "tangential"
+          ],
+          "weight": 11,
+          "hops": 3,
+          "str_cost": 1.667,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "teams",
+            "knowledge-base",
+            "scripts"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 6,
+          "w_diff": 59
+        }
+      },
+      {
+        "id": 6,
+        "src": "SOP-015",
+        "tgt": "SRC-0030",
+        "desc": "SOP-015 to source",
+        "agent": "p2-2",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-015",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0027",
+            "TEAM-0010",
+            "SCR-0024",
+            "SRC-0030"
+          ],
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary"
+          ],
+          "weight": 68,
+          "hops": 8,
+          "str_cost": 0.0,
+          "intuitive": false,
+          "revisits": 3,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-015",
+            "TEAM-0022",
+            "KB-0015",
+            "SRC-0030"
+          ],
+          "strengths": [
+            "related",
+            "supporting",
+            "tangential"
+          ],
+          "weight": 9,
+          "hops": 3,
+          "str_cost": 2.0,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "teams",
+            "knowledge-base",
+            "sources"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 5,
+          "w_diff": 59
+        }
+      },
+      {
+        "id": 7,
+        "src": "SOP-017",
+        "tgt": "SCR-0010",
+        "desc": "SOP-017 to dedup script",
+        "agent": "p2-1",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-017",
+            "SCR-0023",
+            "TEAM-0010",
+            "SCR-0027",
+            "SRC-0006",
+            "SCR-0009",
+            "SRC-0003",
+            "SCR-0008",
+            "SCR-0011",
+            "SCR-0010"
+          ],
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "supporting"
+          ],
+          "weight": 74,
+          "hops": 9,
+          "str_cost": 0.222,
+          "intuitive": false,
+          "revisits": 4,
+          "domains": [
+            "sops",
+            "scripts",
+            "teams",
+            "scripts",
+            "sources",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "scripts"
+          ],
+          "traps": []
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-017",
+            "SCR-0010"
+          ],
+          "strengths": [
+            "related"
+          ],
+          "weight": 2,
+          "hops": 1,
+          "str_cost": 2.0,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "scripts"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 8,
+          "w_diff": 72
+        }
+      },
+      {
+        "id": 8,
+        "src": "SOP-017",
+        "tgt": "SRC-0040",
+        "desc": "SOP-017 to high source",
+        "agent": "p2-2",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-017",
+            "SCR-0023",
+            "TEAM-0010",
+            "KB-0004",
+            "TEAM-0013",
+            "SRC-0040"
+          ],
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "related"
+          ],
+          "weight": 31,
+          "hops": 5,
+          "str_cost": 0.4,
+          "intuitive": false,
+          "revisits": 1,
+          "domains": [
+            "sops",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "sources"
+          ],
+          "traps": [
+            "KB-0004"
+          ]
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-017",
+            "KB-0004",
+            "TEAM-0013",
+            "SRC-0040"
+          ],
+          "strengths": [
+            "related",
+            "primary",
+            "related"
+          ],
+          "weight": 11,
+          "hops": 3,
+          "str_cost": 1.333,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "knowledge-base",
+            "teams",
+            "sources"
+          ],
+          "traps": [
+            "KB-0004"
+          ]
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 2,
+          "w_diff": 20
+        }
+      },
+      {
+        "id": 9,
+        "src": "SOP-023",
+        "tgt": "SCR-0025",
+        "desc": "SOP-023 to mid script",
+        "agent": "p2-1",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-023",
+            "SCR-0023",
+            "TEAM-0010",
+            "SCR-0025"
+          ],
+          "strengths": [
+            "primary",
+            "primary",
+            "primary"
+          ],
+          "weight": 23,
+          "hops": 3,
+          "str_cost": 0.0,
+          "intuitive": false,
+          "revisits": 1,
+          "domains": [
+            "sops",
+            "scripts",
+            "teams",
+            "scripts"
+          ],
+          "traps": []
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-023",
+            "SCR-0025"
+          ],
+          "strengths": [
+            "related"
+          ],
+          "weight": 3,
+          "hops": 1,
+          "str_cost": 2.0,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "scripts"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 2,
+          "w_diff": 20
+        }
+      },
+      {
+        "id": 10,
+        "src": "SOP-023",
+        "tgt": "SRC-0001",
+        "desc": "SOP-023 to first source",
+        "agent": "p2-2",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-023",
+            "SCR-0023",
+            "SRC-0001"
+          ],
+          "strengths": [
+            "primary",
+            "primary"
+          ],
+          "weight": 19,
+          "hops": 2,
+          "str_cost": 0.0,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-023",
+            "SCR-0023",
+            "SRC-0001"
+          ],
+          "strengths": [
+            "primary",
+            "primary"
+          ],
+          "weight": 19,
+          "hops": 2,
+          "str_cost": 0.0,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": true,
+          "sp_fewer_hops": false,
+          "sp_better_str": false,
+          "sp_higher_w": false,
+          "hop_diff": 0,
+          "w_diff": 0
+        }
+      },
+      {
+        "id": 11,
+        "src": "SOP-025",
+        "tgt": "SCR-0035",
+        "desc": "SOP-025 to mid script",
+        "agent": "p2-1",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-025",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0027",
+            "TEAM-0010",
+            "KB-0004",
+            "TEAM-0007",
+            "KB-0006",
+            "TEAM-0026",
+            "KB-0001",
+            "TEAM-0006",
+            "SCR-0013",
+            "SCR-0047",
+            "SCR-0035"
+          ],
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary"
+          ],
+          "weight": 103,
+          "hops": 13,
+          "str_cost": 0.0,
+          "intuitive": false,
+          "revisits": 7,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "scripts",
+            "scripts",
+            "scripts"
+          ],
+          "traps": [
+            "KB-0004"
+          ]
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-025",
+            "SCR-0013",
+            "SCR-0047",
+            "SCR-0035"
+          ],
+          "strengths": [
+            "related",
+            "primary",
+            "primary"
+          ],
+          "weight": 17,
+          "hops": 3,
+          "str_cost": 0.667,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "scripts",
+            "scripts",
+            "scripts"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 10,
+          "w_diff": 86
+        }
+      },
+      {
+        "id": 12,
+        "src": "SOP-025",
+        "tgt": "SRC-0045",
+        "desc": "SOP-025 to high source",
+        "agent": "p2-2",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-025",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0027",
+            "TEAM-0010",
+            "KB-0004",
+            "TEAM-0007",
+            "KB-0006",
+            "TEAM-0026",
+            "KB-0009",
+            "TEAM-0019",
+            "KB-0015",
+            "TEAM-0018",
+            "KB-0016",
+            "TEAM-0022",
+            "KB-0018",
+            "TEAM-0020",
+            "KB-0019",
+            "TEAM-0021",
+            "KB-0020",
+            "KB-0043",
+            "SRC-0045"
+          ],
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "related"
+          ],
+          "weight": 165,
+          "hops": 21,
+          "str_cost": 0.143,
+          "intuitive": false,
+          "revisits": 16,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "knowledge-base",
+            "sources"
+          ],
+          "traps": [
+            "KB-0004",
+            "KB-0009",
+            "KB-0016"
+          ]
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-025",
+            "SCR-0043",
+            "KB-0043",
+            "SRC-0045"
+          ],
+          "strengths": [
+            "primary",
+            "tangential",
+            "related"
+          ],
+          "weight": 11,
+          "hops": 3,
+          "str_cost": 1.667,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "scripts",
+            "knowledge-base",
+            "sources"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 18,
+          "w_diff": 154
+        }
+      },
+      {
+        "id": 13,
+        "src": "SOP-027",
+        "tgt": "SCR-0040",
+        "desc": "SOP-027 to high script",
+        "agent": "p2-1",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-027",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0027",
+            "TEAM-0010",
+            "KB-0004",
+            "TEAM-0007",
+            "KB-0006",
+            "TEAM-0026",
+            "KB-0001",
+            "TEAM-0006",
+            "SCR-0013",
+            "SCR-0047",
+            "SCR-0035",
+            "TEAM-0001",
+            "SCR-0040"
+          ],
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary"
+          ],
+          "weight": 120,
+          "hops": 15,
+          "str_cost": 0.0,
+          "intuitive": false,
+          "revisits": 9,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "scripts",
+            "scripts",
+            "scripts",
+            "teams",
+            "scripts"
+          ],
+          "traps": [
+            "KB-0004"
+          ]
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-027",
+            "SCR-0008",
+            "SRC-0003",
+            "SCR-0040"
+          ],
+          "strengths": [
+            "related",
+            "primary",
+            "supporting"
+          ],
+          "weight": 16,
+          "hops": 3,
+          "str_cost": 1.0,
+          "intuitive": false,
+          "revisits": 1,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 12,
+          "w_diff": 104
+        }
+      },
+      {
+        "id": 14,
+        "src": "SOP-027",
+        "tgt": "SRC-0015",
+        "desc": "SOP-027 to source",
+        "agent": "p2-2",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-027",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0027",
+            "TEAM-0010",
+            "KB-0004",
+            "TEAM-0013",
+            "SRC-0015"
+          ],
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "related"
+          ],
+          "weight": 51,
+          "hops": 7,
+          "str_cost": 0.286,
+          "intuitive": false,
+          "revisits": 3,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "sources"
+          ],
+          "traps": [
+            "KB-0004"
+          ]
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-027",
+            "KB-0005",
+            "KB-0012",
+            "SRC-0015"
+          ],
+          "strengths": [
+            "related",
+            "supporting",
+            "related"
+          ],
+          "weight": 10,
+          "hops": 3,
+          "str_cost": 1.667,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "knowledge-base",
+            "knowledge-base",
+            "sources"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 4,
+          "w_diff": 41
+        }
+      },
+      {
+        "id": 15,
+        "src": "SOP-028",
+        "tgt": "SCR-0030",
+        "desc": "SOP-028 to mid script",
+        "agent": "p2-1",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-028",
+            "SOP-029",
+            "SCR-0057",
+            "SCR-0032",
+            "TEAM-0025",
+            "SCR-0030"
+          ],
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary"
+          ],
+          "weight": 41,
+          "hops": 5,
+          "str_cost": 0.0,
+          "intuitive": false,
+          "revisits": 1,
+          "domains": [
+            "sops",
+            "sops",
+            "scripts",
+            "scripts",
+            "teams",
+            "scripts"
+          ],
+          "traps": []
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-028",
+            "SOP-029",
+            "SCR-0030"
+          ],
+          "strengths": [
+            "primary",
+            "related"
+          ],
+          "weight": 12,
+          "hops": 2,
+          "str_cost": 1.0,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "sops",
+            "scripts"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 3,
+          "w_diff": 29
+        }
+      },
+      {
+        "id": 16,
+        "src": "SOP-028",
+        "tgt": "SRC-0005",
+        "desc": "SOP-028 to source",
+        "agent": "p2-2",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0027",
+            "SRC-0005"
+          ],
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary"
+          ],
+          "weight": 46,
+          "hops": 5,
+          "str_cost": 0.0,
+          "intuitive": false,
+          "revisits": 2,
+          "domains": [
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-028",
+            "SOP-027",
+            "SCR-0027",
+            "SRC-0005"
+          ],
+          "strengths": [
+            "primary",
+            "related",
+            "primary"
+          ],
+          "weight": 21,
+          "hops": 3,
+          "str_cost": 0.667,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "sops",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 2,
+          "w_diff": 25
+        }
+      },
+      {
+        "id": 17,
+        "src": "SOP-029",
+        "tgt": "SCR-0050",
+        "desc": "SOP-029 to high script",
+        "agent": "p2-1",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-029",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0027",
+            "TEAM-0010",
+            "KB-0004",
+            "TEAM-0007",
+            "KB-0006",
+            "TEAM-0026",
+            "KB-0001",
+            "TEAM-0006",
+            "SCR-0013",
+            "SCR-0047",
+            "SCR-0035",
+            "SCR-0050"
+          ],
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "supporting"
+          ],
+          "weight": 126,
+          "hops": 16,
+          "str_cost": 0.062,
+          "intuitive": false,
+          "revisits": 7,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "scripts",
+            "scripts",
+            "scripts",
+            "scripts"
+          ],
+          "traps": [
+            "KB-0004"
+          ]
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-029",
+            "SOP-028",
+            "SCR-0050"
+          ],
+          "strengths": [
+            "primary",
+            "related"
+          ],
+          "weight": 13,
+          "hops": 2,
+          "str_cost": 1.0,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "sops",
+            "scripts"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 14,
+          "w_diff": 113
+        }
+      },
+      {
+        "id": 18,
+        "src": "SOP-029",
+        "tgt": "SRC-0035",
+        "desc": "SOP-029 to mid source",
+        "agent": "p2-2",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-029",
+            "SCR-0057",
+            "SCR-0032",
+            "TEAM-0025",
+            "SCR-0033",
+            "SRC-0035"
+          ],
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "supporting"
+          ],
+          "weight": 38,
+          "hops": 5,
+          "str_cost": 0.2,
+          "intuitive": false,
+          "revisits": 1,
+          "domains": [
+            "sops",
+            "scripts",
+            "scripts",
+            "teams",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-029",
+            "SCR-0019",
+            "SRC-0035"
+          ],
+          "strengths": [
+            "related",
+            "supporting"
+          ],
+          "weight": 8,
+          "hops": 2,
+          "str_cost": 1.5,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources"
+          ],
+          "traps": [
+            "SCR-0019"
+          ]
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 3,
+          "w_diff": 30
+        }
+      },
+      {
+        "id": 19,
+        "src": "SOP-G01",
+        "tgt": "SCR-0001",
+        "desc": "SOP-G01 to first script",
+        "agent": "p2-1",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-G01",
+            "KB-0023",
+            "TEAM-0024",
+            "KB-0022",
+            "KB-0018",
+            "TEAM-0020",
+            "KB-0019",
+            "TEAM-0021",
+            "KB-0020",
+            "TEAM-0022",
+            "KB-0016",
+            "TEAM-0018",
+            "KB-0015",
+            "TEAM-0019",
+            "KB-0009",
+            "TEAM-0026",
+            "KB-0006",
+            "TEAM-0007",
+            "KB-0004",
+            "TEAM-0010",
+            "SCR-0027",
+            "SRC-0006",
+            "SCR-0009",
+            "SRC-0003",
+            "SCR-0001"
+          ],
+          "strengths": [
+            "supporting",
+            "primary",
+            "primary",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "supporting"
+          ],
+          "weight": 187,
+          "hops": 24,
+          "str_cost": 0.125,
+          "intuitive": false,
+          "revisits": 19,
+          "domains": [
+            "sops",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "scripts",
+            "sources",
+            "scripts",
+            "sources",
+            "scripts"
+          ],
+          "traps": [
+            "KB-0016",
+            "KB-0009",
+            "KB-0004"
+          ]
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-G01",
+            "TEAM-0009",
+            "KB-0006",
+            "SCR-0001"
+          ],
+          "strengths": [
+            "related",
+            "primary",
+            "tangential"
+          ],
+          "weight": 11,
+          "hops": 3,
+          "str_cost": 1.667,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "teams",
+            "knowledge-base",
+            "scripts"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 21,
+          "w_diff": 176
+        }
+      },
+      {
+        "id": 20,
+        "src": "SOP-G01",
+        "tgt": "SRC-0025",
+        "desc": "SOP-G01 to mid source",
+        "agent": "p2-2",
+        "sp": {
+          "found": true,
+          "path": [
+            "SOP-G01",
+            "KB-0023",
+            "TEAM-0024",
+            "KB-0022",
+            "KB-0018",
+            "TEAM-0020",
+            "KB-0019",
+            "TEAM-0021",
+            "KB-0020",
+            "TEAM-0022",
+            "KB-0016",
+            "TEAM-0018",
+            "KB-0015",
+            "TEAM-0019",
+            "KB-0009",
+            "TEAM-0026",
+            "KB-0006",
+            "TEAM-0007",
+            "KB-0004",
+            "TEAM-0010",
+            "SCR-0028",
+            "SRC-0025"
+          ],
+          "strengths": [
+            "supporting",
+            "primary",
+            "primary",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary"
+          ],
+          "weight": 164,
+          "hops": 21,
+          "str_cost": 0.095,
+          "intuitive": false,
+          "revisits": 16,
+          "domains": [
+            "sops",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "scripts",
+            "sources"
+          ],
+          "traps": [
+            "KB-0016",
+            "KB-0009",
+            "KB-0004"
+          ]
+        },
+        "mw": {
+          "found": true,
+          "path": [
+            "SOP-G01",
+            "TEAM-0025",
+            "SCR-0029",
+            "SRC-0025"
+          ],
+          "strengths": [
+            "supporting",
+            "primary",
+            "related"
+          ],
+          "weight": 14,
+          "hops": 3,
+          "str_cost": 1.0,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "teams",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        },
+        "cmp": {
+          "same": false,
+          "sp_fewer_hops": false,
+          "sp_better_str": true,
+          "sp_higher_w": true,
+          "hop_diff": 18,
+          "w_diff": 150
+        }
+      }
+    ]
+  },
+  "p4_hybrid": {
+    "algorithm": "Dijkstra maximizing: alpha_w*weight + alpha_s*strength_bonus + alpha_t*tag_coherence",
+    "strength_bonuses": {
+      "primary": 10,
+      "supporting": 7,
+      "related": 4,
+      "tangential": 1,
+      "unclassified": 2
+    },
+    "tunings_tested": {
+      "balanced": {
+        "alpha_w": 0.4,
+        "alpha_s": 0.3,
+        "alpha_t": 0.3
+      },
+      "weight_heavy": {
+        "alpha_w": 0.5,
+        "alpha_s": 0.25,
+        "alpha_t": 0.25
+      },
+      "equal": {
+        "alpha_w": 0.33,
+        "alpha_s": 0.33,
+        "alpha_t": 0.33
+      }
+    },
+    "tuning_summaries": {
+      "balanced": {
+        "found": 17,
+        "total": 20,
+        "success_rate": 85.0,
+        "avg_hops": 8.18,
+        "avg_score": 46.64,
+        "avg_weight": 52.71,
+        "avg_tag_coherence": 3.174,
+        "avg_str_cost": 0.699,
+        "intuitive": 4,
+        "traps": 12,
+        "composite": 67.69
+      },
+      "weight_heavy": {
+        "found": 16,
+        "total": 20,
+        "success_rate": 80.0,
+        "avg_hops": 9.06,
+        "avg_score": 52.33,
+        "avg_weight": 57.56,
+        "avg_tag_coherence": 2.743,
+        "avg_str_cost": 0.677,
+        "intuitive": 4,
+        "traps": 13,
+        "composite": 64.11
+      },
+      "equal": {
+        "found": 17,
+        "total": 20,
+        "success_rate": 85.0,
+        "avg_hops": 7.88,
+        "avg_score": 44.87,
+        "avg_weight": 51.76,
+        "avg_tag_coherence": 3.25,
+        "avg_str_cost": 0.634,
+        "intuitive": 4,
+        "traps": 13,
+        "composite": 68.11
+      }
+    },
+    "tuning_ranking": [
+      {
+        "rank": 1,
+        "tuning": "equal",
+        "composite": 68.11
+      },
+      {
+        "rank": 2,
+        "tuning": "balanced",
+        "composite": 67.69
+      },
+      {
+        "rank": 3,
+        "tuning": "weight_heavy",
+        "composite": 64.11
+      }
+    ],
+    "best_tuning": "equal",
+    "scenarios_by_tuning": {
+      "balanced": [
+        {
+          "found": true,
+          "id": 1,
+          "src": "SOP-011",
+          "tgt": "SCR-0043",
+          "desc": "SOP-011 to cross-domain script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-011",
+            "SOP-014",
+            "SOP-012",
+            "SOP-G01",
+            "SOP-013",
+            "SOP-G02",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043"
+          ],
+          "hops": 8,
+          "score": 44.45,
+          "weight": 53,
+          "avg_tc": 1.562,
+          "strengths": [
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary"
+          ],
+          "str_cost": 0.625,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts"
+          ],
+          "traps": []
+        },
+        {
+          "found": true,
+          "id": 2,
+          "src": "SOP-011",
+          "tgt": "SRC-0017",
+          "desc": "SOP-011 to source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-011",
+            "SOP-014",
+            "SOP-012",
+            "SOP-G01",
+            "SOP-013",
+            "SOP-G02",
+            "SOP-028",
+            "SOP-029",
+            "SOP-024",
+            "SCR-0041",
+            "SRC-0017"
+          ],
+          "hops": 10,
+          "score": 45.875,
+          "weight": 53,
+          "avg_tc": 1.525,
+          "strengths": [
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "related",
+            "related",
+            "related"
+          ],
+          "str_cost": 1.1,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        },
+        {
+          "found": true,
+          "id": 3,
+          "src": "SOP-012",
+          "tgt": "SCR-0057",
+          "desc": "SOP-012 to route tracker script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-012",
+            "SOP-029",
+            "SCR-0057"
+          ],
+          "hops": 2,
+          "score": 14.8,
+          "weight": 13,
+          "avg_tc": 7.5,
+          "strengths": [
+            "supporting",
+            "primary"
+          ],
+          "str_cost": 0.5,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "sops",
+            "scripts"
+          ],
+          "traps": []
+        },
+        {
+          "found": false,
+          "id": 4,
+          "src": "SOP-012",
+          "tgt": "SRC-0020",
+          "desc": "SOP-012 to mid-range source",
+          "agent": "p4-2"
+        },
+        {
+          "found": true,
+          "id": 5,
+          "src": "SOP-015",
+          "tgt": "SCR-0005",
+          "desc": "SOP-015 to low script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-015",
+            "SOP-028",
+            "TEAM-0008",
+            "KB-0039",
+            "KB-0029",
+            "KB-0030",
+            "KB-0034",
+            "KB-0033",
+            "SCR-0004",
+            "TEAM-0005",
+            "SCR-0005"
+          ],
+          "hops": 10,
+          "score": 41.7,
+          "weight": 48,
+          "avg_tc": 1.4,
+          "strengths": [
+            "primary",
+            "related",
+            "related",
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "tangential",
+            "supporting",
+            "supporting"
+          ],
+          "str_cost": 1.3,
+          "intuitive": false,
+          "revisits": 2,
+          "domains": [
+            "sops",
+            "sops",
+            "teams",
+            "knowledge-base",
+            "knowledge-base",
+            "knowledge-base",
+            "knowledge-base",
+            "knowledge-base",
+            "scripts",
+            "teams",
+            "scripts"
+          ],
+          "traps": []
+        },
+        {
+          "found": true,
+          "id": 6,
+          "src": "SOP-015",
+          "tgt": "SRC-0030",
+          "desc": "SOP-015 to source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-015",
+            "SOP-028",
+            "SOP-029",
+            "SCR-0057",
+            "SRC-0006",
+            "SCR-0007",
+            "SCR-0009",
+            "SCR-0006",
+            "TEAM-0014",
+            "SRC-0030"
+          ],
+          "hops": 9,
+          "score": 47.5,
+          "weight": 54,
+          "avg_tc": 1.926,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "primary",
+            "supporting",
+            "supporting",
+            "related",
+            "related"
+          ],
+          "str_cost": 0.778,
+          "intuitive": false,
+          "revisits": 2,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "scripts",
+            "teams",
+            "sources"
+          ],
+          "traps": [
+            "SCR-0007"
+          ]
+        },
+        {
+          "found": true,
+          "id": 7,
+          "src": "SOP-017",
+          "tgt": "SCR-0010",
+          "desc": "SOP-017 to dedup script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-017",
+            "SCR-0023",
+            "SRC-0001",
+            "SCR-0001",
+            "SRC-0002",
+            "SCR-0026",
+            "TEAM-0010",
+            "SCR-0024",
+            "SRC-0029",
+            "SCR-0010"
+          ],
+          "hops": 9,
+          "score": 59.0,
+          "weight": 63,
+          "avg_tc": 4.185,
+          "strengths": [
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "tangential"
+          ],
+          "str_cost": 0.556,
+          "intuitive": false,
+          "revisits": 6,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "scripts",
+            "sources",
+            "scripts"
+          ],
+          "traps": [
+            "SCR-0001"
+          ]
+        },
+        {
+          "found": true,
+          "id": 8,
+          "src": "SOP-017",
+          "tgt": "SRC-0040",
+          "desc": "SOP-017 to high source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-017",
+            "SCR-0023",
+            "SRC-0001",
+            "SCR-0001",
+            "TEAM-0003",
+            "KB-0002",
+            "TEAM-0004",
+            "SCR-0042",
+            "SRC-0004",
+            "KB-0013",
+            "SRC-0040"
+          ],
+          "hops": 10,
+          "score": 52.4,
+          "weight": 58,
+          "avg_tc": 2.133,
+          "strengths": [
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "tangential",
+            "related"
+          ],
+          "str_cost": 0.8,
+          "intuitive": false,
+          "revisits": 6,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "scripts",
+            "sources",
+            "knowledge-base",
+            "sources"
+          ],
+          "traps": [
+            "SCR-0001",
+            "KB-0002"
+          ]
+        },
+        {
+          "found": true,
+          "id": 9,
+          "src": "SOP-023",
+          "tgt": "SCR-0025",
+          "desc": "SOP-023 to mid script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-023",
+            "SCR-0023",
+            "SRC-0001",
+            "SCR-0025"
+          ],
+          "hops": 3,
+          "score": 19.0,
+          "weight": 20,
+          "avg_tc": 5.222,
+          "strengths": [
+            "primary",
+            "primary",
+            "tangential"
+          ],
+          "str_cost": 1.0,
+          "intuitive": false,
+          "revisits": 1,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts"
+          ],
+          "traps": []
+        },
+        {
+          "found": true,
+          "id": 10,
+          "src": "SOP-023",
+          "tgt": "SRC-0001",
+          "desc": "SOP-023 to first source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-023",
+            "SCR-0023",
+            "SRC-0001"
+          ],
+          "hops": 2,
+          "score": 17.6,
+          "weight": 19,
+          "avg_tc": 6.667,
+          "strengths": [
+            "primary",
+            "primary"
+          ],
+          "str_cost": 0.0,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        },
+        {
+          "found": false,
+          "id": 11,
+          "src": "SOP-025",
+          "tgt": "SCR-0035",
+          "desc": "SOP-025 to mid script",
+          "agent": "p4-1"
+        },
+        {
+          "found": true,
+          "id": 12,
+          "src": "SOP-025",
+          "tgt": "SRC-0045",
+          "desc": "SOP-025 to high source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-025",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0007",
+            "SCR-0009",
+            "SRC-0003",
+            "SCR-0008",
+            "SCR-0011",
+            "SCR-0006",
+            "KB-0043",
+            "SRC-0045"
+          ],
+          "hops": 10,
+          "score": 56.9,
+          "weight": 69,
+          "avg_tc": 2.167,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "tangential",
+            "related"
+          ],
+          "str_cost": 0.8,
+          "intuitive": false,
+          "revisits": 4,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "scripts",
+            "knowledge-base",
+            "sources"
+          ],
+          "traps": [
+            "SCR-0007"
+          ]
+        },
+        {
+          "found": true,
+          "id": 13,
+          "src": "SOP-027",
+          "tgt": "SCR-0040",
+          "desc": "SOP-027 to high script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-027",
+            "SCR-0044",
+            "SRC-0006",
+            "SCR-0007",
+            "SCR-0011",
+            "SCR-0006",
+            "SCR-0009",
+            "SRC-0003",
+            "SCR-0040"
+          ],
+          "hops": 8,
+          "score": 49.864,
+          "weight": 60,
+          "avg_tc": 2.277,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "supporting",
+            "primary",
+            "supporting"
+          ],
+          "str_cost": 0.5,
+          "intuitive": false,
+          "revisits": 3,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "scripts",
+            "scripts",
+            "sources",
+            "scripts"
+          ],
+          "traps": [
+            "SCR-0007"
+          ]
+        },
+        {
+          "found": false,
+          "id": 14,
+          "src": "SOP-027",
+          "tgt": "SRC-0015",
+          "desc": "SOP-027 to source",
+          "agent": "p4-2"
+        },
+        {
+          "found": true,
+          "id": 15,
+          "src": "SOP-028",
+          "tgt": "SCR-0030",
+          "desc": "SOP-028 to mid script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-028",
+            "SOP-029",
+            "SOP-012",
+            "SCR-0019",
+            "SCR-0020",
+            "TEAM-0008",
+            "SCR-0016",
+            "SRC-0001",
+            "SCR-0023",
+            "SOP-019",
+            "SCR-0030"
+          ],
+          "hops": 10,
+          "score": 57.057,
+          "weight": 59,
+          "avg_tc": 3.552,
+          "strengths": [
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "supporting",
+            "primary",
+            "tangential",
+            "related"
+          ],
+          "str_cost": 0.8,
+          "intuitive": false,
+          "revisits": 4,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "scripts",
+            "teams",
+            "scripts",
+            "sources",
+            "scripts",
+            "sops",
+            "scripts"
+          ],
+          "traps": [
+            "SCR-0019"
+          ]
+        },
+        {
+          "found": true,
+          "id": 16,
+          "src": "SOP-028",
+          "tgt": "SRC-0005",
+          "desc": "SOP-028 to source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-028",
+            "SOP-029",
+            "SCR-0057",
+            "SRC-0006",
+            "SCR-0007",
+            "SCR-0009",
+            "SRC-0003",
+            "SCR-0027",
+            "SRC-0005"
+          ],
+          "hops": 8,
+          "score": 53.025,
+          "weight": 58,
+          "avg_tc": 4.302,
+          "strengths": [
+            "primary",
+            "primary",
+            "supporting",
+            "primary",
+            "supporting",
+            "primary",
+            "tangential",
+            "primary"
+          ],
+          "str_cost": 0.625,
+          "intuitive": false,
+          "revisits": 4,
+          "domains": [
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "sources",
+            "scripts",
+            "sources"
+          ],
+          "traps": [
+            "SCR-0007"
+          ]
+        },
+        {
+          "found": true,
+          "id": 17,
+          "src": "SOP-029",
+          "tgt": "SCR-0050",
+          "desc": "SOP-029 to high script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-029",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0044",
+            "SRC-0006",
+            "SCR-0007",
+            "SCR-0009",
+            "SRC-0003",
+            "SCR-0008",
+            "SOP-023",
+            "SCR-0050"
+          ],
+          "hops": 10,
+          "score": 67.444,
+          "weight": 79,
+          "avg_tc": 3.148,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "primary",
+            "primary",
+            "related",
+            "supporting"
+          ],
+          "str_cost": 0.4,
+          "intuitive": false,
+          "revisits": 5,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "sources",
+            "scripts",
+            "sops",
+            "scripts"
+          ],
+          "traps": [
+            "SCR-0007"
+          ]
+        },
+        {
+          "found": true,
+          "id": 18,
+          "src": "SOP-029",
+          "tgt": "SRC-0035",
+          "desc": "SOP-029 to mid source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-029",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0007",
+            "SCR-0011",
+            "TEAM-0003",
+            "KB-0002",
+            "SCR-0019",
+            "SRC-0035"
+          ],
+          "hops": 10,
+          "score": 59.8,
+          "weight": 71,
+          "avg_tc": 2.267,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "primary",
+            "tangential",
+            "supporting"
+          ],
+          "str_cost": 0.6,
+          "intuitive": false,
+          "revisits": 3,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "scripts",
+            "sources"
+          ],
+          "traps": [
+            "SCR-0007",
+            "KB-0002",
+            "SCR-0019"
+          ]
+        },
+        {
+          "found": true,
+          "id": 19,
+          "src": "SOP-G01",
+          "tgt": "SCR-0001",
+          "desc": "SOP-G01 to first script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-G01",
+            "SOP-012",
+            "SOP-015",
+            "SOP-028",
+            "SOP-029",
+            "SCR-0057",
+            "SCR-0032",
+            "TEAM-0025",
+            "SOP-G02",
+            "KB-0001",
+            "SCR-0001"
+          ],
+          "hops": 10,
+          "score": 52.321,
+          "weight": 58,
+          "avg_tc": 2.107,
+          "strengths": [
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "related",
+            "related",
+            "related"
+          ],
+          "str_cost": 0.8,
+          "intuitive": false,
+          "revisits": 2,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "scripts",
+            "teams",
+            "sops",
+            "knowledge-base",
+            "scripts"
+          ],
+          "traps": []
+        },
+        {
+          "found": true,
+          "id": 20,
+          "src": "SOP-G01",
+          "tgt": "SRC-0025",
+          "desc": "SOP-G01 to mid source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-G01",
+            "SOP-012",
+            "SOP-014",
+            "SOP-011",
+            "SOP-015",
+            "SOP-028",
+            "SOP-029",
+            "SCR-0057",
+            "SRC-0006",
+            "SCR-0013",
+            "SRC-0025"
+          ],
+          "hops": 10,
+          "score": 54.154,
+          "weight": 61,
+          "avg_tc": 2.018,
+          "strengths": [
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "supporting"
+          ],
+          "str_cost": 0.7,
+          "intuitive": false,
+          "revisits": 2,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        }
+      ],
+      "weight_heavy": [
+        {
+          "found": true,
+          "id": 1,
+          "src": "SOP-011",
+          "tgt": "SCR-0043",
+          "desc": "SOP-011 to cross-domain script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-011",
+            "SOP-014",
+            "SOP-012",
+            "SOP-G01",
+            "SOP-013",
+            "SOP-G02",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043"
+          ],
+          "hops": 8,
+          "score": 45.875,
+          "weight": 53,
+          "avg_tc": 1.562,
+          "strengths": [
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary"
+          ],
+          "str_cost": 0.625,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts"
+          ],
+          "traps": []
+        },
+        {
+          "found": true,
+          "id": 2,
+          "src": "SOP-011",
+          "tgt": "SRC-0017",
+          "desc": "SOP-011 to source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-011",
+            "SOP-014",
+            "SOP-012",
+            "SOP-G01",
+            "SOP-013",
+            "SOP-G02",
+            "SOP-028",
+            "SOP-029",
+            "SOP-024",
+            "SCR-0041",
+            "SRC-0017"
+          ],
+          "hops": 10,
+          "score": 47.062,
+          "weight": 53,
+          "avg_tc": 1.525,
+          "strengths": [
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "related",
+            "related",
+            "related"
+          ],
+          "str_cost": 1.1,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        },
+        {
+          "found": true,
+          "id": 3,
+          "src": "SOP-012",
+          "tgt": "SCR-0057",
+          "desc": "SOP-012 to route tracker script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-012",
+            "SOP-029",
+            "SOP-028",
+            "SOP-015",
+            "SOP-011",
+            "SOP-014",
+            "SOP-016",
+            "SOP-013",
+            "SOP-G02",
+            "SCR-0032",
+            "SCR-0057"
+          ],
+          "hops": 10,
+          "score": 58.027,
+          "weight": 60,
+          "avg_tc": 3.911,
+          "strengths": [
+            "supporting",
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "related",
+            "supporting"
+          ],
+          "str_cost": 0.9,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "scripts"
+          ],
+          "traps": []
+        },
+        {
+          "found": false,
+          "id": 4,
+          "src": "SOP-012",
+          "tgt": "SRC-0020",
+          "desc": "SOP-012 to mid-range source",
+          "agent": "p4-2"
+        },
+        {
+          "found": true,
+          "id": 5,
+          "src": "SOP-015",
+          "tgt": "SCR-0005",
+          "desc": "SOP-015 to low script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-015",
+            "SOP-028",
+            "TEAM-0008",
+            "KB-0039",
+            "KB-0029",
+            "KB-0030",
+            "KB-0034",
+            "KB-0033",
+            "SCR-0004",
+            "TEAM-0005",
+            "SCR-0005"
+          ],
+          "hops": 10,
+          "score": 42.75,
+          "weight": 48,
+          "avg_tc": 1.4,
+          "strengths": [
+            "primary",
+            "related",
+            "related",
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "tangential",
+            "supporting",
+            "supporting"
+          ],
+          "str_cost": 1.3,
+          "intuitive": false,
+          "revisits": 2,
+          "domains": [
+            "sops",
+            "sops",
+            "teams",
+            "knowledge-base",
+            "knowledge-base",
+            "knowledge-base",
+            "knowledge-base",
+            "knowledge-base",
+            "scripts",
+            "teams",
+            "scripts"
+          ],
+          "traps": []
+        },
+        {
+          "found": true,
+          "id": 6,
+          "src": "SOP-015",
+          "tgt": "SRC-0030",
+          "desc": "SOP-015 to source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-015",
+            "SOP-028",
+            "SOP-029",
+            "SCR-0057",
+            "SRC-0006",
+            "SCR-0007",
+            "SCR-0009",
+            "SCR-0006",
+            "TEAM-0014",
+            "SRC-0030"
+          ],
+          "hops": 9,
+          "score": 48.583,
+          "weight": 54,
+          "avg_tc": 1.926,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "primary",
+            "supporting",
+            "supporting",
+            "related",
+            "related"
+          ],
+          "str_cost": 0.778,
+          "intuitive": false,
+          "revisits": 2,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "scripts",
+            "teams",
+            "sources"
+          ],
+          "traps": [
+            "SCR-0007"
+          ]
+        },
+        {
+          "found": true,
+          "id": 7,
+          "src": "SOP-017",
+          "tgt": "SCR-0010",
+          "desc": "SOP-017 to dedup script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-017",
+            "SCR-0023",
+            "SRC-0001",
+            "SCR-0001",
+            "SRC-0002",
+            "SCR-0026",
+            "TEAM-0010",
+            "SCR-0024",
+            "SRC-0029",
+            "SCR-0010"
+          ],
+          "hops": 9,
+          "score": 59.667,
+          "weight": 63,
+          "avg_tc": 4.185,
+          "strengths": [
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "tangential"
+          ],
+          "str_cost": 0.556,
+          "intuitive": false,
+          "revisits": 6,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "scripts",
+            "sources",
+            "scripts"
+          ],
+          "traps": [
+            "SCR-0001"
+          ]
+        },
+        {
+          "found": true,
+          "id": 8,
+          "src": "SOP-017",
+          "tgt": "SRC-0040",
+          "desc": "SOP-017 to high source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-017",
+            "SCR-0023",
+            "SRC-0001",
+            "SCR-0001",
+            "TEAM-0003",
+            "KB-0002",
+            "TEAM-0004",
+            "SCR-0042",
+            "SRC-0004",
+            "KB-0013",
+            "SRC-0040"
+          ],
+          "hops": 10,
+          "score": 53.333,
+          "weight": 58,
+          "avg_tc": 2.133,
+          "strengths": [
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "tangential",
+            "related"
+          ],
+          "str_cost": 0.8,
+          "intuitive": false,
+          "revisits": 6,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "scripts",
+            "sources",
+            "knowledge-base",
+            "sources"
+          ],
+          "traps": [
+            "SCR-0001",
+            "KB-0002"
+          ]
+        },
+        {
+          "found": true,
+          "id": 9,
+          "src": "SOP-023",
+          "tgt": "SCR-0025",
+          "desc": "SOP-023 to mid script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-023",
+            "SCR-0023",
+            "SRC-0001",
+            "SCR-0001",
+            "TEAM-0003",
+            "KB-0002",
+            "TEAM-0004",
+            "SCR-0042",
+            "SRC-0004",
+            "SCR-0025"
+          ],
+          "hops": 9,
+          "score": 51.833,
+          "weight": 57,
+          "avg_tc": 2.37,
+          "strengths": [
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "tangential"
+          ],
+          "str_cost": 0.667,
+          "intuitive": false,
+          "revisits": 5,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "scripts",
+            "sources",
+            "scripts"
+          ],
+          "traps": [
+            "SCR-0001",
+            "KB-0002"
+          ]
+        },
+        {
+          "found": true,
+          "id": 10,
+          "src": "SOP-023",
+          "tgt": "SRC-0001",
+          "desc": "SOP-023 to first source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-023",
+            "SCR-0023",
+            "SRC-0001"
+          ],
+          "hops": 2,
+          "score": 17.833,
+          "weight": 19,
+          "avg_tc": 6.667,
+          "strengths": [
+            "primary",
+            "primary"
+          ],
+          "str_cost": 0.0,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        },
+        {
+          "found": false,
+          "id": 11,
+          "src": "SOP-025",
+          "tgt": "SCR-0035",
+          "desc": "SOP-025 to mid script",
+          "agent": "p4-1"
+        },
+        {
+          "found": false,
+          "id": 12,
+          "src": "SOP-025",
+          "tgt": "SRC-0045",
+          "desc": "SOP-025 to high source",
+          "agent": "p4-2"
+        },
+        {
+          "found": true,
+          "id": 13,
+          "src": "SOP-027",
+          "tgt": "SCR-0040",
+          "desc": "SOP-027 to high script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-027",
+            "SCR-0044",
+            "SRC-0006",
+            "SCR-0007",
+            "SCR-0011",
+            "SCR-0006",
+            "SCR-0009",
+            "SRC-0003",
+            "SCR-0040"
+          ],
+          "hops": 8,
+          "score": 51.554,
+          "weight": 60,
+          "avg_tc": 2.277,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "supporting",
+            "primary",
+            "supporting"
+          ],
+          "str_cost": 0.5,
+          "intuitive": false,
+          "revisits": 3,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "scripts",
+            "scripts",
+            "sources",
+            "scripts"
+          ],
+          "traps": [
+            "SCR-0007"
+          ]
+        },
+        {
+          "found": false,
+          "id": 14,
+          "src": "SOP-027",
+          "tgt": "SRC-0015",
+          "desc": "SOP-027 to source",
+          "agent": "p4-2"
+        },
+        {
+          "found": true,
+          "id": 15,
+          "src": "SOP-028",
+          "tgt": "SCR-0030",
+          "desc": "SOP-028 to mid script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-028",
+            "SOP-029",
+            "SOP-012",
+            "SCR-0019",
+            "SCR-0020",
+            "TEAM-0008",
+            "KB-0001",
+            "TEAM-0006",
+            "SCR-0012",
+            "SOP-015",
+            "SCR-0030"
+          ],
+          "hops": 10,
+          "score": 60.738,
+          "weight": 62,
+          "avg_tc": 3.695,
+          "strengths": [
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "related",
+            "related"
+          ],
+          "str_cost": 0.6,
+          "intuitive": false,
+          "revisits": 4,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "scripts",
+            "sops",
+            "scripts"
+          ],
+          "traps": [
+            "SCR-0019"
+          ]
+        },
+        {
+          "found": true,
+          "id": 16,
+          "src": "SOP-028",
+          "tgt": "SRC-0005",
+          "desc": "SOP-028 to source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-028",
+            "SOP-029",
+            "SCR-0057",
+            "SCR-0032",
+            "TEAM-0025",
+            "SCR-0033",
+            "SRC-0050",
+            "SCR-0005",
+            "SRC-0033",
+            "SCR-0036",
+            "SRC-0005"
+          ],
+          "hops": 10,
+          "score": 60.471,
+          "weight": 65,
+          "avg_tc": 2.689,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting"
+          ],
+          "str_cost": 0.5,
+          "intuitive": false,
+          "revisits": 5,
+          "domains": [
+            "sops",
+            "sops",
+            "scripts",
+            "scripts",
+            "teams",
+            "scripts",
+            "sources",
+            "scripts",
+            "sources",
+            "scripts",
+            "sources"
+          ],
+          "traps": [
+            "SCR-0005"
+          ]
+        },
+        {
+          "found": true,
+          "id": 17,
+          "src": "SOP-029",
+          "tgt": "SCR-0050",
+          "desc": "SOP-029 to high script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-029",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0044",
+            "SRC-0006",
+            "SCR-0007",
+            "SCR-0009",
+            "SRC-0003",
+            "SCR-0008",
+            "SOP-023",
+            "SCR-0050"
+          ],
+          "hops": 10,
+          "score": 69.37,
+          "weight": 79,
+          "avg_tc": 3.148,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "primary",
+            "primary",
+            "related",
+            "supporting"
+          ],
+          "str_cost": 0.4,
+          "intuitive": false,
+          "revisits": 5,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "sources",
+            "scripts",
+            "sops",
+            "scripts"
+          ],
+          "traps": [
+            "SCR-0007"
+          ]
+        },
+        {
+          "found": true,
+          "id": 18,
+          "src": "SOP-029",
+          "tgt": "SRC-0035",
+          "desc": "SOP-029 to mid source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-029",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0007",
+            "SCR-0011",
+            "TEAM-0003",
+            "KB-0002",
+            "SCR-0019",
+            "SRC-0035"
+          ],
+          "hops": 10,
+          "score": 61.667,
+          "weight": 71,
+          "avg_tc": 2.267,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "primary",
+            "tangential",
+            "supporting"
+          ],
+          "str_cost": 0.6,
+          "intuitive": false,
+          "revisits": 3,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "scripts",
+            "sources"
+          ],
+          "traps": [
+            "SCR-0007",
+            "KB-0002",
+            "SCR-0019"
+          ]
+        },
+        {
+          "found": true,
+          "id": 19,
+          "src": "SOP-G01",
+          "tgt": "SCR-0001",
+          "desc": "SOP-G01 to first script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-G01",
+            "SOP-012",
+            "SOP-015",
+            "SOP-028",
+            "SOP-029",
+            "SCR-0057",
+            "SCR-0032",
+            "TEAM-0025",
+            "SOP-G02",
+            "KB-0001",
+            "SCR-0001"
+          ],
+          "hops": 10,
+          "score": 53.268,
+          "weight": 58,
+          "avg_tc": 2.107,
+          "strengths": [
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "related",
+            "related",
+            "related"
+          ],
+          "str_cost": 0.8,
+          "intuitive": false,
+          "revisits": 2,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "scripts",
+            "teams",
+            "sops",
+            "knowledge-base",
+            "scripts"
+          ],
+          "traps": []
+        },
+        {
+          "found": true,
+          "id": 20,
+          "src": "SOP-G01",
+          "tgt": "SRC-0025",
+          "desc": "SOP-G01 to mid source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-G01",
+            "SOP-012",
+            "SOP-014",
+            "SOP-011",
+            "SOP-015",
+            "SOP-028",
+            "SOP-029",
+            "SCR-0057",
+            "SRC-0006",
+            "SCR-0013",
+            "SRC-0025"
+          ],
+          "hops": 10,
+          "score": 55.295,
+          "weight": 61,
+          "avg_tc": 2.018,
+          "strengths": [
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "supporting"
+          ],
+          "str_cost": 0.7,
+          "intuitive": false,
+          "revisits": 2,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        }
+      ],
+      "equal": [
+        {
+          "found": true,
+          "id": 1,
+          "src": "SOP-011",
+          "tgt": "SCR-0043",
+          "desc": "SOP-011 to cross-domain script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-011",
+            "SOP-014",
+            "SOP-012",
+            "SOP-G01",
+            "SOP-013",
+            "SOP-G02",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043"
+          ],
+          "hops": 8,
+          "score": 43.065,
+          "weight": 53,
+          "avg_tc": 1.562,
+          "strengths": [
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary"
+          ],
+          "str_cost": 0.625,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts"
+          ],
+          "traps": []
+        },
+        {
+          "found": true,
+          "id": 2,
+          "src": "SOP-011",
+          "tgt": "SRC-0017",
+          "desc": "SOP-011 to source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-011",
+            "SOP-014",
+            "SOP-012",
+            "SOP-G01",
+            "SOP-013",
+            "SOP-G02",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043",
+            "TEAM-0014",
+            "SRC-0017"
+          ],
+          "hops": 10,
+          "score": 48.263,
+          "weight": 57,
+          "avg_tc": 1.625,
+          "strengths": [
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "related",
+            "related"
+          ],
+          "str_cost": 0.9,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "teams",
+            "sources"
+          ],
+          "traps": []
+        },
+        {
+          "found": true,
+          "id": 3,
+          "src": "SOP-012",
+          "tgt": "SCR-0057",
+          "desc": "SOP-012 to route tracker script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-012",
+            "SOP-029",
+            "SCR-0057"
+          ],
+          "hops": 2,
+          "score": 14.85,
+          "weight": 13,
+          "avg_tc": 7.5,
+          "strengths": [
+            "supporting",
+            "primary"
+          ],
+          "str_cost": 0.5,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "sops",
+            "scripts"
+          ],
+          "traps": []
+        },
+        {
+          "found": false,
+          "id": 4,
+          "src": "SOP-012",
+          "tgt": "SRC-0020",
+          "desc": "SOP-012 to mid-range source",
+          "agent": "p4-2"
+        },
+        {
+          "found": true,
+          "id": 5,
+          "src": "SOP-015",
+          "tgt": "SCR-0005",
+          "desc": "SOP-015 to low script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-015",
+            "SOP-028",
+            "SOP-029",
+            "SOP-012",
+            "SCR-0019",
+            "SCR-0020",
+            "TEAM-0008",
+            "KB-0007",
+            "SCR-0005"
+          ],
+          "hops": 8,
+          "score": 43.56,
+          "weight": 48,
+          "avg_tc": 2.375,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "tangential"
+          ],
+          "str_cost": 0.625,
+          "intuitive": false,
+          "revisits": 1,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "scripts"
+          ],
+          "traps": [
+            "SCR-0019"
+          ]
+        },
+        {
+          "found": true,
+          "id": 6,
+          "src": "SOP-015",
+          "tgt": "SRC-0030",
+          "desc": "SOP-015 to source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-015",
+            "SOP-028",
+            "SOP-029",
+            "SCR-0057",
+            "SRC-0006",
+            "SCR-0007",
+            "SCR-0009",
+            "SCR-0006",
+            "TEAM-0014",
+            "SRC-0030"
+          ],
+          "hops": 9,
+          "score": 46.31,
+          "weight": 54,
+          "avg_tc": 1.926,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "primary",
+            "supporting",
+            "supporting",
+            "related",
+            "related"
+          ],
+          "str_cost": 0.778,
+          "intuitive": false,
+          "revisits": 2,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "scripts",
+            "teams",
+            "sources"
+          ],
+          "traps": [
+            "SCR-0007"
+          ]
+        },
+        {
+          "found": true,
+          "id": 7,
+          "src": "SOP-017",
+          "tgt": "SCR-0010",
+          "desc": "SOP-017 to dedup script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-017",
+            "SCR-0023",
+            "SRC-0001",
+            "SCR-0001",
+            "SRC-0002",
+            "SCR-0026",
+            "TEAM-0010",
+            "SCR-0024",
+            "SRC-0029",
+            "SCR-0010"
+          ],
+          "hops": 9,
+          "score": 57.97,
+          "weight": 63,
+          "avg_tc": 4.185,
+          "strengths": [
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "tangential"
+          ],
+          "str_cost": 0.556,
+          "intuitive": false,
+          "revisits": 6,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "scripts",
+            "sources",
+            "scripts"
+          ],
+          "traps": [
+            "SCR-0001"
+          ]
+        },
+        {
+          "found": true,
+          "id": 8,
+          "src": "SOP-017",
+          "tgt": "SRC-0040",
+          "desc": "SOP-017 to high source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-017",
+            "SCR-0023",
+            "SRC-0001",
+            "SCR-0001",
+            "TEAM-0003",
+            "KB-0002",
+            "TEAM-0004",
+            "SCR-0042",
+            "SRC-0004",
+            "KB-0013",
+            "SRC-0040"
+          ],
+          "hops": 10,
+          "score": 51.26,
+          "weight": 58,
+          "avg_tc": 2.133,
+          "strengths": [
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "tangential",
+            "related"
+          ],
+          "str_cost": 0.8,
+          "intuitive": false,
+          "revisits": 6,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "teams",
+            "scripts",
+            "sources",
+            "knowledge-base",
+            "sources"
+          ],
+          "traps": [
+            "SCR-0001",
+            "KB-0002"
+          ]
+        },
+        {
+          "found": true,
+          "id": 9,
+          "src": "SOP-023",
+          "tgt": "SCR-0025",
+          "desc": "SOP-023 to mid script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-023",
+            "SCR-0023",
+            "SRC-0001",
+            "SCR-0025"
+          ],
+          "hops": 3,
+          "score": 18.7,
+          "weight": 20,
+          "avg_tc": 5.222,
+          "strengths": [
+            "primary",
+            "primary",
+            "tangential"
+          ],
+          "str_cost": 1.0,
+          "intuitive": false,
+          "revisits": 1,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts"
+          ],
+          "traps": []
+        },
+        {
+          "found": true,
+          "id": 10,
+          "src": "SOP-023",
+          "tgt": "SRC-0001",
+          "desc": "SOP-023 to first source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-023",
+            "SCR-0023",
+            "SRC-0001"
+          ],
+          "hops": 2,
+          "score": 17.27,
+          "weight": 19,
+          "avg_tc": 6.667,
+          "strengths": [
+            "primary",
+            "primary"
+          ],
+          "str_cost": 0.0,
+          "intuitive": true,
+          "revisits": 0,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        },
+        {
+          "found": false,
+          "id": 11,
+          "src": "SOP-025",
+          "tgt": "SCR-0035",
+          "desc": "SOP-025 to mid script",
+          "agent": "p4-1"
+        },
+        {
+          "found": true,
+          "id": 12,
+          "src": "SOP-025",
+          "tgt": "SRC-0045",
+          "desc": "SOP-025 to high source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-025",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0007",
+            "SCR-0009",
+            "SRC-0003",
+            "SCR-0008",
+            "SCR-0011",
+            "SCR-0006",
+            "KB-0043",
+            "SRC-0045"
+          ],
+          "hops": 10,
+          "score": 55.0,
+          "weight": 69,
+          "avg_tc": 2.167,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "tangential",
+            "related"
+          ],
+          "str_cost": 0.8,
+          "intuitive": false,
+          "revisits": 4,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "scripts",
+            "knowledge-base",
+            "sources"
+          ],
+          "traps": [
+            "SCR-0007"
+          ]
+        },
+        {
+          "found": true,
+          "id": 13,
+          "src": "SOP-027",
+          "tgt": "SCR-0040",
+          "desc": "SOP-027 to high script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-027",
+            "SCR-0044",
+            "SRC-0006",
+            "SCR-0007",
+            "SCR-0011",
+            "SCR-0006",
+            "SCR-0009",
+            "SRC-0003",
+            "SCR-0040"
+          ],
+          "hops": 8,
+          "score": 48.251,
+          "weight": 60,
+          "avg_tc": 2.277,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "supporting",
+            "primary",
+            "supporting"
+          ],
+          "str_cost": 0.5,
+          "intuitive": false,
+          "revisits": 3,
+          "domains": [
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "scripts",
+            "scripts",
+            "sources",
+            "scripts"
+          ],
+          "traps": [
+            "SCR-0007"
+          ]
+        },
+        {
+          "found": false,
+          "id": 14,
+          "src": "SOP-027",
+          "tgt": "SRC-0015",
+          "desc": "SOP-027 to source",
+          "agent": "p4-2"
+        },
+        {
+          "found": true,
+          "id": 15,
+          "src": "SOP-028",
+          "tgt": "SCR-0030",
+          "desc": "SOP-028 to mid script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-028",
+            "SOP-029",
+            "SOP-012",
+            "SCR-0019",
+            "SCR-0020",
+            "TEAM-0008",
+            "SCR-0016",
+            "SRC-0001",
+            "SCR-0023",
+            "SOP-019",
+            "SCR-0030"
+          ],
+          "hops": 10,
+          "score": 56.273,
+          "weight": 59,
+          "avg_tc": 3.552,
+          "strengths": [
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "supporting",
+            "primary",
+            "tangential",
+            "related"
+          ],
+          "str_cost": 0.8,
+          "intuitive": false,
+          "revisits": 4,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "scripts",
+            "teams",
+            "scripts",
+            "sources",
+            "scripts",
+            "sops",
+            "scripts"
+          ],
+          "traps": [
+            "SCR-0019"
+          ]
+        },
+        {
+          "found": true,
+          "id": 16,
+          "src": "SOP-028",
+          "tgt": "SRC-0005",
+          "desc": "SOP-028 to source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0007",
+            "SRC-0005"
+          ],
+          "hops": 5,
+          "score": 34.522,
+          "weight": 38,
+          "avg_tc": 4.522,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "related"
+          ],
+          "str_cost": 0.4,
+          "intuitive": false,
+          "revisits": 2,
+          "domains": [
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "sources"
+          ],
+          "traps": [
+            "SCR-0007"
+          ]
+        },
+        {
+          "found": true,
+          "id": 17,
+          "src": "SOP-029",
+          "tgt": "SCR-0050",
+          "desc": "SOP-029 to high script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-029",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0044",
+            "SRC-0006",
+            "SCR-0007",
+            "SCR-0009",
+            "SRC-0003",
+            "SCR-0008",
+            "SOP-023",
+            "SCR-0050"
+          ],
+          "hops": 10,
+          "score": 65.498,
+          "weight": 79,
+          "avg_tc": 3.148,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "primary",
+            "primary",
+            "related",
+            "supporting"
+          ],
+          "str_cost": 0.4,
+          "intuitive": false,
+          "revisits": 5,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "sources",
+            "scripts",
+            "sops",
+            "scripts"
+          ],
+          "traps": [
+            "SCR-0007"
+          ]
+        },
+        {
+          "found": true,
+          "id": 18,
+          "src": "SOP-029",
+          "tgt": "SRC-0035",
+          "desc": "SOP-029 to mid source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-029",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043",
+            "SRC-0006",
+            "SCR-0007",
+            "SCR-0011",
+            "TEAM-0003",
+            "KB-0002",
+            "SCR-0019",
+            "SRC-0035"
+          ],
+          "hops": 10,
+          "score": 57.97,
+          "weight": 71,
+          "avg_tc": 2.267,
+          "strengths": [
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "primary",
+            "tangential",
+            "supporting"
+          ],
+          "str_cost": 0.6,
+          "intuitive": false,
+          "revisits": 3,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "scripts",
+            "teams",
+            "knowledge-base",
+            "scripts",
+            "sources"
+          ],
+          "traps": [
+            "SCR-0007",
+            "KB-0002",
+            "SCR-0019"
+          ]
+        },
+        {
+          "found": true,
+          "id": 19,
+          "src": "SOP-G01",
+          "tgt": "SCR-0001",
+          "desc": "SOP-G01 to first script",
+          "agent": "p4-1",
+          "path": [
+            "SOP-G01",
+            "SOP-012",
+            "SOP-015",
+            "SOP-028",
+            "SOP-029",
+            "SCR-0057",
+            "SCR-0032",
+            "TEAM-0025",
+            "SOP-G02",
+            "KB-0001",
+            "SCR-0001"
+          ],
+          "hops": 10,
+          "score": 51.174,
+          "weight": 58,
+          "avg_tc": 2.107,
+          "strengths": [
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "primary",
+            "related",
+            "related",
+            "related"
+          ],
+          "str_cost": 0.8,
+          "intuitive": false,
+          "revisits": 2,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "scripts",
+            "teams",
+            "sops",
+            "knowledge-base",
+            "scripts"
+          ],
+          "traps": []
+        },
+        {
+          "found": true,
+          "id": 20,
+          "src": "SOP-G01",
+          "tgt": "SRC-0025",
+          "desc": "SOP-G01 to mid source",
+          "agent": "p4-2",
+          "path": [
+            "SOP-G01",
+            "SOP-012",
+            "SOP-014",
+            "SOP-011",
+            "SOP-015",
+            "SOP-028",
+            "SOP-029",
+            "SCR-0057",
+            "SRC-0006",
+            "SCR-0013",
+            "SRC-0025"
+          ],
+          "hops": 10,
+          "score": 52.859,
+          "weight": 61,
+          "avg_tc": 2.018,
+          "strengths": [
+            "supporting",
+            "supporting",
+            "supporting",
+            "supporting",
+            "primary",
+            "primary",
+            "primary",
+            "supporting",
+            "supporting",
+            "supporting"
+          ],
+          "str_cost": 0.7,
+          "intuitive": false,
+          "revisits": 2,
+          "domains": [
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "sops",
+            "scripts",
+            "sources",
+            "scripts",
+            "sources"
+          ],
+          "traps": []
+        }
+      ]
+    }
+  },
+  "comparative_analysis": {
+    "observations": [
+      "P2: Strength-priority found paths in 20/20 scenarios; baseline found 20/20.",
+      "P2: Paths differ in 19/20 comparable scenarios.",
+      "P2: Strength-priority uses much more hops (avg 9.9 vs 2.6) but accumulates more weight (77.6 vs 12.0).",
+      "P2: Strength-priority traverses higher-quality edges (avg cost 0.134 vs 1.279) -- lower is better.",
+      "P2: Trap nodes hit: strength=17, baseline=2.",
+      "P2: Intuitive paths: strength=3/20, baseline=19/20.",
+      "P4: Best tuning: equal with composite 68.11.",
+      "P4: equal: found=17/20, hops=7.88, score=44.87, composite=68.11.",
+      "P4: balanced: found=17/20, hops=8.18, score=46.64, composite=67.69.",
+      "P4: weight_heavy: found=16/20, hops=9.06, score=52.33, composite=64.11.",
+      "Cross: Hybrid best (equal) avg hops=7.88 vs strength-priority avg hops=9.95 vs baseline avg hops=2.60.",
+      "Key insight: Strength-priority optimizes for edge quality at the cost of path length. The baseline finds short paths but with lower-quality edges. Hybrid balances both signals."
+    ],
+    "method_comparison": {
+      "p2_avg_hops": 9.95,
+      "p2_avg_weight": 77.6,
+      "p2_avg_str_cost": 0.134,
+      "p2_intuitive_rate": "3/20",
+      "baseline_avg_hops": 2.6,
+      "baseline_avg_weight": 12.0,
+      "p4_best_tuning": "equal",
+      "p4_best_avg_hops": 7.88,
+      "p4_best_avg_weight": 51.76,
+      "p4_best_composite": 68.11
+    }
+  }
+}

@@ -1,0 +1,745 @@
+{
+  "test_id": "stress_s4",
+  "team": "Stress Team S4",
+  "timestamp": "2026-03-12",
+  "description": "Load testing the recommendation system with 40 concurrent-style calls across 8 task types and 5 entry nodes",
+  "seed_data": {
+    "total_routes_seeded": 30,
+    "task_types": [
+      "stress-test",
+      "code-review",
+      "deployment",
+      "debugging",
+      "data-analysis",
+      "documentation",
+      "monitoring",
+      "coordination"
+    ],
+    "entry_nodes_used": [
+      "SOP-015",
+      "SOP-027",
+      "SOP-011",
+      "SOP-020",
+      "SOP-025",
+      "SOP-014",
+      "SOP-012",
+      "SOP-013",
+      "SOP-026"
+    ],
+    "outcome_distribution": {
+      "success": 17,
+      "failure": 6,
+      "partial": 7
+    },
+    "agents_used": [
+      "s4-seed-1",
+      "s4-seed-2",
+      "s4-seed-3",
+      "s4-seed-4",
+      "s4-seed-5",
+      "s4-seed-6",
+      "s4-seed-7",
+      "s4-seed-8",
+      "s4-seed-9",
+      "s4-seed-10",
+      "s4-seed-11",
+      "s4-seed-12",
+      "s4-seed-13",
+      "s4-seed-14",
+      "s4-seed-15",
+      "s4-seed-16",
+      "s4-seed-17",
+      "s4-seed-18",
+      "s4-seed-19",
+      "s4-seed-20",
+      "s4-seed-21",
+      "s4-seed-22",
+      "s4-seed-23",
+      "s4-seed-24",
+      "s4-seed-25",
+      "s4-seed-26",
+      "s4-seed-27",
+      "s4-seed-28",
+      "s4-seed-29",
+      "s4-seed-30"
+    ],
+    "routes": [
+      {
+        "agent": "s4-seed-1",
+        "task": "stress-test",
+        "route": "SOP-015 -> SCR-0036 -> SCR-0037 -> KB-0042",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-2",
+        "task": "stress-test",
+        "route": "SOP-015 -> SOP-014 -> SCR-0019",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-3",
+        "task": "stress-test",
+        "route": "SOP-015 -> SOP-011 -> TEAM-0025",
+        "outcome": "failure"
+      },
+      {
+        "agent": "s4-seed-4",
+        "task": "stress-test",
+        "route": "SOP-027 -> SCR-0043 -> KB-0045",
+        "outcome": "partial"
+      },
+      {
+        "agent": "s4-seed-5",
+        "task": "code-review",
+        "route": "SOP-011 -> SCR-0019 -> KB-0025",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-6",
+        "task": "code-review",
+        "route": "SOP-011 -> SOP-014 -> SOP-012",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-7",
+        "task": "code-review",
+        "route": "SOP-012 -> SCR-0019 -> KB-0001",
+        "outcome": "failure"
+      },
+      {
+        "agent": "s4-seed-8",
+        "task": "code-review",
+        "route": "SOP-025 -> SCR-0043 -> KB-0045",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-9",
+        "task": "deployment",
+        "route": "SOP-027 -> SCR-0043 -> SRC-0006",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-10",
+        "task": "deployment",
+        "route": "SOP-027 -> SCR-0044 -> SRC-0008",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-11",
+        "task": "deployment",
+        "route": "SOP-025 -> SOP-026 -> SCR-0043",
+        "outcome": "partial"
+      },
+      {
+        "agent": "s4-seed-12",
+        "task": "deployment",
+        "route": "SOP-027 -> SOP-025 -> SCR-0043",
+        "outcome": "failure"
+      },
+      {
+        "agent": "s4-seed-13",
+        "task": "debugging",
+        "route": "SOP-014 -> SOP-011 -> SCR-0019",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-14",
+        "task": "debugging",
+        "route": "SOP-014 -> SOP-012 -> SCR-0030",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-15",
+        "task": "debugging",
+        "route": "SOP-015 -> SOP-016 -> SOP-013",
+        "outcome": "partial"
+      },
+      {
+        "agent": "s4-seed-16",
+        "task": "debugging",
+        "route": "SOP-011 -> SOP-015 -> KB-0006",
+        "outcome": "failure"
+      },
+      {
+        "agent": "s4-seed-17",
+        "task": "data-analysis",
+        "route": "SOP-020 -> KB-0025 -> KB-0024",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-18",
+        "task": "data-analysis",
+        "route": "SOP-020 -> TEAM-0025 -> SCR-0033",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-19",
+        "task": "data-analysis",
+        "route": "SOP-020 -> KB-0001 -> TEAM-0008",
+        "outcome": "partial"
+      },
+      {
+        "agent": "s4-seed-20",
+        "task": "data-analysis",
+        "route": "SOP-025 -> SCR-0043 -> KB-0045",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-21",
+        "task": "documentation",
+        "route": "SOP-013 -> SOP-G01 -> SOP-012",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-22",
+        "task": "documentation",
+        "route": "SOP-013 -> SOP-016 -> SOP-015",
+        "outcome": "failure"
+      },
+      {
+        "agent": "s4-seed-23",
+        "task": "documentation",
+        "route": "SOP-012 -> SOP-G01 -> SOP-013",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-24",
+        "task": "monitoring",
+        "route": "SOP-026 -> SCR-0043 -> SRC-0006",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-25",
+        "task": "monitoring",
+        "route": "SOP-026 -> SOP-025 -> SCR-0043",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-26",
+        "task": "monitoring",
+        "route": "SOP-027 -> SCR-0044 -> KB-0046",
+        "outcome": "partial"
+      },
+      {
+        "agent": "s4-seed-27",
+        "task": "monitoring",
+        "route": "SOP-026 -> SOP-027 -> SCR-0043",
+        "outcome": "failure"
+      },
+      {
+        "agent": "s4-seed-28",
+        "task": "coordination",
+        "route": "SOP-015 -> SOP-012 -> SCR-0019",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-29",
+        "task": "coordination",
+        "route": "SOP-014 -> SOP-013 -> SOP-G02",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-seed-30",
+        "task": "coordination",
+        "route": "SOP-011 -> KB-0038 -> KB-0025",
+        "outcome": "partial"
+      }
+    ]
+  },
+  "recommendation_results": {
+    "total_calls": 40,
+    "task_types_tested": 8,
+    "entry_nodes_tested": 5,
+    "total_time_seconds": 2.27,
+    "avg_latency_ms": 56.6,
+    "max_latency_ms": 90.0,
+    "min_latency_ms": 41.0,
+    "category_breakdown": {
+      "pattern_match": 11,
+      "fallback_strength": 29
+    },
+    "error_count": 0,
+    "pattern_match_rate_pct": 27.5,
+    "all_results": [
+      {
+        "task": "stress-test",
+        "entry": "SOP-015",
+        "category": "pattern_match",
+        "elapsed_ms": 82.0,
+        "output": "Recommended route for 'stress-test' from SOP-015: SOP-015 -> SCR-0036 -> SCR-0037 -> KB-0042\n  (score=1.0, based on 4 attempts, 50.0% overall success rate)",
+        "returncode": 0
+      },
+      {
+        "task": "stress-test",
+        "entry": "SOP-027",
+        "category": "fallback_strength",
+        "elapsed_ms": 90.0,
+        "output": "No history for 'stress-test'. Primary tools from SOP-027: ['SCR-0043', 'SCR-0044', 'SOP-028']",
+        "returncode": 0
+      },
+      {
+        "task": "stress-test",
+        "entry": "SOP-011",
+        "category": "fallback_strength",
+        "elapsed_ms": 69.0,
+        "output": "No history for 'stress-test'. Primary tools from SOP-011: ['SCR-0019']",
+        "returncode": 0
+      },
+      {
+        "task": "stress-test",
+        "entry": "SOP-020",
+        "category": "fallback_strength",
+        "elapsed_ms": 49.0,
+        "output": "No history for 'stress-test'. Primary tools from SOP-020: ['SCR-0001']",
+        "returncode": 0
+      },
+      {
+        "task": "stress-test",
+        "entry": "SOP-025",
+        "category": "fallback_strength",
+        "elapsed_ms": 48.0,
+        "output": "No history for 'stress-test'. Primary tools from SOP-025: ['SCR-0043']",
+        "returncode": 0
+      },
+      {
+        "task": "code-review",
+        "entry": "SOP-015",
+        "category": "fallback_strength",
+        "elapsed_ms": 54.0,
+        "output": "No history for 'code-review'. Primary tools from SOP-015: ['SCR-0012', 'SOP-028']",
+        "returncode": 0
+      },
+      {
+        "task": "code-review",
+        "entry": "SOP-027",
+        "category": "fallback_strength",
+        "elapsed_ms": 55.0,
+        "output": "No history for 'code-review'. Primary tools from SOP-027: ['SCR-0043', 'SCR-0044', 'SOP-028']",
+        "returncode": 0
+      },
+      {
+        "task": "code-review",
+        "entry": "SOP-011",
+        "category": "pattern_match",
+        "elapsed_ms": 46.0,
+        "output": "Recommended route for 'code-review' from SOP-011: SOP-011 -> SCR-0019 -> KB-0025\n  (score=1.0, based on 4 attempts, 75.0% overall success rate)",
+        "returncode": 0
+      },
+      {
+        "task": "code-review",
+        "entry": "SOP-020",
+        "category": "fallback_strength",
+        "elapsed_ms": 52.0,
+        "output": "No history for 'code-review'. Primary tools from SOP-020: ['SCR-0001']",
+        "returncode": 0
+      },
+      {
+        "task": "code-review",
+        "entry": "SOP-025",
+        "category": "pattern_match",
+        "elapsed_ms": 45.0,
+        "output": "Recommended route for 'code-review' from SOP-025: SOP-025 -> SCR-0043 -> KB-0045\n  (score=1.0, based on 4 attempts, 75.0% overall success rate)",
+        "returncode": 0
+      },
+      {
+        "task": "deployment",
+        "entry": "SOP-015",
+        "category": "fallback_strength",
+        "elapsed_ms": 47.0,
+        "output": "No history for 'deployment'. Primary tools from SOP-015: ['SCR-0012', 'SOP-028']",
+        "returncode": 0
+      },
+      {
+        "task": "deployment",
+        "entry": "SOP-027",
+        "category": "pattern_match",
+        "elapsed_ms": 41.0,
+        "output": "Recommended route for 'deployment' from SOP-027: SOP-027 -> SCR-0043 -> SRC-0006\n  (score=1.0, based on 4 attempts, 50.0% overall success rate)",
+        "returncode": 0
+      },
+      {
+        "task": "deployment",
+        "entry": "SOP-011",
+        "category": "fallback_strength",
+        "elapsed_ms": 52.0,
+        "output": "No history for 'deployment'. Primary tools from SOP-011: ['SCR-0019']",
+        "returncode": 0
+      },
+      {
+        "task": "deployment",
+        "entry": "SOP-020",
+        "category": "fallback_strength",
+        "elapsed_ms": 64.0,
+        "output": "No history for 'deployment'. Primary tools from SOP-020: ['SCR-0001']",
+        "returncode": 0
+      },
+      {
+        "task": "deployment",
+        "entry": "SOP-025",
+        "category": "pattern_match",
+        "elapsed_ms": 45.0,
+        "output": "Recommended route for 'deployment' from SOP-025: SOP-025 -> SOP-026 -> SCR-0043\n  (score=0.0, based on 4 attempts, 50.0% overall success rate)",
+        "returncode": 0
+      },
+      {
+        "task": "debugging",
+        "entry": "SOP-015",
+        "category": "pattern_match",
+        "elapsed_ms": 56.0,
+        "output": "Recommended route for 'debugging' from SOP-015: SOP-015 -> SOP-016 -> SOP-013\n  (score=0.0, based on 4 attempts, 50.0% overall success rate)",
+        "returncode": 0
+      },
+      {
+        "task": "debugging",
+        "entry": "SOP-027",
+        "category": "fallback_strength",
+        "elapsed_ms": 57.0,
+        "output": "No history for 'debugging'. Primary tools from SOP-027: ['SCR-0043', 'SCR-0044', 'SOP-028']",
+        "returncode": 0
+      },
+      {
+        "task": "debugging",
+        "entry": "SOP-011",
+        "category": "fallback_strength",
+        "elapsed_ms": 53.0,
+        "output": "No history for 'debugging'. Primary tools from SOP-011: ['SCR-0019']",
+        "returncode": 0
+      },
+      {
+        "task": "debugging",
+        "entry": "SOP-020",
+        "category": "fallback_strength",
+        "elapsed_ms": 57.0,
+        "output": "No history for 'debugging'. Primary tools from SOP-020: ['SCR-0001']",
+        "returncode": 0
+      },
+      {
+        "task": "debugging",
+        "entry": "SOP-025",
+        "category": "fallback_strength",
+        "elapsed_ms": 55.0,
+        "output": "No history for 'debugging'. Primary tools from SOP-025: ['SCR-0043']",
+        "returncode": 0
+      },
+      {
+        "task": "data-analysis",
+        "entry": "SOP-015",
+        "category": "fallback_strength",
+        "elapsed_ms": 63.0,
+        "output": "No history for 'data-analysis'. Primary tools from SOP-015: ['SCR-0012', 'SOP-028']",
+        "returncode": 0
+      },
+      {
+        "task": "data-analysis",
+        "entry": "SOP-027",
+        "category": "fallback_strength",
+        "elapsed_ms": 55.0,
+        "output": "No history for 'data-analysis'. Primary tools from SOP-027: ['SCR-0043', 'SCR-0044', 'SOP-028']",
+        "returncode": 0
+      },
+      {
+        "task": "data-analysis",
+        "entry": "SOP-011",
+        "category": "fallback_strength",
+        "elapsed_ms": 53.0,
+        "output": "No history for 'data-analysis'. Primary tools from SOP-011: ['SCR-0019']",
+        "returncode": 0
+      },
+      {
+        "task": "data-analysis",
+        "entry": "SOP-020",
+        "category": "pattern_match",
+        "elapsed_ms": 46.0,
+        "output": "Recommended route for 'data-analysis' from SOP-020: SOP-020 -> KB-0025 -> KB-0024\n  (score=1.0, based on 4 attempts, 75.0% overall success rate)",
+        "returncode": 0
+      },
+      {
+        "task": "data-analysis",
+        "entry": "SOP-025",
+        "category": "pattern_match",
+        "elapsed_ms": 48.0,
+        "output": "Recommended route for 'data-analysis' from SOP-025: SOP-025 -> SCR-0043 -> KB-0045\n  (score=1.0, based on 4 attempts, 75.0% overall success rate)",
+        "returncode": 0
+      },
+      {
+        "task": "documentation",
+        "entry": "SOP-015",
+        "category": "fallback_strength",
+        "elapsed_ms": 57.0,
+        "output": "No history for 'documentation'. Primary tools from SOP-015: ['SCR-0012', 'SOP-028']",
+        "returncode": 0
+      },
+      {
+        "task": "documentation",
+        "entry": "SOP-027",
+        "category": "fallback_strength",
+        "elapsed_ms": 63.0,
+        "output": "No history for 'documentation'. Primary tools from SOP-027: ['SCR-0043', 'SCR-0044', 'SOP-028']",
+        "returncode": 0
+      },
+      {
+        "task": "documentation",
+        "entry": "SOP-011",
+        "category": "fallback_strength",
+        "elapsed_ms": 63.0,
+        "output": "No history for 'documentation'. Primary tools from SOP-011: ['SCR-0019']",
+        "returncode": 0
+      },
+      {
+        "task": "documentation",
+        "entry": "SOP-020",
+        "category": "fallback_strength",
+        "elapsed_ms": 57.0,
+        "output": "No history for 'documentation'. Primary tools from SOP-020: ['SCR-0001']",
+        "returncode": 0
+      },
+      {
+        "task": "documentation",
+        "entry": "SOP-025",
+        "category": "fallback_strength",
+        "elapsed_ms": 89.0,
+        "output": "No history for 'documentation'. Primary tools from SOP-025: ['SCR-0043']",
+        "returncode": 0
+      },
+      {
+        "task": "monitoring",
+        "entry": "SOP-015",
+        "category": "fallback_strength",
+        "elapsed_ms": 58.0,
+        "output": "No history for 'monitoring'. Primary tools from SOP-015: ['SCR-0012', 'SOP-028']",
+        "returncode": 0
+      },
+      {
+        "task": "monitoring",
+        "entry": "SOP-027",
+        "category": "pattern_match",
+        "elapsed_ms": 53.0,
+        "output": "Recommended route for 'monitoring' from SOP-027: SOP-027 -> SCR-0044 -> KB-0046\n  (score=0.0, based on 4 attempts, 50.0% overall success rate)",
+        "returncode": 0
+      },
+      {
+        "task": "monitoring",
+        "entry": "SOP-011",
+        "category": "fallback_strength",
+        "elapsed_ms": 62.0,
+        "output": "No history for 'monitoring'. Primary tools from SOP-011: ['SCR-0019']",
+        "returncode": 0
+      },
+      {
+        "task": "monitoring",
+        "entry": "SOP-020",
+        "category": "fallback_strength",
+        "elapsed_ms": 61.0,
+        "output": "No history for 'monitoring'. Primary tools from SOP-020: ['SCR-0001']",
+        "returncode": 0
+      },
+      {
+        "task": "monitoring",
+        "entry": "SOP-025",
+        "category": "fallback_strength",
+        "elapsed_ms": 63.0,
+        "output": "No history for 'monitoring'. Primary tools from SOP-025: ['SCR-0043']",
+        "returncode": 0
+      },
+      {
+        "task": "coordination",
+        "entry": "SOP-015",
+        "category": "pattern_match",
+        "elapsed_ms": 49.0,
+        "output": "Recommended route for 'coordination' from SOP-015: SOP-015 -> SOP-012 -> SCR-0019\n  (score=1.0, based on 3 attempts, 66.7% overall success rate)",
+        "returncode": 0
+      },
+      {
+        "task": "coordination",
+        "entry": "SOP-027",
+        "category": "fallback_strength",
+        "elapsed_ms": 57.0,
+        "output": "No history for 'coordination'. Primary tools from SOP-027: ['SCR-0043', 'SCR-0044', 'SOP-028']",
+        "returncode": 0
+      },
+      {
+        "task": "coordination",
+        "entry": "SOP-011",
+        "category": "pattern_match",
+        "elapsed_ms": 46.0,
+        "output": "Recommended route for 'coordination' from SOP-011: SOP-011 -> KB-0038 -> KB-0025\n  (score=0.0, based on 3 attempts, 66.7% overall success rate)",
+        "returncode": 0
+      },
+      {
+        "task": "coordination",
+        "entry": "SOP-020",
+        "category": "fallback_strength",
+        "elapsed_ms": 52.0,
+        "output": "No history for 'coordination'. Primary tools from SOP-020: ['SCR-0001']",
+        "returncode": 0
+      },
+      {
+        "task": "coordination",
+        "entry": "SOP-025",
+        "category": "fallback_strength",
+        "elapsed_ms": 54.0,
+        "output": "No history for 'coordination'. Primary tools from SOP-025: ['SCR-0043']",
+        "returncode": 0
+      }
+    ]
+  },
+  "post_update_comparison": {
+    "additional_routes_added": 10,
+    "agents_used_for_additions": [
+      "s4-1",
+      "s4-2",
+      "s4-3",
+      "s4-4",
+      "s4-5",
+      "s4-6"
+    ],
+    "additional_routes": [
+      {
+        "agent": "s4-1",
+        "task": "stress-test",
+        "route": "SOP-027 -> SCR-0043 -> SRC-0006",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-2",
+        "task": "code-review",
+        "route": "SOP-020 -> KB-0025 -> KB-0026",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-3",
+        "task": "deployment",
+        "route": "SOP-020 -> TEAM-0025 -> SCR-0030",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-1",
+        "task": "debugging",
+        "route": "SOP-025 -> SOP-026 -> SOP-027",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-4",
+        "task": "data-analysis",
+        "route": "SOP-027 -> SCR-0044 -> SRC-0008",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-5",
+        "task": "documentation",
+        "route": "SOP-025 -> SOP-026 -> SOP-027",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-6",
+        "task": "monitoring",
+        "route": "SOP-020 -> KB-0004 -> KB-0007",
+        "outcome": "partial"
+      },
+      {
+        "agent": "s4-3",
+        "task": "coordination",
+        "route": "SOP-027 -> SCR-0043 -> KB-0045",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-2",
+        "task": "stress-test",
+        "route": "SOP-020 -> KB-0001 -> TEAM-0008",
+        "outcome": "success"
+      },
+      {
+        "agent": "s4-4",
+        "task": "debugging",
+        "route": "SOP-020 -> KB-0007 -> KB-0004",
+        "outcome": "failure"
+      }
+    ],
+    "before": {
+      "pattern_match": 11,
+      "fallback_strength": 29,
+      "total_time_s": 2.27
+    },
+    "after": {
+      "pattern_match": 13,
+      "fallback_strength": 27,
+      "total_time_s": 2.19
+    },
+    "improvement": {
+      "pattern_match_delta": 2,
+      "pattern_match_rate_before_pct": 27.5,
+      "pattern_match_rate_after_pct": 32.5,
+      "improved_combinations": [
+        {
+          "key": "stress-test/SOP-027",
+          "before": "fallback_strength",
+          "after": "pattern_match"
+        },
+        {
+          "key": "deployment/SOP-020",
+          "before": "fallback_strength",
+          "after": "pattern_match"
+        },
+        {
+          "key": "debugging/SOP-025",
+          "before": "fallback_strength",
+          "after": "pattern_match"
+        },
+        {
+          "key": "documentation/SOP-025",
+          "before": "fallback_strength",
+          "after": "pattern_match"
+        },
+        {
+          "key": "coordination/SOP-027",
+          "before": "fallback_strength",
+          "after": "pattern_match"
+        }
+      ],
+      "regressed_combinations": [
+        {
+          "key": "deployment/SOP-025",
+          "before": "pattern_match",
+          "after": "fallback_strength"
+        },
+        {
+          "key": "debugging/SOP-015",
+          "before": "pattern_match",
+          "after": "fallback_strength"
+        },
+        {
+          "key": "coordination/SOP-011",
+          "before": "pattern_match",
+          "after": "fallback_strength"
+        }
+      ],
+      "verdict": "Results improved. Pattern matches increased from 11/40 (27.5%) to 13/40 (32.5%) after adding 10 more routes. Adding diverse entry-node coverage for underrepresented tasks directly increased pattern-based recommendations."
+    }
+  },
+  "system_reliability": {
+    "total_calls_executed": 80,
+    "errors": 0,
+    "crashes": 0,
+    "timeouts": 0,
+    "unexpected_outputs": 0,
+    "all_calls_returned_results": true,
+    "no_result_count": 0,
+    "notes": [
+      "All 80 recommend calls (40 before + 40 after) completed without error.",
+      "Average latency ~55ms per call, well within acceptable bounds.",
+      "No crashes, hangs, or malformed output detected.",
+      "The system gracefully falls back from pattern_match to fallback_strength when no matching pattern exists for a task/entry combination.",
+      "Pattern regeneration (extract_patterns) is fast and non-destructive."
+    ]
+  },
+  "recommendations": [
+    "Pattern coverage is sparse: only 27.5-32.5% of task/entry combos get pattern-based recommendations. The system needs more logged routes per task/entry combination to build reliable patterns.",
+    "The fallback_strength pathway works reliably but provides generic results (all pointers from a node, not task-specific). Consider caching strength-based fallbacks with task context.",
+    "No entry-node validation errors occurred because all 5 test entries exist in the pointer network. Testing with invalid entry nodes should be added.",
+    "Route scoring (count * success_rate) works correctly but requires at least 2-3 routes per task/entry to produce meaningful scores.",
+    "Pattern regeneration is cheap (~50ms). Consider auto-regenerating patterns on every N-th log call rather than requiring a manual patterns command.",
+    "The recommend command always returns a result (pattern or fallback), which is good for reliability. However, the caller cannot easily distinguish high-confidence pattern matches from low-confidence strength fallbacks without parsing stdout.",
+    "Add a --json flag to the recommend command for machine-readable output, including confidence level and recommendation source.",
+    "Consider adding a time-decay factor to route scoring so recent successful routes are weighted higher than old ones."
+  ]
+}

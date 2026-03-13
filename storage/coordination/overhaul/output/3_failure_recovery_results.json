@@ -1,0 +1,53 @@
+[
+  {
+    "dimension": "failure_recovery",
+    "test_name": "agent_crash_detection",
+    "metrics": {
+      "total_items": 20,
+      "crashed_items": 5,
+      "zombie_detected": 0,
+      "healthy_completed": 15,
+      "recovery_detection_ms": 3.001,
+      "items_accounted_for": 20
+    },
+    "passed": true,
+    "duration_s": 0.027,
+    "details": "Crashed: 5, Zombies detected: 0, Healthy completed: 15, Detection time: 3.0ms",
+    "errors": []
+  },
+  {
+    "dimension": "failure_recovery",
+    "test_name": "sqlite_contention_recovery",
+    "metrics": {
+      "concurrent_writers": 10,
+      "writes_per_thread": 20,
+      "total_attempted": 200,
+      "successful_writes": 200,
+      "failed_writes": 0,
+      "success_rate_pct": 100.0,
+      "avg_write_latency_ms": 4.566,
+      "p95_write_latency_ms": 1.703,
+      "max_write_latency_ms": 230.058,
+      "retry_overhead_indicator": 50.39
+    },
+    "passed": true,
+    "duration_s": 0.254,
+    "details": "200/200 writes succeeded (100.0%), avg latency=4.6ms, max=230.1ms",
+    "errors": []
+  },
+  {
+    "dimension": "failure_recovery",
+    "test_name": "help_request_race_condition",
+    "metrics": {
+      "concurrent_helpers": 5,
+      "winners": 1,
+      "losers": 4,
+      "errors": 0,
+      "exactly_one_winner": true
+    },
+    "passed": true,
+    "duration_s": 0.035,
+    "details": "1 winner(s), 4 losers, 0 errors. Exactly-one-winner: True",
+    "errors": []
+  }
+]

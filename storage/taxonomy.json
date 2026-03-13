@@ -1,0 +1,850 @@
+{
+  "version": "1.0",
+  "created": "2026-03-12",
+  "description": "Unified taxonomy for all repository content. All tags are lowercase, hyphenated, singular nouns where possible.",
+  "rules": {
+    "tag_format": "lowercase, hyphenated, singular nouns where possible",
+    "namespace_required": true,
+    "max_tags_per_entry": 8,
+    "alias_resolution": "When ingesting content, map any alias to its canonical tag automatically",
+    "new_tag_policy": "New tags must be added to this taxonomy before use. Avoid single-entry orphan tags."
+  },
+  "namespaces": {
+    "domain": {
+      "description": "Technology domains and programming languages",
+      "examples": [
+        "vulkan",
+        "sqlite",
+        "python",
+        "go"
+      ]
+    },
+    "pattern": {
+      "description": "Design patterns and architectural approaches",
+      "examples": [
+        "work-stealing",
+        "hub-spoke",
+        "fan-out"
+      ]
+    },
+    "task": {
+      "description": "What the work does functionally",
+      "examples": [
+        "search",
+        "validation",
+        "caching"
+      ]
+    },
+    "infra": {
+      "description": "Infrastructure and system-level concerns",
+      "examples": [
+        "coordination",
+        "communication",
+        "storage"
+      ]
+    },
+    "quality": {
+      "description": "Quality assurance and improvement activities",
+      "examples": [
+        "stress-test",
+        "benchmark",
+        "audit"
+      ]
+    },
+    "api": {
+      "description": "Specific external APIs and data services",
+      "examples": [
+        "openalex",
+        "hacker-news",
+        "arxiv"
+      ]
+    }
+  },
+  "tags": [
+    {
+      "name": "vulkan",
+      "namespace": "domain",
+      "description": "Vulkan graphics and compute API",
+      "aliases": []
+    },
+    {
+      "name": "spir-v",
+      "namespace": "domain",
+      "description": "SPIR-V shader intermediate representation",
+      "aliases": [
+        "SPIR-V",
+        "SPIRV-Cross",
+        "spirv-cross"
+      ]
+    },
+    {
+      "name": "sqlite",
+      "namespace": "domain",
+      "description": "SQLite database engine including WAL mode",
+      "aliases": [
+        "SQLite",
+        "wal",
+        "sqlite-wal"
+      ]
+    },
+    {
+      "name": "python",
+      "namespace": "domain",
+      "description": "Python programming language",
+      "aliases": []
+    },
+    {
+      "name": "go",
+      "namespace": "domain",
+      "description": "Go programming language",
+      "aliases": [
+        "go-tools",
+        "go-scheduler"
+      ]
+    },
+    {
+      "name": "cmake",
+      "namespace": "domain",
+      "description": "CMake build system",
+      "aliases": [
+        "fetchcontent"
+      ]
+    },
+    {
+      "name": "gpu",
+      "namespace": "domain",
+      "description": "GPU programming and graphics pipeline",
+      "aliases": [
+        "graphics-api",
+        "rendering",
+        "rendering-pipeline",
+        "compute-shaders",
+        "ray-tracing",
+        "mesh-shaders",
+        "lighting",
+        "depth-buffer",
+        "swapchain",
+        "frames-in-flight"
+      ]
+    },
+    {
+      "name": "jsonl",
+      "namespace": "domain",
+      "description": "JSON Lines format for streaming data and message buses",
+      "aliases": []
+    },
+    {
+      "name": "nlp",
+      "namespace": "domain",
+      "description": "Natural language processing techniques",
+      "aliases": [
+        "tf-idf"
+      ]
+    },
+    {
+      "name": "ai-ml",
+      "namespace": "domain",
+      "description": "Artificial intelligence and machine learning",
+      "aliases": [
+        "ai-ml-apis",
+        "AI-optimization",
+        "ai-trading",
+        "computer-vision",
+        "embeddings",
+        "RAG",
+        "vector-databases"
+      ]
+    },
+    {
+      "name": "work-stealing",
+      "namespace": "pattern",
+      "description": "Work-stealing pattern for dynamic load balancing",
+      "aliases": [
+        "chase-lev",
+        "batch-steal",
+        "join-idle-queue",
+        "lifo-slot"
+      ]
+    },
+    {
+      "name": "hub-spoke",
+      "namespace": "pattern",
+      "description": "Hub-and-spoke coordination topology",
+      "aliases": [
+        "hub-and-spoke",
+        "coordinator-pattern"
+      ]
+    },
+    {
+      "name": "fan-out",
+      "namespace": "pattern",
+      "description": "Fan-out parallel execution across multiple workers",
+      "aliases": [
+        "parallel-execution"
+      ]
+    },
+    {
+      "name": "pipeline",
+      "namespace": "pattern",
+      "description": "Multi-stage processing pipeline",
+      "aliases": [
+        "pipelines",
+        "pipeline-optimization"
+      ]
+    },
+    {
+      "name": "event-driven",
+      "namespace": "pattern",
+      "description": "Event-driven / reactive architecture",
+      "aliases": [
+        "real-time"
+      ]
+    },
+    {
+      "name": "write-coalescing",
+      "namespace": "pattern",
+      "description": "Batching writes to reduce I/O overhead",
+      "aliases": [
+        "adaptive-batching"
+      ]
+    },
+    {
+      "name": "contract-net",
+      "namespace": "pattern",
+      "description": "Contract net protocol for task allocation",
+      "aliases": [
+        "power-of-two-choices"
+      ]
+    },
+    {
+      "name": "search",
+      "namespace": "task",
+      "description": "Search and information retrieval",
+      "aliases": [
+        "full-text-search"
+      ]
+    },
+    {
+      "name": "validation",
+      "namespace": "task",
+      "description": "Data and schema validation, integrity checking",
+      "aliases": [
+        "verification",
+        "validation-layers"
+      ]
+    },
+    {
+      "name": "caching",
+      "namespace": "task",
+      "description": "Response and data caching for performance",
+      "aliases": [
+        "request-cache"
+      ]
+    },
+    {
+      "name": "data-gathering",
+      "namespace": "task",
+      "description": "Collecting data from external sources",
+      "aliases": [
+        "data-collection",
+        "data-import"
+      ]
+    },
+    {
+      "name": "monitoring",
+      "namespace": "task",
+      "description": "System health monitoring and dashboards",
+      "aliases": [
+        "dashboard"
+      ]
+    },
+    {
+      "name": "indexing",
+      "namespace": "task",
+      "description": "Building and maintaining indexes",
+      "aliases": [
+        "index-rebuild",
+        "cross-references"
+      ]
+    },
+    {
+      "name": "deduplication",
+      "namespace": "task",
+      "description": "Removing duplicate entries across datasets",
+      "aliases": []
+    },
+    {
+      "name": "scheduling",
+      "namespace": "task",
+      "description": "Task scheduling and queue management",
+      "aliases": [
+        "queue-management",
+        "task-allocation"
+      ]
+    },
+    {
+      "name": "automation",
+      "namespace": "task",
+      "description": "Automated workflows and tooling",
+      "aliases": [
+        "archive-automation",
+        "archive-tools"
+      ]
+    },
+    {
+      "name": "stock-analysis",
+      "namespace": "task",
+      "description": "Financial stock analysis and quantitative methods",
+      "aliases": [
+        "quantitative-analysis",
+        "competitive-research"
+      ]
+    },
+    {
+      "name": "coordination",
+      "namespace": "infra",
+      "description": "Multi-agent coordination systems and protocols",
+      "aliases": [
+        "multi-team-orchestration",
+        "coordination-strategies",
+        "dynamic-coordination",
+        "coordination-overhead"
+      ]
+    },
+    {
+      "name": "multi-agent",
+      "namespace": "infra",
+      "description": "Multi-agent systems with multiple cooperating AI agents",
+      "aliases": [
+        "multi-team",
+        "multi-process",
+        "agent-scaling",
+        "team-sizing",
+        "large-teams"
+      ]
+    },
+    {
+      "name": "communication",
+      "namespace": "infra",
+      "description": "Inter-agent communication mechanisms",
+      "aliases": [
+        "inter-agent-communication",
+        "direct-channels",
+        "ipc"
+      ]
+    },
+    {
+      "name": "message-bus",
+      "namespace": "infra",
+      "description": "JSONL message bus for agent communication",
+      "aliases": []
+    },
+    {
+      "name": "storage",
+      "namespace": "infra",
+      "description": "Data storage systems and formats",
+      "aliases": [
+        "storage-system",
+        "data-storage",
+        "storage-formats",
+        "key-value-stores"
+      ]
+    },
+    {
+      "name": "shared-state",
+      "namespace": "infra",
+      "description": "Shared state management across processes",
+      "aliases": [
+        "scratchpad"
+      ]
+    },
+    {
+      "name": "concurrency",
+      "namespace": "infra",
+      "description": "Concurrent execution and synchronization primitives",
+      "aliases": [
+        "synchronization",
+        "lock-free",
+        "race-conditions"
+      ]
+    },
+    {
+      "name": "stress-test",
+      "namespace": "quality",
+      "description": "Load and stress testing",
+      "aliases": [
+        "stress-testing"
+      ]
+    },
+    {
+      "name": "benchmark",
+      "namespace": "quality",
+      "description": "Performance measurement and comparison",
+      "aliases": [
+        "benchmarks",
+        "performance"
+      ]
+    },
+    {
+      "name": "bug-fix",
+      "namespace": "quality",
+      "description": "Bug identification and resolution",
+      "aliases": [
+        "bug-fixes",
+        "efficiency-fixes"
+      ]
+    },
+    {
+      "name": "failure-analysis",
+      "namespace": "quality",
+      "description": "Analyzing failure modes, risks, and reliability",
+      "aliases": [
+        "risk-assessment",
+        "reliability",
+        "error-amplification",
+        "error-protection"
+      ]
+    },
+    {
+      "name": "sop",
+      "namespace": "quality",
+      "description": "Standard operating procedures for repeatable processes",
+      "aliases": [
+        "sops",
+        "SOPs"
+      ]
+    },
+    {
+      "name": "prototype",
+      "namespace": "quality",
+      "description": "Experimental prototype or proof-of-concept",
+      "aliases": [
+        "proto-a",
+        "dogfooding",
+        "live-testing"
+      ]
+    },
+    {
+      "name": "openalex",
+      "namespace": "api",
+      "description": "OpenAlex scholarly works API",
+      "aliases": []
+    },
+    {
+      "name": "hacker-news",
+      "namespace": "api",
+      "description": "Hacker News via Algolia and Firebase APIs",
+      "aliases": [
+        "hackernews"
+      ]
+    },
+    {
+      "name": "arxiv",
+      "namespace": "api",
+      "description": "arXiv preprint repository API",
+      "aliases": []
+    },
+    {
+      "name": "guardian",
+      "namespace": "api",
+      "description": "The Guardian Open Platform news API",
+      "aliases": []
+    },
+    {
+      "name": "wikidata",
+      "namespace": "api",
+      "description": "Wikidata knowledge graph and SPARQL endpoint",
+      "aliases": [
+        "knowledge-graphs",
+        "dbpedia",
+        "conceptnet"
+      ]
+    },
+    {
+      "name": "semantic-scholar",
+      "namespace": "api",
+      "description": "Semantic Scholar Academic Graph API",
+      "aliases": []
+    },
+    {
+      "name": "github-api",
+      "namespace": "api",
+      "description": "GitHub REST and GraphQL APIs",
+      "aliases": [
+        "github"
+      ]
+    },
+    {
+      "name": "public-api",
+      "namespace": "api",
+      "description": "General category for free/public data APIs",
+      "aliases": [
+        "public-apis",
+        "free-apis",
+        "api-tools",
+        "api-methods"
+      ]
+    },
+    {
+      "name": "financial-api",
+      "namespace": "api",
+      "description": "Financial data APIs (Alpha Vantage, Yahoo Finance, FRED, etc.)",
+      "aliases": [
+        "economic-data"
+      ]
+    },
+    {
+      "name": "government-api",
+      "namespace": "api",
+      "description": "Government open data APIs (Census, BLS, Data.gov, etc.)",
+      "aliases": [
+        "government-data",
+        "open-data"
+      ]
+    },
+    {
+      "name": "geospatial-api",
+      "namespace": "api",
+      "description": "Geospatial and weather APIs (Open-Meteo, Nominatim, etc.)",
+      "aliases": [
+        "geospatial",
+        "weather",
+        "ip-geolocation"
+      ]
+    },
+    {
+      "name": "package-registry",
+      "namespace": "api",
+      "description": "Package registry APIs (npm, PyPI, etc.)",
+      "aliases": [
+        "package-registries",
+        "npm",
+        "pypi"
+      ]
+    },
+    {
+      "name": "stack-exchange",
+      "namespace": "api",
+      "description": "Stack Exchange / Stack Overflow API",
+      "aliases": [
+        "stack-overflow"
+      ]
+    },
+    {
+      "name": "sparse-data",
+      "namespace": "quality",
+      "description": "Entry has limited or sparse data coverage",
+      "aliases": []
+    },
+    {
+      "name": "rich-data",
+      "namespace": "quality",
+      "description": "Entry has rich, comprehensive data coverage",
+      "aliases": []
+    },
+    {
+      "name": "stub",
+      "namespace": "quality",
+      "description": "Minimal entry with little useful content",
+      "aliases": [
+        "stub-like"
+      ]
+    },
+    {
+      "name": "well-linked",
+      "namespace": "quality",
+      "description": "Entry has many cross-references and connections",
+      "aliases": []
+    },
+    {
+      "name": "orphan",
+      "namespace": "quality",
+      "description": "Entry with no incoming or outgoing references",
+      "aliases": [
+        "orphan-node"
+      ]
+    },
+    {
+      "name": "broad-overview",
+      "namespace": "quality",
+      "description": "High-level survey or overview of a topic",
+      "aliases": []
+    },
+    {
+      "name": "deep-dive",
+      "namespace": "quality",
+      "description": "In-depth detailed analysis of a specific topic",
+      "aliases": []
+    },
+    {
+      "name": "data-annotation",
+      "namespace": "task",
+      "description": "Labeling, tagging, and annotating data entries",
+      "aliases": []
+    },
+    {
+      "name": "enrichment",
+      "namespace": "task",
+      "description": "Adding metadata, links, scores, and context to existing data",
+      "aliases": []
+    },
+    {
+      "name": "indexing-v2",
+      "namespace": "task",
+      "description": "Schema v2.0 index creation with secondary indexes and cross-references",
+      "aliases": []
+    },
+    {
+      "name": "categorization",
+      "namespace": "task",
+      "description": "Assigning categories and taxonomic classifications",
+      "aliases": []
+    },
+    {
+      "name": "scoring",
+      "namespace": "task",
+      "description": "Computing quality, relevance, or usefulness scores",
+      "aliases": []
+    },
+    {
+      "name": "wikipedia",
+      "namespace": "domain",
+      "description": "Wikipedia content, categories, and article data",
+      "aliases": []
+    },
+    {
+      "name": "dbpedia",
+      "namespace": "domain",
+      "description": "DBpedia SPARQL endpoint and linked data",
+      "aliases": []
+    },
+    {
+      "name": "statistical-software",
+      "namespace": "domain",
+      "description": "Statistical computing packages and tools",
+      "aliases": []
+    },
+    {
+      "name": "r-ecosystem",
+      "namespace": "domain",
+      "description": "R language packages and statistical computing ecosystem",
+      "aliases": [
+        "R-project"
+      ]
+    },
+    {
+      "name": "bayesian",
+      "namespace": "domain",
+      "description": "Bayesian statistical methods and probabilistic programming",
+      "aliases": []
+    },
+    {
+      "name": "sop-driven",
+      "namespace": "pattern",
+      "description": "Workflow guided by Standard Operating Procedures",
+      "aliases": []
+    },
+    {
+      "name": "batch-processing",
+      "namespace": "pattern",
+      "description": "Processing items in batches for efficiency",
+      "aliases": []
+    },
+    {
+      "name": "parallel-tagger",
+      "namespace": "pattern",
+      "description": "Multiple agents tagging/enriching data in parallel",
+      "aliases": []
+    },
+    {
+      "name": "router",
+      "namespace": "infra",
+      "description": "Index router for navigating across all domain indexes",
+      "aliases": []
+    },
+    {
+      "name": "cross-reference",
+      "namespace": "infra",
+      "description": "Cross-domain reference linking between entries",
+      "aliases": []
+    },
+    {
+      "name": "back-pointer",
+      "namespace": "infra",
+      "description": "Reverse reference from target back to source entry",
+      "aliases": []
+    },
+    {
+      "name": "ckan",
+      "namespace": "api",
+      "description": "CKAN open data platform API and portal ecosystem",
+      "aliases": [
+        "CKAN",
+        "dkan",
+        "DKAN"
+      ]
+    },
+    {
+      "name": "mcp",
+      "namespace": "domain",
+      "description": "Model Context Protocol servers and integrations",
+      "aliases": [
+        "MCP",
+        "model-context-protocol"
+      ]
+    },
+    {
+      "name": "tool-registry",
+      "namespace": "infra",
+      "description": "Registry or catalog of available tools and servers",
+      "aliases": []
+    }
+  ],
+  "categories": {
+    "knowledge-base": [
+      "optimization",
+      "integration",
+      "methodology",
+      "tool-usage",
+      "testing",
+      "debugging",
+      "market-research"
+    ],
+    "scripts": [
+      "validation",
+      "search",
+      "indexing",
+      "caching",
+      "data-collection",
+      "analysis",
+      "automation",
+      "coordination"
+    ],
+    "sources": [
+      "financial",
+      "scientific",
+      "news",
+      "government",
+      "geospatial",
+      "developer",
+      "ai-ml",
+      "social-media"
+    ],
+    "sops": [
+      "operations",
+      "data-gathering",
+      "infrastructure",
+      "development",
+      "research"
+    ]
+  },
+  "consolidations": {
+    "SPIR-V": "spir-v",
+    "SPIRV-Cross": "spir-v",
+    "SQLite": "sqlite",
+    "wal": "sqlite",
+    "multi-team": "multi-agent",
+    "multi-team-orchestration": "coordination",
+    "multi-process": "multi-agent",
+    "agent-scaling": "multi-agent",
+    "team-sizing": "multi-agent",
+    "large-teams": "multi-agent",
+    "hackernews": "hacker-news",
+    "free-apis": "public-api",
+    "public-apis": "public-api",
+    "api-tools": "public-api",
+    "api-methods": "public-api",
+    "inter-agent-communication": "communication",
+    "direct-channels": "communication",
+    "ipc": "communication",
+    "hub-and-spoke": "hub-spoke",
+    "coordinator-pattern": "hub-spoke",
+    "parallel-execution": "fan-out",
+    "pipelines": "pipeline",
+    "pipeline-optimization": "pipeline",
+    "stress-testing": "stress-test",
+    "benchmarks": "benchmark",
+    "performance": "benchmark",
+    "bug-fixes": "bug-fix",
+    "efficiency-fixes": "bug-fix",
+    "sops": "sop",
+    "SOPs": "sop",
+    "proto-a": "prototype",
+    "dogfooding": "prototype",
+    "live-testing": "prototype",
+    "storage-system": "storage",
+    "data-storage": "storage",
+    "storage-formats": "storage",
+    "key-value-stores": "storage",
+    "data-collection": "data-gathering",
+    "data-import": "data-gathering",
+    "index-rebuild": "indexing",
+    "cross-references": "indexing",
+    "queue-management": "scheduling",
+    "task-allocation": "scheduling",
+    "verification": "validation",
+    "validation-layers": "validation",
+    "archive-automation": "automation",
+    "archive-tools": "automation",
+    "risk-assessment": "failure-analysis",
+    "reliability": "failure-analysis",
+    "error-amplification": "failure-analysis",
+    "error-protection": "failure-analysis",
+    "shared-state": "shared-state",
+    "scratchpad": "shared-state",
+    "synchronization": "concurrency",
+    "lock-free": "concurrency",
+    "race-conditions": "concurrency",
+    "real-time": "event-driven",
+    "dashboard": "monitoring",
+    "graphics-api": "gpu",
+    "rendering": "gpu",
+    "rendering-pipeline": "gpu",
+    "compute-shaders": "gpu",
+    "ray-tracing": "gpu",
+    "mesh-shaders": "gpu",
+    "lighting": "gpu",
+    "depth-buffer": "gpu",
+    "swapchain": "gpu",
+    "frames-in-flight": "gpu",
+    "go-tools": "go",
+    "go-scheduler": "go",
+    "fetchcontent": "cmake",
+    "ai-ml-apis": "ai-ml",
+    "AI-optimization": "ai-ml",
+    "ai-trading": "ai-ml",
+    "computer-vision": "ai-ml",
+    "embeddings": "ai-ml",
+    "RAG": "ai-ml",
+    "vector-databases": "ai-ml",
+    "tf-idf": "nlp",
+    "knowledge-graphs": "wikidata",
+    "government-data": "government-api",
+    "open-data": "government-api",
+    "economic-data": "financial-api",
+    "geospatial": "geospatial-api",
+    "weather": "geospatial-api",
+    "ip-geolocation": "geospatial-api",
+    "package-registries": "package-registry",
+    "npm": "package-registry",
+    "pypi": "package-registry",
+    "stack-overflow": "stack-exchange",
+    "github": "github-api",
+    "quantitative-analysis": "stock-analysis",
+    "competitive-research": "stock-analysis",
+    "chase-lev": "work-stealing",
+    "batch-steal": "work-stealing",
+    "join-idle-queue": "work-stealing",
+    "lifo-slot": "work-stealing",
+    "adaptive-batching": "write-coalescing",
+    "power-of-two-choices": "contract-net",
+    "coordination-strategies": "coordination",
+    "dynamic-coordination": "coordination",
+    "coordination-overhead": "coordination",
+    "full-text-search": "search",
+    "request-cache": "caching",
+    "stub-like": "stub",
+    "orphan-node": "orphan",
+    "R-project": "r-ecosystem"
+  }
+}

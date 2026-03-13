@@ -1,0 +1,263 @@
+{
+  "tag": "hub-spoke",
+  "node_count": 9,
+  "domains": [
+    "knowledge-base",
+    "scripts",
+    "sops",
+    "teams"
+  ],
+  "nodes": [
+    {
+      "id": "KB-0009",
+      "domain": "knowledge-base",
+      "title": "Multi-Team Operation 3: Archive Optimization, High-Speed Tools & Coordinated Improvement",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0019",
+      "domain": "knowledge-base",
+      "title": "Architecture & Integration Analysis: Live Communication System",
+      "pointer_count": 20
+    },
+    {
+      "id": "KB-0025",
+      "domain": "knowledge-base",
+      "title": "Bug Fixes, Coordinator Hub, and Central Commander SOPs",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0033",
+      "domain": "scripts",
+      "title": "coordinator-hub",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-014",
+      "domain": "sops",
+      "title": "Simultaneous Multi-Project Management Protocol",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-G03",
+      "domain": "sops",
+      "title": "Proto A Coordination Tool SOPs",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0009",
+      "domain": "teams",
+      "title": "Full coordinated operation: 3 programming teams building archive tools and high-speed Go tools, 3 archive teams verifying and benchmarking, 1 research team on data storage, 1 coordinator agent",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0019",
+      "domain": "teams",
+      "title": "Architecture and integration analysis for live inter-agent communication system",
+      "pointer_count": 20
+    },
+    {
+      "id": "TEAM-0025",
+      "domain": "teams",
+      "title": "Bug fixes, coordinator hub implementation, central commander SOPs, anti-sequential pattern enforcement",
+      "pointer_count": 20
+    }
+  ],
+  "internal_edges": [
+    {
+      "from": "SCR-0033",
+      "to": "TEAM-0025",
+      "weight": 7
+    },
+    {
+      "from": "KB-0009",
+      "to": "TEAM-0009",
+      "weight": 5
+    },
+    {
+      "from": "KB-0025",
+      "to": "TEAM-0025",
+      "weight": 5
+    },
+    {
+      "from": "KB-0019",
+      "to": "TEAM-0019",
+      "weight": 4
+    },
+    {
+      "from": "KB-0025",
+      "to": "SOP-014",
+      "weight": 4
+    },
+    {
+      "from": "KB-0025",
+      "to": "SOP-G03",
+      "weight": 4
+    },
+    {
+      "from": "SOP-014",
+      "to": "TEAM-0025",
+      "weight": 4
+    },
+    {
+      "from": "SOP-G03",
+      "to": "TEAM-0025",
+      "weight": 4
+    },
+    {
+      "from": "SCR-0033",
+      "to": "SOP-014",
+      "weight": 4
+    },
+    {
+      "from": "SCR-0033",
+      "to": "SOP-G03",
+      "weight": 4
+    },
+    {
+      "from": "KB-0009",
+      "to": "TEAM-0019",
+      "weight": 4
+    },
+    {
+      "from": "KB-0025",
+      "to": "SCR-0033",
+      "weight": 3
+    },
+    {
+      "from": "SCR-0033",
+      "to": "TEAM-0009",
+      "weight": 3
+    },
+    {
+      "from": "SCR-0033",
+      "to": "TEAM-0019",
+      "weight": 3
+    },
+    {
+      "from": "KB-0019",
+      "to": "KB-0009",
+      "weight": 3
+    },
+    {
+      "from": "KB-0009",
+      "to": "KB-0019",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0019",
+      "to": "KB-0009",
+      "weight": 3
+    },
+    {
+      "from": "TEAM-0025",
+      "to": "SCR-0033",
+      "weight": 3
+    },
+    {
+      "from": "KB-0009",
+      "to": "SCR-0033",
+      "weight": 2
+    },
+    {
+      "from": "KB-0009",
+      "to": "SOP-014",
+      "weight": 2
+    },
+    {
+      "from": "KB-0009",
+      "to": "SOP-G03",
+      "weight": 2
+    },
+    {
+      "from": "KB-0009",
+      "to": "TEAM-0025",
+      "weight": 2
+    },
+    {
+      "from": "KB-0019",
+      "to": "SCR-0033",
+      "weight": 2
+    },
+    {
+      "from": "KB-0019",
+      "to": "SOP-G03",
+      "weight": 2
+    },
+    {
+      "from": "KB-0025",
+      "to": "TEAM-0009",
+      "weight": 2
+    },
+    {
+      "from": "SOP-014",
+      "to": "TEAM-0009",
+      "weight": 2
+    },
+    {
+      "from": "SOP-G03",
+      "to": "TEAM-0009",
+      "weight": 2
+    },
+    {
+      "from": "SOP-G03",
+      "to": "TEAM-0019",
+      "weight": 2
+    },
+    {
+      "from": "KB-0019",
+      "to": "SOP-014",
+      "weight": 1
+    },
+    {
+      "from": "KB-0019",
+      "to": "TEAM-0009",
+      "weight": 1
+    },
+    {
+      "from": "KB-0019",
+      "to": "TEAM-0025",
+      "weight": 1
+    },
+    {
+      "from": "KB-0025",
+      "to": "TEAM-0019",
+      "weight": 1
+    },
+    {
+      "from": "SOP-014",
+      "to": "TEAM-0019",
+      "weight": 1
+    },
+    {
+      "from": "TEAM-0009",
+      "to": "SOP-014",
+      "weight": 1
+    },
+    {
+      "from": "TEAM-0009",
+      "to": "SOP-G03",
+      "weight": 1
+    },
+    {
+      "from": "TEAM-0019",
+      "to": "SOP-014",
+      "weight": 1
+    },
+    {
+      "from": "TEAM-0019",
+      "to": "SOP-G03",
+      "weight": 1
+    },
+    {
+      "from": "TEAM-0025",
+      "to": "SOP-014",
+      "weight": 1
+    },
+    {
+      "from": "TEAM-0025",
+      "to": "SOP-G03",
+      "weight": 1
+    }
+  ]
+}

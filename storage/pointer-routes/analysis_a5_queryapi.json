@@ -1,0 +1,154 @@
+{
+  "agent": "analysis-5",
+  "task": "query-api-design",
+  "timestamp": "2026-03-12",
+  "status": "complete",
+  "implementation": "storage/coordination/pointer_query.py",
+
+  "summary": "Designed and implemented a complete query language (PNQ) and Python API (PointerNetworkQuery) for the pointer network. The system supports graph traversal, search, pathfinding, impact analysis, edge suggestions, and shared-neighbor analysis across all 310 nodes and 4820 edges.",
+
+  "query_language_spec": {
+    "name": "PNQ (Pointer Network Query)",
+    "description": "A mini query language for agents to interrogate the pointer network. Supports both structured PNQ strings and direct Python API calls.",
+    "syntax_examples": [
+      {
+        "query": "FIND nodes WHERE domain = \"scripts\" AND weight >= 5",
+        "description": "Search for script nodes with high-weight edges",
+        "api_equivalent": "pq.search(domain='scripts', min_weight=5)"
+      },
+      {
+        "query": "PATH FROM \"SOP-012\" TO \"SRC-0001\" STRATEGY weight",
+        "description": "Find the highest-weight path between two nodes",
+        "api_equivalent": "pq.find_path('SOP-012', 'SRC-0001', strategy='weight')"
+      },
+      {
+        "query": "NEIGHBORS OF \"SCR-0043\" DEPTH 2 STRENGTH primary",
+        "description": "Find all primary-strength neighbors within 2 hops",
+        "api_equivalent": "pq.neighbors('SCR-0043', depth=2, strength='primary')"
+      },
+      {
+        "query": "IMPACT OF \"SCR-0043\"",
+        "description": "Show what's affected if SCR-0043 changes",
+        "api_equivalent": "pq.impact('SCR-0043')"
+      },
+      {
+        "query": "SUGGEST EDGES FOR \"SOP-015\"",
+        "description": "Recommend missing edges using structural/tag/domain heuristics",
+        "api_equivalent": "pq.suggest_edges('SOP-015')"
+      },
+      {
+        "query": "SHARED BETWEEN \"SOP-012\" AND \"SOP-015\"",
+        "description": "Find common neighbors of two nodes",
+        "api_equivalent": "pq.shared_neighbors('SOP-012', 'SOP-015')"
+      },
+      {
+        "query": "MOST SHARED IN \"sops\" TOP 10",
+        "description": "Which SOP pairs share the most common neighbors",
+        "api_equivalent": "pq.most_shared_pairs(domain='sops', top_n=10)"
+      },
+      {
+        "query": "STATS",
+        "description": "Network summary statistics",
+        "api_equivalent": "pq.stats()"
+      }
+    ],
+    "grammar": {
+      "FIND": "FIND nodes WHERE <clause> [AND <clause>]* [LIMIT n]",
+      "PATH": "PATH FROM \"<node>\" TO \"<node>\" [STRATEGY weight|hops|strength|hybrid]",
+      "NEIGHBORS": "NEIGHBORS OF \"<node>\" [DEPTH n] [STRENGTH s] [MIN_WEIGHT w]",
+      "IMPACT": "IMPACT OF \"<node>\"",
+      "SUGGEST": "SUGGEST EDGES FOR \"<node>\"",
+      "SHARED": "SHARED BETWEEN \"<node>\" AND \"<node>\"",
+      "MOST_SHARED": "MOST SHARED IN \"<domain>\" [TOP n]",
+      "STATS": "STATS"
+    },
+    "where_clauses": {
+      "domain = \"<value>\"": "Filter by node domain",
+      "weight >= <n>": "Minimum pointer weight",
+      "strength = \"<value>\"": "Filter by strength level",
+      "tag = \"<value>\"": "Filter by shared tags in reasons",
+      "reason contain \"<value>\"": "Substring match on reason text"
+    }
+  },
+
+  "python_api_spec": {
+    "class": "PointerNetworkQuery",
+    "constructor": "PointerNetworkQuery(network_path=None)",
+    "methods": {
+      "neighbors": {
+        "signature": "neighbors(node_id, depth=1, min_weight=0, strength=None, direction='outgoing')",
+        "description": "BFS neighbor discovery with weight/strength filtering. Direction can be outgoing, incoming, or both.",
+        "returns": "List of {id, distance, weight, strength, path, domain}"
+      },
+      "find_path": {
+        "signature": "find_path(from_node, to_node, strategy='weight'|'hops'|'strength'|'hybrid')",
+        "description": "Pathfinding with four strategies. 'weight' maximizes total edge weight via Dijkstra. 'hops' minimizes hop count via BFS. 'strength' prefers primary edges. 'hybrid' maximizes weight * strength_score.",
+        "returns": "{path, hops, total_weight, edges}"
+      },
+      "search": {
+        "signature": "search(tags=None, domain=None, min_weight=0, strength=None, reasons_contain=None, limit=50)",
+        "description": "Filtered search across all nodes. Supports domain, weight, strength, tag, and reason-text filters.",
+        "returns": "List of {id, domain, edge_count, max_weight, edges}"
+      },
+      "impact": {
+        "signature": "impact(node_id, max_depth=3)",
+        "description": "Reverse-dependency analysis. Traces all nodes that point TO the given node (directly or transitively). Identifies critical high-weight dependents.",
+        "returns": "{total_affected, direct_dependents, transitive_dependents, by_distance, by_strength, by_domain, critical_dependents}"
+      },
+      "suggest_edges": {
+        "signature": "suggest_edges(node_id, top_n=10)",
+        "description": "Recommends missing edges using three heuristics: (1) structural holes (reachable in 2 hops but not 1), (2) tag affinity via tag_clusters, (3) domain bridges to underrepresented domains.",
+        "returns": "List of {target, score, reason, via, domain}"
+      },
+      "shared_neighbors": {
+        "signature": "shared_neighbors(node_a, node_b)",
+        "description": "Find nodes that both nodes point to, with weight details from each side.",
+        "returns": "{shared_count, only_a, only_b, shared_nodes}"
+      },
+      "most_shared_pairs": {
+        "signature": "most_shared_pairs(domain='sops', top_n=10)",
+        "description": "Find which pairs of nodes in a domain share the most outgoing neighbors.",
+        "returns": "List of {node_a, node_b, shared_count, shared_nodes}"
+      },
+      "execute": {
+        "signature": "execute(query_string)",
+        "description": "Parse and execute a PNQ query string. Dispatches to the appropriate method.",
+        "returns": "Query-specific result dict"
+      },
+      "stats": {
+        "signature": "stats()",
+        "description": "Network summary: node/edge counts, domain/weight/strength/reason distributions.",
+        "returns": "Statistics dict"
+      }
+    },
+    "properties": ["node_count", "edge_count", "domains"]
+  },
+
+  "test_results": {
+    "stats": {"nodes": 310, "edges": 4820, "domains": 7, "status": "pass"},
+    "neighbors": {"query": "SCR-0043 depth=2 strength=primary", "result_count": "multiple", "top_hit": "KB-0045 w=15", "status": "pass"},
+    "find_path": {"query": "SOP-012 -> SRC-0001 strategy=weight", "status": "pass"},
+    "search": {"query": "domain=scripts weight>=5", "result_count": 50, "top_hit": "SCR-0043 max_weight=15", "status": "pass"},
+    "impact": {"query": "SCR-0043", "total_affected": 302, "direct": 11, "critical": 6, "status": "pass"},
+    "suggest": {"query": "SOP-015", "top_suggestion": "SOP-029 score=14.0", "status": "pass"},
+    "shared": {"query": "SOP-012 + SOP-015", "shared_count": 6, "status": "pass"},
+    "most_shared": {"query": "sops", "top_pair": "SOP-011 + SOP-012 = 19 shared", "status": "pass"},
+    "query_language": {"tested_all_8_forms": true, "status": "pass"}
+  },
+
+  "design_decisions": [
+    "Used BFS for neighbors() and hop-count pathfinding; Dijkstra (with negated weights) for weight/strength/hybrid pathfinding",
+    "Built reverse adjacency index at load time for efficient impact analysis and incoming-edge traversal",
+    "Query language uses a simple keyword-based grammar (FIND/PATH/NEIGHBORS/IMPACT/SUGGEST/SHARED/STATS) that is easy for agents to generate",
+    "suggest_edges() combines three complementary heuristics: structural holes (graph topology), tag affinity (semantic similarity via tag_clusters), and domain bridges (cross-domain coverage gaps)",
+    "All results include domain metadata so agents can filter by context",
+    "CLI supports both structured subcommands (neighbors, path, etc.) and free-form PNQ queries via the 'query' subcommand"
+  ],
+
+  "integration_notes": [
+    "Import: from storage.coordination.pointer_query import PointerNetworkQuery",
+    "CLI: python3 storage/coordination/pointer_query.py <command> [args]",
+    "Works with existing route_tracker.py — agents can use pointer_query to plan routes, then route_tracker to log them",
+    "The execute() method enables agents to pass natural-language-like queries without knowing the Python API"
+  ]
+}

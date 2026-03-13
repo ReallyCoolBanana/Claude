@@ -1,0 +1,73 @@
+{
+  "title": "Multi-Agent Coordination System Research Index",
+  "date": "2026-03-12",
+  "description": "Complete index of all benchmark results, experiments, and research outputs from the coordination system overhaul project.",
+  "knowledge_base_entries": [
+    {
+      "id": "KB-0026",
+      "title": "Multi-Agent Coordination System Benchmark Results",
+      "file": "../../knowledge-base/entries/KB-0026.md",
+      "summary": "20-test benchmark across 6 dimensions. Key: 86.4% overhead ratio, 9,500 msg/s bus, scaling exponent -0.99."
+    },
+    {
+      "id": "KB-0027",
+      "title": "Large-Team Efficiency Experiment: 8 Strategies Compared",
+      "file": "../../knowledge-base/entries/KB-0027.md",
+      "summary": "8 internal strategies tested. Winners: Pre-partition 10.8x, Hierarchical 10.4x, Adaptive Batch 5.5x."
+    },
+    {
+      "id": "KB-0028",
+      "title": "Think Tank Debate: 7 Strategies from External Research",
+      "file": "../../knowledge-base/entries/KB-0028.md",
+      "summary": "5 strategies from CS research literature. Winners: Two-Level 9.8x, Chase-Lev 9.8x, Go-Style 9.5x."
+    }
+  ],
+  "benchmark_results": [
+    {
+      "phase": "Phase 1: Core Benchmarks (20 tests, 6 dimensions)",
+      "output_files": [
+        {"file": "benchmark_summary.json", "description": "Summary of all 20 benchmark tests across 6 dimensions"},
+        {"file": "1_communication_overhead_results.json", "description": "Bus throughput, latency, message overhead tests"},
+        {"file": "2_team_sizing_results.json", "description": "Optimal team size analysis (2-16 agents)"},
+        {"file": "3_failure_recovery_results.json", "description": "SQLite contention recovery, heartbeat detection"},
+        {"file": "4_capability_matching_results.json", "description": "Help protocol capability matching accuracy"},
+        {"file": "5_pipeline_correctness_results.json", "description": "Pipeline DAG execution, dependency ordering"},
+        {"file": "6_scaling_limits_results.json", "description": "Maximum concurrent agents, throughput scaling"}
+      ]
+    },
+    {
+      "phase": "Phase 2: Efficiency Experiment (8 internal strategies)",
+      "output_files": [
+        {"file": "efficiency_experiment_results.json", "description": "Comparison of 8 work distribution strategies with 10 workers"}
+      ]
+    },
+    {
+      "phase": "Phase 3: Think Tank Debate (5 external strategies + 2 baselines)",
+      "output_files": [
+        {"file": "think_tank_debate_results.json", "description": "5 think tank teams debating 7 strategies with validation benchmarks"}
+      ]
+    }
+  ],
+  "scripts": [
+    {"file": "../benchmark_coordination.py", "description": "Phase 1: 20-test benchmark suite"},
+    {"file": "../efficiency_experiment.py", "description": "Phase 2: 8-strategy efficiency comparison"},
+    {"file": "../think_tank_debate.py", "description": "Phase 3: Think tank debate with external research strategies"}
+  ],
+  "key_findings": {
+    "current_bottleneck": "Single-item work stealing with BEGIN IMMEDIATE spends 2.77-3.36x more time on steal transactions than on actual work",
+    "root_cause": "SQLite serialization in the hot path - workers contend on every item",
+    "universal_principle": "Move work distribution out of SQLite into in-memory structures. All top strategies (9-11x improvement) avoid SQLite in the hot path.",
+    "recommended_implementation": {
+      "immediate": "Add steal_batch(n) method to WorkStealing class (4.7x improvement, no architecture change)",
+      "structural": "Implement hierarchical LeadDistributor with in-memory queue (10.4x improvement)",
+      "future": "Go-style three-tier (local → global → steal) for sub-ms scheduling latency"
+    },
+    "top_strategies_ranked": [
+      {"rank": 1, "name": "Two-Level Scheduling", "improvement": "9.8x", "source": "Spark/Dask"},
+      {"rank": 2, "name": "Chase-Lev Deques", "improvement": "9.8x", "source": "Chase & Lev 2005"},
+      {"rank": 3, "name": "Pre-Partition", "improvement": "10.8x", "source": "Internal", "caveat": "No dynamic work"},
+      {"rank": 4, "name": "Go-Style Local Queues", "improvement": "9.5x", "source": "Go GMP model"},
+      {"rank": 5, "name": "Hierarchical Lead", "improvement": "9.4-10.4x", "source": "Internal", "note": "Recommended for production"}
+    ]
+  }
+}

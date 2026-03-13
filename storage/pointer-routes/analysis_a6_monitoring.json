@@ -1,0 +1,271 @@
+{
+  "report_id": "analysis-a6-monitoring-design",
+  "agent": "analysis-6",
+  "generated": "2026-03-12",
+  "task": "Design monitoring and health dashboard for the pointer network",
+  "route_used": "SOP-012 -> SOP-029 -> pointer-network",
+
+  "1_health_metrics_design": {
+    "description": "Six core metrics for continuous pointer network health monitoring",
+    "metrics": [
+      {
+        "name": "Network Connectivity Score",
+        "computation": "Based on connected components (undirected), graph diameter (BFS from sampled nodes), and bridge edge count (Tarjan's algorithm)",
+        "current_value": {
+          "components": 1,
+          "diameter": 4,
+          "bridge_fraction": "computed at runtime",
+          "score": "1.0 minus penalties for multi-component, large diameter, or high bridge fraction"
+        },
+        "rationale": "A disconnected or high-diameter network means agents cannot efficiently traverse. Bridge edges are single points of failure. S5 confirmed diameter=4, radius=3, single component of 310 nodes.",
+        "data_sources": ["pointer-network.json stats", "stress_s5_report (diameter/components)"]
+      },
+      {
+        "name": "Orphan Rate",
+        "computation": "Count nodes with zero incoming pointers divided by total node count",
+        "current_value": {
+          "orphan_count": 92,
+          "total_nodes": 310,
+          "rate": 0.297
+        },
+        "rationale": "Orphan nodes are unreachable via pointer traversal. High orphan rate means the network has dead-end regions. Currently 29.7% which is above the 25% critical threshold.",
+        "data_sources": ["pointer-network.json edge analysis"]
+      },
+      {
+        "name": "Strength Coverage",
+        "computation": "Fraction of edges with strength classification (primary/supporting/related/tangential) vs unclassified",
+        "current_value": {
+          "classified": 889,
+          "total_edges": 4820,
+          "coverage": 0.184
+        },
+        "rationale": "S1 showed primary-path journeys have 100% success, while random walks with unclassified edges have much lower success. S6 confirmed weight-based routing (80% success) outperforms tag-based (45%). Strength labels are critical for routing quality.",
+        "data_sources": ["pointer-network.json edges", "stress_s1_report", "stress_s6_report"]
+      },
+      {
+        "name": "Route Success Rate",
+        "computation": "Success count / total routes from route_log.jsonl, plus recent-20 trend detection",
+        "current_value": {
+          "total_routes": 81,
+          "success_rate": 0.988,
+          "trend": "stable"
+        },
+        "rationale": "Direct measure of whether agents can find what they need. S1 showed 56% overall success across journey types, but controlled routes in production achieve higher rates. Below 70% triggers warning.",
+        "data_sources": ["route_log.jsonl", "stress_s1_report outcomes"]
+      },
+      {
+        "name": "Path Efficiency",
+        "computation": "Average hops to reach resource nodes (SCR/SRC) from SOP nodes, combining static BFS analysis and dynamic route log data",
+        "current_value": {
+          "static_avg": "1-2 hops (SOP to nearest SCR/SRC)",
+          "dynamic_avg": "varies by route log",
+          "combined": 2.59
+        },
+        "rationale": "S1 showed primary paths average 1 hop while exploration averages 3 hops. S7 found 61.7% of SOP-SRC pairs reachable within 3 hops. Longer paths waste agent time and increase failure probability.",
+        "data_sources": ["pointer-network.json BFS", "route_log.jsonl", "stress_s7_report"]
+      },
+      {
+        "name": "Tag Coherence Score",
+        "computation": "Average Jaccard similarity of tag sets between source and target nodes across all edges, broken down by strength level",
+        "current_value": {
+          "avg_coherence": 0.007,
+          "zero_coherence_fraction": 0.986
+        },
+        "rationale": "S6 showed tag-based routing has only 45% success vs 80% for weight-based. S8 found avg_tag_coherence of 0.0 across workflows. Low coherence means edges are not semantically justified by shared tags. This is the weakest metric currently.",
+        "data_sources": ["pointer-network.json tags", "stress_s6_report", "stress_s8_report"]
+      }
+    ]
+  },
+
+  "2_health_check_script": {
+    "path": "storage/coordination/network_health.py",
+    "description": "Complete health check script that runs all 6 metrics and produces pass/fail report",
+    "features": [
+      "Runs all 6 metrics against live pointer-network.json and route_log.jsonl",
+      "Produces structured JSON report with per-metric status (PASS/WARN/FAIL/SKIP)",
+      "Computes overall health score (0-100%) as weighted average of metric scores",
+      "Generates alert objects with severity levels (CRITICAL/WARNING/INFO)",
+      "Multiple output modes: text report, JSON, single-line dashboard, watch mode",
+      "render_network_health_section() function for direct dashboard.py integration",
+      "Configurable thresholds dictionary for all alerting rules",
+      "Bridge detection using Tarjan's algorithm for connectivity analysis",
+      "Trend detection on recent route success rates"
+    ],
+    "usage": {
+      "full_report": "python3 storage/coordination/network_health.py",
+      "json_output": "python3 storage/coordination/network_health.py --json",
+      "save_report": "python3 storage/coordination/network_health.py --output FILE",
+      "dashboard_line": "python3 storage/coordination/network_health.py --dashboard",
+      "continuous": "python3 storage/coordination/network_health.py --watch --interval 30"
+    },
+    "test_results": {
+      "verdict": "FAIL",
+      "health_score": 0.654,
+      "pass_metrics": ["connectivity", "route_success", "path_efficiency"],
+      "fail_metrics": ["orphan_rate", "strength_coverage", "tag_coherence"],
+      "critical_alerts": 3,
+      "warning_alerts": 1
+    }
+  },
+
+  "3_alerting_rules": {
+    "description": "Rules for when the system should warn about network degradation",
+    "rules": [
+      {
+        "rule": "disconnected_network",
+        "severity": "CRITICAL",
+        "condition": "Number of connected components > 1",
+        "rationale": "A disconnected network means some nodes are entirely unreachable. S5 confirmed current network is fully connected."
+      },
+      {
+        "rule": "high_diameter",
+        "severity": "WARNING at >6, CRITICAL at >8",
+        "condition": "Graph diameter exceeds threshold",
+        "rationale": "Current diameter is 4 (S5). Higher diameter means longer worst-case traversals."
+      },
+      {
+        "rule": "bridge_edges",
+        "severity": "WARNING",
+        "condition": "Bridge edge fraction > 5% of total edges",
+        "rationale": "S7 found SCR-0007 is a critical SPOF. Bridge edges create fragility."
+      },
+      {
+        "rule": "orphan_increase",
+        "severity": "WARNING at >15%, CRITICAL at >25%",
+        "condition": "Orphan rate exceeds threshold",
+        "rationale": "Currently at 29.7% (CRITICAL). Nodes with no incoming pointers cannot be discovered."
+      },
+      {
+        "rule": "strength_degradation",
+        "severity": "WARNING at <60%, CRITICAL at <40%",
+        "condition": "Strength coverage drops below threshold",
+        "rationale": "Currently at 18.4% (CRITICAL). S1 showed unclassified edges correlate with navigation failures."
+      },
+      {
+        "rule": "success_rate_drop",
+        "severity": "WARNING at <70%, CRITICAL at <50%",
+        "condition": "Route success rate drops below threshold",
+        "rationale": "S1 showed 56% overall success across all journey types. Production routes currently at 98.8%."
+      },
+      {
+        "rule": "success_trend_decline",
+        "severity": "WARNING",
+        "condition": "Recent 20-route success rate drops >5pp below overall average",
+        "rationale": "Catches degradation before it becomes systemic."
+      },
+      {
+        "rule": "path_inefficiency",
+        "severity": "WARNING at >4 hops, CRITICAL at >6 hops",
+        "condition": "Average path length exceeds threshold",
+        "rationale": "S1 showed primary paths average ~1 hop; exploration averages 3. Beyond 4 hops indicates structural issues."
+      },
+      {
+        "rule": "unreachable_sops",
+        "severity": "CRITICAL",
+        "condition": "Any SOP node cannot reach any resource (SCR/SRC) via BFS",
+        "rationale": "S7 found 100% reachability at unlimited hops but only 61.7% within 3 hops."
+      },
+      {
+        "rule": "tag_coherence_collapse",
+        "severity": "WARNING at <0.25, CRITICAL at <0.10",
+        "condition": "Average Jaccard tag similarity across edges drops below threshold",
+        "rationale": "Currently at 0.007 (CRITICAL). S6 showed tag routing only 45% effective. Tags need repair."
+      },
+      {
+        "rule": "zero_coherence_dominance",
+        "severity": "WARNING",
+        "condition": ">50% of edges have zero tag overlap",
+        "rationale": "Currently 98.6% have zero overlap. Edges without shared tags provide no semantic signal."
+      },
+      {
+        "rule": "new_unclassified_edges",
+        "severity": "WARNING",
+        "condition": ">20% of edges added since last check are unclassified",
+        "rationale": "Prevents strength coverage from degrading as network grows."
+      }
+    ]
+  },
+
+  "4_dashboard_integration": {
+    "description": "How to integrate network health into the existing dashboard.py",
+    "approach": "The network_health.py module exports render_network_health_section() which returns a list of formatted strings matching dashboard.py's section pattern",
+    "integration_steps": [
+      {
+        "step": 1,
+        "description": "Import the health renderer",
+        "code": "from network_health import render_network_health_section"
+      },
+      {
+        "step": 2,
+        "description": "Add a --network flag to dashboard.py's argument parser",
+        "code": "parser.add_argument('--network', action='store_true', help='Show network health')"
+      },
+      {
+        "step": 3,
+        "description": "In render_dashboard(), add the section after findings",
+        "code": "if show_network: sections.extend(render_network_health_section())"
+      },
+      {
+        "step": 4,
+        "description": "Add network health data to the --json output mode",
+        "code": "data['network_health'] = run_health_check() if show_network else {}"
+      }
+    ],
+    "dashboard_section_format": {
+      "example_output": [
+        "----------------------------  NETWORK HEALTH  --------------------------",
+        "  Verdict: FAIL  (health score: 65.4%)",
+        "  Connectivity: PASS (components=1, diameter=4)",
+        "  Orphans: FAIL (92/310 = 29.7%)",
+        "  Strength: FAIL (18.4% classified)",
+        "  Routes: PASS (98.8% success, trend=stable)",
+        "  Efficiency: PASS (avg 2.59 hops)",
+        "  Coherence: FAIL (avg Jaccard=0.007)",
+        "  (!) 3 critical alert(s):",
+        "      Orphan rate 29.7% exceeds critical threshold (25%)...",
+        "      Only 18.4% of edges classified -- 3931 unclassified...",
+        "      Tag coherence 0.007 below critical threshold"
+      ]
+    },
+    "watch_mode_support": "Both dashboard.py --watch and network_health.py --watch support continuous monitoring. The dashboard integration calls render_network_health_section() each refresh cycle."
+  },
+
+  "5_current_network_diagnosis": {
+    "summary": "The pointer network has strong structural connectivity (single component, diameter 4) and excellent route success (98.8%), but suffers from three critical weaknesses",
+    "critical_issues": [
+      {
+        "issue": "Tag coherence is near zero (0.007 avg Jaccard)",
+        "impact": "Tag-based routing only achieves 45% success (S6). Edges lack semantic justification.",
+        "recommendation": "Run a tag propagation/enrichment pass to ensure connected nodes share relevant tags"
+      },
+      {
+        "issue": "Strength coverage is 18.4% (889/4820 edges classified)",
+        "impact": "81.6% of edges have no strength label, making route recommendations unreliable for most paths",
+        "recommendation": "Batch-classify edges using weight thresholds and reason patterns (shared_tags count, explicit_reference presence)"
+      },
+      {
+        "issue": "Orphan rate is 29.7% (92/310 nodes with no incoming pointers)",
+        "impact": "Nearly a third of nodes are unreachable via reverse traversal",
+        "recommendation": "Add backlinks for high-value orphan nodes, particularly wiki-* and SRC-* nodes"
+      }
+    ],
+    "strengths": [
+      "Single fully-connected component (all 310 nodes reachable)",
+      "Diameter of 4 with radius 3 (efficient traversal possible)",
+      "98.8% route success rate in production use",
+      "Average path efficiency of ~2.5 hops to reach resources",
+      "Cross-domain traversal succeeds in 1 hop from all SOPs (S3)"
+    ]
+  },
+
+  "6_stress_test_insights_used": {
+    "S1": "Journey type success rates: primary-path 100%, exploration ~45%, random-walk ~23%. Validates that strength classification directly drives success.",
+    "S2": "Script fan-out analysis: avg 3-hop reach of 204/310 nodes. Hub scripts (SCR-0003, SCR-0020) reach 213. Dead-end scripts (SCR-0018) reach only 161.",
+    "S3": "All SOPs hit cycles when following lowest-weight pointers (adversarial). 4.26M unique cycles found. All cross-domain hops = 1. Validates network is cycle-rich but still navigable.",
+    "S4": "Recommendation system handles 40 concurrent-style calls across 8 task types. 30 seeded routes with 57% success rate.",
+    "S5": "Deep graph: diameter=4, 1 component of 310, center has 124 nodes. Structural foundation is sound.",
+    "S6": "Weight routing (80%) beats hybrid (75%) beats tag (45%). Tag coherence ~0.37-0.45 in controlled tests. Weight is the primary reliable routing signal.",
+    "S7": "SOP-to-SRC 3-hop reachability at 61.7%. SCR-0007 is critical SPOF (removing it breaks 32 paths). Gateway dependency is a structural risk.",
+    "S8": "E2E workflow: 8/15 success, 7/15 partial, 0 failures. Avg tag coherence 0.0 in real workflows. Weight/strength labels needed."
+  }
+}

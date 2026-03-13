@@ -1,0 +1,110 @@
+{
+  "tag": "deduplication",
+  "node_count": 7,
+  "domains": [
+    "knowledge-base",
+    "scripts",
+    "sops"
+  ],
+  "nodes": [
+    {
+      "id": "KB-0005",
+      "domain": "knowledge-base",
+      "title": "Data Gathering Iteration 2: Parallel Hybrid Methods & Academic APIs",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0005",
+      "domain": "scripts",
+      "title": "merge-research",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0009",
+      "domain": "scripts",
+      "title": "data-gathering-hybrid",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0031",
+      "domain": "scripts",
+      "title": "think-tank",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-016",
+      "domain": "sops",
+      "title": "Cross-Team Data Flow and Report Consolidation",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-024",
+      "domain": "sops",
+      "title": "Data Quality & Freshness Maintenance",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0045",
+      "domain": "scripts",
+      "title": "dedup-utils",
+      "pointer_count": 10
+    }
+  ],
+  "internal_edges": [
+    {
+      "from": "SCR-0009",
+      "to": "SOP-024",
+      "weight": 3
+    },
+    {
+      "from": "KB-0005",
+      "to": "SCR-0009",
+      "weight": 2
+    },
+    {
+      "from": "KB-0005",
+      "to": "SOP-024",
+      "weight": 2
+    },
+    {
+      "from": "SCR-0031",
+      "to": "SOP-016",
+      "weight": 2
+    },
+    {
+      "from": "KB-0005",
+      "to": "SCR-0005",
+      "weight": 1
+    },
+    {
+      "from": "KB-0005",
+      "to": "SCR-0031",
+      "weight": 1
+    },
+    {
+      "from": "KB-0005",
+      "to": "SOP-016",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0005",
+      "to": "SOP-016",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0005",
+      "to": "SOP-024",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0009",
+      "to": "SOP-016",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0031",
+      "to": "SOP-024",
+      "weight": 1
+    }
+  ]
+}

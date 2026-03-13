@@ -1,546 +1,729 @@
 {
-  "version": "1.0",
-  "count": 40,
+  "schema_version": "2.0",
+  "domain": "sources",
+  "last_updated": "2026-03-12",
+  "entry_count": 48,
   "entries": [
     {
       "id": "SRC-0001",
       "title": "OpenAlex API",
-      "file": "SRC-0001-openalex.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "date": "2026-03-12",
+      "category": "scientific",
       "tags": [
-        "academic-papers",
-        "authors",
-        "institutions",
-        "journals",
-        "citations"
+        "openalex",
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0023"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0002",
+          "SRC-0003",
+          "SRC-0004",
+          "SRC-0005",
+          "SRC-0007",
+          "SRC-0008",
+          "SRC-0034"
+        ]
+      },
       "url": "https://api.openalex.org/",
       "data_types": [
-        "academic-papers",
-        "authors",
-        "institutions",
-        "journals",
-        "citations",
-        "funding",
-        "concepts"
+        "scientific"
       ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0002",
-      "title": "Semantic Scholar Academic Graph API",
-      "file": "SRC-0002-semantic-scholar.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "title": "Semantic Scholar",
+      "date": "2026-03-12",
+      "category": "scientific",
       "tags": [
-        "academic-papers",
-        "authors",
-        "citations",
-        "references",
-        "paper-embeddings"
+        "semantic-scholar",
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0026"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0001",
+          "SRC-0003",
+          "SRC-0004",
+          "SRC-0005",
+          "SRC-0007",
+          "SRC-0008",
+          "SRC-0034"
+        ]
+      },
       "url": "https://api.semanticscholar.org/graph/v1/",
       "data_types": [
-        "academic-papers",
-        "authors",
-        "citations",
-        "references",
-        "paper-embeddings",
-        "recommendations"
+        "scientific"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0003",
       "title": "arXiv API",
-      "file": "SRC-0003-arxiv.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "date": "2026-03-12",
+      "category": "scientific",
       "tags": [
-        "preprints",
-        "academic-papers",
-        "paper-metadata",
-        "abstracts",
-        "full-text-pdf-links"
+        "arxiv",
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0008",
+          "SCR-0009"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0001",
+          "SRC-0002",
+          "SRC-0004",
+          "SRC-0005",
+          "SRC-0007",
+          "SRC-0008",
+          "SRC-0034"
+        ]
+      },
       "url": "http://export.arxiv.org/api/query",
       "data_types": [
-        "preprints",
-        "academic-papers",
-        "paper-metadata",
-        "abstracts",
-        "full-text-pdf-links"
+        "scientific"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0004",
       "title": "Crossref REST API",
-      "file": "SRC-0004-crossref.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "date": "2026-03-12",
+      "category": "scientific",
       "tags": [
-        "doi-metadata",
-        "journal-articles",
-        "books",
-        "citations",
-        "funding-data"
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0001",
+          "SRC-0002",
+          "SRC-0003",
+          "SRC-0005",
+          "SRC-0007",
+          "SRC-0008",
+          "SRC-0034"
+        ]
+      },
       "url": "https://api.crossref.org/",
       "data_types": [
-        "doi-metadata",
-        "journal-articles",
-        "books",
-        "citations",
-        "funding-data",
-        "license-info",
-        "orcid-ids",
-        "abstracts"
+        "scientific"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0005",
-      "title": "Wikidata SPARQL Query Service",
-      "file": "SRC-0005-wikidata.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "title": "Wikidata",
+      "date": "2026-03-12",
+      "category": "scientific",
       "tags": [
-        "knowledge-graph",
-        "entities",
-        "properties",
-        "relationships",
-        "scholarly-articles"
+        "wikidata",
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0027"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0001",
+          "SRC-0002",
+          "SRC-0003",
+          "SRC-0004",
+          "SRC-0006",
+          "SRC-0007",
+          "SRC-0008",
+          "SRC-0025",
+          "SRC-0026",
+          "SRC-0027",
+          "SRC-0031",
+          "SRC-0032",
+          "SRC-0033",
+          "SRC-0034",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049",
+          "SRC-0050",
+          "SRC-0051"
+        ]
+      },
       "url": "https://query.wikidata.org/sparql",
       "data_types": [
-        "knowledge-graph",
-        "entities",
-        "properties",
-        "relationships",
-        "scholarly-articles",
-        "geographic-data",
-        "scientific-data",
-        "multilingual-labels"
+        "scientific",
+        "general"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0006",
-      "title": "Wikipedia / MediaWiki REST API",
-      "file": "SRC-0006-wikipedia.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "title": "Wikipedia / MediaWiki",
+      "date": "2026-03-12",
+      "category": "general",
       "tags": [
-        "encyclopedia-articles",
-        "article-summaries",
-        "article-html",
-        "page-metadata",
-        "revision-history"
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0007",
+          "SCR-0009",
+          "SCR-0027",
+          "SCR-0043",
+          "SCR-0044"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0005",
+          "SRC-0008",
+          "SRC-0025",
+          "SRC-0026",
+          "SRC-0027",
+          "SRC-0031",
+          "SRC-0032",
+          "SRC-0033",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049",
+          "SRC-0050",
+          "SRC-0051"
+        ]
+      },
       "url": "https://en.wikipedia.org/api/rest_v1/",
       "data_types": [
-        "encyclopedia-articles",
-        "article-summaries",
-        "article-html",
-        "page-metadata",
-        "revision-history",
-        "media-files",
-        "search-results"
+        "general"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0007",
-      "title": "CORE API",
-      "file": "SRC-0007-core.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "title": "CORE",
+      "date": "2026-03-12",
+      "category": "scientific",
       "tags": [
-        "academic-papers",
-        "full-text-articles",
-        "paper-metadata",
-        "open-access-content",
-        "institutional-repository-data"
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0001",
+          "SRC-0002",
+          "SRC-0003",
+          "SRC-0004",
+          "SRC-0005",
+          "SRC-0008",
+          "SRC-0034"
+        ]
+      },
       "url": "https://api.core.ac.uk",
       "data_types": [
-        "academic-papers",
-        "full-text-articles",
-        "paper-metadata",
-        "open-access-content",
-        "institutional-repository-data"
+        "scientific"
       ],
       "access_type": "api-key-required"
     },
     {
       "id": "SRC-0008",
-      "title": "DBpedia SPARQL Endpoint",
-      "file": "SRC-0008-dbpedia.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "title": "DBpedia",
+      "date": "2026-03-12",
+      "category": "scientific",
       "tags": [
-        "knowledge-graph",
-        "structured-wikipedia-data",
-        "entities",
-        "ontology",
-        "relationships"
+        "wikidata",
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0043",
+          "SCR-0044"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0001",
+          "SRC-0002",
+          "SRC-0003",
+          "SRC-0004",
+          "SRC-0005",
+          "SRC-0006",
+          "SRC-0007",
+          "SRC-0025",
+          "SRC-0026",
+          "SRC-0027",
+          "SRC-0031",
+          "SRC-0032",
+          "SRC-0033",
+          "SRC-0034",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049",
+          "SRC-0050",
+          "SRC-0051"
+        ]
+      },
       "url": "https://dbpedia.org/sparql",
       "data_types": [
-        "knowledge-graph",
-        "structured-wikipedia-data",
-        "entities",
-        "ontology",
-        "relationships",
-        "geographic-data",
-        "biographical-data"
+        "scientific",
+        "general"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0012",
-      "title": "NewsAPI.org",
-      "file": "SRC-0012-newsapi-org.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "title": "NewsAPI",
+      "date": "2026-03-12",
+      "category": "news",
       "tags": [
-        "news-headlines",
-        "news-articles",
-        "news-sources",
-        "search"
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0013",
+          "SRC-0014",
+          "SRC-0015",
+          "SRC-0016",
+          "SRC-0017",
+          "SRC-0029",
+          "SRC-0030"
+        ]
+      },
       "url": "https://newsapi.org/v2",
       "data_types": [
-        "news-headlines",
-        "news-articles",
-        "news-sources",
-        "search"
+        "news"
       ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0013",
-      "title": "The Guardian Open Platform API",
-      "file": "SRC-0013-guardian-api.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "title": "The Guardian",
+      "date": "2026-03-12",
+      "category": "news",
       "tags": [
-        "news-articles",
-        "full-text-content",
-        "tags",
-        "sections",
-        "contributors"
+        "guardian",
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0025"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0012",
+          "SRC-0014",
+          "SRC-0015",
+          "SRC-0016",
+          "SRC-0017",
+          "SRC-0029",
+          "SRC-0030"
+        ]
+      },
       "url": "https://content.guardianapis.com",
       "data_types": [
-        "news-articles",
-        "full-text-content",
-        "tags",
-        "sections",
-        "contributors",
-        "editorial-metadata"
+        "news"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0014",
-      "title": "GNews API",
-      "file": "SRC-0014-gnews.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "title": "GNews",
+      "date": "2026-03-12",
+      "category": "news",
       "tags": [
-        "news-headlines",
-        "news-articles",
         "search",
-        "top-stories"
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0012",
+          "SRC-0013",
+          "SRC-0015",
+          "SRC-0016",
+          "SRC-0017",
+          "SRC-0029",
+          "SRC-0030"
+        ]
+      },
       "url": "https://gnews.io/api/v4",
       "data_types": [
-        "news-headlines",
-        "news-articles",
-        "search",
-        "top-stories"
+        "news"
       ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0015",
-      "title": "GDELT Project API",
-      "file": "SRC-0015-gdelt.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "title": "GDELT Project",
+      "date": "2026-03-12",
+      "category": "news",
       "tags": [
-        "news-articles",
-        "global-events",
-        "sentiment-analysis",
-        "geospatial-data",
-        "tv-news"
+        "geospatial-api",
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0012",
+          "SRC-0013",
+          "SRC-0014",
+          "SRC-0016",
+          "SRC-0017",
+          "SRC-0021",
+          "SRC-0022",
+          "SRC-0028",
+          "SRC-0029",
+          "SRC-0030"
+        ]
+      },
       "url": "https://api.gdeltproject.org/api/v2",
       "data_types": [
-        "news-articles",
-        "global-events",
-        "sentiment-analysis",
-        "geospatial-data",
-        "tv-news",
-        "themes",
-        "entity-extraction",
-        "timelines"
+        "news",
+        "geospatial"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0016",
       "title": "Mediastack",
-      "file": "SRC-0016-mediastack.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "date": "2026-03-12",
+      "category": "news",
       "tags": [
-        "news-articles",
-        "live-headlines",
-        "historical-news",
-        "categories",
-        "sources"
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0012",
+          "SRC-0013",
+          "SRC-0014",
+          "SRC-0015",
+          "SRC-0017",
+          "SRC-0029",
+          "SRC-0030"
+        ]
+      },
       "url": "https://api.mediastack.com/v1",
       "data_types": [
-        "news-articles",
-        "live-headlines",
-        "historical-news",
-        "categories",
-        "sources",
-        "languages"
+        "news"
       ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0017",
       "title": "rss2json",
-      "file": "SRC-0017-rss2json.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "date": "2026-03-12",
+      "category": "news",
       "tags": [
-        "rss-feeds",
-        "atom-feeds",
-        "feed-metadata",
-        "feed-items"
+        "data-gathering",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0012",
+          "SRC-0013",
+          "SRC-0014",
+          "SRC-0015",
+          "SRC-0016",
+          "SRC-0029",
+          "SRC-0030"
+        ]
+      },
       "url": "https://api.rss2json.com/v1/api.json",
       "data_types": [
-        "rss-feeds",
-        "atom-feeds",
-        "feed-metadata",
-        "feed-items"
+        "news"
       ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0018",
-      "title": "FRED API (Federal Reserve Economic Data)",
-      "file": "SRC-0018-fred.json",
+      "title": "FRED",
       "date": "2026-03-12",
-      "team": "TEAM-0013",
+      "category": "financial",
       "tags": [
-        "economic-indicators",
-        "interest-rates",
-        "employment",
-        "inflation",
-        "GDP"
+        "financial-api",
+        "government-api",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0019",
+          "SRC-0020",
+          "SRC-0023",
+          "SRC-0024",
+          "SRC-0038",
+          "SRC-0039",
+          "SRC-0040",
+          "SRC-0041",
+          "SRC-0042",
+          "SRC-0043",
+          "SRC-0044",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049"
+        ]
+      },
       "url": "https://api.stlouisfed.org/fred/",
       "data_types": [
-        "economic-indicators",
-        "interest-rates",
-        "employment",
-        "inflation",
-        "GDP",
-        "monetary-policy",
         "financial",
-        "time-series",
-        "gdp",
-        "inflation-cpi",
-        "unemployment-rate",
-        "money-supply",
-        "consumer-sentiment",
-        "housing-data",
-        "trade-balance",
-        "industrial-production"
+        "government"
       ],
       "access_type": "api-key-required"
     },
     {
       "id": "SRC-0019",
-      "title": "US Census Bureau Data API",
-      "file": "SRC-0019-census.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0013",
+      "title": "US Census Bureau",
+      "date": "2026-03-12",
+      "category": "government",
       "tags": [
-        "demographics",
-        "population",
-        "housing",
-        "economic",
-        "business"
+        "government-api",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0018",
+          "SRC-0020",
+          "SRC-0023",
+          "SRC-0024",
+          "SRC-0039",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049"
+        ]
+      },
       "url": "https://api.census.gov/data",
       "data_types": [
-        "demographics",
-        "population",
-        "housing",
-        "economic",
-        "business",
-        "income",
-        "poverty",
-        "education",
         "government"
       ],
       "access_type": "api-key-required"
     },
     {
       "id": "SRC-0020",
-      "title": "Bureau of Labor Statistics (BLS) Public Data API",
-      "file": "SRC-0020-bls.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0013",
+      "title": "BLS",
+      "date": "2026-03-12",
+      "category": "government",
       "tags": [
-        "employment",
-        "unemployment",
-        "inflation",
-        "CPI",
-        "wages"
+        "government-api",
+        "financial-api",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0018",
+          "SRC-0019",
+          "SRC-0023",
+          "SRC-0024",
+          "SRC-0039",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049"
+        ]
+      },
       "url": "https://api.bls.gov/publicAPI/v2/timeseries/data/",
       "data_types": [
-        "employment",
-        "unemployment",
-        "inflation",
-        "CPI",
-        "wages",
-        "productivity",
-        "occupational-data",
-        "labor-statistics"
+        "government"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0021",
-      "title": "National Weather Service (NWS) API",
-      "file": "SRC-0021-nws-weather.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0013",
+      "title": "National Weather Service",
+      "date": "2026-03-12",
+      "category": "geospatial",
       "tags": [
-        "weather-forecasts",
-        "weather-alerts",
-        "weather-observations",
-        "climate",
-        "geospatial"
+        "geospatial-api",
+        "government-api",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0015",
+          "SRC-0022",
+          "SRC-0028"
+        ]
+      },
       "url": "https://api.weather.gov",
       "data_types": [
-        "weather-forecasts",
-        "weather-alerts",
-        "weather-observations",
-        "climate",
         "geospatial"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0022",
-      "title": "Open-Meteo Weather API",
-      "file": "SRC-0022-open-meteo.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0013",
+      "title": "Open-Meteo",
+      "date": "2026-03-12",
+      "category": "geospatial",
       "tags": [
-        "weather-forecasts",
-        "historical-weather",
-        "air-quality",
-        "marine-weather",
-        "climate"
+        "geospatial-api",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0015",
+          "SRC-0021",
+          "SRC-0028"
+        ]
+      },
       "url": "https://api.open-meteo.com/v1/forecast",
       "data_types": [
-        "weather-forecasts",
-        "historical-weather",
-        "air-quality",
-        "marine-weather",
-        "climate",
-        "elevation",
-        "geocoding"
+        "geospatial"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0023",
-      "title": "World Bank Indicators API",
-      "file": "SRC-0023-world-bank.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0013",
+      "title": "World Bank",
+      "date": "2026-03-12",
+      "category": "government",
       "tags": [
-        "economic-indicators",
-        "development",
-        "demographics",
-        "health",
-        "education"
+        "government-api",
+        "financial-api",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0018",
+          "SRC-0019",
+          "SRC-0020",
+          "SRC-0024",
+          "SRC-0039",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049"
+        ]
+      },
       "url": "https://api.worldbank.org/v2/",
       "data_types": [
-        "economic-indicators",
-        "development",
-        "demographics",
-        "health",
-        "education",
-        "trade",
-        "climate",
-        "poverty",
-        "international"
+        "government"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0024",
-      "title": "US Treasury Fiscal Data API",
-      "file": "SRC-0024-treasury-fiscal.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0013",
+      "title": "US Treasury Fiscal Data",
+      "date": "2026-03-12",
+      "category": "financial",
       "tags": [
-        "federal-debt",
-        "federal-revenue",
-        "federal-spending",
-        "treasury-securities",
-        "interest-rates"
+        "financial-api",
+        "government-api",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0018",
+          "SRC-0019",
+          "SRC-0020",
+          "SRC-0023",
+          "SRC-0038",
+          "SRC-0039",
+          "SRC-0040",
+          "SRC-0041",
+          "SRC-0042",
+          "SRC-0043",
+          "SRC-0044",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049"
+        ]
+      },
       "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/",
       "data_types": [
-        "federal-debt",
-        "federal-revenue",
-        "federal-spending",
-        "treasury-securities",
-        "interest-rates",
-        "currency-exchange-rates",
-        "savings-bonds",
         "financial",
         "government"
       ],
@@ -549,498 +732,1363 @@
     {
       "id": "SRC-0025",
       "title": "GitHub REST API",
-      "file": "SRC-0025-github-api.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "date": "2026-03-12",
+      "category": "general",
       "tags": [
-        "repositories",
-        "code-search",
-        "commits",
-        "issues",
-        "pull-requests"
+        "github-api",
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0028"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0005",
+          "SRC-0006",
+          "SRC-0008",
+          "SRC-0026",
+          "SRC-0027",
+          "SRC-0031",
+          "SRC-0032",
+          "SRC-0033",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049",
+          "SRC-0050",
+          "SRC-0051"
+        ]
+      },
       "url": "https://api.github.com/",
       "data_types": [
-        "repositories",
-        "code-search",
-        "commits",
-        "issues",
-        "pull-requests",
-        "users",
-        "organizations",
-        "gists",
-        "releases",
-        "topics",
-        "licenses"
+        "general"
       ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0026",
-      "title": "npm Registry API",
-      "file": "SRC-0026-npm-registry.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "title": "npm Registry",
+      "date": "2026-03-12",
+      "category": "general",
       "tags": [
-        "package-metadata",
-        "package-versions",
-        "download-counts",
-        "package-search",
-        "dependency-trees"
+        "package-registry",
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0005",
+          "SRC-0006",
+          "SRC-0008",
+          "SRC-0025",
+          "SRC-0027",
+          "SRC-0031",
+          "SRC-0032",
+          "SRC-0033",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049",
+          "SRC-0050",
+          "SRC-0051"
+        ]
+      },
       "url": "https://registry.npmjs.org/",
       "data_types": [
-        "package-metadata",
-        "package-versions",
-        "download-counts",
-        "package-search",
-        "dependency-trees"
+        "general"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0027",
-      "title": "PyPI JSON API",
-      "file": "SRC-0027-pypi-api.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "title": "PyPI",
+      "date": "2026-03-12",
+      "category": "general",
       "tags": [
-        "package-metadata",
-        "package-versions",
-        "download-urls",
-        "vulnerability-data",
-        "release-history"
+        "package-registry",
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0005",
+          "SRC-0006",
+          "SRC-0008",
+          "SRC-0025",
+          "SRC-0026",
+          "SRC-0031",
+          "SRC-0032",
+          "SRC-0033",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049",
+          "SRC-0050",
+          "SRC-0051"
+        ]
+      },
       "url": "https://pypi.org/pypi/",
       "data_types": [
-        "package-metadata",
-        "package-versions",
-        "download-urls",
-        "vulnerability-data",
-        "release-history"
+        "general"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0028",
-      "title": "ip-api.com Geolocation API",
-      "file": "SRC-0028-ip-api.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "title": "ip-api.com",
+      "date": "2026-03-12",
+      "category": "geospatial",
       "tags": [
-        "ip-geolocation",
-        "country",
-        "city",
-        "timezone",
-        "isp-data"
+        "geospatial-api",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0015",
+          "SRC-0021",
+          "SRC-0022"
+        ]
+      },
       "url": "http://ip-api.com/json/",
       "data_types": [
-        "ip-geolocation",
-        "country",
-        "city",
-        "timezone",
-        "isp-data",
-        "as-number"
+        "geospatial"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0029",
-      "title": "Hacker News Algolia Search API",
-      "file": "SRC-0029-hn-algolia.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "title": "Hacker News (Algolia)",
+      "date": "2026-03-12",
+      "category": "news",
       "tags": [
-        "stories",
-        "comments",
-        "polls",
-        "users",
-        "ask-hn"
+        "hacker-news",
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0024"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0012",
+          "SRC-0013",
+          "SRC-0014",
+          "SRC-0015",
+          "SRC-0016",
+          "SRC-0017",
+          "SRC-0030"
+        ]
+      },
       "url": "https://hn.algolia.com/api/v1/",
       "data_types": [
-        "stories",
-        "comments",
-        "polls",
-        "users",
-        "ask-hn",
-        "show-hn",
-        "jobs"
+        "news",
+        "social-media"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0030",
-      "title": "Hacker News Official API (Firebase)",
-      "file": "SRC-0030-hn-firebase.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "title": "Hacker News (Firebase)",
+      "date": "2026-03-12",
+      "category": "news",
       "tags": [
-        "stories",
-        "comments",
-        "polls",
-        "users",
-        "top-stories"
+        "hacker-news",
+        "event-driven",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0024"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0012",
+          "SRC-0013",
+          "SRC-0014",
+          "SRC-0015",
+          "SRC-0016",
+          "SRC-0017",
+          "SRC-0029"
+        ]
+      },
       "url": "https://hacker-news.firebaseio.com/v0/",
       "data_types": [
-        "stories",
-        "comments",
-        "polls",
-        "users",
-        "top-stories",
-        "new-stories",
-        "best-stories",
-        "ask-hn",
-        "show-hn",
-        "jobs"
+        "news",
+        "social-media"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0031",
-      "title": "Stack Exchange API",
-      "file": "SRC-0031-stackexchange-api.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0010",
+      "title": "Stack Exchange",
+      "date": "2026-03-12",
+      "category": "general",
       "tags": [
-        "questions",
-        "answers",
-        "comments",
-        "users",
-        "tags"
+        "stack-exchange",
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0005",
+          "SRC-0006",
+          "SRC-0008",
+          "SRC-0025",
+          "SRC-0026",
+          "SRC-0027",
+          "SRC-0032",
+          "SRC-0033",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049",
+          "SRC-0050",
+          "SRC-0051"
+        ]
+      },
       "url": "https://api.stackexchange.com/2.3/",
       "data_types": [
-        "questions",
-        "answers",
-        "comments",
-        "users",
-        "tags",
-        "badges",
-        "search",
-        "reputation"
+        "general"
       ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0032",
-      "title": "Free Dictionary API",
-      "file": "SRC-0032-free-dictionary.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0012",
+      "title": "Free Dictionary",
+      "date": "2026-03-12",
+      "category": "general",
       "tags": [
-        "word-definitions",
-        "phonetics",
-        "audio-pronunciations",
-        "parts-of-speech",
-        "usage-examples"
+        "nlp",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0005",
+          "SRC-0006",
+          "SRC-0008",
+          "SRC-0025",
+          "SRC-0026",
+          "SRC-0027",
+          "SRC-0031",
+          "SRC-0033",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049",
+          "SRC-0050",
+          "SRC-0051"
+        ]
+      },
       "url": "https://api.dictionaryapi.dev/api/v2/entries/en/",
       "data_types": [
-        "word-definitions",
-        "phonetics",
-        "audio-pronunciations",
-        "parts-of-speech",
-        "usage-examples",
-        "synonyms",
-        "antonyms"
+        "general"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0033",
-      "title": "Datamuse API",
-      "file": "SRC-0033-datamuse.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0012",
+      "title": "Datamuse",
+      "date": "2026-03-12",
+      "category": "general",
       "tags": [
-        "word-relationships",
-        "semantic-similarity",
-        "rhymes",
-        "sound-alike",
-        "spelling-suggestions"
+        "nlp",
+        "search",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0005",
+          "SRC-0006",
+          "SRC-0008",
+          "SRC-0025",
+          "SRC-0026",
+          "SRC-0027",
+          "SRC-0031",
+          "SRC-0032",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049",
+          "SRC-0050",
+          "SRC-0051"
+        ]
+      },
       "url": "https://api.datamuse.com",
       "data_types": [
-        "word-relationships",
-        "semantic-similarity",
-        "rhymes",
-        "sound-alike",
-        "spelling-suggestions",
-        "word-frequency",
-        "syllable-counts",
-        "definitions",
-        "word-context"
+        "general"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0034",
-      "title": "ConceptNet API",
-      "file": "SRC-0034-conceptnet.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0012",
+      "title": "ConceptNet",
+      "date": "2026-03-12",
+      "category": "scientific",
       "tags": [
-        "commonsense-knowledge",
-        "semantic-relationships",
-        "word-embeddings",
-        "multilingual-concepts",
-        "knowledge-graph-edges"
+        "wikidata",
+        "nlp",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0001",
+          "SRC-0002",
+          "SRC-0003",
+          "SRC-0004",
+          "SRC-0005",
+          "SRC-0007",
+          "SRC-0008"
+        ]
+      },
       "url": "http://api.conceptnet.io",
       "data_types": [
-        "commonsense-knowledge",
-        "semantic-relationships",
-        "word-embeddings",
-        "multilingual-concepts",
-        "knowledge-graph-edges",
-        "word-associations",
-        "concept-relatedness"
+        "scientific"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0035",
       "title": "Hugging Face Inference Providers API",
-      "file": "SRC-0035-huggingface-inference.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0012",
+      "date": "2026-03-12",
+      "category": "ai-ml",
       "tags": [
-        "text-generation",
-        "text-embeddings",
-        "image-generation",
-        "image-classification",
-        "object-detection"
+        "ai-ml",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0036",
+          "SRC-0037"
+        ]
+      },
       "url": "https://router.huggingface.co/v1",
       "data_types": [
-        "text-generation",
-        "text-embeddings",
-        "image-generation",
-        "image-classification",
-        "object-detection",
-        "speech-to-text",
-        "text-to-speech",
-        "summarization",
-        "translation",
-        "named-entity-recognition",
-        "sentiment-analysis",
-        "question-answering",
-        "video-generation"
+        "ai-ml"
       ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0036",
       "title": "Google Gemini Embeddings API",
-      "file": "SRC-0036-gemini-embeddings.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0012",
+      "date": "2026-03-12",
+      "category": "ai-ml",
       "tags": [
-        "text-embeddings",
-        "multimodal-embeddings",
-        "semantic-vectors",
-        "document-embeddings"
+        "ai-ml",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0035",
+          "SRC-0037"
+        ]
+      },
       "url": "https://generativelanguage.googleapis.com/v1beta/models/",
       "data_types": [
-        "text-embeddings",
-        "multimodal-embeddings",
-        "semantic-vectors",
-        "document-embeddings"
+        "ai-ml"
       ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0037",
       "title": "Roboflow Inference API",
-      "file": "SRC-0037-roboflow.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0012",
+      "date": "2026-03-12",
+      "category": "ai-ml",
       "tags": [
-        "object-detection",
-        "image-classification",
-        "instance-segmentation",
-        "keypoint-detection",
-        "image-embeddings"
+        "ai-ml",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0035",
+          "SRC-0036"
+        ]
+      },
       "url": "https://detect.roboflow.com",
       "data_types": [
-        "object-detection",
-        "image-classification",
-        "instance-segmentation",
-        "keypoint-detection",
-        "image-embeddings",
-        "computer-vision-datasets"
+        "ai-ml"
       ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0038",
       "title": "Alpha Vantage",
-      "file": "SRC-0038-alpha-vantage.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0013",
+      "date": "2026-03-12",
+      "category": "financial",
       "tags": [
-        "stock-prices-realtime",
-        "stock-prices-historical",
-        "forex-rates",
-        "cryptocurrency-prices",
-        "technical-indicators"
+        "financial-api",
+        "stock-analysis",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0018",
+          "SRC-0024",
+          "SRC-0039",
+          "SRC-0040",
+          "SRC-0041",
+          "SRC-0042",
+          "SRC-0043",
+          "SRC-0044"
+        ]
+      },
       "url": "https://www.alphavantage.co/query",
       "data_types": [
-        "stock-prices-realtime",
-        "stock-prices-historical",
-        "forex-rates",
-        "cryptocurrency-prices",
-        "technical-indicators",
-        "commodity-prices",
-        "economic-indicators"
+        "financial"
       ],
       "access_type": "freemium"
     },
     {
-      "id": "SRC-0040",
-      "title": "Finnhub",
-      "file": "SRC-0040-finnhub.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0013",
+      "id": "SRC-0039",
+      "title": "FRED API (Federal Reserve Economic Data)",
+      "date": "2026-03-12",
+      "category": "financial",
       "tags": [
-        "stock-prices-realtime",
-        "stock-prices-historical",
-        "company-fundamentals",
-        "financial-statements",
-        "earnings-estimates"
+        "financial-api",
+        "government-api",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0018",
+          "SRC-0019",
+          "SRC-0020",
+          "SRC-0023",
+          "SRC-0024",
+          "SRC-0038",
+          "SRC-0040",
+          "SRC-0041",
+          "SRC-0042",
+          "SRC-0043",
+          "SRC-0044",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049"
+        ]
+      },
+      "url": "https://api.stlouisfed.org/fred",
+      "data_types": [
+        "financial",
+        "government"
+      ],
+      "access_type": "api-key-required"
+    },
+    {
+      "id": "SRC-0040",
+      "title": "Finnhub",
+      "date": "2026-03-12",
+      "category": "financial",
+      "tags": [
+        "financial-api",
+        "stock-analysis",
+        "public-api"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0018",
+          "SRC-0024",
+          "SRC-0038",
+          "SRC-0039",
+          "SRC-0041",
+          "SRC-0042",
+          "SRC-0043",
+          "SRC-0044"
+        ]
+      },
       "url": "https://finnhub.io/api/v1",
       "data_types": [
-        "stock-prices-realtime",
-        "stock-prices-historical",
-        "company-fundamentals",
-        "financial-statements",
-        "earnings-estimates",
-        "forex-rates",
-        "cryptocurrency-prices",
-        "economic-calendar",
-        "news-sentiment",
-        "insider-transactions",
-        "sec-filings"
+        "financial"
       ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0041",
       "title": "CoinGecko API",
-      "file": "SRC-0041-coingecko.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0013",
+      "date": "2026-03-12",
+      "category": "financial",
       "tags": [
-        "cryptocurrency-prices-realtime",
-        "cryptocurrency-prices-historical",
-        "market-cap",
-        "trading-volume",
-        "exchange-data"
+        "financial-api",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0018",
+          "SRC-0024",
+          "SRC-0038",
+          "SRC-0039",
+          "SRC-0040",
+          "SRC-0042",
+          "SRC-0043",
+          "SRC-0044"
+        ]
+      },
       "url": "https://api.coingecko.com/api/v3",
       "data_types": [
-        "cryptocurrency-prices-realtime",
-        "cryptocurrency-prices-historical",
-        "market-cap",
-        "trading-volume",
-        "exchange-data",
-        "defi-data",
-        "nft-data",
-        "trending-coins",
-        "categories"
+        "financial"
       ],
       "access_type": "freemium"
     },
     {
       "id": "SRC-0042",
       "title": "ExchangeRate-API (Open Access)",
-      "file": "SRC-0042-exchangerate-api.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0013",
+      "date": "2026-03-12",
+      "category": "financial",
       "tags": [
-        "forex-exchange-rates",
-        "currency-conversion"
+        "financial-api",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0018",
+          "SRC-0024",
+          "SRC-0038",
+          "SRC-0039",
+          "SRC-0040",
+          "SRC-0041",
+          "SRC-0043",
+          "SRC-0044"
+        ]
+      },
       "url": "https://open.er-api.com/v6/latest",
       "data_types": [
-        "forex-exchange-rates",
-        "currency-conversion"
+        "financial"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0043",
-      "title": "fawazahmed0/exchange-api (Open Source Currency API)",
-      "file": "SRC-0043-fawazahmed0-exchange.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0013",
+      "title": "fawazahmed0/exchange-api",
+      "date": "2026-03-12",
+      "category": "financial",
       "tags": [
-        "forex-exchange-rates",
-        "cryptocurrency-rates",
-        "precious-metals-rates",
-        "historical-exchange-rates"
+        "financial-api",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0018",
+          "SRC-0024",
+          "SRC-0038",
+          "SRC-0039",
+          "SRC-0040",
+          "SRC-0041",
+          "SRC-0042",
+          "SRC-0044"
+        ]
+      },
       "url": "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1",
       "data_types": [
-        "forex-exchange-rates",
-        "cryptocurrency-rates",
-        "precious-metals-rates",
-        "historical-exchange-rates"
+        "financial"
       ],
       "access_type": "free"
     },
     {
       "id": "SRC-0044",
       "title": "CoinPaprika API",
-      "file": "SRC-0044-coinpaprika.json",
-      "date": "2026-03-10",
-      "team": "TEAM-0013",
+      "date": "2026-03-12",
+      "category": "financial",
       "tags": [
-        "cryptocurrency-prices-realtime",
-        "cryptocurrency-prices-historical",
-        "market-cap",
-        "trading-volume",
-        "exchange-data"
+        "financial-api",
+        "public-api"
       ],
       "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0018",
+          "SRC-0024",
+          "SRC-0038",
+          "SRC-0039",
+          "SRC-0040",
+          "SRC-0041",
+          "SRC-0042",
+          "SRC-0043"
+        ]
+      },
       "url": "https://api.coinpaprika.com/v1",
       "data_types": [
-        "cryptocurrency-prices-realtime",
-        "cryptocurrency-prices-historical",
-        "market-cap",
-        "trading-volume",
-        "exchange-data",
-        "ohlcv-candles",
-        "coin-events",
-        "global-market-data"
+        "financial"
+      ],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0045",
+      "title": "CKAN - US Data.gov",
+      "date": "2026-03-12",
+      "category": "government",
+      "tags": [
+        "ckan",
+        "government-api",
+        "open-data",
+        "public-api"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0005",
+          "SRC-0006",
+          "SRC-0008",
+          "SRC-0018",
+          "SRC-0019",
+          "SRC-0020",
+          "SRC-0023",
+          "SRC-0024",
+          "SRC-0025",
+          "SRC-0026",
+          "SRC-0027",
+          "SRC-0031",
+          "SRC-0032",
+          "SRC-0033",
+          "SRC-0039",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049",
+          "SRC-0050",
+          "SRC-0051"
+        ]
+      },
+      "url": "https://catalog.data.gov/api/3/action/package_search",
+      "data_types": [
+        "government",
+        "general"
+      ],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0046",
+      "title": "CKAN - Canada Open Data",
+      "date": "2026-03-12",
+      "category": "government",
+      "tags": [
+        "ckan",
+        "government-api",
+        "open-data",
+        "public-api"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0005",
+          "SRC-0006",
+          "SRC-0008",
+          "SRC-0018",
+          "SRC-0019",
+          "SRC-0020",
+          "SRC-0023",
+          "SRC-0024",
+          "SRC-0025",
+          "SRC-0026",
+          "SRC-0027",
+          "SRC-0031",
+          "SRC-0032",
+          "SRC-0033",
+          "SRC-0039",
+          "SRC-0045",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049",
+          "SRC-0050",
+          "SRC-0051"
+        ]
+      },
+      "url": "https://open.canada.ca/data/api/3/action/package_search",
+      "data_types": [
+        "government",
+        "general"
+      ],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0047",
+      "title": "CKAN - Australia data.gov.au",
+      "date": "2026-03-12",
+      "category": "government",
+      "tags": [
+        "ckan",
+        "government-api",
+        "open-data",
+        "public-api"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0005",
+          "SRC-0006",
+          "SRC-0008",
+          "SRC-0018",
+          "SRC-0019",
+          "SRC-0020",
+          "SRC-0023",
+          "SRC-0024",
+          "SRC-0025",
+          "SRC-0026",
+          "SRC-0027",
+          "SRC-0031",
+          "SRC-0032",
+          "SRC-0033",
+          "SRC-0039",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0048",
+          "SRC-0049",
+          "SRC-0050",
+          "SRC-0051"
+        ]
+      },
+      "url": "https://data.gov.au/api/3/action/package_search",
+      "data_types": [
+        "government",
+        "general"
+      ],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0048",
+      "title": "CKAN - UK data.gov.uk",
+      "date": "2026-03-12",
+      "category": "government",
+      "tags": [
+        "ckan",
+        "government-api",
+        "open-data",
+        "public-api"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0005",
+          "SRC-0006",
+          "SRC-0008",
+          "SRC-0018",
+          "SRC-0019",
+          "SRC-0020",
+          "SRC-0023",
+          "SRC-0024",
+          "SRC-0025",
+          "SRC-0026",
+          "SRC-0027",
+          "SRC-0031",
+          "SRC-0032",
+          "SRC-0033",
+          "SRC-0039",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0049",
+          "SRC-0050",
+          "SRC-0051"
+        ]
+      },
+      "url": "https://ckan.publishing.service.gov.uk/api/3/action/package_search",
+      "data_types": [
+        "government",
+        "general"
+      ],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0049",
+      "title": "CKAN - European Data Portal",
+      "date": "2026-03-12",
+      "category": "government",
+      "tags": [
+        "ckan",
+        "government-api",
+        "open-data",
+        "public-api"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0005",
+          "SRC-0006",
+          "SRC-0008",
+          "SRC-0018",
+          "SRC-0019",
+          "SRC-0020",
+          "SRC-0023",
+          "SRC-0024",
+          "SRC-0025",
+          "SRC-0026",
+          "SRC-0027",
+          "SRC-0031",
+          "SRC-0032",
+          "SRC-0033",
+          "SRC-0039",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0050",
+          "SRC-0051"
+        ]
+      },
+      "url": "https://data.europa.eu/api/hub/search/api/3/action/package_search",
+      "data_types": [
+        "government",
+        "general"
+      ],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0050",
+      "title": "MCP Server Ecosystem (Glama.ai)",
+      "date": "2026-03-12",
+      "category": "general",
+      "tags": [
+        "mcp",
+        "ai-ml",
+        "tool-registry",
+        "public-api"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0005",
+          "SRC-0006",
+          "SRC-0008",
+          "SRC-0025",
+          "SRC-0026",
+          "SRC-0027",
+          "SRC-0031",
+          "SRC-0032",
+          "SRC-0033",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049",
+          "SRC-0051"
+        ]
+      },
+      "url": "https://glama.ai/mcp/servers",
+      "data_types": [
+        "general"
+      ],
+      "access_type": "free"
+    },
+    {
+      "id": "SRC-0051",
+      "title": "MCP Server Ecosystem (Smithery.ai)",
+      "date": "2026-03-12",
+      "category": "general",
+      "tags": [
+        "mcp",
+        "ai-ml",
+        "tool-registry",
+        "public-api"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SRC-0005",
+          "SRC-0006",
+          "SRC-0008",
+          "SRC-0025",
+          "SRC-0026",
+          "SRC-0027",
+          "SRC-0031",
+          "SRC-0032",
+          "SRC-0033",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049",
+          "SRC-0050"
+        ]
+      },
+      "url": "https://smithery.ai/",
+      "data_types": [
+        "general"
       ],
       "access_type": "free"
     }
   ],
-  "date": "2026-03-12"
+  "secondary_indexes": {
+    "by_category": {
+      "scientific": [
+        "SRC-0001",
+        "SRC-0002",
+        "SRC-0003",
+        "SRC-0004",
+        "SRC-0005",
+        "SRC-0007",
+        "SRC-0008",
+        "SRC-0034"
+      ],
+      "general": [
+        "SRC-0006",
+        "SRC-0025",
+        "SRC-0026",
+        "SRC-0027",
+        "SRC-0031",
+        "SRC-0032",
+        "SRC-0033",
+        "SRC-0050",
+        "SRC-0051"
+      ],
+      "news": [
+        "SRC-0012",
+        "SRC-0013",
+        "SRC-0014",
+        "SRC-0015",
+        "SRC-0016",
+        "SRC-0017",
+        "SRC-0029",
+        "SRC-0030"
+      ],
+      "financial": [
+        "SRC-0018",
+        "SRC-0024",
+        "SRC-0038",
+        "SRC-0039",
+        "SRC-0040",
+        "SRC-0041",
+        "SRC-0042",
+        "SRC-0043",
+        "SRC-0044"
+      ],
+      "government": [
+        "SRC-0019",
+        "SRC-0020",
+        "SRC-0023",
+        "SRC-0045",
+        "SRC-0046",
+        "SRC-0047",
+        "SRC-0048",
+        "SRC-0049"
+      ],
+      "geospatial": [
+        "SRC-0021",
+        "SRC-0022",
+        "SRC-0028"
+      ],
+      "ai-ml": [
+        "SRC-0035",
+        "SRC-0036",
+        "SRC-0037"
+      ]
+    },
+    "by_tag": {
+      "openalex": [
+        "SRC-0001"
+      ],
+      "search": [
+        "SRC-0001",
+        "SRC-0002",
+        "SRC-0003",
+        "SRC-0004",
+        "SRC-0005",
+        "SRC-0006",
+        "SRC-0007",
+        "SRC-0008",
+        "SRC-0012",
+        "SRC-0013",
+        "SRC-0014",
+        "SRC-0015",
+        "SRC-0016",
+        "SRC-0025",
+        "SRC-0026",
+        "SRC-0027",
+        "SRC-0029",
+        "SRC-0031",
+        "SRC-0033"
+      ],
+      "public-api": [
+        "SRC-0001",
+        "SRC-0002",
+        "SRC-0003",
+        "SRC-0004",
+        "SRC-0005",
+        "SRC-0006",
+        "SRC-0007",
+        "SRC-0008",
+        "SRC-0012",
+        "SRC-0013",
+        "SRC-0014",
+        "SRC-0015",
+        "SRC-0016",
+        "SRC-0017",
+        "SRC-0018",
+        "SRC-0019",
+        "SRC-0020",
+        "SRC-0021",
+        "SRC-0022",
+        "SRC-0023",
+        "SRC-0024",
+        "SRC-0025",
+        "SRC-0026",
+        "SRC-0027",
+        "SRC-0028",
+        "SRC-0029",
+        "SRC-0030",
+        "SRC-0031",
+        "SRC-0032",
+        "SRC-0033",
+        "SRC-0034",
+        "SRC-0035",
+        "SRC-0036",
+        "SRC-0037",
+        "SRC-0038",
+        "SRC-0039",
+        "SRC-0040",
+        "SRC-0041",
+        "SRC-0042",
+        "SRC-0043",
+        "SRC-0044",
+        "SRC-0045",
+        "SRC-0046",
+        "SRC-0047",
+        "SRC-0048",
+        "SRC-0049",
+        "SRC-0050",
+        "SRC-0051"
+      ],
+      "semantic-scholar": [
+        "SRC-0002"
+      ],
+      "arxiv": [
+        "SRC-0003"
+      ],
+      "wikidata": [
+        "SRC-0005",
+        "SRC-0008",
+        "SRC-0034"
+      ],
+      "guardian": [
+        "SRC-0013"
+      ],
+      "geospatial-api": [
+        "SRC-0015",
+        "SRC-0021",
+        "SRC-0022",
+        "SRC-0028"
+      ],
+      "data-gathering": [
+        "SRC-0017"
+      ],
+      "financial-api": [
+        "SRC-0018",
+        "SRC-0020",
+        "SRC-0023",
+        "SRC-0024",
+        "SRC-0038",
+        "SRC-0039",
+        "SRC-0040",
+        "SRC-0041",
+        "SRC-0042",
+        "SRC-0043",
+        "SRC-0044"
+      ],
+      "government-api": [
+        "SRC-0018",
+        "SRC-0019",
+        "SRC-0020",
+        "SRC-0021",
+        "SRC-0023",
+        "SRC-0024",
+        "SRC-0039",
+        "SRC-0045",
+        "SRC-0046",
+        "SRC-0047",
+        "SRC-0048",
+        "SRC-0049"
+      ],
+      "github-api": [
+        "SRC-0025"
+      ],
+      "package-registry": [
+        "SRC-0026",
+        "SRC-0027"
+      ],
+      "hacker-news": [
+        "SRC-0029",
+        "SRC-0030"
+      ],
+      "event-driven": [
+        "SRC-0030"
+      ],
+      "stack-exchange": [
+        "SRC-0031"
+      ],
+      "nlp": [
+        "SRC-0032",
+        "SRC-0033",
+        "SRC-0034"
+      ],
+      "ai-ml": [
+        "SRC-0035",
+        "SRC-0036",
+        "SRC-0037",
+        "SRC-0050",
+        "SRC-0051"
+      ],
+      "stock-analysis": [
+        "SRC-0038",
+        "SRC-0040"
+      ],
+      "ckan": [
+        "SRC-0045",
+        "SRC-0046",
+        "SRC-0047",
+        "SRC-0048",
+        "SRC-0049"
+      ],
+      "open-data": [
+        "SRC-0045",
+        "SRC-0046",
+        "SRC-0047",
+        "SRC-0048",
+        "SRC-0049"
+      ],
+      "mcp": [
+        "SRC-0050",
+        "SRC-0051"
+      ],
+      "tool-registry": [
+        "SRC-0050",
+        "SRC-0051"
+      ]
+    },
+    "by_access_type": {
+      "freemium": [
+        "SRC-0001",
+        "SRC-0012",
+        "SRC-0014",
+        "SRC-0016",
+        "SRC-0017",
+        "SRC-0025",
+        "SRC-0031",
+        "SRC-0035",
+        "SRC-0036",
+        "SRC-0037",
+        "SRC-0038",
+        "SRC-0040",
+        "SRC-0041"
+      ],
+      "free": [
+        "SRC-0002",
+        "SRC-0003",
+        "SRC-0004",
+        "SRC-0005",
+        "SRC-0006",
+        "SRC-0008",
+        "SRC-0013",
+        "SRC-0015",
+        "SRC-0020",
+        "SRC-0021",
+        "SRC-0022",
+        "SRC-0023",
+        "SRC-0024",
+        "SRC-0026",
+        "SRC-0027",
+        "SRC-0028",
+        "SRC-0029",
+        "SRC-0030",
+        "SRC-0032",
+        "SRC-0033",
+        "SRC-0034",
+        "SRC-0042",
+        "SRC-0043",
+        "SRC-0044",
+        "SRC-0045",
+        "SRC-0046",
+        "SRC-0047",
+        "SRC-0048",
+        "SRC-0049",
+        "SRC-0050",
+        "SRC-0051"
+      ],
+      "api-key-required": [
+        "SRC-0007",
+        "SRC-0018",
+        "SRC-0019",
+        "SRC-0039"
+      ]
+    },
+    "by_data_type": {
+      "scientific": [
+        "SRC-0001",
+        "SRC-0002",
+        "SRC-0003",
+        "SRC-0004",
+        "SRC-0005",
+        "SRC-0007",
+        "SRC-0008",
+        "SRC-0034"
+      ],
+      "general": [
+        "SRC-0005",
+        "SRC-0006",
+        "SRC-0008",
+        "SRC-0025",
+        "SRC-0026",
+        "SRC-0027",
+        "SRC-0031",
+        "SRC-0032",
+        "SRC-0033",
+        "SRC-0045",
+        "SRC-0046",
+        "SRC-0047",
+        "SRC-0048",
+        "SRC-0049",
+        "SRC-0050",
+        "SRC-0051"
+      ],
+      "news": [
+        "SRC-0012",
+        "SRC-0013",
+        "SRC-0014",
+        "SRC-0015",
+        "SRC-0016",
+        "SRC-0017",
+        "SRC-0029",
+        "SRC-0030"
+      ],
+      "geospatial": [
+        "SRC-0015",
+        "SRC-0021",
+        "SRC-0022",
+        "SRC-0028"
+      ],
+      "financial": [
+        "SRC-0018",
+        "SRC-0024",
+        "SRC-0038",
+        "SRC-0039",
+        "SRC-0040",
+        "SRC-0041",
+        "SRC-0042",
+        "SRC-0043",
+        "SRC-0044"
+      ],
+      "government": [
+        "SRC-0018",
+        "SRC-0019",
+        "SRC-0020",
+        "SRC-0023",
+        "SRC-0024",
+        "SRC-0039",
+        "SRC-0045",
+        "SRC-0046",
+        "SRC-0047",
+        "SRC-0048",
+        "SRC-0049"
+      ],
+      "social-media": [
+        "SRC-0029",
+        "SRC-0030"
+      ],
+      "ai-ml": [
+        "SRC-0035",
+        "SRC-0036",
+        "SRC-0037"
+      ]
+    }
+  }
 }

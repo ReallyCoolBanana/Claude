@@ -1,0 +1,121 @@
+{
+  "tag": "stock-analysis",
+  "node_count": 6,
+  "domains": [
+    "knowledge-base",
+    "scripts",
+    "sops",
+    "sources",
+    "teams"
+  ],
+  "nodes": [
+    {
+      "id": "KB-0003",
+      "domain": "knowledge-base",
+      "title": "Multi-Team Competitive Research: Quantitative Stock Analysis with AI",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0004",
+      "domain": "scripts",
+      "title": "grade-research",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-018",
+      "domain": "sops",
+      "title": "Market Research Operations",
+      "pointer_count": 20
+    },
+    {
+      "id": "SRC-0038",
+      "domain": "sources",
+      "title": "Alpha Vantage",
+      "pointer_count": 16
+    },
+    {
+      "id": "SRC-0040",
+      "domain": "sources",
+      "title": "Finnhub",
+      "pointer_count": 16
+    },
+    {
+      "id": "TEAM-0003",
+      "domain": "teams",
+      "title": "5-team competitive research operation on Quantitative Stock Analysis Techniques with AI",
+      "pointer_count": 20
+    }
+  ],
+  "internal_edges": [
+    {
+      "from": "KB-0003",
+      "to": "TEAM-0003",
+      "weight": 3
+    },
+    {
+      "from": "KB-0003",
+      "to": "SCR-0004",
+      "weight": 2
+    },
+    {
+      "from": "KB-0003",
+      "to": "SOP-018",
+      "weight": 1
+    },
+    {
+      "from": "KB-0003",
+      "to": "SRC-0038",
+      "weight": 1
+    },
+    {
+      "from": "KB-0003",
+      "to": "SRC-0040",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0004",
+      "to": "SOP-018",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0004",
+      "to": "SRC-0038",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0004",
+      "to": "SRC-0040",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0004",
+      "to": "TEAM-0003",
+      "weight": 1
+    },
+    {
+      "from": "SOP-018",
+      "to": "SRC-0038",
+      "weight": 1
+    },
+    {
+      "from": "SOP-018",
+      "to": "SRC-0040",
+      "weight": 1
+    },
+    {
+      "from": "SOP-018",
+      "to": "TEAM-0003",
+      "weight": 1
+    },
+    {
+      "from": "SRC-0038",
+      "to": "TEAM-0003",
+      "weight": 1
+    },
+    {
+      "from": "SRC-0040",
+      "to": "TEAM-0003",
+      "weight": 1
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "schema_version": "2.0",
+  "description": "Repository index router. Start here to navigate all indexed content.",
+  "last_updated": "2026-03-12",
+  "total_entries": 495,
+  "domains": {
+    "knowledge-base": {
+      "index_path": "knowledge-base/index.json",
+      "entry_prefix": "KB",
+      "entry_count": 46,
+      "description": "Shared knowledge entries with dependency chains",
+      "categories": [
+        "optimization",
+        "integration",
+        "methodology",
+        "tool-usage",
+        "testing",
+        "debugging",
+        "market-research"
+      ]
+    },
+    "scripts": {
+      "index_path": "storage/scripts/index.json",
+      "entry_prefix": "SCR",
+      "entry_count": 57,
+      "description": "Reusable scripts and utilities",
+      "categories": [
+        "validation",
+        "search",
+        "indexing",
+        "caching",
+        "data-collection",
+        "analysis",
+        "automation",
+        "coordination"
+      ]
+    },
+    "sources": {
+      "index_path": "storage/sources/index.json",
+      "entry_prefix": "SRC",
+      "entry_count": 48,
+      "description": "Curated data sources and APIs",
+      "categories": [
+        "financial",
+        "scientific",
+        "news",
+        "government",
+        "geospatial",
+        "ai-ml",
+        "general"
+      ]
+    },
+    "api-tools": {
+      "index_path": "storage/api-tools/index.json",
+      "entry_prefix": "TOOL",
+      "entry_count": 1,
+      "description": "API tool definitions and implementations",
+      "categories": [
+        "integration"
+      ]
+    },
+    "teams": {
+      "index_path": "teams/sessions/index.json",
+      "entry_prefix": "TEAM",
+      "entry_count": 22,
+      "description": "Team session logs and coordination records",
+      "categories": [
+        "testing",
+        "coordination",
+        "data-collection",
+        "integration",
+        "maintenance",
+        "multi-agent"
+      ]
+    },
+    "sops": {
+      "index_path": "storage/coordination/sops/index.json",
+      "entry_prefix": "SOP",
+      "entry_count": 22,
+      "description": "Standard Operating Procedures",
+      "categories": [
+        "operations",
+        "data-gathering",
+        "infrastructure",
+        "development",
+        "research"
+      ]
+    },
+    "wikipedia-ai": {
+      "index_path": "storage/sources/wikipedia-ai/index.json",
+      "entry_prefix": null,
+      "entry_count": 241,
+      "description": "Wikipedia AI category articles with enrichment",
+      "supplementary": [
+        "storage/sources/wikipedia-ai/links-index.json",
+        "storage/sources/wikipedia-ai/categories.json"
+      ]
+    },
+    "wikipedia-statistical-software": {
+      "index_path": "storage/sources/wikipedia-statistical-software/index.json",
+      "entry_prefix": null,
+      "entry_count": 58,
+      "description": "Wikipedia Statistical Software category articles with enrichment",
+      "supplementary": [
+        "storage/sources/wikipedia-statistical-software/links-index.json",
+        "storage/sources/wikipedia-statistical-software/categories.json"
+      ]
+    }
+  },
+  "schema_spec": "storage/INDEX_SCHEMA.md",
+  "taxonomy": "storage/taxonomy.json",
+  "navigation_guide": {
+    "find_by_id": "Determine prefix (KB/SCR/SRC/TOOL/TEAM/SOP), look up domain, read that index",
+    "find_by_topic": "Check taxonomy.json for canonical tag, then search by_tag in relevant domain indexes",
+    "find_by_category": "Check router categories, then by_category in the domain index",
+    "find_related": "Read entry's references.related_to, builds_on, uses_scripts, uses_sources",
+    "find_everything": "Iterate router.domains, read each index_path"
+  }
+}

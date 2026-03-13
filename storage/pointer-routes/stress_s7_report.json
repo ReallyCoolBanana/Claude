@@ -1,0 +1,4491 @@
+{
+  "report": "stress_s7_src_accessibility",
+  "team": "Stress Team S7",
+  "generated": "2026-03-12T22:52:28.649303Z",
+  "summary": {
+    "description": "Deep testing of data source (SRC) accessibility from SOPs in the pointer network",
+    "network_size": {
+      "sop_nodes": 22,
+      "src_nodes": 48,
+      "scr_nodes": 57,
+      "total_sop_src_pairs": 1056
+    },
+    "key_findings": [
+      "Post-repair 3-hop SOP-to-SRC reachability is 61.7%, up from run-002's 36.4% (+25.3pp)",
+      "Without SCR->SRC repair links, baseline would be 43.2% \u2014 repairs contributed +18.5pp",
+      "100% of SOP-SRC pairs are reachable (unlimited hops), but only 61.7% within 3 hops",
+      "47/48 SRC nodes are well-connected (reachable from 5+ SOPs within 3 hops); 1 moderate, 0 isolated",
+      "Network is gateway-dependent: top 3 SCR gateways handle 43.3% of all SOP-SRC bridging",
+      "SCR-0007 is the most critical single point of failure \u2014 removing it breaks 32 SOP-SRC 3-hop paths"
+    ]
+  },
+  "task_1_src_reverse_reachability": {
+    "description": "For each SRC, how many SOPs can reach it within 3 hops",
+    "categories": {
+      "well_connected_5plus": {
+        "count": 47,
+        "nodes": [
+          "SRC-0001",
+          "SRC-0002",
+          "SRC-0003",
+          "SRC-0004",
+          "SRC-0005",
+          "SRC-0006",
+          "SRC-0007",
+          "SRC-0008",
+          "SRC-0012",
+          "SRC-0013",
+          "SRC-0014",
+          "SRC-0015",
+          "SRC-0017",
+          "SRC-0018",
+          "SRC-0019",
+          "SRC-0020",
+          "SRC-0021",
+          "SRC-0022",
+          "SRC-0023",
+          "SRC-0024",
+          "SRC-0025",
+          "SRC-0026",
+          "SRC-0027",
+          "SRC-0028",
+          "SRC-0029",
+          "SRC-0030",
+          "SRC-0031",
+          "SRC-0032",
+          "SRC-0033",
+          "SRC-0034",
+          "SRC-0035",
+          "SRC-0036",
+          "SRC-0037",
+          "SRC-0038",
+          "SRC-0039",
+          "SRC-0040",
+          "SRC-0041",
+          "SRC-0042",
+          "SRC-0043",
+          "SRC-0044",
+          "SRC-0045",
+          "SRC-0046",
+          "SRC-0047",
+          "SRC-0048",
+          "SRC-0049",
+          "SRC-0050",
+          "SRC-0051"
+        ]
+      },
+      "moderate_2to4": {
+        "count": 1,
+        "nodes": [
+          "SRC-0016"
+        ]
+      },
+      "isolated_0to1": {
+        "count": 0,
+        "nodes": []
+      }
+    },
+    "per_src_detail": {
+      "SRC-0001": {
+        "reachable_from_sops": 22,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-011",
+            3
+          ],
+          [
+            "SOP-012",
+            3
+          ],
+          [
+            "SOP-013",
+            3
+          ],
+          [
+            "SOP-014",
+            3
+          ],
+          [
+            "SOP-015",
+            2
+          ],
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            2
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-019",
+            3
+          ],
+          [
+            "SOP-020",
+            2
+          ],
+          [
+            "SOP-021",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            2
+          ],
+          [
+            "SOP-025",
+            2
+          ],
+          [
+            "SOP-026",
+            2
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            2
+          ],
+          [
+            "SOP-029",
+            3
+          ],
+          [
+            "SOP-G01",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ],
+          [
+            "SOP-G03",
+            3
+          ]
+        ]
+      },
+      "SRC-0002": {
+        "reachable_from_sops": 22,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-011",
+            3
+          ],
+          [
+            "SOP-012",
+            3
+          ],
+          [
+            "SOP-013",
+            3
+          ],
+          [
+            "SOP-014",
+            3
+          ],
+          [
+            "SOP-015",
+            2
+          ],
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            2
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-019",
+            3
+          ],
+          [
+            "SOP-020",
+            2
+          ],
+          [
+            "SOP-021",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            2
+          ],
+          [
+            "SOP-025",
+            2
+          ],
+          [
+            "SOP-026",
+            2
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            2
+          ],
+          [
+            "SOP-029",
+            3
+          ],
+          [
+            "SOP-G01",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ],
+          [
+            "SOP-G03",
+            3
+          ]
+        ]
+      },
+      "SRC-0003": {
+        "reachable_from_sops": 22,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-011",
+            3
+          ],
+          [
+            "SOP-012",
+            3
+          ],
+          [
+            "SOP-013",
+            3
+          ],
+          [
+            "SOP-014",
+            3
+          ],
+          [
+            "SOP-015",
+            2
+          ],
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            2
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-019",
+            3
+          ],
+          [
+            "SOP-020",
+            2
+          ],
+          [
+            "SOP-021",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            2
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            2
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            2
+          ],
+          [
+            "SOP-029",
+            3
+          ],
+          [
+            "SOP-G01",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ],
+          [
+            "SOP-G03",
+            3
+          ]
+        ]
+      },
+      "SRC-0004": {
+        "reachable_from_sops": 19,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-011",
+            3
+          ],
+          [
+            "SOP-012",
+            3
+          ],
+          [
+            "SOP-014",
+            3
+          ],
+          [
+            "SOP-015",
+            2
+          ],
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            2
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-019",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            2
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            2
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-029",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ],
+          [
+            "SOP-G03",
+            3
+          ]
+        ]
+      },
+      "SRC-0005": {
+        "reachable_from_sops": 21,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-011",
+            3
+          ],
+          [
+            "SOP-012",
+            3
+          ],
+          [
+            "SOP-013",
+            3
+          ],
+          [
+            "SOP-014",
+            3
+          ],
+          [
+            "SOP-015",
+            3
+          ],
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            2
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-019",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-021",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            2
+          ],
+          [
+            "SOP-025",
+            2
+          ],
+          [
+            "SOP-026",
+            1
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-029",
+            3
+          ],
+          [
+            "SOP-G01",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ]
+        ]
+      },
+      "SRC-0006": {
+        "reachable_from_sops": 22,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-011",
+            3
+          ],
+          [
+            "SOP-012",
+            3
+          ],
+          [
+            "SOP-013",
+            3
+          ],
+          [
+            "SOP-014",
+            3
+          ],
+          [
+            "SOP-015",
+            2
+          ],
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            2
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-019",
+            2
+          ],
+          [
+            "SOP-020",
+            2
+          ],
+          [
+            "SOP-021",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            2
+          ],
+          [
+            "SOP-025",
+            2
+          ],
+          [
+            "SOP-026",
+            2
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            2
+          ],
+          [
+            "SOP-029",
+            2
+          ],
+          [
+            "SOP-G01",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ],
+          [
+            "SOP-G03",
+            2
+          ]
+        ]
+      },
+      "SRC-0007": {
+        "reachable_from_sops": 11,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-017",
+            2
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            2
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            2
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-029",
+            3
+          ]
+        ]
+      },
+      "SRC-0008": {
+        "reachable_from_sops": 13,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            2
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            2
+          ],
+          [
+            "SOP-025",
+            2
+          ],
+          [
+            "SOP-026",
+            1
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-029",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ]
+        ]
+      },
+      "SRC-0012": {
+        "reachable_from_sops": 11,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-017",
+            2
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            2
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            2
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-029",
+            3
+          ]
+        ]
+      },
+      "SRC-0013": {
+        "reachable_from_sops": 18,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-014",
+            3
+          ],
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            2
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-019",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-021",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            2
+          ],
+          [
+            "SOP-025",
+            2
+          ],
+          [
+            "SOP-026",
+            2
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-029",
+            3
+          ],
+          [
+            "SOP-G01",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ],
+          [
+            "SOP-G03",
+            3
+          ]
+        ]
+      },
+      "SRC-0014": {
+        "reachable_from_sops": 11,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-017",
+            2
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            2
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            2
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-029",
+            3
+          ]
+        ]
+      },
+      "SRC-0015": {
+        "reachable_from_sops": 10,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ]
+        ]
+      },
+      "SRC-0016": {
+        "reachable_from_sops": 2,
+        "category": "moderate",
+        "sops_with_distances": [
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ]
+        ]
+      },
+      "SRC-0017": {
+        "reachable_from_sops": 22,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-011",
+            3
+          ],
+          [
+            "SOP-012",
+            3
+          ],
+          [
+            "SOP-013",
+            3
+          ],
+          [
+            "SOP-014",
+            3
+          ],
+          [
+            "SOP-015",
+            3
+          ],
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            2
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-019",
+            2
+          ],
+          [
+            "SOP-020",
+            2
+          ],
+          [
+            "SOP-021",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            2
+          ],
+          [
+            "SOP-025",
+            2
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-029",
+            3
+          ],
+          [
+            "SOP-G01",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ],
+          [
+            "SOP-G03",
+            2
+          ]
+        ]
+      },
+      "SRC-0018": {
+        "reachable_from_sops": 10,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ]
+        ]
+      },
+      "SRC-0019": {
+        "reachable_from_sops": 10,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ]
+        ]
+      },
+      "SRC-0020": {
+        "reachable_from_sops": 10,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ]
+        ]
+      },
+      "SRC-0021": {
+        "reachable_from_sops": 10,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ]
+        ]
+      },
+      "SRC-0022": {
+        "reachable_from_sops": 9,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ]
+        ]
+      },
+      "SRC-0023": {
+        "reachable_from_sops": 10,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ]
+        ]
+      },
+      "SRC-0024": {
+        "reachable_from_sops": 10,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ]
+        ]
+      },
+      "SRC-0025": {
+        "reachable_from_sops": 22,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-011",
+            3
+          ],
+          [
+            "SOP-012",
+            3
+          ],
+          [
+            "SOP-013",
+            3
+          ],
+          [
+            "SOP-014",
+            3
+          ],
+          [
+            "SOP-015",
+            2
+          ],
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            2
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-019",
+            2
+          ],
+          [
+            "SOP-020",
+            2
+          ],
+          [
+            "SOP-021",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            2
+          ],
+          [
+            "SOP-025",
+            2
+          ],
+          [
+            "SOP-026",
+            2
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            2
+          ],
+          [
+            "SOP-029",
+            3
+          ],
+          [
+            "SOP-G01",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ],
+          [
+            "SOP-G03",
+            2
+          ]
+        ]
+      },
+      "SRC-0026": {
+        "reachable_from_sops": 21,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-011",
+            3
+          ],
+          [
+            "SOP-012",
+            3
+          ],
+          [
+            "SOP-014",
+            3
+          ],
+          [
+            "SOP-015",
+            2
+          ],
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-019",
+            3
+          ],
+          [
+            "SOP-020",
+            2
+          ],
+          [
+            "SOP-021",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            2
+          ],
+          [
+            "SOP-025",
+            2
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            2
+          ],
+          [
+            "SOP-029",
+            3
+          ],
+          [
+            "SOP-G01",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ],
+          [
+            "SOP-G03",
+            3
+          ]
+        ]
+      },
+      "SRC-0027": {
+        "reachable_from_sops": 9,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ]
+        ]
+      },
+      "SRC-0028": {
+        "reachable_from_sops": 9,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ]
+        ]
+      },
+      "SRC-0029": {
+        "reachable_from_sops": 17,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-014",
+            3
+          ],
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            2
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-019",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-021",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            2
+          ],
+          [
+            "SOP-026",
+            2
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-G01",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ],
+          [
+            "SOP-G03",
+            3
+          ]
+        ]
+      },
+      "SRC-0030": {
+        "reachable_from_sops": 20,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-011",
+            3
+          ],
+          [
+            "SOP-012",
+            3
+          ],
+          [
+            "SOP-014",
+            3
+          ],
+          [
+            "SOP-015",
+            3
+          ],
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            2
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-019",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-021",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            2
+          ],
+          [
+            "SOP-026",
+            2
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-G01",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ],
+          [
+            "SOP-G03",
+            2
+          ]
+        ]
+      },
+      "SRC-0031": {
+        "reachable_from_sops": 9,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ]
+        ]
+      },
+      "SRC-0032": {
+        "reachable_from_sops": 12,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-022",
+            3
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ]
+        ]
+      },
+      "SRC-0033": {
+        "reachable_from_sops": 22,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-011",
+            2
+          ],
+          [
+            "SOP-012",
+            3
+          ],
+          [
+            "SOP-013",
+            2
+          ],
+          [
+            "SOP-014",
+            3
+          ],
+          [
+            "SOP-015",
+            3
+          ],
+          [
+            "SOP-016",
+            2
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-019",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-021",
+            3
+          ],
+          [
+            "SOP-022",
+            2
+          ],
+          [
+            "SOP-023",
+            2
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-029",
+            3
+          ],
+          [
+            "SOP-G01",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ],
+          [
+            "SOP-G03",
+            3
+          ]
+        ]
+      },
+      "SRC-0034": {
+        "reachable_from_sops": 15,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-013",
+            3
+          ],
+          [
+            "SOP-014",
+            3
+          ],
+          [
+            "SOP-015",
+            3
+          ],
+          [
+            "SOP-016",
+            2
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            2
+          ],
+          [
+            "SOP-025",
+            2
+          ],
+          [
+            "SOP-026",
+            2
+          ],
+          [
+            "SOP-027",
+            2
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-029",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ]
+        ]
+      },
+      "SRC-0035": {
+        "reachable_from_sops": 22,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-011",
+            2
+          ],
+          [
+            "SOP-012",
+            2
+          ],
+          [
+            "SOP-013",
+            2
+          ],
+          [
+            "SOP-014",
+            2
+          ],
+          [
+            "SOP-015",
+            2
+          ],
+          [
+            "SOP-016",
+            2
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-019",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-021",
+            2
+          ],
+          [
+            "SOP-022",
+            2
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-029",
+            2
+          ],
+          [
+            "SOP-G01",
+            2
+          ],
+          [
+            "SOP-G02",
+            2
+          ],
+          [
+            "SOP-G03",
+            2
+          ]
+        ]
+      },
+      "SRC-0036": {
+        "reachable_from_sops": 13,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-019",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-021",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ]
+        ]
+      },
+      "SRC-0037": {
+        "reachable_from_sops": 13,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-019",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-021",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-G02",
+            3
+          ]
+        ]
+      },
+      "SRC-0038": {
+        "reachable_from_sops": 9,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            2
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ]
+        ]
+      },
+      "SRC-0039": {
+        "reachable_from_sops": 10,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ]
+        ]
+      },
+      "SRC-0040": {
+        "reachable_from_sops": 9,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            2
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ]
+        ]
+      },
+      "SRC-0041": {
+        "reachable_from_sops": 9,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ]
+        ]
+      },
+      "SRC-0042": {
+        "reachable_from_sops": 9,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ]
+        ]
+      },
+      "SRC-0043": {
+        "reachable_from_sops": 9,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ]
+        ]
+      },
+      "SRC-0044": {
+        "reachable_from_sops": 9,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-016",
+            3
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ]
+        ]
+      },
+      "SRC-0045": {
+        "reachable_from_sops": 9,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ]
+        ]
+      },
+      "SRC-0046": {
+        "reachable_from_sops": 9,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ]
+        ]
+      },
+      "SRC-0047": {
+        "reachable_from_sops": 9,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ]
+        ]
+      },
+      "SRC-0048": {
+        "reachable_from_sops": 9,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ]
+        ]
+      },
+      "SRC-0049": {
+        "reachable_from_sops": 9,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ]
+        ]
+      },
+      "SRC-0050": {
+        "reachable_from_sops": 22,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-011",
+            2
+          ],
+          [
+            "SOP-012",
+            2
+          ],
+          [
+            "SOP-013",
+            2
+          ],
+          [
+            "SOP-014",
+            2
+          ],
+          [
+            "SOP-015",
+            2
+          ],
+          [
+            "SOP-016",
+            2
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-019",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-021",
+            2
+          ],
+          [
+            "SOP-022",
+            2
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-029",
+            2
+          ],
+          [
+            "SOP-G01",
+            2
+          ],
+          [
+            "SOP-G02",
+            2
+          ],
+          [
+            "SOP-G03",
+            2
+          ]
+        ]
+      },
+      "SRC-0051": {
+        "reachable_from_sops": 22,
+        "category": "well-connected",
+        "sops_with_distances": [
+          [
+            "SOP-011",
+            2
+          ],
+          [
+            "SOP-012",
+            2
+          ],
+          [
+            "SOP-013",
+            2
+          ],
+          [
+            "SOP-014",
+            2
+          ],
+          [
+            "SOP-015",
+            2
+          ],
+          [
+            "SOP-016",
+            2
+          ],
+          [
+            "SOP-017",
+            3
+          ],
+          [
+            "SOP-018",
+            3
+          ],
+          [
+            "SOP-019",
+            2
+          ],
+          [
+            "SOP-020",
+            3
+          ],
+          [
+            "SOP-021",
+            2
+          ],
+          [
+            "SOP-022",
+            2
+          ],
+          [
+            "SOP-023",
+            3
+          ],
+          [
+            "SOP-024",
+            3
+          ],
+          [
+            "SOP-025",
+            3
+          ],
+          [
+            "SOP-026",
+            3
+          ],
+          [
+            "SOP-027",
+            3
+          ],
+          [
+            "SOP-028",
+            3
+          ],
+          [
+            "SOP-029",
+            2
+          ],
+          [
+            "SOP-G01",
+            2
+          ],
+          [
+            "SOP-G02",
+            2
+          ],
+          [
+            "SOP-G03",
+            2
+          ]
+        ]
+      }
+    }
+  },
+  "task_2_distance_matrix": {
+    "description": "Shortest path distance from each SOP to each SRC (22x48 matrix)",
+    "overall_reachability": {
+      "reachable_pairs": 1056,
+      "total_pairs": 1056,
+      "reachability_pct": 100.0
+    },
+    "distance_distribution": {
+      "3": 458,
+      "4": 394,
+      "5": 10,
+      "2": 192,
+      "1": 2
+    },
+    "per_sop_reachability": {
+      "SOP-011": 48,
+      "SOP-012": 48,
+      "SOP-013": 48,
+      "SOP-014": 48,
+      "SOP-015": 48,
+      "SOP-016": 48,
+      "SOP-017": 48,
+      "SOP-018": 48,
+      "SOP-019": 48,
+      "SOP-020": 48,
+      "SOP-021": 48,
+      "SOP-022": 48,
+      "SOP-023": 48,
+      "SOP-024": 48,
+      "SOP-025": 48,
+      "SOP-026": 48,
+      "SOP-027": 48,
+      "SOP-028": 48,
+      "SOP-029": 48,
+      "SOP-G01": 48,
+      "SOP-G02": 48,
+      "SOP-G03": 48
+    },
+    "matrix": {
+      "SOP-011": {
+        "SRC-0001": 3,
+        "SRC-0002": 3,
+        "SRC-0003": 3,
+        "SRC-0004": 3,
+        "SRC-0005": 3,
+        "SRC-0006": 3,
+        "SRC-0007": 4,
+        "SRC-0008": 4,
+        "SRC-0012": 4,
+        "SRC-0013": 4,
+        "SRC-0014": 4,
+        "SRC-0015": 4,
+        "SRC-0016": 5,
+        "SRC-0017": 3,
+        "SRC-0018": 4,
+        "SRC-0019": 4,
+        "SRC-0020": 4,
+        "SRC-0021": 4,
+        "SRC-0022": 4,
+        "SRC-0023": 4,
+        "SRC-0024": 4,
+        "SRC-0025": 3,
+        "SRC-0026": 3,
+        "SRC-0027": 4,
+        "SRC-0028": 4,
+        "SRC-0029": 4,
+        "SRC-0030": 3,
+        "SRC-0031": 4,
+        "SRC-0032": 4,
+        "SRC-0033": 2,
+        "SRC-0034": 4,
+        "SRC-0035": 2,
+        "SRC-0036": 4,
+        "SRC-0037": 4,
+        "SRC-0038": 4,
+        "SRC-0039": 4,
+        "SRC-0040": 4,
+        "SRC-0041": 4,
+        "SRC-0042": 4,
+        "SRC-0043": 4,
+        "SRC-0044": 4,
+        "SRC-0045": 4,
+        "SRC-0046": 4,
+        "SRC-0047": 4,
+        "SRC-0048": 4,
+        "SRC-0049": 4,
+        "SRC-0050": 2,
+        "SRC-0051": 2
+      },
+      "SOP-012": {
+        "SRC-0001": 3,
+        "SRC-0002": 3,
+        "SRC-0003": 3,
+        "SRC-0004": 3,
+        "SRC-0005": 3,
+        "SRC-0006": 3,
+        "SRC-0007": 4,
+        "SRC-0008": 4,
+        "SRC-0012": 4,
+        "SRC-0013": 4,
+        "SRC-0014": 4,
+        "SRC-0015": 4,
+        "SRC-0016": 5,
+        "SRC-0017": 3,
+        "SRC-0018": 4,
+        "SRC-0019": 4,
+        "SRC-0020": 4,
+        "SRC-0021": 4,
+        "SRC-0022": 4,
+        "SRC-0023": 4,
+        "SRC-0024": 4,
+        "SRC-0025": 3,
+        "SRC-0026": 3,
+        "SRC-0027": 4,
+        "SRC-0028": 4,
+        "SRC-0029": 4,
+        "SRC-0030": 3,
+        "SRC-0031": 4,
+        "SRC-0032": 4,
+        "SRC-0033": 3,
+        "SRC-0034": 4,
+        "SRC-0035": 2,
+        "SRC-0036": 4,
+        "SRC-0037": 4,
+        "SRC-0038": 4,
+        "SRC-0039": 4,
+        "SRC-0040": 4,
+        "SRC-0041": 4,
+        "SRC-0042": 4,
+        "SRC-0043": 4,
+        "SRC-0044": 4,
+        "SRC-0045": 4,
+        "SRC-0046": 4,
+        "SRC-0047": 4,
+        "SRC-0048": 4,
+        "SRC-0049": 4,
+        "SRC-0050": 2,
+        "SRC-0051": 2
+      },
+      "SOP-013": {
+        "SRC-0001": 3,
+        "SRC-0002": 3,
+        "SRC-0003": 3,
+        "SRC-0004": 4,
+        "SRC-0005": 3,
+        "SRC-0006": 3,
+        "SRC-0007": 4,
+        "SRC-0008": 4,
+        "SRC-0012": 4,
+        "SRC-0013": 4,
+        "SRC-0014": 4,
+        "SRC-0015": 4,
+        "SRC-0016": 5,
+        "SRC-0017": 3,
+        "SRC-0018": 4,
+        "SRC-0019": 4,
+        "SRC-0020": 4,
+        "SRC-0021": 4,
+        "SRC-0022": 4,
+        "SRC-0023": 4,
+        "SRC-0024": 4,
+        "SRC-0025": 3,
+        "SRC-0026": 4,
+        "SRC-0027": 4,
+        "SRC-0028": 4,
+        "SRC-0029": 4,
+        "SRC-0030": 4,
+        "SRC-0031": 4,
+        "SRC-0032": 4,
+        "SRC-0033": 2,
+        "SRC-0034": 3,
+        "SRC-0035": 2,
+        "SRC-0036": 4,
+        "SRC-0037": 4,
+        "SRC-0038": 4,
+        "SRC-0039": 4,
+        "SRC-0040": 4,
+        "SRC-0041": 4,
+        "SRC-0042": 4,
+        "SRC-0043": 4,
+        "SRC-0044": 4,
+        "SRC-0045": 4,
+        "SRC-0046": 4,
+        "SRC-0047": 4,
+        "SRC-0048": 4,
+        "SRC-0049": 4,
+        "SRC-0050": 2,
+        "SRC-0051": 2
+      },
+      "SOP-014": {
+        "SRC-0001": 3,
+        "SRC-0002": 3,
+        "SRC-0003": 3,
+        "SRC-0004": 3,
+        "SRC-0005": 3,
+        "SRC-0006": 3,
+        "SRC-0007": 4,
+        "SRC-0008": 4,
+        "SRC-0012": 4,
+        "SRC-0013": 3,
+        "SRC-0014": 4,
+        "SRC-0015": 4,
+        "SRC-0016": 5,
+        "SRC-0017": 3,
+        "SRC-0018": 4,
+        "SRC-0019": 4,
+        "SRC-0020": 4,
+        "SRC-0021": 4,
+        "SRC-0022": 4,
+        "SRC-0023": 4,
+        "SRC-0024": 4,
+        "SRC-0025": 3,
+        "SRC-0026": 3,
+        "SRC-0027": 4,
+        "SRC-0028": 4,
+        "SRC-0029": 3,
+        "SRC-0030": 3,
+        "SRC-0031": 4,
+        "SRC-0032": 4,
+        "SRC-0033": 3,
+        "SRC-0034": 3,
+        "SRC-0035": 2,
+        "SRC-0036": 4,
+        "SRC-0037": 4,
+        "SRC-0038": 4,
+        "SRC-0039": 4,
+        "SRC-0040": 4,
+        "SRC-0041": 4,
+        "SRC-0042": 4,
+        "SRC-0043": 4,
+        "SRC-0044": 4,
+        "SRC-0045": 4,
+        "SRC-0046": 4,
+        "SRC-0047": 4,
+        "SRC-0048": 4,
+        "SRC-0049": 4,
+        "SRC-0050": 2,
+        "SRC-0051": 2
+      },
+      "SOP-015": {
+        "SRC-0001": 2,
+        "SRC-0002": 2,
+        "SRC-0003": 2,
+        "SRC-0004": 2,
+        "SRC-0005": 3,
+        "SRC-0006": 2,
+        "SRC-0007": 4,
+        "SRC-0008": 4,
+        "SRC-0012": 4,
+        "SRC-0013": 4,
+        "SRC-0014": 4,
+        "SRC-0015": 4,
+        "SRC-0016": 4,
+        "SRC-0017": 3,
+        "SRC-0018": 4,
+        "SRC-0019": 4,
+        "SRC-0020": 4,
+        "SRC-0021": 4,
+        "SRC-0022": 4,
+        "SRC-0023": 4,
+        "SRC-0024": 4,
+        "SRC-0025": 2,
+        "SRC-0026": 2,
+        "SRC-0027": 4,
+        "SRC-0028": 4,
+        "SRC-0029": 4,
+        "SRC-0030": 3,
+        "SRC-0031": 4,
+        "SRC-0032": 4,
+        "SRC-0033": 3,
+        "SRC-0034": 3,
+        "SRC-0035": 2,
+        "SRC-0036": 4,
+        "SRC-0037": 4,
+        "SRC-0038": 4,
+        "SRC-0039": 4,
+        "SRC-0040": 4,
+        "SRC-0041": 4,
+        "SRC-0042": 4,
+        "SRC-0043": 4,
+        "SRC-0044": 4,
+        "SRC-0045": 4,
+        "SRC-0046": 4,
+        "SRC-0047": 4,
+        "SRC-0048": 4,
+        "SRC-0049": 4,
+        "SRC-0050": 2,
+        "SRC-0051": 2
+      },
+      "SOP-016": {
+        "SRC-0001": 3,
+        "SRC-0002": 3,
+        "SRC-0003": 3,
+        "SRC-0004": 3,
+        "SRC-0005": 3,
+        "SRC-0006": 3,
+        "SRC-0007": 4,
+        "SRC-0008": 3,
+        "SRC-0012": 4,
+        "SRC-0013": 3,
+        "SRC-0014": 4,
+        "SRC-0015": 3,
+        "SRC-0016": 5,
+        "SRC-0017": 3,
+        "SRC-0018": 3,
+        "SRC-0019": 3,
+        "SRC-0020": 3,
+        "SRC-0021": 3,
+        "SRC-0022": 3,
+        "SRC-0023": 3,
+        "SRC-0024": 3,
+        "SRC-0025": 3,
+        "SRC-0026": 3,
+        "SRC-0027": 3,
+        "SRC-0028": 3,
+        "SRC-0029": 3,
+        "SRC-0030": 3,
+        "SRC-0031": 3,
+        "SRC-0032": 3,
+        "SRC-0033": 2,
+        "SRC-0034": 2,
+        "SRC-0035": 2,
+        "SRC-0036": 3,
+        "SRC-0037": 3,
+        "SRC-0038": 3,
+        "SRC-0039": 3,
+        "SRC-0040": 3,
+        "SRC-0041": 3,
+        "SRC-0042": 3,
+        "SRC-0043": 3,
+        "SRC-0044": 3,
+        "SRC-0045": 4,
+        "SRC-0046": 4,
+        "SRC-0047": 4,
+        "SRC-0048": 4,
+        "SRC-0049": 4,
+        "SRC-0050": 2,
+        "SRC-0051": 2
+      },
+      "SOP-017": {
+        "SRC-0001": 2,
+        "SRC-0002": 2,
+        "SRC-0003": 2,
+        "SRC-0004": 2,
+        "SRC-0005": 2,
+        "SRC-0006": 2,
+        "SRC-0007": 2,
+        "SRC-0008": 2,
+        "SRC-0012": 2,
+        "SRC-0013": 2,
+        "SRC-0014": 2,
+        "SRC-0015": 3,
+        "SRC-0016": 4,
+        "SRC-0017": 2,
+        "SRC-0018": 3,
+        "SRC-0019": 3,
+        "SRC-0020": 3,
+        "SRC-0021": 3,
+        "SRC-0022": 3,
+        "SRC-0023": 3,
+        "SRC-0024": 3,
+        "SRC-0025": 2,
+        "SRC-0026": 3,
+        "SRC-0027": 3,
+        "SRC-0028": 3,
+        "SRC-0029": 2,
+        "SRC-0030": 2,
+        "SRC-0031": 3,
+        "SRC-0032": 3,
+        "SRC-0033": 3,
+        "SRC-0034": 3,
+        "SRC-0035": 3,
+        "SRC-0036": 3,
+        "SRC-0037": 3,
+        "SRC-0038": 3,
+        "SRC-0039": 3,
+        "SRC-0040": 3,
+        "SRC-0041": 3,
+        "SRC-0042": 3,
+        "SRC-0043": 3,
+        "SRC-0044": 3,
+        "SRC-0045": 3,
+        "SRC-0046": 3,
+        "SRC-0047": 3,
+        "SRC-0048": 3,
+        "SRC-0049": 3,
+        "SRC-0050": 3,
+        "SRC-0051": 3
+      },
+      "SOP-018": {
+        "SRC-0001": 2,
+        "SRC-0002": 2,
+        "SRC-0003": 2,
+        "SRC-0004": 2,
+        "SRC-0005": 2,
+        "SRC-0006": 2,
+        "SRC-0007": 2,
+        "SRC-0008": 2,
+        "SRC-0012": 2,
+        "SRC-0013": 2,
+        "SRC-0014": 2,
+        "SRC-0015": 3,
+        "SRC-0016": 4,
+        "SRC-0017": 2,
+        "SRC-0018": 2,
+        "SRC-0019": 2,
+        "SRC-0020": 2,
+        "SRC-0021": 2,
+        "SRC-0022": 3,
+        "SRC-0023": 2,
+        "SRC-0024": 2,
+        "SRC-0025": 3,
+        "SRC-0026": 3,
+        "SRC-0027": 3,
+        "SRC-0028": 3,
+        "SRC-0029": 2,
+        "SRC-0030": 2,
+        "SRC-0031": 3,
+        "SRC-0032": 3,
+        "SRC-0033": 3,
+        "SRC-0034": 2,
+        "SRC-0035": 3,
+        "SRC-0036": 3,
+        "SRC-0037": 3,
+        "SRC-0038": 2,
+        "SRC-0039": 2,
+        "SRC-0040": 2,
+        "SRC-0041": 3,
+        "SRC-0042": 3,
+        "SRC-0043": 3,
+        "SRC-0044": 3,
+        "SRC-0045": 2,
+        "SRC-0046": 2,
+        "SRC-0047": 2,
+        "SRC-0048": 2,
+        "SRC-0049": 2,
+        "SRC-0050": 3,
+        "SRC-0051": 3
+      },
+      "SOP-019": {
+        "SRC-0001": 3,
+        "SRC-0002": 3,
+        "SRC-0003": 3,
+        "SRC-0004": 3,
+        "SRC-0005": 3,
+        "SRC-0006": 2,
+        "SRC-0007": 4,
+        "SRC-0008": 4,
+        "SRC-0012": 4,
+        "SRC-0013": 3,
+        "SRC-0014": 4,
+        "SRC-0015": 4,
+        "SRC-0016": 5,
+        "SRC-0017": 2,
+        "SRC-0018": 4,
+        "SRC-0019": 4,
+        "SRC-0020": 4,
+        "SRC-0021": 4,
+        "SRC-0022": 4,
+        "SRC-0023": 4,
+        "SRC-0024": 4,
+        "SRC-0025": 2,
+        "SRC-0026": 3,
+        "SRC-0027": 4,
+        "SRC-0028": 4,
+        "SRC-0029": 3,
+        "SRC-0030": 3,
+        "SRC-0031": 4,
+        "SRC-0032": 4,
+        "SRC-0033": 3,
+        "SRC-0034": 4,
+        "SRC-0035": 2,
+        "SRC-0036": 3,
+        "SRC-0037": 3,
+        "SRC-0038": 4,
+        "SRC-0039": 4,
+        "SRC-0040": 4,
+        "SRC-0041": 4,
+        "SRC-0042": 4,
+        "SRC-0043": 4,
+        "SRC-0044": 4,
+        "SRC-0045": 4,
+        "SRC-0046": 4,
+        "SRC-0047": 4,
+        "SRC-0048": 4,
+        "SRC-0049": 4,
+        "SRC-0050": 2,
+        "SRC-0051": 2
+      },
+      "SOP-020": {
+        "SRC-0001": 2,
+        "SRC-0002": 2,
+        "SRC-0003": 2,
+        "SRC-0004": 3,
+        "SRC-0005": 3,
+        "SRC-0006": 2,
+        "SRC-0007": 3,
+        "SRC-0008": 3,
+        "SRC-0012": 3,
+        "SRC-0013": 3,
+        "SRC-0014": 3,
+        "SRC-0015": 3,
+        "SRC-0016": 4,
+        "SRC-0017": 2,
+        "SRC-0018": 3,
+        "SRC-0019": 3,
+        "SRC-0020": 3,
+        "SRC-0021": 3,
+        "SRC-0022": 3,
+        "SRC-0023": 3,
+        "SRC-0024": 3,
+        "SRC-0025": 2,
+        "SRC-0026": 2,
+        "SRC-0027": 3,
+        "SRC-0028": 3,
+        "SRC-0029": 3,
+        "SRC-0030": 3,
+        "SRC-0031": 3,
+        "SRC-0032": 3,
+        "SRC-0033": 3,
+        "SRC-0034": 3,
+        "SRC-0035": 3,
+        "SRC-0036": 3,
+        "SRC-0037": 3,
+        "SRC-0038": 2,
+        "SRC-0039": 3,
+        "SRC-0040": 2,
+        "SRC-0041": 3,
+        "SRC-0042": 3,
+        "SRC-0043": 3,
+        "SRC-0044": 3,
+        "SRC-0045": 3,
+        "SRC-0046": 3,
+        "SRC-0047": 3,
+        "SRC-0048": 3,
+        "SRC-0049": 3,
+        "SRC-0050": 3,
+        "SRC-0051": 3
+      },
+      "SOP-021": {
+        "SRC-0001": 3,
+        "SRC-0002": 3,
+        "SRC-0003": 3,
+        "SRC-0004": 4,
+        "SRC-0005": 3,
+        "SRC-0006": 3,
+        "SRC-0007": 4,
+        "SRC-0008": 4,
+        "SRC-0012": 4,
+        "SRC-0013": 3,
+        "SRC-0014": 4,
+        "SRC-0015": 4,
+        "SRC-0016": 5,
+        "SRC-0017": 3,
+        "SRC-0018": 4,
+        "SRC-0019": 4,
+        "SRC-0020": 4,
+        "SRC-0021": 4,
+        "SRC-0022": 4,
+        "SRC-0023": 4,
+        "SRC-0024": 4,
+        "SRC-0025": 3,
+        "SRC-0026": 3,
+        "SRC-0027": 4,
+        "SRC-0028": 4,
+        "SRC-0029": 3,
+        "SRC-0030": 3,
+        "SRC-0031": 4,
+        "SRC-0032": 4,
+        "SRC-0033": 3,
+        "SRC-0034": 4,
+        "SRC-0035": 2,
+        "SRC-0036": 3,
+        "SRC-0037": 3,
+        "SRC-0038": 4,
+        "SRC-0039": 4,
+        "SRC-0040": 4,
+        "SRC-0041": 4,
+        "SRC-0042": 4,
+        "SRC-0043": 4,
+        "SRC-0044": 4,
+        "SRC-0045": 4,
+        "SRC-0046": 4,
+        "SRC-0047": 4,
+        "SRC-0048": 4,
+        "SRC-0049": 4,
+        "SRC-0050": 2,
+        "SRC-0051": 2
+      },
+      "SOP-022": {
+        "SRC-0001": 3,
+        "SRC-0002": 3,
+        "SRC-0003": 3,
+        "SRC-0004": 3,
+        "SRC-0005": 3,
+        "SRC-0006": 3,
+        "SRC-0007": 3,
+        "SRC-0008": 3,
+        "SRC-0012": 3,
+        "SRC-0013": 3,
+        "SRC-0014": 3,
+        "SRC-0015": 4,
+        "SRC-0016": 4,
+        "SRC-0017": 3,
+        "SRC-0018": 4,
+        "SRC-0019": 4,
+        "SRC-0020": 4,
+        "SRC-0021": 4,
+        "SRC-0022": 4,
+        "SRC-0023": 4,
+        "SRC-0024": 4,
+        "SRC-0025": 3,
+        "SRC-0026": 3,
+        "SRC-0027": 4,
+        "SRC-0028": 4,
+        "SRC-0029": 3,
+        "SRC-0030": 3,
+        "SRC-0031": 4,
+        "SRC-0032": 3,
+        "SRC-0033": 2,
+        "SRC-0034": 4,
+        "SRC-0035": 2,
+        "SRC-0036": 4,
+        "SRC-0037": 4,
+        "SRC-0038": 4,
+        "SRC-0039": 4,
+        "SRC-0040": 4,
+        "SRC-0041": 4,
+        "SRC-0042": 4,
+        "SRC-0043": 4,
+        "SRC-0044": 4,
+        "SRC-0045": 4,
+        "SRC-0046": 4,
+        "SRC-0047": 4,
+        "SRC-0048": 4,
+        "SRC-0049": 4,
+        "SRC-0050": 2,
+        "SRC-0051": 2
+      },
+      "SOP-023": {
+        "SRC-0001": 2,
+        "SRC-0002": 2,
+        "SRC-0003": 2,
+        "SRC-0004": 2,
+        "SRC-0005": 2,
+        "SRC-0006": 2,
+        "SRC-0007": 2,
+        "SRC-0008": 2,
+        "SRC-0012": 2,
+        "SRC-0013": 2,
+        "SRC-0014": 2,
+        "SRC-0015": 3,
+        "SRC-0016": 3,
+        "SRC-0017": 2,
+        "SRC-0018": 3,
+        "SRC-0019": 3,
+        "SRC-0020": 3,
+        "SRC-0021": 3,
+        "SRC-0022": 3,
+        "SRC-0023": 3,
+        "SRC-0024": 3,
+        "SRC-0025": 2,
+        "SRC-0026": 2,
+        "SRC-0027": 3,
+        "SRC-0028": 3,
+        "SRC-0029": 2,
+        "SRC-0030": 2,
+        "SRC-0031": 3,
+        "SRC-0032": 2,
+        "SRC-0033": 2,
+        "SRC-0034": 3,
+        "SRC-0035": 3,
+        "SRC-0036": 3,
+        "SRC-0037": 3,
+        "SRC-0038": 3,
+        "SRC-0039": 3,
+        "SRC-0040": 3,
+        "SRC-0041": 3,
+        "SRC-0042": 3,
+        "SRC-0043": 3,
+        "SRC-0044": 3,
+        "SRC-0045": 3,
+        "SRC-0046": 3,
+        "SRC-0047": 3,
+        "SRC-0048": 3,
+        "SRC-0049": 3,
+        "SRC-0050": 3,
+        "SRC-0051": 3
+      },
+      "SOP-024": {
+        "SRC-0001": 2,
+        "SRC-0002": 2,
+        "SRC-0003": 2,
+        "SRC-0004": 2,
+        "SRC-0005": 2,
+        "SRC-0006": 2,
+        "SRC-0007": 2,
+        "SRC-0008": 2,
+        "SRC-0012": 2,
+        "SRC-0013": 2,
+        "SRC-0014": 2,
+        "SRC-0015": 3,
+        "SRC-0016": 4,
+        "SRC-0017": 2,
+        "SRC-0018": 3,
+        "SRC-0019": 3,
+        "SRC-0020": 3,
+        "SRC-0021": 3,
+        "SRC-0022": 3,
+        "SRC-0023": 3,
+        "SRC-0024": 3,
+        "SRC-0025": 2,
+        "SRC-0026": 2,
+        "SRC-0027": 3,
+        "SRC-0028": 3,
+        "SRC-0029": 3,
+        "SRC-0030": 3,
+        "SRC-0031": 3,
+        "SRC-0032": 3,
+        "SRC-0033": 3,
+        "SRC-0034": 2,
+        "SRC-0035": 3,
+        "SRC-0036": 3,
+        "SRC-0037": 3,
+        "SRC-0038": 3,
+        "SRC-0039": 3,
+        "SRC-0040": 3,
+        "SRC-0041": 3,
+        "SRC-0042": 3,
+        "SRC-0043": 3,
+        "SRC-0044": 3,
+        "SRC-0045": 3,
+        "SRC-0046": 3,
+        "SRC-0047": 3,
+        "SRC-0048": 3,
+        "SRC-0049": 3,
+        "SRC-0050": 3,
+        "SRC-0051": 3
+      },
+      "SOP-025": {
+        "SRC-0001": 2,
+        "SRC-0002": 2,
+        "SRC-0003": 3,
+        "SRC-0004": 3,
+        "SRC-0005": 2,
+        "SRC-0006": 2,
+        "SRC-0007": 3,
+        "SRC-0008": 2,
+        "SRC-0012": 3,
+        "SRC-0013": 2,
+        "SRC-0014": 3,
+        "SRC-0015": 3,
+        "SRC-0016": 4,
+        "SRC-0017": 2,
+        "SRC-0018": 3,
+        "SRC-0019": 3,
+        "SRC-0020": 3,
+        "SRC-0021": 3,
+        "SRC-0022": 3,
+        "SRC-0023": 3,
+        "SRC-0024": 3,
+        "SRC-0025": 2,
+        "SRC-0026": 2,
+        "SRC-0027": 3,
+        "SRC-0028": 3,
+        "SRC-0029": 2,
+        "SRC-0030": 2,
+        "SRC-0031": 3,
+        "SRC-0032": 3,
+        "SRC-0033": 3,
+        "SRC-0034": 2,
+        "SRC-0035": 3,
+        "SRC-0036": 3,
+        "SRC-0037": 3,
+        "SRC-0038": 3,
+        "SRC-0039": 3,
+        "SRC-0040": 3,
+        "SRC-0041": 3,
+        "SRC-0042": 3,
+        "SRC-0043": 3,
+        "SRC-0044": 3,
+        "SRC-0045": 3,
+        "SRC-0046": 3,
+        "SRC-0047": 3,
+        "SRC-0048": 3,
+        "SRC-0049": 3,
+        "SRC-0050": 3,
+        "SRC-0051": 3
+      },
+      "SOP-026": {
+        "SRC-0001": 2,
+        "SRC-0002": 2,
+        "SRC-0003": 2,
+        "SRC-0004": 2,
+        "SRC-0005": 1,
+        "SRC-0006": 2,
+        "SRC-0007": 2,
+        "SRC-0008": 1,
+        "SRC-0012": 2,
+        "SRC-0013": 2,
+        "SRC-0014": 2,
+        "SRC-0015": 3,
+        "SRC-0016": 5,
+        "SRC-0017": 3,
+        "SRC-0018": 3,
+        "SRC-0019": 3,
+        "SRC-0020": 3,
+        "SRC-0021": 3,
+        "SRC-0022": 3,
+        "SRC-0023": 3,
+        "SRC-0024": 3,
+        "SRC-0025": 2,
+        "SRC-0026": 3,
+        "SRC-0027": 3,
+        "SRC-0028": 3,
+        "SRC-0029": 2,
+        "SRC-0030": 2,
+        "SRC-0031": 3,
+        "SRC-0032": 3,
+        "SRC-0033": 3,
+        "SRC-0034": 2,
+        "SRC-0035": 3,
+        "SRC-0036": 3,
+        "SRC-0037": 3,
+        "SRC-0038": 3,
+        "SRC-0039": 3,
+        "SRC-0040": 3,
+        "SRC-0041": 3,
+        "SRC-0042": 3,
+        "SRC-0043": 3,
+        "SRC-0044": 3,
+        "SRC-0045": 3,
+        "SRC-0046": 3,
+        "SRC-0047": 3,
+        "SRC-0048": 3,
+        "SRC-0049": 3,
+        "SRC-0050": 3,
+        "SRC-0051": 3
+      },
+      "SOP-027": {
+        "SRC-0001": 2,
+        "SRC-0002": 2,
+        "SRC-0003": 2,
+        "SRC-0004": 2,
+        "SRC-0005": 2,
+        "SRC-0006": 2,
+        "SRC-0007": 2,
+        "SRC-0008": 2,
+        "SRC-0012": 2,
+        "SRC-0013": 2,
+        "SRC-0014": 2,
+        "SRC-0015": 3,
+        "SRC-0016": 4,
+        "SRC-0017": 2,
+        "SRC-0018": 3,
+        "SRC-0019": 3,
+        "SRC-0020": 3,
+        "SRC-0021": 3,
+        "SRC-0022": 3,
+        "SRC-0023": 3,
+        "SRC-0024": 3,
+        "SRC-0025": 2,
+        "SRC-0026": 3,
+        "SRC-0027": 3,
+        "SRC-0028": 3,
+        "SRC-0029": 2,
+        "SRC-0030": 2,
+        "SRC-0031": 3,
+        "SRC-0032": 3,
+        "SRC-0033": 3,
+        "SRC-0034": 2,
+        "SRC-0035": 3,
+        "SRC-0036": 3,
+        "SRC-0037": 3,
+        "SRC-0038": 3,
+        "SRC-0039": 3,
+        "SRC-0040": 3,
+        "SRC-0041": 3,
+        "SRC-0042": 3,
+        "SRC-0043": 3,
+        "SRC-0044": 3,
+        "SRC-0045": 3,
+        "SRC-0046": 3,
+        "SRC-0047": 3,
+        "SRC-0048": 3,
+        "SRC-0049": 3,
+        "SRC-0050": 3,
+        "SRC-0051": 3
+      },
+      "SOP-028": {
+        "SRC-0001": 2,
+        "SRC-0002": 2,
+        "SRC-0003": 2,
+        "SRC-0004": 3,
+        "SRC-0005": 3,
+        "SRC-0006": 2,
+        "SRC-0007": 3,
+        "SRC-0008": 3,
+        "SRC-0012": 3,
+        "SRC-0013": 3,
+        "SRC-0014": 3,
+        "SRC-0015": 3,
+        "SRC-0016": 3,
+        "SRC-0017": 3,
+        "SRC-0018": 3,
+        "SRC-0019": 3,
+        "SRC-0020": 3,
+        "SRC-0021": 3,
+        "SRC-0022": 4,
+        "SRC-0023": 3,
+        "SRC-0024": 3,
+        "SRC-0025": 2,
+        "SRC-0026": 2,
+        "SRC-0027": 4,
+        "SRC-0028": 4,
+        "SRC-0029": 3,
+        "SRC-0030": 3,
+        "SRC-0031": 4,
+        "SRC-0032": 3,
+        "SRC-0033": 3,
+        "SRC-0034": 3,
+        "SRC-0035": 3,
+        "SRC-0036": 3,
+        "SRC-0037": 3,
+        "SRC-0038": 4,
+        "SRC-0039": 3,
+        "SRC-0040": 4,
+        "SRC-0041": 4,
+        "SRC-0042": 4,
+        "SRC-0043": 4,
+        "SRC-0044": 4,
+        "SRC-0045": 3,
+        "SRC-0046": 3,
+        "SRC-0047": 3,
+        "SRC-0048": 3,
+        "SRC-0049": 3,
+        "SRC-0050": 3,
+        "SRC-0051": 3
+      },
+      "SOP-029": {
+        "SRC-0001": 3,
+        "SRC-0002": 3,
+        "SRC-0003": 3,
+        "SRC-0004": 3,
+        "SRC-0005": 3,
+        "SRC-0006": 2,
+        "SRC-0007": 3,
+        "SRC-0008": 3,
+        "SRC-0012": 3,
+        "SRC-0013": 3,
+        "SRC-0014": 3,
+        "SRC-0015": 4,
+        "SRC-0016": 4,
+        "SRC-0017": 3,
+        "SRC-0018": 4,
+        "SRC-0019": 4,
+        "SRC-0020": 4,
+        "SRC-0021": 4,
+        "SRC-0022": 4,
+        "SRC-0023": 4,
+        "SRC-0024": 4,
+        "SRC-0025": 3,
+        "SRC-0026": 3,
+        "SRC-0027": 4,
+        "SRC-0028": 4,
+        "SRC-0029": 4,
+        "SRC-0030": 4,
+        "SRC-0031": 4,
+        "SRC-0032": 4,
+        "SRC-0033": 3,
+        "SRC-0034": 3,
+        "SRC-0035": 2,
+        "SRC-0036": 4,
+        "SRC-0037": 4,
+        "SRC-0038": 4,
+        "SRC-0039": 4,
+        "SRC-0040": 4,
+        "SRC-0041": 4,
+        "SRC-0042": 4,
+        "SRC-0043": 4,
+        "SRC-0044": 4,
+        "SRC-0045": 4,
+        "SRC-0046": 4,
+        "SRC-0047": 4,
+        "SRC-0048": 4,
+        "SRC-0049": 4,
+        "SRC-0050": 2,
+        "SRC-0051": 2
+      },
+      "SOP-G01": {
+        "SRC-0001": 3,
+        "SRC-0002": 3,
+        "SRC-0003": 3,
+        "SRC-0004": 4,
+        "SRC-0005": 3,
+        "SRC-0006": 3,
+        "SRC-0007": 4,
+        "SRC-0008": 4,
+        "SRC-0012": 4,
+        "SRC-0013": 3,
+        "SRC-0014": 4,
+        "SRC-0015": 4,
+        "SRC-0016": 5,
+        "SRC-0017": 3,
+        "SRC-0018": 4,
+        "SRC-0019": 4,
+        "SRC-0020": 4,
+        "SRC-0021": 4,
+        "SRC-0022": 4,
+        "SRC-0023": 4,
+        "SRC-0024": 4,
+        "SRC-0025": 3,
+        "SRC-0026": 3,
+        "SRC-0027": 4,
+        "SRC-0028": 4,
+        "SRC-0029": 3,
+        "SRC-0030": 3,
+        "SRC-0031": 4,
+        "SRC-0032": 4,
+        "SRC-0033": 3,
+        "SRC-0034": 4,
+        "SRC-0035": 2,
+        "SRC-0036": 4,
+        "SRC-0037": 4,
+        "SRC-0038": 4,
+        "SRC-0039": 4,
+        "SRC-0040": 4,
+        "SRC-0041": 4,
+        "SRC-0042": 4,
+        "SRC-0043": 4,
+        "SRC-0044": 4,
+        "SRC-0045": 4,
+        "SRC-0046": 4,
+        "SRC-0047": 4,
+        "SRC-0048": 4,
+        "SRC-0049": 4,
+        "SRC-0050": 2,
+        "SRC-0051": 2
+      },
+      "SOP-G02": {
+        "SRC-0001": 3,
+        "SRC-0002": 3,
+        "SRC-0003": 3,
+        "SRC-0004": 3,
+        "SRC-0005": 3,
+        "SRC-0006": 3,
+        "SRC-0007": 4,
+        "SRC-0008": 3,
+        "SRC-0012": 4,
+        "SRC-0013": 3,
+        "SRC-0014": 4,
+        "SRC-0015": 4,
+        "SRC-0016": 4,
+        "SRC-0017": 3,
+        "SRC-0018": 4,
+        "SRC-0019": 4,
+        "SRC-0020": 4,
+        "SRC-0021": 4,
+        "SRC-0022": 4,
+        "SRC-0023": 4,
+        "SRC-0024": 4,
+        "SRC-0025": 3,
+        "SRC-0026": 3,
+        "SRC-0027": 4,
+        "SRC-0028": 4,
+        "SRC-0029": 3,
+        "SRC-0030": 3,
+        "SRC-0031": 4,
+        "SRC-0032": 3,
+        "SRC-0033": 3,
+        "SRC-0034": 3,
+        "SRC-0035": 2,
+        "SRC-0036": 3,
+        "SRC-0037": 3,
+        "SRC-0038": 4,
+        "SRC-0039": 4,
+        "SRC-0040": 4,
+        "SRC-0041": 4,
+        "SRC-0042": 4,
+        "SRC-0043": 4,
+        "SRC-0044": 4,
+        "SRC-0045": 4,
+        "SRC-0046": 4,
+        "SRC-0047": 4,
+        "SRC-0048": 4,
+        "SRC-0049": 4,
+        "SRC-0050": 2,
+        "SRC-0051": 2
+      },
+      "SOP-G03": {
+        "SRC-0001": 3,
+        "SRC-0002": 3,
+        "SRC-0003": 3,
+        "SRC-0004": 3,
+        "SRC-0005": 4,
+        "SRC-0006": 2,
+        "SRC-0007": 4,
+        "SRC-0008": 4,
+        "SRC-0012": 4,
+        "SRC-0013": 3,
+        "SRC-0014": 4,
+        "SRC-0015": 4,
+        "SRC-0016": 5,
+        "SRC-0017": 2,
+        "SRC-0018": 4,
+        "SRC-0019": 4,
+        "SRC-0020": 4,
+        "SRC-0021": 4,
+        "SRC-0022": 4,
+        "SRC-0023": 4,
+        "SRC-0024": 4,
+        "SRC-0025": 2,
+        "SRC-0026": 3,
+        "SRC-0027": 4,
+        "SRC-0028": 4,
+        "SRC-0029": 3,
+        "SRC-0030": 2,
+        "SRC-0031": 4,
+        "SRC-0032": 4,
+        "SRC-0033": 3,
+        "SRC-0034": 4,
+        "SRC-0035": 2,
+        "SRC-0036": 4,
+        "SRC-0037": 4,
+        "SRC-0038": 4,
+        "SRC-0039": 4,
+        "SRC-0040": 4,
+        "SRC-0041": 4,
+        "SRC-0042": 4,
+        "SRC-0043": 4,
+        "SRC-0044": 4,
+        "SRC-0045": 4,
+        "SRC-0046": 4,
+        "SRC-0047": 4,
+        "SRC-0048": 4,
+        "SRC-0049": 4,
+        "SRC-0050": 2,
+        "SRC-0051": 2
+      }
+    }
+  },
+  "task_3_post_repair_comparison": {
+    "description": "SOP-to-SRC reachability within 3 hops, before and after SCR->SRC repair links",
+    "run_002_baseline": 36.4,
+    "without_scr_src_links": 43.2,
+    "with_scr_src_links_current": 61.7,
+    "improvement_vs_run002": 25.3,
+    "repair_link_impact": 18.5,
+    "scr_to_src_links_count": 167,
+    "analysis": "The network now achieves 61.7% 3-hop SOP-to-SRC reachability, a +25.3pp improvement over run-002's 36.4%. Of this improvement, +18.5pp is directly attributable to the 167 SCR->SRC links added by R2 repairs. The remaining +6.8pp comes from other network changes."
+  },
+  "task_4_gateway_scripts": {
+    "description": "SCR nodes that serve as bridges on shortest SOP-to-SRC paths",
+    "total_gateway_scrs": 33,
+    "total_bridging_instances": 689,
+    "concentration": {
+      "top_3_gateways_pct": 43.3,
+      "top_5_gateways_pct": 56.3,
+      "assessment": "High dependency \u2014 top 3 gateways handle 43.3% of all bridging, indicating fragility"
+    },
+    "top_gateways": [
+      {
+        "scr": "SCR-0019",
+        "pairs_bridged": 101
+      },
+      {
+        "scr": "SCR-0007",
+        "pairs_bridged": 100
+      },
+      {
+        "scr": "SCR-0033",
+        "pairs_bridged": 97
+      },
+      {
+        "scr": "SCR-0023",
+        "pairs_bridged": 46
+      },
+      {
+        "scr": "SCR-0043",
+        "pairs_bridged": 44
+      },
+      {
+        "scr": "SCR-0035",
+        "pairs_bridged": 25
+      },
+      {
+        "scr": "SCR-0024",
+        "pairs_bridged": 24
+      },
+      {
+        "scr": "SCR-0029",
+        "pairs_bridged": 22
+      },
+      {
+        "scr": "SCR-0027",
+        "pairs_bridged": 21
+      },
+      {
+        "scr": "SCR-0012",
+        "pairs_bridged": 18
+      },
+      {
+        "scr": "SCR-0036",
+        "pairs_bridged": 17
+      },
+      {
+        "scr": "SCR-0034",
+        "pairs_bridged": 17
+      },
+      {
+        "scr": "SCR-0031",
+        "pairs_bridged": 15
+      },
+      {
+        "scr": "SCR-0050",
+        "pairs_bridged": 15
+      },
+      {
+        "scr": "SCR-0006",
+        "pairs_bridged": 14
+      }
+    ],
+    "critical_single_points_of_failure": [
+      {
+        "scr": "SCR-0007",
+        "pairs_broken_if_removed": 32
+      },
+      {
+        "scr": "SCR-0036",
+        "pairs_broken_if_removed": 8
+      },
+      {
+        "scr": "SCR-0042",
+        "pairs_broken_if_removed": 5
+      },
+      {
+        "scr": "SCR-0029",
+        "pairs_broken_if_removed": 4
+      },
+      {
+        "scr": "SCR-0003",
+        "pairs_broken_if_removed": 4
+      },
+      {
+        "scr": "SCR-0035",
+        "pairs_broken_if_removed": 3
+      },
+      {
+        "scr": "SCR-0034",
+        "pairs_broken_if_removed": 2
+      },
+      {
+        "scr": "SCR-0031",
+        "pairs_broken_if_removed": 2
+      },
+      {
+        "scr": "SCR-0050",
+        "pairs_broken_if_removed": 2
+      },
+      {
+        "scr": "SCR-0045",
+        "pairs_broken_if_removed": 2
+      }
+    ],
+    "recommendations": [
+      "Add redundant paths to reduce dependency on SCR-0007 (32 pairs at risk)",
+      "Create direct SOP->SRC links for the most-accessed SRC nodes",
+      "Add alternative SCR bridges for SRC-0016 (only reachable from 2 SOPs within 3 hops)"
+    ]
+  },
+  "task_5_journey_simulations": {
+    "description": "15 data-gathering journeys targeting SRC nodes, logged via route_tracker",
+    "agents_used": [
+      "s7-1",
+      "s7-2",
+      "s7-3",
+      "s7-4",
+      "s7-5"
+    ],
+    "total_journeys": 15,
+    "outcomes": {
+      "success": 8,
+      "partial": 7,
+      "failure": 0
+    },
+    "avg_hops": 3.3,
+    "journeys": [
+      {
+        "journey": 1,
+        "agent": "s7-1",
+        "source_sop": "SOP-011",
+        "target_src": "SRC-0006",
+        "path": [
+          "SOP-011",
+          "SOP-015",
+          "SCR-0034",
+          "SRC-0006"
+        ],
+        "hops": 3,
+        "outcome": "success"
+      },
+      {
+        "journey": 2,
+        "agent": "s7-2",
+        "source_sop": "SOP-015",
+        "target_src": "SRC-0012",
+        "path": [
+          "SOP-015",
+          "KB-0001",
+          "KB-0002",
+          "SCR-0007",
+          "SRC-0012"
+        ],
+        "hops": 4,
+        "outcome": "partial"
+      },
+      {
+        "journey": 3,
+        "agent": "s7-3",
+        "source_sop": "SOP-019",
+        "target_src": "SRC-0045",
+        "path": [
+          "SOP-019",
+          "SCR-0033",
+          "SRC-0050",
+          "KB-0043",
+          "SRC-0045"
+        ],
+        "hops": 4,
+        "outcome": "partial"
+      },
+      {
+        "journey": 4,
+        "agent": "s7-4",
+        "source_sop": "SOP-014",
+        "target_src": "SRC-0006",
+        "path": [
+          "SOP-014",
+          "SOP-015",
+          "SCR-0034",
+          "SRC-0006"
+        ],
+        "hops": 3,
+        "outcome": "success"
+      },
+      {
+        "journey": 5,
+        "agent": "s7-5",
+        "source_sop": "SOP-G02",
+        "target_src": "SRC-0007",
+        "path": [
+          "SOP-G02",
+          "TEAM-0022",
+          "KB-0020",
+          "SCR-0007",
+          "SRC-0007"
+        ],
+        "hops": 4,
+        "outcome": "partial"
+      },
+      {
+        "journey": 6,
+        "agent": "s7-1",
+        "source_sop": "SOP-013",
+        "target_src": "SRC-0046",
+        "path": [
+          "SOP-013",
+          "KB-0016",
+          "TEAM-0018",
+          "KB-0043",
+          "SRC-0046"
+        ],
+        "hops": 4,
+        "outcome": "partial"
+      },
+      {
+        "journey": 7,
+        "agent": "s7-2",
+        "source_sop": "SOP-025",
+        "target_src": "SRC-0051",
+        "path": [
+          "SOP-025",
+          "KB-0002",
+          "SCR-0005",
+          "SRC-0051"
+        ],
+        "hops": 3,
+        "outcome": "success"
+      },
+      {
+        "journey": 8,
+        "agent": "s7-3",
+        "source_sop": "SOP-022",
+        "target_src": "SRC-0003",
+        "path": [
+          "SOP-022",
+          "SOP-023",
+          "SCR-0006",
+          "SRC-0003"
+        ],
+        "hops": 3,
+        "outcome": "success"
+      },
+      {
+        "journey": 9,
+        "agent": "s7-4",
+        "source_sop": "SOP-024",
+        "target_src": "SRC-0019",
+        "path": [
+          "SOP-024",
+          "KB-0004",
+          "TEAM-0013",
+          "SRC-0019"
+        ],
+        "hops": 3,
+        "outcome": "success"
+      },
+      {
+        "journey": 10,
+        "agent": "s7-5",
+        "source_sop": "SOP-G02",
+        "target_src": "SRC-0047",
+        "path": [
+          "SOP-G02",
+          "TEAM-0022",
+          "KB-0020",
+          "KB-0043",
+          "SRC-0047"
+        ],
+        "hops": 4,
+        "outcome": "partial"
+      },
+      {
+        "journey": 11,
+        "agent": "s7-1",
+        "source_sop": "SOP-026",
+        "target_src": "SRC-0004",
+        "path": [
+          "SOP-026",
+          "SCR-0007",
+          "SRC-0004"
+        ],
+        "hops": 2,
+        "outcome": "success"
+      },
+      {
+        "journey": 12,
+        "agent": "s7-2",
+        "source_sop": "SOP-028",
+        "target_src": "SRC-0025",
+        "path": [
+          "SOP-028",
+          "SCR-0013",
+          "SRC-0025"
+        ],
+        "hops": 2,
+        "outcome": "success"
+      },
+      {
+        "journey": 13,
+        "agent": "s7-3",
+        "source_sop": "SOP-022",
+        "target_src": "SRC-0030",
+        "path": [
+          "SOP-022",
+          "SOP-023",
+          "SCR-0024",
+          "SRC-0030"
+        ],
+        "hops": 3,
+        "outcome": "success"
+      },
+      {
+        "journey": 14,
+        "agent": "s7-4",
+        "source_sop": "SOP-028",
+        "target_src": "SRC-0022",
+        "path": [
+          "SOP-028",
+          "SOP-027",
+          "KB-0005",
+          "KB-0012",
+          "SRC-0022"
+        ],
+        "hops": 4,
+        "outcome": "partial"
+      },
+      {
+        "journey": 15,
+        "agent": "s7-5",
+        "source_sop": "SOP-021",
+        "target_src": "SRC-0028",
+        "path": [
+          "SOP-021",
+          "SCR-0033",
+          "SRC-0050",
+          "KB-0012",
+          "SRC-0028"
+        ],
+        "hops": 4,
+        "outcome": "partial"
+      }
+    ]
+  }
+}

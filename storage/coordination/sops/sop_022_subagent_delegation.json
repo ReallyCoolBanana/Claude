@@ -1,0 +1,213 @@
+{
+  "id": "SOP-022",
+  "version": "1.0",
+  "created": "2026-03-12",
+  "team": "commander",
+  "title": "Sub-Agent Delegation: When to Use and When Not To",
+  "purpose": "Decision framework for commanders to determine when delegating work to sub-agents improves efficiency versus when direct execution is faster. Prevents both under-delegation (doing everything sequentially) and over-delegation (spawning agents for trivial work).",
+  "sections": {
+    "decision_framework": {
+      "title": "The Core Decision",
+      "overview": "Ask: Will the overhead of spawning, prompting, and waiting for a sub-agent be less than the time saved by parallelism or context isolation?",
+      "key_costs_of_delegation": [
+        "Prompt construction time (~5-10s to write a clear task description)",
+        "Agent startup latency (~3-5s)",
+        "Loss of direct control (can't course-correct mid-task)",
+        "Context transfer overhead (agent starts fresh, needs full context)",
+        "Result interpretation (reading and acting on agent output)"
+      ],
+      "key_benefits_of_delegation": [
+        "Parallelism (multiple agents work simultaneously)",
+        "Context isolation (large outputs don't bloat commander's context)",
+        "Specialization (agent can focus deeply on one task)",
+        "Commander stays free to do other work or respond to user"
+      ]
+    },
+    "when_to_delegate": {
+      "title": "Use Sub-Agents For",
+      "categories": {
+        "parallel_research": {
+          "description": "Scanning multiple files, topics, or sources simultaneously",
+          "examples": [
+            "Code review across 5+ files",
+            "Searching for a pattern across an unfamiliar codebase",
+            "Researching multiple web topics at once",
+            "Auditing all SOPs for consistency"
+          ],
+          "why": "Research tasks are read-only, embarrassingly parallel, and produce large outputs that benefit from summarization"
+        },
+        "deep_analysis": {
+          "description": "Tasks that produce large amounts of output you need summarized",
+          "examples": [
+            "Full code review of a 500+ line file (produces detailed bug reports)",
+            "Dependency audit across a project",
+            "Test suite analysis and coverage gaps",
+            "Architecture review of a module"
+          ],
+          "why": "Agent processes and summarizes the output, keeping commander's context clean"
+        },
+        "independent_workstreams": {
+          "description": "Multiple tasks with zero dependencies between them",
+          "examples": [
+            "Team A researches build patterns while Team B reviews rendering code",
+            "One agent writes tests while another writes documentation",
+            "Parallel exploration of different solution approaches"
+          ],
+          "why": "No dependency means no coordination overhead — pure parallelism gain"
+        },
+        "exploratory_searches": {
+          "description": "Open-ended searches where you don't know exactly what you're looking for",
+          "examples": [
+            "Finding all usage patterns of a deprecated API",
+            "Discovering how a feature is implemented across the codebase",
+            "Locating relevant prior knowledge base entries"
+          ],
+          "why": "May require many rounds of grep/glob/read — agent handles the iteration"
+        }
+      }
+    },
+    "when_not_to_delegate": {
+      "title": "Do NOT Use Sub-Agents For",
+      "categories": {
+        "simple_edits": {
+          "description": "Small, targeted code changes where you know exactly what to do",
+          "examples": [
+            "Fixing a single function (< 20 lines changed)",
+            "Adding error checks to known locations",
+            "Renaming a variable",
+            "Updating a config value"
+          ],
+          "why": "Overhead of delegation exceeds the work itself. Just do it directly."
+        },
+        "sequential_dependencies": {
+          "description": "Tasks where each step depends on the result of the previous step",
+          "examples": [
+            "Fix bug -> run test -> fix test -> run again",
+            "Read file -> understand pattern -> edit file -> verify",
+            "Install dependency -> configure -> test integration"
+          ],
+          "why": "No parallelism possible. Agent would block waiting for results just like you would."
+        },
+        "known_file_lookups": {
+          "description": "Reading a specific file or searching for a known pattern",
+          "examples": [
+            "Reading a file whose path you already know",
+            "Grepping for a specific function name",
+            "Checking git status or log"
+          ],
+          "why": "Direct tool calls (Read, Grep, Glob) are instant. Agent adds 10+ seconds of overhead."
+        },
+        "user_interaction_required": {
+          "description": "Tasks that need user input or approval at multiple points",
+          "examples": [
+            "Choosing between implementation approaches",
+            "Confirming destructive operations",
+            "Iterating on requirements"
+          ],
+          "why": "Sub-agents cannot interact with the user. Only the commander can."
+        },
+        "trivial_tasks": {
+          "description": "Any task completable in under 30 seconds of direct work",
+          "examples": [
+            "Running a single test",
+            "Creating a git commit",
+            "Writing a 1-line fix"
+          ],
+          "why": "Agent startup time alone exceeds the task duration"
+        }
+      }
+    },
+    "delegation_patterns": {
+      "title": "Effective Delegation Patterns",
+      "patterns": {
+        "research_then_act": {
+          "description": "Delegate research to agents, act on results directly",
+          "flow": "Spawn agent(s) for analysis -> Read summary -> Make edits yourself",
+          "example": "Agent reviews 800 lines of Vulkan code and produces bug report. Commander reads summary, applies 6 targeted fixes directly.",
+          "why_it_works": "Research benefits from isolation and parallelism. Edits benefit from direct control and tight feedback loops."
+        },
+        "parallel_fan_out": {
+          "description": "Spawn multiple agents for independent tasks, then synthesize",
+          "flow": "Launch N agents in parallel -> Collect results -> Synthesize into action",
+          "example": "3 agents research CMake patterns, shader compilation, and Vulkan best practices simultaneously. Commander combines findings.",
+          "why_it_works": "N tasks complete in time of 1 (the slowest), not time of N."
+        },
+        "background_monitoring": {
+          "description": "Run slow tasks in background while doing other work",
+          "flow": "Launch agent in background -> Continue working -> Get notified on completion",
+          "example": "Background agent runs full test suite while commander addresses user questions.",
+          "why_it_works": "Commander stays responsive. No idle waiting."
+        }
+      },
+      "anti_patterns": {
+        "over_decomposition": {
+          "description": "Splitting a small task into many tiny agent tasks",
+          "symptom": "5 agents spawned for a task that takes 2 minutes directly",
+          "fix": "If total work is < 5 minutes, do it yourself"
+        },
+        "duplicate_work": {
+          "description": "Commander and agent both researching the same thing",
+          "symptom": "Commander reads the same files the agent is analyzing",
+          "fix": "Either delegate fully or do it yourself — never both"
+        },
+        "chain_delegation": {
+          "description": "Agent A spawns Agent B spawns Agent C",
+          "symptom": "Deep nesting with compounding latency and context loss",
+          "fix": "Commander should spawn all agents directly. Keep delegation flat."
+        },
+        "fire_and_forget": {
+          "description": "Spawning agents without acting on their results",
+          "symptom": "Agent produces detailed findings that commander ignores",
+          "fix": "Only delegate if you will use the output. Otherwise it's wasted compute."
+        }
+      }
+    },
+    "quick_decision_checklist": {
+      "title": "5-Second Decision Checklist",
+      "overview": "Run through these questions before spawning a sub-agent.",
+      "questions": [
+        {
+          "question": "Can I do this in under 30 seconds with direct tool calls?",
+          "if_yes": "Do it directly.",
+          "if_no": "Continue to next question."
+        },
+        {
+          "question": "Do I know exactly which file(s) to read/edit?",
+          "if_yes": "Do it directly.",
+          "if_no": "Consider an agent for exploration."
+        },
+        {
+          "question": "Are there 2+ independent tasks I could run in parallel?",
+          "if_yes": "Delegate to parallel agents.",
+          "if_no": "Continue to next question."
+        },
+        {
+          "question": "Will the output be large (100+ lines) and need summarization?",
+          "if_yes": "Delegate to an agent for context isolation.",
+          "if_no": "Do it directly."
+        },
+        {
+          "question": "Does the task require multiple rounds of search/read iteration?",
+          "if_yes": "Delegate to an Explore agent.",
+          "if_no": "Do it directly."
+        }
+      ],
+      "default": "When in doubt, do it directly. Delegation should be a deliberate optimization, not a default."
+    }
+  },
+  "checklists": {
+    "before_delegating": [
+      "Task is clearly defined with specific deliverable",
+      "Task is independent (no user interaction or sequential dependencies)",
+      "Expected output size justifies isolation, OR parallelism gain is clear",
+      "Prompt includes all context the agent needs (don't assume shared state)",
+      "You have a plan for what to do with the agent's output"
+    ],
+    "after_delegation": [
+      "Read and verify agent output (don't blindly trust)",
+      "Act on findings promptly",
+      "If agent found nothing useful, note why for future calibration",
+      "Mark relevant todos as complete"
+    ]
+  }
+}

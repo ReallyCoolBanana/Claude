@@ -1,0 +1,164 @@
+{
+  "report": "Team D1 Benchmark Report - Post-Fix Re-Testing",
+  "team": "d1",
+  "timestamp": "2026-03-12T22:45:00Z",
+  "purpose": "Re-test recommendation system after run-001 fixes: entry_node filtering, related fallback, success-weighted scoring",
+  "test_agents": ["d1-1", "d1-2", "d1-3", "d1-4"],
+
+  "entry_node_filtering": {
+    "overall": "pass",
+    "tests": {
+      "SOP-011": {
+        "result": "pass",
+        "output": "SOP-011 -> SCR-0019 -> KB-0025",
+        "note": "Pattern-based recommendation returned route starting from SOP-011 (score=1.0)"
+      },
+      "SOP-012": {
+        "result": "pass",
+        "output": "Primary tools from SOP-012: ['SCR-0019']",
+        "note": "No pattern match for SOP-012 entry; fell back to strength-based routing from SOP-012. Returns pointers FROM SOP-012, not a global route."
+      },
+      "SOP-017": {
+        "result": "pass",
+        "output": "SOP-017 -> SCR-0023 -> SRC-0001",
+        "note": "Pattern-based recommendation returned route starting from SOP-017 (score=1.0)"
+      },
+      "SOP-023": {
+        "result": "pass",
+        "output": "Primary tools from SOP-023: ['SCR-0023']",
+        "note": "No pattern match for SOP-023 entry; fell back to strength-based routing from SOP-023."
+      },
+      "SOP-027": {
+        "result": "pass",
+        "output": "Primary tools from SOP-027: ['SCR-0043', 'SCR-0044', 'SOP-028']",
+        "note": "No pattern match for SOP-027 entry; fell back to strength-based routing from SOP-027."
+      }
+    },
+    "summary": "All 5 entry points return results rooted at the specified entry node. No global route leakage observed. Fix #1 confirmed working."
+  },
+
+  "related_fallback": {
+    "overall": "pass",
+    "tests": {
+      "SOP-011_novel_task": {
+        "result": "pass",
+        "output": "Primary tools from SOP-011: ['SCR-0019']",
+        "note": "SOP-011 has a primary pointer (SCR-0019), so primary tier returned first. Related fallback not exercised because primary exists."
+      },
+      "SCR-0006_related_only": {
+        "result": "pass",
+        "output": "Related tools from SCR-0006: ['SOP-023', 'SOP-026']",
+        "note": "SCR-0006 has ONLY related pointers (no primary/supporting). System correctly falls through to related tier and returns useful results. Fix #2 confirmed working."
+      }
+    },
+    "summary": "Related-strength fallback works correctly. When a node has no primary or supporting pointers, the system falls through to related pointers and returns useful results."
+  },
+
+  "no_entry_fallback": {
+    "overall": "pass",
+    "tests": {
+      "novel_task_no_entry": {
+        "result": "pass",
+        "output": "Best-connected SOP: SOP-028 with 8 primary/supporting pointers: ['SOP-027', 'SOP-G02', 'SOP-015', 'SOP-024', 'SOP-025', 'SOP-023', 'SCR-0013', 'SOP-029']",
+        "note": "With no entry_node and no pattern history, system searches all SOP nodes and returns the best-connected one. Fix #3 confirmed working."
+      }
+    },
+    "summary": "No-entry-node fallback correctly searches all SOP nodes and returns the best-connected SOP (SOP-028 with 8 primary/supporting pointers)."
+  },
+
+  "success_weighting": {
+    "overall": "pass",
+    "tests": {
+      "benchmark_test_scoring": {
+        "result": "pass",
+        "setup": "Logged 3 routes via path A (SOP-011 -> SCR-0019 -> KB-0025) with 'failure' outcome; 2 routes via path B (SOP-011 -> SCR-0030 -> SCR-0032) with 'success' outcome.",
+        "path_a": {
+          "route": "SOP-011 -> SCR-0019 -> KB-0025",
+          "count": 3,
+          "success_rate": 0.0,
+          "score": 0.0
+        },
+        "path_b": {
+          "route": "SOP-011 -> SCR-0030 -> SCR-0032",
+          "count": 2,
+          "success_rate": 100.0,
+          "score": 2.0
+        },
+        "recommended": "SOP-011 -> SCR-0030 -> SCR-0032",
+        "note": "Path B recommended despite lower frequency (2 vs 3) because score = count * success_rate. Path B score (2.0) > Path A score (0.0). Fix #4 confirmed working."
+      }
+    },
+    "summary": "Success-weighted scoring correctly prioritizes routes with higher success rates over more frequently-used but failing routes."
+  },
+
+  "edge_cases": {
+    "non_existent_node": {
+      "result": "pass",
+      "input": "--entry SOP-999",
+      "output": "No route recommendation available for task='test', entry='SOP-999'",
+      "note": "Graceful handling, no crash, returns None."
+    },
+    "empty_task_string": {
+      "result": "pass",
+      "input": "--task ''",
+      "output": "Primary tools from SOP-011: ['SCR-0019']",
+      "note": "Falls through to strength-based routing. No crash."
+    },
+    "wiki_node": {
+      "result": "not_applicable",
+      "note": "No WIKI-prefixed nodes exist in the current pointer network."
+    },
+    "src_node": {
+      "result": "pass",
+      "input": "--entry SRC-0001",
+      "output": "Primary tools from SRC-0001: ['SCR-0023']",
+      "note": "SRC nodes work as entry points. Returns primary pointers from the SRC node."
+    },
+    "kb_node": {
+      "result": "pass",
+      "input": "--entry KB-0001",
+      "output": "Primary tools from KB-0001: ['TEAM-0008', 'TEAM-0006', 'TEAM-0026']",
+      "note": "KB nodes work as entry points. Returns primary pointers."
+    }
+  },
+
+  "traversals_logged": [
+    {"agent": "d1-1", "task": "benchmark-test", "route": "SOP-011 -> SCR-0019 -> KB-0025", "outcome": "failure", "notes": "path A attempt 1"},
+    {"agent": "d1-1", "task": "benchmark-test", "route": "SOP-011 -> SCR-0019 -> KB-0025", "outcome": "failure", "notes": "path A attempt 2"},
+    {"agent": "d1-2", "task": "benchmark-test", "route": "SOP-011 -> SCR-0019 -> KB-0025", "outcome": "failure", "notes": "path A attempt 3"},
+    {"agent": "d1-2", "task": "benchmark-test", "route": "SOP-011 -> SCR-0030 -> SCR-0032", "outcome": "success", "notes": "path B attempt 1"},
+    {"agent": "d1-3", "task": "benchmark-test", "route": "SOP-011 -> SCR-0030 -> SCR-0032", "outcome": "success", "notes": "path B attempt 2"},
+    {"agent": "d1-1", "task": "entry-filter-test", "route": "SOP-011 -> SCR-0019", "outcome": "success", "notes": "entry_node filtering test"},
+    {"agent": "d1-2", "task": "entry-filter-test", "route": "SOP-017 -> SCR-0023 -> SRC-0001", "outcome": "success", "notes": "entry_node filtering test"},
+    {"agent": "d1-3", "task": "related-fallback-test", "route": "SCR-0006 -> SOP-023", "outcome": "success", "notes": "related-strength fallback test"},
+    {"agent": "d1-4", "task": "no-entry-fallback-test", "route": "SOP-028 -> SOP-027", "outcome": "success", "notes": "no-entry-node fallback test"}
+  ],
+
+  "accuracy_score": {
+    "rating": 8,
+    "justification": "All four fixes (entry_node filtering, related fallback, no-entry fallback, success-weighted scoring) are confirmed working correctly. The system handles edge cases gracefully without crashes. Score reduced from 10 because: (1) the no-entry fallback finds the best-connected SOP by pointer count but does not consider task relevance -- it always returns SOP-028 regardless of task type; (2) empty task string is handled but could benefit from explicit validation; (3) the pattern-based entry_node filtering only matches routes where the route string starts with the entry node text, which could break if a node ID is a prefix of another (e.g., SOP-01 matching SOP-011)."
+  },
+
+  "remaining_issues": [
+    {
+      "severity": "minor",
+      "issue": "No-entry fallback always returns SOP-028 regardless of task",
+      "description": "The no-entry fallback selects the SOP with the most primary/supporting pointers globally. It does not consider task keywords or context. This means every novel task without an entry_node gets the same recommendation."
+    },
+    {
+      "severity": "minor",
+      "issue": "Entry node pattern matching uses string prefix check",
+      "description": "The entry_node filter uses route.startswith(entry_node), which could false-match if one node ID is a prefix of another (e.g., 'SOP-01' would match 'SOP-011 -> ...'). Current node naming convention avoids this, but it is fragile."
+    },
+    {
+      "severity": "low",
+      "issue": "No input validation on empty task strings",
+      "description": "An empty task string is silently accepted and processed. Could benefit from a warning or early return."
+    },
+    {
+      "severity": "info",
+      "issue": "WIKI nodes do not exist in the pointer network",
+      "description": "Cannot test WIKI node edge case. Not a bug, just a gap in test coverage."
+    }
+  ]
+}

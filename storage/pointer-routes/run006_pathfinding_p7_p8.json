@@ -1,0 +1,5052 @@
+{
+  "run": "Run-006",
+  "division": "4B",
+  "task": "Pathfinding",
+  "timestamp": "2026-03-12T23:57:56.940695+00:00",
+  "agents": {
+    "p7-1": {
+      "role": "Failure-aware routing (odd scenarios)"
+    },
+    "p7-2": {
+      "role": "Failure-aware routing (even scenarios)"
+    },
+    "p8-1": {
+      "role": "Exploration pathfinding (odd journeys)"
+    },
+    "p8-2": {
+      "role": "Exploration pathfinding (even journeys)"
+    }
+  },
+  "p7_failure_aware_routing": {
+    "method": "Dijkstra with cost = -log(reliability); unseen edges default to 0.8",
+    "summary": {
+      "total_scenarios": 20,
+      "comparison": {
+        "failure_aware_wins": 17,
+        "naive_wins": 0,
+        "ties": 3,
+        "both_unreachable": 0
+      },
+      "avg_failure_aware_reliability": 0.97,
+      "avg_naive_reliability": 0.7576,
+      "avg_reliability_improvement": 0.2124,
+      "max_reliability_improvement": 0.36,
+      "edge_reliability_stats": {
+        "edges_with_history": 374,
+        "default_for_unseen": 0.8,
+        "avg_observed_reliability": 0.9991,
+        "low_reliability_edges": 1
+      }
+    },
+    "scenarios": [
+      {
+        "scenario_id": "scenario_1",
+        "agent": "p7-1",
+        "source": "SOP-011",
+        "target": "KB-0001",
+        "failure_aware": {
+          "path": [
+            "SOP-011",
+            "SOP-015",
+            "KB-0001"
+          ],
+          "hops": 2,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-011",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-015",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-011",
+            "SOP-015",
+            "KB-0001"
+          ],
+          "hops": 2,
+          "total_weight": 8,
+          "reliability_of_naive_path": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-011",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ]
+            },
+            {
+              "from": "SOP-015",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ]
+            }
+          ]
+        },
+        "winner": "tie",
+        "reliability_improvement": 0.0
+      },
+      {
+        "scenario_id": "scenario_2",
+        "agent": "p7-2",
+        "source": "SOP-011",
+        "target": "SCR-0001",
+        "failure_aware": {
+          "path": [
+            "SOP-011",
+            "SOP-015",
+            "KB-0001",
+            "SCR-0001"
+          ],
+          "hops": 3,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-011",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-015",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0001",
+              "to": "SCR-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:storage,validation"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-011",
+            "SCR-0019",
+            "TEAM-0008",
+            "SCR-0001"
+          ],
+          "hops": 3,
+          "total_weight": 11,
+          "reliability_of_naive_path": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-011",
+              "to": "SCR-0019",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:coordination,multi-agent",
+                "category_affinity:coordination \u2248 operations"
+              ]
+            },
+            {
+              "from": "SCR-0019",
+              "to": "TEAM-0008",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:uses_scripts",
+                "explicit_reference:used_by"
+              ]
+            },
+            {
+              "from": "TEAM-0008",
+              "to": "SCR-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:storage",
+                "category_affinity:validation \u2248 testing"
+              ]
+            }
+          ]
+        },
+        "winner": "tie",
+        "reliability_improvement": 0.0
+      },
+      {
+        "scenario_id": "scenario_3",
+        "agent": "p7-1",
+        "source": "SOP-012",
+        "target": "TEAM-0002",
+        "failure_aware": {
+          "path": [
+            "SOP-012",
+            "SOP-015",
+            "KB-0001",
+            "KB-0002",
+            "SCR-0005",
+            "KB-0020",
+            "KB-0043",
+            "TEAM-0002"
+          ],
+          "hops": 7,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-012",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-015",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0001",
+              "to": "KB-0002",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0002",
+              "to": "SCR-0005",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:multi-agent"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0005",
+              "to": "KB-0020",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:multi-agent"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0020",
+              "to": "KB-0043",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0043",
+              "to": "TEAM-0002",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:data-gathering,multi-agent"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-012",
+            "SCR-0019",
+            "TEAM-0008",
+            "KB-0001",
+            "TEAM-0002"
+          ],
+          "hops": 4,
+          "total_weight": 25,
+          "reliability_of_naive_path": 0.8,
+          "hop_details": [
+            {
+              "from": "SOP-012",
+              "to": "SCR-0019",
+              "weight": 4,
+              "strength": "supporting",
+              "reasons": [
+                "shared_tags:coordination,monitoring,multi-agent",
+                "category_affinity:coordination \u2248 operations"
+              ]
+            },
+            {
+              "from": "SCR-0019",
+              "to": "TEAM-0008",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:uses_scripts",
+                "explicit_reference:used_by"
+              ]
+            },
+            {
+              "from": "TEAM-0008",
+              "to": "KB-0001",
+              "weight": 9,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:benchmark,indexing,storage",
+                "explicit_reference:built_upon_by",
+                "explicit_reference:builds_on"
+              ]
+            },
+            {
+              "from": "KB-0001",
+              "to": "TEAM-0002",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.2
+      },
+      {
+        "scenario_id": "scenario_4",
+        "agent": "p7-2",
+        "source": "SOP-012",
+        "target": "SRC-0002",
+        "failure_aware": {
+          "path": [
+            "SOP-012",
+            "KB-0023",
+            "KB-0041",
+            "KB-0022",
+            "KB-0021",
+            "KB-0042",
+            "SCR-0037",
+            "SRC-0002"
+          ],
+          "hops": 7,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-012",
+              "to": "KB-0023",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:coordination,multi-agent"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0023",
+              "to": "KB-0041",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0041",
+              "to": "KB-0022",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0022",
+              "to": "KB-0021",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0021",
+              "to": "KB-0042",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0042",
+              "to": "SCR-0037",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:stress-test",
+                "category_affinity:testing \u2248 validation"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0037",
+              "to": "SRC-0002",
+              "weight": 5,
+              "strength": "supporting",
+              "reasons": [
+                "shared_tags:data_source"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-012",
+            "SCR-0019",
+            "SCR-0020",
+            "SRC-0002"
+          ],
+          "hops": 3,
+          "total_weight": 15,
+          "reliability_of_naive_path": 0.8,
+          "hop_details": [
+            {
+              "from": "SOP-012",
+              "to": "SCR-0019",
+              "weight": 4,
+              "strength": "supporting",
+              "reasons": [
+                "shared_tags:coordination,monitoring,multi-agent",
+                "category_affinity:coordination \u2248 operations"
+              ]
+            },
+            {
+              "from": "SCR-0019",
+              "to": "SCR-0020",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:uses_scripts",
+                "explicit_reference:used_by"
+              ]
+            },
+            {
+              "from": "SCR-0020",
+              "to": "SRC-0002",
+              "weight": 5,
+              "strength": "supporting",
+              "reasons": [
+                "shared_tags:data_source"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.2
+      },
+      {
+        "scenario_id": "scenario_5",
+        "agent": "p7-1",
+        "source": "SOP-013",
+        "target": "KB-0003",
+        "failure_aware": {
+          "path": [
+            "SOP-013",
+            "KB-0025",
+            "SOP-011",
+            "SOP-015",
+            "KB-0001",
+            "KB-0003"
+          ],
+          "hops": 5,
+          "reliability": 0.8,
+          "hop_details": [
+            {
+              "from": "SOP-013",
+              "to": "KB-0025",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:coordination,multi-agent,sop"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0025",
+              "to": "SOP-011",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:coordination,multi-agent,sop"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-011",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-015",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0001",
+              "to": "KB-0003",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 0.8
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-013",
+            "SOP-G02",
+            "KB-0001",
+            "KB-0003"
+          ],
+          "hops": 3,
+          "total_weight": 14,
+          "reliability_of_naive_path": 0.8,
+          "hop_details": [
+            {
+              "from": "SOP-013",
+              "to": "SOP-G02",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ]
+            },
+            {
+              "from": "SOP-G02",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,storage"
+              ]
+            },
+            {
+              "from": "KB-0001",
+              "to": "KB-0003",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ]
+            }
+          ]
+        },
+        "winner": "tie",
+        "reliability_improvement": 0.0
+      },
+      {
+        "scenario_id": "scenario_6",
+        "agent": "p7-2",
+        "source": "SOP-013",
+        "target": "SCR-0003",
+        "failure_aware": {
+          "path": [
+            "SOP-013",
+            "KB-0025",
+            "SCR-0033",
+            "SOP-014",
+            "KB-0009",
+            "SCR-0003"
+          ],
+          "hops": 5,
+          "reliability": 0.8,
+          "hop_details": [
+            {
+              "from": "SOP-013",
+              "to": "KB-0025",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:coordination,multi-agent,sop"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0025",
+              "to": "SCR-0033",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:coordination,hub-spoke,multi-agent"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0033",
+              "to": "SOP-014",
+              "weight": 4,
+              "strength": "supporting",
+              "reasons": [
+                "shared_tags:coordination,hub-spoke,multi-agent",
+                "category_affinity:coordination \u2248 operations"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-014",
+              "to": "KB-0009",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:coordination,hub-spoke"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0009",
+              "to": "SCR-0003",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:automation"
+              ],
+              "reliability": 0.8
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-013",
+            "SOP-G02",
+            "KB-0001",
+            "TEAM-0003",
+            "SCR-0003"
+          ],
+          "hops": 4,
+          "total_weight": 20,
+          "reliability_of_naive_path": 0.64,
+          "hop_details": [
+            {
+              "from": "SOP-013",
+              "to": "SOP-G02",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ]
+            },
+            {
+              "from": "SOP-G02",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,storage"
+              ]
+            },
+            {
+              "from": "KB-0001",
+              "to": "TEAM-0003",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ]
+            },
+            {
+              "from": "TEAM-0003",
+              "to": "SCR-0003",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:uses_scripts",
+                "explicit_reference:used_by"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.16
+      },
+      {
+        "scenario_id": "scenario_7",
+        "agent": "p7-1",
+        "source": "SOP-014",
+        "target": "TEAM-0004",
+        "failure_aware": {
+          "path": [
+            "SOP-014",
+            "SOP-015",
+            "KB-0001",
+            "KB-0002",
+            "TEAM-0004"
+          ],
+          "hops": 4,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-014",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-015",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0001",
+              "to": "KB-0002",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0002",
+              "to": "TEAM-0004",
+              "weight": 7,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:data-gathering",
+                "explicit_reference:built_upon_by",
+                "explicit_reference:builds_on"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-014",
+            "SOP-015",
+            "SCR-0042",
+            "TEAM-0004"
+          ],
+          "hops": 3,
+          "total_weight": 16,
+          "reliability_of_naive_path": 0.64,
+          "hop_details": [
+            {
+              "from": "SOP-014",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ]
+            },
+            {
+              "from": "SOP-015",
+              "to": "SCR-0042",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ]
+            },
+            {
+              "from": "SCR-0042",
+              "to": "TEAM-0004",
+              "weight": 8,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:validation",
+                "explicit_reference:used_by",
+                "category_affinity:validation \u2248 testing",
+                "explicit_reference:uses_scripts"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.36
+      },
+      {
+        "scenario_id": "scenario_8",
+        "agent": "p7-2",
+        "source": "SOP-014",
+        "target": "SRC-0004",
+        "failure_aware": {
+          "path": [
+            "SOP-014",
+            "SOP-011",
+            "SCR-0019",
+            "SCR-0020",
+            "SRC-0001",
+            "SCR-0040",
+            "SRC-0004"
+          ],
+          "hops": 6,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-014",
+              "to": "SOP-011",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-011",
+              "to": "SCR-0019",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:coordination,multi-agent",
+                "category_affinity:coordination \u2248 operations"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0019",
+              "to": "SCR-0020",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:uses_scripts",
+                "explicit_reference:used_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0020",
+              "to": "SRC-0001",
+              "weight": 5,
+              "strength": "supporting",
+              "reasons": [
+                "shared_tags:data_source"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SRC-0001",
+              "to": "SCR-0040",
+              "weight": 4,
+              "strength": "supporting",
+              "reasons": [
+                "shared_tags:data_source"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0040",
+              "to": "SRC-0004",
+              "weight": 5,
+              "strength": "supporting",
+              "reasons": [
+                "shared_tags:data_source"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-014",
+            "SOP-015",
+            "SCR-0042",
+            "SRC-0004"
+          ],
+          "hops": 3,
+          "total_weight": 13,
+          "reliability_of_naive_path": 0.64,
+          "hop_details": [
+            {
+              "from": "SOP-014",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ]
+            },
+            {
+              "from": "SOP-015",
+              "to": "SCR-0042",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ]
+            },
+            {
+              "from": "SCR-0042",
+              "to": "SRC-0004",
+              "weight": 5,
+              "strength": "supporting",
+              "reasons": [
+                "shared_tags:data_source"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.36
+      },
+      {
+        "scenario_id": "scenario_9",
+        "agent": "p7-1",
+        "source": "SOP-015",
+        "target": "KB-0005",
+        "failure_aware": {
+          "path": [
+            "SOP-015",
+            "KB-0001",
+            "KB-0008",
+            "KB-0010",
+            "KB-0014",
+            "KB-0004",
+            "TEAM-0014",
+            "KB-0005"
+          ],
+          "hops": 7,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-015",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0001",
+              "to": "KB-0008",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0008",
+              "to": "KB-0010",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0010",
+              "to": "KB-0014",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0014",
+              "to": "KB-0004",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0004",
+              "to": "TEAM-0014",
+              "weight": 8,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:data-gathering,public-api",
+                "explicit_reference:built_upon_by",
+                "explicit_reference:builds_on"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "TEAM-0014",
+              "to": "KB-0005",
+              "weight": 8,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:data-gathering,openalex",
+                "explicit_reference:built_upon_by",
+                "explicit_reference:builds_on"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-015",
+            "SOP-028",
+            "SOP-027",
+            "KB-0005"
+          ],
+          "hops": 3,
+          "total_weight": 17,
+          "reliability_of_naive_path": 0.8,
+          "hop_details": [
+            {
+              "from": "SOP-015",
+              "to": "SOP-028",
+              "weight": 7,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:indexing,sop",
+                "explicit_reference:related_to",
+                "category_affinity:infrastructure"
+              ]
+            },
+            {
+              "from": "SOP-028",
+              "to": "SOP-027",
+              "weight": 8,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:indexing,sop",
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ]
+            },
+            {
+              "from": "SOP-027",
+              "to": "KB-0005",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:data-gathering,wikidata"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.2
+      },
+      {
+        "scenario_id": "scenario_10",
+        "agent": "p7-2",
+        "source": "SOP-015",
+        "target": "SCR-0005",
+        "failure_aware": {
+          "path": [
+            "SOP-015",
+            "KB-0001",
+            "KB-0002",
+            "SCR-0005"
+          ],
+          "hops": 3,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-015",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0001",
+              "to": "KB-0002",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0002",
+              "to": "SCR-0005",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:multi-agent"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-015",
+            "SCR-0019",
+            "SRC-0050",
+            "SCR-0005"
+          ],
+          "hops": 3,
+          "total_weight": 11,
+          "reliability_of_naive_path": 0.8,
+          "hop_details": [
+            {
+              "from": "SOP-015",
+              "to": "SCR-0019",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:monitoring",
+                "category_affinity:coordination \u2248 infrastructure"
+              ]
+            },
+            {
+              "from": "SCR-0019",
+              "to": "SRC-0050",
+              "weight": 5,
+              "strength": "supporting",
+              "reasons": [
+                "shared_tags:data_source"
+              ]
+            },
+            {
+              "from": "SRC-0050",
+              "to": "SCR-0005",
+              "weight": 4,
+              "strength": "supporting",
+              "reasons": [
+                "shared_tags:data_source"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.2
+      },
+      {
+        "scenario_id": "scenario_11",
+        "agent": "p7-1",
+        "source": "SOP-016",
+        "target": "TEAM-0006",
+        "failure_aware": {
+          "path": [
+            "SOP-016",
+            "SOP-013",
+            "KB-0025",
+            "SOP-011",
+            "SOP-015",
+            "KB-0001",
+            "TEAM-0006"
+          ],
+          "hops": 6,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-016",
+              "to": "SOP-013",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-013",
+              "to": "KB-0025",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:coordination,multi-agent,sop"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0025",
+              "to": "SOP-011",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:coordination,multi-agent,sop"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-011",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-015",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0001",
+              "to": "TEAM-0006",
+              "weight": 8,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:indexing,validation",
+                "explicit_reference:built_upon_by",
+                "explicit_reference:builds_on"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-016",
+            "SOP-015",
+            "TEAM-0006"
+          ],
+          "hops": 2,
+          "total_weight": 8,
+          "reliability_of_naive_path": 0.64,
+          "hop_details": [
+            {
+              "from": "SOP-016",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ]
+            },
+            {
+              "from": "SOP-015",
+              "to": "TEAM-0006",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.36
+      },
+      {
+        "scenario_id": "scenario_12",
+        "agent": "p7-2",
+        "source": "SOP-016",
+        "target": "SRC-0006",
+        "failure_aware": {
+          "path": [
+            "SOP-016",
+            "SOP-013",
+            "KB-0025",
+            "SOP-011",
+            "SOP-015",
+            "SOP-028",
+            "SCR-0050",
+            "SOP-023",
+            "SCR-0023",
+            "SOP-017",
+            "SCR-0009",
+            "SRC-0006"
+          ],
+          "hops": 11,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-016",
+              "to": "SOP-013",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-013",
+              "to": "KB-0025",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:coordination,multi-agent,sop"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0025",
+              "to": "SOP-011",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:coordination,multi-agent,sop"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-011",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-015",
+              "to": "SOP-028",
+              "weight": 7,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:indexing,sop",
+                "explicit_reference:related_to",
+                "category_affinity:infrastructure"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-028",
+              "to": "SCR-0050",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,python",
+                "category_affinity:indexing"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0050",
+              "to": "SOP-023",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:search,indexing,python",
+                "category_affinity:search",
+                "backlink:reciprocal"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-023",
+              "to": "SCR-0023",
+              "weight": 9,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:data-gathering,search",
+                "explicit_reference:used_by",
+                "category_affinity:data-collection \u2248 data-gathering",
+                "explicit_reference:uses_scripts"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0023",
+              "to": "SOP-017",
+              "weight": 8,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:data-gathering",
+                "explicit_reference:used_by",
+                "category_affinity:data-collection \u2248 data-gathering",
+                "explicit_reference:uses_scripts"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-017",
+              "to": "SCR-0009",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:data-gathering",
+                "category_affinity:data-collection \u2248 data-gathering"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0009",
+              "to": "SRC-0006",
+              "weight": 10,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:search",
+                "explicit_reference:uses_sources",
+                "explicit_reference:used_by",
+                "explicit_reference:uses_scripts"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-016",
+            "SOP-015",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043",
+            "SRC-0006"
+          ],
+          "hops": 5,
+          "total_weight": 39,
+          "reliability_of_naive_path": 0.8,
+          "hop_details": [
+            {
+              "from": "SOP-016",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ]
+            },
+            {
+              "from": "SOP-015",
+              "to": "SOP-028",
+              "weight": 7,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:indexing,sop",
+                "explicit_reference:related_to",
+                "category_affinity:infrastructure"
+              ]
+            },
+            {
+              "from": "SOP-028",
+              "to": "SOP-027",
+              "weight": 8,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:indexing,sop",
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ]
+            },
+            {
+              "from": "SOP-027",
+              "to": "SCR-0043",
+              "weight": 8,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:data-gathering",
+                "explicit_reference:used_by",
+                "category_affinity:data-collection \u2248 data-gathering",
+                "explicit_reference:uses_scripts"
+              ]
+            },
+            {
+              "from": "SCR-0043",
+              "to": "SRC-0006",
+              "weight": 10,
+              "strength": "primary",
+              "reasons": [
+                "explicit_reference:uses_sources",
+                "explicit_reference:used_by",
+                "explicit_reference:uses_scripts"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.2
+      },
+      {
+        "scenario_id": "scenario_13",
+        "agent": "p7-1",
+        "source": "SOP-017",
+        "target": "KB-0007",
+        "failure_aware": {
+          "path": [
+            "SOP-017",
+            "SCR-0023",
+            "SOP-023",
+            "KB-0001",
+            "KB-0008",
+            "KB-0007"
+          ],
+          "hops": 5,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-017",
+              "to": "SCR-0023",
+              "weight": 8,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:data-gathering",
+                "explicit_reference:used_by",
+                "category_affinity:data-collection \u2248 data-gathering",
+                "explicit_reference:uses_scripts"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0023",
+              "to": "SOP-023",
+              "weight": 9,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:data-gathering,search",
+                "explicit_reference:used_by",
+                "category_affinity:data-collection \u2248 data-gathering",
+                "explicit_reference:uses_scripts"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-023",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0001",
+              "to": "KB-0008",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0008",
+              "to": "KB-0007",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-017",
+            "KB-0004",
+            "KB-0007"
+          ],
+          "hops": 2,
+          "total_weight": 8,
+          "reliability_of_naive_path": 0.8,
+          "hop_details": [
+            {
+              "from": "SOP-017",
+              "to": "KB-0004",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:data-gathering,validation"
+              ]
+            },
+            {
+              "from": "KB-0004",
+              "to": "KB-0007",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.2
+      },
+      {
+        "scenario_id": "scenario_14",
+        "agent": "p7-2",
+        "source": "SOP-017",
+        "target": "SCR-0007",
+        "failure_aware": {
+          "path": [
+            "SOP-017",
+            "SCR-0009",
+            "SRC-0006",
+            "SCR-0007"
+          ],
+          "hops": 3,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-017",
+              "to": "SCR-0009",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:data-gathering",
+                "category_affinity:data-collection \u2248 data-gathering"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0009",
+              "to": "SRC-0006",
+              "weight": 10,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:search",
+                "explicit_reference:uses_sources",
+                "explicit_reference:used_by",
+                "explicit_reference:uses_scripts"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SRC-0006",
+              "to": "SCR-0007",
+              "weight": 10,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:public-api,search",
+                "explicit_reference:uses_sources",
+                "explicit_reference:used_by",
+                "explicit_reference:uses_scripts"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-017",
+            "SCR-0007"
+          ],
+          "hops": 1,
+          "total_weight": 2,
+          "reliability_of_naive_path": 0.8,
+          "hop_details": [
+            {
+              "from": "SOP-017",
+              "to": "SCR-0007",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:data-gathering",
+                "category_affinity:data-collection \u2248 data-gathering"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.2
+      },
+      {
+        "scenario_id": "scenario_15",
+        "agent": "p7-1",
+        "source": "SOP-018",
+        "target": "TEAM-0008",
+        "failure_aware": {
+          "path": [
+            "SOP-018",
+            "KB-0002",
+            "SCR-0005",
+            "KB-0020",
+            "KB-0042",
+            "SCR-0037",
+            "SRC-0002",
+            "SCR-0026",
+            "SCR-0022",
+            "SCR-0023",
+            "SOP-023",
+            "KB-0001",
+            "TEAM-0008"
+          ],
+          "hops": 12,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-018",
+              "to": "KB-0002",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:data-gathering"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0002",
+              "to": "SCR-0005",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:multi-agent"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0005",
+              "to": "KB-0020",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:multi-agent"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0020",
+              "to": "KB-0042",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0042",
+              "to": "SCR-0037",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:stress-test",
+                "category_affinity:testing \u2248 validation"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0037",
+              "to": "SRC-0002",
+              "weight": 5,
+              "strength": "supporting",
+              "reasons": [
+                "shared_tags:data_source"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SRC-0002",
+              "to": "SCR-0026",
+              "weight": 10,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:search,semantic-scholar",
+                "explicit_reference:uses_sources",
+                "explicit_reference:used_by",
+                "explicit_reference:uses_scripts"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0026",
+              "to": "SCR-0022",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:uses_scripts",
+                "explicit_reference:used_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0022",
+              "to": "SCR-0023",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:uses_scripts",
+                "explicit_reference:used_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0023",
+              "to": "SOP-023",
+              "weight": 9,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:data-gathering,search",
+                "explicit_reference:used_by",
+                "category_affinity:data-collection \u2248 data-gathering",
+                "explicit_reference:uses_scripts"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-023",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0001",
+              "to": "TEAM-0008",
+              "weight": 9,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:benchmark,indexing,storage",
+                "explicit_reference:built_upon_by",
+                "explicit_reference:builds_on"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-018",
+            "KB-0002",
+            "KB-0001",
+            "TEAM-0008"
+          ],
+          "hops": 3,
+          "total_weight": 16,
+          "reliability_of_naive_path": 0.8,
+          "hop_details": [
+            {
+              "from": "SOP-018",
+              "to": "KB-0002",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:data-gathering"
+              ]
+            },
+            {
+              "from": "KB-0002",
+              "to": "KB-0001",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ]
+            },
+            {
+              "from": "KB-0001",
+              "to": "TEAM-0008",
+              "weight": 9,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:benchmark,indexing,storage",
+                "explicit_reference:built_upon_by",
+                "explicit_reference:builds_on"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.2
+      },
+      {
+        "scenario_id": "scenario_16",
+        "agent": "p7-2",
+        "source": "SOP-018",
+        "target": "SRC-0008",
+        "failure_aware": {
+          "path": [
+            "SOP-018",
+            "KB-0002",
+            "SCR-0005",
+            "KB-0020",
+            "KB-0042",
+            "SCR-0037",
+            "SRC-0002",
+            "SCR-0026",
+            "SCR-0022",
+            "SCR-0023",
+            "SOP-023",
+            "KB-0001",
+            "KB-0008",
+            "KB-0007",
+            "SCR-0032",
+            "SOP-012",
+            "SOP-015",
+            "SOP-028",
+            "SOP-027",
+            "SCR-0043",
+            "SRC-0008"
+          ],
+          "hops": 20,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-018",
+              "to": "KB-0002",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:data-gathering"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0002",
+              "to": "SCR-0005",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:multi-agent"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0005",
+              "to": "KB-0020",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:multi-agent"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0020",
+              "to": "KB-0042",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0042",
+              "to": "SCR-0037",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:stress-test",
+                "category_affinity:testing \u2248 validation"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0037",
+              "to": "SRC-0002",
+              "weight": 5,
+              "strength": "supporting",
+              "reasons": [
+                "shared_tags:data_source"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SRC-0002",
+              "to": "SCR-0026",
+              "weight": 10,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:search,semantic-scholar",
+                "explicit_reference:uses_sources",
+                "explicit_reference:used_by",
+                "explicit_reference:uses_scripts"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0026",
+              "to": "SCR-0022",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:uses_scripts",
+                "explicit_reference:used_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0022",
+              "to": "SCR-0023",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:uses_scripts",
+                "explicit_reference:used_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0023",
+              "to": "SOP-023",
+              "weight": 9,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:data-gathering,search",
+                "explicit_reference:used_by",
+                "category_affinity:data-collection \u2248 data-gathering",
+                "explicit_reference:uses_scripts"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-023",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0001",
+              "to": "KB-0008",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0008",
+              "to": "KB-0007",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0007",
+              "to": "SCR-0032",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:multi-agent"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0032",
+              "to": "SOP-012",
+              "weight": 4,
+              "strength": "supporting",
+              "reasons": [
+                "shared_tags:coordination,monitoring,multi-agent",
+                "category_affinity:coordination \u2248 operations"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-012",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-015",
+              "to": "SOP-028",
+              "weight": 7,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:indexing,sop",
+                "explicit_reference:related_to",
+                "category_affinity:infrastructure"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-028",
+              "to": "SOP-027",
+              "weight": 8,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:indexing,sop",
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-027",
+              "to": "SCR-0043",
+              "weight": 8,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:data-gathering",
+                "explicit_reference:used_by",
+                "category_affinity:data-collection \u2248 data-gathering",
+                "explicit_reference:uses_scripts"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0043",
+              "to": "SRC-0008",
+              "weight": 10,
+              "strength": "primary",
+              "reasons": [
+                "explicit_reference:uses_sources",
+                "explicit_reference:used_by",
+                "explicit_reference:uses_scripts"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-018",
+            "SCR-0007",
+            "SRC-0006",
+            "SCR-0043",
+            "SRC-0008"
+          ],
+          "hops": 4,
+          "total_weight": 31,
+          "reliability_of_naive_path": 0.64,
+          "hop_details": [
+            {
+              "from": "SOP-018",
+              "to": "SCR-0007",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:data-gathering"
+              ]
+            },
+            {
+              "from": "SCR-0007",
+              "to": "SRC-0006",
+              "weight": 10,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:public-api,search",
+                "explicit_reference:uses_sources",
+                "explicit_reference:used_by",
+                "explicit_reference:uses_scripts"
+              ]
+            },
+            {
+              "from": "SRC-0006",
+              "to": "SCR-0043",
+              "weight": 10,
+              "strength": "primary",
+              "reasons": [
+                "explicit_reference:uses_sources",
+                "explicit_reference:used_by",
+                "explicit_reference:uses_scripts"
+              ]
+            },
+            {
+              "from": "SCR-0043",
+              "to": "SRC-0008",
+              "weight": 10,
+              "strength": "primary",
+              "reasons": [
+                "explicit_reference:uses_sources",
+                "explicit_reference:used_by",
+                "explicit_reference:uses_scripts"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.36
+      },
+      {
+        "scenario_id": "scenario_17",
+        "agent": "p7-1",
+        "source": "SOP-019",
+        "target": "KB-0009",
+        "failure_aware": {
+          "path": [
+            "SOP-019",
+            "KB-0016",
+            "KB-0009"
+          ],
+          "hops": 2,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-019",
+              "to": "KB-0016",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:sqlite"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0016",
+              "to": "KB-0009",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-019",
+            "TEAM-0019",
+            "KB-0009"
+          ],
+          "hops": 2,
+          "total_weight": 9,
+          "reliability_of_naive_path": 0.8,
+          "hop_details": [
+            {
+              "from": "SOP-019",
+              "to": "TEAM-0019",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:sqlite",
+                "category_affinity:coordination \u2248 infrastructure"
+              ]
+            },
+            {
+              "from": "TEAM-0019",
+              "to": "KB-0009",
+              "weight": 7,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:hub-spoke",
+                "explicit_reference:built_upon_by",
+                "explicit_reference:builds_on"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.2
+      },
+      {
+        "scenario_id": "scenario_18",
+        "agent": "p7-2",
+        "source": "SOP-019",
+        "target": "SCR-0009",
+        "failure_aware": {
+          "path": [
+            "SOP-019",
+            "SCR-0033",
+            "SOP-014",
+            "SOP-015",
+            "SOP-028",
+            "SCR-0050",
+            "SOP-023",
+            "SCR-0023",
+            "SOP-017",
+            "SCR-0009"
+          ],
+          "hops": 9,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-019",
+              "to": "SCR-0033",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:python,sqlite",
+                "category_affinity:coordination \u2248 infrastructure"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0033",
+              "to": "SOP-014",
+              "weight": 4,
+              "strength": "supporting",
+              "reasons": [
+                "shared_tags:coordination,hub-spoke,multi-agent",
+                "category_affinity:coordination \u2248 operations"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-014",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-015",
+              "to": "SOP-028",
+              "weight": 7,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:indexing,sop",
+                "explicit_reference:related_to",
+                "category_affinity:infrastructure"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-028",
+              "to": "SCR-0050",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,python",
+                "category_affinity:indexing"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0050",
+              "to": "SOP-023",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:search,indexing,python",
+                "category_affinity:search",
+                "backlink:reciprocal"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-023",
+              "to": "SCR-0023",
+              "weight": 9,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:data-gathering,search",
+                "explicit_reference:used_by",
+                "category_affinity:data-collection \u2248 data-gathering",
+                "explicit_reference:uses_scripts"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SCR-0023",
+              "to": "SOP-017",
+              "weight": 8,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:data-gathering",
+                "explicit_reference:used_by",
+                "category_affinity:data-collection \u2248 data-gathering",
+                "explicit_reference:uses_scripts"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-017",
+              "to": "SCR-0009",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:data-gathering",
+                "category_affinity:data-collection \u2248 data-gathering"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-019",
+            "SCR-0029",
+            "SRC-0006",
+            "SCR-0009"
+          ],
+          "hops": 3,
+          "total_weight": 15,
+          "reliability_of_naive_path": 0.64,
+          "hop_details": [
+            {
+              "from": "SOP-019",
+              "to": "SCR-0029",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:python",
+                "category_affinity:coordination \u2248 infrastructure"
+              ]
+            },
+            {
+              "from": "SCR-0029",
+              "to": "SRC-0006",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:data_source"
+              ]
+            },
+            {
+              "from": "SRC-0006",
+              "to": "SCR-0009",
+              "weight": 10,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:search",
+                "explicit_reference:uses_sources",
+                "explicit_reference:used_by",
+                "explicit_reference:uses_scripts"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.36
+      },
+      {
+        "scenario_id": "scenario_19",
+        "agent": "p7-1",
+        "source": "SOP-020",
+        "target": "TEAM-0010",
+        "failure_aware": {
+          "path": [
+            "SOP-020",
+            "KB-0025",
+            "SOP-011",
+            "SOP-015",
+            "KB-0001",
+            "KB-0008",
+            "KB-0010",
+            "KB-0014",
+            "KB-0004",
+            "TEAM-0010"
+          ],
+          "hops": 9,
+          "reliability": 1.0,
+          "hop_details": [
+            {
+              "from": "SOP-020",
+              "to": "KB-0025",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:bug-fix,sop"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0025",
+              "to": "SOP-011",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:coordination,multi-agent,sop"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-011",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-015",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0001",
+              "to": "KB-0008",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0008",
+              "to": "KB-0010",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0010",
+              "to": "KB-0014",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0014",
+              "to": "KB-0004",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0004",
+              "to": "TEAM-0010",
+              "weight": 7,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:public-api",
+                "explicit_reference:built_upon_by",
+                "explicit_reference:builds_on"
+              ],
+              "reliability": 1.0
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-020",
+            "KB-0004",
+            "TEAM-0010"
+          ],
+          "hops": 2,
+          "total_weight": 8,
+          "reliability_of_naive_path": 0.8,
+          "hop_details": [
+            {
+              "from": "SOP-020",
+              "to": "KB-0004",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:validation"
+              ]
+            },
+            {
+              "from": "KB-0004",
+              "to": "TEAM-0010",
+              "weight": 7,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:public-api",
+                "explicit_reference:built_upon_by",
+                "explicit_reference:builds_on"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.2
+      },
+      {
+        "scenario_id": "scenario_20",
+        "agent": "p7-2",
+        "source": "SOP-020",
+        "target": "SRC-0013",
+        "failure_aware": {
+          "path": [
+            "SOP-020",
+            "KB-0025",
+            "SOP-011",
+            "SOP-015",
+            "KB-0001",
+            "KB-0008",
+            "KB-0010",
+            "KB-0014",
+            "SRC-0013"
+          ],
+          "hops": 8,
+          "reliability": 0.8,
+          "hop_details": [
+            {
+              "from": "SOP-020",
+              "to": "KB-0025",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:bug-fix,sop"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0025",
+              "to": "SOP-011",
+              "weight": 3,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:coordination,multi-agent,sop"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-011",
+              "to": "SOP-015",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "SOP-015",
+              "to": "KB-0001",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:indexing,validation"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0001",
+              "to": "KB-0008",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0008",
+              "to": "KB-0010",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0010",
+              "to": "KB-0014",
+              "weight": 6,
+              "strength": "supporting",
+              "reasons": [
+                "explicit_reference:builds_on",
+                "explicit_reference:built_upon_by"
+              ],
+              "reliability": 1.0
+            },
+            {
+              "from": "KB-0014",
+              "to": "SRC-0013",
+              "weight": 2,
+              "strength": "related",
+              "reasons": [
+                "shared_tags:guardian,public-api"
+              ],
+              "reliability": 0.8
+            }
+          ]
+        },
+        "naive_max_weight": {
+          "path": [
+            "SOP-020",
+            "KB-0004",
+            "TEAM-0010",
+            "SCR-0025",
+            "SRC-0013"
+          ],
+          "hops": 4,
+          "total_weight": 25,
+          "reliability_of_naive_path": 0.512,
+          "hop_details": [
+            {
+              "from": "SOP-020",
+              "to": "KB-0004",
+              "weight": 1,
+              "strength": "tangential",
+              "reasons": [
+                "shared_tags:validation"
+              ]
+            },
+            {
+              "from": "KB-0004",
+              "to": "TEAM-0010",
+              "weight": 7,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:public-api",
+                "explicit_reference:built_upon_by",
+                "explicit_reference:builds_on"
+              ]
+            },
+            {
+              "from": "TEAM-0010",
+              "to": "SCR-0025",
+              "weight": 7,
+              "strength": "primary",
+              "reasons": [
+                "explicit_reference:uses_scripts",
+                "explicit_reference:used_by",
+                "category_affinity:same category: data-collection"
+              ]
+            },
+            {
+              "from": "SCR-0025",
+              "to": "SRC-0013",
+              "weight": 10,
+              "strength": "primary",
+              "reasons": [
+                "shared_tags:guardian,search",
+                "explicit_reference:uses_sources",
+                "explicit_reference:used_by",
+                "explicit_reference:uses_scripts"
+              ]
+            }
+          ]
+        },
+        "winner": "failure_aware",
+        "reliability_improvement": 0.288
+      }
+    ]
+  },
+  "p8_exploration_pathfinding": {
+    "method": "Greedy exploration preferring least-visited nodes; 8-hop max",
+    "summary": {
+      "total_journeys": 20,
+      "total_new_nodes_discovered": 22,
+      "cumulative_new_node_hits": 22,
+      "coverage_before": 168,
+      "coverage_after": 190,
+      "coverage_increase": 22,
+      "coverage_percent_before": 54.19,
+      "coverage_percent_after": 61.29,
+      "avg_new_nodes_per_journey": 1.1,
+      "avg_exploration_efficiency": 0.1222,
+      "visit_frequency_top_10": {
+        "SOP-028": 29,
+        "SOP-029": 27,
+        "SOP-012": 27,
+        "SRC-0001": 25,
+        "SCR-0057": 24,
+        "SOP-011": 22,
+        "SOP-013": 21,
+        "SOP-015": 20,
+        "KB-0001": 18,
+        "TEAM-0025": 17
+      }
+    },
+    "journeys": [
+      {
+        "journey_id": "explore_1",
+        "agent": "p8-1",
+        "start": "SOP-011",
+        "path": [
+          "SOP-011",
+          "KB-0027",
+          "KB-0028",
+          "SCR-0015",
+          "KB-0032",
+          "KB-0035",
+          "KB-0031",
+          "KB-0041",
+          "SCR-0031"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 1,
+        "new_nodes_list": [
+          "SCR-0015"
+        ],
+        "exploration_efficiency": 0.1111,
+        "coverage_after": 169,
+        "hop_details": [
+          {
+            "from": "SOP-011",
+            "to": "KB-0027",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:coordination,multi-agent"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "KB-0027",
+            "to": "KB-0028",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "KB-0028",
+            "to": "SCR-0015",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:go"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "SCR-0015",
+            "to": "KB-0032",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:go"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "KB-0032",
+            "to": "KB-0035",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "KB-0035",
+            "to": "KB-0031",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "KB-0031",
+            "to": "KB-0041",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "KB-0041",
+            "to": "SCR-0031",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:coordination,multi-agent"
+            ],
+            "target_visit_count": 3
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_2",
+        "agent": "p8-2",
+        "start": "SOP-012",
+        "path": [
+          "SOP-012",
+          "KB-0026",
+          "KB-0027",
+          "TEAM-0007",
+          "KB-0003",
+          "SCR-0004",
+          "KB-0011",
+          "SCR-0003",
+          "SRC-0026"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 5,
+        "new_nodes_list": [
+          "KB-0003",
+          "KB-0011",
+          "SCR-0003",
+          "SCR-0004",
+          "SRC-0026"
+        ],
+        "exploration_efficiency": 0.5556,
+        "coverage_after": 174,
+        "hop_details": [
+          {
+            "from": "SOP-012",
+            "to": "KB-0026",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:coordination,multi-agent"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "KB-0026",
+            "to": "KB-0027",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "KB-0027",
+            "to": "TEAM-0007",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:benchmark,multi-agent"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "TEAM-0007",
+            "to": "KB-0003",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:multi-agent"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "KB-0003",
+            "to": "SCR-0004",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:stock-analysis",
+              "category_affinity:market-research \u2248 analysis"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "SCR-0004",
+            "to": "KB-0011",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:validation"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "KB-0011",
+            "to": "SCR-0003",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:validation"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "SCR-0003",
+            "to": "SRC-0026",
+            "weight": 5,
+            "strength": "supporting",
+            "reasons": [
+              "shared_tags:data_source"
+            ],
+            "target_visit_count": 0
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_3",
+        "agent": "p8-1",
+        "start": "SOP-013",
+        "path": [
+          "SOP-013",
+          "KB-0031",
+          "KB-0028",
+          "TEAM-0009",
+          "KB-0026",
+          "KB-0032",
+          "SCR-0015",
+          "SOP-026",
+          "SCR-0028"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 1,
+        "new_nodes_list": [
+          "SCR-0028"
+        ],
+        "exploration_efficiency": 0.1111,
+        "coverage_after": 175,
+        "hop_details": [
+          {
+            "from": "SOP-013",
+            "to": "KB-0031",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:coordination,multi-agent"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "KB-0031",
+            "to": "KB-0028",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "KB-0028",
+            "to": "TEAM-0009",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:coordination,go"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "TEAM-0009",
+            "to": "KB-0026",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:coordination,pipeline"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "KB-0026",
+            "to": "KB-0032",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "KB-0032",
+            "to": "SCR-0015",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:go"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0015",
+            "to": "SOP-026",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:search"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SOP-026",
+            "to": "SCR-0028",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:data-gathering,search"
+            ],
+            "target_visit_count": 0
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_4",
+        "agent": "p8-2",
+        "start": "SOP-014",
+        "path": [
+          "SOP-014",
+          "TEAM-0009",
+          "KB-0028",
+          "SCR-0017",
+          "SRC-0004",
+          "KB-0012",
+          "SRC-0021",
+          "KB-0014",
+          "SRC-0013"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 3,
+        "new_nodes_list": [
+          "KB-0012",
+          "SRC-0013",
+          "SRC-0021"
+        ],
+        "exploration_efficiency": 0.3333,
+        "coverage_after": 178,
+        "hop_details": [
+          {
+            "from": "SOP-014",
+            "to": "TEAM-0009",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:coordination,hub-spoke",
+              "category_affinity:coordination \u2248 operations"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "TEAM-0009",
+            "to": "KB-0028",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:coordination,go"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "KB-0028",
+            "to": "SCR-0017",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:go"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0017",
+            "to": "SRC-0004",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:data_source"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SRC-0004",
+            "to": "KB-0012",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:public-api"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "KB-0012",
+            "to": "SRC-0021",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:geospatial-api,public-api"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "SRC-0021",
+            "to": "KB-0014",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:public-api"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "KB-0014",
+            "to": "SRC-0013",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:guardian,public-api"
+            ],
+            "target_visit_count": 0
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_5",
+        "agent": "p8-1",
+        "start": "SOP-015",
+        "path": [
+          "SOP-015",
+          "SCR-0014",
+          "KB-0011",
+          "SCR-0003",
+          "SRC-0025",
+          "SCR-0028",
+          "KB-0012",
+          "SRC-0022",
+          "KB-0013"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 1,
+        "new_nodes_list": [
+          "SRC-0022"
+        ],
+        "exploration_efficiency": 0.1111,
+        "coverage_after": 179,
+        "hop_details": [
+          {
+            "from": "SOP-015",
+            "to": "SCR-0014",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:indexing,validation"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0014",
+            "to": "KB-0011",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:validation"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "KB-0011",
+            "to": "SCR-0003",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:validation"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0003",
+            "to": "SRC-0025",
+            "weight": 5,
+            "strength": "supporting",
+            "reasons": [
+              "shared_tags:data_source"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SRC-0025",
+            "to": "SCR-0028",
+            "weight": 10,
+            "strength": "primary",
+            "reasons": [
+              "shared_tags:github-api,search",
+              "explicit_reference:uses_sources",
+              "explicit_reference:used_by",
+              "explicit_reference:uses_scripts"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0028",
+            "to": "KB-0012",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:github-api"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "KB-0012",
+            "to": "SRC-0022",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:geospatial-api,public-api"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "SRC-0022",
+            "to": "KB-0013",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:geospatial-api,public-api"
+            ],
+            "target_visit_count": 2
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_6",
+        "agent": "p8-2",
+        "start": "SOP-016",
+        "path": [
+          "SOP-016",
+          "TEAM-0023",
+          "SCR-0029",
+          "KB-0017",
+          "TEAM-0019",
+          "KB-0019",
+          "KB-0021",
+          "TEAM-0007",
+          "KB-0003"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 0,
+        "new_nodes_list": [],
+        "exploration_efficiency": 0.0,
+        "coverage_after": 179,
+        "hop_details": [
+          {
+            "from": "SOP-016",
+            "to": "TEAM-0023",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:coordination,pipeline",
+              "category_affinity:coordination \u2248 operations"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "TEAM-0023",
+            "to": "SCR-0029",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:communication",
+              "category_affinity:same category: coordination"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0029",
+            "to": "KB-0017",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:communication,jsonl"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "KB-0017",
+            "to": "TEAM-0019",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:communication,jsonl,sqlite"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "TEAM-0019",
+            "to": "KB-0019",
+            "weight": 4,
+            "strength": "supporting",
+            "reasons": [
+              "shared_tags:communication,hub-spoke,jsonl,sqlite"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "KB-0019",
+            "to": "KB-0021",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "KB-0021",
+            "to": "TEAM-0007",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:benchmark,multi-agent"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "TEAM-0007",
+            "to": "KB-0003",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:multi-agent"
+            ],
+            "target_visit_count": 1
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_7",
+        "agent": "p8-1",
+        "start": "SOP-017",
+        "path": [
+          "SOP-017",
+          "SCR-0046",
+          "SCR-0045",
+          "SCR-0006",
+          "SRC-0002",
+          "SCR-0038",
+          "TEAM-0007",
+          "SCR-0021",
+          "SCR-0025"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 1,
+        "new_nodes_list": [
+          "SCR-0038"
+        ],
+        "exploration_efficiency": 0.1111,
+        "coverage_after": 180,
+        "hop_details": [
+          {
+            "from": "SOP-017",
+            "to": "SCR-0046",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:search,python",
+              "category_affinity:data-collection"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0046",
+            "to": "SCR-0045",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:uses_scripts",
+              "shared_tags:data-gathering,python",
+              "category_affinity:data-collection"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0045",
+            "to": "SCR-0006",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:data-gathering,python",
+              "category_affinity:data-collection"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0006",
+            "to": "SRC-0002",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:data_source"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SRC-0002",
+            "to": "SCR-0038",
+            "weight": 4,
+            "strength": "supporting",
+            "reasons": [
+              "shared_tags:data_source"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "SCR-0038",
+            "to": "TEAM-0007",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "category_affinity:validation \u2248 testing"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "TEAM-0007",
+            "to": "SCR-0021",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:uses_scripts",
+              "explicit_reference:used_by"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0021",
+            "to": "SCR-0025",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:uses_scripts",
+              "explicit_reference:used_by"
+            ],
+            "target_visit_count": 2
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_8",
+        "agent": "p8-2",
+        "start": "SOP-018",
+        "path": [
+          "SOP-018",
+          "SCR-0004",
+          "SRC-0038",
+          "KB-0003",
+          "TEAM-0004",
+          "SCR-0041",
+          "KB-0033",
+          "KB-0036",
+          "KB-0037"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 3,
+        "new_nodes_list": [
+          "KB-0036",
+          "KB-0037",
+          "SRC-0038"
+        ],
+        "exploration_efficiency": 0.3333,
+        "coverage_after": 183,
+        "hop_details": [
+          {
+            "from": "SOP-018",
+            "to": "SCR-0004",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:stock-analysis"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0004",
+            "to": "SRC-0038",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:stock-analysis"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "SRC-0038",
+            "to": "KB-0003",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:stock-analysis"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "KB-0003",
+            "to": "TEAM-0004",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 4
+          },
+          {
+            "from": "TEAM-0004",
+            "to": "SCR-0041",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:data-gathering,validation",
+              "category_affinity:validation \u2248 testing"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0041",
+            "to": "KB-0033",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:concurrency,validation"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "KB-0033",
+            "to": "KB-0036",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "KB-0036",
+            "to": "KB-0037",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 0
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_9",
+        "agent": "p8-1",
+        "start": "SOP-019",
+        "path": [
+          "SOP-019",
+          "SCR-0029",
+          "SRC-0025",
+          "SCR-0013",
+          "SCR-0047",
+          "SCR-0034",
+          "SRC-0026",
+          "SCR-0051",
+          "SCR-0048"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 1,
+        "new_nodes_list": [
+          "SCR-0048"
+        ],
+        "exploration_efficiency": 0.1111,
+        "coverage_after": 184,
+        "hop_details": [
+          {
+            "from": "SOP-019",
+            "to": "SCR-0029",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:python",
+              "category_affinity:coordination \u2248 infrastructure"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0029",
+            "to": "SRC-0025",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:data_source"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SRC-0025",
+            "to": "SCR-0013",
+            "weight": 4,
+            "strength": "supporting",
+            "reasons": [
+              "shared_tags:data_source"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0013",
+            "to": "SCR-0047",
+            "weight": 7,
+            "strength": "primary",
+            "reasons": [
+              "backlink:reciprocal"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0047",
+            "to": "SCR-0034",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:indexing,python,validation"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0034",
+            "to": "SRC-0026",
+            "weight": 5,
+            "strength": "supporting",
+            "reasons": [
+              "shared_tags:data_source"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SRC-0026",
+            "to": "SCR-0051",
+            "weight": 4,
+            "strength": "supporting",
+            "reasons": [
+              "shared_tags:data_source"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0051",
+            "to": "SCR-0048",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:indexing,python"
+            ],
+            "target_visit_count": 0
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_10",
+        "agent": "p8-2",
+        "start": "SOP-020",
+        "path": [
+          "SOP-020",
+          "KB-0040",
+          "SCR-0003",
+          "SRC-0026",
+          "SCR-0027",
+          "SRC-0008",
+          "KB-0012",
+          "SRC-0027",
+          "KB-0014"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 1,
+        "new_nodes_list": [
+          "SRC-0027"
+        ],
+        "exploration_efficiency": 0.1111,
+        "coverage_after": 185,
+        "hop_details": [
+          {
+            "from": "SOP-020",
+            "to": "KB-0040",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:validation"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "KB-0040",
+            "to": "SCR-0003",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:automation,validation"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0003",
+            "to": "SRC-0026",
+            "weight": 5,
+            "strength": "supporting",
+            "reasons": [
+              "shared_tags:data_source"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SRC-0026",
+            "to": "SCR-0027",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:search"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0027",
+            "to": "SRC-0008",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:search,wikidata"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SRC-0008",
+            "to": "KB-0012",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:public-api"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "KB-0012",
+            "to": "SRC-0027",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:package-registry,public-api"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "SRC-0027",
+            "to": "KB-0014",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:public-api"
+            ],
+            "target_visit_count": 2
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_11",
+        "agent": "p8-1",
+        "start": "SOP-021",
+        "path": [
+          "SOP-021",
+          "KB-0017",
+          "TOOL-0001",
+          "KB-0041",
+          "KB-0035",
+          "KB-0027",
+          "KB-0031",
+          "KB-0026",
+          "KB-0032"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 0,
+        "new_nodes_list": [],
+        "exploration_efficiency": 0.0,
+        "coverage_after": 185,
+        "hop_details": [
+          {
+            "from": "SOP-021",
+            "to": "KB-0017",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:failure-analysis,sqlite"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "KB-0017",
+            "to": "TOOL-0001",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "category_affinity:same category: integration"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "TOOL-0001",
+            "to": "KB-0041",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:multi-agent",
+              "tag_upgrade:high_overlap"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "KB-0041",
+            "to": "KB-0035",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "KB-0035",
+            "to": "KB-0027",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "KB-0027",
+            "to": "KB-0031",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "KB-0031",
+            "to": "KB-0026",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 4
+          },
+          {
+            "from": "KB-0026",
+            "to": "KB-0032",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 3
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_12",
+        "agent": "p8-2",
+        "start": "SOP-022",
+        "path": [
+          "SOP-022",
+          "TEAM-0024",
+          "SOP-021",
+          "KB-0019",
+          "TEAM-0021",
+          "KB-0018",
+          "KB-0039",
+          "SRC-0036",
+          "KB-0040"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 1,
+        "new_nodes_list": [
+          "SRC-0036"
+        ],
+        "exploration_efficiency": 0.1111,
+        "coverage_after": 186,
+        "hop_details": [
+          {
+            "from": "SOP-022",
+            "to": "TEAM-0024",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:coordination,sop",
+              "category_affinity:coordination \u2248 operations"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "TEAM-0024",
+            "to": "SOP-021",
+            "weight": 4,
+            "strength": "supporting",
+            "reasons": [
+              "shared_tags:coordination,failure-analysis,sop",
+              "category_affinity:coordination \u2248 operations"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SOP-021",
+            "to": "KB-0019",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:sqlite"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "KB-0019",
+            "to": "TEAM-0021",
+            "weight": 8,
+            "strength": "primary",
+            "reasons": [
+              "shared_tags:communication",
+              "explicit_reference:built_upon_by",
+              "category_affinity:same category: integration",
+              "explicit_reference:builds_on"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "TEAM-0021",
+            "to": "KB-0018",
+            "weight": 9,
+            "strength": "primary",
+            "reasons": [
+              "shared_tags:multi-agent,prototype",
+              "explicit_reference:built_upon_by",
+              "category_affinity:same category: integration",
+              "explicit_reference:builds_on"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "KB-0018",
+            "to": "KB-0039",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "KB-0039",
+            "to": "SRC-0036",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:ai-ml"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "SRC-0036",
+            "to": "KB-0040",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:ai-ml"
+            ],
+            "target_visit_count": 2
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_13",
+        "agent": "p8-1",
+        "start": "SOP-023",
+        "path": [
+          "SOP-023",
+          "SCR-0048",
+          "SCR-0015",
+          "SOP-026",
+          "SCR-0027",
+          "SRC-0005",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0006"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 0,
+        "new_nodes_list": [],
+        "exploration_efficiency": 0.0,
+        "coverage_after": 186,
+        "hop_details": [
+          {
+            "from": "SOP-023",
+            "to": "SCR-0048",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:search,indexing,python",
+              "category_affinity:search"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0048",
+            "to": "SCR-0015",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:indexing,search",
+              "category_affinity:search"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0015",
+            "to": "SOP-026",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:search"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SOP-026",
+            "to": "SCR-0027",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:data-gathering,search,wikidata"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0027",
+            "to": "SRC-0005",
+            "weight": 10,
+            "strength": "primary",
+            "reasons": [
+              "shared_tags:search,wikidata",
+              "explicit_reference:uses_sources",
+              "explicit_reference:used_by",
+              "explicit_reference:uses_scripts"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SRC-0005",
+            "to": "SCR-0010",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:search"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0010",
+            "to": "SCR-0011",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:uses_scripts",
+              "explicit_reference:used_by"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SCR-0011",
+            "to": "SCR-0006",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:uses_scripts",
+              "explicit_reference:used_by"
+            ],
+            "target_visit_count": 3
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_14",
+        "agent": "p8-2",
+        "start": "SOP-024",
+        "path": [
+          "SOP-024",
+          "SCR-0012",
+          "TEAM-0006",
+          "SCR-0013",
+          "SCR-0049",
+          "SCR-0047",
+          "SCR-0035",
+          "SRC-0007",
+          "SCR-0026"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 1,
+        "new_nodes_list": [
+          "SRC-0007"
+        ],
+        "exploration_efficiency": 0.1111,
+        "coverage_after": 187,
+        "hop_details": [
+          {
+            "from": "SOP-024",
+            "to": "SCR-0012",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:indexing,validation"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0012",
+            "to": "TEAM-0006",
+            "weight": 8,
+            "strength": "primary",
+            "reasons": [
+              "shared_tags:indexing,validation",
+              "explicit_reference:used_by",
+              "explicit_reference:uses_scripts"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "TEAM-0006",
+            "to": "SCR-0013",
+            "weight": 8,
+            "strength": "primary",
+            "reasons": [
+              "shared_tags:automation,indexing",
+              "explicit_reference:used_by",
+              "explicit_reference:uses_scripts"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0013",
+            "to": "SCR-0049",
+            "weight": 5,
+            "strength": "supporting",
+            "reasons": [
+              "backlink:reciprocal"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SCR-0049",
+            "to": "SCR-0047",
+            "weight": 4,
+            "strength": "supporting",
+            "reasons": [
+              "shared_tags:automation,indexing,python,search"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0047",
+            "to": "SCR-0035",
+            "weight": 8,
+            "strength": "primary",
+            "reasons": [
+              "explicit_reference:related_to",
+              "explicit_reference:uses_scripts",
+              "shared_tags:python,search"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0035",
+            "to": "SRC-0007",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:search"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "SRC-0007",
+            "to": "SCR-0026",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:search"
+            ],
+            "target_visit_count": 2
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_15",
+        "agent": "p8-1",
+        "start": "SOP-025",
+        "path": [
+          "SOP-025",
+          "SCR-0013",
+          "SCR-0049",
+          "SCR-0034",
+          "KB-0011",
+          "SCR-0002",
+          "KB-0033",
+          "KB-0034",
+          "KB-0030"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 0,
+        "new_nodes_list": [],
+        "exploration_efficiency": 0.0,
+        "coverage_after": 187,
+        "hop_details": [
+          {
+            "from": "SOP-025",
+            "to": "SCR-0013",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:automation,indexing"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SCR-0013",
+            "to": "SCR-0049",
+            "weight": 5,
+            "strength": "supporting",
+            "reasons": [
+              "backlink:reciprocal"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0049",
+            "to": "SCR-0034",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:indexing,python",
+              "category_affinity:indexing"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0034",
+            "to": "KB-0011",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:validation"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "KB-0011",
+            "to": "SCR-0002",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:validation"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0002",
+            "to": "KB-0033",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:validation"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "KB-0033",
+            "to": "KB-0034",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "KB-0034",
+            "to": "KB-0030",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 2
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_16",
+        "agent": "p8-2",
+        "start": "SOP-026",
+        "path": [
+          "SOP-026",
+          "SCR-0028",
+          "SCR-0022",
+          "SCR-0024",
+          "SRC-0029",
+          "KB-0012",
+          "SRC-0028",
+          "KB-0013",
+          "SRC-0018"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 2,
+        "new_nodes_list": [
+          "SRC-0018",
+          "SRC-0028"
+        ],
+        "exploration_efficiency": 0.2222,
+        "coverage_after": 189,
+        "hop_details": [
+          {
+            "from": "SOP-026",
+            "to": "SCR-0028",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:data-gathering,search"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0028",
+            "to": "SCR-0022",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:uses_scripts",
+              "explicit_reference:used_by"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0022",
+            "to": "SCR-0024",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:uses_scripts",
+              "explicit_reference:used_by"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SCR-0024",
+            "to": "SRC-0029",
+            "weight": 10,
+            "strength": "primary",
+            "reasons": [
+              "shared_tags:hacker-news,search",
+              "explicit_reference:uses_sources",
+              "explicit_reference:used_by",
+              "explicit_reference:uses_scripts"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SRC-0029",
+            "to": "KB-0012",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:hacker-news,public-api"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "KB-0012",
+            "to": "SRC-0028",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:geospatial-api,public-api"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "SRC-0028",
+            "to": "KB-0013",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:geospatial-api,public-api"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "KB-0013",
+            "to": "SRC-0018",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:financial-api,government-api,public-api"
+            ],
+            "target_visit_count": 0
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_17",
+        "agent": "p8-1",
+        "start": "SOP-027",
+        "path": [
+          "SOP-027",
+          "SCR-0027",
+          "SRC-0008",
+          "KB-0014",
+          "SRC-0013",
+          "SCR-0025",
+          "TEAM-0010",
+          "SRC-0027",
+          "SCR-0010"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 0,
+        "new_nodes_list": [],
+        "exploration_efficiency": 0.0,
+        "coverage_after": 189,
+        "hop_details": [
+          {
+            "from": "SOP-027",
+            "to": "SCR-0027",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:data-gathering,wikidata",
+              "category_affinity:data-collection \u2248 data-gathering"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SCR-0027",
+            "to": "SRC-0008",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:search,wikidata"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SRC-0008",
+            "to": "KB-0014",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:public-api"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "KB-0014",
+            "to": "SRC-0013",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:guardian,public-api"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SRC-0013",
+            "to": "SCR-0025",
+            "weight": 10,
+            "strength": "primary",
+            "reasons": [
+              "shared_tags:guardian,search",
+              "explicit_reference:uses_sources",
+              "explicit_reference:used_by",
+              "explicit_reference:uses_scripts"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SCR-0025",
+            "to": "TEAM-0010",
+            "weight": 7,
+            "strength": "primary",
+            "reasons": [
+              "explicit_reference:uses_scripts",
+              "explicit_reference:used_by",
+              "category_affinity:same category: data-collection"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "TEAM-0010",
+            "to": "SRC-0027",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:package-registry,public-api"
+            ],
+            "target_visit_count": 1
+          },
+          {
+            "from": "SRC-0027",
+            "to": "SCR-0010",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:search"
+            ],
+            "target_visit_count": 3
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_18",
+        "agent": "p8-2",
+        "start": "SOP-028",
+        "path": [
+          "SOP-028",
+          "SCR-0051",
+          "SCR-0014",
+          "TEAM-0006",
+          "SCR-0012",
+          "SCR-0020",
+          "SRC-0002",
+          "SCR-0039",
+          "TEAM-0001"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 1,
+        "new_nodes_list": [
+          "SCR-0039"
+        ],
+        "exploration_efficiency": 0.1111,
+        "coverage_after": 190,
+        "hop_details": [
+          {
+            "from": "SOP-028",
+            "to": "SCR-0051",
+            "weight": 4,
+            "strength": "supporting",
+            "reasons": [
+              "shared_tags:indexing,automation,python",
+              "category_affinity:indexing"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0051",
+            "to": "SCR-0014",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:indexing,python"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0014",
+            "to": "TEAM-0006",
+            "weight": 8,
+            "strength": "primary",
+            "reasons": [
+              "shared_tags:indexing,validation",
+              "explicit_reference:used_by",
+              "explicit_reference:uses_scripts"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "TEAM-0006",
+            "to": "SCR-0012",
+            "weight": 8,
+            "strength": "primary",
+            "reasons": [
+              "shared_tags:indexing,validation",
+              "explicit_reference:used_by",
+              "explicit_reference:uses_scripts"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SCR-0012",
+            "to": "SCR-0020",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:uses_scripts",
+              "explicit_reference:used_by"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SCR-0020",
+            "to": "SRC-0002",
+            "weight": 5,
+            "strength": "supporting",
+            "reasons": [
+              "shared_tags:data_source"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SRC-0002",
+            "to": "SCR-0039",
+            "weight": 4,
+            "strength": "supporting",
+            "reasons": [
+              "shared_tags:data_source"
+            ],
+            "target_visit_count": 0
+          },
+          {
+            "from": "SCR-0039",
+            "to": "TEAM-0001",
+            "weight": 9,
+            "strength": "primary",
+            "reasons": [
+              "shared_tags:storage,stress-test",
+              "explicit_reference:used_by",
+              "category_affinity:validation \u2248 testing",
+              "explicit_reference:uses_scripts"
+            ],
+            "target_visit_count": 4
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_19",
+        "agent": "p8-1",
+        "start": "SOP-029",
+        "path": [
+          "SOP-029",
+          "SCR-0030",
+          "KB-0041",
+          "KB-0035",
+          "TEAM-0023",
+          "SCR-0029",
+          "SRC-0017",
+          "SCR-0045",
+          "SCR-0046"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 0,
+        "new_nodes_list": [],
+        "exploration_efficiency": 0.0,
+        "coverage_after": 190,
+        "hop_details": [
+          {
+            "from": "SOP-029",
+            "to": "SCR-0030",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:coordination,monitoring",
+              "category_affinity:infrastructure \u2248 coordination"
+            ],
+            "target_visit_count": 4
+          },
+          {
+            "from": "SCR-0030",
+            "to": "KB-0041",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:coordination,multi-agent"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "KB-0041",
+            "to": "KB-0035",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:builds_on",
+              "explicit_reference:built_upon_by"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "KB-0035",
+            "to": "TEAM-0023",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:coordination,work-stealing"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "TEAM-0023",
+            "to": "SCR-0029",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:communication",
+              "category_affinity:same category: coordination"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SCR-0029",
+            "to": "SRC-0017",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:data_source"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SRC-0017",
+            "to": "SCR-0045",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:data_source"
+            ],
+            "target_visit_count": 2
+          },
+          {
+            "from": "SCR-0045",
+            "to": "SCR-0046",
+            "weight": 4,
+            "strength": "supporting",
+            "reasons": [
+              "backlink:reciprocal"
+            ],
+            "target_visit_count": 2
+          }
+        ]
+      },
+      {
+        "journey_id": "explore_20",
+        "agent": "p8-2",
+        "start": "SOP-G01",
+        "path": [
+          "SOP-G01",
+          "TEAM-0009",
+          "KB-0006",
+          "SCR-0003",
+          "SRC-0025",
+          "SCR-0028",
+          "SCR-0022",
+          "SCR-0026",
+          "SOP-018"
+        ],
+        "hops": 8,
+        "new_nodes_discovered": 0,
+        "new_nodes_list": [],
+        "exploration_efficiency": 0.0,
+        "coverage_after": 190,
+        "hop_details": [
+          {
+            "from": "SOP-G01",
+            "to": "TEAM-0009",
+            "weight": 3,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:coordination,pipeline",
+              "category_affinity:coordination \u2248 operations"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "TEAM-0009",
+            "to": "KB-0006",
+            "weight": 7,
+            "strength": "primary",
+            "reasons": [
+              "shared_tags:automation",
+              "explicit_reference:built_upon_by",
+              "explicit_reference:builds_on"
+            ],
+            "target_visit_count": 4
+          },
+          {
+            "from": "KB-0006",
+            "to": "SCR-0003",
+            "weight": 2,
+            "strength": "related",
+            "reasons": [
+              "shared_tags:automation,validation"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SCR-0003",
+            "to": "SRC-0025",
+            "weight": 5,
+            "strength": "supporting",
+            "reasons": [
+              "shared_tags:data_source"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SRC-0025",
+            "to": "SCR-0028",
+            "weight": 10,
+            "strength": "primary",
+            "reasons": [
+              "shared_tags:github-api,search",
+              "explicit_reference:uses_sources",
+              "explicit_reference:used_by",
+              "explicit_reference:uses_scripts"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SCR-0028",
+            "to": "SCR-0022",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:uses_scripts",
+              "explicit_reference:used_by"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SCR-0022",
+            "to": "SCR-0026",
+            "weight": 6,
+            "strength": "supporting",
+            "reasons": [
+              "explicit_reference:uses_scripts",
+              "explicit_reference:used_by"
+            ],
+            "target_visit_count": 3
+          },
+          {
+            "from": "SCR-0026",
+            "to": "SOP-018",
+            "weight": 1,
+            "strength": "tangential",
+            "reasons": [
+              "shared_tags:data-gathering"
+            ],
+            "target_visit_count": 3
+          }
+        ]
+      }
+    ]
+  }
+}

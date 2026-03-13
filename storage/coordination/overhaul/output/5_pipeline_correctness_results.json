@@ -1,0 +1,60 @@
+[
+  {
+    "dimension": "pipeline_correctness",
+    "test_name": "concurrent_pipelines_ordering",
+    "metrics": {
+      "num_pipelines": 10,
+      "stages_per_pipeline": 8,
+      "all_completed": true,
+      "pipelines_completed": 10,
+      "ordering_violations": 0,
+      "thread_errors": 0
+    },
+    "passed": true,
+    "duration_s": 0.269,
+    "details": "10/10 pipelines completed, 0 ordering violations",
+    "errors": []
+  },
+  {
+    "dimension": "pipeline_correctness",
+    "test_name": "bus_message_ordering_and_loss",
+    "metrics": {
+      "senders": 5,
+      "msgs_per_sender": 200,
+      "total_expected": 1000,
+      "total_received": 1000,
+      "message_loss": 0,
+      "message_loss_pct": 0.0,
+      "per_sender_ordered": true,
+      "per_sender_counts": {
+        "0": 200,
+        "4": 200,
+        "2": 200,
+        "3": 200,
+        "1": 200
+      },
+      "send_errors": 0
+    },
+    "passed": true,
+    "duration_s": 0.109,
+    "details": "Received 1000/1000 messages, loss=0, per-sender-ordered=True",
+    "errors": []
+  },
+  {
+    "dimension": "pipeline_correctness",
+    "test_name": "exactly_once_work_stealing",
+    "metrics": {
+      "total_items": 200,
+      "total_stolen": 200,
+      "unique_stolen": 200,
+      "duplicates": 0,
+      "concurrent_stealers": 10,
+      "exactly_once": true,
+      "errors": 0
+    },
+    "passed": true,
+    "duration_s": 0.263,
+    "details": "200/200 unique items stolen, 0 duplicates, exactly-once=YES",
+    "errors": []
+  }
+]

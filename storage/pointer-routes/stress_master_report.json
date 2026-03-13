@@ -1,0 +1,122 @@
+{
+  "title": "Pointer Network Stress Test — Run 003 Master Report",
+  "timestamp": "2026-03-12T23:00:00Z",
+  "scope": "8 stress test teams, 155 routes, 797 hops",
+
+  "network_evolution": {
+    "run": ["001", "002", "003"],
+    "total_edges": [4535, 4820, 4820],
+    "classified_edges": [397, 889, 889],
+    "routes_logged": [95, 98, 155],
+    "total_routes_all_runs": 348,
+    "agents_deployed_all_runs": [26, 34, 42],
+    "total_agents_all_runs": 102
+  },
+
+  "stress_test_results": {
+    "s1_high_volume": {
+      "journeys": 66,
+      "primary_path_success": "100%",
+      "exploration_success": "45%",
+      "random_walk_success": "23%",
+      "verdict": "Primary strength pointers are highly reliable. Alternative paths degrade quickly."
+    },
+    "s2_fanout": {
+      "scripts_analyzed": 57,
+      "avg_3hop_reach": "204/310 nodes (66%)",
+      "worst_script_reach": "161/310 (52%)",
+      "best_script_reach": "213/310 (69%)",
+      "verdict": "Network well-connected. Even worst scripts reach majority of nodes within 3 hops."
+    },
+    "s3_adversarial": {
+      "all_sops_have_cycles": true,
+      "shortest_cycle": 2,
+      "avg_longest_path": 4.18,
+      "network_traps": 6,
+      "cross_domain_hops": 1,
+      "verdict": "Compact network (diameter 4-5). All SOPs can cycle back. 6 trap patterns identified."
+    },
+    "s4_recommendation_load": {
+      "total_calls": 80,
+      "errors": 0,
+      "crashes": 0,
+      "avg_latency_ms": 55,
+      "verdict": "Recommendation system is reliable under load. Zero failures across 80 calls."
+    },
+    "s5_graph_analysis": {
+      "diameter": 4,
+      "components": 1,
+      "center_nodes": 124,
+      "verdict": "Compact, fully connected network. 124 of 310 nodes are in the center (radius 3)."
+    },
+    "s6_routing_strategies": {
+      "weight_routing_success": "80%",
+      "tag_routing_success": "45%",
+      "hybrid_routing_success": "intermediate",
+      "weight_coherence": 0.37,
+      "tag_coherence": "higher but lower success",
+      "verdict": "Weight routing is the superior strategy at scale. Tag routing has better coherence but fails to reach targets."
+    },
+    "s7_src_accessibility": {
+      "sop_to_src_reachability_3hop": "61.7%",
+      "improvement_from_run002": "+25.3 percentage points",
+      "repair_link_impact": "+18.5pp from SCR->SRC repairs",
+      "src_nodes_well_connected": "47/48",
+      "verdict": "Major improvement from repairs. 61.7% vs 36.4% in run-002. Nearly all SRC nodes now accessible."
+    },
+    "s8_end_to_end": {
+      "total_workflows": 15,
+      "success": 8,
+      "partial": 7,
+      "failure": 0,
+      "research_success": "100%",
+      "build_success": "66.7%",
+      "enrichment_success": "0%",
+      "discovery_success": "100%",
+      "full_stack_success": "0%",
+      "bottleneck_transitions": ["SCR->wiki (100% failure)", "TEAM->SOP (50% failure)"],
+      "verdict": "Research and discovery workflows excellent. Enrichment and full-stack blocked by wiki isolation and TEAM->SOP gaps."
+    }
+  },
+
+  "key_metrics_summary": {
+    "network_diameter": 4,
+    "avg_3hop_reach": "66% of network",
+    "primary_path_reliability": "100%",
+    "recommendation_reliability": "100% (0 errors in 80 calls)",
+    "sop_to_src_reachability": "61.7% (up from 36.4%)",
+    "weight_routing_success": "80%",
+    "end_to_end_success": "53.3% (8/15 workflows)",
+    "total_routes_logged_all_runs": 348,
+    "total_agents_deployed_all_runs": 102
+  },
+
+  "remaining_flaws": {
+    "critical": [
+      "SCR->wiki connectivity: 100% failure rate in traversals",
+      "TEAM->SOP transitions: 50% failure rate",
+      "Full-stack workflows (5+ domain crossings): 0% success"
+    ],
+    "high": [
+      "3,931 edges still unclassified",
+      "Tag coherence drops to 0 in multi-hop traversals",
+      "Enrichment workflows completely broken (can't reach wiki from scripts)"
+    ],
+    "medium": [
+      "6 network trap patterns where routing loops",
+      "92 wiki orphan nodes",
+      "90 nodes with skewed weight distributions"
+    ],
+    "low": [
+      "No-entry recommendation fallback doesn't consider task context well",
+      "102 nodes with undifferentiated edge weights"
+    ]
+  },
+
+  "improvement_trajectory": {
+    "run_001": "Found critical structural issues — orphans, missing classifications, broken recommendations",
+    "run_002": "Fixed structural issues — all SOPs tagged, strengths corrected, SRC links added",
+    "run_003": "Stress tested at scale — confirmed repairs work, identified remaining cross-domain gaps",
+    "recommended_run_004": "Focus on wiki bridging, TEAM->SOP connectivity, and full-stack workflow enablement"
+  }
+}

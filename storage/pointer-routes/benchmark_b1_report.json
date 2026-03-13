@@ -1,0 +1,1382 @@
+{
+  "benchmark_id": "b1-stress-test",
+  "generated": "2026-03-12T22:33:50.098021Z",
+  "summary": {
+    "total_sop_nodes": 22,
+    "total_scr_nodes": 57,
+    "total_src_nodes": 48,
+    "sops_that_can_reach_src": 8,
+    "sops_that_cannot_reach_src": 14,
+    "sop_src_reachability_pct": 36.4,
+    "scripts_with_src_links": 15,
+    "scripts_without_src_links": 42,
+    "scr_src_link_pct": 26.3,
+    "journeys_simulated": 10,
+    "journey_outcomes": {
+      "partial": 8,
+      "success": 2
+    },
+    "recommended_new_links_count": 42
+  },
+  "sop_to_src_reachability": {
+    "SOP-011": {
+      "reachable": false,
+      "best_path": null,
+      "all_paths_count": 0,
+      "all_paths": [],
+      "scr_neighbors": 5
+    },
+    "SOP-012": {
+      "reachable": false,
+      "best_path": null,
+      "all_paths_count": 0,
+      "all_paths": [],
+      "scr_neighbors": 4
+    },
+    "SOP-013": {
+      "reachable": false,
+      "best_path": null,
+      "all_paths_count": 0,
+      "all_paths": [],
+      "scr_neighbors": 5
+    },
+    "SOP-014": {
+      "reachable": false,
+      "best_path": null,
+      "all_paths_count": 0,
+      "all_paths": [],
+      "scr_neighbors": 4
+    },
+    "SOP-015": {
+      "reachable": false,
+      "best_path": null,
+      "all_paths_count": 0,
+      "all_paths": [],
+      "scr_neighbors": 9
+    },
+    "SOP-016": {
+      "reachable": false,
+      "best_path": null,
+      "all_paths_count": 0,
+      "all_paths": [],
+      "scr_neighbors": 5
+    },
+    "SOP-017": {
+      "reachable": true,
+      "best_path": {
+        "path": "SOP-017 -> SCR-0023 -> SRC-0001",
+        "total_weight": 20,
+        "hop1_weight": 8,
+        "hop1_strength": "primary",
+        "hop2_weight": 12,
+        "hop2_strength": "primary"
+      },
+      "all_paths_count": 27,
+      "all_paths": [
+        {
+          "path": "SOP-017 -> SCR-0023 -> SRC-0001",
+          "total_weight": 20,
+          "hop1_weight": 8,
+          "hop1_strength": "primary",
+          "hop2_weight": 12,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-017 -> SCR-0007 -> SRC-0006",
+          "total_weight": 14,
+          "hop1_weight": 2,
+          "hop1_strength": "tangential",
+          "hop2_weight": 12,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-017 -> SCR-0007 -> SRC-0001",
+          "total_weight": 4,
+          "hop1_weight": 2,
+          "hop1_strength": "tangential",
+          "hop2_weight": 2,
+          "hop2_strength": "unknown"
+        },
+        {
+          "path": "SOP-017 -> SCR-0007 -> SRC-0002",
+          "total_weight": 4,
+          "hop1_weight": 2,
+          "hop1_strength": "tangential",
+          "hop2_weight": 2,
+          "hop2_strength": "unknown"
+        },
+        {
+          "path": "SOP-017 -> SCR-0007 -> SRC-0003",
+          "total_weight": 4,
+          "hop1_weight": 2,
+          "hop1_strength": "tangential",
+          "hop2_weight": 2,
+          "hop2_strength": "unknown"
+        }
+      ],
+      "scr_neighbors": 17
+    },
+    "SOP-018": {
+      "reachable": true,
+      "best_path": {
+        "path": "SOP-018 -> SCR-0007 -> SRC-0006",
+        "total_weight": 13,
+        "hop1_weight": 1,
+        "hop1_strength": "tangential",
+        "hop2_weight": 12,
+        "hop2_strength": "primary"
+      },
+      "all_paths_count": 17,
+      "all_paths": [
+        {
+          "path": "SOP-018 -> SCR-0004 -> SRC-0038",
+          "total_weight": 2,
+          "hop1_weight": 1,
+          "hop1_strength": "primary",
+          "hop2_weight": 1,
+          "hop2_strength": "unknown"
+        },
+        {
+          "path": "SOP-018 -> SCR-0004 -> SRC-0040",
+          "total_weight": 2,
+          "hop1_weight": 1,
+          "hop1_strength": "primary",
+          "hop2_weight": 1,
+          "hop2_strength": "unknown"
+        },
+        {
+          "path": "SOP-018 -> SCR-0007 -> SRC-0006",
+          "total_weight": 13,
+          "hop1_weight": 1,
+          "hop1_strength": "tangential",
+          "hop2_weight": 12,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-018 -> SCR-0007 -> SRC-0001",
+          "total_weight": 3,
+          "hop1_weight": 1,
+          "hop1_strength": "tangential",
+          "hop2_weight": 2,
+          "hop2_strength": "unknown"
+        },
+        {
+          "path": "SOP-018 -> SCR-0007 -> SRC-0002",
+          "total_weight": 3,
+          "hop1_weight": 1,
+          "hop1_strength": "tangential",
+          "hop2_weight": 2,
+          "hop2_strength": "unknown"
+        }
+      ],
+      "scr_neighbors": 10
+    },
+    "SOP-019": {
+      "reachable": false,
+      "best_path": null,
+      "all_paths_count": 0,
+      "all_paths": [],
+      "scr_neighbors": 5
+    },
+    "SOP-020": {
+      "reachable": true,
+      "best_path": {
+        "path": "SOP-020 -> SCR-0004 -> SRC-0038",
+        "total_weight": 2,
+        "hop1_weight": 1,
+        "hop1_strength": "tangential",
+        "hop2_weight": 1,
+        "hop2_strength": "unknown"
+      },
+      "all_paths_count": 2,
+      "all_paths": [
+        {
+          "path": "SOP-020 -> SCR-0004 -> SRC-0038",
+          "total_weight": 2,
+          "hop1_weight": 1,
+          "hop1_strength": "tangential",
+          "hop2_weight": 1,
+          "hop2_strength": "unknown"
+        },
+        {
+          "path": "SOP-020 -> SCR-0004 -> SRC-0040",
+          "total_weight": 2,
+          "hop1_weight": 1,
+          "hop1_strength": "tangential",
+          "hop2_weight": 1,
+          "hop2_strength": "unknown"
+        }
+      ],
+      "scr_neighbors": 10
+    },
+    "SOP-021": {
+      "reachable": false,
+      "best_path": null,
+      "all_paths_count": 0,
+      "all_paths": [],
+      "scr_neighbors": 4
+    },
+    "SOP-022": {
+      "reachable": false,
+      "best_path": null,
+      "all_paths_count": 0,
+      "all_paths": [],
+      "scr_neighbors": 5
+    },
+    "SOP-023": {
+      "reachable": true,
+      "best_path": {
+        "path": "SOP-023 -> SCR-0023 -> SRC-0001",
+        "total_weight": 21,
+        "hop1_weight": 9,
+        "hop1_strength": "primary",
+        "hop2_weight": 12,
+        "hop2_strength": "primary"
+      },
+      "all_paths_count": 27,
+      "all_paths": [
+        {
+          "path": "SOP-023 -> SCR-0023 -> SRC-0001",
+          "total_weight": 21,
+          "hop1_weight": 9,
+          "hop1_strength": "primary",
+          "hop2_weight": 12,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-023 -> SCR-0007 -> SRC-0006",
+          "total_weight": 15,
+          "hop1_weight": 3,
+          "hop1_strength": "related",
+          "hop2_weight": 12,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-023 -> SCR-0007 -> SRC-0001",
+          "total_weight": 5,
+          "hop1_weight": 3,
+          "hop1_strength": "related",
+          "hop2_weight": 2,
+          "hop2_strength": "unknown"
+        },
+        {
+          "path": "SOP-023 -> SCR-0007 -> SRC-0002",
+          "total_weight": 5,
+          "hop1_weight": 3,
+          "hop1_strength": "related",
+          "hop2_weight": 2,
+          "hop2_strength": "unknown"
+        },
+        {
+          "path": "SOP-023 -> SCR-0007 -> SRC-0003",
+          "total_weight": 5,
+          "hop1_weight": 3,
+          "hop1_strength": "related",
+          "hop2_weight": 2,
+          "hop2_strength": "unknown"
+        }
+      ],
+      "scr_neighbors": 21
+    },
+    "SOP-024": {
+      "reachable": true,
+      "best_path": {
+        "path": "SOP-024 -> SCR-0009 -> SRC-0003",
+        "total_weight": 14,
+        "hop1_weight": 3,
+        "hop1_strength": "primary",
+        "hop2_weight": 11,
+        "hop2_strength": "primary"
+      },
+      "all_paths_count": 14,
+      "all_paths": [
+        {
+          "path": "SOP-024 -> SCR-0009 -> SRC-0003",
+          "total_weight": 14,
+          "hop1_weight": 3,
+          "hop1_strength": "primary",
+          "hop2_weight": 11,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-024 -> SCR-0009 -> SRC-0006",
+          "total_weight": 14,
+          "hop1_weight": 3,
+          "hop1_strength": "primary",
+          "hop2_weight": 11,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-024 -> SCR-0007 -> SRC-0006",
+          "total_weight": 14,
+          "hop1_weight": 2,
+          "hop1_strength": "tangential",
+          "hop2_weight": 12,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-024 -> SCR-0007 -> SRC-0001",
+          "total_weight": 4,
+          "hop1_weight": 2,
+          "hop1_strength": "tangential",
+          "hop2_weight": 2,
+          "hop2_strength": "unknown"
+        },
+        {
+          "path": "SOP-024 -> SCR-0007 -> SRC-0002",
+          "total_weight": 4,
+          "hop1_weight": 2,
+          "hop1_strength": "tangential",
+          "hop2_weight": 2,
+          "hop2_strength": "unknown"
+        }
+      ],
+      "scr_neighbors": 12
+    },
+    "SOP-025": {
+      "reachable": true,
+      "best_path": {
+        "path": "SOP-025 -> SCR-0043 -> SRC-0006",
+        "total_weight": 17,
+        "hop1_weight": 7,
+        "hop1_strength": "primary",
+        "hop2_weight": 10,
+        "hop2_strength": "primary"
+      },
+      "all_paths_count": 2,
+      "all_paths": [
+        {
+          "path": "SOP-025 -> SCR-0043 -> SRC-0006",
+          "total_weight": 17,
+          "hop1_weight": 7,
+          "hop1_strength": "primary",
+          "hop2_weight": 10,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-025 -> SCR-0043 -> SRC-0008",
+          "total_weight": 17,
+          "hop1_weight": 7,
+          "hop1_strength": "primary",
+          "hop2_weight": 10,
+          "hop2_strength": "primary"
+        }
+      ],
+      "scr_neighbors": 2
+    },
+    "SOP-026": {
+      "reachable": true,
+      "best_path": {
+        "path": "SOP-026 -> SCR-0043 -> SRC-0006",
+        "total_weight": 17,
+        "hop1_weight": 7,
+        "hop1_strength": "primary",
+        "hop2_weight": 10,
+        "hop2_strength": "primary"
+      },
+      "all_paths_count": 25,
+      "all_paths": [
+        {
+          "path": "SOP-026 -> SCR-0043 -> SRC-0006",
+          "total_weight": 17,
+          "hop1_weight": 7,
+          "hop1_strength": "primary",
+          "hop2_weight": 10,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-026 -> SCR-0043 -> SRC-0008",
+          "total_weight": 17,
+          "hop1_weight": 7,
+          "hop1_strength": "primary",
+          "hop2_weight": 10,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-026 -> SCR-0027 -> SRC-0005",
+          "total_weight": 15,
+          "hop1_weight": 3,
+          "hop1_strength": "related",
+          "hop2_weight": 12,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-026 -> SCR-0027 -> SRC-0006",
+          "total_weight": 14,
+          "hop1_weight": 3,
+          "hop1_strength": "related",
+          "hop2_weight": 11,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-026 -> SCR-0027 -> SRC-0008",
+          "total_weight": 5,
+          "hop1_weight": 3,
+          "hop1_strength": "related",
+          "hop2_weight": 2,
+          "hop2_strength": "unknown"
+        }
+      ],
+      "scr_neighbors": 13
+    },
+    "SOP-027": {
+      "reachable": true,
+      "best_path": {
+        "path": "SOP-027 -> SCR-0043 -> SRC-0006",
+        "total_weight": 18,
+        "hop1_weight": 8,
+        "hop1_strength": "primary",
+        "hop2_weight": 10,
+        "hop2_strength": "primary"
+      },
+      "all_paths_count": 27,
+      "all_paths": [
+        {
+          "path": "SOP-027 -> SCR-0043 -> SRC-0006",
+          "total_weight": 18,
+          "hop1_weight": 8,
+          "hop1_strength": "primary",
+          "hop2_weight": 10,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-027 -> SCR-0043 -> SRC-0008",
+          "total_weight": 18,
+          "hop1_weight": 8,
+          "hop1_strength": "primary",
+          "hop2_weight": 10,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-027 -> SCR-0044 -> SRC-0006",
+          "total_weight": 18,
+          "hop1_weight": 8,
+          "hop1_strength": "primary",
+          "hop2_weight": 10,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-027 -> SCR-0044 -> SRC-0008",
+          "total_weight": 18,
+          "hop1_weight": 8,
+          "hop1_strength": "primary",
+          "hop2_weight": 10,
+          "hop2_strength": "primary"
+        },
+        {
+          "path": "SOP-027 -> SCR-0027 -> SRC-0005",
+          "total_weight": 15,
+          "hop1_weight": 3,
+          "hop1_strength": "related",
+          "hop2_weight": 12,
+          "hop2_strength": "primary"
+        }
+      ],
+      "scr_neighbors": 15
+    },
+    "SOP-028": {
+      "reachable": false,
+      "best_path": null,
+      "all_paths_count": 0,
+      "all_paths": [],
+      "scr_neighbors": 5
+    },
+    "SOP-029": {
+      "reachable": false,
+      "best_path": null,
+      "all_paths_count": 0,
+      "all_paths": [],
+      "scr_neighbors": 4
+    },
+    "SOP-G01": {
+      "reachable": false,
+      "best_path": null,
+      "all_paths_count": 0,
+      "all_paths": [],
+      "scr_neighbors": 4
+    },
+    "SOP-G02": {
+      "reachable": false,
+      "best_path": null,
+      "all_paths_count": 0,
+      "all_paths": [],
+      "scr_neighbors": 4
+    },
+    "SOP-G03": {
+      "reachable": false,
+      "best_path": null,
+      "all_paths_count": 0,
+      "all_paths": [],
+      "scr_neighbors": 5
+    }
+  },
+  "scripts_with_src_links": {
+    "count": 15,
+    "scripts": {
+      "SCR-0004": {
+        "src_targets": [
+          {
+            "id": "SRC-0038",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0040",
+            "weight": 1,
+            "strength": "unknown"
+          }
+        ]
+      },
+      "SCR-0007": {
+        "src_targets": [
+          {
+            "id": "SRC-0006",
+            "weight": 12,
+            "strength": "primary"
+          },
+          {
+            "id": "SRC-0001",
+            "weight": 2,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0002",
+            "weight": 2,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0003",
+            "weight": 2,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0004",
+            "weight": 2,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0005",
+            "weight": 2,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0007",
+            "weight": 2,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0008",
+            "weight": 2,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0012",
+            "weight": 2,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0013",
+            "weight": 2,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0014",
+            "weight": 2,
+            "strength": "unknown"
+          }
+        ]
+      },
+      "SCR-0008": {
+        "src_targets": [
+          {
+            "id": "SRC-0003",
+            "weight": 12,
+            "strength": "primary"
+          }
+        ]
+      },
+      "SCR-0009": {
+        "src_targets": [
+          {
+            "id": "SRC-0003",
+            "weight": 11,
+            "strength": "primary"
+          },
+          {
+            "id": "SRC-0006",
+            "weight": 11,
+            "strength": "primary"
+          }
+        ]
+      },
+      "SCR-0015": {
+        "src_targets": [
+          {
+            "id": "SRC-0001",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0002",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0003",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0004",
+            "weight": 1,
+            "strength": "unknown"
+          }
+        ]
+      },
+      "SCR-0018": {
+        "src_targets": [
+          {
+            "id": "SRC-0033",
+            "weight": 2,
+            "strength": "unknown"
+          }
+        ]
+      },
+      "SCR-0023": {
+        "src_targets": [
+          {
+            "id": "SRC-0001",
+            "weight": 12,
+            "strength": "primary"
+          }
+        ]
+      },
+      "SCR-0024": {
+        "src_targets": [
+          {
+            "id": "SRC-0029",
+            "weight": 12,
+            "strength": "primary"
+          },
+          {
+            "id": "SRC-0030",
+            "weight": 11,
+            "strength": "primary"
+          }
+        ]
+      },
+      "SCR-0025": {
+        "src_targets": [
+          {
+            "id": "SRC-0013",
+            "weight": 12,
+            "strength": "primary"
+          }
+        ]
+      },
+      "SCR-0026": {
+        "src_targets": [
+          {
+            "id": "SRC-0002",
+            "weight": 12,
+            "strength": "primary"
+          }
+        ]
+      },
+      "SCR-0027": {
+        "src_targets": [
+          {
+            "id": "SRC-0005",
+            "weight": 12,
+            "strength": "primary"
+          },
+          {
+            "id": "SRC-0006",
+            "weight": 11,
+            "strength": "primary"
+          },
+          {
+            "id": "SRC-0008",
+            "weight": 2,
+            "strength": "unknown"
+          }
+        ]
+      },
+      "SCR-0028": {
+        "src_targets": [
+          {
+            "id": "SRC-0025",
+            "weight": 12,
+            "strength": "primary"
+          }
+        ]
+      },
+      "SCR-0035": {
+        "src_targets": [
+          {
+            "id": "SRC-0001",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0002",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0003",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0004",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0005",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0006",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0007",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0008",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0012",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0013",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0014",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0015",
+            "weight": 1,
+            "strength": "unknown"
+          },
+          {
+            "id": "SRC-0016",
+            "weight": 1,
+            "strength": "unknown"
+          }
+        ]
+      },
+      "SCR-0043": {
+        "src_targets": [
+          {
+            "id": "SRC-0006",
+            "weight": 10,
+            "strength": "primary"
+          },
+          {
+            "id": "SRC-0008",
+            "weight": 10,
+            "strength": "primary"
+          }
+        ]
+      },
+      "SCR-0044": {
+        "src_targets": [
+          {
+            "id": "SRC-0006",
+            "weight": 10,
+            "strength": "primary"
+          },
+          {
+            "id": "SRC-0008",
+            "weight": 10,
+            "strength": "primary"
+          }
+        ]
+      }
+    }
+  },
+  "scripts_without_src_links": {
+    "count": 42,
+    "scripts": [
+      "SCR-0001",
+      "SCR-0002",
+      "SCR-0003",
+      "SCR-0005",
+      "SCR-0006",
+      "SCR-0010",
+      "SCR-0011",
+      "SCR-0012",
+      "SCR-0013",
+      "SCR-0014",
+      "SCR-0016",
+      "SCR-0017",
+      "SCR-0019",
+      "SCR-0020",
+      "SCR-0021",
+      "SCR-0022",
+      "SCR-0029",
+      "SCR-0030",
+      "SCR-0031",
+      "SCR-0032",
+      "SCR-0033",
+      "SCR-0034",
+      "SCR-0036",
+      "SCR-0037",
+      "SCR-0038",
+      "SCR-0039",
+      "SCR-0040",
+      "SCR-0041",
+      "SCR-0042",
+      "SCR-0045",
+      "SCR-0046",
+      "SCR-0047",
+      "SCR-0048",
+      "SCR-0049",
+      "SCR-0050",
+      "SCR-0051",
+      "SCR-0052",
+      "SCR-0053",
+      "SCR-0054",
+      "SCR-0055",
+      "SCR-0056",
+      "SCR-0057"
+    ]
+  },
+  "journeys": [
+    {
+      "journey": 1,
+      "agent": "b1-1",
+      "start": "SOP-011",
+      "path": [
+        "SOP-011",
+        "SCR-0019",
+        "SCR-0020",
+        "SCR-0012",
+        "TEAM-0006",
+        "SCR-0013",
+        "SCR-0047"
+      ],
+      "route_str": "SOP-011 -> SCR-0019 -> SCR-0020 -> SCR-0012 -> TEAM-0006 -> SCR-0013 -> SCR-0047",
+      "outcome": "partial",
+      "notes": "Reached SCR but no SRC connection found. Dead-end at SCR-0047",
+      "reached_src": false,
+      "hops": 6
+    },
+    {
+      "journey": 2,
+      "agent": "b1-2",
+      "start": "SOP-012",
+      "path": [
+        "SOP-012",
+        "SCR-0019",
+        "SCR-0020",
+        "SCR-0012",
+        "TEAM-0006",
+        "SCR-0013",
+        "SCR-0047"
+      ],
+      "route_str": "SOP-012 -> SCR-0019 -> SCR-0020 -> SCR-0012 -> TEAM-0006 -> SCR-0013 -> SCR-0047",
+      "outcome": "partial",
+      "notes": "Reached SCR but no SRC connection found. Dead-end at SCR-0047",
+      "reached_src": false,
+      "hops": 6
+    },
+    {
+      "journey": 3,
+      "agent": "b1-3",
+      "start": "SOP-013",
+      "path": [
+        "SOP-013",
+        "SCR-0019",
+        "SCR-0020",
+        "SCR-0012",
+        "TEAM-0006",
+        "SCR-0013",
+        "SCR-0047"
+      ],
+      "route_str": "SOP-013 -> SCR-0019 -> SCR-0020 -> SCR-0012 -> TEAM-0006 -> SCR-0013 -> SCR-0047",
+      "outcome": "partial",
+      "notes": "Reached SCR but no SRC connection found. Dead-end at SCR-0047",
+      "reached_src": false,
+      "hops": 6
+    },
+    {
+      "journey": 4,
+      "agent": "b1-4",
+      "start": "SOP-014",
+      "path": [
+        "SOP-014",
+        "SCR-0033",
+        "SCR-0057",
+        "SCR-0032",
+        "TEAM-0025",
+        "SCR-0030",
+        "SOP-012"
+      ],
+      "route_str": "SOP-014 -> SCR-0033 -> SCR-0057 -> SCR-0032 -> TEAM-0025 -> SCR-0030 -> SOP-012",
+      "outcome": "partial",
+      "notes": "Reached SCR but no SRC connection found. Dead-end at SOP-012",
+      "reached_src": false,
+      "hops": 6
+    },
+    {
+      "journey": 5,
+      "agent": "b1-5",
+      "start": "SOP-015",
+      "path": [
+        "SOP-015",
+        "SCR-0012",
+        "SCR-0020",
+        "SCR-0014",
+        "TEAM-0006",
+        "SCR-0013",
+        "SCR-0047"
+      ],
+      "route_str": "SOP-015 -> SCR-0012 -> SCR-0020 -> SCR-0014 -> TEAM-0006 -> SCR-0013 -> SCR-0047",
+      "outcome": "partial",
+      "notes": "Reached SCR but no SRC connection found. Dead-end at SCR-0047",
+      "reached_src": false,
+      "hops": 6
+    },
+    {
+      "journey": 6,
+      "agent": "b1-1",
+      "start": "SOP-016",
+      "path": [
+        "SOP-016",
+        "SCR-0031",
+        "TEAM-0025",
+        "SCR-0033",
+        "SCR-0057",
+        "SCR-0032",
+        "SOP-012"
+      ],
+      "route_str": "SOP-016 -> SCR-0031 -> TEAM-0025 -> SCR-0033 -> SCR-0057 -> SCR-0032 -> SOP-012",
+      "outcome": "partial",
+      "notes": "Reached SCR but no SRC connection found. Dead-end at SOP-012",
+      "reached_src": false,
+      "hops": 6
+    },
+    {
+      "journey": 7,
+      "agent": "b1-2",
+      "start": "SOP-017",
+      "path": [
+        "SOP-017",
+        "SCR-0023",
+        "SRC-0001"
+      ],
+      "route_str": "SOP-017 -> SCR-0023 -> SRC-0001",
+      "outcome": "success",
+      "notes": "Full SOP->SCR->SRC chain achieved in 2 hops",
+      "reached_src": true,
+      "hops": 2
+    },
+    {
+      "journey": 8,
+      "agent": "b1-3",
+      "start": "SOP-018",
+      "path": [
+        "SOP-018",
+        "SCR-0004",
+        "SRC-0038"
+      ],
+      "route_str": "SOP-018 -> SCR-0004 -> SRC-0038",
+      "outcome": "success",
+      "notes": "Full SOP->SCR->SRC chain achieved in 2 hops",
+      "reached_src": true,
+      "hops": 2
+    },
+    {
+      "journey": 9,
+      "agent": "b1-4",
+      "start": "SOP-019",
+      "path": [
+        "SOP-019",
+        "SCR-0033",
+        "SCR-0057",
+        "SCR-0032",
+        "TEAM-0025",
+        "SCR-0030",
+        "SOP-012"
+      ],
+      "route_str": "SOP-019 -> SCR-0033 -> SCR-0057 -> SCR-0032 -> TEAM-0025 -> SCR-0030 -> SOP-012",
+      "outcome": "partial",
+      "notes": "Reached SCR but no SRC connection found. Dead-end at SOP-012",
+      "reached_src": false,
+      "hops": 6
+    },
+    {
+      "journey": 10,
+      "agent": "b1-5",
+      "start": "SOP-020",
+      "path": [
+        "SOP-020",
+        "SCR-0001",
+        "TEAM-0003",
+        "SCR-0002",
+        "TEAM-0001",
+        "SCR-0036",
+        "KB-0001"
+      ],
+      "route_str": "SOP-020 -> SCR-0001 -> TEAM-0003 -> SCR-0002 -> TEAM-0001 -> SCR-0036 -> KB-0001",
+      "outcome": "partial",
+      "notes": "Reached SCR but no SRC connection found. Dead-end at KB-0001",
+      "reached_src": false,
+      "hops": 6
+    }
+  ],
+  "recommended_new_links": [
+    {
+      "from": "SCR-0001",
+      "from_name": "",
+      "to": "SRC-0017",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0017 (1 connections via neighbors)",
+      "candidate_count": 1
+    },
+    {
+      "from": "SCR-0002",
+      "from_name": "",
+      "to": "SRC-0017",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0017 (1 connections via neighbors)",
+      "candidate_count": 1
+    },
+    {
+      "from": "SCR-0003",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0033 (2 connections via neighbors)",
+      "candidate_count": 2
+    },
+    {
+      "from": "SCR-0005",
+      "from_name": "",
+      "to": "SRC-0045",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0045 (1 connections via neighbors)",
+      "candidate_count": 14
+    },
+    {
+      "from": "SCR-0006",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0033 (18 connections via neighbors)",
+      "candidate_count": 24
+    },
+    {
+      "from": "SCR-0010",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0033 (16 connections via neighbors)",
+      "candidate_count": 22
+    },
+    {
+      "from": "SCR-0011",
+      "from_name": "",
+      "to": "SRC-0003",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0003 (3 connections via neighbors)",
+      "candidate_count": 20
+    },
+    {
+      "from": "SCR-0012",
+      "from_name": "",
+      "to": "SRC-0017",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0017 (1 connections via neighbors)",
+      "candidate_count": 1
+    },
+    {
+      "from": "SCR-0013",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "No neighbor-based candidates; SRC-0033 is most-connected SRC globally (64 inbound pointers)",
+      "candidate_count": 0
+    },
+    {
+      "from": "SCR-0014",
+      "from_name": "",
+      "to": "SRC-0017",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0017 (1 connections via neighbors)",
+      "candidate_count": 1
+    },
+    {
+      "from": "SCR-0016",
+      "from_name": "",
+      "to": "SRC-0017",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0017 (1 connections via neighbors)",
+      "candidate_count": 1
+    },
+    {
+      "from": "SCR-0017",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "No neighbor-based candidates; SRC-0033 is most-connected SRC globally (64 inbound pointers)",
+      "candidate_count": 0
+    },
+    {
+      "from": "SCR-0019",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "No neighbor-based candidates; SRC-0033 is most-connected SRC globally (64 inbound pointers)",
+      "candidate_count": 0
+    },
+    {
+      "from": "SCR-0020",
+      "from_name": "",
+      "to": "SRC-0017",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0017 (1 connections via neighbors)",
+      "candidate_count": 1
+    },
+    {
+      "from": "SCR-0021",
+      "from_name": "",
+      "to": "SRC-0017",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0017 (3 connections via neighbors)",
+      "candidate_count": 21
+    },
+    {
+      "from": "SCR-0022",
+      "from_name": "",
+      "to": "SRC-0001",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0001 (3 connections via neighbors)",
+      "candidate_count": 11
+    },
+    {
+      "from": "SCR-0029",
+      "from_name": "",
+      "to": "SRC-0030",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0030 (1 connections via neighbors)",
+      "candidate_count": 1
+    },
+    {
+      "from": "SCR-0030",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "No neighbor-based candidates; SRC-0033 is most-connected SRC globally (64 inbound pointers)",
+      "candidate_count": 0
+    },
+    {
+      "from": "SCR-0031",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "No neighbor-based candidates; SRC-0033 is most-connected SRC globally (64 inbound pointers)",
+      "candidate_count": 0
+    },
+    {
+      "from": "SCR-0032",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "No neighbor-based candidates; SRC-0033 is most-connected SRC globally (64 inbound pointers)",
+      "candidate_count": 0
+    },
+    {
+      "from": "SCR-0033",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "No neighbor-based candidates; SRC-0033 is most-connected SRC globally (64 inbound pointers)",
+      "candidate_count": 0
+    },
+    {
+      "from": "SCR-0034",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "No neighbor-based candidates; SRC-0033 is most-connected SRC globally (64 inbound pointers)",
+      "candidate_count": 0
+    },
+    {
+      "from": "SCR-0036",
+      "from_name": "",
+      "to": "SRC-0017",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0017 (1 connections via neighbors)",
+      "candidate_count": 1
+    },
+    {
+      "from": "SCR-0037",
+      "from_name": "",
+      "to": "SRC-0017",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0017 (1 connections via neighbors)",
+      "candidate_count": 1
+    },
+    {
+      "from": "SCR-0038",
+      "from_name": "",
+      "to": "SRC-0017",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0017 (1 connections via neighbors)",
+      "candidate_count": 1
+    },
+    {
+      "from": "SCR-0039",
+      "from_name": "",
+      "to": "SRC-0017",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0017 (1 connections via neighbors)",
+      "candidate_count": 1
+    },
+    {
+      "from": "SCR-0040",
+      "from_name": "",
+      "to": "SRC-0035",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0035 (1 connections via neighbors)",
+      "candidate_count": 7
+    },
+    {
+      "from": "SCR-0041",
+      "from_name": "",
+      "to": "SRC-0017",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0017 (2 connections via neighbors)",
+      "candidate_count": 12
+    },
+    {
+      "from": "SCR-0042",
+      "from_name": "",
+      "to": "SRC-0017",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0017 (1 connections via neighbors)",
+      "candidate_count": 1
+    },
+    {
+      "from": "SCR-0045",
+      "from_name": "",
+      "to": "SRC-0003",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0003 (3 connections via neighbors)",
+      "candidate_count": 14
+    },
+    {
+      "from": "SCR-0046",
+      "from_name": "",
+      "to": "SRC-0003",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0003 (3 connections via neighbors)",
+      "candidate_count": 13
+    },
+    {
+      "from": "SCR-0047",
+      "from_name": "",
+      "to": "SRC-0001",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0001 (1 connections via neighbors)",
+      "candidate_count": 13
+    },
+    {
+      "from": "SCR-0048",
+      "from_name": "",
+      "to": "SRC-0003",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0003 (5 connections via neighbors)",
+      "candidate_count": 14
+    },
+    {
+      "from": "SCR-0049",
+      "from_name": "",
+      "to": "SRC-0003",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0003 (3 connections via neighbors)",
+      "candidate_count": 11
+    },
+    {
+      "from": "SCR-0050",
+      "from_name": "",
+      "to": "SRC-0003",
+      "to_name": "",
+      "reason": "Sibling/related nodes connect to SRC-0003 (5 connections via neighbors)",
+      "candidate_count": 14
+    },
+    {
+      "from": "SCR-0051",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "No neighbor-based candidates; SRC-0033 is most-connected SRC globally (64 inbound pointers)",
+      "candidate_count": 0
+    },
+    {
+      "from": "SCR-0052",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "No neighbor-based candidates; SRC-0033 is most-connected SRC globally (64 inbound pointers)",
+      "candidate_count": 0
+    },
+    {
+      "from": "SCR-0053",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "No neighbor-based candidates; SRC-0033 is most-connected SRC globally (64 inbound pointers)",
+      "candidate_count": 0
+    },
+    {
+      "from": "SCR-0054",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "No neighbor-based candidates; SRC-0033 is most-connected SRC globally (64 inbound pointers)",
+      "candidate_count": 0
+    },
+    {
+      "from": "SCR-0055",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "No neighbor-based candidates; SRC-0033 is most-connected SRC globally (64 inbound pointers)",
+      "candidate_count": 0
+    },
+    {
+      "from": "SCR-0056",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "No neighbor-based candidates; SRC-0033 is most-connected SRC globally (64 inbound pointers)",
+      "candidate_count": 0
+    },
+    {
+      "from": "SCR-0057",
+      "from_name": "",
+      "to": "SRC-0033",
+      "to_name": "",
+      "reason": "No neighbor-based candidates; SRC-0033 is most-connected SRC globally (64 inbound pointers)",
+      "candidate_count": 0
+    }
+  ]
+}

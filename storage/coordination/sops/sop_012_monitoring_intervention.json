@@ -567,5 +567,11 @@
     "polling_rhythm": "CP-1 (30-60s post-launch) -> CP-2 (5-10min) -> CP-3 (30-50% elapsed) -> CP-4 (first completion) -> CP-5 (all done)",
     "intervention_escalation": "Clarify (INTERVENTION-01) -> Redirect (INTERVENTION-03) -> Helper (INTERVENTION-02) -> Kill+Relaunch (INTERVENTION-04)"
   },
-  "date": "2026-03-11"
+  "procedures": [
+    "Agents append status to agent_status.jsonl on startup, milestones, blockers, and completion",
+    "Coordinator polls at 5 checkpoints: post-launch, early progress, mid-session, completion wave, final gathering",
+    "Monitor for 7 intervention triggers: blocker, stale status, overtime, cross-agent opportunity, duplicate work, error, resource conflict",
+    "Apply intervention actions: clarify, launch helper, redirect, kill+relaunch, post cross-agent data, resolve resource conflict",
+    "Handle completion: verify output, redistribute early finishers, aggregate results, run verification checklist"
+  ]
 }

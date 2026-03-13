@@ -1,0 +1,460 @@
+{
+  "agent": "analysis-4",
+  "task": "graph-optimization-algorithm-research",
+  "timestamp": "2026-03-12T23:30:00Z",
+  "network_summary": {
+    "nodes": 310,
+    "edges": 4820,
+    "density": 0.0503,
+    "diameter": 4,
+    "avg_clustering": 0.3663,
+    "connected_components": 1,
+    "domains": {
+      "wikipedia": 114,
+      "scripts": 57,
+      "sources": 48,
+      "knowledge-base": 46,
+      "sops": 22,
+      "teams": 22,
+      "api-tools": 1
+    }
+  },
+
+  "analysis_1_community_detection": {
+    "algorithm": "Label Propagation",
+    "description": "Iterative algorithm where each node adopts the most frequent label among its neighbors. Converges when no node changes label.",
+    "pseudocode": [
+      "INITIALIZE: assign unique label L[v] to each node v",
+      "REPEAT until convergence:",
+      "  SHUFFLE node order randomly",
+      "  FOR each node v in shuffled order:",
+      "    label_counts = COUNT labels of all neighbors of v",
+      "    L[v] = argmax(label_counts)  // break ties randomly",
+      "  IF no labels changed: STOP"
+    ],
+    "results": {
+      "communities_found": 3,
+      "convergence_iterations": 7,
+      "community_sizes": [224, 56, 30],
+      "communities": [
+        {
+          "id": 0,
+          "size": 224,
+          "composition": {
+            "wikipedia": 93,
+            "scripts": 42,
+            "sources": 48,
+            "knowledge-base": 21,
+            "teams": 11,
+            "sops": 9
+          },
+          "dominant_domain": "wikipedia",
+          "purity": 0.415,
+          "entropy": 2.176,
+          "interpretation": "Large general community anchored by wikipedia and sources nodes. These nodes share broad tag overlap (shared_tags edges) creating a densely connected core. Contains all 48 sources nodes, suggesting sources are tag-bridge connectors."
+        },
+        {
+          "id": 1,
+          "size": 56,
+          "composition": {
+            "knowledge-base": 21,
+            "scripts": 13,
+            "sops": 12,
+            "teams": 9,
+            "api-tools": 1
+          },
+          "dominant_domain": "knowledge-base",
+          "purity": 0.375,
+          "entropy": 2.024,
+          "interpretation": "Operational core community. Contains the majority of SOPs and teams alongside knowledge-base entries. Held together by explicit_reference edges (builds_on/built_upon_by). This is the 'institutional knowledge' cluster."
+        },
+        {
+          "id": 2,
+          "size": 30,
+          "composition": {
+            "wikipedia": 21,
+            "knowledge-base": 4,
+            "scripts": 2,
+            "teams": 2,
+            "sops": 1
+          },
+          "dominant_domain": "wikipedia",
+          "purity": 0.700,
+          "entropy": 1.432,
+          "interpretation": "Specialized wikipedia sub-cluster. These wiki nodes have stronger mutual connections than to the main cluster, suggesting a topically distinct sub-area (likely specific AI sub-topics that are more self-referential)."
+        }
+      ]
+    },
+    "domain_alignment_finding": "Communities do NOT strongly align with domain types. Average entropy of 1.877 (max 2.81) shows moderate mixing. The network is organized more by topical/semantic relatedness than by domain type. This is expected since edges are created from shared_tags which cross domain boundaries.",
+    "recommendations": [
+      "Use community structure to optimize routing: intra-community routes should be preferred for 1-hop lookups",
+      "Community 1 (operational core) should have higher default weights since it contains the most actionable content",
+      "Consider a hierarchical community approach: run label propagation within Community 0 to find sub-communities in the large 224-node cluster",
+      "Community membership could be stored as a node attribute to speed up route planning"
+    ]
+  },
+
+  "analysis_2_pagerank": {
+    "algorithm": "PageRank (standard + weighted variant)",
+    "description": "Iterative computation of node importance based on incoming link structure. Damping factor d=0.85. Weighted variant distributes rank proportional to edge weight rather than uniformly.",
+    "pseudocode": [
+      "INITIALIZE: PR[v] = 1/N for all nodes v",
+      "REPEAT until convergence (delta < 1e-8):",
+      "  sink_sum = SUM(PR[v]) for all v with out_degree=0",
+      "  FOR each node v:",
+      "    PR_new[v] = (1-d)/N + d * sink_sum/N",
+      "    FOR each edge (u -> v):",
+      "      PR_new[v] += d * PR[u] / out_degree(u)",
+      "      // Weighted variant: d * PR[u] * w(u,v) / sum_weights_out(u)",
+      "  PR = PR_new"
+    ],
+    "results": {
+      "convergence_iterations": 54,
+      "top_15_standard_pagerank": [
+        {"rank": 1, "node": "KB-0004", "pagerank": 0.020006, "domain": "knowledge-base", "in_degree": 100, "s5_degree_rank": 5},
+        {"rank": 2, "node": "SCR-0007", "pagerank": 0.017231, "domain": "scripts", "in_degree": 125, "s5_degree_rank": 1},
+        {"rank": 3, "node": "KB-0005", "pagerank": 0.016802, "domain": "knowledge-base", "in_degree": 109, "s5_degree_rank": 4},
+        {"rank": 4, "node": "KB-0014", "pagerank": 0.014651, "domain": "knowledge-base", "in_degree": 75, "s5_degree_rank": 11},
+        {"rank": 5, "node": "KB-0010", "pagerank": 0.013356, "domain": "knowledge-base", "in_degree": 124, "s5_degree_rank": 2},
+        {"rank": 6, "node": "KB-0043", "pagerank": 0.012823, "domain": "knowledge-base", "in_degree": 73, "s5_degree_rank": 12},
+        {"rank": 7, "node": "SCR-0009", "pagerank": 0.011999, "domain": "scripts", "in_degree": 91, "s5_degree_rank": 7},
+        {"rank": 8, "node": "TEAM-0014", "pagerank": 0.011876, "domain": "teams", "in_degree": 53, "s5_degree_rank": "not_in_top15"},
+        {"rank": 9, "node": "SCR-0019", "pagerank": 0.010996, "domain": "scripts", "in_degree": 48, "s5_degree_rank": "not_in_top15"},
+        {"rank": 10, "node": "SCR-0006", "pagerank": 0.010838, "domain": "scripts", "in_degree": 93, "s5_degree_rank": 6}
+      ],
+      "top_5_weighted_pagerank": [
+        {"rank": 1, "node": "KB-0004", "weighted_pagerank": 0.020578, "domain": "knowledge-base"},
+        {"rank": 2, "node": "KB-0005", "weighted_pagerank": 0.018425, "domain": "knowledge-base"},
+        {"rank": 3, "node": "SCR-0007", "weighted_pagerank": 0.014983, "domain": "scripts"},
+        {"rank": 4, "node": "KB-0010", "weighted_pagerank": 0.014063, "domain": "knowledge-base"},
+        {"rank": 5, "node": "SCR-0009", "weighted_pagerank": 0.013082, "domain": "scripts"}
+      ]
+    },
+    "pagerank_vs_degree_centrality_comparison": {
+      "key_divergences": [
+        "KB-0004 ranks #1 by PageRank but only #5 by degree centrality. Its incoming links come from other high-PageRank nodes, amplifying its importance.",
+        "SCR-0007 is #1 by degree (146 total) but #2 by PageRank. Many of its incoming links come from low-importance wiki nodes.",
+        "SCR-0018 is #2 by degree (144 total) but drops out of top 10 PageRank. Its high in-degree is inflated by many low-value connections.",
+        "TEAM-0014 (in_degree=53) appears at PageRank #8 despite not being in the degree top 15. It receives links from important knowledge-base nodes.",
+        "KB-0014 (in_degree=75) ranks PageRank #4 but degree #11. Its inbound links carry high authority."
+      ],
+      "conclusion": "PageRank reveals that knowledge-base nodes are more structurally important than raw degree suggests. SCR nodes accumulate many low-value inbound edges from wiki nodes, inflating their degree centrality. PageRank correctly identifies KB-0004 and KB-0005 as the true network hubs because they receive links from other authoritative nodes. Degree centrality overweights the 'popularity' of script nodes among wikipedia nodes."
+    },
+    "recommendations": [
+      "Use PageRank (not degree) for route prioritization: prefer routing through high-PR nodes",
+      "Weighted PageRank boosts KB nodes further, suggesting edge weights already encode quality signals",
+      "TEAM-0014 is a 'hidden hub' - important despite modest degree; ensure it is well-connected in routes",
+      "Consider PageRank as a multiplier on edge weights: w_effective = w * sqrt(PR_target / PR_mean)"
+    ]
+  },
+
+  "analysis_3_link_prediction": {
+    "algorithms": {
+      "common_neighbors": "CN(u,v) = |N(u) intersection N(v)|",
+      "jaccard_coefficient": "J(u,v) = |N(u) intersection N(v)| / |N(u) union N(v)|",
+      "adamic_adar_index": "AA(u,v) = SUM(1/log|N(w)|) for w in N(u) intersection N(v)"
+    },
+    "pseudocode": [
+      "FOR each pair (u, v) where edge (u,v) does not exist:",
+      "  common = neighbors(u) INTERSECT neighbors(v)",
+      "  CN = |common|",
+      "  J = CN / |neighbors(u) UNION neighbors(v)|",
+      "  AA = SUM(1 / log(degree(w)) for w in common)",
+      "  IF AA > threshold: PREDICT edge (u,v) with confidence = AA",
+      "SORT predictions by AA descending"
+    ],
+    "results": {
+      "total_candidates_analyzed": 448,
+      "top_10_missing_edges": [
+        {"source": "SCR-0006", "target": "SCR-0008", "CN": 92, "jaccard": 0.968, "adamic_adar": 34.23, "cross_domain": false},
+        {"source": "SCR-0007", "target": "SCR-0006", "CN": 91, "jaccard": 0.705, "adamic_adar": 34.02, "cross_domain": false},
+        {"source": "SCR-0007", "target": "SCR-0008", "CN": 91, "jaccard": 0.722, "adamic_adar": 34.02, "cross_domain": false},
+        {"source": "SCR-0006", "target": "SCR-0010", "CN": 90, "jaccard": 0.938, "adamic_adar": 33.55, "cross_domain": false},
+        {"source": "SCR-0008", "target": "SCR-0010", "CN": 89, "jaccard": 0.947, "adamic_adar": 33.28, "cross_domain": false},
+        {"source": "SCR-0007", "target": "SCR-0010", "CN": 88, "jaccard": 0.688, "adamic_adar": 33.07, "cross_domain": false},
+        {"source": "SCR-0009", "target": "SCR-0010", "CN": 88, "jaccard": 0.917, "adamic_adar": 33.05, "cross_domain": false},
+        {"source": "SCR-0018", "target": "KB-0005", "CN": 73, "jaccard": 0.456, "adamic_adar": 32.65, "cross_domain": true},
+        {"source": "KB-0005", "target": "SRC-0033", "CN": 65, "jaccard": 0.575, "adamic_adar": 29.60, "cross_domain": true},
+        {"source": "SCR-0006", "target": "SCR-0015", "CN": 73, "jaccard": 0.689, "adamic_adar": 28.66, "cross_domain": false}
+      ],
+      "top_cross_domain_predictions": [
+        {"source": "SCR-0018", "target": "KB-0005", "CN": 73, "adamic_adar": 32.65, "domains": "scripts->knowledge-base"},
+        {"source": "KB-0005", "target": "SRC-0033", "CN": 65, "adamic_adar": 29.60, "domains": "knowledge-base->sources"},
+        {"source": "KB-0010", "target": "TEAM-0005", "CN": 50, "adamic_adar": 22.32, "domains": "knowledge-base->teams"},
+        {"source": "SCR-0018", "target": "TEAM-0012", "CN": 49, "adamic_adar": 22.26, "domains": "scripts->teams"},
+        {"source": "SRC-0033", "target": "TEAM-0005", "CN": 45, "adamic_adar": 21.20, "domains": "sources->teams"}
+      ]
+    },
+    "findings": {
+      "intra_script_cluster": "SCR-0006, SCR-0007, SCR-0008, SCR-0009, SCR-0010, SCR-0015, SCR-0018 form a near-clique with 90+ common neighbors between pairs but many missing direct edges. These scripts are clearly related and should be linked.",
+      "cross_domain_gaps": "The strongest cross-domain missing link is SCR-0018 -> KB-0005 (AA=32.65). This is as strong as most intra-script predictions, indicating a genuinely missing connection.",
+      "jaccard_insight": "SCR-0006 <-> SCR-0008 has Jaccard=0.968, meaning they share 96.8% of their neighborhoods. These are near-duplicate nodes topologically."
+    },
+    "recommendations": [
+      "Add edges for all pairs with Adamic-Adar > 25 and Jaccard > 0.5: approximately 15 edges",
+      "Prioritize cross-domain predictions (SCR-0018->KB-0005, KB-0005->SRC-0033) as they improve network integration",
+      "Suggested initial weight for predicted edges: weight = round(AA / 10), capped at 5",
+      "Run link prediction periodically after network updates to find emerging gaps",
+      "Investigate SCR-0006/SCR-0008 near-duplication: consider merging or differentiating"
+    ]
+  },
+
+  "analysis_4_weight_optimization": {
+    "context": {
+      "total_logged_routes": 348,
+      "weight_distribution": {
+        "weight_1": {"count": 2420, "pct": 50.2},
+        "weight_2": {"count": 1191, "pct": 24.7},
+        "weight_3_to_5": {"count": 666, "pct": 13.8},
+        "weight_6_plus": {"count": 543, "pct": 11.3}
+      },
+      "edge_type_weight_means": {
+        "shared_tags": 1.88,
+        "explicit_reference": 7.24,
+        "category_affinity": 3.25,
+        "tag_bridge": 3.67,
+        "backlink": 5.30
+      }
+    },
+    "reinforcement_learning_weight_update_rule": {
+      "name": "Route-Feedback Weight Adjustment (RFWA)",
+      "inspiration": "Combines Q-learning temporal difference updates with exponential moving average for stability",
+      "parameters": {
+        "alpha": 0.1,
+        "alpha_description": "Learning rate - how much each route outcome adjusts the weight",
+        "gamma": 0.95,
+        "gamma_description": "Discount factor for downstream edge success",
+        "success_reward": 1.0,
+        "failure_penalty": -0.5,
+        "min_weight": 0.5,
+        "max_weight": 16,
+        "decay_rate": 0.01,
+        "decay_description": "Unused edges slowly decay toward baseline"
+      },
+      "pseudocode": [
+        "FUNCTION update_weights(route, outcome, edges_in_route):",
+        "  reward = success_reward IF outcome == 'success' ELSE failure_penalty",
+        "  ",
+        "  // Assign credit to each edge in the route (later edges get discounted)",
+        "  FOR i, edge IN enumerate(edges_in_route):",
+        "    credit = reward * (gamma ^ (len(edges_in_route) - 1 - i))",
+        "    edge.weight = edge.weight + alpha * (credit - (edge.weight / max_weight - 0.5))",
+        "    edge.weight = clamp(edge.weight, min_weight, max_weight)",
+        "    edge.last_used = current_timestamp",
+        "    edge.use_count += 1",
+        "",
+        "FUNCTION decay_unused_edges(all_edges, current_time):",
+        "  FOR edge IN all_edges:",
+        "    days_idle = (current_time - edge.last_used).days",
+        "    IF days_idle > 7:",
+        "      baseline = get_baseline_weight(edge)  // from edge type",
+        "      edge.weight = edge.weight + decay_rate * (baseline - edge.weight)",
+        "",
+        "FUNCTION get_baseline_weight(edge):",
+        "  // Base weight by edge reason type",
+        "  IF 'explicit_reference' IN edge.reasons: RETURN 6",
+        "  IF 'backlink' IN edge.reasons: RETURN 5",
+        "  IF 'tag_bridge' IN edge.reasons: RETURN 3",
+        "  IF 'category_affinity' IN edge.reasons: RETURN 3",
+        "  IF 'shared_tags' IN edge.reasons: RETURN 2",
+        "  RETURN 1"
+      ],
+      "edge_metadata_additions": {
+        "last_used": "ISO timestamp of last route traversal",
+        "use_count": "Total number of route traversals",
+        "success_count": "Number of successful route traversals",
+        "failure_count": "Number of failed route traversals",
+        "success_rate": "success_count / use_count"
+      }
+    },
+    "batch_optimization_rule": {
+      "name": "Bayesian Weight Calibration",
+      "description": "After accumulating N route logs, recalibrate all weights using observed success rates as priors",
+      "pseudocode": [
+        "FUNCTION batch_recalibrate(route_logs, edges):",
+        "  // Collect per-edge statistics from route logs",
+        "  edge_stats = aggregate_route_logs(route_logs)",
+        "  ",
+        "  FOR edge IN edges:",
+        "    stats = edge_stats.get(edge.id, None)",
+        "    IF stats IS None:",
+        "      // Never traversed - reduce weight by staleness factor",
+        "      edge.weight *= 0.95",
+        "      CONTINUE",
+        "    ",
+        "    // Bayesian update: prior is current weight, evidence is success rate",
+        "    prior = edge.weight / max_weight",
+        "    likelihood = stats.success_rate",
+        "    posterior = (prior * 0.3 + likelihood * 0.7)  // weighted combination",
+        "    edge.weight = round(posterior * max_weight)",
+        "    edge.weight = clamp(edge.weight, min_weight, max_weight)"
+      ]
+    },
+    "recommendations": [
+      "Implement RFWA as the online update rule - apply after each route completion",
+      "Run batch recalibration weekly using accumulated route logs",
+      "Track edge traversal metadata (last_used, use_count, success_rate) in pointer-network.json",
+      "Edges with explicit_reference should have a higher floor (weight >= 4) since they represent curated relationships",
+      "Consider separate weight tracks: 'structural_weight' (fixed, topology-based) and 'learned_weight' (updated by RFWA). Route score = 0.4*structural + 0.6*learned"
+    ]
+  },
+
+  "analysis_5_pruning_strategy": {
+    "problem": {
+      "weight_1_edges": 2420,
+      "percentage_of_total": 50.2,
+      "description": "Half of all edges have weight 1, the minimum. These are exclusively shared_tags edges with only 1-2 shared tags. Many may be noise (coincidental tag overlap) rather than meaningful semantic connections."
+    },
+    "pruning_algorithm": {
+      "name": "Multi-Criteria Edge Pruning with Connectivity Guarantee",
+      "phases": [
+        {
+          "phase": 1,
+          "name": "Classify weight-1 edges",
+          "pseudocode": [
+            "FOR each edge (u,v) with weight == 1:",
+            "  score = 0",
+            "  ",
+            "  // Criterion 1: Topological redundancy",
+            "  // If u and v share many other paths, this edge is redundant",
+            "  alt_paths = count_paths(u, v, max_hops=2, excluding=(u,v))",
+            "  IF alt_paths >= 3: score += 2  // highly redundant",
+            "  ELIF alt_paths >= 1: score += 1  // somewhat redundant",
+            "  ",
+            "  // Criterion 2: Common neighbor ratio",
+            "  cn = |neighbors(u) INTERSECT neighbors(v)|",
+            "  cn_ratio = cn / min(degree(u), degree(v))",
+            "  IF cn_ratio > 0.5: score += 1  // already well-connected via neighbors",
+            "  ",
+            "  // Criterion 3: Domain bridge value",
+            "  IF domain(u) != domain(v):",
+            "    cross_domain_edges_u = count(edges from u to domain(v))",
+            "    IF cross_domain_edges_u <= 2: score -= 2  // rare cross-domain link, keep it",
+            "  ",
+            "  // Criterion 4: Node importance",
+            "  IF pagerank(u) < median_pr AND pagerank(v) < median_pr:",
+            "    score += 1  // edge between two unimportant nodes",
+            "  ",
+            "  // Criterion 5: Usage data (if available)",
+            "  IF edge.use_count == 0 AND edge.age > 30_days:",
+            "    score += 2  // never used, old edge",
+            "  ",
+            "  edge.prune_score = score"
+          ]
+        },
+        {
+          "phase": 2,
+          "name": "Connectivity-safe pruning",
+          "pseudocode": [
+            "// Sort candidates by prune_score descending (most prunable first)",
+            "candidates = sorted(weight_1_edges, key=prune_score, reverse=True)",
+            "pruned = []",
+            "",
+            "FOR edge IN candidates:",
+            "  IF edge.prune_score < 2: BREAK  // only prune confident candidates",
+            "  ",
+            "  // Check if removing this edge disconnects any node",
+            "  temp_remove(edge)",
+            "  IF is_connected(graph):",
+            "    // Check minimum degree constraint",
+            "    IF degree(edge.source) >= 3 AND degree(edge.target) >= 3:",
+            "      pruned.append(edge)",
+            "    ELSE:",
+            "      restore(edge)  // would leave a node too isolated",
+            "  ELSE:",
+            "    restore(edge)  // would disconnect graph",
+            "",
+            "RETURN pruned"
+          ]
+        },
+        {
+          "phase": 3,
+          "name": "Soft pruning (alternative to deletion)",
+          "description": "Instead of removing edges, mark them as 'dormant' with weight 0.5. They are excluded from default routing but can be reactivated if a route specifically needs them.",
+          "pseudocode": [
+            "FOR edge IN pruned_candidates:",
+            "  edge.weight = 0.5",
+            "  edge.status = 'dormant'",
+            "  edge.dormant_since = current_timestamp",
+            "",
+            "// Reactivation rule:",
+            "IF route_planner cannot find path with active edges only:",
+            "  include dormant edges with penalty factor 2x"
+          ]
+        }
+      ]
+    },
+    "estimated_pruning_impact": {
+      "estimated_pruneable_edges": "800-1200 of 2420 weight-1 edges (33-50%)",
+      "estimated_total_edge_reduction": "17-25% of all 4820 edges",
+      "connectivity_impact": "None (guaranteed by algorithm)",
+      "routing_impact": "Minimal - pruned edges are redundant paths between well-connected nodes",
+      "storage_savings": "15-20% reduction in pointer-network.json size"
+    },
+    "specific_pruning_targets": {
+      "high_confidence_prune_category": {
+        "description": "Weight-1 shared_tags edges between nodes that already share 50+ common neighbors",
+        "example_pairs": ["SCR-0006<->SCR-0008 neighborhood (Jaccard=0.968)", "SCR-0007<->SCR-0010 neighborhood"],
+        "rationale": "These nodes are already reachable via dozens of 2-hop paths. The weight-1 direct edge adds no routing value."
+      },
+      "preserve_category": {
+        "description": "Weight-1 edges that serve as the only or one of few cross-domain bridges for a node",
+        "example": "wiki nodes with in_degree=0 rely entirely on their outgoing weight-1 edges",
+        "rationale": "114 wiki nodes all have in_degree=0 and only 8 outgoing edges each. Pruning any reduces their already minimal connectivity."
+      }
+    },
+    "recommendations": [
+      "Start with soft pruning (dormant status) rather than deletion to allow recovery",
+      "Never prune edges from nodes with total_degree <= 8 (the wiki nodes)",
+      "Prioritize pruning within the dense SCR cluster where redundancy is highest",
+      "After pruning, re-run community detection to verify structure is preserved",
+      "Set up a pruning audit: if a dormant edge is reactivated 3+ times, restore it permanently",
+      "Target: reduce from 4820 to ~3800 active edges while maintaining diameter <= 4"
+    ]
+  },
+
+  "cross_cutting_recommendations": {
+    "implementation_priority": [
+      {
+        "priority": 1,
+        "action": "Add edge traversal metadata (use_count, success_count, last_used) to pointer-network.json",
+        "effort": "low",
+        "impact": "Enables all RL-based optimization and data-driven pruning"
+      },
+      {
+        "priority": 2,
+        "action": "Implement RFWA online weight updates in route_tracker.py",
+        "effort": "medium",
+        "impact": "Weights automatically improve with usage, reducing manual tuning"
+      },
+      {
+        "priority": 3,
+        "action": "Add predicted cross-domain edges (SCR-0018->KB-0005, KB-0005->SRC-0033, KB-0010->TEAM-0005)",
+        "effort": "low",
+        "impact": "Improves cross-domain routing for high-value node pairs"
+      },
+      {
+        "priority": 4,
+        "action": "Run soft pruning on weight-1 edges with prune_score >= 3",
+        "effort": "medium",
+        "impact": "Reduces noise, speeds up route computation, clarifies network structure"
+      },
+      {
+        "priority": 5,
+        "action": "Store community labels and PageRank scores as node attributes",
+        "effort": "low",
+        "impact": "Enables community-aware routing and importance-weighted path selection"
+      }
+    ],
+    "composite_edge_score_formula": {
+      "description": "Recommended unified edge scoring for route planning",
+      "formula": "edge_score = (0.3 * normalized_weight) + (0.3 * pagerank_target / max_pagerank) + (0.2 * (1 - redundancy_ratio)) + (0.2 * success_rate)",
+      "components": {
+        "normalized_weight": "edge.weight / 16 (current structural weight)",
+        "pagerank_target": "PageRank of destination node (authority signal)",
+        "redundancy_ratio": "alternative_path_count / max_alternatives (penalizes redundant edges)",
+        "success_rate": "edge.success_count / edge.use_count (learned from route feedback, default 0.5)"
+      }
+    }
+  }
+}

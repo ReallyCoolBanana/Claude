@@ -1,0 +1,144 @@
+{
+  "report_id": "run006_fix_sops",
+  "division": "2A",
+  "agents": [
+    "FIX-3",
+    "FIX-4"
+  ],
+  "date": "2026-03-12",
+  "files_fixed": 10,
+  "bugs_addressed": [
+    "BUG-B3-002 (sop_026_wikipedia_toolkit.json: missing operational content)",
+    "BUG-B3-003 to BUG-B3-006 (efficiency_guide.json: missing id, title, purpose, operational content)",
+    "BUG-B3-007 (sop_027_wikipedia_category_pull.json: missing operational content)",
+    "BUG-B3-008 (sop_012_monitoring_intervention.json: missing operational content)",
+    "BUG-B3-009 (sop_014_simultaneous_project_management.json: missing operational content)",
+    "BUG-B3-010 to BUG-B3-013 (tool_sops.json: missing id, title, purpose, operational content)",
+    "BUG-B3-014 (sop_016_cross_team_data_flow.json: missing operational content)",
+    "BUG-B3-015 (sop_015_infrastructure_audit.json: missing operational content)",
+    "BUG-B3-016 to BUG-B3-019 (future_team_data_strategy.json: missing id, title, purpose, operational content)",
+    "BUG-B3-020 to BUG-B3-021 (sop_013_prompt_engineering.json: missing purpose, operational content)"
+  ],
+  "bugs_not_addressed": [
+    "BUG-B3-001 (secondary-index: SCR-0057 tag indexing - out of scope for SOP fixes)",
+    "BUG-B3-022 to BUG-B3-032 (orphaned scripts not in scripts/index.json - out of scope for SOP fixes)"
+  ],
+  "fixes": [
+    {
+      "file": "efficiency_guide.json",
+      "bugs_fixed": [
+        "BUG-B3-003",
+        "BUG-B3-004",
+        "BUG-B3-005",
+        "BUG-B3-006"
+      ],
+      "fields_added": [
+        "id",
+        "title",
+        "purpose",
+        "procedures"
+      ]
+    },
+    {
+      "file": "tool_sops.json",
+      "bugs_fixed": [
+        "BUG-B3-010",
+        "BUG-B3-011",
+        "BUG-B3-012",
+        "BUG-B3-013"
+      ],
+      "fields_added": [
+        "id",
+        "title",
+        "purpose",
+        "procedures"
+      ]
+    },
+    {
+      "file": "future_team_data_strategy.json",
+      "bugs_fixed": [
+        "BUG-B3-016",
+        "BUG-B3-017",
+        "BUG-B3-018",
+        "BUG-B3-019"
+      ],
+      "fields_added": [
+        "id",
+        "title",
+        "purpose",
+        "procedures"
+      ]
+    },
+    {
+      "file": "sop_013_prompt_engineering.json",
+      "bugs_fixed": [
+        "BUG-B3-020",
+        "BUG-B3-021"
+      ],
+      "fields_added": [
+        "purpose",
+        "procedures"
+      ]
+    },
+    {
+      "file": "sop_026_wikipedia_toolkit.json",
+      "bugs_fixed": [
+        "BUG-B3-002"
+      ],
+      "fields_added": [
+        "procedures"
+      ]
+    },
+    {
+      "file": "sop_027_wikipedia_category_pull.json",
+      "bugs_fixed": [
+        "BUG-B3-007"
+      ],
+      "fields_added": [
+        "procedures"
+      ]
+    },
+    {
+      "file": "sop_012_monitoring_intervention.json",
+      "bugs_fixed": [
+        "BUG-B3-008"
+      ],
+      "fields_added": [
+        "procedures"
+      ]
+    },
+    {
+      "file": "sop_014_simultaneous_project_management.json",
+      "bugs_fixed": [
+        "BUG-B3-009"
+      ],
+      "fields_added": [
+        "procedures"
+      ]
+    },
+    {
+      "file": "sop_016_cross_team_data_flow.json",
+      "bugs_fixed": [
+        "BUG-B3-014"
+      ],
+      "fields_added": [
+        "procedures"
+      ]
+    },
+    {
+      "file": "sop_015_infrastructure_audit.json",
+      "bugs_fixed": [
+        "BUG-B3-015"
+      ],
+      "fields_added": [
+        "procedures"
+      ]
+    }
+  ],
+  "approach": {
+    "required_fields": "Added missing id, title, and purpose fields to SOPs that lacked them (efficiency_guide, tool_sops, future_team_data_strategy)",
+    "operational_content": "Added a standardized 'procedures' array to all 10 SOPs. Each procedures array contains 4-6 actionable steps derived from the SOP's existing rich content (sections, phases, checklists).",
+    "rationale": "The SOPs already contained detailed operational content under custom field names (section_1, phase_1, etc.) but lacked a standardized 'procedures' field that scanners expect. The added procedures serve as a quick-reference index into the existing detailed content."
+  },
+  "total_bugs_fixed": 20
+}

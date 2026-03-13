@@ -1,0 +1,208 @@
+{
+  "id": "SOP-029",
+  "version": "1.0",
+  "created": "2026-03-12",
+  "title": "Agent Route Tracking: Log, Analyze, and Optimize Pointer Traversals",
+  "purpose": "Standard procedure for agents to log which pointer network paths they follow, and for coordinators to analyze route patterns to optimize the pointer network over time.",
+  "reference": {
+    "route_tracker": "storage/coordination/route_tracker.py",
+    "route_log": "storage/pointer-routes/route_log.jsonl",
+    "route_analysis": "storage/pointer-routes/route_analysis.json",
+    "route_patterns": "storage/pointer-routes/route_patterns.json",
+    "pointer_network": "storage/pointer-network.json",
+    "related_sops": ["SOP-028 (pointer network operations)", "SOP-012 (monitoring)"]
+  },
+
+  "strength_levels": {
+    "description": "Every SCR/TOOL <-> SOP pointer has a strength classification guiding agents.",
+    "levels": {
+      "primary": {
+        "weight_range": "7-10",
+        "meaning": "This tool IS the SOP's implementation. The SOP directly names and uses it.",
+        "agent_action": "Use first. This is the canonical tool for this workflow."
+      },
+      "supporting": {
+        "weight_range": "4-6",
+        "meaning": "This tool supports the SOP's workflow (monitoring, coordination, validation).",
+        "agent_action": "Use when primary tool needs orchestration or post-processing."
+      },
+      "related": {
+        "weight_range": "2-3",
+        "meaning": "Shares domain/tags but isn't directly used by the SOP.",
+        "agent_action": "Consider for adjacent tasks or extending the SOP's scope."
+      },
+      "tangential": {
+        "weight_range": "1",
+        "meaning": "Weak connection. Not directly useful.",
+        "agent_action": "Ignore unless exploring broadly."
+      }
+    }
+  },
+
+  "operations": {
+
+    "agent_log_route": {
+      "id": "OP-01",
+      "title": "Log a Route During Task Execution",
+      "when": "An agent follows pointer network links to find tools, SOPs, or resources for a task.",
+      "who": "Any agent (coding, research, think-tank, coordinator)",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Track which nodes you traverse during task execution",
+          "detail": "As you follow pointers from an SOP to scripts, or from scripts to sources, record the chain of node IDs in order."
+        },
+        {
+          "step": 2,
+          "action": "Log the route when done",
+          "command": "python3 storage/coordination/route_tracker.py log --agent \"{agent_id}\" --task \"{task_type}\" --route \"{node1} -> {node2} -> {node3}\" --outcome \"{success|failure|partial}\" --session \"{session_id}\" --notes \"{optional_notes}\"",
+          "example": "python3 storage/coordination/route_tracker.py log --agent \"coding-team-2\" --task \"wikipedia-enrichment\" --route \"SOP-027 -> SCR-0043 -> SCR-0044\" --outcome \"success\""
+        }
+      ],
+      "required_fields": {
+        "agent": "Unique agent identifier (e.g., coding-team-1, research-2)",
+        "task": "Task category (e.g., wikipedia-enrichment, data-gathering, monitoring, coordination-setup, stress-test, indexing)",
+        "route": "Space-separated node IDs with ' -> ' between them",
+        "outcome": "success, failure, or partial"
+      }
+    },
+
+    "coordinator_analyze": {
+      "id": "OP-02",
+      "title": "Analyze Route Patterns",
+      "when": "After a multi-agent session, or periodically to optimize the pointer network.",
+      "who": "Coordinator or maintenance agent",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Run analysis",
+          "command": "python3 storage/coordination/route_tracker.py analyze"
+        },
+        {
+          "step": 2,
+          "action": "Review output at storage/pointer-routes/route_analysis.json",
+          "check": [
+            "strength_effectiveness: Are 'primary' routes succeeding more than 'related'?",
+            "top_edges: Which pointer links are most traversed?",
+            "outcome_distribution: What fraction of routes succeed?"
+          ]
+        },
+        {
+          "step": 3,
+          "action": "Extract reusable patterns",
+          "command": "python3 storage/coordination/route_tracker.py patterns"
+        },
+        {
+          "step": 4,
+          "action": "Review storage/pointer-routes/route_patterns.json",
+          "check": [
+            "recommended_route: Is the most common successful route the best one?",
+            "strengths_on_success: Which strength levels correlate with success?"
+          ]
+        }
+      ]
+    },
+
+    "recommend_route": {
+      "id": "OP-03",
+      "title": "Get Route Recommendation Before Starting a Task",
+      "when": "An agent is about to start a task and wants to know the best pointer path.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Ask for a recommendation",
+          "command": "python3 storage/coordination/route_tracker.py recommend --task \"{task_type}\" --entry \"{starting_node}\"",
+          "detail": "Returns the historically best route if one exists, or falls back to strength-based suggestion from the pointer network."
+        },
+        {
+          "step": 2,
+          "action": "Follow the recommended route, but log your actual route when done (OP-01)"
+        }
+      ]
+    },
+
+    "optimize_network": {
+      "id": "OP-04",
+      "title": "Use Route Data to Optimize Pointer Weights and Strengths",
+      "when": "After accumulating 20+ route logs, or when success rates are below 70%.",
+      "who": "Coordinator or infrastructure agent",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Run full export",
+          "command": "python3 storage/coordination/route_tracker.py export"
+        },
+        {
+          "step": 2,
+          "action": "Identify misclassified strengths",
+          "detail": "If 'related' edges have higher success rates than 'primary' edges for a specific task, the pointer weights or strength classifications may need updating."
+        },
+        {
+          "step": 3,
+          "action": "Identify dead routes",
+          "detail": "Edges that exist in the pointer network but are never traversed may indicate unnecessary connections. Consider removing or downgrading them."
+        },
+        {
+          "step": 4,
+          "action": "Identify missing routes",
+          "detail": "If agents frequently traverse node pairs that DON'T have a direct pointer, add one. These are discovered shortcuts."
+        },
+        {
+          "step": 5,
+          "action": "Apply changes via SOP-028 (OP-06 for tag updates, OP-07 for full rebuild)"
+        }
+      ],
+      "triggers": [
+        "20+ routes logged",
+        "Success rate below 70% for any task type",
+        "New SOP or script added that changes routing landscape"
+      ]
+    },
+
+    "view_top_routes": {
+      "id": "OP-05",
+      "title": "View Most-Used Routes from a Node",
+      "when": "Investigating which paths agents take from a specific SOP or script.",
+      "command": "python3 storage/coordination/route_tracker.py top --entry \"{node_id}\"",
+      "example": "python3 storage/coordination/route_tracker.py top --entry SOP-027"
+    }
+  },
+
+  "integration_with_agent_workflow": {
+    "description": "How agents should integrate route tracking into their normal workflow.",
+    "before_task": [
+      "1. Identify your task type (e.g., 'data-gathering', 'monitoring')",
+      "2. Run: route_tracker.py recommend --task '{task}' --entry '{starting_sop}'",
+      "3. Follow primary-strength pointers first, then supporting if needed"
+    ],
+    "during_task": [
+      "1. Note each pointer you follow (node ID sequence)",
+      "2. If you deviate from the recommended route, note why"
+    ],
+    "after_task": [
+      "1. Log route: route_tracker.py log --agent '{id}' --task '{type}' --route '{chain}' --outcome '{result}'",
+      "2. If outcome was 'failure', include --notes explaining what went wrong"
+    ]
+  },
+
+  "data_format": {
+    "route_log_entry": {
+      "timestamp": "ISO 8601 UTC",
+      "agent_id": "string (agent identifier)",
+      "task": "string (task category)",
+      "route": ["node1", "node2", "node3"],
+      "hops": [
+        {
+          "from": "node1",
+          "to": "node2",
+          "weight": 8,
+          "strength": "primary",
+          "reasons": ["shared_tags:...", "explicit_reference:..."]
+        }
+      ],
+      "outcome": "success|failure|partial",
+      "total_weight": "sum of all hop weights",
+      "strengths_used": ["primary", "supporting"]
+    }
+  }
+}

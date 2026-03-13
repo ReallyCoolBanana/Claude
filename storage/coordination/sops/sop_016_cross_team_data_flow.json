@@ -112,9 +112,9 @@
         "name": "Cross-reference",
         "action": "Link findings across report types",
         "examples": [
-          "Bug in tool X (bug report) → Tool X marked broken (assessment report)",
-          "Missing docs for module Y (documentation report) → Module Y index entry updated",
-          "Fixed bug in Z (bug report) → Z re-tested and verified (assessment report)"
+          "Bug in tool X (bug report) \u2192 Tool X marked broken (assessment report)",
+          "Missing docs for module Y (documentation report) \u2192 Module Y index entry updated",
+          "Fixed bug in Z (bug report) \u2192 Z re-tested and verified (assessment report)"
         ]
       },
       {
@@ -188,8 +188,14 @@
   },
   "quick_reference": {
     "consolidation_command": "python3 -c \"import json,glob; files=glob.glob('storage/coordination/hub/infrastructure-*.json'); [print(f'{f}: {json.load(open(f))[\"metadata\"][\"team\"]} - {json.load(open(f))[\"metadata\"][\"task\"]}') for f in sorted(files)]\"",
-    "data_flow_summary": "Teams write to isolated outputs → Commander collects → Validates → Deduplicates → Cross-references → Assembles master report",
+    "data_flow_summary": "Teams write to isolated outputs \u2192 Commander collects \u2192 Validates \u2192 Deduplicates \u2192 Cross-references \u2192 Assembles master report",
     "key_principle": "Data flows UP to the commander, never sideways between project groups"
   },
-  "date": "2026-03-11"
+  "procedures": [
+    "All team outputs must include standard metadata block (team, task, date, project_group, etc.)",
+    "Follow report_types schema for index, bug, documentation, and assessment reports",
+    "Run 6-step consolidation pipeline: collect, validate, categorize, deduplicate, cross-reference, assemble",
+    "Apply 5 data flow rules (DF-01 through DF-05) for inter-team data sharing",
+    "Use standard findings taxonomy categories and severity levels for consistent reporting"
+  ]
 }

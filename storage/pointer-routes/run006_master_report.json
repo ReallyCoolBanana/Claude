@@ -1,0 +1,258 @@
+{
+  "run_id": "run-006",
+  "timestamp": "2026-03-13T00:30:00Z",
+  "total_agents": 58,
+  "divisions": 6,
+  "helper_agents": 10,
+
+  "summary": {
+    "description": "Largest benchmark run to date: 58 agents across 6 divisions performing stress testing, bug squashing, bug finding, pathfinding, random searches, deep analysis, resilience testing, and exploration.",
+    "key_achievements": [
+      "100% network coverage achieved (was 56.8%)",
+      "117 bugs from Run-005 addressed, 57 new bugs found in Run-006",
+      "4,047 data integrity fixes applied to pointer-network.json",
+      "11 orphaned scripts indexed (SCR-0058 through SCR-0068)",
+      "10 SOPs given operational content",
+      "All pathfinding algorithms benchmarked (P2, P4, P7, P8)",
+      "Network proven extremely resilient (survives 25%+ node removal)",
+      "4 communities detected, KB nodes identified as foundational connective tissue"
+    ]
+  },
+
+  "division_1_stress_testing": {
+    "agents": 8,
+    "status": "complete",
+    "reports": ["run006_stress_s1_s3.json", "run006_stress_s5_s6_s8.json"],
+    "results": {
+      "s1_s3_traversal": {
+        "total_journeys": 96,
+        "success_rate": "100%",
+        "avg_hops": 13.96,
+        "trap_nodes_found": 20,
+        "top_traps": ["KB-0010", "SCR-0018", "SCR-0007", "KB-0005", "KB-0004"]
+      },
+      "s5_graph_analysis": {
+        "graph_diameter": 4,
+        "connected_components": 1,
+        "avg_clustering_coefficient": 0.3396,
+        "top_betweenness": ["SCR-0018", "KB-0010", "KB-0005"]
+      },
+      "s6_strategy_benchmark": {
+        "tag_coherent_success": "70%",
+        "max_weight_success": "40%",
+        "strength_priority_success": "40%",
+        "winner": "tag_coherent"
+      },
+      "s8_workflow_simulation": {
+        "completion_rate": "87%",
+        "avg_steps": 1.92,
+        "failures": 2,
+        "bottleneck_node": "KB-0001"
+      }
+    }
+  },
+
+  "division_2_bug_squashing": {
+    "agents": 8,
+    "status": "complete",
+    "reports": ["run006_fix_data_integrity.json", "run006_fix_sops.json", "run006_fix_index_integrity.json"],
+    "results": {
+      "data_integrity_fixes": {
+        "strength_weight_mismatches_fixed": 116,
+        "missing_strength_fields_added": 3931,
+        "duplicate_edges_removed": 11,
+        "malformed_reasons_normalized": 229,
+        "tag_consistency_fixes": 10
+      },
+      "sop_fixes": {
+        "sops_updated": 10,
+        "missing_fields_added": ["id", "title", "purpose", "procedures"]
+      },
+      "index_fixes": {
+        "orphaned_scripts_indexed": 11,
+        "new_entries": "SCR-0058 through SCR-0068",
+        "duplicate_edges_remaining": 0,
+        "strength_mismatches_remaining": 0
+      }
+    }
+  },
+
+  "division_3_bug_finding": {
+    "agents": 8,
+    "status": "complete",
+    "reports": ["run006_bugs_found_a.json", "run006_bugs_found_b.json"],
+    "results": {
+      "bf1_bf2_integrity_scan": {
+        "total_nodes": 310,
+        "total_edges": 4809,
+        "naming_violations": 140,
+        "self_loops": 0,
+        "orphaned_nodes": 0,
+        "duplicate_edges": 0
+      },
+      "bf3_bf4_cross_report_audit": {
+        "stale_edge_counts_found": 7,
+        "inconsistent_success_rate_formats": true,
+        "critical_bugs": 1,
+        "total_bugs_a": 27
+      },
+      "bf5_bf8_regression_and_audit": {
+        "scripts_checked": 19,
+        "syntax_errors": 0,
+        "total_bugs_b": 30,
+        "missing_error_handling": 16,
+        "deprecated_api_calls": 6,
+        "route_tracker_stress_tests": "ALL PASS"
+      }
+    }
+  },
+
+  "division_4_pathfinding": {
+    "agents": 14,
+    "note": "8 planned + 6 helpers (Div4A hit OOM running Python scripts)",
+    "status": "complete",
+    "reports": [
+      "run006_pathfinding_p7_p8.json",
+      "run006_pathfinding_p2.json",
+      "run006_pathfinding_p2_batch2.json",
+      "run006_pathfinding_p2_batch3.json",
+      "run006_pathfinding_p4.json",
+      "run006_pathfinding_p4_batch2.json",
+      "run006_pathfinding_p4_batch3.json"
+    ],
+    "results": {
+      "p2_strength_priority": {
+        "total_scenarios": 40,
+        "algorithm": "Dijkstra with strength-tier cost (primary=0, supporting=1, related=2, tangential=3, unclassified=4)"
+      },
+      "p4_hybrid": {
+        "total_scenarios": 60,
+        "best_config": "B (0.5, 0.25, 0.25)",
+        "config_b_success_rate": "80-90%",
+        "finding": "Weight-dominant hybrid performs best; higher weight emphasis helps bridge domains"
+      },
+      "p7_failure_aware": {
+        "total_scenarios": 20,
+        "failure_aware_wins": "17/20",
+        "reliability_improvement": "+21.2%",
+        "avg_path_reliability": 0.97
+      },
+      "p8_exploration": {
+        "total_journeys": 20,
+        "coverage_increase": "54.2% to 61.3%",
+        "new_nodes_discovered": 22
+      }
+    }
+  },
+
+  "division_5_random_searches": {
+    "agents": 8,
+    "status": "complete",
+    "reports": ["run006_random_search_a.json", "run006_random_search_b.json"],
+    "results": {
+      "rs1_random_walks": {
+        "walks": 50,
+        "coverage": "55.8%",
+        "attractor_nodes": ["KB-0004", "SCR-0007", "KB-0005"],
+        "island_nodes": 137
+      },
+      "rs2_reachability": {
+        "pairs_tested": 30,
+        "reachability": "73.3%",
+        "avg_path_length": 2.5,
+        "most_isolated": "wiki-ai:* nodes"
+      },
+      "rs5_tag_clusters": {
+        "most_cohesive_tag": "package-registry (0.83)",
+        "densest_tag": "prototype (59 internal edges)"
+      },
+      "rs6_domain_crossing": {
+        "avg_cross_domain_hops": 2.28,
+        "best_bridges": ["SCR-0009", "KB-0002", "SCR-0007"],
+        "easiest_transition": "SCR->KB (1 hop avg)",
+        "hardest_transition": "SRC (3 hops avg)"
+      },
+      "rs7_failure_injection": {
+        "resilience": "100% — zero single-edge removals caused disconnection"
+      },
+      "rs8_pattern_mining": {
+        "top_2step_pattern": "SCR->KB (15 occurrences)",
+        "backbone_nodes": "KB and SCR"
+      }
+    }
+  },
+
+  "division_6_deep_analysis_resilience": {
+    "agents": 8,
+    "status": "complete",
+    "reports": ["run006_deep_analysis_a.json", "run006_deep_analysis_b.json"],
+    "results": {
+      "dna1_community_detection": {
+        "communities": 4,
+        "largest": "143 nodes (wiki-dominant core hub)",
+        "kb_cluster": "61 nodes (knowledge/operations)"
+      },
+      "dna2_pagerank": {
+        "top_3": ["SCR-0018 (0.0178)", "KB-0010 (0.0176)", "SCR-0007 (0.0160)"],
+        "pagerank_degree_correlation": 0.986,
+        "finding": "Importance is almost entirely driven by connectivity"
+      },
+      "dna3_path_redundancy": {
+        "avg_alternative_paths": 120456,
+        "most_redundant_pair": "SOP-017 -> SCR-0025 (458,776 paths)",
+        "top_intermediaries": ["KB-0004", "SCR-0007", "KB-0005"]
+      },
+      "dna4_temporal_evolution": {
+        "finding": "KB entries are foundational connective tissue — without them, network fragments into 4 components"
+      },
+      "nr1_targeted_removal": {
+        "finding": "No single node removal fragments the network"
+      },
+      "nr2_random_failure": {
+        "threshold": ">25% node removal needed for fragmentation",
+        "rating": "HIGH resilience"
+      },
+      "nr3_edge_sensitivity": {
+        "most_critical_strength": "tangential",
+        "finding": "Weakest edges provide most structural connectivity (2,409 tangential edges = 99 components if removed)"
+      },
+      "nr4_domain_isolation": {
+        "cross_domain_removal_components": 206,
+        "most_self_sufficient": "knowledge-base (91.3%)",
+        "most_connecting_pair": "scripts <-> wikipedia (551 edges)"
+      }
+    }
+  },
+
+  "exploration_team": {
+    "agents": 4,
+    "status": "complete",
+    "report": "run006_exploration_unvisited.json",
+    "results": {
+      "unvisited_before": 134,
+      "successfully_reached": 134,
+      "coverage_after": "100%",
+      "truly_unreachable": 0,
+      "wiki_ai_one_way_fringe": 86,
+      "finding": "86 wiki-ai nodes are source-only (point into core, nothing points back)"
+    }
+  },
+
+  "cross_cutting_insights": [
+    "KB and SCR nodes are the network backbone — they dominate PageRank, betweenness centrality, and random walk attractors",
+    "Tangential edges are paradoxically the most structurally important — they provide cross-cluster bridges",
+    "The network is extremely resilient: survives 25%+ random removal, no single point of failure",
+    "Tag-coherent routing (70%) outperforms weight-based (40%) and strength-based (40%) for pathfinding",
+    "Hybrid pathfinding works best with weight-dominant config (0.5, 0.25, 0.25)",
+    "Failure-aware routing improves reliability by +21.2% over naive approaches",
+    "Wiki-ai nodes form a one-way fringe — 86 nodes with zero inbound edges",
+    "4 natural communities exist, with a wiki-dominant core hub of 143 nodes",
+    "Average cross-domain path is just 2.28 hops — the network is very compact (diameter=4)"
+  ],
+
+  "route_statistics": {
+    "total_routes_logged": "500+",
+    "agents_tracked": "58+",
+    "tasks_tracked": "15+"
+  }
+}

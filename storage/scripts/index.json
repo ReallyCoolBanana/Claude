@@ -1,854 +1,2314 @@
 {
-  "version": "1.0",
-  "count": 70,
+  "schema_version": "2.0",
+  "domain": "scripts",
+  "last_updated": "2026-03-12",
+  "entry_count": 75,
   "entries": [
     {
       "id": "SCR-0001",
       "title": "validate-storage",
-      "file": "validate-storage.py",
       "date": "2026-03-10",
-      "team": "TEAM-0003",
-      "tags": [],
+      "category": "validation",
+      "tags": [
+        "validation",
+        "storage",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0002",
+          "SCR-0003",
+          "SCR-0004",
+          "SCR-0012",
+          "SCR-0014",
+          "SCR-0016",
+          "SCR-0020",
+          "SCR-0034",
+          "SCR-0035",
+          "SCR-0036",
+          "SCR-0037",
+          "SCR-0038",
+          "SCR-0039",
+          "SCR-0040",
+          "SCR-0041",
+          "SCR-0042"
+        ]
+      },
+      "filename": "validate-storage.py",
       "language": "python",
       "description": "Comprehensive validation tool for the storage system. Checks schema validation, referential integrity, file existence, orphan detection, ID format, date format, required fields, duplicates, version validation, and length limits across all three subsections.",
-      "dependencies": []
+      "added_by_team": "TEAM-0003"
     },
     {
       "id": "SCR-0002",
       "title": "test-edge-cases",
-      "file": "test-edge-cases.py",
       "date": "2026-03-10",
-      "team": "TEAM-0003",
-      "tags": [],
+      "category": "validation",
+      "tags": [
+        "validation",
+        "storage",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0003",
+          "SCR-0004",
+          "SCR-0012",
+          "SCR-0014",
+          "SCR-0016",
+          "SCR-0020",
+          "SCR-0034",
+          "SCR-0035",
+          "SCR-0036",
+          "SCR-0037",
+          "SCR-0038",
+          "SCR-0039",
+          "SCR-0040",
+          "SCR-0041",
+          "SCR-0042"
+        ]
+      },
+      "filename": "test-edge-cases.py",
       "language": "python",
       "description": "Edge case and boundary testing suite for the storage system. Runs 35 tests covering malformed JSON, long descriptions, special characters, ID format violations, category mismatches, version field issues, and duplicate detection.",
-      "dependencies": []
+      "added_by_team": "TEAM-0003"
     },
     {
       "id": "SCR-0003",
       "title": "repair-storage",
-      "file": "repair-storage.py",
       "date": "2026-03-10",
-      "team": "TEAM-0003",
-      "tags": [],
+      "category": "automation",
+      "tags": [
+        "automation",
+        "storage",
+        "validation",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0002",
+          "SCR-0004",
+          "SCR-0012",
+          "SCR-0013",
+          "SCR-0014",
+          "SCR-0020",
+          "SCR-0034",
+          "SCR-0035",
+          "SCR-0036",
+          "SCR-0037",
+          "SCR-0038",
+          "SCR-0039",
+          "SCR-0040",
+          "SCR-0041",
+          "SCR-0042"
+        ]
+      },
+      "filename": "repair-storage.py",
       "language": "python",
       "description": "Automated repair tool for common storage system issues. Fixes versions, dates, rebuilds category indexes, removes duplicates, truncates long descriptions, and ensures structural completeness. Supports --dry-run mode.",
-      "dependencies": []
+      "added_by_team": "TEAM-0003"
     },
     {
       "id": "SCR-0004",
-      "title": "grade_research",
-      "file": "grade_research.py",
+      "title": "grade-research",
       "date": "2026-03-10",
-      "team": "TEAM-0005",
-      "tags": [],
-      "status": "active",
       "category": "analysis",
+      "tags": [
+        "validation",
+        "stock-analysis",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0002",
+          "SCR-0003",
+          "SCR-0005",
+          "SCR-0011",
+          "SCR-0012",
+          "SCR-0014",
+          "SCR-0020",
+          "SCR-0031",
+          "SCR-0034",
+          "SCR-0041",
+          "SCR-0042"
+        ]
+      },
+      "filename": "grade_research.py",
       "language": "python",
       "description": "Evaluates research JSON quality across five dimensions: citation count/quality, coverage breadth, depth (word count), and specificity (metrics, tools, code). Outputs a graded report with recommendations.",
-      "dependencies": []
+      "added_by_team": "TEAM-0005"
     },
     {
       "id": "SCR-0005",
-      "title": "merge_research",
-      "file": "merge_research.py",
+      "title": "merge-research",
       "date": "2026-03-10",
-      "team": "TEAM-0005",
-      "tags": [],
-      "status": "active",
       "category": "analysis",
+      "tags": [
+        "deduplication",
+        "multi-agent",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0004",
+          "SCR-0009",
+          "SCR-0011",
+          "SCR-0019",
+          "SCR-0030",
+          "SCR-0031",
+          "SCR-0032",
+          "SCR-0033"
+        ]
+      },
+      "filename": "merge_research.py",
       "language": "python",
       "description": "Merges multiple team research JSON files by topic category. Deduplicates techniques using string similarity, identifies coverage gaps across teams, and outputs a unified research document.",
-      "dependencies": []
+      "added_by_team": "TEAM-0005"
     },
     {
       "id": "SCR-0006",
-      "title": "method_websearch",
-      "file": "data-gathering/methods/method_websearch.py",
+      "title": "data-gathering-websearch",
       "date": "2026-03-10",
-      "team": "TEAM-0003",
-      "tags": [],
-      "status": "active",
       "category": "data-collection",
+      "tags": [
+        "data-gathering",
+        "search",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0018",
+          "SCR-0021",
+          "SCR-0022",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0035",
+          "SCR-0041",
+          "SCR-0043",
+          "SCR-0044"
+        ]
+      },
+      "filename": "data-gathering/methods/method_websearch.py",
       "language": "python",
       "description": "Multi-query web search via DuckDuckGo. Generates 3-5 query variants and deduplicates results by URL.",
-      "dependencies": []
+      "added_by_team": "TEAM-0003"
     },
     {
       "id": "SCR-0007",
-      "title": "method_wikipedia",
-      "file": "data-gathering/methods/method_wikipedia.py",
+      "title": "data-gathering-wikipedia",
       "date": "2026-03-10",
-      "team": "TEAM-0003",
-      "tags": [],
-      "status": "active",
       "category": "data-collection",
+      "tags": [
+        "data-gathering",
+        "search",
+        "public-api",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [
+          "SRC-0006"
+        ],
+        "related_to": [
+          "SCR-0006",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0018",
+          "SCR-0021",
+          "SCR-0022",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0035",
+          "SCR-0041",
+          "SCR-0043",
+          "SCR-0044"
+        ]
+      },
+      "filename": "data-gathering/methods/method_wikipedia.py",
       "language": "python",
       "description": "Wikipedia API deep extraction with DuckDuckGo fallback. Extracts summaries, sections, references, categories, and follows See Also links.",
-      "dependencies": []
+      "added_by_team": "TEAM-0003"
     },
     {
       "id": "SCR-0008",
-      "title": "method_arxiv",
-      "file": "data-gathering/methods/method_arxiv.py",
+      "title": "data-gathering-arxiv",
       "date": "2026-03-10",
-      "team": "TEAM-0003",
-      "tags": [],
-      "status": "active",
       "category": "data-collection",
+      "tags": [
+        "data-gathering",
+        "search",
+        "arxiv",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [
+          "SRC-0003"
+        ],
+        "related_to": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0018",
+          "SCR-0021",
+          "SCR-0022",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0035",
+          "SCR-0041",
+          "SCR-0043",
+          "SCR-0044"
+        ]
+      },
+      "filename": "data-gathering/methods/method_arxiv.py",
       "language": "python",
       "description": "arXiv academic paper search with DuckDuckGo fallback. Extracts titles, authors, abstracts, categories, and publication dates.",
-      "dependencies": []
+      "added_by_team": "TEAM-0003"
     },
     {
       "id": "SCR-0009",
-      "title": "method_hybrid",
-      "file": "data-gathering/methods/method_hybrid.py",
+      "title": "data-gathering-hybrid",
       "date": "2026-03-10",
-      "team": "TEAM-0003",
-      "tags": [],
-      "status": "active",
       "category": "data-collection",
+      "tags": [
+        "data-gathering",
+        "search",
+        "deduplication",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008"
+        ],
+        "uses_sources": [
+          "SRC-0003",
+          "SRC-0006"
+        ],
+        "related_to": [
+          "SCR-0005",
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0018",
+          "SCR-0021",
+          "SCR-0022",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0031",
+          "SCR-0035",
+          "SCR-0041",
+          "SCR-0043",
+          "SCR-0044"
+        ]
+      },
+      "filename": "data-gathering/methods/method_hybrid.py",
       "language": "python",
       "description": "Hybrid multi-source aggregation combining web search, Wikipedia, and arXiv. Cross-references findings and scores by corroboration count.",
-      "dependencies": [
-        "SCR-0006",
-        "SCR-0007",
-        "SCR-0008"
-      ]
+      "added_by_team": "TEAM-0003"
     },
     {
       "id": "SCR-0010",
-      "title": "method_iterative",
-      "file": "data-gathering/methods/method_iterative.py",
+      "title": "data-gathering-iterative",
       "date": "2026-03-10",
-      "team": "TEAM-0003",
-      "tags": [],
-      "status": "active",
       "category": "data-collection",
+      "tags": [
+        "data-gathering",
+        "search",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0011",
+          "SCR-0018",
+          "SCR-0021",
+          "SCR-0022",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0035",
+          "SCR-0041",
+          "SCR-0043",
+          "SCR-0044"
+        ]
+      },
+      "filename": "data-gathering/methods/method_iterative.py",
       "language": "python",
       "description": "Iterative deepening search doing 3 rounds of progressively deeper DuckDuckGo queries. Each round refines queries based on previous results.",
-      "dependencies": []
+      "added_by_team": "TEAM-0003"
     },
     {
       "id": "SCR-0011",
-      "title": "benchmark_runner",
-      "file": "data-gathering/benchmark_runner.py",
+      "title": "data-gathering-benchmark",
       "date": "2026-03-10",
-      "team": "TEAM-0003",
-      "tags": [],
-      "status": "active",
       "category": "analysis",
+      "tags": [
+        "benchmark",
+        "data-gathering",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0004",
+          "SCR-0005",
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0021",
+          "SCR-0022",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0031",
+          "SCR-0041",
+          "SCR-0043",
+          "SCR-0044"
+        ]
+      },
+      "filename": "data-gathering/benchmark_runner.py",
       "language": "python",
       "description": "Benchmark harness that runs all data gathering methods against a test query, times them, and calculates quality scores based on result count, source diversity, and information density.",
-      "dependencies": [
-        "SCR-0006",
-        "SCR-0007",
-        "SCR-0008",
-        "SCR-0009",
-        "SCR-0010"
-      ]
+      "added_by_team": "TEAM-0003"
     },
     {
       "id": "SCR-0012",
-      "title": "kb_validator",
-      "file": "kb_validator.py",
+      "title": "kb-validator",
       "date": "2026-03-10",
-      "team": "TEAM-0006",
-      "tags": [],
+      "category": "validation",
+      "tags": [
+        "validation",
+        "indexing",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0002",
+          "SCR-0003",
+          "SCR-0004",
+          "SCR-0013",
+          "SCR-0014",
+          "SCR-0016",
+          "SCR-0020",
+          "SCR-0034",
+          "SCR-0036",
+          "SCR-0037",
+          "SCR-0038",
+          "SCR-0039",
+          "SCR-0040",
+          "SCR-0041",
+          "SCR-0042"
+        ]
+      },
+      "filename": "kb_validator.py",
       "language": "python",
       "description": "Validates knowledge base entries and index.json consistency. Checks YAML frontmatter required fields, builds_on references, index entry/file matching, tag_index completeness, category consistency, and team ID format. Outputs structured JSON report.",
-      "dependencies": []
+      "added_by_team": "TEAM-0006"
     },
     {
       "id": "SCR-0013",
-      "title": "index_rebuilder",
-      "file": "index_rebuilder.py",
+      "title": "index-rebuilder",
       "date": "2026-03-10",
-      "team": "TEAM-0006",
-      "tags": [],
+      "category": "indexing",
+      "tags": [
+        "indexing",
+        "automation",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0003",
+          "SCR-0012",
+          "SCR-0014",
+          "SCR-0034",
+          "SCR-0042"
+        ]
+      },
+      "filename": "index_rebuilder.py",
       "language": "python",
       "description": "Auto-generates index.json files by scanning knowledge-base/entries/ and teams/sessions/ directories. Parses YAML frontmatter, rebuilds entries, categories, and tag_index. Supports --dry-run and --fix modes with diff output.",
-      "dependencies": []
+      "added_by_team": "TEAM-0006"
     },
     {
       "id": "SCR-0014",
-      "title": "cross_ref_checker",
-      "file": "cross_ref_checker.py",
+      "title": "cross-ref-checker",
       "date": "2026-03-10",
-      "team": "TEAM-0006",
-      "tags": [],
+      "category": "validation",
+      "tags": [
+        "validation",
+        "indexing",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0002",
+          "SCR-0003",
+          "SCR-0004",
+          "SCR-0012",
+          "SCR-0013",
+          "SCR-0016",
+          "SCR-0020",
+          "SCR-0034",
+          "SCR-0036",
+          "SCR-0037",
+          "SCR-0038",
+          "SCR-0039",
+          "SCR-0040",
+          "SCR-0041",
+          "SCR-0042"
+        ]
+      },
+      "filename": "cross_ref_checker.py",
       "language": "python",
       "description": "Validates all cross-references across the repository. Checks KB builds_on chains, team session KB references, script dependencies. Detects cycles via DFS, finds orphan files and dangling index entries. Outputs dependency tree and structured JSON report.",
-      "dependencies": []
+      "added_by_team": "TEAM-0006"
     },
     {
       "id": "SCR-0015",
-      "title": "main",
-      "file": "fast_search/main.go",
+      "title": "fast-search",
       "date": "2026-03-10",
-      "team": "TEAM-0008",
-      "tags": [],
+      "category": "search",
+      "tags": [
+        "search",
+        "indexing",
+        "go"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0016",
+          "SCR-0018",
+          "SCR-0035"
+        ]
+      },
+      "filename": "fast_search/main.go",
       "language": "go",
       "description": "High-speed full-text search index compiled in Go. Builds an inverted index of all .md, .json, .py, .go files. Supports exact match, multi-word AND, and phrase search modes. Query time <5ms on current corpus (126 files). Outputs JSON results with file, line, column, and context.",
-      "dependencies": []
+      "added_by_team": "TEAM-0008"
     },
     {
       "id": "SCR-0016",
-      "title": "main",
-      "file": "fast_validate/main.go",
+      "title": "fast-validate",
       "date": "2026-03-10",
-      "team": "TEAM-0008",
-      "tags": [],
+      "category": "validation",
+      "tags": [
+        "validation",
+        "indexing",
+        "go"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0002",
+          "SCR-0012",
+          "SCR-0014",
+          "SCR-0015",
+          "SCR-0020",
+          "SCR-0034",
+          "SCR-0036",
+          "SCR-0037",
+          "SCR-0038",
+          "SCR-0039",
+          "SCR-0040",
+          "SCR-0041",
+          "SCR-0042"
+        ]
+      },
+      "filename": "fast_validate/main.go",
       "language": "go",
       "description": "High-speed repository structure validator compiled in Go. Validates all index.json files, cross-references (KB builds_on, script dependencies), file existence, orphan detection, and dependency cycle detection in a single pass. Completes in <2ms. Outputs JSON report with pass/fail and all issues.",
-      "dependencies": []
+      "added_by_team": "TEAM-0008"
     },
     {
       "id": "SCR-0017",
-      "title": "main",
-      "file": "fast_cache/main.go",
+      "title": "fast-cache",
       "date": "2026-03-10",
-      "team": "TEAM-0008",
-      "tags": [],
+      "category": "caching",
+      "tags": [
+        "caching",
+        "storage",
+        "go"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "fast_cache/main.go",
       "language": "go",
       "description": "High-speed file-based key-value cache for API responses, compiled in Go. Keys are SHA-256 of URL. Supports get, set (with TTL), delete, stats, gc (garbage collection), and keys commands. Uses index file + data directory for sub-millisecond cache hits. CLI interface with JSON output.",
-      "dependencies": []
+      "added_by_team": "TEAM-0008"
     },
     {
       "id": "SCR-0018",
-      "title": "kb_search",
-      "file": "kb_search.py",
+      "title": "kb-search",
       "date": "2026-03-10",
-      "team": "TEAM-0008",
-      "tags": [],
+      "category": "search",
+      "tags": [
+        "search",
+        "nlp",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0015",
+          "SCR-0021",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0035"
+        ]
+      },
+      "filename": "kb_search.py",
       "language": "python",
       "description": "Full-text search across KB entries, team logs, and script metadata using TF-IDF ranking. CLI with argparse supporting query, --tags, --category, and --type filters. Returns ranked results with context snippets.",
-      "dependencies": []
+      "added_by_team": "TEAM-0008"
     },
     {
       "id": "SCR-0019",
-      "title": "handoff_tracker",
-      "file": "handoff_tracker.py",
+      "title": "handoff-tracker",
       "date": "2026-03-10",
-      "team": "TEAM-0008",
-      "tags": [],
+      "category": "coordination",
+      "tags": [
+        "coordination",
+        "multi-agent",
+        "monitoring",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0005",
+          "SCR-0020",
+          "SCR-0029",
+          "SCR-0030",
+          "SCR-0031",
+          "SCR-0032",
+          "SCR-0033"
+        ]
+      },
+      "filename": "handoff_tracker.py",
       "language": "python",
       "description": "Parses Handoff Notes sections from team session logs, extracts action items, and checks if subsequent teams addressed each item. Tracks resolution rate across all iterations.",
-      "dependencies": []
+      "added_by_team": "TEAM-0008"
     },
     {
       "id": "SCR-0020",
-      "title": "staleness_detector",
-      "file": "staleness_detector.py",
+      "title": "staleness-detector",
       "date": "2026-03-10",
-      "team": "TEAM-0008",
-      "tags": [],
+      "category": "validation",
+      "tags": [
+        "validation",
+        "monitoring",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0012",
+          "SCR-0014",
+          "SCR-0019"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0002",
+          "SCR-0003",
+          "SCR-0004",
+          "SCR-0012",
+          "SCR-0014",
+          "SCR-0016",
+          "SCR-0019",
+          "SCR-0030",
+          "SCR-0032",
+          "SCR-0034",
+          "SCR-0036",
+          "SCR-0037",
+          "SCR-0038",
+          "SCR-0039",
+          "SCR-0040",
+          "SCR-0041",
+          "SCR-0042"
+        ]
+      },
+      "filename": "staleness_detector.py",
       "language": "python",
       "description": "Repository health checker with 6 checks: stale statuses, regressions, unaddressed handoffs, broken references, index mismatches, and orphan files. Outputs scored health report.",
-      "dependencies": [
-        "SCR-0012",
-        "SCR-0014",
-        "SCR-0019"
-      ]
+      "added_by_team": "TEAM-0008"
     },
     {
       "id": "SCR-0021",
-      "title": "ddg_utils",
-      "file": "data-gathering/methods/ddg_utils.py",
+      "title": "ddg-utils",
       "date": "2026-03-10",
-      "team": "TEAM-0007",
-      "tags": [],
-      "status": "active",
       "category": "data-collection",
+      "tags": [
+        "search",
+        "data-gathering",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0018",
+          "SCR-0022",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0035",
+          "SCR-0041",
+          "SCR-0043",
+          "SCR-0044"
+        ]
+      },
+      "filename": "data-gathering/methods/ddg_utils.py",
       "language": "python",
       "description": "Shared DuckDuckGo search utilities. Contains DuckDuckGoParser class, search_duckduckgo function, rate limiting (0.5s between requests), and configurable User-Agent. Extracted from 4 duplicate implementations.",
-      "dependencies": []
+      "added_by_team": "TEAM-0007"
     },
     {
       "id": "SCR-0022",
-      "title": "request_cache",
-      "file": "data-gathering/methods/request_cache.py",
+      "title": "request-cache",
       "date": "2026-03-10",
-      "team": "TEAM-0007",
-      "tags": [],
-      "status": "active",
       "category": "data-collection",
+      "tags": [
+        "caching",
+        "data-gathering",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0021",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0041",
+          "SCR-0043",
+          "SCR-0044"
+        ]
+      },
+      "filename": "data-gathering/methods/request_cache.py",
       "language": "python",
       "description": "File-based HTTP response cache with SHA-256 keys, base64 storage, and configurable TTL (default 1 hour). Functions: cached_request(), clear_cache(), cache_stats().",
-      "dependencies": []
+      "added_by_team": "TEAM-0007"
     },
     {
       "id": "SCR-0023",
-      "title": "method_openalex",
-      "file": "data-gathering/methods/method_openalex.py",
+      "title": "data-gathering-openalex",
       "date": "2026-03-10",
-      "team": "TEAM-0010",
-      "tags": [],
-      "status": "active",
       "category": "data-collection",
+      "tags": [
+        "data-gathering",
+        "openalex",
+        "search",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0022"
+        ],
+        "uses_sources": [
+          "SRC-0001"
+        ],
+        "related_to": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0018",
+          "SCR-0021",
+          "SCR-0022",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0035",
+          "SCR-0041",
+          "SCR-0043",
+          "SCR-0044"
+        ]
+      },
+      "filename": "data-gathering/methods/method_openalex.py",
       "language": "python",
       "description": "OpenAlex academic search via REST API. Searches 250M+ scholarly works, extracts titles, authors, abstracts (from inverted index), citation counts, DOIs, and open access status. Uses polite pool for higher rate limits.",
-      "dependencies": [
-        "SCR-0022"
-      ]
+      "added_by_team": "TEAM-0010"
     },
     {
       "id": "SCR-0024",
-      "title": "method_hackernews",
-      "file": "data-gathering/methods/method_hackernews.py",
+      "title": "data-gathering-hackernews",
       "date": "2026-03-10",
-      "team": "TEAM-0010",
-      "tags": [],
-      "status": "active",
       "category": "data-collection",
+      "tags": [
+        "data-gathering",
+        "hacker-news",
+        "search",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0022"
+        ],
+        "uses_sources": [
+          "SRC-0029",
+          "SRC-0030"
+        ],
+        "related_to": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0018",
+          "SCR-0021",
+          "SCR-0022",
+          "SCR-0023",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0035",
+          "SCR-0041",
+          "SCR-0043",
+          "SCR-0044"
+        ]
+      },
+      "filename": "data-gathering/methods/method_hackernews.py",
       "language": "python",
       "description": "Hacker News search via Algolia API plus Firebase top stories. Extracts titles, URLs, authors, points, comment counts. Deduplicates across both sources.",
-      "dependencies": [
-        "SCR-0022"
-      ]
+      "added_by_team": "TEAM-0010"
     },
     {
       "id": "SCR-0025",
-      "title": "method_guardian",
-      "file": "data-gathering/methods/method_guardian.py",
+      "title": "data-gathering-guardian",
       "date": "2026-03-10",
-      "team": "TEAM-0010",
-      "tags": [],
-      "status": "active",
       "category": "data-collection",
+      "tags": [
+        "data-gathering",
+        "guardian",
+        "search",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0021",
+          "SCR-0022"
+        ],
+        "uses_sources": [
+          "SRC-0013"
+        ],
+        "related_to": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0018",
+          "SCR-0021",
+          "SCR-0022",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0035",
+          "SCR-0041",
+          "SCR-0043",
+          "SCR-0044"
+        ]
+      },
+      "filename": "data-gathering/methods/method_guardian.py",
       "language": "python",
       "description": "Guardian news search via Open Platform API. Extracts headlines, body text, sections, and publication dates. Falls back to DuckDuckGo site-scoped search if API fails.",
-      "dependencies": [
-        "SCR-0021",
-        "SCR-0022"
-      ]
+      "added_by_team": "TEAM-0010"
     },
     {
       "id": "SCR-0026",
-      "title": "method_semantic_scholar",
-      "file": "data-gathering/methods/method_semantic_scholar.py",
+      "title": "data-gathering-semantic-scholar",
       "date": "2026-03-10",
-      "team": "TEAM-0010",
-      "tags": [],
-      "status": "active",
       "category": "data-collection",
+      "tags": [
+        "data-gathering",
+        "semantic-scholar",
+        "search",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0022"
+        ],
+        "uses_sources": [
+          "SRC-0002"
+        ],
+        "related_to": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0018",
+          "SCR-0021",
+          "SCR-0022",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0035",
+          "SCR-0041",
+          "SCR-0043",
+          "SCR-0044"
+        ]
+      },
+      "filename": "data-gathering/methods/method_semantic_scholar.py",
       "language": "python",
       "description": "Semantic Scholar paper search via Academic Graph API. Extracts titles, authors, abstracts, AI-generated TLDRs, citation counts, fields of study, and open access PDF links. Respects 1 req/sec rate limit.",
-      "dependencies": [
-        "SCR-0022"
-      ]
+      "added_by_team": "TEAM-0010"
     },
     {
       "id": "SCR-0027",
-      "title": "method_wikidata",
-      "file": "data-gathering/methods/method_wikidata.py",
+      "title": "data-gathering-wikidata",
       "date": "2026-03-10",
-      "team": "TEAM-0010",
-      "tags": [],
-      "status": "active",
       "category": "data-collection",
+      "tags": [
+        "data-gathering",
+        "wikidata",
+        "search",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0022"
+        ],
+        "uses_sources": [
+          "SRC-0005",
+          "SRC-0006"
+        ],
+        "related_to": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0018",
+          "SCR-0021",
+          "SCR-0022",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0028",
+          "SCR-0035",
+          "SCR-0041",
+          "SCR-0043",
+          "SCR-0044"
+        ]
+      },
+      "filename": "data-gathering/methods/method_wikidata.py",
       "language": "python",
       "description": "Wikidata knowledge graph search. Two-phase: searches entities then fetches full details including labels, descriptions, key properties (instance of, subclass of), and Wikipedia sitelinks.",
-      "dependencies": [
-        "SCR-0022"
-      ]
+      "added_by_team": "TEAM-0010"
     },
     {
       "id": "SCR-0028",
-      "title": "method_github",
-      "file": "data-gathering/methods/method_github.py",
+      "title": "data-gathering-github",
       "date": "2026-03-10",
-      "team": "TEAM-0010",
-      "tags": [],
-      "status": "active",
       "category": "data-collection",
+      "tags": [
+        "data-gathering",
+        "github-api",
+        "search",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0022"
+        ],
+        "uses_sources": [
+          "SRC-0025"
+        ],
+        "related_to": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0018",
+          "SCR-0021",
+          "SCR-0022",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0035",
+          "SCR-0041",
+          "SCR-0043",
+          "SCR-0044"
+        ]
+      },
+      "filename": "data-gathering/methods/method_github.py",
       "language": "python",
       "description": "GitHub repository and code search via REST API. Searches repos by stars, extracts descriptions, languages, topics, licenses, and fork counts. Also searches code with graceful rate-limit handling.",
-      "dependencies": [
-        "SCR-0022"
-      ]
+      "added_by_team": "TEAM-0010"
+    },
+    {
+      "id": "SCR-0029",
+      "title": "bus-cli",
+      "date": "2026-03-11",
+      "category": "coordination",
+      "tags": [
+        "message-bus",
+        "communication",
+        "jsonl",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0019",
+          "SCR-0030",
+          "SCR-0032",
+          "SCR-0033"
+        ]
+      },
+      "filename": "../coordination/bus_cli.py",
+      "language": "python",
+      "description": "CLI for JSONL message bus operations. Provides command-line interface for reading, writing, and managing messages on the JSONL-based inter-agent communication bus.",
+      "added_by_team": "TEAM-0025"
+    },
+    {
+      "id": "SCR-0030",
+      "title": "multi-team-runner",
+      "date": "2026-03-11",
+      "category": "coordination",
+      "tags": [
+        "coordination",
+        "multi-agent",
+        "monitoring",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0005",
+          "SCR-0019",
+          "SCR-0020",
+          "SCR-0029",
+          "SCR-0031",
+          "SCR-0032",
+          "SCR-0033"
+        ]
+      },
+      "filename": "../coordination/multi_team_runner.py",
+      "language": "python",
+      "description": "Production multi-team launcher with heartbeat monitoring. Manages lifecycle of multiple agent teams with health checks, restart logic, and coordinated startup/shutdown.",
+      "added_by_team": "TEAM-0025"
+    },
+    {
+      "id": "SCR-0031",
+      "title": "think-tank",
+      "date": "2026-03-11",
+      "category": "analysis",
+      "tags": [
+        "coordination",
+        "multi-agent",
+        "deduplication",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0004",
+          "SCR-0005",
+          "SCR-0009",
+          "SCR-0011",
+          "SCR-0019",
+          "SCR-0030",
+          "SCR-0032",
+          "SCR-0033"
+        ]
+      },
+      "filename": "../coordination/think_tank.py",
+      "language": "python",
+      "description": "Convergence script for cross-referencing team findings. Aggregates and reconciles results from multiple teams to identify consensus, conflicts, and coverage gaps.",
+      "added_by_team": "TEAM-0025"
+    },
+    {
+      "id": "SCR-0032",
+      "title": "dashboard",
+      "date": "2026-03-11",
+      "category": "coordination",
+      "tags": [
+        "monitoring",
+        "coordination",
+        "multi-agent",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0005",
+          "SCR-0019",
+          "SCR-0020",
+          "SCR-0029",
+          "SCR-0030",
+          "SCR-0031",
+          "SCR-0033"
+        ]
+      },
+      "filename": "../coordination/dashboard.py",
+      "language": "python",
+      "description": "Real-time text-based agent monitoring dashboard. Displays live status of running agent teams, message throughput, task progress, and system health in a terminal UI.",
+      "added_by_team": "TEAM-0025"
+    },
+    {
+      "id": "SCR-0033",
+      "title": "coordinator-hub",
+      "date": "2026-03-11",
+      "category": "coordination",
+      "tags": [
+        "coordination",
+        "hub-spoke",
+        "sqlite",
+        "multi-agent",
+        "python"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0005",
+          "SCR-0019",
+          "SCR-0029",
+          "SCR-0030",
+          "SCR-0031",
+          "SCR-0032"
+        ]
+      },
+      "filename": "../coordination/coordinator_hub.py",
+      "language": "python",
+      "description": "Hub-and-spoke agent coordination via SQLite. Central coordinator that manages task assignment, result collection, and agent communication through a SQLite-based shared state.",
+      "added_by_team": "TEAM-0025"
     },
     {
       "id": "SCR-0034",
       "title": "build-cross-ref-index",
-      "file": "build-cross-ref-index.py",
       "date": "2026-03-11",
-      "team": "TEAM-0001",
-      "tags": [],
+      "category": "indexing",
+      "tags": [
+        "indexing",
+        "validation",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0002",
+          "SCR-0003",
+          "SCR-0004",
+          "SCR-0012",
+          "SCR-0013",
+          "SCR-0014",
+          "SCR-0016",
+          "SCR-0020",
+          "SCR-0041",
+          "SCR-0042"
+        ]
+      },
+      "filename": "build-cross-ref-index.py",
       "language": "python",
       "description": "Cross-reference index builder. Scans repository to build a comprehensive index of all cross-references between KB entries, team logs, scripts, and other artifacts.",
-      "dependencies": []
+      "added_by_team": "TEAM-0001"
     },
     {
       "id": "SCR-0035",
       "title": "search-storage",
-      "file": "search-storage.py",
       "date": "2026-03-11",
-      "team": "TEAM-0001",
-      "tags": [],
+      "category": "search",
+      "tags": [
+        "search",
+        "storage",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0002",
+          "SCR-0003",
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0015",
+          "SCR-0018",
+          "SCR-0021",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0036",
+          "SCR-0037",
+          "SCR-0038",
+          "SCR-0039",
+          "SCR-0040"
+        ]
+      },
+      "filename": "search-storage.py",
       "language": "python",
       "description": "Storage search utility. Provides search capabilities across the storage system including scripts, API tools, and data sources.",
-      "dependencies": []
+      "added_by_team": "TEAM-0001"
     },
     {
       "id": "SCR-0036",
       "title": "stress-test-setup-reads",
-      "file": "stress-test-setup-reads.py",
       "date": "2026-03-11",
-      "team": "TEAM-0001",
-      "tags": [],
+      "category": "validation",
+      "tags": [
+        "stress-test",
+        "storage",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0002",
+          "SCR-0003",
+          "SCR-0012",
+          "SCR-0014",
+          "SCR-0016",
+          "SCR-0020",
+          "SCR-0035",
+          "SCR-0037",
+          "SCR-0038",
+          "SCR-0039",
+          "SCR-0040",
+          "SCR-0041",
+          "SCR-0042"
+        ]
+      },
+      "filename": "stress-test-setup-reads.py",
       "language": "python",
       "description": "Read stress test setup. Prepares the environment and test data for storage system read stress testing.",
-      "dependencies": []
+      "added_by_team": "TEAM-0001"
     },
     {
       "id": "SCR-0037",
       "title": "stress-test-reads-category",
-      "file": "stress-test-reads-category.py",
       "date": "2026-03-11",
-      "team": "TEAM-0001",
-      "tags": [],
+      "category": "validation",
+      "tags": [
+        "stress-test",
+        "storage",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0002",
+          "SCR-0003",
+          "SCR-0012",
+          "SCR-0014",
+          "SCR-0016",
+          "SCR-0020",
+          "SCR-0035",
+          "SCR-0036",
+          "SCR-0038",
+          "SCR-0039",
+          "SCR-0040",
+          "SCR-0041",
+          "SCR-0042"
+        ]
+      },
+      "filename": "stress-test-reads-category.py",
       "language": "python",
       "description": "Category read stress testing. Stress tests the storage system's category-based read operations under high load conditions.",
-      "dependencies": []
+      "added_by_team": "TEAM-0001"
     },
     {
       "id": "SCR-0038",
       "title": "stress-test-reads-cross",
-      "file": "stress-test-reads-cross.py",
       "date": "2026-03-11",
-      "team": "TEAM-0001",
-      "tags": [],
+      "category": "validation",
+      "tags": [
+        "stress-test",
+        "storage",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0002",
+          "SCR-0003",
+          "SCR-0012",
+          "SCR-0014",
+          "SCR-0016",
+          "SCR-0020",
+          "SCR-0035",
+          "SCR-0036",
+          "SCR-0037",
+          "SCR-0039",
+          "SCR-0040",
+          "SCR-0041",
+          "SCR-0042"
+        ]
+      },
+      "filename": "stress-test-reads-cross.py",
       "language": "python",
       "description": "Cross-reference read stress testing. Stress tests the storage system's cross-reference lookup operations under high load conditions.",
-      "dependencies": []
+      "added_by_team": "TEAM-0001"
     },
     {
       "id": "SCR-0039",
       "title": "stress-test-reads-id",
-      "file": "stress-test-reads-id.py",
       "date": "2026-03-11",
-      "team": "TEAM-0001",
-      "tags": [],
+      "category": "validation",
+      "tags": [
+        "stress-test",
+        "storage",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0002",
+          "SCR-0003",
+          "SCR-0012",
+          "SCR-0014",
+          "SCR-0016",
+          "SCR-0020",
+          "SCR-0035",
+          "SCR-0036",
+          "SCR-0037",
+          "SCR-0038",
+          "SCR-0040",
+          "SCR-0041",
+          "SCR-0042"
+        ]
+      },
+      "filename": "stress-test-reads-id.py",
       "language": "python",
       "description": "ID lookup read stress testing. Stress tests the storage system's ID-based lookup operations under high load conditions.",
-      "dependencies": []
+      "added_by_team": "TEAM-0001"
     },
     {
       "id": "SCR-0040",
       "title": "stress-test-writes",
-      "file": "stress-test-writes.py",
       "date": "2026-03-11",
-      "team": "TEAM-0001",
-      "tags": [],
+      "category": "validation",
+      "tags": [
+        "stress-test",
+        "storage",
+        "concurrency",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0002",
+          "SCR-0003",
+          "SCR-0012",
+          "SCR-0014",
+          "SCR-0016",
+          "SCR-0020",
+          "SCR-0035",
+          "SCR-0036",
+          "SCR-0037",
+          "SCR-0038",
+          "SCR-0039",
+          "SCR-0041",
+          "SCR-0042"
+        ]
+      },
+      "filename": "stress-test-writes.py",
       "language": "python",
       "description": "Write stress testing. Stress tests the storage system's write operations including concurrent writes, large payloads, and rapid sequential writes.",
-      "dependencies": []
+      "added_by_team": "TEAM-0001"
     },
     {
       "id": "SCR-0041",
-      "title": "finding_dedup",
-      "file": "finding_dedup.py",
-      "date": "2026-03-11",
-      "team": "PROG-TEAM-3",
-      "tags": [],
+      "title": "test-utilities",
+      "date": "2026-03-12",
+      "category": "validation",
+      "tags": [
+        "validation",
+        "data-gathering",
+        "concurrency",
+        "python"
+      ],
       "status": "active",
-      "category": "analysis",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0021",
+          "SCR-0022"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0002",
+          "SCR-0003",
+          "SCR-0004",
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0012",
+          "SCR-0014",
+          "SCR-0016",
+          "SCR-0020",
+          "SCR-0021",
+          "SCR-0022",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0034",
+          "SCR-0036",
+          "SCR-0037",
+          "SCR-0038",
+          "SCR-0039",
+          "SCR-0040",
+          "SCR-0042",
+          "SCR-0043",
+          "SCR-0044"
+        ]
+      },
+      "filename": "data-gathering/methods/test_utilities.py",
       "language": "python",
-      "description": "Finding deduplicator using fuzzy matching (difflib.SequenceMatcher). Reads findings from multiple team JSON/JSONL files, detects duplicates above configurable similarity threshold, merges duplicates keeping the most complete version, and outputs deduplicated findings with merge metadata.",
-      "dependencies": []
+      "description": "Test suite for data-gathering utility modules (ddg_utils, request_cache, dedup_utils). Covers rate limiter thread safety, config locks, cache operations, TOCTOU-safe reads, tokenization, similarity scoring, and deduplication.",
+      "added_by_team": "TEAM-0026"
     },
     {
       "id": "SCR-0042",
-      "title": "quality_scorer",
-      "file": "quality_scorer.py",
-      "date": "2026-03-11",
-      "team": "PROG-TEAM-3",
-      "tags": [],
+      "title": "test-cross-references",
+      "date": "2026-03-12",
+      "category": "validation",
+      "tags": [
+        "validation",
+        "indexing",
+        "python"
+      ],
       "status": "active",
-      "category": "analysis",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0001",
+          "SCR-0002",
+          "SCR-0003",
+          "SCR-0004",
+          "SCR-0012",
+          "SCR-0013",
+          "SCR-0014",
+          "SCR-0016",
+          "SCR-0020",
+          "SCR-0034",
+          "SCR-0036",
+          "SCR-0037",
+          "SCR-0038",
+          "SCR-0039",
+          "SCR-0040",
+          "SCR-0041"
+        ]
+      },
+      "filename": "test-cross-references.py",
       "language": "python",
-      "description": "Quality scorer for gathered data entries. Scores on four dimensions: source authority (official docs > academic > blogs), freshness (date decay), completeness (fields filled + key field bonus), and citation count. Configurable weights via CLI or JSON config. Outputs scored and ranked list.",
-      "dependencies": []
+      "description": "Cross-reference analysis test script. Populates index.json files with test entries and validates cross-referencing capabilities across scripts, API tools, and sources indexes.",
+      "added_by_team": "TEAM-0004"
     },
     {
       "id": "SCR-0043",
-      "title": "archive_formatter",
-      "file": "archive_formatter.py",
-      "date": "2026-03-11",
-      "team": "PROG-TEAM-3",
-      "tags": [],
+      "title": "wikipedia-tools",
+      "date": "2026-03-12",
+      "category": "data-collection",
+      "tags": [
+        "wikipedia",
+        "dbpedia",
+        "sparql",
+        "data-gathering",
+        "research",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [
+          "KB-0045"
+        ],
+        "uses_scripts": [],
+        "uses_sources": [
+          "SRC-0006",
+          "SRC-0008"
+        ],
+        "related_to": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0021",
+          "SCR-0022",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0041",
+          "SCR-0044"
+        ]
+      },
+      "filename": "wikipedia_tools.py",
       "language": "python",
-      "description": "Archive formatter that converts raw findings (JSON/JSONL) into knowledge-base entries. Generates YAML frontmatter, extracts titles/tags/categories, maps finding fields to KB sections (Context, Method, Result, Lessons, Recommendations). Auto-detects next KB ID and creates properly named files.",
-      "dependencies": []
+      "description": "Wikipedia research toolkit for egress-restricted environments. Uses DBpedia SPARQL for batch link extraction (internal + external) with caching, URL compression, and token-efficient export. Supports single article queries, batch processing of 234 AI category articles, and compact JSON output. See KB-0045.",
+      "added_by_team": "team-beta"
     },
     {
       "id": "SCR-0044",
-      "title": "cross_team_search",
-      "file": "cross_team_search.py",
-      "date": "2026-03-11",
-      "team": "PROG-TEAM-3",
-      "tags": [],
+      "title": "wiki-text-extractor",
+      "date": "2026-03-12",
+      "category": "data-collection",
+      "tags": [
+        "wikipedia",
+        "dbpedia",
+        "text-extraction",
+        "data-gathering",
+        "research",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [
+          "KB-0046"
+        ],
+        "uses_scripts": [],
+        "uses_sources": [
+          "SRC-0006",
+          "SRC-0008"
+        ],
+        "related_to": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010",
+          "SCR-0011",
+          "SCR-0021",
+          "SCR-0022",
+          "SCR-0023",
+          "SCR-0024",
+          "SCR-0025",
+          "SCR-0026",
+          "SCR-0027",
+          "SCR-0028",
+          "SCR-0041",
+          "SCR-0043"
+        ]
+      },
+      "filename": "wiki_text_extractor.py",
       "language": "python",
-      "description": "Cross-team search across all team findings, session logs, KB entries, and scripts. Supports keyword, regex, and category search modes. Returns ranked results with team attribution, line numbers, and context. Filters by team and category.",
-      "dependencies": []
+      "description": "Wikipedia article text extractor for egress-restricted environments. Uses DBpedia Lookup API for short descriptions and WebSearch for full summaries. Caches per-article, exports as markdown/JSON/LLM format with token-efficient compact keys. Generates agent task batches for parallel extraction. See KB-0046.",
+      "added_by_team": "team-beta"
     },
     {
       "id": "SCR-0045",
-      "title": "bus_monitor",
-      "file": "bus_monitor.py",
-      "date": "2026-03-11",
-      "team": "PROG-TEAM-3",
-      "tags": [],
+      "title": "dedup-utils",
+      "date": "2026-03-12",
+      "category": "data-collection",
+      "tags": [
+        "deduplication",
+        "data-gathering",
+        "python",
+        "nlp"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "path": "storage/scripts/data-gathering/methods/dedup_utils.py",
       "language": "python",
-      "description": "JSONL message bus monitor. Reads all bus channels, shows recent messages with timestamps, filters by team/channel/message type, generates activity summaries, and supports watch mode for real-time monitoring.",
-      "dependencies": []
+      "description": "TF-IDF-based deduplication utilities for data gathering methods. Provides similarity scoring, result deduplication, and source merging for combining results across multiple data gathering methods. No external dependencies."
     },
     {
       "id": "SCR-0046",
-      "title": "doc_fetcher",
-      "file": "doc_fetcher.py",
-      "date": "2026-03-11",
-      "team": "PROG-TEAM-1",
-      "tags": [],
-      "status": "active",
+      "title": "method-ckan",
+      "date": "2026-03-12",
       "category": "data-collection",
+      "tags": [
+        "data-gathering",
+        "public-api",
+        "python",
+        "search"
+      ],
+      "status": "active",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0045"
+        ],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "path": "storage/scripts/data-gathering/methods/method_ckan.py",
       "language": "python",
-      "description": "Documentation fetcher that extracts structured content from URLs. Supports Python docs, ReadTheDocs, and generic HTML. Converts HTML to clean Markdown, handles pagination and link following, extracts headings, code blocks, and metadata. Outputs JSON or Markdown reports. CLI with depth and max-pages controls.",
-      "dependencies": []
+      "description": "CKAN/DKAN open data portal search method (DG-0010). Searches multiple government open data portals (data.gov, data.gov.uk, EU, Canada, Australia) using the CKAN Action API v3 package_search endpoint. No API key required."
     },
     {
       "id": "SCR-0047",
-      "title": "version_tracker",
-      "file": "version_tracker.py",
-      "date": "2026-03-11",
-      "team": "PROG-TEAM-1",
-      "tags": [],
+      "title": "data-pipeline",
+      "date": "2026-03-12",
+      "category": "automation",
+      "tags": [
+        "automation",
+        "indexing",
+        "validation",
+        "search",
+        "python"
+      ],
       "status": "active",
-      "category": "data-collection",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [
+          "SCR-0013",
+          "SCR-0035"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0013",
+          "SCR-0035"
+        ]
+      },
+      "path": "storage/scripts/data_pipeline.py",
       "language": "python",
-      "description": "Software version tracker querying PyPI, npm, and GitHub APIs. Checks latest versions, extracts release dates, changelogs, dependencies, and license info. Supports single package check, multi-package reports, and version comparison showing dependency changes and commit diffs.",
-      "dependencies": []
+      "description": "Data pipeline automation tool for the research-to-storage workflow. Automates KB ingestion, validation, search, and health checks. Orchestrates rebuild_unified_index.py, kb_validator.py, and unified_search.py."
     },
     {
       "id": "SCR-0048",
-      "title": "algo_catalog",
-      "file": "algo_catalog.py",
-      "date": "2026-03-11",
-      "team": "PROG-TEAM-2",
-      "tags": [],
+      "title": "graph-query",
+      "date": "2026-03-12",
+      "category": "search",
+      "tags": [
+        "search",
+        "analysis",
+        "python",
+        "indexing"
+      ],
       "status": "active",
-      "category": "data-collection",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "path": "storage/scripts/graph_query.py",
       "language": "python",
-      "description": "Algorithm Catalog Builder. Maintains a structured JSON catalog of algorithms with name, category, complexity, description, references, and code snippets. Supports add, search (by category/complexity/keyword/tags), import, export (JSON/Markdown), remove, and statistics. Deterministic IDs via MD5 hash. Designed for DATA-GATHER-ALGO team.",
-      "dependencies": []
+      "description": "Cross-reference relationship graph query tool. Queries the relationship_graph.json to find node neighbors, orphan entries, hub entries, shortest paths between nodes, and graph statistics."
     },
     {
       "id": "SCR-0049",
-      "title": "practices_linter",
-      "file": "practices_linter.py",
-      "date": "2026-03-11",
-      "team": "PROG-TEAM-2",
-      "tags": [],
+      "title": "rebuild-unified-index",
+      "date": "2026-03-12",
+      "category": "indexing",
+      "tags": [
+        "indexing",
+        "search",
+        "automation",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0013"
+        ]
+      },
+      "path": "storage/scripts/rebuild_unified_index.py",
       "language": "python",
-      "description": "Best Practices Linter Config Generator. Takes best practice rules (JSON) and generates linter configurations for pylint, flake8, and ruff. Maps 10 practice categories (naming, typing, documentation, complexity, security, imports, error-handling, testing, style, performance) to specific linter rules. Supports validate, generate, list-rules, and sample commands. Designed for DATA-GATHER-PRACTICES team.",
-      "dependencies": []
+      "description": "Rebuilds the unified search index from all 5 domain index.json files (knowledge-base, scripts, sources, api-tools, sessions). Normalizes entries to a common schema and writes storage/unified_index.json with an inverted tag index."
     },
     {
       "id": "SCR-0050",
-      "title": "pattern_analyzer",
-      "file": "pattern_analyzer.py",
-      "date": "2026-03-11",
-      "team": "PROG-TEAM-2",
-      "tags": [],
+      "title": "unified-search",
+      "date": "2026-03-12",
+      "category": "search",
+      "tags": [
+        "search",
+        "python",
+        "indexing"
+      ],
       "status": "active",
-      "category": "analysis",
+      "references": {
+        "builds_on": [
+          "SCR-0049"
+        ],
+        "uses_scripts": [
+          "SCR-0049"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0035"
+        ]
+      },
+      "path": "storage/scripts/unified_search.py",
       "language": "python",
-      "description": "Code Pattern Analyzer. Scans Python codebases using AST parsing to detect 10 design patterns (singleton, factory, builder, observer, decorator, strategy, template method, iterator, context manager) and 10 anti-patterns (god class, long method, too many params, deep nesting, bare except, mutable defaults, global state, star imports, nested class abuse, return in init). Reports findings with file locations, severity, and suggestions.",
-      "dependencies": []
+      "description": "Unified search across all repository domains. Searches knowledge-base, scripts, sources, api-tools, and sessions from unified_index.json. Supports text queries, tag filtering, domain filtering, and related-entry lookup."
     },
     {
       "id": "SCR-0051",
-      "title": "tool_benchmarker",
-      "file": "tool_benchmarker.py",
-      "date": "2026-03-11",
-      "team": "TEAM-0030",
-      "tags": [],
+      "title": "upgrade-indexes-v2",
+      "date": "2026-03-12",
+      "category": "indexing",
+      "tags": [
+        "indexing",
+        "automation",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0013"
+        ]
+      },
+      "path": "storage/scripts/upgrade_indexes_v2.py",
       "language": "python",
-      "description": "Generic benchmark harness for repository scripts. Measures execution time, output size (chars/tokens), memory usage. Supports single command benchmarks, A/B comparisons, JSON suite definitions, built-in auto profiles for known tools (smart_read, query_kb, smart_search, smart_write, validate_naming, kb_validator), and regression checking against saved baselines.",
-      "dependencies": []
+      "description": "Schema migration script that upgrades knowledge-base/index.json and teams/sessions/index.json to schema v2.0 format. Computes cross-references between KB entries, scripts, and team sessions."
     },
     {
       "id": "SCR-0052",
-      "title": "tool_tester",
-      "file": "tool_tester.py",
-      "date": "2026-03-11",
-      "team": "TEAM-0030",
-      "tags": [],
+      "title": "bus-core",
+      "date": "2026-03-12",
+      "category": "coordination",
+      "tags": [
+        "coordination",
+        "sqlite",
+        "message-bus",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0053",
+          "SCR-0054",
+          "SCR-0055",
+          "SCR-0056"
+        ]
+      },
+      "path": "storage/coordination/bus_core.py",
       "language": "python",
-      "description": "Generic test harness for repository scripts. Validates correctness via exit codes, stdout/stderr pattern matching, JSON schema checks, CSV validation, and line count assertions. Built-in test profiles for 12 tools (45 tests total). Supports JSON suite definitions and --all mode for full regression testing.",
-      "dependencies": []
+      "description": "Canonical shared primitives for the Proto A coordination bus and SQLite layer. Provides retry_on_busy decorator, WAL-mode connection init, POSIX-atomic JSONL bus append/read, channel name sanitization, and valid message type constants. Single source of truth for patterns previously duplicated across coordination modules."
     },
     {
       "id": "SCR-0053",
-      "title": "coord_stress_bench",
-      "file": "coord_stress_bench.py",
-      "date": "2026-03-11",
-      "team": "TEAM-0030",
-      "tags": [],
+      "title": "db-utils",
+      "date": "2026-03-12",
+      "category": "coordination",
+      "tags": [
+        "coordination",
+        "sqlite",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [
+          "SCR-0052"
+        ],
+        "uses_scripts": [
+          "SCR-0052"
+        ],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0052"
+        ]
+      },
+      "path": "storage/coordination/db_utils.py",
       "language": "python",
-      "description": "Coordination infrastructure stress test and benchmark. Tests CoordinatorHub, HelpProtocol, DirectChannels, WorkStealing, PipelineManager, and Scratchpad under realistic multi-agent conditions. Includes team-sizing optimization (1-50 agents), SQLite contention analysis (1-32 threads), thundering herd test, help offer races, and pipeline throughput benchmarks. 2000+ measurements per run.",
-      "dependencies": []
+      "description": "Common database utilities for the Proto A coordination layer. Provides reusable helpers for SQLite WAL connection management, idempotent schema creation, and atomic read-modify-write transactions. Complements bus_core.init_db with higher-level patterns."
     },
     {
       "id": "SCR-0054",
-      "title": "team_analyzer",
-      "file": "team_analyzer.py",
-      "date": "2026-03-11",
-      "team": "TEAM-0030",
-      "tags": [],
+      "title": "direct-channels",
+      "date": "2026-03-12",
+      "category": "coordination",
+      "tags": [
+        "coordination",
+        "multi-agent",
+        "communication",
+        "sqlite",
+        "python"
+      ],
       "status": "active",
-      "category": "analysis",
+      "references": {
+        "builds_on": [
+          "SCR-0052"
+        ],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0052",
+          "SCR-0055",
+          "SCR-0056"
+        ]
+      },
+      "path": "storage/coordination/direct_channels.py",
       "language": "python",
-      "description": "Historical team performance analyzer. Analyzes 20 team session logs to extract team size vs efficiency curves, cooperation pattern rankings, weak link identification, and optimal configuration recommendations. Includes power-law efficiency model (E = 4.0 * N^-0.75) and infrastructure weak link priority map.",
-      "dependencies": []
+      "description": "Direct team-to-team channels, presence tracking, and work progress broadcasting. Provides named channels (direct, topic, team, broadcast), team presence indicators, and progress broadcasting with bottleneck detection using SQLite WAL and JSONL bus."
     },
     {
       "id": "SCR-0055",
-      "title": "pick_logger",
-      "file": "pick_logger.py",
+      "title": "help-protocol",
       "date": "2026-03-12",
-      "team": "TEAM-0036",
-      "tags": [],
+      "category": "coordination",
+      "tags": [
+        "coordination",
+        "multi-agent",
+        "communication",
+        "sqlite",
+        "python"
+      ],
       "status": "active",
-      "category": "market-research",
+      "references": {
+        "builds_on": [
+          "SCR-0052"
+        ],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0052",
+          "SCR-0054",
+          "SCR-0056"
+        ]
+      },
+      "path": "storage/coordination/help_protocol.py",
       "language": "python",
-      "description": "CLI tool for automated stock pick creation. Generates PICK markdown files from arguments, auto-generates next PICK ID, updates picks/index.json, validates price relationships and enums. Supports --dry-run.",
-      "dependencies": []
+      "description": "Team help protocol and idle detection for Proto A. Provides work-item tracking, help-request/offer/accept flow, idle detection, capability matching, and automatic assignment of idle teams to busy teams. Uses SQLite WAL with BEGIN IMMEDIATE for atomic operations."
     },
     {
       "id": "SCR-0056",
-      "title": "method_sec_edgar",
-      "file": "method_sec_edgar.py",
+      "title": "work-stealing",
       "date": "2026-03-12",
-      "team": "TEAM-0037",
-      "tags": [],
+      "category": "coordination",
+      "tags": [
+        "coordination",
+        "multi-agent",
+        "sqlite",
+        "python"
+      ],
       "status": "active",
-      "category": "data-collection",
+      "references": {
+        "builds_on": [
+          "SCR-0052"
+        ],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0052",
+          "SCR-0054",
+          "SCR-0055"
+        ]
+      },
+      "path": "storage/coordination/work_stealing.py",
       "language": "python",
-      "description": "SEC EDGAR filing data retrieval. Looks up CIK from ticker, fetches filings from data.sec.gov, filters by type (10-K, 10-Q, 8-K). Table and JSON output. Rate-limited for SEC compliance.",
-      "dependencies": []
+      "description": "Work stealing, pipeline chaining, and shared scratchpad for Proto A. Provides a shared work queue with atomic steal, multi-stage pipeline manager with dependency tracking and bus notifications, and a namespaced key-value scratchpad with TTL expiration."
     },
     {
       "id": "SCR-0057",
-      "title": "mcp_kb_server",
-      "file": "mcp_kb_server.py",
-      "date": "2026-03-11",
-      "team": "TEAM-0032",
-      "tags": [],
+      "title": "route-tracker",
+      "date": "2026-03-12",
+      "category": "coordination",
+      "tags": [
+        "coordination",
+        "monitoring",
+        "indexing",
+        "python"
+      ],
       "status": "active",
-      "category": "integration",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": [
+          "SCR-0033",
+          "SCR-0032"
+        ]
+      },
+      "path": "storage/coordination/route_tracker.py",
       "language": "python",
-      "description": "MCP server for knowledge base search. Provides FTS5 full-text search, semantic search via LanceDB, and CRUD operations on KB entries via FastMCP stdio protocol.",
-      "dependencies": []
+      "description": "Agent route tracker for pointer network traversals. Logs which paths agents follow through the pointer network, analyzes route patterns, computes strength effectiveness, and recommends optimal routes for task types."
     },
     {
       "id": "SCR-0058",
-      "title": "semantic_indexer",
-      "file": "semantic_indexer.py",
-      "date": "2026-03-11",
-      "team": "TEAM-0032",
-      "tags": [],
+      "title": "s6-routing-benchmark",
+      "date": "2026-03-12",
+      "category": "analysis",
+      "tags": [
+        "benchmark",
+        "stress-test",
+        "python",
+        "coordination"
+      ],
       "status": "active",
-      "category": "integration",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "s6_routing_benchmark.py",
       "language": "python",
-      "description": "Builds LanceDB vector index from KB entries using sentence-transformers embeddings for semantic search.",
-      "dependencies": []
+      "description": "Stress Team S6 routing strategy benchmark. Compares weight-based, tag-based, and hybrid routing strategies across 60 journeys through the pointer network.",
+      "added_by_team": "TEAM-0026"
     },
     {
       "id": "SCR-0059",
-      "title": "semantic_search",
-      "file": "semantic_search.py",
-      "date": "2026-03-11",
-      "team": "TEAM-0032",
-      "tags": [],
+      "title": "upgrade-indexes-v2",
+      "date": "2026-03-12",
+      "category": "indexing",
+      "tags": [
+        "indexing",
+        "automation",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "upgrade_indexes_v2.py",
       "language": "python",
-      "description": "CLI for semantic search across KB entries via LanceDB vector similarity.",
-      "dependencies": [
-        "SCR-0058"
-      ]
+      "description": "Upgrades knowledge-base/index.json and teams/sessions/index.json to schema v2.0 with secondary indexes, cross-references, and related_to links.",
+      "added_by_team": "TEAM-0026"
     },
     {
       "id": "SCR-0060",
-      "title": "smart_read",
-      "file": "smart_read.py",
-      "date": "2026-03-11",
-      "team": "TEAM-0030",
-      "tags": [],
+      "title": "rebuild-unified-index",
+      "date": "2026-03-12",
+      "category": "indexing",
+      "tags": [
+        "indexing",
+        "search",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "rebuild_unified_index.py",
       "language": "python",
-      "description": "Smart file read utility with contextual awareness for the repository structure.",
-      "dependencies": []
+      "description": "Rebuilds the unified search index from all 5 domain index.json files (knowledge-base, scripts, sources, api-tools, team sessions) into a single storage/unified_index.json with inverted tag index.",
+      "added_by_team": "TEAM-0026"
     },
     {
       "id": "SCR-0061",
-      "title": "smart_search",
-      "file": "smart_search.py",
-      "date": "2026-03-11",
-      "team": "TEAM-0030",
-      "tags": [],
+      "title": "viz-data-flow",
+      "date": "2026-03-12",
+      "category": "analysis",
+      "tags": [
+        "analysis",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
-      "language": "python",
-      "description": "Smart search utility across repository with contextual ranking.",
-      "dependencies": []
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "viz_data_flow.js",
+      "language": "javascript",
+      "description": "D3.js v7 visualization of script-to-source data flow. Renders a left-to-right flow diagram showing how scripts connect to data sources with dependency chains, interactive hover/click highlighting.",
+      "added_by_team": "TEAM-0026"
     },
     {
       "id": "SCR-0062",
-      "title": "smart_write",
-      "file": "smart_write.py",
-      "date": "2026-03-11",
-      "team": "TEAM-0030",
-      "tags": [],
+      "title": "unified-search",
+      "date": "2026-03-12",
+      "category": "search",
+      "tags": [
+        "search",
+        "indexing",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "unified_search.py",
       "language": "python",
-      "description": "Smart write utility with validation and index auto-updating.",
-      "dependencies": []
+      "description": "Unified search tool across all repository domains (knowledge-base, scripts, sources, api-tools, team sessions). Supports keyword search, tag filtering, domain filtering, date ranges, and related entry lookup.",
+      "added_by_team": "TEAM-0026"
     },
     {
       "id": "SCR-0063",
-      "title": "query_kb",
-      "file": "query_kb.py",
-      "date": "2026-03-11",
-      "team": "TEAM-0030",
-      "tags": [],
+      "title": "viz-kb-graph",
+      "date": "2026-03-12",
+      "category": "analysis",
+      "tags": [
+        "analysis",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
-      "language": "python",
-      "description": "Knowledge base query interface with structured output formatting.",
-      "dependencies": []
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "viz_kb_graph.js",
+      "language": "javascript",
+      "description": "D3.js v7 visualization rendering a top-down layered DAG of Knowledge Base entry dependencies. Shows builds_on relationships with interactive click-to-highlight dependency chains.",
+      "added_by_team": "TEAM-0026"
     },
     {
       "id": "SCR-0064",
-      "title": "validate_naming",
-      "file": "validate_naming.py",
-      "date": "2026-03-11",
-      "team": "TEAM-0030",
-      "tags": [],
+      "title": "repair-pointer-network",
+      "date": "2026-03-12",
+      "category": "automation",
+      "tags": [
+        "automation",
+        "indexing",
+        "python",
+        "coordination"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "repair_pointer_network.py",
       "language": "python",
-      "description": "Naming convention validator for repository files. Checks snake_case for .py, kebab-case for .md, ID format standards.",
-      "dependencies": []
+      "description": "Repair tool for the pointer network. Fixes orphan nodes, adds missing backlinks for high-weight edges, connects unreachable scripts to SOPs, and updates network statistics.",
+      "added_by_team": "TEAM-0026"
     },
     {
       "id": "SCR-0065",
-      "title": "auto_index",
-      "file": "auto_index.py",
-      "date": "2026-03-11",
-      "team": "TEAM-0030",
-      "tags": [],
+      "title": "viz-team-hierarchy",
+      "date": "2026-03-12",
+      "category": "analysis",
+      "tags": [
+        "analysis",
+        "multi-agent",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
-      "language": "python",
-      "description": "Automated index.json generator. Scans directories and generates/updates index files.",
-      "dependencies": []
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "viz_team_hierarchy.js",
+      "language": "javascript",
+      "description": "D3.js v7 force-directed graph visualization of team hierarchy showing agent membership, knowledge dependencies, and parent-child team relationships with expandable/collapsible team nodes.",
+      "added_by_team": "TEAM-0026"
     },
     {
       "id": "SCR-0066",
-      "title": "generate_registry",
-      "file": "generate_registry.py",
-      "date": "2026-03-11",
-      "team": "TEAM-0030",
-      "tags": [],
+      "title": "graph-query",
+      "date": "2026-03-12",
+      "category": "search",
+      "tags": [
+        "search",
+        "indexing",
+        "python"
+      ],
       "status": "active",
-      "category": "utility",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "graph_query.py",
       "language": "python",
-      "description": "Registry generation tool for cataloging repository artifacts.",
-      "dependencies": []
+      "description": "Cross-reference relationship graph query tool. Supports node inspection, orphan detection, hub finding, shortest path computation, and graph statistics including connected components and density.",
+      "added_by_team": "TEAM-0026"
     },
     {
       "id": "SCR-0067",
-      "title": "import_to_db",
-      "file": "import_to_db.py",
-      "date": "2026-03-11",
-      "team": "TEAM-0032",
-      "tags": [],
+      "title": "s2-fanout-stress",
+      "date": "2026-03-12",
+      "category": "analysis",
+      "tags": [
+        "benchmark",
+        "stress-test",
+        "python",
+        "coordination"
+      ],
       "status": "active",
-      "category": "integration",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "s2_fanout_stress.py",
       "language": "python",
-      "description": "Database import tool. Imports KB entries and metadata into SQLite for FTS5 search.",
-      "dependencies": []
+      "description": "Stress Team S2 script node fan-out analysis. Computes direct, 2-hop, and 3-hop reach for all SCR nodes, identifies hub and dead-end scripts, and simulates 15 journeys from top hub scripts.",
+      "added_by_team": "TEAM-0026"
     },
     {
       "id": "SCR-0068",
-      "title": "method_fred",
-      "file": "method_fred.py",
+      "title": "data-pipeline",
       "date": "2026-03-12",
-      "team": "TEAM-0039",
-      "tags": [],
+      "category": "automation",
+      "tags": [
+        "automation",
+        "indexing",
+        "validation",
+        "search",
+        "python"
+      ],
       "status": "active",
-      "category": "data-collection",
+      "references": {
+        "builds_on": [],
+        "uses_scripts": [],
+        "uses_sources": [],
+        "related_to": []
+      },
+      "filename": "data_pipeline.py",
       "language": "python",
-      "description": "FRED economic data retrieval. 33 series aliases (GDP, CPI, unemployment, fed_funds, etc.). Works without API key via public CSV fallback. Supports --macro-summary for 8-indicator overview.",
-      "dependencies": []
+      "description": "Data pipeline automation for the research-to-storage workflow. Supports KB ingestion from JSON, validation with taxonomy checks, unified search delegation, and repository health checks across all domains.",
+      "added_by_team": "TEAM-0026"
     },
     {
       "id": "SCR-0069",
@@ -942,5 +2402,413 @@
       "dependencies": []
     }
   ],
-  "date": "2026-03-12"
+  "secondary_indexes": {
+    "by_category": {
+      "analysis": [
+        "SCR-0004",
+        "SCR-0005",
+        "SCR-0011",
+        "SCR-0031",
+        "SCR-0058",
+        "SCR-0061",
+        "SCR-0063",
+        "SCR-0065",
+        "SCR-0067"
+      ],
+      "automation": [
+        "SCR-0003",
+        "SCR-0047",
+        "SCR-0064",
+        "SCR-0068"
+      ],
+      "caching": [
+        "SCR-0017"
+      ],
+      "coordination": [
+        "SCR-0019",
+        "SCR-0029",
+        "SCR-0030",
+        "SCR-0032",
+        "SCR-0033",
+        "SCR-0052",
+        "SCR-0053",
+        "SCR-0054",
+        "SCR-0055",
+        "SCR-0056",
+        "SCR-0057"
+      ],
+      "data-collection": [
+        "SCR-0006",
+        "SCR-0007",
+        "SCR-0008",
+        "SCR-0009",
+        "SCR-0010",
+        "SCR-0021",
+        "SCR-0022",
+        "SCR-0023",
+        "SCR-0024",
+        "SCR-0025",
+        "SCR-0026",
+        "SCR-0027",
+        "SCR-0028",
+        "SCR-0043",
+        "SCR-0044",
+        "SCR-0045",
+        "SCR-0046"
+      ],
+      "indexing": [
+        "SCR-0013",
+        "SCR-0034",
+        "SCR-0049",
+        "SCR-0051",
+        "SCR-0059",
+        "SCR-0060"
+      ],
+      "search": [
+        "SCR-0015",
+        "SCR-0018",
+        "SCR-0035",
+        "SCR-0048",
+        "SCR-0050",
+        "SCR-0062",
+        "SCR-0066"
+      ],
+      "validation": [
+        "SCR-0001",
+        "SCR-0002",
+        "SCR-0012",
+        "SCR-0014",
+        "SCR-0016",
+        "SCR-0020",
+        "SCR-0036",
+        "SCR-0037",
+        "SCR-0038",
+        "SCR-0039",
+        "SCR-0040",
+        "SCR-0041",
+        "SCR-0042"
+      ]
+    },
+    "by_tag": {
+      "analysis": [
+        "SCR-0048",
+        "SCR-0061",
+        "SCR-0063",
+        "SCR-0065"
+      ],
+      "arxiv": [
+        "SCR-0008"
+      ],
+      "automation": [
+        "SCR-0003",
+        "SCR-0013",
+        "SCR-0047",
+        "SCR-0049",
+        "SCR-0051",
+        "SCR-0059",
+        "SCR-0064",
+        "SCR-0068"
+      ],
+      "benchmark": [
+        "SCR-0011",
+        "SCR-0058",
+        "SCR-0067"
+      ],
+      "caching": [
+        "SCR-0017",
+        "SCR-0022"
+      ],
+      "communication": [
+        "SCR-0029",
+        "SCR-0054",
+        "SCR-0055"
+      ],
+      "concurrency": [
+        "SCR-0040",
+        "SCR-0041"
+      ],
+      "coordination": [
+        "SCR-0019",
+        "SCR-0030",
+        "SCR-0031",
+        "SCR-0032",
+        "SCR-0033",
+        "SCR-0052",
+        "SCR-0053",
+        "SCR-0054",
+        "SCR-0055",
+        "SCR-0056",
+        "SCR-0057",
+        "SCR-0058",
+        "SCR-0064",
+        "SCR-0067"
+      ],
+      "data-gathering": [
+        "SCR-0006",
+        "SCR-0007",
+        "SCR-0008",
+        "SCR-0009",
+        "SCR-0010",
+        "SCR-0011",
+        "SCR-0021",
+        "SCR-0022",
+        "SCR-0023",
+        "SCR-0024",
+        "SCR-0025",
+        "SCR-0026",
+        "SCR-0027",
+        "SCR-0028",
+        "SCR-0041",
+        "SCR-0043",
+        "SCR-0044",
+        "SCR-0045",
+        "SCR-0046"
+      ],
+      "dbpedia": [
+        "SCR-0043",
+        "SCR-0044"
+      ],
+      "deduplication": [
+        "SCR-0005",
+        "SCR-0009",
+        "SCR-0031",
+        "SCR-0045"
+      ],
+      "github-api": [
+        "SCR-0028"
+      ],
+      "go": [
+        "SCR-0015",
+        "SCR-0016",
+        "SCR-0017"
+      ],
+      "guardian": [
+        "SCR-0025"
+      ],
+      "hacker-news": [
+        "SCR-0024"
+      ],
+      "hub-spoke": [
+        "SCR-0033"
+      ],
+      "indexing": [
+        "SCR-0012",
+        "SCR-0013",
+        "SCR-0014",
+        "SCR-0015",
+        "SCR-0016",
+        "SCR-0034",
+        "SCR-0042",
+        "SCR-0047",
+        "SCR-0048",
+        "SCR-0049",
+        "SCR-0050",
+        "SCR-0051",
+        "SCR-0057",
+        "SCR-0059",
+        "SCR-0060",
+        "SCR-0062",
+        "SCR-0064",
+        "SCR-0066",
+        "SCR-0068"
+      ],
+      "jsonl": [
+        "SCR-0029"
+      ],
+      "message-bus": [
+        "SCR-0029",
+        "SCR-0052"
+      ],
+      "monitoring": [
+        "SCR-0019",
+        "SCR-0020",
+        "SCR-0030",
+        "SCR-0032",
+        "SCR-0057"
+      ],
+      "multi-agent": [
+        "SCR-0005",
+        "SCR-0019",
+        "SCR-0030",
+        "SCR-0031",
+        "SCR-0032",
+        "SCR-0033",
+        "SCR-0054",
+        "SCR-0055",
+        "SCR-0056",
+        "SCR-0065"
+      ],
+      "nlp": [
+        "SCR-0018",
+        "SCR-0045"
+      ],
+      "openalex": [
+        "SCR-0023"
+      ],
+      "public-api": [
+        "SCR-0007",
+        "SCR-0046"
+      ],
+      "python": [
+        "SCR-0001",
+        "SCR-0002",
+        "SCR-0003",
+        "SCR-0004",
+        "SCR-0005",
+        "SCR-0006",
+        "SCR-0007",
+        "SCR-0008",
+        "SCR-0009",
+        "SCR-0010",
+        "SCR-0011",
+        "SCR-0012",
+        "SCR-0013",
+        "SCR-0014",
+        "SCR-0018",
+        "SCR-0019",
+        "SCR-0020",
+        "SCR-0021",
+        "SCR-0022",
+        "SCR-0023",
+        "SCR-0024",
+        "SCR-0025",
+        "SCR-0026",
+        "SCR-0027",
+        "SCR-0028",
+        "SCR-0029",
+        "SCR-0030",
+        "SCR-0031",
+        "SCR-0032",
+        "SCR-0033",
+        "SCR-0034",
+        "SCR-0035",
+        "SCR-0036",
+        "SCR-0037",
+        "SCR-0038",
+        "SCR-0039",
+        "SCR-0040",
+        "SCR-0041",
+        "SCR-0042",
+        "SCR-0043",
+        "SCR-0044",
+        "SCR-0045",
+        "SCR-0046",
+        "SCR-0047",
+        "SCR-0048",
+        "SCR-0049",
+        "SCR-0050",
+        "SCR-0051",
+        "SCR-0052",
+        "SCR-0053",
+        "SCR-0054",
+        "SCR-0055",
+        "SCR-0056",
+        "SCR-0057",
+        "SCR-0058",
+        "SCR-0059",
+        "SCR-0060",
+        "SCR-0061",
+        "SCR-0062",
+        "SCR-0063",
+        "SCR-0064",
+        "SCR-0065",
+        "SCR-0066",
+        "SCR-0067",
+        "SCR-0068"
+      ],
+      "research": [
+        "SCR-0043",
+        "SCR-0044"
+      ],
+      "search": [
+        "SCR-0006",
+        "SCR-0007",
+        "SCR-0008",
+        "SCR-0009",
+        "SCR-0010",
+        "SCR-0015",
+        "SCR-0018",
+        "SCR-0021",
+        "SCR-0023",
+        "SCR-0024",
+        "SCR-0025",
+        "SCR-0026",
+        "SCR-0027",
+        "SCR-0028",
+        "SCR-0035",
+        "SCR-0046",
+        "SCR-0047",
+        "SCR-0048",
+        "SCR-0049",
+        "SCR-0050",
+        "SCR-0060",
+        "SCR-0062",
+        "SCR-0066",
+        "SCR-0068"
+      ],
+      "semantic-scholar": [
+        "SCR-0026"
+      ],
+      "sparql": [
+        "SCR-0043"
+      ],
+      "sqlite": [
+        "SCR-0033",
+        "SCR-0052",
+        "SCR-0053",
+        "SCR-0054",
+        "SCR-0055",
+        "SCR-0056"
+      ],
+      "stock-analysis": [
+        "SCR-0004"
+      ],
+      "storage": [
+        "SCR-0001",
+        "SCR-0002",
+        "SCR-0003",
+        "SCR-0017",
+        "SCR-0035",
+        "SCR-0036",
+        "SCR-0037",
+        "SCR-0038",
+        "SCR-0039",
+        "SCR-0040"
+      ],
+      "stress-test": [
+        "SCR-0036",
+        "SCR-0037",
+        "SCR-0038",
+        "SCR-0039",
+        "SCR-0040",
+        "SCR-0058",
+        "SCR-0067"
+      ],
+      "text-extraction": [
+        "SCR-0044"
+      ],
+      "validation": [
+        "SCR-0001",
+        "SCR-0002",
+        "SCR-0003",
+        "SCR-0004",
+        "SCR-0012",
+        "SCR-0014",
+        "SCR-0016",
+        "SCR-0020",
+        "SCR-0034",
+        "SCR-0041",
+        "SCR-0042",
+        "SCR-0047",
+        "SCR-0068"
+      ],
+      "wikidata": [
+        "SCR-0027"
+      ],
+      "wikipedia": [
+        "SCR-0043",
+        "SCR-0044"
+      ]
+    }
+  }
 }

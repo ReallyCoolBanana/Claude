@@ -1,0 +1,134 @@
+{
+  "tag": "monitoring",
+  "node_count": 7,
+  "domains": [
+    "scripts",
+    "sops"
+  ],
+  "nodes": [
+    {
+      "id": "SCR-0019",
+      "domain": "scripts",
+      "title": "handoff-tracker",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0020",
+      "domain": "scripts",
+      "title": "staleness-detector",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0030",
+      "domain": "scripts",
+      "title": "multi-team-runner",
+      "pointer_count": 20
+    },
+    {
+      "id": "SCR-0032",
+      "domain": "scripts",
+      "title": "dashboard",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-012",
+      "domain": "sops",
+      "title": "Real-Time Monitoring and Intervention Protocol",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-015",
+      "domain": "sops",
+      "title": "Infrastructure Audit and Mass Indexing Protocol",
+      "pointer_count": 20
+    },
+    {
+      "id": "SOP-024",
+      "domain": "sops",
+      "title": "Data Quality & Freshness Maintenance",
+      "pointer_count": 20
+    }
+  ],
+  "internal_edges": [
+    {
+      "from": "SCR-0019",
+      "to": "SOP-012",
+      "weight": 4
+    },
+    {
+      "from": "SCR-0030",
+      "to": "SOP-012",
+      "weight": 4
+    },
+    {
+      "from": "SCR-0032",
+      "to": "SOP-012",
+      "weight": 4
+    },
+    {
+      "from": "SCR-0020",
+      "to": "SCR-0019",
+      "weight": 3
+    },
+    {
+      "from": "SCR-0019",
+      "to": "SCR-0020",
+      "weight": 3
+    },
+    {
+      "from": "SOP-015",
+      "to": "SOP-012",
+      "weight": 3
+    },
+    {
+      "from": "SOP-012",
+      "to": "SOP-015",
+      "weight": 3
+    },
+    {
+      "from": "SCR-0020",
+      "to": "SOP-015",
+      "weight": 2
+    },
+    {
+      "from": "SCR-0020",
+      "to": "SOP-024",
+      "weight": 2
+    },
+    {
+      "from": "SCR-0019",
+      "to": "SOP-015",
+      "weight": 2
+    },
+    {
+      "from": "SCR-0030",
+      "to": "SOP-015",
+      "weight": 2
+    },
+    {
+      "from": "SCR-0032",
+      "to": "SOP-015",
+      "weight": 2
+    },
+    {
+      "from": "SCR-0019",
+      "to": "SOP-024",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0020",
+      "to": "SOP-012",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0030",
+      "to": "SOP-024",
+      "weight": 1
+    },
+    {
+      "from": "SCR-0032",
+      "to": "SOP-024",
+      "weight": 1
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "report_id": "run006_fix_index_integrity",
+  "run": "Run-006",
+  "division": "2B",
+  "date": "2026-03-12",
+  "agents": ["FIX-5", "FIX-6", "FIX-7", "FIX-8"],
+  "summary": {
+    "total_bugs_addressed": 13,
+    "bugs_fixed": 12,
+    "bugs_verified_clean": 1,
+    "categories_addressed": ["orphaned", "secondary-index", "strength-weight", "duplicate-edges", "tag-consistency"]
+  },
+  "fix_5_6_orphaned_scripts": {
+    "description": "Indexed 11 orphaned script files into storage/scripts/index.json",
+    "bugs_fixed": ["BUG-B3-022", "BUG-B3-023", "BUG-B3-024", "BUG-B3-025", "BUG-B3-026", "BUG-B3-027", "BUG-B3-028", "BUG-B3-029", "BUG-B3-030", "BUG-B3-031", "BUG-B3-032"],
+    "also_fixed": "BUG-B3-001 (SCR-0057 missing from by_tag[python]) resolved by rebuilding secondary indexes",
+    "scripts_added": [
+      {"id": "SCR-0058", "filename": "s6_routing_benchmark.py", "category": "analysis", "language": "python"},
+      {"id": "SCR-0059", "filename": "upgrade_indexes_v2.py", "category": "indexing", "language": "python"},
+      {"id": "SCR-0060", "filename": "rebuild_unified_index.py", "category": "indexing", "language": "python"},
+      {"id": "SCR-0061", "filename": "viz_data_flow.js", "category": "analysis", "language": "javascript"},
+      {"id": "SCR-0062", "filename": "unified_search.py", "category": "search", "language": "python"},
+      {"id": "SCR-0063", "filename": "viz_kb_graph.js", "category": "analysis", "language": "javascript"},
+      {"id": "SCR-0064", "filename": "repair_pointer_network.py", "category": "automation", "language": "python"},
+      {"id": "SCR-0065", "filename": "viz_team_hierarchy.js", "category": "analysis", "language": "javascript"},
+      {"id": "SCR-0066", "filename": "graph_query.py", "category": "search", "language": "python"},
+      {"id": "SCR-0067", "filename": "s2_fanout_stress.py", "category": "analysis", "language": "python"},
+      {"id": "SCR-0068", "filename": "data_pipeline.py", "category": "automation", "language": "python"}
+    ],
+    "index_entry_count_before": 57,
+    "index_entry_count_after": 68,
+    "secondary_indexes_rebuilt": true
+  },
+  "fix_7_strength_weight_mismatches": {
+    "description": "Verified pointer-network.json for strength-weight mismatches after FIX-1/FIX-2 work",
+    "result": "CLEAN - No mismatches found",
+    "rules_checked": {
+      "primary": "weight >= 7",
+      "secondary": "weight 4-6",
+      "tertiary": "weight <= 3"
+    },
+    "mismatches_found": 0
+  },
+  "fix_8_duplicate_edges_and_tags": {
+    "description": "Checked for duplicate edges and fixed tag consistency in pointer-network.json",
+    "duplicate_edges": {
+      "exact_duplicates": 0,
+      "same_source_target_any_reason": 0,
+      "result": "CLEAN - No duplicates found"
+    },
+    "tag_consistency": {
+      "issues_found": 10,
+      "issues_fixed": 10,
+      "fixes_applied": [
+        {"location": "tag_clusters", "old_tag": "analysis", "new_tag": "benchmark"},
+        {"location": "SOP-013", "old_tag": "infrastructure", "new_tag": "coordination"},
+        {"location": "SOP-014", "old_tag": "infrastructure", "new_tag": "coordination"},
+        {"location": "SOP-015", "old_tag": "infrastructure", "new_tag": "coordination"},
+        {"location": "SOP-016", "old_tag": "infrastructure", "new_tag": "coordination"},
+        {"location": "SOP-017", "old_tag": "api", "new_tag": "public-api"},
+        {"location": "SOP-018", "old_tag": "knowledge-base", "new_tag": "storage"},
+        {"location": "SOP-018", "old_tag": "documentation", "new_tag": "sop"},
+        {"location": "SOP-028", "old_tag": "pointer-network", "new_tag": "indexing"},
+        {"location": "SOP-028", "old_tag": "infrastructure", "new_tag": "coordination"}
+      ],
+      "remaining_issues": 0
+    }
+  },
+  "files_modified": [
+    "storage/scripts/index.json",
+    "storage/pointer-network.json"
+  ]
+}

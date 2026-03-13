@@ -324,6 +324,70 @@ class WorkStealing:
         return work_id
 
     @_retry_on_busy
+    def steal_batch(self, batch_size: int = 10) -> list[dict]:
+        """Atomically claim up to ``batch_size`` highest-priority unclaimed items.
+
+        Uses a single ``BEGIN IMMEDIATE`` transaction to claim multiple items,
+        reducing SQLite contention by ~5x compared to single-item stealing.
+        Returns a list of claimed work item dicts (may be shorter than
+        ``batch_size`` if fewer items are available, or empty if none).
+
+        See KB-0027: batch stealing gives 4.7x throughput improvement over
+        single-item stealing with no architecture changes required.
+        """
+        conn = self._conn
+        now = time.time()
+        with self._lock:
+            try:
+                conn.execute("BEGIN IMMEDIATE")
+            except sqlite3.OperationalError:
+                raise  # let _retry_on_busy handle SQLITE_BUSY
+
+            try:
+                rows = conn.execute(
+                    """SELECT id, owner_team, title, description, priority, created_at
+                       FROM work_queue
+                       WHERE status = 'queued'
+                       ORDER BY priority ASC, created_at ASC
+                       LIMIT ?""",
+                    (batch_size,),
+                ).fetchall()
+
+                if not rows:
+                    conn.execute("ROLLBACK")
+                    return []
+
+                results = []
+                for row in rows:
+                    work_id = row["id"]
+                    conn.execute(
+                        "UPDATE work_queue SET status = 'claimed', claimed_by = ?, claimed_at = ? WHERE id = ?",
+                        (self.team, now, work_id),
+                    )
+                    item = dict(row)
+                    item["claimed_by"] = self.team
+                    item["claimed_at"] = now
+                    item["status"] = "claimed"
+                    results.append(item)
+
+                conn.execute("COMMIT")
+
+            except Exception:
+                try:
+                    conn.execute("ROLLBACK")
+                except sqlite3.OperationalError:
+                    pass
+                raise
+
+        _bus_notify(self.bus_dir, "global", self.agent_id, self.team, {
+            "event": "work-batch-stolen",
+            "count": len(results),
+            "work_ids": [r["id"] for r in results],
+            "stolen_by": self.team,
+        })
+        return results
+
+    @_retry_on_busy
     def steal_work(self) -> Optional[dict]:
         """Atomically claim the highest-priority unclaimed work item.
 
@@ -490,6 +554,141 @@ class WorkStealing:
                    ORDER BY priority ASC, created_at ASC""",
             ).fetchall()
         return [dict(r) for r in rows]
+
+
+# ===================================================================
+# TeamLeadDistributor
+# ===================================================================
+
+
+class TeamLeadDistributor:
+    """Hierarchical lead-distribute pattern for high-throughput work distribution.
+
+    Decouples SQLite contention from workers: a single lead thread batch-steals
+    from the SQLite work queue into an in-memory ``queue.Queue``, while worker
+    threads pull from the in-memory queue with zero contention.
+
+    This pattern gives **10.4x throughput improvement** over single-item stealing
+    with near-perfect work distribution (CV=0.009). See KB-0027 and KB-0028.
+
+    Architecture::
+
+        SQLite DB ──[batch steal]──> Lead Thread ──> queue.Queue ──> Workers
+                                         │
+                                    (only 1 thread
+                                     touches SQLite)
+
+    Parameters
+    ----------
+    work_stealing:
+        The underlying ``WorkStealing`` instance for SQLite access.
+    batch_size:
+        Number of items the lead steals per SQLite transaction (default 10).
+    buffer_size:
+        Maximum items in the in-memory queue (default 100). The lead pauses
+        when the buffer is full to avoid over-fetching.
+    poll_interval:
+        Seconds between lead polling when the queue is full or DB is empty
+        (default 0.05).
+    """
+
+    def __init__(
+        self,
+        work_stealing: WorkStealing,
+        batch_size: int = 10,
+        buffer_size: int = 100,
+        poll_interval: float = 0.05,
+    ) -> None:
+        import queue as _queue_mod
+        self._ws = work_stealing
+        self._batch_size = batch_size
+        self._buffer: _queue_mod.Queue = _queue_mod.Queue(maxsize=buffer_size)
+        self._poll_interval = poll_interval
+        self._stop_event = threading.Event()
+        self._lead_thread: Optional[threading.Thread] = None
+        self._started = False
+        self._items_distributed = 0
+        self._lock = threading.Lock()
+
+    def start(self) -> None:
+        """Start the lead thread that batch-steals from SQLite into the buffer."""
+        if self._started:
+            return
+        self._started = True
+        self._stop_event.clear()
+        self._lead_thread = threading.Thread(
+            target=self._lead_loop, name="team-lead", daemon=True
+        )
+        self._lead_thread.start()
+
+    def stop(self, timeout: float = 5.0) -> None:
+        """Signal the lead thread to stop and wait for it to finish."""
+        self._stop_event.set()
+        if self._lead_thread is not None:
+            self._lead_thread.join(timeout=timeout)
+        self._started = False
+
+    def _lead_loop(self) -> None:
+        """Lead thread: batch-steal from SQLite and put items in the buffer."""
+        while not self._stop_event.is_set():
+            # Don't over-fill the buffer
+            if self._buffer.full():
+                self._stop_event.wait(self._poll_interval)
+                continue
+
+            try:
+                items = self._ws.steal_batch(self._batch_size)
+            except Exception:
+                logger.warning("Lead thread: steal_batch failed", exc_info=True)
+                self._stop_event.wait(self._poll_interval * 2)
+                continue
+
+            if not items:
+                # No work available, back off
+                self._stop_event.wait(self._poll_interval)
+                continue
+
+            for item in items:
+                if self._stop_event.is_set():
+                    break
+                try:
+                    self._buffer.put(item, timeout=1.0)
+                    with self._lock:
+                        self._items_distributed += 1
+                except Exception:
+                    break
+
+    def get_work(self, timeout: float = 1.0) -> Optional[dict]:
+        """Worker method: get the next work item from the in-memory buffer.
+
+        This is the method workers call instead of ``steal_work()``.
+        It never touches SQLite, so there is zero contention between workers.
+
+        Parameters
+        ----------
+        timeout:
+            Max seconds to wait for an item (default 1.0).
+
+        Returns
+        -------
+        dict or None
+            The work item, or None if no work is available within the timeout.
+        """
+        try:
+            return self._buffer.get(timeout=timeout)
+        except Exception:
+            return None
+
+    @property
+    def items_distributed(self) -> int:
+        """Total items distributed to workers since start."""
+        with self._lock:
+            return self._items_distributed
+
+    @property
+    def buffer_size(self) -> int:
+        """Current number of items waiting in the buffer."""
+        return self._buffer.qsize()
 
 
 # ===================================================================

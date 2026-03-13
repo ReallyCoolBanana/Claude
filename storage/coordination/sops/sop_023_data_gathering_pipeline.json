@@ -1,0 +1,225 @@
+{
+  "id": "SOP-023",
+  "version": "1.0",
+  "created": "2026-03-12",
+  "team": "data-ops",
+  "title": "Data Gathering Pipeline",
+  "purpose": "Standardize how research data flows from gathering through processing to storage. Ensures all research is deduplicated, quality-checked, properly tagged, and indexed before being committed to the knowledge base.",
+  "sections": {
+    "pre_research_checklist": {
+      "title": "Pre-Research Checklist",
+      "overview": "Before gathering any new data, verify what already exists and define the scope of research.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Search existing KB entries for the topic using unified_search.py",
+          "command": "python storage/scripts/unified_search.py '<topic keywords>'",
+          "rationale": "Avoid duplicating research that already exists. If a relevant entry exists, extend it rather than creating a new one."
+        },
+        {
+          "step": 2,
+          "action": "Check the relationship graph for related entries that might contain relevant data",
+          "command": "python storage/scripts/graph_query.py --search '<topic>'",
+          "rationale": "Related entries may contain partial answers or complementary data that reduces the scope of new research needed."
+        },
+        {
+          "step": 3,
+          "action": "Define the research scope and expected output format",
+          "output": {
+            "research_question": "Clear, specific question to answer",
+            "expected_format": "KB entry | source definition | script | market-research pick",
+            "estimated_sources": "Number of sources expected to consult",
+            "time_budget": "Maximum time to spend gathering before switching to synthesis"
+          }
+        },
+        {
+          "step": 4,
+          "action": "Assign canonical tags from taxonomy.json BEFORE research starts",
+          "rules": [
+            "Select 3-6 tags from storage/taxonomy.json",
+            "All tags must be canonical (not aliases). Use the consolidations map to resolve aliases.",
+            "Tags must span at least 2 different namespaces (e.g., one domain + one task)",
+            "Pre-assigning tags focuses the research and prevents scope creep"
+          ],
+          "command": "Review storage/taxonomy.json tags array for valid canonical tag names"
+        }
+      ]
+    },
+    "research_execution": {
+      "title": "Research Execution",
+      "overview": "Gather data using parallel sub-agents, each returning structured findings.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Dispatch sub-agents for parallel web search following SOP-022 sub-agent patterns",
+          "rules": [
+            "Each sub-agent gets a distinct search facet (e.g., one searches documentation, another searches academic papers, another searches community discussions)",
+            "Limit to 3-5 parallel agents to avoid redundant coverage",
+            "Each agent must have a clear, non-overlapping scope"
+          ]
+        },
+        {
+          "step": 2,
+          "action": "Each agent returns structured JSON with standardized fields",
+          "output_format": {
+            "source_url": "Full URL of the source",
+            "key_finding": "One-paragraph summary of the relevant information found",
+            "relevance_score": "0.0-1.0 score indicating how relevant this finding is to the research question",
+            "date_accessed": "YYYY-MM-DD date the source was accessed",
+            "source_type": "documentation | paper | forum | blog | official-api | dataset"
+          }
+        },
+        {
+          "step": 3,
+          "action": "Merge findings from all agents using the merge_research.py pattern",
+          "technique": "Collect all agent outputs, sort by relevance_score descending, group by theme",
+          "command": "python storage/scripts/merge_research.py --input agent_outputs/*.json --output merged_findings.json"
+        },
+        {
+          "step": 4,
+          "action": "Deduplicate merged findings using TF-IDF similarity",
+          "command": "python storage/scripts/dedup_utils.py --input merged_findings.json --threshold 0.65",
+          "rules": [
+            "Similarity threshold: 0.65 (findings above this are considered duplicates)",
+            "When duplicates are found, keep the finding with the higher relevance_score",
+            "Log all removed duplicates for audit trail"
+          ]
+        }
+      ]
+    },
+    "quality_gate": {
+      "title": "Quality Gate",
+      "overview": "Grade the research output before committing it to storage. Research that does not meet the quality threshold must be improved.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Grade research output using grade_research.py across 5 dimensions",
+          "command": "python storage/scripts/grade_research.py --input deduplicated_findings.json",
+          "dimensions": {
+            "completeness": "Does the research answer the original question fully? (0-20)",
+            "accuracy": "Are findings from reliable, authoritative sources? (0-20)",
+            "recency": "Are findings current and not outdated? (0-20)",
+            "diversity": "Do findings come from multiple independent sources? (0-20)",
+            "actionability": "Can the findings be directly used or do they need further work? (0-20)"
+          },
+          "total": "Sum of all dimensions (0-100)"
+        },
+        {
+          "step": 2,
+          "action": "Evaluate the quality score against the minimum threshold",
+          "threshold": 60,
+          "if_passes": "Proceed to Storage & Indexing",
+          "if_fails": "Identify which dimensions scored lowest and dispatch targeted follow-up agents"
+        },
+        {
+          "step": 3,
+          "action": "If below threshold: dispatch targeted follow-up research",
+          "rules": [
+            "Only re-research the weakest dimensions (e.g., if recency scored low, search for more recent sources)",
+            "Follow-up agents use the same structured output format as the original agents",
+            "Maximum 2 follow-up rounds. If still below threshold after 2 rounds, proceed with a quality warning annotation.",
+            "Re-run the quality gate after each follow-up round"
+          ]
+        }
+      ]
+    },
+    "storage_and_indexing": {
+      "title": "Storage & Indexing",
+      "overview": "Commit the quality-checked research to the knowledge base with proper metadata, tags, and index updates.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Create a KB entry using the standard TEMPLATE.md format",
+          "template": "knowledge-base/TEMPLATE.md",
+          "rules": [
+            "Use the pre-assigned canonical tags from the Pre-Research Checklist",
+            "Include 3-6 tags, all from taxonomy.json canonical names",
+            "Set the category field to match one of the categories in taxonomy.json",
+            "Include source URLs in the references section"
+          ]
+        },
+        {
+          "step": 2,
+          "action": "Set builds_on references to related entries discovered in the pre-research checklist",
+          "rules": [
+            "Reference any entries found in step 1-2 of the Pre-Research Checklist",
+            "Only reference entries that this new entry genuinely extends or depends on",
+            "Do not create circular references"
+          ]
+        },
+        {
+          "step": 3,
+          "action": "Update knowledge-base/index.json with the new entry",
+          "updates_required": [
+            "Add entry to the entries array with id, title, file, category, tags, created date",
+            "Add entry ID to the appropriate categories array",
+            "Add entry ID to each relevant tag in the tag_index"
+          ]
+        },
+        {
+          "step": 4,
+          "action": "Rebuild the unified search index",
+          "command": "python storage/scripts/rebuild_unified_index.py"
+        },
+        {
+          "step": 5,
+          "action": "Verify no new orphan nodes in the relationship graph",
+          "command": "python storage/scripts/graph_query.py --stats",
+          "expected": "Orphan count should not increase. If it does, add builds_on references to connect the new entry."
+        }
+      ]
+    },
+    "verification": {
+      "title": "Verification",
+      "overview": "Run all validators to confirm the new entry is structurally sound and discoverable.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Run fast_validate to check structural integrity of all indexes",
+          "command": "python storage/scripts/fast_validate.py",
+          "expected": "All checks pass with no errors"
+        },
+        {
+          "step": 2,
+          "action": "Run kb_validator.py on the new entry specifically",
+          "command": "python storage/scripts/kb_validator.py --entry <entry-id>",
+          "expected": "Entry passes all validation rules (valid tags, valid category, valid builds_on references)"
+        },
+        {
+          "step": 3,
+          "action": "Test that unified_search.py can find the entry by its tags",
+          "command": "python storage/scripts/unified_search.py '<primary-tag>'",
+          "expected": "The new entry appears in search results"
+        },
+        {
+          "step": 4,
+          "action": "Verify the relationship graph shows expected connections",
+          "command": "python storage/scripts/graph_query.py --node <entry-id>",
+          "expected": "Node exists in the graph with correct builds_on edges"
+        }
+      ]
+    }
+  },
+  "checklists": {
+    "per_research_task": [
+      "Searched existing KB for prior work on this topic",
+      "Checked relationship graph for related entries",
+      "Defined research scope and expected output format",
+      "Assigned 3-6 canonical tags from taxonomy.json",
+      "Dispatched sub-agents with non-overlapping scopes",
+      "All agent outputs use structured JSON format",
+      "Merged and deduplicated findings (TF-IDF threshold 0.65)",
+      "Quality gate score >= 60/100",
+      "Created KB entry using TEMPLATE.md format",
+      "Set builds_on references to related entries",
+      "Updated knowledge-base/index.json (entries + categories + tag_index)",
+      "Ran rebuild_unified_index.py",
+      "Verified no new orphans in relationship graph",
+      "fast_validate passes",
+      "kb_validator.py passes for new entry",
+      "unified_search.py finds entry by tags",
+      "graph_query.py shows expected relationships"
+    ]
+  },
+  "tags": ["sop", "data-gathering", "pipeline", "indexing", "validation", "search"]
+}

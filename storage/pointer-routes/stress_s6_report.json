@@ -1,0 +1,963 @@
+{
+  "benchmark": "Stress Team S6 - Routing Strategy Comparison",
+  "date": "2026-03-12",
+  "methodology": {
+    "strategies": [
+      "weight",
+      "tag",
+      "hybrid"
+    ],
+    "journeys_per_strategy": 20,
+    "total_journeys": 60,
+    "sops_used": [
+      "SOP-011",
+      "SOP-012",
+      "SOP-013",
+      "SOP-014",
+      "SOP-015",
+      "SOP-016",
+      "SOP-017",
+      "SOP-018",
+      "SOP-019",
+      "SOP-020"
+    ],
+    "targets": [
+      "SCR (scripts)",
+      "SRC (sources)"
+    ],
+    "tag_source": "tag_clusters from pointer-network.json",
+    "hybrid_formula": "score = weight * (1 + alpha * jaccard_similarity)",
+    "max_hops": 15
+  },
+  "strategy_comparison": {
+    "weight": {
+      "total_journeys": 20,
+      "successes": 16,
+      "success_rate": 80.0,
+      "avg_hops": 8.3,
+      "avg_coherence": 0.3704,
+      "avg_weight": 57.3,
+      "avg_hops_on_success": 6.62
+    },
+    "tag": {
+      "total_journeys": 20,
+      "successes": 9,
+      "success_rate": 45.0,
+      "avg_hops": 10.85,
+      "avg_coherence": 0.4542,
+      "avg_weight": 44.85,
+      "avg_hops_on_success": 5.78
+    },
+    "hybrid": {
+      "total_journeys": 20,
+      "successes": 15,
+      "success_rate": 75.0,
+      "avg_hops": 9.1,
+      "avg_coherence": 0.3928,
+      "avg_weight": 60.85,
+      "avg_hops_on_success": 7.13
+    }
+  },
+  "best_strategy": {
+    "name": "weight",
+    "justification": "weight routing achieved 80.0% success rate; avg coherence 0.3704; avg hops 8.3; won 6/10 per-SOP comparisons",
+    "ranking": [
+      "weight",
+      "hybrid",
+      "tag"
+    ],
+    "per_sop_wins": {
+      "weight": 6,
+      "tag": 1,
+      "null": 1,
+      "hybrid": 2
+    }
+  },
+  "per_sop_results": {
+    "SOP-011": {
+      "weight": {
+        "successes": 2,
+        "of": 2,
+        "avg_coherence": 0.4645,
+        "avg_hops": 10.0,
+        "composite_score": 12.32
+      },
+      "tag": {
+        "successes": 1,
+        "of": 2,
+        "avg_coherence": 0.542,
+        "avg_hops": 8.0,
+        "composite_score": 4.71
+      },
+      "hybrid": {
+        "successes": 2,
+        "of": 2,
+        "avg_coherence": 0.4546,
+        "avg_hops": 12.0,
+        "composite_score": 10.27
+      },
+      "best_strategy": "weight"
+    },
+    "SOP-012": {
+      "weight": {
+        "successes": 2,
+        "of": 2,
+        "avg_coherence": 0.4568,
+        "avg_hops": 8.0,
+        "composite_score": 14.28
+      },
+      "tag": {
+        "successes": 1,
+        "of": 2,
+        "avg_coherence": 0.542,
+        "avg_hops": 8.0,
+        "composite_score": 4.71
+      },
+      "hybrid": {
+        "successes": 2,
+        "of": 2,
+        "avg_coherence": 0.479,
+        "avg_hops": 11.0,
+        "composite_score": 11.39
+      },
+      "best_strategy": "weight"
+    },
+    "SOP-013": {
+      "weight": {
+        "successes": 2,
+        "of": 2,
+        "avg_coherence": 0.4819,
+        "avg_hops": 10.0,
+        "composite_score": 12.41
+      },
+      "tag": {
+        "successes": 0,
+        "of": 2,
+        "avg_coherence": 0.453,
+        "avg_hops": 15.0,
+        "composite_score": -12.73
+      },
+      "hybrid": {
+        "successes": 1,
+        "of": 2,
+        "avg_coherence": 0.4836,
+        "avg_hops": 12.0,
+        "composite_score": 0.42
+      },
+      "best_strategy": "weight"
+    },
+    "SOP-014": {
+      "weight": {
+        "successes": 0,
+        "of": 2,
+        "avg_coherence": 0.4156,
+        "avg_hops": 15.0,
+        "composite_score": -12.92
+      },
+      "tag": {
+        "successes": 1,
+        "of": 2,
+        "avg_coherence": 0.5486,
+        "avg_hops": 10.0,
+        "composite_score": 2.74
+      },
+      "hybrid": {
+        "successes": 1,
+        "of": 2,
+        "avg_coherence": 0.5084,
+        "avg_hops": 11.0,
+        "composite_score": 1.54
+      },
+      "best_strategy": "tag"
+    },
+    "SOP-015": {
+      "weight": {
+        "successes": 0,
+        "of": 2,
+        "avg_coherence": 0.4315,
+        "avg_hops": 15.0,
+        "composite_score": -12.84
+      },
+      "tag": {
+        "successes": 0,
+        "of": 2,
+        "avg_coherence": 0.3991,
+        "avg_hops": 15.0,
+        "composite_score": -13.0
+      },
+      "hybrid": {
+        "successes": 0,
+        "of": 2,
+        "avg_coherence": 0.4406,
+        "avg_hops": 15.0,
+        "composite_score": -12.8
+      },
+      "best_strategy": null
+    },
+    "SOP-016": {
+      "weight": {
+        "successes": 2,
+        "of": 2,
+        "avg_coherence": 0.4763,
+        "avg_hops": 11.0,
+        "composite_score": 11.38
+      },
+      "tag": {
+        "successes": 1,
+        "of": 2,
+        "avg_coherence": 0.4844,
+        "avg_hops": 13.5,
+        "composite_score": -1.08
+      },
+      "hybrid": {
+        "successes": 2,
+        "of": 2,
+        "avg_coherence": 0.5018,
+        "avg_hops": 10.5,
+        "composite_score": 12.01
+      },
+      "best_strategy": "hybrid"
+    },
+    "SOP-017": {
+      "weight": {
+        "successes": 2,
+        "of": 2,
+        "avg_coherence": 0.1938,
+        "avg_hops": 1.5,
+        "composite_score": 19.47
+      },
+      "tag": {
+        "successes": 1,
+        "of": 2,
+        "avg_coherence": 0.3443,
+        "avg_hops": 10.5,
+        "composite_score": 1.22
+      },
+      "hybrid": {
+        "successes": 1,
+        "of": 2,
+        "avg_coherence": 0.2682,
+        "avg_hops": 8.0,
+        "composite_score": 3.34
+      },
+      "best_strategy": "weight"
+    },
+    "SOP-018": {
+      "weight": {
+        "successes": 2,
+        "of": 2,
+        "avg_coherence": 0.1943,
+        "avg_hops": 5.5,
+        "composite_score": 15.47
+      },
+      "tag": {
+        "successes": 2,
+        "of": 2,
+        "avg_coherence": 0.4336,
+        "avg_hops": 8.5,
+        "composite_score": 13.67
+      },
+      "hybrid": {
+        "successes": 2,
+        "of": 2,
+        "avg_coherence": 0.2024,
+        "avg_hops": 4.5,
+        "composite_score": 16.51
+      },
+      "best_strategy": "hybrid"
+    },
+    "SOP-019": {
+      "weight": {
+        "successes": 2,
+        "of": 2,
+        "avg_coherence": 0.2679,
+        "avg_hops": 2.5,
+        "composite_score": 18.84
+      },
+      "tag": {
+        "successes": 1,
+        "of": 2,
+        "avg_coherence": 0.3414,
+        "avg_hops": 8.0,
+        "composite_score": 3.71
+      },
+      "hybrid": {
+        "successes": 2,
+        "of": 2,
+        "avg_coherence": 0.2679,
+        "avg_hops": 2.5,
+        "composite_score": 18.84
+      },
+      "best_strategy": "weight"
+    },
+    "SOP-020": {
+      "weight": {
+        "successes": 2,
+        "of": 2,
+        "avg_coherence": 0.3214,
+        "avg_hops": 4.5,
+        "composite_score": 17.11
+      },
+      "tag": {
+        "successes": 1,
+        "of": 2,
+        "avg_coherence": 0.4532,
+        "avg_hops": 12.0,
+        "composite_score": 0.27
+      },
+      "hybrid": {
+        "successes": 2,
+        "of": 2,
+        "avg_coherence": 0.3214,
+        "avg_hops": 4.5,
+        "composite_score": 17.11
+      },
+      "best_strategy": "weight"
+    }
+  },
+  "hybrid_tuning": {
+    "description": "Effect of varying alpha in hybrid formula: score = weight * (1 + alpha * jaccard)",
+    "alpha_0_equals_pure_weight": true,
+    "results": {
+      "alpha=0.0": {
+        "success_rate": 80.0,
+        "avg_hops": 8.3,
+        "avg_coherence": 0.3704,
+        "avg_weight": 57.3
+      },
+      "alpha=0.5": {
+        "success_rate": 85.0,
+        "avg_hops": 7.9,
+        "avg_coherence": 0.3899,
+        "avg_weight": 52.9
+      },
+      "alpha=1.0": {
+        "success_rate": 75.0,
+        "avg_hops": 9.1,
+        "avg_coherence": 0.3928,
+        "avg_weight": 60.85
+      },
+      "alpha=2.0": {
+        "success_rate": 80.0,
+        "avg_hops": 9.9,
+        "avg_coherence": 0.402,
+        "avg_weight": 67.95
+      },
+      "alpha=5.0": {
+        "success_rate": 60.0,
+        "avg_hops": 10.35,
+        "avg_coherence": 0.4065,
+        "avg_weight": 65.55
+      },
+      "alpha=10.0": {
+        "success_rate": 50.0,
+        "avg_hops": 11.2,
+        "avg_coherence": 0.4123,
+        "avg_weight": 68.1
+      }
+    },
+    "best_alpha": "alpha=0.5"
+  },
+  "all_journeys": [
+    {
+      "strategy": "weight",
+      "start": "SOP-011",
+      "target": "SCR",
+      "path": "SOP-011 -> SOP-014 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> SOP-028 -> SOP-029 -> SCR-0057",
+      "reached": true,
+      "hops": 8,
+      "coherence": 0.4917,
+      "total_weight": 53
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-011",
+      "target": "SRC",
+      "path": "SOP-011 -> SOP-014 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> SOP-028 -> SOP-029 -> SCR-0057 -> SCR-0032 -> TEAM-0025 -> SCR-0033 -> SRC-0050",
+      "reached": true,
+      "hops": 12,
+      "coherence": 0.4373,
+      "total_weight": 84
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-012",
+      "target": "SCR",
+      "path": "SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> SOP-028 -> SOP-029 -> SCR-0057",
+      "reached": true,
+      "hops": 6,
+      "coherence": 0.4889,
+      "total_weight": 41
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-012",
+      "target": "SRC",
+      "path": "SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> SOP-028 -> SOP-029 -> SCR-0057 -> SCR-0032 -> TEAM-0025 -> SCR-0033 -> SRC-0050",
+      "reached": true,
+      "hops": 10,
+      "coherence": 0.4248,
+      "total_weight": 72
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-013",
+      "target": "SCR",
+      "path": "SOP-013 -> SOP-G01 -> SOP-012 -> SOP-014 -> SOP-011 -> SOP-015 -> SOP-028 -> SOP-029 -> SCR-0057",
+      "reached": true,
+      "hops": 8,
+      "coherence": 0.5125,
+      "total_weight": 53
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-013",
+      "target": "SRC",
+      "path": "SOP-013 -> SOP-G01 -> SOP-012 -> SOP-014 -> SOP-011 -> SOP-015 -> SOP-028 -> SOP-029 -> SCR-0057 -> SCR-0032 -> TEAM-0025 -> SCR-0033 -> SRC-0050",
+      "reached": true,
+      "hops": 12,
+      "coherence": 0.4512,
+      "total_weight": 84
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-014",
+      "target": "SCR",
+      "path": "SOP-014 -> SOP-011 -> SOP-015 -> SOP-028 -> SOP-029 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> TEAM-0022 -> KB-0016 -> TEAM-0018 -> KB-0015 -> TEAM-0019 -> KB-0009 -> TEAM-0026",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.4156,
+      "total_weight": 105
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-014",
+      "target": "SRC",
+      "path": "SOP-014 -> SOP-011 -> SOP-015 -> SOP-028 -> SOP-029 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> TEAM-0022 -> KB-0016 -> TEAM-0018 -> KB-0015 -> TEAM-0019 -> KB-0009 -> TEAM-0026",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.4156,
+      "total_weight": 105
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-015",
+      "target": "SCR",
+      "path": "SOP-015 -> SOP-028 -> SOP-029 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> TEAM-0022 -> KB-0016 -> TEAM-0018 -> KB-0015 -> TEAM-0019 -> KB-0009 -> TEAM-0026 -> KB-0006 -> TEAM-0007",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.4315,
+      "total_weight": 109
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-015",
+      "target": "SRC",
+      "path": "SOP-015 -> SOP-028 -> SOP-029 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-G02 -> TEAM-0022 -> KB-0016 -> TEAM-0018 -> KB-0015 -> TEAM-0019 -> KB-0009 -> TEAM-0026 -> KB-0006 -> TEAM-0007",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.4315,
+      "total_weight": 109
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-016",
+      "target": "SCR",
+      "path": "SOP-016 -> SOP-013 -> SOP-G01 -> SOP-012 -> SOP-014 -> SOP-011 -> SOP-015 -> SOP-028 -> SOP-029 -> SCR-0057",
+      "reached": true,
+      "hops": 9,
+      "coherence": 0.5032,
+      "total_weight": 59
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-016",
+      "target": "SRC",
+      "path": "SOP-016 -> SOP-013 -> SOP-G01 -> SOP-012 -> SOP-014 -> SOP-011 -> SOP-015 -> SOP-028 -> SOP-029 -> SCR-0057 -> SCR-0032 -> TEAM-0025 -> SCR-0033 -> SRC-0050",
+      "reached": true,
+      "hops": 13,
+      "coherence": 0.4495,
+      "total_weight": 90
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-017",
+      "target": "SCR",
+      "path": "SOP-017 -> SCR-0023",
+      "reached": true,
+      "hops": 1,
+      "coherence": 0.125,
+      "total_weight": 8
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-017",
+      "target": "SRC",
+      "path": "SOP-017 -> SCR-0023 -> SRC-0001",
+      "reached": true,
+      "hops": 2,
+      "coherence": 0.2625,
+      "total_weight": 20
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-018",
+      "target": "SCR",
+      "path": "SOP-018 -> KB-0002 -> TEAM-0003 -> KB-0001 -> TEAM-0008 -> SCR-0016",
+      "reached": true,
+      "hops": 5,
+      "coherence": 0.2119,
+      "total_weight": 31
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-018",
+      "target": "SRC",
+      "path": "SOP-018 -> KB-0002 -> TEAM-0003 -> KB-0001 -> TEAM-0008 -> SCR-0016 -> SRC-0001",
+      "reached": true,
+      "hops": 6,
+      "coherence": 0.1766,
+      "total_weight": 36
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-019",
+      "target": "SCR",
+      "path": "SOP-019 -> SCR-0033",
+      "reached": true,
+      "hops": 1,
+      "coherence": 0.2857,
+      "total_weight": 3
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-019",
+      "target": "SRC",
+      "path": "SOP-019 -> SCR-0033 -> TEAM-0025 -> SCR-0030 -> SRC-0050",
+      "reached": true,
+      "hops": 4,
+      "coherence": 0.25,
+      "total_weight": 27
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-020",
+      "target": "SCR",
+      "path": "SOP-020 -> KB-0025 -> KB-0024 -> TEAM-0025 -> SCR-0033",
+      "reached": true,
+      "hops": 4,
+      "coherence": 0.3571,
+      "total_weight": 26
+    },
+    {
+      "strategy": "weight",
+      "start": "SOP-020",
+      "target": "SRC",
+      "path": "SOP-020 -> KB-0025 -> KB-0024 -> TEAM-0025 -> SCR-0033 -> SRC-0050",
+      "reached": true,
+      "hops": 5,
+      "coherence": 0.2857,
+      "total_weight": 31
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-011",
+      "target": "SCR",
+      "path": "SOP-011 -> SCR-0019",
+      "reached": true,
+      "hops": 1,
+      "coherence": 0.6,
+      "total_weight": 3
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-011",
+      "target": "SRC",
+      "path": "SOP-011 -> SCR-0019 -> SOP-012 -> SCR-0030 -> SOP-022 -> SCR-0032 -> SOP-013 -> SOP-G01 -> TEAM-0025 -> KB-0025 -> SOP-014 -> SOP-015 -> SOP-016 -> TEAM-0024 -> SOP-G03 -> TEAM-0022",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.484,
+      "total_weight": 59
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-012",
+      "target": "SCR",
+      "path": "SOP-012 -> SCR-0019",
+      "reached": true,
+      "hops": 1,
+      "coherence": 0.6,
+      "total_weight": 4
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-012",
+      "target": "SRC",
+      "path": "SOP-012 -> SCR-0019 -> SOP-011 -> SCR-0030 -> SOP-022 -> SCR-0032 -> SOP-013 -> SOP-G01 -> TEAM-0025 -> KB-0025 -> SOP-014 -> SOP-015 -> SOP-016 -> TEAM-0024 -> SOP-G03 -> TEAM-0022",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.484,
+      "total_weight": 58
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-013",
+      "target": "SCR",
+      "path": "SOP-013 -> SOP-014 -> SOP-011 -> TEAM-0025 -> SOP-022 -> KB-0025 -> SOP-012 -> SOP-G01 -> TEAM-0022 -> SOP-G03 -> TEAM-0024 -> SOP-016 -> SOP-015 -> SOP-028 -> KB-0024 -> KB-0022",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.453,
+      "total_weight": 65
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-013",
+      "target": "SRC",
+      "path": "SOP-013 -> SOP-014 -> SOP-011 -> TEAM-0025 -> SOP-022 -> KB-0025 -> SOP-012 -> SOP-G01 -> TEAM-0022 -> SOP-G03 -> TEAM-0024 -> SOP-016 -> SOP-015 -> SOP-028 -> KB-0024 -> KB-0022",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.453,
+      "total_weight": 65
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-014",
+      "target": "SCR",
+      "path": "SOP-014 -> SOP-013 -> KB-0025 -> TEAM-0025 -> SOP-022 -> SCR-0033",
+      "reached": true,
+      "hops": 5,
+      "coherence": 0.6467,
+      "total_weight": 21
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-014",
+      "target": "SRC",
+      "path": "SOP-014 -> SOP-013 -> KB-0025 -> TEAM-0025 -> SOP-022 -> SCR-0033 -> SOP-G03 -> TEAM-0022 -> SOP-011 -> SOP-015 -> SOP-012 -> SOP-G01 -> TEAM-0024 -> SOP-016 -> KB-0024 -> KB-0022",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.4504,
+      "total_weight": 63
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-015",
+      "target": "SCR",
+      "path": "SOP-015 -> SOP-028 -> SOP-029 -> SOP-016 -> SOP-013 -> SOP-G02 -> TEAM-0022 -> SOP-011 -> SOP-014 -> SOP-012 -> TEAM-0024 -> KB-0022 -> KB-0024 -> SOP-022 -> SOP-023 -> SOP-024",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.3991,
+      "total_weight": 79
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-015",
+      "target": "SRC",
+      "path": "SOP-015 -> SOP-028 -> SOP-029 -> SOP-016 -> SOP-013 -> SOP-G02 -> TEAM-0022 -> SOP-011 -> SOP-014 -> SOP-012 -> TEAM-0024 -> KB-0022 -> KB-0024 -> SOP-022 -> SOP-023 -> SOP-024",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.3991,
+      "total_weight": 79
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-016",
+      "target": "SCR",
+      "path": "SOP-016 -> SOP-015 -> SOP-011 -> SOP-014 -> SOP-012 -> SOP-029 -> SOP-028 -> SOP-G01 -> SOP-013 -> KB-0024 -> TEAM-0024 -> SOP-022 -> SCR-0019",
+      "reached": true,
+      "hops": 12,
+      "coherence": 0.5065,
+      "total_weight": 61
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-016",
+      "target": "SRC",
+      "path": "SOP-016 -> SOP-015 -> SOP-011 -> SOP-014 -> SOP-012 -> SOP-029 -> SOP-028 -> SOP-G01 -> SOP-013 -> KB-0024 -> TEAM-0024 -> SOP-022 -> SCR-0019 -> TEAM-0025 -> SCR-0030 -> KB-0023",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.4624,
+      "total_weight": 75
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-017",
+      "target": "SCR",
+      "path": "SOP-017 -> KB-0004 -> SOP-023 -> SOP-024 -> KB-0006 -> SOP-015 -> SCR-0012",
+      "reached": true,
+      "hops": 6,
+      "coherence": 0.3155,
+      "total_weight": 16
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-017",
+      "target": "SRC",
+      "path": "SOP-017 -> KB-0004 -> SOP-023 -> SOP-024 -> KB-0006 -> SOP-015 -> SCR-0012 -> TEAM-0006 -> SOP-025 -> SOP-026 -> SOP-027 -> SOP-028 -> SCR-0034 -> TEAM-0026 -> SCR-0014 -> SOP-020",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.3731,
+      "total_weight": 54
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-018",
+      "target": "SCR",
+      "path": "SOP-018 -> KB-0002 -> TEAM-0002 -> SCR-0022",
+      "reached": true,
+      "hops": 3,
+      "coherence": 0.4921,
+      "total_weight": 6
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-018",
+      "target": "SRC",
+      "path": "SOP-018 -> KB-0002 -> TEAM-0002 -> SCR-0022 -> SOP-017 -> SCR-0006 -> SOP-023 -> SOP-024 -> SOP-028 -> SOP-025 -> SOP-026 -> SOP-027 -> SCR-0008 -> SCR-0011 -> SRC-0017",
+      "reached": true,
+      "hops": 14,
+      "coherence": 0.3751,
+      "total_weight": 50
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-019",
+      "target": "SCR",
+      "path": "SOP-019 -> SCR-0033",
+      "reached": true,
+      "hops": 1,
+      "coherence": 0.2857,
+      "total_weight": 3
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-019",
+      "target": "SRC",
+      "path": "SOP-019 -> SCR-0033 -> SOP-021 -> TEAM-0024 -> KB-0024 -> SOP-022 -> SCR-0019 -> SCR-0020 -> SCR-0012 -> SOP-020 -> SCR-0001 -> SOP-G02 -> SOP-013 -> KB-0031 -> KB-0035 -> KB-0032",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.397,
+      "total_weight": 54
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-020",
+      "target": "SCR",
+      "path": "SOP-020 -> KB-0025 -> TEAM-0025 -> KB-0024 -> TEAM-0024 -> SOP-015 -> KB-0006 -> SOP-023 -> SOP-024 -> SCR-0012",
+      "reached": true,
+      "hops": 9,
+      "coherence": 0.4788,
+      "total_weight": 33
+    },
+    {
+      "strategy": "tag",
+      "start": "SOP-020",
+      "target": "SRC",
+      "path": "SOP-020 -> KB-0025 -> TEAM-0025 -> KB-0024 -> TEAM-0024 -> SOP-015 -> KB-0006 -> SOP-023 -> SOP-024 -> SCR-0012 -> KB-0011 -> SOP-017 -> KB-0004 -> TEAM-0007 -> KB-0007 -> SCR-0003",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.4276,
+      "total_weight": 49
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-011",
+      "target": "SCR",
+      "path": "SOP-011 -> SOP-014 -> SOP-012 -> SOP-029 -> SOP-028 -> SOP-015 -> SOP-016 -> SOP-013 -> SOP-G01 -> TEAM-0025 -> SCR-0030",
+      "reached": true,
+      "hops": 10,
+      "coherence": 0.4814,
+      "total_weight": 66
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-011",
+      "target": "SRC",
+      "path": "SOP-011 -> SOP-014 -> SOP-012 -> SOP-029 -> SOP-028 -> SOP-015 -> SOP-016 -> SOP-013 -> SOP-G01 -> TEAM-0025 -> SCR-0030 -> SOP-022 -> SOP-023 -> SCR-0023 -> SRC-0001",
+      "reached": true,
+      "hops": 14,
+      "coherence": 0.4278,
+      "total_weight": 96
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-012",
+      "target": "SCR",
+      "path": "SOP-012 -> SOP-029 -> SOP-028 -> SOP-015 -> SOP-011 -> SOP-014 -> SOP-013 -> SOP-G01 -> TEAM-0025 -> SCR-0030",
+      "reached": true,
+      "hops": 9,
+      "coherence": 0.5127,
+      "total_weight": 60
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-012",
+      "target": "SRC",
+      "path": "SOP-012 -> SOP-029 -> SOP-028 -> SOP-015 -> SOP-011 -> SOP-014 -> SOP-013 -> SOP-G01 -> TEAM-0025 -> SCR-0030 -> SOP-022 -> SOP-023 -> SCR-0023 -> SRC-0001",
+      "reached": true,
+      "hops": 13,
+      "coherence": 0.4453,
+      "total_weight": 90
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-013",
+      "target": "SCR",
+      "path": "SOP-013 -> SOP-014 -> SOP-011 -> SOP-015 -> SOP-028 -> SOP-029 -> SOP-012 -> SOP-G01 -> TEAM-0025 -> SCR-0033",
+      "reached": true,
+      "hops": 9,
+      "coherence": 0.5286,
+      "total_weight": 61
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-013",
+      "target": "SRC",
+      "path": "SOP-013 -> SOP-014 -> SOP-011 -> SOP-015 -> SOP-028 -> SOP-029 -> SOP-012 -> SOP-G01 -> TEAM-0025 -> SCR-0033 -> SOP-G03 -> KB-0025 -> KB-0024 -> KB-0022 -> TEAM-0024 -> KB-0023",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.4387,
+      "total_weight": 95
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-014",
+      "target": "SCR",
+      "path": "SOP-014 -> SOP-013 -> SOP-G01 -> SOP-012 -> SOP-015 -> SOP-028 -> SOP-029 -> SCR-0057",
+      "reached": true,
+      "hops": 7,
+      "coherence": 0.5571,
+      "total_weight": 47
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-014",
+      "target": "SRC",
+      "path": "SOP-014 -> SOP-013 -> SOP-G01 -> SOP-012 -> SOP-015 -> SOP-028 -> SOP-029 -> SCR-0057 -> SCR-0032 -> TEAM-0025 -> SCR-0033 -> SOP-G03 -> KB-0025 -> KB-0024 -> KB-0022 -> TEAM-0024",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.4596,
+      "total_weight": 100
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-015",
+      "target": "SCR",
+      "path": "SOP-015 -> SOP-028 -> SOP-029 -> SOP-012 -> SOP-014 -> SOP-016 -> SOP-013 -> SOP-G02 -> TEAM-0022 -> KB-0016 -> TEAM-0018 -> KB-0015 -> TEAM-0019 -> KB-0009 -> TEAM-0026 -> KB-0006",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.4406,
+      "total_weight": 108
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-015",
+      "target": "SRC",
+      "path": "SOP-015 -> SOP-028 -> SOP-029 -> SOP-012 -> SOP-014 -> SOP-016 -> SOP-013 -> SOP-G02 -> TEAM-0022 -> KB-0016 -> TEAM-0018 -> KB-0015 -> TEAM-0019 -> KB-0009 -> TEAM-0026 -> KB-0006",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.4406,
+      "total_weight": 108
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-016",
+      "target": "SCR",
+      "path": "SOP-016 -> SOP-015 -> SOP-028 -> SOP-029 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-014 -> SOP-011 -> TEAM-0025 -> SCR-0030",
+      "reached": true,
+      "hops": 10,
+      "coherence": 0.5257,
+      "total_weight": 66
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-016",
+      "target": "SRC",
+      "path": "SOP-016 -> SOP-015 -> SOP-028 -> SOP-029 -> SOP-012 -> SOP-G01 -> SOP-013 -> SOP-014 -> SOP-011 -> TEAM-0025 -> SCR-0030 -> SRC-0050",
+      "reached": true,
+      "hops": 11,
+      "coherence": 0.4779,
+      "total_weight": 71
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-017",
+      "target": "SCR",
+      "path": "SOP-017 -> SCR-0023",
+      "reached": true,
+      "hops": 1,
+      "coherence": 0.125,
+      "total_weight": 8
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-017",
+      "target": "SRC",
+      "path": "SOP-017 -> SCR-0023 -> SOP-023 -> SOP-024 -> SOP-028 -> SOP-029 -> SOP-012 -> SOP-015 -> SOP-011 -> SOP-014 -> SOP-013 -> SOP-G02 -> TEAM-0022 -> KB-0020 -> TEAM-0021 -> KB-0018",
+      "reached": false,
+      "hops": 15,
+      "coherence": 0.4114,
+      "total_weight": 102
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-018",
+      "target": "SCR",
+      "path": "SOP-018 -> KB-0002 -> TEAM-0003 -> SCR-0006",
+      "reached": true,
+      "hops": 3,
+      "coherence": 0.131,
+      "total_weight": 14
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-018",
+      "target": "SRC",
+      "path": "SOP-018 -> KB-0002 -> TEAM-0003 -> SCR-0006 -> SCR-0011 -> SCR-0008 -> SRC-0003",
+      "reached": true,
+      "hops": 6,
+      "coherence": 0.2738,
+      "total_weight": 38
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-019",
+      "target": "SCR",
+      "path": "SOP-019 -> SCR-0033",
+      "reached": true,
+      "hops": 1,
+      "coherence": 0.2857,
+      "total_weight": 3
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-019",
+      "target": "SRC",
+      "path": "SOP-019 -> SCR-0033 -> TEAM-0025 -> SCR-0030 -> SRC-0050",
+      "reached": true,
+      "hops": 4,
+      "coherence": 0.25,
+      "total_weight": 27
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-020",
+      "target": "SCR",
+      "path": "SOP-020 -> KB-0025 -> KB-0024 -> TEAM-0025 -> SCR-0033",
+      "reached": true,
+      "hops": 4,
+      "coherence": 0.3571,
+      "total_weight": 26
+    },
+    {
+      "strategy": "hybrid",
+      "start": "SOP-020",
+      "target": "SRC",
+      "path": "SOP-020 -> KB-0025 -> KB-0024 -> TEAM-0025 -> SCR-0033 -> SRC-0050",
+      "reached": true,
+      "hops": 5,
+      "coherence": 0.2857,
+      "total_weight": 31
+    }
+  ]
+}

@@ -1,0 +1,311 @@
+{
+  "timestamp": "2026-03-12T04:12:24",
+  "config": {
+    "work_items": 500,
+    "workers": 10,
+    "simulated_work_ms": 1
+  },
+  "total_duration_s": 2.857,
+  "results": [
+    {
+      "strategy": "baseline_single_steal",
+      "total_items": 500,
+      "items_completed": 500,
+      "duration_s": 0.616,
+      "throughput_items_per_s": 811.09,
+      "per_worker_throughput": 81.11,
+      "items_per_worker": [
+        63,
+        11,
+        11,
+        69,
+        35,
+        41,
+        91,
+        74,
+        38,
+        67
+      ],
+      "distribution_cv": 0.5403,
+      "steal_overhead_s": 1.535,
+      "work_time_s": 0.554,
+      "steal_to_work_ratio": 2.773,
+      "coordination_ops": 1010,
+      "errors": [],
+      "extra_metrics": {}
+    },
+    {
+      "strategy": "batch_steal_10",
+      "total_items": 500,
+      "items_completed": 500,
+      "duration_s": 0.132,
+      "throughput_items_per_s": 3778.95,
+      "per_worker_throughput": 377.89,
+      "items_per_worker": [
+        80,
+        40,
+        0,
+        60,
+        80,
+        20,
+        70,
+        80,
+        0,
+        70
+      ],
+      "distribution_cv": 0.6532,
+      "steal_overhead_s": 0.508,
+      "work_time_s": 0.551,
+      "steal_to_work_ratio": 0.921,
+      "coordination_ops": 60,
+      "errors": [],
+      "extra_metrics": {
+        "batch_size": 10
+      }
+    },
+    {
+      "strategy": "pre_partition_round_robin",
+      "total_items": 500,
+      "items_completed": 500,
+      "duration_s": 0.057,
+      "throughput_items_per_s": 8760.18,
+      "per_worker_throughput": 876.02,
+      "items_per_worker": [
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "distribution_cv": 0.0,
+      "steal_overhead_s": 0.0,
+      "work_time_s": 0.547,
+      "steal_to_work_ratio": 0.0,
+      "coordination_ops": 0,
+      "errors": [],
+      "extra_metrics": {}
+    },
+    {
+      "strategy": "hierarchical_lead_distribute",
+      "total_items": 500,
+      "items_completed": 500,
+      "duration_s": 0.059,
+      "throughput_items_per_s": 8414.09,
+      "per_worker_throughput": 841.41,
+      "items_per_worker": [
+        50,
+        50,
+        50,
+        49,
+        50,
+        50,
+        50,
+        50,
+        50,
+        51
+      ],
+      "distribution_cv": 0.0094,
+      "steal_overhead_s": 0.026,
+      "work_time_s": 0.546,
+      "steal_to_work_ratio": 0.048,
+      "coordination_ops": 26,
+      "errors": [],
+      "extra_metrics": {
+        "lead_batch_size": 20,
+        "lead_items_fetched": 500,
+        "worker_wait_time_s": 0.021
+      }
+    },
+    {
+      "strategy": "sharded_queues_3",
+      "total_items": 500,
+      "items_completed": 500,
+      "duration_s": 0.403,
+      "throughput_items_per_s": 1240.85,
+      "per_worker_throughput": 124.08,
+      "items_per_worker": [
+        25,
+        68,
+        68,
+        51,
+        30,
+        37,
+        19,
+        72,
+        69,
+        61
+      ],
+      "distribution_cv": 0.4093,
+      "steal_overhead_s": 1.102,
+      "work_time_s": 0.576,
+      "steal_to_work_ratio": 1.912,
+      "coordination_ops": 1041,
+      "errors": [],
+      "extra_metrics": {
+        "num_shards": 3
+      }
+    },
+    {
+      "strategy": "adaptive_batch",
+      "total_items": 500,
+      "items_completed": 500,
+      "duration_s": 0.112,
+      "throughput_items_per_s": 4456.58,
+      "per_worker_throughput": 445.66,
+      "items_per_worker": [
+        42,
+        58,
+        56,
+        72,
+        72,
+        42,
+        30,
+        56,
+        0,
+        72
+      ],
+      "distribution_cv": 0.4529,
+      "steal_overhead_s": 0.451,
+      "work_time_s": 0.546,
+      "steal_to_work_ratio": 0.825,
+      "coordination_ops": 103,
+      "errors": [],
+      "extra_metrics": {
+        "avg_final_batch_size": 14.3
+      }
+    },
+    {
+      "strategy": "hybrid_80_pre_20_steal",
+      "total_items": 500,
+      "items_completed": 500,
+      "duration_s": 0.228,
+      "throughput_items_per_s": 2191.44,
+      "per_worker_throughput": 219.14,
+      "items_per_worker": [
+        55,
+        44,
+        47,
+        75,
+        45,
+        40,
+        40,
+        61,
+        43,
+        50
+      ],
+      "distribution_cv": 0.2201,
+      "steal_overhead_s": 0.726,
+      "work_time_s": 0.548,
+      "steal_to_work_ratio": 1.326,
+      "coordination_ops": 210,
+      "errors": [],
+      "extra_metrics": {
+        "pre_assigned_pct": 0.8,
+        "pre_assigned_items": 400,
+        "steal_pool_items": 100
+      }
+    },
+    {
+      "strategy": "batch_steal_5",
+      "total_items": 500,
+      "items_completed": 500,
+      "duration_s": 0.132,
+      "throughput_items_per_s": 3774.55,
+      "per_worker_throughput": 377.46,
+      "items_per_worker": [
+        80,
+        75,
+        25,
+        0,
+        75,
+        40,
+        55,
+        65,
+        80,
+        5
+      ],
+      "distribution_cv": 0.6164,
+      "steal_overhead_s": 0.579,
+      "work_time_s": 0.546,
+      "steal_to_work_ratio": 1.059,
+      "coordination_ops": 110,
+      "errors": [],
+      "extra_metrics": {
+        "batch_size": 5
+      }
+    }
+  ],
+  "rankings": {
+    "by_throughput": [
+      "pre_partition_round_robin",
+      "hierarchical_lead_distribute",
+      "adaptive_batch",
+      "batch_steal_10",
+      "batch_steal_5",
+      "hybrid_80_pre_20_steal",
+      "sharded_queues_3",
+      "baseline_single_steal"
+    ],
+    "by_evenness": [
+      "pre_partition_round_robin",
+      "hierarchical_lead_distribute",
+      "hybrid_80_pre_20_steal",
+      "sharded_queues_3",
+      "adaptive_batch",
+      "baseline_single_steal",
+      "batch_steal_5",
+      "batch_steal_10"
+    ],
+    "by_low_overhead": [
+      "pre_partition_round_robin",
+      "hierarchical_lead_distribute",
+      "adaptive_batch",
+      "batch_steal_10",
+      "batch_steal_5",
+      "hybrid_80_pre_20_steal",
+      "sharded_queues_3",
+      "baseline_single_steal"
+    ],
+    "composite": [
+      [
+        "pre_partition_round_robin",
+        1.0
+      ],
+      [
+        "hierarchical_lead_distribute",
+        0.975
+      ],
+      [
+        "adaptive_batch",
+        0.506
+      ],
+      [
+        "hybrid_80_pre_20_steal",
+        0.456
+      ],
+      [
+        "batch_steal_5",
+        0.375
+      ],
+      [
+        "batch_steal_10",
+        0.373
+      ],
+      [
+        "sharded_queues_3",
+        0.262
+      ],
+      [
+        "baseline_single_steal",
+        0.089
+      ]
+    ]
+  },
+  "best_strategy": "pre_partition_round_robin",
+  "improvement_over_baseline_pct": 1025.0
+}

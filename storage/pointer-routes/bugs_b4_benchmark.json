@@ -1,0 +1,323 @@
+{
+  "scanner": "Bug Hunter B4 - Benchmark & Report Bug Hunting",
+  "timestamp": "2026-03-12",
+  "scope": "All benchmark_*.json, stress_*.json reports; all .py scripts; route_log.jsonl; route_analysis.json; route_patterns.json",
+  "summary": {
+    "total_bugs": 25,
+    "by_severity": {
+      "high": 5,
+      "medium": 11,
+      "critical": 1,
+      "low": 8
+    },
+    "by_category": {
+      "route_log_validation": 4,
+      "route_analysis_crash": 1,
+      "route_analysis_stale": 1,
+      "script_quality": 12,
+      "cross_report_consistency": 5,
+      "analysis_patterns_mismatch": 2
+    }
+  },
+  "bugs": [
+    {
+      "id": "B4-0001",
+      "category": "route_log_validation",
+      "severity": "high",
+      "title": "Invalid outcome 'unknown-outcome' on line 1",
+      "description": "Line 1 has outcome='unknown-outcome'. Valid outcomes: ['failure', 'partial', 'success']",
+      "details": {
+        "line_number": 1,
+        "outcome": "unknown-outcome",
+        "agent_id": "agent1"
+      }
+    },
+    {
+      "id": "B4-0002",
+      "category": "route_log_validation",
+      "severity": "medium",
+      "title": "Route with zero hops and empty route on line 2",
+      "description": "Line 2 has hop_count=0 and route=[]. An agent logged a route with nothing traversed.",
+      "details": {
+        "line_number": 2,
+        "agent_id": "agent1",
+        "task": "task1"
+      }
+    },
+    {
+      "id": "B4-0003",
+      "category": "route_log_validation",
+      "severity": "medium",
+      "title": "Empty agent_id on line 5",
+      "description": "Line 5 has no agent_id",
+      "details": {
+        "line_number": 5
+      }
+    },
+    {
+      "id": "B4-0004",
+      "category": "route_analysis_crash",
+      "severity": "critical",
+      "title": "route_tracker.py 'analyze' crashes on current route_log.jsonl",
+      "description": "Running 'python3 storage/coordination/route_tracker.py analyze' crashes with KeyError: 'unknown-outcome' at line 151. This is because line 1 of route_log.jsonl has outcome='unknown-outcome' which is not one of the expected outcome values (success/failure/partial). The analyze function's edge_outcomes defaultdict uses a dict with fixed keys {success, failure, partial} and crashes when encountering an unexpected outcome.",
+      "details": {
+        "error": "KeyError: 'unknown-outcome'",
+        "file": "storage/coordination/route_tracker.py",
+        "line": 151,
+        "cause": "route_log.jsonl line 1 has outcome='unknown-outcome'"
+      }
+    },
+    {
+      "id": "B4-0005",
+      "category": "route_analysis_stale",
+      "severity": "high",
+      "title": "Stored route_analysis.json is stale - does not include current route_log entries",
+      "description": "route_analysis.json reports 155 total routes and was generated at 2026-03-12T22:53:33Z, but the current route_log.jsonl only has 4 entries (from the test runs and bug hunting). The stored analysis was generated from a much larger route_log that was later archived. The analysis file was NOT regenerated after archiving to run-002.",
+      "details": {
+        "stored_total_routes": 155,
+        "current_log_entries": 134
+      }
+    },
+    {
+      "id": "B4-0007",
+      "category": "script_quality",
+      "severity": "medium",
+      "title": "beta_analysis.py: hardcoded absolute path",
+      "description": "beta_analysis.py line 8 uses hardcoded path: PN_PATH = Path('/home/user/Claude/storage/pointer-network.json'). Other scripts (audit_a1.py, benchmark_c1.py, gamma_benchmark.py) use relative paths via Path(__file__).parent.parent.",
+      "details": {
+        "file": "storage/pointer-routes/beta_analysis.py",
+        "line": 8
+      }
+    },
+    {
+      "id": "B4-0008",
+      "category": "script_quality",
+      "severity": "medium",
+      "title": "beta_analysis.py: hardcoded output path",
+      "description": "beta_analysis.py line 292 uses hardcoded output path: '/home/user/Claude/storage/pointer-routes/benchmark_beta_report.json'. Should use a relative path like other scripts.",
+      "details": {
+        "file": "storage/pointer-routes/beta_analysis.py",
+        "line": 292
+      }
+    },
+    {
+      "id": "B4-0009",
+      "category": "script_quality",
+      "severity": "medium",
+      "title": "pathfind_p1.py: all 3 paths are hardcoded absolute",
+      "description": "pathfind_p1.py uses 3 hardcoded absolute paths on lines 18-20: NETWORK_PATH, REPORT_PATH, ROUTE_TRACKER. Should use Path(__file__).parent patterns like other scripts.",
+      "details": {
+        "file": "storage/pointer-routes/pathfind_p1.py",
+        "lines": [
+          18,
+          19,
+          20
+        ]
+      }
+    },
+    {
+      "id": "B4-0010",
+      "category": "script_quality",
+      "severity": "medium",
+      "title": "bugs_b2_scan.py: hardcoded paths for input and output",
+      "description": "bugs_b2_scan.py uses hardcoded paths on lines 8 and 382: input '/home/user/Claude/storage/pointer-network.json' and output path.",
+      "details": {
+        "file": "storage/pointer-routes/bugs_b2_scan.py",
+        "lines": [
+          8,
+          382
+        ]
+      }
+    },
+    {
+      "id": "B4-0011",
+      "category": "script_quality",
+      "severity": "medium",
+      "title": "pathfind_p1.py: uses 'python3' string instead of sys.executable",
+      "description": "pathfind_p1.py line 152 uses 'python3' directly in subprocess.run cmd array. If the Python interpreter is at a different path, this will fail. Other scripts correctly use sys.executable.",
+      "details": {
+        "file": "storage/pointer-routes/pathfind_p1.py",
+        "line": 152
+      }
+    },
+    {
+      "id": "B4-0012",
+      "category": "script_quality",
+      "severity": "high",
+      "title": "audit_a1.py: indentation error on line 15",
+      "description": "audit_a1.py line 15 has a leading space before 'PN_PATH = BASE / ...' which would cause an IndentationError if the file is run. This appears to be a typo (space before a module-level variable).",
+      "details": {
+        "file": "storage/pointer-routes/audit_a1.py",
+        "line": 15
+      }
+    },
+    {
+      "id": "B4-0013",
+      "category": "script_quality",
+      "severity": "low",
+      "title": "Scripts append to route_log.jsonl without backup",
+      "description": "All benchmark/stress scripts (s1, s3, s6, s8, c1, gamma) append route log entries via route_tracker.py log. If interrupted mid-run, partial entries could remain. The route_tracker.py itself doesn't have atomic write protection for the JSONL file.",
+      "details": {
+        "affected_scripts": [
+          "stress_s1.py",
+          "stress_s3.py",
+          "stress_s6_benchmark.py",
+          "stress_s8_simulate.py",
+          "benchmark_c1.py",
+          "gamma_benchmark.py"
+        ]
+      }
+    },
+    {
+      "id": "B4-0014",
+      "category": "script_quality",
+      "severity": "low",
+      "title": "benchmark_c1.py: loads pointer network at module level",
+      "description": "benchmark_c1.py loads pointer-network.json at line 18-21 at module scope, before main() is called. If the file doesn't exist, the script fails on import with no helpful error message.",
+      "details": {
+        "file": "storage/pointer-routes/benchmark_c1.py",
+        "lines": [
+          18,
+          21
+        ]
+      }
+    },
+    {
+      "id": "B4-0015",
+      "category": "script_quality",
+      "severity": "low",
+      "title": "stress_s1.py: loads pointer network at module level",
+      "description": "stress_s1.py loads pointer-network.json at module scope. If the file doesn't exist, fails on import with no helpful error.",
+      "details": {
+        "file": "storage/pointer-routes/stress_s1.py"
+      }
+    },
+    {
+      "id": "B4-0016",
+      "category": "script_quality",
+      "severity": "low",
+      "title": "gamma_benchmark.py: loads pointer network at module level",
+      "description": "gamma_benchmark.py loads pointer-network.json at module scope. If the file doesn't exist, fails on import with no helpful error.",
+      "details": {
+        "file": "storage/pointer-routes/gamma_benchmark.py"
+      }
+    },
+    {
+      "id": "B4-0017",
+      "category": "script_quality",
+      "severity": "low",
+      "title": "stress_s8_simulate.py: loads pointer network at module level",
+      "description": "stress_s8_simulate.py loads pointer-network.json at module scope. If the file doesn't exist, fails on import with no helpful error.",
+      "details": {
+        "file": "storage/pointer-routes/stress_s8_simulate.py"
+      }
+    },
+    {
+      "id": "B4-0018",
+      "category": "script_quality",
+      "severity": "low",
+      "title": "stress_s5_analysis.py: has both recursive and iterative DFS; recursive unused",
+      "description": "stress_s5_analysis.py defines a recursive dfs() at line 185 for bridge-finding that could stack overflow on large graphs, but then also defines dfs_iterative() at line 199 which is actually used. The recursive version is dead code but confusing.",
+      "details": {
+        "file": "storage/pointer-routes/stress_s5_analysis.py",
+        "lines": [
+          185,
+          199
+        ]
+      }
+    },
+    {
+      "id": "B4-0019",
+      "category": "cross_report_consistency",
+      "severity": "high",
+      "title": "Gamma vs Beta: network total_edges mismatch (6859 vs 4535)",
+      "description": "Gamma reports total_edges=6859 (with unique_edges=6474), Beta reports total_edges=4535 (unique=4535). Both ran on the same pointer-network.json. Gamma counts reason-level edges (shared_tags + explicit_reference + category_affinity = 6859) while Beta counts pointer-level edges.",
+      "details": {
+        "gamma_edge_types": {
+          "shared_tags": 5778,
+          "explicit_reference": 613,
+          "category_affinity": 611
+        },
+        "beta_edges": 4535
+      }
+    },
+    {
+      "id": "B4-0020",
+      "category": "analysis_patterns_mismatch",
+      "severity": "high",
+      "title": "route_patterns.json has only 1 pattern but route_analysis.json claims 155 routes",
+      "description": "route_analysis.json reports 155 total routes across 60 agents and 19 tasks. But route_patterns.json has only 1 pattern (for task 'fail-task'). This means patterns was regenerated after the route_log was mostly cleared but route_analysis was not re-generated from the same data.",
+      "details": {
+        "analysis_total_routes": 155,
+        "patterns_total": 1
+      }
+    },
+    {
+      "id": "B4-0021",
+      "category": "analysis_patterns_mismatch",
+      "severity": "medium",
+      "title": "route_patterns.json recommends a route with 0% success rate",
+      "description": "For task 'fail-task', the recommended_route is 'A -> B -> C' but success_rate is 0%. The patterns system should not recommend routes that always fail.",
+      "details": {
+        "task": "fail-task",
+        "recommended_route": "A -> B -> C",
+        "success_rate": 0.0
+      }
+    },
+    {
+      "id": "B4-0022",
+      "category": "cross_report_consistency",
+      "severity": "low",
+      "title": "Unclassified edge count changed: master v1 says 3,910 but v2 and stress master say 3,931",
+      "description": "This is expected if run-002 added more edges. The master v1 count (3,910) plus the new edges classified and added should net out. master v2 shows total_edges went from 4,580 to 4,820 (240 new edges), classified went 625->889 (264 newly classified). So unclassified = 4820 - 889 = 3,931 which is correct."
+    },
+    {
+      "id": "B4-0023",
+      "category": "route_log_validation",
+      "severity": "medium",
+      "title": "Route with single node (SINGLE-NODE) and zero hops on line 6",
+      "description": "Line 6 of route_log.jsonl has route=[\"SINGLE-NODE\"] with hop_count=0. A route with a single node has no traversal - this appears to be a test entry.",
+      "details": {
+        "line_number": 6,
+        "agent_id": "test",
+        "route": [
+          "SINGLE-NODE"
+        ]
+      }
+    },
+    {
+      "id": "B4-0024",
+      "category": "cross_report_consistency",
+      "severity": "medium",
+      "title": "Tangential success rate: route_analysis says 0.0% but master report says 66.7%",
+      "description": "route_analysis.json strength_effectiveness.tangential.success_rate=0.0 (3 uses). benchmark_master_report.json strength_effectiveness_post_benchmark.tangential.success_rate_pct=66.7 (3 uses). These measure different route populations but the discrepancy is notable.",
+      "details": {
+        "route_analysis": {
+          "uses": 3,
+          "rate": 0.0
+        },
+        "master_report": {
+          "uses": 3,
+          "success_rate_pct": 66.7
+        }
+      }
+    },
+    {
+      "id": "B4-0025",
+      "category": "cross_report_consistency",
+      "severity": "medium",
+      "title": "S3 network traps: S3 report lists 20 traps, stress master says 6",
+      "description": "stress_s3_report.json network_traps.traps array has 20 entries (total_traps reports from S3 data), but stress_master_report.json s3_adversarial.network_traps=6. The stress master significantly underreports the trap count found by S3."
+    },
+    {
+      "id": "B4-0026",
+      "category": "cross_report_consistency",
+      "severity": "low",
+      "title": "Stress master claims S3 cross_domain_hops=1 but this metric is not in S3 report",
+      "description": "stress_master_report.json s3_adversarial.cross_domain_hops=1, but this exact field does not appear in stress_s3_report.json. The S3 report has avg_cross_domain_hops in its summary section instead. The stress master value seems fabricated or summarized from the detail data.",
+      "details": {
+        "stress_master_value": 1
+      }
+    }
+  ]
+}

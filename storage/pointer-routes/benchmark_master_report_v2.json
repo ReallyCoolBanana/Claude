@@ -1,0 +1,116 @@
+{
+  "title": "Pointer Network Benchmark — Run 002 Master Report",
+  "timestamp": "2026-03-12T22:45:00Z",
+  "scope": "8 audit teams + 4 repair teams",
+
+  "network_comparison": {
+    "metric": ["run-001 before", "run-001 after", "run-002 after"],
+    "total_edges": [4535, 4580, 4820],
+    "classified_edges": [397, 625, 889],
+    "classification_rate_pct": [8.8, 13.6, 18.4],
+    "critical_orphans": [4, 0, 0],
+    "wiki_orphans": [92, 92, 92],
+    "sops_with_primary": [6, 22, 22],
+    "sops_with_tags": [0, 0, 22],
+    "strength_mismatches": ["unknown", 116, 0]
+  },
+
+  "run_002_stats": {
+    "routes_logged": 98,
+    "total_hops": 310,
+    "agents_deployed": 34,
+    "audit_teams": 8,
+    "repair_teams": 4,
+    "task_types_tested": 16
+  },
+
+  "audit_findings": {
+    "a1_strength_audit": {
+      "verdict": "116 weight/strength mismatches found",
+      "main_issue": "92 weight-2 edges marked tangential (should be related), 11 primary edges at weight 2-3",
+      "all_sops_have_primary": true,
+      "all_sop_tags_empty": true
+    },
+    "a2_connectivity": {
+      "verdict": "Network structurally clean after run-001 repairs",
+      "critical_orphans": 0,
+      "wiki_orphans": 92,
+      "scr_reachability_from_sops": "100%",
+      "non_reciprocal_edges_w4plus": 36,
+      "integrity_issues": 0
+    },
+    "b1_data_gathering": {
+      "verdict": "73.7% of scripts have zero SRC links",
+      "sop_to_src_reachability": "36.4% (8/22)",
+      "journey_success_rate": "20% (2/10)",
+      "root_cause": "42 scripts lack SRC pointers"
+    },
+    "b2_wiki_knowledge": {
+      "wiki_reachable_from_sops_pct": 19.3,
+      "wiki_bridges": "SCR and SRC nodes serve as only bridges",
+      "recommendation": "Add direct SOP/KB -> wiki edges"
+    },
+    "c1_monitoring_chains": {
+      "verdict": "GOOD — SCR chains healthy after run-001 repairs",
+      "monitoring_success": "Improved from 25% (run-001) to healthy"
+    },
+    "c2_tag_coherence": {
+      "avg_jaccard": 0.277,
+      "tag_routing_vs_weight_routing": "Tag routing won 10/10 with 0.68 vs 0.43 coherence",
+      "tag_deserts": 4,
+      "recommendation": "Consider hybrid routing (tag primary, weight tiebreaker)"
+    },
+    "d1_recommendations": {
+      "accuracy_score": "8/10",
+      "all_run001_fixes_verified": true,
+      "remaining_issues": ["no-entry fallback ignores task context", "no entry node validation"]
+    },
+    "d2_weight_analysis": {
+      "weight_1_pct": 52.4,
+      "weight_1_noise": false,
+      "skewed_nodes": 90,
+      "upgrade_candidates": 23,
+      "downgrade_candidates": 20
+    }
+  },
+
+  "repairs_applied": {
+    "r1_strength_mismatches": {
+      "fixed": 100,
+      "preserved_exceptions": 16,
+      "remaining_mismatches": 0
+    },
+    "r2_scr_src_links": {
+      "new_edges_added": "SCR->SRC tag-based connections",
+      "scripts_now_connected": "increased from 15"
+    },
+    "r3_sop_tags_and_upgrades": {
+      "sops_given_tags": 22,
+      "weight_upgrades": 6
+    },
+    "r4_recommendation_fixes": {
+      "task_relevant_no_entry_fallback": true,
+      "entry_node_validation": true
+    }
+  },
+
+  "post_repair_network": {
+    "total_edges": 4820,
+    "classified": 889,
+    "classification_rate_pct": 18.4,
+    "strengths": {"primary": 230, "supporting": 133, "related": 412, "tangential": 114},
+    "all_sops_have_primary": true,
+    "all_sops_have_tags": true,
+    "critical_orphans": 0,
+    "all_scripts_reachable": true
+  },
+
+  "remaining_issues_for_run_003": [
+    "3,931 edges still unclassified (mostly cross-domain auto-generated)",
+    "92 wiki orphan nodes (by design, low priority)",
+    "Wiki domain only 19.3% reachable from SOPs — needs bridges",
+    "Tag coherence still low (0.28) — hybrid routing recommended",
+    "90 nodes with skewed weight distributions",
+    "36 non-reciprocal edges at weight 4"
+  ]
+}
