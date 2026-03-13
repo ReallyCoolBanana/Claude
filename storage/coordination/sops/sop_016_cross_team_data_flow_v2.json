@@ -1,0 +1,158 @@
+{
+  "id": "SOP-016-v2",
+  "version": "2.0",
+  "updated": "2026-03-11",
+  "updated_by": "ANALYSIS-001",
+  "title": "Cross-Team Data Flow, Handoff Protocol, and Quality Gates (v2)",
+  "changelog": "v2: Added gatherer-to-sorter handoff protocol (identified as largest gap by TT-OBS-1), quality gates between pipeline stages, batch manifest schema, and load-balanced sorter assignment",
+  "builds_on": [
+    "SOP-013",
+    "SOP-014",
+    "SOP-015",
+    "SOP-016-v1"
+  ],
+  "improvements_over_v1": [
+    "Added formal gatherer-to-sorter handoff protocol (v1 had none — largest identified gap)",
+    "Added quality gates between pipeline stages with minimum thresholds",
+    "Added batch manifest schema for structured handoffs",
+    "Added load-balanced sorter assignment via WorkStealing (v1 was static)",
+    "Added deduplication step using fingerprinting from think_tank.py",
+    "Added cross-validation stage where think tanks periodically validate flowing data"
+  ],
+  "section_1_handoff_protocol": {
+    "title": "Gatherer-to-Sorter Handoff Protocol",
+    "description": "Defines how data gatherers package and hand off data to sorter/archiver teams.",
+    "batch_manifest_schema": {
+      "description": "Every handoff must include a manifest that describes the batch.",
+      "schema": {
+        "manifest_id": "string (UUID or sequential)",
+        "source_team": "string (e.g., DATA-GATHER-DOCS-1)",
+        "timestamp": "number (Unix epoch)",
+        "item_count": "number",
+        "quality_score": "number (0.0-1.0, see quality gates)",
+        "categories": [
+          "array of strings (topics covered)"
+        ],
+        "dedup_hashes": [
+          "array of content fingerprints for dedup"
+        ],
+        "items": [
+          {
+            "id": "string",
+            "title": "string",
+            "category": "string",
+            "source_url": "string (if web-sourced)",
+            "reliability": "high|medium|low",
+            "content_hash": "string (for dedup)",
+            "content": "string or object"
+          }
+        ],
+        "metadata": {
+          "gathering_method": "string (SOP-017 method used)",
+          "duration_seconds": "number",
+          "errors_encountered": "number",
+          "items_discarded": "number (failed quality check)"
+        }
+      }
+    },
+    "handoff_steps": [
+      {
+        "step": 1,
+        "action": "Gatherer packages batch with manifest",
+        "details": "Create manifest JSON with all items and quality metadata"
+      },
+      {
+        "step": 2,
+        "action": "Gatherer runs self-quality-check",
+        "details": "Score must be >= 0.6 (60% B+ threshold). If below, gatherer must improve or discard low-quality items before handoff.",
+        "quality_criteria": [
+          "All required fields populated: +0.2",
+          "Source attribution present: +0.2",
+          "No duplicate items in batch: +0.2",
+          "Content length > 100 chars per item: +0.2",
+          "Reliability assessment included: +0.2"
+        ]
+      },
+      {
+        "step": 3,
+        "action": "Gatherer enqueues batch via WorkStealing",
+        "details": "ws.enqueue_work(category='sort', payload=manifest_json, priority=quality_score)",
+        "rationale": "Higher quality batches get sorted first"
+      },
+      {
+        "step": 4,
+        "action": "Sorter claims batch from queue",
+        "details": "ws.steal_work(category='sort') — load-balanced, not static assignment"
+      },
+      {
+        "step": 5,
+        "action": "Sorter validates manifest against schema",
+        "details": "Reject batches missing required fields. Return to gatherer with error details."
+      },
+      {
+        "step": 6,
+        "action": "Sorter deduplicates against existing archive",
+        "details": "Compare content_hash against previously archived items. Use think_tank._fingerprint() for consistency."
+      },
+      {
+        "step": 7,
+        "action": "Sorter categorizes and archives",
+        "details": "Place items in appropriate knowledge-base/entries/ or storage/ locations per taxonomy"
+      }
+    ]
+  },
+  "section_2_quality_gates": {
+    "title": "Quality Gates Between Pipeline Stages",
+    "description": "Data must pass quality checks to move between stages. Prevents garbage-in-garbage-out.",
+    "gates": [
+      {
+        "gate": "G1: Pre-Handoff (Gatherer → Sorter)",
+        "minimum_score": 0.6,
+        "checks": [
+          "All required manifest fields present",
+          "Item count matches actual items array length",
+          "No items with empty content",
+          "Source attribution for every item",
+          "Content hashes computed for all items"
+        ],
+        "fail_action": "Gatherer fixes issues and resubmits. Batch does NOT enter sort queue."
+      },
+      {
+        "gate": "G2: Post-Sort (Sorter → Archive)",
+        "minimum_score": 0.7,
+        "checks": [
+          "Items categorized against standard taxonomy (SOP-016 v1 taxonomy)",
+          "No duplicates against existing archive (< 80% content similarity)",
+          "KB entry format compliance (if destined for knowledge-base/)",
+          "Cross-references validated (no dangling references)"
+        ],
+        "fail_action": "Sorter fixes categorization or dedup issues. Items NOT archived until passing."
+      },
+      {
+        "gate": "G3: Periodic Validation (Think Tank spot-check)",
+        "frequency": "Every 30 minutes or every 50 items archived, whichever comes first",
+        "checks": [
+          "Random sample of 5 archived items for accuracy",
+          "Category assignment correctness",
+          "No systematic quality degradation (compare recent vs earlier batches)",
+          "Cross-team consistency (items from different gatherers on same topic should align)"
+        ],
+        "fail_action": "Think tank flags specific issues. Gatherers/sorters receive corrective feedback via bus."
+      }
+    ]
+  },
+  "section_3_load_balanced_sorter_assignment": {
+    "title": "Load-Balanced Sorter Assignment",
+    "description": "Replaces static 1:1 gatherer-to-sorter mapping with dynamic queue-based assignment.",
+    "mechanism": "WorkStealing queue with category='sort'",
+    "scaling_guideline": "1 sorter per 2 gatherers",
+    "backpressure": {
+      "trigger": "Sort queue depth > 5 batches",
+      "action": "Notify coordinator; slow gatherer output or add temporary sorter agents",
+      "extreme_trigger": "Sort queue depth > 10 batches",
+      "extreme_action": "Pause all gatherers until queue drains to < 3"
+    }
+  },
+  "note": "The full v1 content (report standardization, consolidation pipeline, data flow rules, findings taxonomy) remains valid and is inherited. This v2 adds the handoff/quality layer.",
+  "date": "2026-03-11"
+}

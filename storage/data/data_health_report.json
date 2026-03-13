@@ -1,0 +1,123 @@
+{
+  "team": "data-org",
+  "date": "2026-03-11",
+  "audit_results": {
+    "kb_entries": {
+      "indexed": 33,
+      "actual_files": 33,
+      "orphaned": [],
+      "missing": []
+    },
+    "scripts": {
+      "indexed": 54,
+      "actual_files": 61,
+      "orphaned": [
+        "test-cross-references.py",
+        "data-gathering/methods/dedup_utils.py",
+        "data-gathering/methods/test_utilities.py",
+        "data-gathering/methods/benchmark_runner.py",
+        "generate_registry.py",
+        "validate_naming.py",
+        "smart_write.py",
+        "auto_index.py",
+        "import_to_db.py",
+        "smart_search.py",
+        "smart_read.py",
+        "query_kb.py"
+      ],
+      "missing": []
+    },
+    "sources": {
+      "indexed": 41,
+      "actual_files": 41
+    },
+    "sops": {
+      "indexed": 28,
+      "actual_files": 28
+    },
+    "sessions": {
+      "indexed": 30,
+      "actual_files": 29
+    },
+    "data_files": {
+      "indexed": 6,
+      "actual_files": 7,
+      "orphaned": ["efficiency_report.json"],
+      "missing": []
+    }
+  },
+  "issues_found": [
+    {
+      "type": "missing",
+      "description": "KB-0011 was a placeholder gap entry with 'low' confidence and 'unknown' team. TEAM-0010 session log confirms it should be 'Free Public APIs for Developer Tools & General-Purpose Data'. Content reconstructed from session log evidence.",
+      "severity": "high",
+      "fix_applied": true
+    },
+    {
+      "type": "duplicate",
+      "description": "KB-0012 and KB-0013 had identical titles 'Free Public APIs for Government and Open Data'. KB-0012 was from TEAM-0011, KB-0013 from TEAM-0013. Content is near-identical (same 7 APIs, slightly different SRC ID formatting). Titles differentiated with team attribution suffixes.",
+      "severity": "medium",
+      "fix_applied": true
+    },
+    {
+      "type": "broken_ref",
+      "description": "KB-0012 was attributed to TEAM-0010 in the index, but TEAM-0010 session log shows it produced KB-0011. TEAM-0011 session log (in index) has objective matching KB-0012 content. Fixed team attribution to TEAM-0011.",
+      "severity": "medium",
+      "fix_applied": true
+    },
+    {
+      "type": "missing",
+      "description": "KB-0011 was categorized as 'methodology' in the index (from placeholder). Corrected to 'integration' with proper tags (public-apis, developer-tools, code-hosting, package-registries, community-data, free-apis). Old placeholder tags (reconstructed, placeholder, gap-entry) replaced.",
+      "severity": "low",
+      "fix_applied": true
+    },
+    {
+      "type": "orphan",
+      "description": "12 script files exist on disk but are not registered in storage/scripts/index.json: test-cross-references.py, dedup_utils.py, test_utilities.py, data-gathering/methods/benchmark_runner.py, generate_registry.py, validate_naming.py, smart_write.py, auto_index.py, import_to_db.py, smart_search.py, smart_read.py, query_kb.py",
+      "severity": "medium",
+      "fix_applied": false
+    },
+    {
+      "type": "missing",
+      "description": "TEAM-0011.md session log file does not exist on disk, but is listed in teams/sessions/index.json with 30 entries. Corrected session_count from 30 to 29. The TEAM-0011 entry remains in the index as a record of what should exist.",
+      "severity": "medium",
+      "fix_applied": true
+    },
+    {
+      "type": "orphan",
+      "description": "storage/data/efficiency_report.json exists on disk but is not registered in storage/data/index.json (file_count says 6, actual non-meta data files are 7).",
+      "severity": "low",
+      "fix_applied": false
+    },
+    {
+      "type": "duplicate",
+      "description": "SRC-0018 (FRED API) and SRC-0039 (FRED API) are duplicate source entries for the same Federal Reserve Economic Data API with slightly different URLs and data_type lists. Both are indexed.",
+      "severity": "low",
+      "fix_applied": false
+    },
+    {
+      "type": "missing",
+      "description": "Source IDs SRC-0009, SRC-0010, SRC-0011 are gaps in the numbering sequence. No files or index entries exist for these IDs. Likely lost during parallel team operations with ID conflicts.",
+      "severity": "low",
+      "fix_applied": false
+    }
+  ],
+  "fixes_applied": [
+    "Reconstructed KB-0011 content as 'Free Public APIs for Developer Tools & General-Purpose Data' from TEAM-0010 session log evidence, covering SRC-0025 through SRC-0031 (GitHub, npm, PyPI, ip-api, HN Algolia, HN Firebase, Stack Exchange)",
+    "Updated KB-0011 index entry: team unknown->TEAM-0010, category methodology->integration, confidence low->high, added builds_on [KB-0004, KB-0005], replaced placeholder tags with proper tags",
+    "Moved KB-0011 from methodology to integration in categories index",
+    "Added KB-0011 to public-apis and free-apis tag indexes, created new tag indexes for developer-tools, code-hosting, package-registries, community-data",
+    "Differentiated KB-0012 title to 'Free Public APIs for Government and Open Data (TEAM-0011 Catalog)'",
+    "Differentiated KB-0013 title to 'Free Public APIs for Government and Open Data (TEAM-0013 Verification)'",
+    "Fixed KB-0012 team attribution from TEAM-0010 to TEAM-0011 in both the entry frontmatter and the index",
+    "Corrected teams/sessions/index.json session_count from 30 to 29 (TEAM-0011.md file missing)"
+  ],
+  "cross_team_notes": [
+    "All 33 KB entry builds_on references are valid -- no broken cross-reference chains detected",
+    "12 orphaned scripts need to be registered in storage/scripts/index.json. Most appear to be from TEAM-0030 (smart_read.py, smart_write.py, smart_search.py, query_kb.py, import_to_db.py, auto_index.py, validate_naming.py, generate_registry.py)",
+    "TEAM-0011.md session log is missing from disk. A future team should reconstruct it from the index metadata (objective: 'Find the best free public APIs for government and open data')",
+    "SRC-0018 and SRC-0039 are duplicate FRED API entries from different teams. A future team should consolidate them",
+    "efficiency_report.json in storage/data/ needs to be added to the data index",
+    "KB-0012 and KB-0013 remain as separate entries with differentiated titles. Content is near-identical but from independent teams, serving as independent verification of the same 7 government/open data APIs"
+  ]
+}

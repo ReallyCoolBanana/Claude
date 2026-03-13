@@ -1,0 +1,308 @@
+{
+  "benchmark_suite": "overhaul_benchmarks",
+  "version": "1.0.0",
+  "repo_root": "/home/user/Claude",
+  "iterations": 3,
+  "total_duration_ms": 4426.728,
+  "benchmarks": {
+    "bus_throughput": {
+      "benchmarks": {
+        "1_agents": {
+          "write": {
+            "mean_ms": 0.0233,
+            "median_ms": 0.0154,
+            "p50_ms": 0.0154,
+            "p95_ms": 0.0434,
+            "p99_ms": 0.2185,
+            "min_ms": 0.0118,
+            "max_ms": 0.53,
+            "sample_count": 150,
+            "total_messages": 150,
+            "errors": 0,
+            "throughput_msgs_per_sec": 42897.23
+          },
+          "read": {
+            "mean_ms": 0.2802,
+            "median_ms": 0.2221,
+            "p50_ms": 0.3899,
+            "p95_ms": 0.7167,
+            "p99_ms": 0.7167,
+            "min_ms": 0.024,
+            "max_ms": 0.7167,
+            "sample_count": 6
+          }
+        },
+        "4_agents": {
+          "write": {
+            "mean_ms": 0.5075,
+            "median_ms": 0.464,
+            "p50_ms": 0.4644,
+            "p95_ms": 1.0302,
+            "p99_ms": 1.3707,
+            "min_ms": 0.0199,
+            "max_ms": 2.7131,
+            "sample_count": 600,
+            "total_messages": 600,
+            "errors": 0,
+            "throughput_msgs_per_sec": 1970.5
+          },
+          "read": {
+            "mean_ms": 1.0206,
+            "median_ms": 0.9497,
+            "p50_ms": 1.728,
+            "p95_ms": 2.2321,
+            "p99_ms": 2.2321,
+            "min_ms": 0.1083,
+            "max_ms": 2.2321,
+            "sample_count": 6
+          }
+        },
+        "8_agents": {
+          "write": {
+            "mean_ms": 0.995,
+            "median_ms": 0.8707,
+            "p50_ms": 0.8716,
+            "p95_ms": 2.3346,
+            "p99_ms": 3.4011,
+            "min_ms": 0.0152,
+            "max_ms": 5.3294,
+            "sample_count": 1200,
+            "total_messages": 1200,
+            "errors": 0,
+            "throughput_msgs_per_sec": 1004.99
+          },
+          "read": {
+            "mean_ms": 2.0774,
+            "median_ms": 1.8744,
+            "p50_ms": 3.4142,
+            "p95_ms": 4.1924,
+            "p99_ms": 4.1924,
+            "min_ms": 0.1968,
+            "max_ms": 4.1924,
+            "sample_count": 6
+          }
+        },
+        "16_agents": {
+          "write": {
+            "mean_ms": 1.7558,
+            "median_ms": 1.4587,
+            "p50_ms": 1.4587,
+            "p95_ms": 4.5268,
+            "p99_ms": 6.3087,
+            "min_ms": 0.0156,
+            "max_ms": 10.4849,
+            "sample_count": 2400,
+            "total_messages": 2400,
+            "errors": 0,
+            "throughput_msgs_per_sec": 569.55
+          },
+          "read": {
+            "mean_ms": 3.8721,
+            "median_ms": 3.7042,
+            "p50_ms": 6.6395,
+            "p95_ms": 7.8857,
+            "p99_ms": 7.8857,
+            "min_ms": 0.4162,
+            "max_ms": 7.8857,
+            "sample_count": 6
+          }
+        }
+      },
+      "error": null
+    },
+    "rate_limiter_accuracy": {
+      "error": "No RateLimiter class found",
+      "benchmarks": {}
+    },
+    "index_generation_speed": {
+      "benchmarks": {
+        "scan": {
+          "mean_ms": 0.0313,
+          "median_ms": 0.021,
+          "p50_ms": 0.021,
+          "p95_ms": 0.0563,
+          "p99_ms": 0.0563,
+          "min_ms": 0.0167,
+          "max_ms": 0.0563,
+          "sample_count": 3
+        },
+        "parse": {
+          "mean_ms": 0.5936,
+          "median_ms": 0.5316,
+          "p50_ms": 0.5316,
+          "p95_ms": 0.7194,
+          "p99_ms": 0.7194,
+          "min_ms": 0.5296,
+          "max_ms": 0.7194,
+          "sample_count": 3
+        },
+        "auto_index": null,
+        "indexes_found": 8,
+        "total_entries": 304
+      },
+      "error": null
+    },
+    "sqlite_contention": {
+      "benchmarks": {
+        "1_writers": {
+          "mean_ms": 0.2707,
+          "median_ms": 0.2514,
+          "p50_ms": 0.2515,
+          "p95_ms": 0.3393,
+          "p99_ms": 0.9719,
+          "min_ms": 0.218,
+          "max_ms": 1.0074,
+          "sample_count": 150,
+          "total_ops": 150,
+          "errors": 0,
+          "ops_per_sec": 3694.12
+        },
+        "4_writers": {
+          "mean_ms": 0.7867,
+          "median_ms": 0.2462,
+          "p50_ms": 0.2463,
+          "p95_ms": 0.3349,
+          "p99_ms": 34.0737,
+          "min_ms": 0.1544,
+          "max_ms": 54.4877,
+          "sample_count": 600,
+          "total_ops": 600,
+          "errors": 0,
+          "ops_per_sec": 1271.14
+        },
+        "8_writers": {
+          "mean_ms": 1.7696,
+          "median_ms": 0.255,
+          "p50_ms": 0.255,
+          "p95_ms": 0.3546,
+          "p99_ms": 79.614,
+          "min_ms": 0.1442,
+          "max_ms": 180.3364,
+          "sample_count": 1200,
+          "total_ops": 1200,
+          "errors": 0,
+          "ops_per_sec": 565.1
+        },
+        "16_writers": {
+          "mean_ms": 6.7997,
+          "median_ms": 0.2412,
+          "p50_ms": 0.2412,
+          "p95_ms": 0.4212,
+          "p99_ms": 230.306,
+          "min_ms": 0.1177,
+          "max_ms": 931.6532,
+          "sample_count": 2400,
+          "total_ops": 2400,
+          "errors": 0,
+          "ops_per_sec": 147.06
+        }
+      },
+      "error": null
+    },
+    "end_to_end_scenario": {
+      "benchmarks": {
+        "scenario_total": {
+          "mean_ms": 31.9096,
+          "median_ms": 32.7171,
+          "p50_ms": 32.7171,
+          "p95_ms": 33.411,
+          "p99_ms": 33.411,
+          "min_ms": 29.6007,
+          "max_ms": 33.411,
+          "sample_count": 3
+        },
+        "phases": {
+          "registration": {
+            "mean_ms": 7.8927,
+            "median_ms": 7.5831,
+            "p50_ms": 7.5831,
+            "p95_ms": 8.9234,
+            "p99_ms": 8.9234,
+            "min_ms": 7.1717,
+            "max_ms": 8.9234,
+            "sample_count": 3
+          },
+          "status_updates": {
+            "mean_ms": 2.0746,
+            "median_ms": 2.1782,
+            "p50_ms": 2.1782,
+            "p95_ms": 2.3156,
+            "p99_ms": 2.3156,
+            "min_ms": 1.7302,
+            "max_ms": 2.3156,
+            "sample_count": 3
+          },
+          "work_enqueue": {
+            "mean_ms": 7.1721,
+            "median_ms": 7.1867,
+            "p50_ms": 7.1867,
+            "p95_ms": 7.9962,
+            "p99_ms": 7.9962,
+            "min_ms": 6.3333,
+            "max_ms": 7.9962,
+            "sample_count": 3
+          },
+          "work_steal": {
+            "mean_ms": 3.9212,
+            "median_ms": 3.6196,
+            "p50_ms": 3.6196,
+            "p95_ms": 4.6313,
+            "p99_ms": 4.6313,
+            "min_ms": 3.5127,
+            "max_ms": 4.6313,
+            "sample_count": 3
+          },
+          "help_request": {
+            "mean_ms": 6.5228,
+            "median_ms": 6.5306,
+            "p50_ms": 6.5306,
+            "p95_ms": 6.5655,
+            "p99_ms": 6.5655,
+            "min_ms": 6.4724,
+            "max_ms": 6.5655,
+            "sample_count": 3
+          },
+          "bus_communication": {
+            "mean_ms": 0.4568,
+            "median_ms": 0.4374,
+            "p50_ms": 0.4374,
+            "p95_ms": 0.5178,
+            "p99_ms": 0.5178,
+            "min_ms": 0.4151,
+            "max_ms": 0.5178,
+            "sample_count": 3
+          },
+          "dashboard_read": {
+            "mean_ms": 0.1489,
+            "median_ms": 0.1531,
+            "p50_ms": 0.1531,
+            "p95_ms": 0.1568,
+            "p99_ms": 0.1568,
+            "min_ms": 0.1369,
+            "max_ms": 0.1568,
+            "sample_count": 3
+          },
+          "completion": {
+            "mean_ms": 3.7112,
+            "median_ms": 3.6934,
+            "p50_ms": 3.6934,
+            "p95_ms": 3.8118,
+            "p99_ms": 3.8118,
+            "min_ms": 3.6284,
+            "max_ms": 3.8118,
+            "sample_count": 3
+          }
+        },
+        "agents_per_scenario": 5,
+        "work_items_per_scenario": 10,
+        "bus_messages_per_scenario": 20,
+        "help_requests_per_scenario": 3
+      },
+      "error": null
+    }
+  },
+  "regressions": [],
+  "regression_count": 0,
+  "all_benchmarks_pass": false,
+  "date": "2026-03-12T02:23:30"
+}

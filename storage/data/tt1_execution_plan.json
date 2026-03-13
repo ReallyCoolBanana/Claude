@@ -1,0 +1,1047 @@
+{
+  "id": "TT1-EXECUTION-PLAN",
+  "author": "TT-1 (Execution Strategy) + Coordinator synthesis",
+  "based_on": [
+    "ROADMAP-5-SESSIONS",
+    "DATA-AGENT-1 Market Intelligence",
+    "TT-ALPHA-DOMAIN-STRATEGY"
+  ],
+  "sessions": [
+    {
+      "session_number": 1,
+      "title": "Market Research Sprint: First Picks",
+      "objective": "Break the zero-output streak. Produce 3-5 market research picks using WebSearch/WebFetch and documented methods.",
+      "step_by_step_workflow": [
+        {
+          "step": 1,
+          "action": "Coordinator reads TEAM-0033/0034 session logs and roadmap_5_sessions.json, briefs team on zero-infrastructure rule",
+          "agent": "Coordinator",
+          "duration_minutes": 5,
+          "inputs": [
+            "teams/sessions/TEAM-0033.md",
+            "storage/data/roadmap_5_sessions.json"
+          ],
+          "outputs": [
+            "team_briefing"
+          ],
+          "tools_used": [
+            "Read"
+          ]
+        },
+        {
+          "step": 2,
+          "action": "Gather macro backdrop: S&P 500, VIX, Fed funds rate, inflation, GDP growth, yield curve",
+          "agent": "Research Team A",
+          "duration_minutes": 10,
+          "inputs": [],
+          "outputs": [
+            "macro_backdrop_summary"
+          ],
+          "tools_used": [
+            "WebSearch",
+            "WebFetch"
+          ]
+        },
+        {
+          "step": 3,
+          "action": "Screen 3-4 sectors for catalysts, relative performance, and macro tailwinds",
+          "agent": "Research Team A",
+          "duration_minutes": 10,
+          "inputs": [
+            "macro_backdrop_summary"
+          ],
+          "outputs": [
+            "sector_rankings"
+          ],
+          "tools_used": [
+            "WebSearch"
+          ]
+        },
+        {
+          "step": 4,
+          "action": "Gather news sentiment, insider transactions, analyst consensus for top 2 sectors",
+          "agent": "Research Team B",
+          "duration_minutes": 15,
+          "inputs": [
+            "sector_rankings"
+          ],
+          "outputs": [
+            "sentiment_data"
+          ],
+          "tools_used": [
+            "WebSearch",
+            "WebFetch"
+          ]
+        },
+        {
+          "step": 5,
+          "action": "Screen 8-10 candidate stocks within selected sectors using fundamental criteria from fundamental.md",
+          "agent": "Research Team A",
+          "duration_minutes": 15,
+          "inputs": [
+            "sector_rankings"
+          ],
+          "outputs": [
+            "candidate_list"
+          ],
+          "tools_used": [
+            "WebSearch",
+            "WebFetch"
+          ]
+        },
+        {
+          "step": 6,
+          "action": "Apply fundamental.md checklist to top 5 candidates: P/E, revenue growth, FCF, ROIC, moat",
+          "agent": "Analysis / Cross-Validation",
+          "duration_minutes": 15,
+          "inputs": [
+            "candidate_list",
+            "market-research/methods/fundamental.md"
+          ],
+          "outputs": [
+            "fundamental_scores"
+          ],
+          "tools_used": [
+            "WebSearch",
+            "WebFetch"
+          ]
+        },
+        {
+          "step": 7,
+          "action": "Apply sentiment.md checklist: insider activity, analyst ratings, news flow, institutional positioning",
+          "agent": "Research Team B",
+          "duration_minutes": 10,
+          "inputs": [
+            "candidate_list",
+            "market-research/methods/sentiment.md"
+          ],
+          "outputs": [
+            "sentiment_scores"
+          ],
+          "tools_used": [
+            "WebSearch"
+          ]
+        },
+        {
+          "step": 8,
+          "action": "Merge fundamental + sentiment scores, rank by composite, select top 3-5 for picks",
+          "agent": "Analysis / Cross-Validation",
+          "duration_minutes": 10,
+          "inputs": [
+            "fundamental_scores",
+            "sentiment_scores"
+          ],
+          "outputs": [
+            "final_pick_selections"
+          ],
+          "tools_used": []
+        },
+        {
+          "step": 9,
+          "action": "Create pick files using TEMPLATE.md for each selected stock",
+          "agent": "Writer / Indexer",
+          "duration_minutes": 15,
+          "inputs": [
+            "final_pick_selections",
+            "market-research/picks/TEMPLATE.md"
+          ],
+          "outputs": [
+            "pick_files"
+          ],
+          "tools_used": [
+            "Write"
+          ]
+        },
+        {
+          "step": 10,
+          "action": "Update market-research/picks/index.json with new picks",
+          "agent": "Writer / Indexer",
+          "duration_minutes": 5,
+          "inputs": [
+            "pick_files"
+          ],
+          "outputs": [
+            "updated_index"
+          ],
+          "tools_used": [
+            "Edit"
+          ]
+        },
+        {
+          "step": 11,
+          "action": "Create KB entry documenting methodology, macro conditions, and sector analysis",
+          "agent": "Writer / Indexer",
+          "duration_minutes": 10,
+          "inputs": [
+            "macro_backdrop_summary",
+            "sector_rankings",
+            "final_pick_selections"
+          ],
+          "outputs": [
+            "kb_entry"
+          ],
+          "tools_used": [
+            "Write"
+          ]
+        },
+        {
+          "step": 12,
+          "action": "Write session log with actual domain/infra/overhead split",
+          "agent": "Writer / Indexer",
+          "duration_minutes": 5,
+          "inputs": [],
+          "outputs": [
+            "session_log"
+          ],
+          "tools_used": [
+            "Write"
+          ]
+        }
+      ],
+      "agent_prompts": {
+        "coordinator": "You are the coordinator for a Market Research Sprint. Your ONLY job is to ensure the team produces 3-5 market research picks. ZERO infrastructure work is allowed. Read roadmap_5_sessions.json for context. Time-box: sector screening 10 min, stock screening 15 min, analysis 15 min. If any agent proposes building a tool, redirect them immediately. Quality gate: every pick must have entry_price, target_price, stop_loss, and a clear thesis supported by data from 2+ sources. Use WebSearch and WebFetch exclusively.",
+        "research_a": "You are Research Team A (Fundamental + Macro). Your tasks: (1) Establish macro backdrop using WebSearch - search for 'S&P 500 performance 2026', 'Fed funds rate March 2026', 'US inflation CPI latest', 'VIX current level', 'US GDP growth 2026'. Summarize in 200+ words. (2) Screen 3-4 sectors using WebSearch for sector ETF performance (XLK, XLF, XLE, XLV, XLI). Pick sectors with catalysts. (3) Screen 8-10 stocks within chosen sectors using WebSearch for company financials. Apply fundamental.md criteria: P/E < sector median, positive revenue growth, positive FCF, reasonable debt. Share candidate list with other agents.",
+        "research_b": "You are Research Team B (Sentiment + News). Your tasks: (1) For each candidate stock from Research Team A, search for recent news, analyst ratings, insider transactions, and institutional positioning using WebSearch. (2) Apply sentiment.md checklist to each candidate. Score on: insider activity (buying=bullish), analyst consensus (upgrades vs downgrades), news sentiment (positive/negative/neutral), institutional flow. (3) Flag any red flags: pending lawsuits, regulatory issues, accounting concerns, management departures.",
+        "analyst": "You are the Analysis / Cross-Validation agent. Your tasks: (1) Receive fundamental scores from Research A and sentiment scores from Research B. (2) Create composite score for each candidate: fundamental 50%, sentiment 30%, macro fit 20%. (3) Rank all candidates by composite score. (4) Select top 3-5 with composite >= 6.0/10. (5) For each selected pick, verify it's supported by at least 2 methods (fundamental + sentiment). (6) Set entry_price (current market price via WebSearch), target_price (based on upside analysis), stop_loss (support level or -15% max).",
+        "writer": "You are the Writer / Indexer. Your tasks: (1) Create pick files using market-research/picks/TEMPLATE.md format. Fill ALL YAML frontmatter fields: pick_id (auto-increment from index.json), date, team (TEAM-0035), ticker, company, direction, method, entry_price, target_price, stop_loss, timeframe, confidence, status (active), builds_on. Fill body: ## Thesis (2-3 sentences), ## Analysis (### Method Applied, ### Key Metrics, ### Risk Factors), ## Exit Criteria. (2) Update market-research/picks/index.json. (3) Create 1 KB entry about research methodology and findings. (4) Write session log."
+      },
+      "data_sharing_plan": "Research A shares macro_backdrop and candidate_list as data files in storage/data/. Research B reads candidate_list and produces sentiment_scores. Analyst reads both score sets. Writer reads final selections. All sharing via files in storage/data/session_1/.",
+      "quality_gates": [
+        "Every pick has all TEMPLATE.md YAML fields populated",
+        "Every pick cites >= 2 data sources in analysis",
+        "Every pick has falsifiable thesis (not vague)",
+        "Entry price is current market price (within 1%)",
+        "Target price and stop loss specified",
+        "At least 2 methods support the pick direction",
+        "Minimum 3 picks produced"
+      ],
+      "contingency_plans": [
+        "If 30 min in with no candidates: reduce sector screening, pick obvious large-cap stocks (AAPL, MSFT, GOOGL) and do fundamental + sentiment analysis",
+        "If data quality poor from WebSearch: try WebFetch on specific URLs (finance.yahoo.com, marketwatch.com)",
+        "If analysis paralysis on stock selection: time-box to 15 min, pick best available not perfect"
+      ],
+      "estimated_output": {
+        "picks": 4,
+        "kb_entries": 1,
+        "tools_built": []
+      }
+    },
+    {
+      "session_number": 2,
+      "title": "Financial Data Integration + More Picks",
+      "step_by_step_workflow": [
+        {
+          "step": 1,
+          "action": "Review Session 1 outputs, validate picks still current",
+          "agent": "Coordinator",
+          "duration_minutes": 5,
+          "inputs": [
+            "market-research/picks/"
+          ],
+          "outputs": [
+            "session_1_review"
+          ],
+          "tools_used": [
+            "Read"
+          ]
+        },
+        {
+          "step": 2,
+          "action": "Install Yahoo Finance MCP server (no auth, most reliable)",
+          "agent": "Infrastructure",
+          "duration_minutes": 10,
+          "inputs": [],
+          "outputs": [
+            ".mcp.json updated"
+          ],
+          "tools_used": [
+            "Bash",
+            "Edit"
+          ]
+        },
+        {
+          "step": 3,
+          "action": "Install EdgarTools MCP server for SEC filings",
+          "agent": "Infrastructure",
+          "duration_minutes": 10,
+          "inputs": [],
+          "outputs": [
+            ".mcp.json updated"
+          ],
+          "tools_used": [
+            "Bash",
+            "Edit"
+          ]
+        },
+        {
+          "step": 4,
+          "action": "Install Alpha Vantage MCP (if API key available)",
+          "agent": "Infrastructure",
+          "duration_minutes": 5,
+          "inputs": [
+            "ALPHA_VANTAGE_API_KEY"
+          ],
+          "outputs": [
+            ".mcp.json updated"
+          ],
+          "tools_used": [
+            "Bash",
+            "Edit"
+          ]
+        },
+        {
+          "step": 5,
+          "action": "Build pick_logger.py (create_pick, update_pick, list_picks, get_performance)",
+          "agent": "Infrastructure",
+          "duration_minutes": 30,
+          "inputs": [
+            "market-research/picks/TEMPLATE.md",
+            "market-research/picks/index.json"
+          ],
+          "outputs": [
+            "storage/scripts/pick_logger.py"
+          ],
+          "tools_used": [
+            "Write"
+          ]
+        },
+        {
+          "step": 6,
+          "action": "Research Team gathers financial data using new MCP servers for 8-10 candidates",
+          "agent": "Research Fundamental",
+          "duration_minutes": 20,
+          "inputs": [
+            "session_1_review"
+          ],
+          "outputs": [
+            "financial_data"
+          ],
+          "tools_used": [
+            "MCP:yahoo-finance",
+            "MCP:alpha-vantage",
+            "MCP:edgar"
+          ]
+        },
+        {
+          "step": 7,
+          "action": "Sentiment + macro update: fresh news, insider activity, analyst changes",
+          "agent": "Research Sentiment",
+          "duration_minutes": 15,
+          "inputs": [],
+          "outputs": [
+            "sentiment_update"
+          ],
+          "tools_used": [
+            "WebSearch",
+            "MCP:yahoo-finance"
+          ]
+        },
+        {
+          "step": 8,
+          "action": "Cross-validate Session 1 picks with new MCP data, update if needed",
+          "agent": "Research Sentiment",
+          "duration_minutes": 10,
+          "inputs": [
+            "session_1_picks"
+          ],
+          "outputs": [
+            "validation_report"
+          ],
+          "tools_used": [
+            "MCP:yahoo-finance"
+          ]
+        },
+        {
+          "step": 9,
+          "action": "Create 3-5 new pick files using pick_logger.py",
+          "agent": "Writer / Indexer",
+          "duration_minutes": 15,
+          "inputs": [
+            "financial_data",
+            "sentiment_update"
+          ],
+          "outputs": [
+            "new_pick_files"
+          ],
+          "tools_used": [
+            "Bash:pick_logger.py"
+          ]
+        },
+        {
+          "step": 10,
+          "action": "Create KB entry on MCP financial tools evaluation",
+          "agent": "Writer / Indexer",
+          "duration_minutes": 10,
+          "inputs": [
+            "mcp_setup_results"
+          ],
+          "outputs": [
+            "kb_entry"
+          ],
+          "tools_used": [
+            "Write"
+          ]
+        },
+        {
+          "step": 11,
+          "action": "Write session log",
+          "agent": "Writer / Indexer",
+          "duration_minutes": 5,
+          "inputs": [],
+          "outputs": [
+            "session_log"
+          ],
+          "tools_used": [
+            "Write"
+          ]
+        }
+      ],
+      "agent_prompts": {
+        "coordinator": "Manage Session 2: Financial Data Integration + More Picks. Infrastructure agent has 45 min max to set up MCP servers + build pick_logger. If MCP setup takes >15 min per server, skip and use WebSearch fallback. Verify each MCP server returns data before research starts. Quality gate all picks.",
+        "infrastructure": "You are the Infrastructure agent. Tasks in order: (1) Install Yahoo Finance MCP: try 'uvx mcp-yahoo-finance', add to .mcp.json. Test with MSFT quote. (2) Install EdgarTools MCP: 'pip install edgartools[mcp]', add to .mcp.json with EDGAR_IDENTITY env var. Test with AAPL 10-K. (3) Install Alpha Vantage MCP if key available: add to .mcp.json. Test with AAPL quote. (4) Build pick_logger.py: 180 LOC script with create_pick, update_pick, list_picks, get_performance functions. Standard library only. Atomic file writes. CLI with argparse subcommands.",
+        "research_fundamental": "Use MCP financial tools (Yahoo Finance, Alpha Vantage, EdgarTools) to gather comprehensive data on 8-10 candidates. Apply fundamental.md + technical.md checklists with numeric data (P/E, RSI, MACD, revenue growth). If MCP tools unavailable, fall back to WebSearch.",
+        "research_sentiment": "Gather fresh sentiment data and validate Session 1 picks. Use Yahoo Finance MCP for analyst ratings and insider transactions. WebSearch for news flow. Update macro backdrop from Session 1. Flag any material changes since last session.",
+        "writer": "Log all new picks via pick_logger.py. Create KB entry documenting which MCP servers work, their capabilities, and rate limits. Write session log."
+      },
+      "data_sharing_plan": "MCP servers provide shared data access. Infrastructure agent writes status to storage/data/mcp_setup_status.json. Research agents read MCP results. Writer uses pick_logger.py for standardized output.",
+      "quality_gates": [
+        "At least 1 MCP server returning valid data",
+        "pick_logger.py creates valid pick files matching TEMPLATE.md",
+        "Session 1 picks validated with current data",
+        "3+ new picks logged",
+        "All indexes updated"
+      ],
+      "contingency_plans": [
+        "If all MCP servers fail: use WebSearch (proven in Session 1), document failures for retry",
+        "If pick_logger not ready: manually create picks using TEMPLATE.md (Session 1 method)",
+        "If Alpha Vantage rate limited: use Yahoo Finance MCP (no limits) as primary"
+      ],
+      "estimated_output": {
+        "picks": 4,
+        "kb_entries": 1,
+        "tools_built": [
+          "pick_logger.py",
+          "3 MCP servers configured"
+        ]
+      }
+    },
+    {
+      "session_number": 3,
+      "title": "SEC EDGAR Integration + Sector Deep Dive",
+      "step_by_step_workflow": [
+        {
+          "step": 1,
+          "action": "Review Sessions 1-2 outputs, identify target sector for deep dive",
+          "agent": "Coordinator",
+          "duration_minutes": 5,
+          "inputs": [
+            "market-research/picks/index.json"
+          ],
+          "outputs": [
+            "target_sector"
+          ],
+          "tools_used": [
+            "Read"
+          ]
+        },
+        {
+          "step": 2,
+          "action": "Build method_sec_edgar.py OR method_fred.py (depends on EdgarTools MCP status)",
+          "agent": "Coding Team",
+          "duration_minutes": 45,
+          "inputs": [
+            "storage/scripts/data-gathering/methods/"
+          ],
+          "outputs": [
+            "new_method_script"
+          ],
+          "tools_used": [
+            "Write",
+            "Bash"
+          ]
+        },
+        {
+          "step": 3,
+          "action": "Deep-dive sector analysis: 5-8 companies compared across valuation, growth, profitability",
+          "agent": "Research Sector",
+          "duration_minutes": 30,
+          "inputs": [
+            "target_sector"
+          ],
+          "outputs": [
+            "sector_comparison_matrix"
+          ],
+          "tools_used": [
+            "MCP:yahoo-finance",
+            "MCP:edgar",
+            "WebSearch"
+          ]
+        },
+        {
+          "step": 4,
+          "action": "Macro + cross-sector analysis: update backdrop, compare target vs alternatives",
+          "agent": "Research Macro",
+          "duration_minutes": 20,
+          "inputs": [],
+          "outputs": [
+            "macro_update",
+            "cross_sector_comparison"
+          ],
+          "tools_used": [
+            "WebSearch",
+            "WebFetch"
+          ]
+        },
+        {
+          "step": 5,
+          "action": "Validate Sessions 1-2 picks still performing",
+          "agent": "Research Macro",
+          "duration_minutes": 10,
+          "inputs": [
+            "market-research/picks/"
+          ],
+          "outputs": [
+            "performance_check"
+          ],
+          "tools_used": [
+            "MCP:yahoo-finance"
+          ]
+        },
+        {
+          "step": 6,
+          "action": "Create 3-5 picks from sector deep dive using multi-method analysis",
+          "agent": "Writer / Indexer",
+          "duration_minutes": 15,
+          "inputs": [
+            "sector_comparison_matrix",
+            "macro_update"
+          ],
+          "outputs": [
+            "pick_files"
+          ],
+          "tools_used": [
+            "Bash:pick_logger.py"
+          ]
+        },
+        {
+          "step": 7,
+          "action": "Create sector analysis KB entry",
+          "agent": "Writer / Indexer",
+          "duration_minutes": 10,
+          "inputs": [
+            "sector_comparison_matrix"
+          ],
+          "outputs": [
+            "kb_entry"
+          ],
+          "tools_used": [
+            "Write"
+          ]
+        },
+        {
+          "step": 8,
+          "action": "Write session log",
+          "agent": "Writer / Indexer",
+          "duration_minutes": 5,
+          "inputs": [],
+          "outputs": [
+            "session_log"
+          ],
+          "tools_used": [
+            "Write"
+          ]
+        }
+      ],
+      "agent_prompts": {
+        "coordinator": "Session 3: SEC EDGAR + Sector Deep Dive. DECISION-01: If EdgarTools MCP works from Session 2, coding agent builds method_fred.py instead of method_sec_edgar.py (pull FRED forward). Identify target sector based on Sessions 1-2 findings. Time-box coding to 45 min. Quality gate all picks.",
+        "coding": "CONDITIONAL: If EdgarTools MCP failed → build method_sec_edgar.py using raw SEC EDGAR REST API (data.sec.gov). Follow existing method_*.py patterns. Core endpoints: company_tickers.json for CIK lookup, companyfacts for XBRL data. If EdgarTools MCP works → build method_fred.py for FRED economic data (GDP, CPI, UNRATE, DFF, T10Y2Y). Both scripts: ~150 LOC, standard library + requests, CLI interface, error handling.",
+        "research_sector": "Comprehensive analysis of 1 sector (5-8 companies). Use all MCP tools + SEC filings for fundamental data. Build comparison matrix: P/E, EV/EBITDA, revenue growth, margins, ROIC, debt/equity, analyst consensus. Rank companies within sector. Apply quantitative.md screening criteria.",
+        "research_macro": "Update macro backdrop. Compare target sector vs alternatives using sector ETF performance. Identify cross-sector catalysts and risks. Check all Session 1-2 picks for performance vs entry price.",
+        "writer": "Create 3-5 picks from deep dive using pick_logger.py. Create KB entry with sector comparison matrix. Grade research quality. Write session log."
+      },
+      "data_sharing_plan": "Coding agent publishes tool status. Research agents share via direct channel. Writer reads all outputs.",
+      "quality_gates": [
+        "New tool functional for test inputs",
+        "Sector analysis covers 5+ companies",
+        "3+ new picks from deep dive",
+        "Cumulative picks >= 9",
+        "All prior picks validated"
+      ],
+      "contingency_plans": [
+        "If SEC EDGAR API too complex: ship minimal tool (filing list only), iterate later",
+        "If sector deep dive takes too long: reduce to 3-4 companies",
+        "If XBRL parsing fails: use WebSearch to read filing summaries instead"
+      ],
+      "estimated_output": {
+        "picks": 4,
+        "kb_entries": 1,
+        "tools_built": [
+          "method_sec_edgar.py OR method_fred.py"
+        ]
+      }
+    },
+    {
+      "session_number": 4,
+      "title": "Data Hygiene Sprint + Portfolio Review",
+      "step_by_step_workflow": [
+        {
+          "step": 1,
+          "action": "Review Gamma audit items, partition bug fixes vs domain work",
+          "agent": "Coordinator",
+          "duration_minutes": 5,
+          "inputs": [
+            "storage/data/tt_gamma_health_audit.json"
+          ],
+          "outputs": [
+            "fix_list",
+            "review_plan"
+          ],
+          "tools_used": [
+            "Read"
+          ]
+        },
+        {
+          "step": 2,
+          "action": "Index 15 orphaned scripts in storage/scripts/index.json",
+          "agent": "Infrastructure Bug Fix",
+          "duration_minutes": 5,
+          "inputs": [
+            "storage/scripts/"
+          ],
+          "outputs": [
+            "updated_scripts_index"
+          ],
+          "tools_used": [
+            "Edit"
+          ]
+        },
+        {
+          "step": 3,
+          "action": "Add TEAM-0032 + TEAM-0033 + TEAM-0034 to sessions/index.json",
+          "agent": "Infrastructure Bug Fix",
+          "duration_minutes": 5,
+          "inputs": [
+            "teams/sessions/"
+          ],
+          "outputs": [
+            "updated_sessions_index"
+          ],
+          "tools_used": [
+            "Edit"
+          ]
+        },
+        {
+          "step": 4,
+          "action": "Backfill titles into 34 KB entries YAML frontmatter",
+          "agent": "Infrastructure Bug Fix",
+          "duration_minutes": 15,
+          "inputs": [
+            "knowledge-base/index.json"
+          ],
+          "outputs": [
+            "34 updated KB files"
+          ],
+          "tools_used": [
+            "Edit"
+          ]
+        },
+        {
+          "step": 5,
+          "action": "Fix TOCTOU-WS-001: add BEGIN IMMEDIATE + WHERE guard to complete_work",
+          "agent": "Infrastructure Bug Fix",
+          "duration_minutes": 20,
+          "inputs": [
+            "storage/coordination/work_stealing.py"
+          ],
+          "outputs": [
+            "fixed_work_stealing.py",
+            "test_ws_001.py"
+          ],
+          "tools_used": [
+            "Edit",
+            "Bash"
+          ]
+        },
+        {
+          "step": 6,
+          "action": "Fix TOCTOU-HP-001: wrap both UPDATEs in BEGIN IMMEDIATE transaction",
+          "agent": "Infrastructure Bug Fix",
+          "duration_minutes": 20,
+          "inputs": [
+            "storage/coordination/help_protocol.py"
+          ],
+          "outputs": [
+            "fixed_help_protocol.py",
+            "test_hp_001.py"
+          ],
+          "tools_used": [
+            "Edit",
+            "Bash"
+          ]
+        },
+        {
+          "step": 7,
+          "action": "Fix TOCTOU-MTR-004: add threading.Event double-stop guard",
+          "agent": "Infrastructure Bug Fix",
+          "duration_minutes": 10,
+          "inputs": [
+            "storage/coordination/multi_team_runner.py"
+          ],
+          "outputs": [
+            "fixed_multi_team_runner.py",
+            "test_mtr_004.py"
+          ],
+          "tools_used": [
+            "Edit",
+            "Bash"
+          ]
+        },
+        {
+          "step": 8,
+          "action": "Merge duplicate FRED source SRC-0018/SRC-0039",
+          "agent": "Infrastructure Bug Fix",
+          "duration_minutes": 5,
+          "inputs": [
+            "storage/sources/"
+          ],
+          "outputs": [
+            "merged_fred_source"
+          ],
+          "tools_used": [
+            "Edit",
+            "Bash"
+          ]
+        },
+        {
+          "step": 9,
+          "action": "Gather current prices for all Session 1-3 picks, calculate performance",
+          "agent": "Portfolio Review A",
+          "duration_minutes": 20,
+          "inputs": [
+            "market-research/picks/"
+          ],
+          "outputs": [
+            "performance_data"
+          ],
+          "tools_used": [
+            "MCP:yahoo-finance",
+            "WebSearch"
+          ]
+        },
+        {
+          "step": 10,
+          "action": "Review news/sentiment changes, recommend hold/sell/add for each pick",
+          "agent": "Portfolio Review B",
+          "duration_minutes": 20,
+          "inputs": [
+            "market-research/picks/"
+          ],
+          "outputs": [
+            "recommendations"
+          ],
+          "tools_used": [
+            "WebSearch",
+            "MCP:yahoo-finance"
+          ]
+        },
+        {
+          "step": 11,
+          "action": "Update pick files with performance data and review notes",
+          "agent": "Writer / Indexer",
+          "duration_minutes": 10,
+          "inputs": [
+            "performance_data",
+            "recommendations"
+          ],
+          "outputs": [
+            "updated_pick_files"
+          ],
+          "tools_used": [
+            "Edit"
+          ]
+        },
+        {
+          "step": 12,
+          "action": "Create portfolio performance KB entry, write session log",
+          "agent": "Writer / Indexer",
+          "duration_minutes": 10,
+          "inputs": [
+            "performance_data"
+          ],
+          "outputs": [
+            "kb_entry",
+            "session_log"
+          ],
+          "tools_used": [
+            "Write"
+          ]
+        }
+      ],
+      "agent_prompts": {
+        "coordinator": "Session 4: Data Hygiene + Portfolio Review. Infrastructure agent has approved fix list (7 items). NO scope expansion. Domain work = portfolio review (3 agents). Time-box infra fixes to 80 min total. If infra agent finishes early, reassign to domain.",
+        "infrastructure": "Fix exactly these items in order: (1) Index 15 orphaned scripts, (2) Index TEAM-0032/0033/0034, (3) Backfill 34 KB titles from index.json, (4) Fix TOCTOU-WS-001 with BEGIN IMMEDIATE + WHERE guard (write test first), (5) Fix TOCTOU-HP-001 with transaction wrapping (write test first), (6) Fix TOCTOU-MTR-004 with threading.Event guard, (7) Merge FRED duplicates. DO NOT expand scope.",
+        "portfolio_review_a": "Gather current prices for every pick from Sessions 1-3 using Yahoo Finance MCP or WebSearch. Calculate: (current_price - entry_price) / entry_price * 100 for each. Check if any hit stop_loss or target_price. Produce performance summary table.",
+        "portfolio_review_b": "For each active pick: search for material changes since pick date (earnings, guidance, M&A, regulatory). Check insider transactions. Update analyst consensus. Recommend: HOLD (thesis intact), SELL (thesis broken), ADD (thesis strengthened). Produce 1-2 new picks if opportunities found.",
+        "writer": "Update each pick file with performance section. Create portfolio performance KB entry with aggregate stats. Validate all indexes after infrastructure fixes. Write session log."
+      },
+      "data_sharing_plan": "Infrastructure agent updates files directly. Portfolio review agents share findings via storage/data/session_4/. Writer integrates all.",
+      "quality_gates": [
+        "5+ of 7 data hygiene items completed",
+        "All TOCTOU fixes have passing regression tests",
+        "All prior picks have performance data",
+        "Portfolio review KB entry produced",
+        "All indexes validated"
+      ],
+      "contingency_plans": [
+        "If TOCTOU fixes too complex: ship partial fix, document remaining work",
+        "If portfolio review reveals all picks underwater: document lessons, adjust methodology for Session 5",
+        "If infrastructure fixes expand scope: coordinator halts immediately"
+      ],
+      "estimated_output": {
+        "picks": 1,
+        "kb_entries": 1,
+        "tools_built": [],
+        "bugs_fixed": 3,
+        "data_hygiene_items": 7
+      }
+    },
+    {
+      "session_number": 5,
+      "title": "Agent Skills + Expanded Domain Output",
+      "step_by_step_workflow": [
+        {
+          "step": 1,
+          "action": "Review all Sessions 1-4 outputs, prepare for final session",
+          "agent": "Coordinator",
+          "duration_minutes": 5,
+          "inputs": [
+            "market-research/picks/index.json",
+            "storage/data/roadmap_5_sessions.json"
+          ],
+          "outputs": [
+            "session_5_plan"
+          ],
+          "tools_used": [
+            "Read"
+          ]
+        },
+        {
+          "step": 2,
+          "action": "Build method_fred.py (if not already built in Session 3)",
+          "agent": "Coding Team",
+          "duration_minutes": 30,
+          "inputs": [],
+          "outputs": [
+            "storage/scripts/data-gathering/methods/method_fred.py"
+          ],
+          "tools_used": [
+            "Write",
+            "Bash"
+          ]
+        },
+        {
+          "step": 3,
+          "action": "Package market research workflow as Agent Skill (.skill.md)",
+          "agent": "Coding Team",
+          "duration_minutes": 20,
+          "inputs": [
+            "market-research/methods/",
+            "storage/scripts/pick_logger.py"
+          ],
+          "outputs": [
+            "storage/skills/market-research.skill.md"
+          ],
+          "tools_used": [
+            "Write"
+          ]
+        },
+        {
+          "step": 4,
+          "action": "Economic analysis: labor market, inflation, rates using FRED + BLS data",
+          "agent": "Research Economic",
+          "duration_minutes": 25,
+          "inputs": [],
+          "outputs": [
+            "economic_analysis_report"
+          ],
+          "tools_used": [
+            "Bash:method_fred.py",
+            "WebSearch"
+          ]
+        },
+        {
+          "step": 5,
+          "action": "Produce 3-5 new picks targeting sectors identified by economic analysis",
+          "agent": "Research Picks",
+          "duration_minutes": 25,
+          "inputs": [
+            "economic_analysis_report"
+          ],
+          "outputs": [
+            "new_picks"
+          ],
+          "tools_used": [
+            "MCP:yahoo-finance",
+            "MCP:edgar",
+            "WebSearch"
+          ]
+        },
+        {
+          "step": 6,
+          "action": "Create economic analysis KB entry",
+          "agent": "Writer / Indexer",
+          "duration_minutes": 10,
+          "inputs": [
+            "economic_analysis_report"
+          ],
+          "outputs": [
+            "kb_entry_economics"
+          ],
+          "tools_used": [
+            "Write"
+          ]
+        },
+        {
+          "step": 7,
+          "action": "Create 5-session retrospective KB entry",
+          "agent": "Writer / Indexer",
+          "duration_minutes": 10,
+          "inputs": [
+            "all session logs"
+          ],
+          "outputs": [
+            "kb_entry_retrospective"
+          ],
+          "tools_used": [
+            "Write"
+          ]
+        },
+        {
+          "step": 8,
+          "action": "Draft roadmap_sessions_6_10.json",
+          "agent": "Coordinator",
+          "duration_minutes": 10,
+          "inputs": [
+            "retrospective"
+          ],
+          "outputs": [
+            "storage/data/roadmap_sessions_6_10.json"
+          ],
+          "tools_used": [
+            "Write"
+          ]
+        },
+        {
+          "step": 9,
+          "action": "Log new picks, update all indexes, write session log",
+          "agent": "Writer / Indexer",
+          "duration_minutes": 10,
+          "inputs": [
+            "new_picks"
+          ],
+          "outputs": [
+            "pick_files",
+            "session_log"
+          ],
+          "tools_used": [
+            "Bash:pick_logger.py",
+            "Write"
+          ]
+        }
+      ],
+      "agent_prompts": {
+        "coordinator": "Final session of the 5-session roadmap. Balance: method_fred.py + Agent Skill packaging (1 coding agent) with domain output (2 research agents, 1 writer). Draft Sessions 6-10 roadmap based on learnings. Retrospective must cover what worked, what failed, methodology improvements.",
+        "coding": "Tasks: (1) Build method_fred.py if not done in Session 3. Support key series: GDP, CPI, UNRATE, DFF, T10Y2Y. Use FRED API (https://api.stlouisfed.org/fred/series/observations). CLI interface. Cache responses. ~120 LOC. (2) Package market research workflow as .skill.md Agent Skill. Include: data gathering steps referencing all MCP servers, checklist application from methods/, pick file creation via pick_logger.py, index update. Make it usable by any future agent.",
+        "research_economic": "Use method_fred.py (or WebSearch fallback) to gather: GDP growth trend (last 4 quarters), CPI inflation (last 12 months), unemployment rate trend, Fed funds rate, 10Y-2Y yield curve spread. Identify macro themes: expansion/contraction, inflation trajectory, rate expectations. Map themes to investment implications.",
+        "research_picks": "Using economic analysis themes + all available tools (MCP servers, SEC filings, WebSearch): produce 3-5 new picks with comprehensive multi-method analysis. Each pick should reference macro context. Target sectors aligned with economic themes.",
+        "writer": "Log picks via pick_logger.py. Create 2 KB entries: (1) economic analysis with current conditions, (2) 5-session retrospective with cumulative metrics (total picks, tools built, domain ratio achieved, what worked, what to improve). Write session log with full roadmap metrics."
+      },
+      "data_sharing_plan": "Coding agent publishes tool/skill. Research agents share via storage/data/session_5/. Writer integrates all. Coordinator produces next roadmap.",
+      "quality_gates": [
+        "method_fred.py returns data for test series",
+        "Agent Skill is usable (covers full workflow)",
+        "Economic report has quantitative data",
+        "3+ new picks with macro context",
+        "Retrospective covers all 5 sessions",
+        "Next roadmap draft exists"
+      ],
+      "contingency_plans": [
+        "If FRED API key unavailable: use BLS API (no key needed) for employment + inflation",
+        "If Agent Skill format unclear: write as detailed markdown guide instead",
+        "If method_fred.py already built in Session 3: coding agent focuses on Agent Skill + a bonus tool"
+      ],
+      "estimated_output": {
+        "picks": 4,
+        "kb_entries": 2,
+        "tools_built": [
+          "method_fred.py",
+          "market-research.skill.md"
+        ]
+      }
+    }
+  ],
+  "cross_session_dependencies": [
+    {
+      "from": 1,
+      "to": 2,
+      "dependency": "Session 1 picks validate the workflow. TEMPLATE.md format confirmed working."
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "dependency": "MCP servers operational. pick_logger.py available. EdgarTools MCP status determines Session 3 coding task."
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "dependency": "DECISION-01 resolved: if EdgarTools MCP works, Session 3 builds method_fred.py instead of method_sec_edgar.py."
+    },
+    {
+      "from": "1-3",
+      "to": 4,
+      "dependency": "9-15 picks available for portfolio review. Gamma audit items ready for fixes."
+    },
+    {
+      "from": "1-4",
+      "to": 5,
+      "dependency": "All tools operational. 12-20 picks tracked. Data hygiene resolved. Full toolkit for final session."
+    }
+  ],
+  "cumulative_output_tracker": {
+    "picks": {
+      "session_1": 4,
+      "session_2": 4,
+      "session_3": 4,
+      "session_4": 1,
+      "session_5": 4,
+      "total": 17
+    },
+    "kb_entries": {
+      "session_1": 1,
+      "session_2": 1,
+      "session_3": 1,
+      "session_4": 1,
+      "session_5": 2,
+      "total": 6
+    },
+    "tools_built": {
+      "session_1": 0,
+      "session_2": 1,
+      "session_3": 1,
+      "session_4": 0,
+      "session_5": 2,
+      "total": 4
+    },
+    "mcp_servers": {
+      "session_1": 0,
+      "session_2": 3,
+      "total": 3
+    },
+    "bugs_fixed": {
+      "session_4": 3,
+      "total": 3
+    },
+    "domain_ratio_avg": "64% (above 60% minimum across all sessions)"
+  },
+  "date": "2026-03-12"
+}

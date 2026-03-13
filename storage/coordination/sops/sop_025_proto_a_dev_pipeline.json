@@ -1,0 +1,132 @@
+{
+  "sop_id": "SOP-025",
+  "title": "Proto A Development Pipeline: Programming, Testing, Bug Fixing",
+  "version": "1.0",
+  "date": "2026-03-11",
+  "status": "active",
+  "purpose": "Define a repeatable pipeline for using Prototype A (JSONL + SQLite WAL) coordination to drive actual development work through programming, testing, and bug fixing stages — with cross-team coordination via think tanks, external research, and data archival.",
+  "scope": "Any development task coordinated through Proto A multi-agent teams",
+  "anti_recursion_check": "This SOP produces domain artifacts (code, tests, fixes, reports) — NOT more coordination infrastructure. If >40% of work items are about the coordination system itself, STOP and rebalance.",
+
+  "team_structure": {
+    "think_tanks": {
+      "count": 2,
+      "roles": {
+        "think-tank-alpha": "Plan analysis — decompose features into work items, define acceptance criteria, identify risks. Consumes research team findings.",
+        "think-tank-beta": "Verification and convergence — review outputs from dev teams, validate fixes, cross-reference research, produce consolidated reports."
+      },
+      "coordination": "Both think tanks publish to topic channel 'think-tank-findings'. They consume from research team channels and dev team progress broadcasts."
+    },
+    "research_teams": {
+      "count": 2,
+      "roles": {
+        "research-ext-1": "External research on implementation patterns, best practices, API documentation, and library usage relevant to current work items.",
+        "research-ext-2": "External research on testing strategies, bug patterns, edge cases, and regression prevention relevant to current work items."
+      },
+      "coordination": "Research teams publish findings to topic channel 'research-findings'. They pull work items from the shared work queue (priority: research tasks from think tanks)."
+    },
+    "data_archive_team": {
+      "count": 1,
+      "roles": {
+        "data-archive": "Process and archive all team outputs. Maintain knowledge base entries. Feed processed data to think tanks. Update index files. Produce session logs."
+      },
+      "coordination": "Subscribes to all topic channels. Writes to knowledge-base/entries/ and teams/ directories. Publishes archive confirmations on 'archive-status' channel."
+    },
+    "dev_teams": {
+      "count": "2-4 as needed",
+      "roles": {
+        "dev-prog": "Programming team — implements features from work queue.",
+        "dev-test": "Testing team — writes and runs tests against implementations.",
+        "dev-fix": "Bug fix team — addresses failures found by testing team."
+      },
+      "coordination": "Dev teams use work stealing queue. Progress broadcast on 'dev-progress' channel. Blockers reported on 'topic-blockers'."
+    }
+  },
+
+  "pipeline_stages": [
+    {
+      "stage": 1,
+      "name": "research_and_plan",
+      "description": "Research teams gather external information. Think Tank Alpha decomposes the objective into work items with acceptance criteria.",
+      "inputs": ["Objective definition", "Prior knowledge base entries"],
+      "outputs": ["Work items in shared queue", "Research findings on topic channel"],
+      "duration_target": "First 20% of session",
+      "done_when": "Work queue has prioritized items AND research findings published"
+    },
+    {
+      "stage": 2,
+      "name": "programming",
+      "description": "Dev-prog teams steal work items and implement. Research teams continue feeding findings. Data-archive begins processing.",
+      "inputs": ["Work items from queue", "Research findings"],
+      "outputs": ["Code implementations", "Progress broadcasts"],
+      "duration_target": "20-50% of session",
+      "done_when": "All priority work items claimed and implemented"
+    },
+    {
+      "stage": 3,
+      "name": "testing",
+      "description": "Dev-test team writes and executes tests. Think Tank Beta begins verification. Bugs filed back to work queue.",
+      "inputs": ["Implementations from stage 2"],
+      "outputs": ["Test results", "Bug reports in work queue", "Verification reports"],
+      "duration_target": "50-70% of session",
+      "done_when": "All implementations tested AND bugs filed"
+    },
+    {
+      "stage": 4,
+      "name": "bug_fixing",
+      "description": "Dev-fix team addresses bugs. Research-ext-2 provides fix strategies. Think Tank Beta re-verifies.",
+      "inputs": ["Bug reports from stage 3", "Fix strategies from research"],
+      "outputs": ["Fixed code", "Re-test results"],
+      "duration_target": "70-85% of session",
+      "done_when": "All critical/high bugs fixed AND re-verified"
+    },
+    {
+      "stage": 5,
+      "name": "convergence_and_archive",
+      "description": "Think tanks produce final report. Data-archive creates KB entries and session log. Pipeline results consolidated.",
+      "inputs": ["All team outputs"],
+      "outputs": ["Think tank report", "KB entries", "Session log", "Updated indexes"],
+      "duration_target": "85-100% of session",
+      "done_when": "Session log written AND KB entries created AND indexes updated"
+    }
+  ],
+
+  "iteration": {
+    "description": "After stage 5, the pipeline can loop back to stage 1 with lessons learned feeding the next iteration.",
+    "trigger": "Remaining work items in queue OR new objectives identified during convergence",
+    "max_iterations": 3,
+    "between_iterations": "Think Tank Alpha reviews prior iteration report, re-prioritizes remaining work, research teams shift focus based on gaps identified."
+  },
+
+  "proto_a_channels": {
+    "bus_channels": [
+      "global",
+      "think-tank-findings",
+      "research-findings",
+      "dev-progress",
+      "archive-status",
+      "topic-blockers",
+      "phase-signals"
+    ],
+    "direct_channels": [
+      "think-tank-alpha--research-ext-1",
+      "think-tank-alpha--research-ext-2",
+      "think-tank-beta--dev-test",
+      "think-tank-beta--dev-fix",
+      "data-archive--think-tank-alpha",
+      "data-archive--think-tank-beta"
+    ],
+    "work_queues": [
+      "main-work-queue",
+      "research-queue",
+      "bug-queue"
+    ]
+  },
+
+  "metrics": {
+    "domain_artifact_ratio": "Track (domain artifacts produced) / (total artifacts). Must be > 0.6.",
+    "queue_throughput": "Work items completed per stage.",
+    "bug_escape_rate": "Bugs found in iteration N+1 that should have been caught in iteration N.",
+    "research_utilization": "Percentage of research findings referenced in implementations."
+  }
+}

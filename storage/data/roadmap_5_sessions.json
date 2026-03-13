@@ -1,0 +1,725 @@
+{
+  "id": "ROADMAP-5-SESSIONS",
+  "version": "1.0",
+  "author": "ARCHIVER-D2",
+  "title": "Prioritized 5-Session Roadmap",
+  "based_on": [
+    "TT-ALPHA-DOMAIN-STRATEGY",
+    "TT-BETA-TOOLS-2026-03-11",
+    "TT-GAMMA-HEALTH-AUDIT-2026-03-11",
+    "SOP-022 (Team Sizing)",
+    "SOP-023 (Anti-Recursion Protocol)"
+  ],
+  "guiding_principles": [
+    "Sessions 1-3 maintain 60%+ domain work (SOP-023 AR-01)",
+    "Max 3 infrastructure agents per session (SOP-023 AR-02)",
+    "Think tank:coding ratio <= 1:2 (SOP-022 anti-pattern)",
+    "Team sizes follow SOP-022 validated patterns",
+    "Session 1 breaks the zero-output streak with market research picks"
+  ],
+  "sessions": [
+    {
+      "session_number": 1,
+      "title": "Market Research Sprint: First Picks",
+      "objective": "Execute SOP-018 end-to-end to produce 3-5 market research picks using existing methods and WebSearch/WebFetch, breaking the zero-output streak that has persisted for 14+ team sessions.",
+      "sop_023_compliance": {
+        "domain_percent": 80,
+        "infra_percent": 0,
+        "overhead_percent": 20,
+        "justification": "4 of 5 agents on domain work (research + analysis), 1 on documentation/indexing. Zero infrastructure work. This is a pure execution session."
+      },
+      "team_composition": {
+        "pattern": "Market Research Sprint (SOP-022 Section 2)",
+        "size": 5,
+        "roles": [
+          {
+            "role": "Coordinator",
+            "count": 1,
+            "tasks": [
+              "Manage workflow per SOP-018",
+              "Enforce time-boxing",
+              "Prevent drift into infrastructure",
+              "Quality-gate picks before logging"
+            ]
+          },
+          {
+            "role": "Research Team A (Fundamental + Macro)",
+            "count": 1,
+            "tasks": [
+              "Gather macro backdrop (S&P 500, VIX, Fed, inflation)",
+              "Screen sectors for catalysts",
+              "Gather company financials via WebSearch/WebFetch",
+              "Apply fundamental.md checklist"
+            ]
+          },
+          {
+            "role": "Research Team B (Sentiment + News)",
+            "count": 1,
+            "tasks": [
+              "Gather news sentiment from multiple sources",
+              "Check insider transactions via WebSearch",
+              "Assess institutional positioning",
+              "Apply sentiment.md checklist"
+            ]
+          },
+          {
+            "role": "Analysis / Cross-Validation",
+            "count": 1,
+            "tasks": [
+              "Merge findings from both research teams",
+              "Score candidates on valuation, growth, moat, sentiment, risk",
+              "Rank by composite score",
+              "Apply second-method validation per SOP-018 step 5"
+            ]
+          },
+          {
+            "role": "Writer / Indexer",
+            "count": 1,
+            "tasks": [
+              "Create pick files using market-research/picks/TEMPLATE.md",
+              "Update market-research/picks/index.json",
+              "Create 1 KB entry documenting methodology and results",
+              "Write session log"
+            ]
+          }
+        ],
+        "think_tank_coding_ratio": "0:0 (no think tanks or coding teams -- this is a pure research/execution session)"
+      },
+      "deliverables": [
+        {
+          "item": "3-5 market research pick files",
+          "location": "market-research/picks/2026-MM-DD_TICKER.md",
+          "measurable": "Files exist with all required fields per TEMPLATE.md"
+        },
+        {
+          "item": "Updated picks index",
+          "location": "market-research/picks/index.json",
+          "measurable": "All new picks indexed with IDs"
+        },
+        {
+          "item": "Macro backdrop summary",
+          "location": "Embedded in pick files and KB entry",
+          "measurable": "200+ word market conditions analysis"
+        },
+        {
+          "item": "1 KB entry",
+          "location": "knowledge-base/entries/KB-0042.md",
+          "measurable": "Domain KB entry documenting research methodology and results"
+        },
+        {
+          "item": "Session log",
+          "location": "teams/sessions/TEAM-0033.md",
+          "measurable": "Log with actual domain/infra/overhead split"
+        }
+      ],
+      "prerequisites": [
+        "None. All tools exist. WebSearch and WebFetch are built into Claude. Methods are documented in market-research/methods/. TEMPLATE.md is ready. This session has ZERO dependencies."
+      ],
+      "risk_factors": [
+        {
+          "risk": "Recursive infrastructure trap",
+          "severity": "CRITICAL",
+          "mitigation": "Coordinator enforces zero infrastructure work. If any agent proposes building a tool first, redirect immediately. The Alpha report confirms all needed tools exist."
+        },
+        {
+          "risk": "Data quality from WebSearch insufficient",
+          "severity": "LOW",
+          "mitigation": "Financial data is widely available on Yahoo Finance, MarketWatch, Google Finance via WebSearch. Alpha report confirms HIGH confidence for fundamental + sentiment methods."
+        },
+        {
+          "risk": "Analysis paralysis on stock selection",
+          "severity": "MEDIUM",
+          "mitigation": "Time-box sector screening to 10 min, stock screening to 15 min. Pick the best available, not the perfect candidate."
+        }
+      ],
+      "estimated_duration": "60-90 minutes",
+      "success_criteria": "At least 3 pick files written to market-research/picks/ with all required fields. This is the minimum viable output."
+    },
+    {
+      "session_number": 2,
+      "title": "Financial Data Integration + More Picks",
+      "objective": "Add 2-3 financial MCP servers to .mcp.json for instant financial data access, build the pick_logger tool, and produce 3-5 additional market picks using the improved data pipeline.",
+      "sop_023_compliance": {
+        "domain_percent": 60,
+        "infra_percent": 20,
+        "overhead_percent": 20,
+        "justification": "3 of 5 agents on domain work (research + pick logging tool which directly enables domain output). 1 agent on MCP integration (infrastructure but domain-enabling). 1 on documentation. MCP servers are ADOPT not BUILD -- minimal infra effort."
+      },
+      "team_composition": {
+        "pattern": "Market Research Sprint variant (SOP-022 Section 2)",
+        "size": 5,
+        "roles": [
+          {
+            "role": "Coordinator",
+            "count": 1,
+            "tasks": [
+              "Manage workflow",
+              "Verify MCP servers working before research starts",
+              "Quality-gate picks"
+            ]
+          },
+          {
+            "role": "Infrastructure (MCP Setup)",
+            "count": 1,
+            "tasks": [
+              "Add Alpha Vantage MCP server to .mcp.json",
+              "Add Yahoo Finance Stockflow MCP server (no auth)",
+              "Add Financial Datasets MCP server",
+              "Verify all 3 return data correctly",
+              "Build pick_logger.py tool"
+            ]
+          },
+          {
+            "role": "Research Team (Fundamental + Technical)",
+            "count": 1,
+            "tasks": [
+              "Use new MCP financial data tools for deeper analysis",
+              "Apply fundamental.md AND technical.md checklists",
+              "Gather technical indicators (RSI, MACD, moving averages) numerically",
+              "Screen 8-10 candidates"
+            ]
+          },
+          {
+            "role": "Research Team (Sentiment + Macro Update)",
+            "count": 1,
+            "tasks": [
+              "Update macro backdrop from Session 1",
+              "Gather fresh sentiment data",
+              "Check for changes in insider activity since last session",
+              "Cross-validate Session 1 picks still valid"
+            ]
+          },
+          {
+            "role": "Writer / Indexer",
+            "count": 1,
+            "tasks": [
+              "Create 3-5 new pick files",
+              "Use pick_logger tool once available",
+              "Update all indexes",
+              "Create KB entry on financial MCP server evaluation",
+              "Write session log"
+            ]
+          }
+        ],
+        "think_tank_coding_ratio": "0:1 (1 coding/infra agent, no think tanks)"
+      },
+      "deliverables": [
+        {
+          "item": "2-3 financial MCP servers in .mcp.json",
+          "location": ".mcp.json",
+          "measurable": "Servers configured and returning data"
+        },
+        {
+          "item": "pick_logger.py tool",
+          "location": "storage/scripts/pick_logger.py",
+          "measurable": "Script creates structured pick entries, auto-generates IDs, updates index.json"
+        },
+        {
+          "item": "3-5 additional market picks",
+          "location": "market-research/picks/",
+          "measurable": "New pick files with improved data from MCP sources"
+        },
+        {
+          "item": "Session 1 pick validation",
+          "location": "Updates to Session 1 pick files if needed",
+          "measurable": "Each Session 1 pick reviewed with current data"
+        },
+        {
+          "item": "1 KB entry on MCP financial tools",
+          "location": "knowledge-base/entries/",
+          "measurable": "Domain KB entry evaluating financial data MCP servers"
+        },
+        {
+          "item": "Session log",
+          "location": "teams/sessions/",
+          "measurable": "Log with domain/infra/overhead split"
+        }
+      ],
+      "prerequisites": [
+        "Session 1 completed with at least 3 picks",
+        "TEMPLATE.md and picks/index.json structure validated by Session 1"
+      ],
+      "risk_factors": [
+        {
+          "risk": "MCP server installation fails",
+          "severity": "MEDIUM",
+          "mitigation": "Yahoo Finance Stockflow requires no auth and is the simplest. Fall back to WebSearch (proven in Session 1) if MCP setup takes >15 min."
+        },
+        {
+          "risk": "Alpha Vantage free tier too restrictive (25 calls/day)",
+          "severity": "LOW",
+          "mitigation": "Finnhub has 60 calls/min. Yahoo Finance Stockflow has no auth. Multiple fallback options."
+        },
+        {
+          "risk": "Scope creep into building custom API scripts",
+          "severity": "MEDIUM",
+          "mitigation": "Beta report says ADOPT MCP servers, not BUILD scripts. Coordinator enforces this."
+        }
+      ],
+      "estimated_duration": "90-120 minutes",
+      "success_criteria": "At least 1 MCP financial data server working + pick_logger.py functional + 3 additional picks logged."
+    },
+    {
+      "session_number": 3,
+      "title": "SEC EDGAR Integration + Sector Deep Dive",
+      "objective": "Build the SEC EDGAR data-gathering tool (the only critical financial API without an existing MCP server) and produce a deep-dive sector analysis report with 3-5 picks grounded in SEC filing data.",
+      "sop_023_compliance": {
+        "domain_percent": 60,
+        "infra_percent": 20,
+        "overhead_percent": 20,
+        "justification": "3 of 5 agents on domain work (sector research, SEC data analysis, pick writing). 1 agent builds SEC EDGAR tool (domain-enabling per FREEZE-02 -- this unblocks fundamental analysis depth). 1 on documentation."
+      },
+      "team_composition": {
+        "pattern": "Market Research Sprint variant (SOP-022 Section 2)",
+        "size": 5,
+        "roles": [
+          {
+            "role": "Coordinator",
+            "count": 1,
+            "tasks": [
+              "Manage workflow",
+              "Identify target sector for deep dive based on Sessions 1-2 findings",
+              "Quality-gate analysis depth"
+            ]
+          },
+          {
+            "role": "Coding Team (SEC EDGAR Tool)",
+            "count": 1,
+            "tasks": [
+              "Build method_sec_edgar.py following method_*.py pattern",
+              "Support company lookup by ticker/CIK",
+              "Extract XBRL financial data (revenue, earnings, margins)",
+              "Catalog as new SRC entry",
+              "Write tests"
+            ]
+          },
+          {
+            "role": "Research Team (Sector Deep Dive)",
+            "count": 1,
+            "tasks": [
+              "Comprehensive analysis of 1 sector (5-8 companies)",
+              "Use MCP financial data + SEC EDGAR for fundamental analysis",
+              "Apply quantitative screening (simplified factor model)",
+              "Produce sector comparison matrix"
+            ]
+          },
+          {
+            "role": "Research Team (Macro + Cross-Sector)",
+            "count": 1,
+            "tasks": [
+              "Update macro backdrop",
+              "Compare target sector vs alternatives",
+              "Identify cross-sector catalysts and risks",
+              "Validate Session 1-2 picks still performing"
+            ]
+          },
+          {
+            "role": "Writer / Indexer",
+            "count": 1,
+            "tasks": [
+              "Create 3-5 new pick files from deep dive",
+              "Create sector analysis KB entry (domain content)",
+              "Update all indexes",
+              "Write session log",
+              "Grade research quality using SCR-0004"
+            ]
+          }
+        ],
+        "think_tank_coding_ratio": "0:1 (1 coding agent for SEC EDGAR, no think tanks)"
+      },
+      "deliverables": [
+        {
+          "item": "method_sec_edgar.py",
+          "location": "storage/scripts/data-gathering/methods/method_sec_edgar.py",
+          "measurable": "Script fetches 10-K/10-Q data for any US public company by ticker"
+        },
+        {
+          "item": "SEC EDGAR source entry",
+          "location": "storage/sources/SRC-XXXX-sec-edgar.json",
+          "measurable": "Cataloged with endpoints, rate limits, data types"
+        },
+        {
+          "item": "Sector deep-dive report",
+          "location": "knowledge-base/entries/",
+          "measurable": "KB entry with 5-8 company comparison across valuation, growth, profitability metrics"
+        },
+        {
+          "item": "3-5 additional picks",
+          "location": "market-research/picks/",
+          "measurable": "Pick files with SEC filing data supporting thesis"
+        },
+        {
+          "item": "Research quality grade",
+          "location": "Embedded in session log",
+          "measurable": "SCR-0004 grade_research.py score for this session's output"
+        },
+        {
+          "item": "Session log",
+          "location": "teams/sessions/",
+          "measurable": "Log with domain/infra/overhead split"
+        }
+      ],
+      "prerequisites": [
+        "Session 2 completed with MCP servers operational",
+        "pick_logger.py available for streamlined pick creation",
+        "At least 6 picks logged from Sessions 1-2 (validates the workflow)"
+      ],
+      "risk_factors": [
+        {
+          "risk": "SEC EDGAR API complexity (XBRL parsing)",
+          "severity": "MEDIUM",
+          "mitigation": "Start with simple JSON endpoints (company search, recent filings list). XBRL parsing is a stretch goal. Core value is filing access, not full data extraction."
+        },
+        {
+          "risk": "Scope creep into building full financial data platform",
+          "severity": "HIGH",
+          "mitigation": "SEC EDGAR tool is the LAST tool to build before pure domain work. Coordinator must block any additional tool proposals."
+        },
+        {
+          "risk": "Sector selection bias",
+          "severity": "LOW",
+          "mitigation": "Base sector selection on data from Sessions 1-2, not intuition. Use performance data from MCP servers."
+        }
+      ],
+      "estimated_duration": "90-120 minutes",
+      "success_criteria": "SEC EDGAR tool returns filing data for test tickers + sector analysis report produced + 3 new picks."
+    },
+    {
+      "session_number": 4,
+      "title": "Data Hygiene Sprint + Portfolio Review",
+      "objective": "Fix critical data quality issues identified by Gamma audit (orphaned scripts, KB title drift, TOCTOU bugs) while simultaneously reviewing all picks from Sessions 1-3 for a portfolio performance update.",
+      "sop_023_compliance": {
+        "domain_percent": 60,
+        "infra_percent": 20,
+        "overhead_percent": 20,
+        "justification": "3 of 5 agents on domain work (portfolio review is domain work -- analyzing actual pick performance). 1 agent on infrastructure bug fixes (allowed per FREEZE-03). 1 on documentation. Infrastructure fixes are all bug fixes to existing code, not new modules."
+      },
+      "team_composition": {
+        "pattern": "Bug Hunt variant (SOP-022 Section 2)",
+        "size": 5,
+        "roles": [
+          {
+            "role": "Coordinator",
+            "count": 1,
+            "tasks": [
+              "Partition bug fixes vs domain work",
+              "Ensure infrastructure agent stays on bug fixes only",
+              "Track pick performance review progress"
+            ]
+          },
+          {
+            "role": "Infrastructure Bug Fix",
+            "count": 1,
+            "tasks": [
+              "Index 15 orphaned scripts in storage/scripts/index.json",
+              "Add TEAM-0032 to sessions/index.json",
+              "Backfill titles into 34 KB entry YAML frontmatter",
+              "Fix TOCTOU-WS-001 (complete_work race condition)",
+              "Fix TOCTOU-HP-001 (fulfill_help crash consistency)",
+              "Fix TOCTOU-MTR-004 (double stop guard)",
+              "Merge duplicate FRED source SRC-0018/SRC-0039"
+            ]
+          },
+          {
+            "role": "Portfolio Review Team A",
+            "count": 1,
+            "tasks": [
+              "Gather current prices for all Session 1-3 picks",
+              "Calculate performance vs entry price",
+              "Check if any stop-loss or target levels hit",
+              "Update pick files with performance data"
+            ]
+          },
+          {
+            "role": "Portfolio Review Team B",
+            "count": 1,
+            "tasks": [
+              "Review news/sentiment changes since picks were made",
+              "Identify any material changes (earnings, guidance, M&A)",
+              "Recommend hold/sell/add for each pick",
+              "Produce 1-2 new picks based on updated analysis"
+            ]
+          },
+          {
+            "role": "Writer / Indexer",
+            "count": 1,
+            "tasks": [
+              "Create portfolio performance KB entry",
+              "Update pick files with review notes",
+              "Validate all index.json files after bug fixes",
+              "Write session log"
+            ]
+          }
+        ],
+        "think_tank_coding_ratio": "0:1 (1 coding/fix agent, no think tanks)"
+      },
+      "deliverables": [
+        {
+          "item": "15 orphaned scripts indexed",
+          "location": "storage/scripts/index.json",
+          "measurable": "All 15 scripts from Gamma audit added to index"
+        },
+        {
+          "item": "34 KB titles backfilled",
+          "location": "knowledge-base/entries/KB-*.md",
+          "measurable": "All entries have 'title' field in YAML frontmatter"
+        },
+        {
+          "item": "3 critical/high TOCTOU bugs fixed",
+          "location": "storage/coordination/",
+          "measurable": "TOCTOU-WS-001, TOCTOU-HP-001, TOCTOU-MTR-004 fixed with tests"
+        },
+        {
+          "item": "FRED duplicate merged",
+          "location": "storage/sources/",
+          "measurable": "Single SRC entry for FRED, indexes updated"
+        },
+        {
+          "item": "TEAM-0032 indexed",
+          "location": "teams/sessions/index.json",
+          "measurable": "Entry added, session_count updated to 31"
+        },
+        {
+          "item": "Portfolio performance report",
+          "location": "knowledge-base/entries/",
+          "measurable": "KB entry with performance data for all 9-15 picks from Sessions 1-3"
+        },
+        {
+          "item": "1-2 new picks",
+          "location": "market-research/picks/",
+          "measurable": "New picks based on updated analysis"
+        },
+        {
+          "item": "Session log",
+          "location": "teams/sessions/",
+          "measurable": "Log with domain/infra/overhead split and bug fix evidence"
+        }
+      ],
+      "prerequisites": [
+        "Sessions 1-3 completed with 9-15 picks total",
+        "Gamma audit report available (tt_gamma_health_audit.json)",
+        "Sufficient time elapsed since Session 1 picks for meaningful performance data"
+      ],
+      "risk_factors": [
+        {
+          "risk": "Infrastructure fixes expand in scope",
+          "severity": "MEDIUM",
+          "mitigation": "Limit to the specific items listed. Gamma audit prioritized these as highest-impact, trivial-to-small effort. No new modules."
+        },
+        {
+          "risk": "Pick performance review reveals poor methodology",
+          "severity": "LOW",
+          "mitigation": "This is valuable feedback, not a risk. Document methodology improvements for Session 5."
+        },
+        {
+          "risk": "TOCTOU fixes introduce regressions",
+          "severity": "LOW",
+          "mitigation": "test_toctou_fixes.py provides the pattern. Write tests BEFORE fixing. Fixes are small (add BEGIN IMMEDIATE + WHERE guards)."
+        }
+      ],
+      "estimated_duration": "90-120 minutes",
+      "success_criteria": "All 5 Gamma critical/high items fixed + portfolio review with performance data for all picks."
+    },
+    {
+      "session_number": 5,
+      "title": "Agent Skills + Expanded Domain Output",
+      "objective": "Package the proven market research workflow as a reusable Agent Skill, build the FRED data-gathering tool for macro analysis, and produce an economic analysis report alongside 3-5 new picks.",
+      "sop_023_compliance": {
+        "domain_percent": 60,
+        "infra_percent": 20,
+        "overhead_percent": 20,
+        "justification": "3 of 5 agents on domain work (economic analysis, new picks, domain KB entries). 1 agent builds FRED tool + packages Agent Skill (both domain-enabling). 1 on documentation. The Agent Skill packages existing domain workflow -- it is domain tooling, not coordination infrastructure."
+      },
+      "team_composition": {
+        "pattern": "Feature Build variant (SOP-022 Section 2)",
+        "size": 5,
+        "roles": [
+          {
+            "role": "Coordinator",
+            "count": 1,
+            "tasks": [
+              "Manage workflow",
+              "Review Agent Skill for completeness",
+              "Plan roadmap for Sessions 6-10 based on learnings"
+            ]
+          },
+          {
+            "role": "Coding Team (FRED + Agent Skill)",
+            "count": 1,
+            "tasks": [
+              "Build method_fred.py following established pattern",
+              "Support key series: GDP, CPI, UNRATE, DFF, T10Y2Y",
+              "Package market research workflow as .skill.md Agent Skill",
+              "Skill includes: data gathering steps, checklist application, pick file creation, index update"
+            ]
+          },
+          {
+            "role": "Research Team (Economic Analysis)",
+            "count": 1,
+            "tasks": [
+              "Use FRED tool + BLS API (free, no key) for macro data",
+              "Produce economic analysis report (labor market, inflation, rates)",
+              "Identify macro-driven investment themes",
+              "Create domain KB entry on current economic conditions"
+            ]
+          },
+          {
+            "role": "Research Team (New Picks)",
+            "count": 1,
+            "tasks": [
+              "Use all available tools (MCP servers + SEC EDGAR + FRED)",
+              "Apply multi-method analysis (fundamental + technical + sentiment)",
+              "Target sectors/themes identified by economic analysis",
+              "Produce 3-5 new picks with comprehensive data backing"
+            ]
+          },
+          {
+            "role": "Writer / Indexer",
+            "count": 1,
+            "tasks": [
+              "Create economic analysis KB entry",
+              "Log new picks via pick_logger",
+              "Create retrospective KB entry on 5-session roadmap execution",
+              "Write session log with full roadmap retrospective"
+            ]
+          }
+        ],
+        "think_tank_coding_ratio": "0:1 (1 coding agent, no think tanks)"
+      },
+      "deliverables": [
+        {
+          "item": "method_fred.py",
+          "location": "storage/scripts/data-gathering/methods/method_fred.py",
+          "measurable": "Script fetches FRED time series data for key economic indicators"
+        },
+        {
+          "item": "Market Research Agent Skill",
+          "location": ".skill.md or storage/skills/market-research.skill.md",
+          "measurable": "Reusable skill file that any agent can use to produce market picks"
+        },
+        {
+          "item": "Economic analysis report",
+          "location": "knowledge-base/entries/",
+          "measurable": "KB entry with current macro conditions, labor market, inflation, rates analysis"
+        },
+        {
+          "item": "3-5 new picks",
+          "location": "market-research/picks/",
+          "measurable": "Picks using multi-method analysis with FRED macro context"
+        },
+        {
+          "item": "5-session retrospective",
+          "location": "knowledge-base/entries/",
+          "measurable": "KB entry documenting what worked, what failed, methodology improvements"
+        },
+        {
+          "item": "Session log",
+          "location": "teams/sessions/",
+          "measurable": "Log with cumulative roadmap metrics"
+        },
+        {
+          "item": "Next roadmap draft",
+          "location": "storage/data/roadmap_sessions_6_10.json",
+          "measurable": "Preliminary roadmap for next 5 sessions based on learnings"
+        }
+      ],
+      "prerequisites": [
+        "Sessions 1-4 completed",
+        "12-20 picks logged with performance tracking",
+        "MCP financial servers operational (from Session 2)",
+        "SEC EDGAR tool functional (from Session 3)",
+        "Data hygiene issues resolved (from Session 4)"
+      ],
+      "risk_factors": [
+        {
+          "risk": "Agent Skill format not well-documented",
+          "severity": "MEDIUM",
+          "mitigation": "Beta report references agentskills.io standard (Dec 2025). Skill is a .skill.md file with structured instructions -- low complexity."
+        },
+        {
+          "risk": "FRED API key not available",
+          "severity": "LOW",
+          "mitigation": "FRED keys are free and instant. Alternatively, BLS API requires no key and provides employment/inflation data."
+        },
+        {
+          "risk": "Scope creep into LightRAG or other advanced tools",
+          "severity": "MEDIUM",
+          "mitigation": "LightRAG is explicitly deferred beyond Session 5. This session completes the domain-output foundation. Advanced retrieval is a future roadmap item."
+        }
+      ],
+      "estimated_duration": "90-120 minutes",
+      "success_criteria": "FRED tool functional + Agent Skill packaged + economic report produced + 3 new picks + retrospective written."
+    }
+  ],
+  "cumulative_metrics": {
+    "total_picks_target": "15-27 market research picks across 5 sessions",
+    "total_tools_built": "3 (pick_logger, method_sec_edgar, method_fred)",
+    "total_tools_adopted": "2-3 financial MCP servers",
+    "total_kb_entries": "6-8 domain KB entries",
+    "total_bugs_fixed": "3 critical/high TOCTOU bugs + data hygiene items",
+    "total_infrastructure_agents": "4 across 5 sessions (0 + 1 + 1 + 1 + 1)",
+    "domain_work_average": "64% (well above 60% minimum)",
+    "think_tank_to_coding_ratio": "0:4 (zero think tanks, 4 coding agents across all sessions)"
+  },
+  "deferred_items": {
+    "rationale": "These items are valuable but not prioritized in the first 5 sessions to maintain domain output focus.",
+    "items": [
+      {
+        "item": "LightRAG adoption for KB retrieval",
+        "from": "Beta report rank 5",
+        "defer_to": "Session 6-7",
+        "reason": "Medium effort, medium-high impact but not domain-output-enabling for market picks."
+      },
+      {
+        "item": "Remaining 15 TOCTOU bugs (medium/low severity)",
+        "from": "Gamma audit",
+        "defer_to": "Session 7-8",
+        "reason": "Medium/low severity, do not block domain work."
+      },
+      {
+        "item": "11 kebab-case script renames",
+        "from": "Gamma naming standards",
+        "defer_to": "Session 6",
+        "reason": "Cosmetic, does not affect functionality."
+      },
+      {
+        "item": "3 SOP non-standard filename renames",
+        "from": "Gamma naming standards",
+        "defer_to": "Session 6",
+        "reason": "Cosmetic, does not affect functionality."
+      },
+      {
+        "item": "cost_tracker tool",
+        "from": "Beta report rank 2",
+        "defer_to": "Session 6",
+        "reason": "Only needed when API usage approaches free-tier limits."
+      },
+      {
+        "item": "context_budget_monitor",
+        "from": "Beta report rank 3",
+        "defer_to": "Session 8+",
+        "reason": "Nice-to-have, not blocking domain output."
+      },
+      {
+        "item": "CoinGecko/crypto analysis",
+        "from": "Beta report rank 5",
+        "defer_to": "Session 8+",
+        "reason": "Optional scope expansion after core equity analysis is proven."
+      },
+      {
+        "item": "MCP Apps / interactive UI",
+        "from": "Beta new techniques",
+        "defer_to": "Session 10+",
+        "reason": "Future-looking technology, monitor only."
+      }
+    ]
+  },
+  "critical_constraints_summary": {
+    "session_1_must_produce_picks": "Non-negotiable. The zero-output streak must end. Session 1 has zero prerequisites and zero infrastructure dependencies.",
+    "no_new_sops": "Per SOP-023 FREEZE-01, no new SOPs unless a genuinely novel failure mode is encountered during these 5 sessions.",
+    "no_new_coordination_modules": "Per SOP-023 FREEZE-02, no modifications to coordination system beyond bug fixes (FREEZE-03 allows fixes).",
+    "infrastructure_cap": "Max 1 infrastructure agent per session (Sessions 2-5). Session 1 has zero.",
+    "tool_building_is_time_boxed": "Each tool (pick_logger, SEC EDGAR, FRED) gets 1 agent for 1 session. If not complete, it ships as-is and iterates later."
+  },
+  "date": "2026-03-11"
+}

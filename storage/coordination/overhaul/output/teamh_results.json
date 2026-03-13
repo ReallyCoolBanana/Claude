@@ -1,0 +1,93 @@
+{
+  "team": "TEAM-H",
+  "wave": 2,
+  "mission": "Date normalization migration and duplicate entry merging",
+  "date": "2026-03-12",
+  "status": "completed",
+  "tasks": {
+    "date_normalization": {
+      "status": "completed",
+      "summary": "Ran normalize_dates.py --apply across entire repo, then manually fixed files the script missed",
+      "changes": [
+        {
+          "file": "storage/coordination/overhaul/output/teamf_results.json",
+          "field": "timestamp -> date",
+          "method": "normalize_dates.py --apply"
+        },
+        {
+          "file": "storage/coordination/hub/infrastructure-inventory.json",
+          "field": "added -> date (42 entries in inventory arrays)",
+          "method": "manual script (nested arrays not covered by normalize_dates.py)"
+        },
+        {
+          "file": "storage/coordination/teams/gamma/output/live_data.json",
+          "field": "timestamp -> date",
+          "method": "manual script"
+        },
+        {
+          "file": "storage/coordination/overhaul/output/teamg_results.json",
+          "field": "timestamp -> date",
+          "method": "manual script"
+        },
+        {
+          "file": "storage/coordination/teams/alpha-1/output/benchmark_analysis.json",
+          "field": "timestamp -> date",
+          "method": "manual script"
+        }
+      ],
+      "total_fields_normalized": 46,
+      "skipped_schema_definitions": [
+        "sop_013_prompt_engineering.json (created field in schema example)",
+        "sop_016_cross_team_data_flow_v2.json (timestamp in schema definition)",
+        "sop_030_index_management.json (last_updated in field definitions)",
+        "sop_036_data_collection_indexing.json (generated in schema example)",
+        "query_protocol_design.json (last_updated in schema/examples)",
+        "naming_conventions.json (last_updated in schema definition)"
+      ],
+      "note": "Most files (396 scanned) already had canonical 'date' fields from prior normalization work"
+    },
+    "src_duplicate_merge": {
+      "status": "already_completed",
+      "summary": "SRC-0018 and SRC-0039 were already merged by TEAM-0013. SRC-0018-fred.json contains merged_from: [SRC-0018, SRC-0039]. SRC-0039 file does not exist.",
+      "cleanup_performed": "Removed stale SRC-0039 entry from storage/sources/INDEX_COMPACT.json"
+    },
+    "kb_duplicate_merge": {
+      "status": "completed",
+      "summary": "KB-0012 (TEAM-0011) and KB-0013 (TEAM-0013) had ~95% content overlap. KB-0013 was a verification copy. Merged into KB-0012.",
+      "actions": [
+        "Updated KB-0012 frontmatter: added verified_by: TEAM-0013, merged_from: [KB-0012, KB-0013]",
+        "Removed KB-0013.md file",
+        "Removed KB-0013 entry from knowledge-base/index.json (count: 52 -> 51)",
+        "Removed KB-0013 from knowledge-base/INDEX_COMPACT.json",
+        "Updated KB-0013 references in knowledge-base/.pointer.json",
+        "Updated KB-0038.md builds_on to remove KB-0013 (replaced with KB-0012)"
+      ]
+    },
+    "sop_id_collisions": {
+      "status": "completed",
+      "summary": "SOP index already had distinct IDs (SOP-012 vs SOP-012-v2, SOP-016 vs SOP-016-v2), but the v2 JSON files internally still used SOP-012 and SOP-016 as their id field.",
+      "actions": [
+        "Changed id in sop_012_monitoring_intervention_v2.json from 'SOP-012' to 'SOP-012-v2'",
+        "Changed id in sop_016_cross_team_data_flow_v2.json from 'SOP-016' to 'SOP-016-v2'"
+      ]
+    }
+  },
+  "files_modified": [
+    "storage/coordination/overhaul/output/teamf_results.json",
+    "storage/coordination/hub/infrastructure-inventory.json",
+    "storage/coordination/teams/gamma/output/live_data.json",
+    "storage/coordination/overhaul/output/teamg_results.json",
+    "storage/coordination/teams/alpha-1/output/benchmark_analysis.json",
+    "storage/coordination/sops/sop_012_monitoring_intervention_v2.json",
+    "storage/coordination/sops/sop_016_cross_team_data_flow_v2.json",
+    "knowledge-base/entries/KB-0012.md",
+    "knowledge-base/entries/KB-0038.md",
+    "knowledge-base/index.json",
+    "knowledge-base/INDEX_COMPACT.json",
+    "knowledge-base/.pointer.json",
+    "storage/sources/INDEX_COMPACT.json"
+  ],
+  "files_removed": [
+    "knowledge-base/entries/KB-0013.md"
+  ]
+}

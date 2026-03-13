@@ -7,7 +7,11 @@
       "name": "Deep Deterministic Policy Gradient (DDPG) for Portfolio Allocation",
       "description": "Off-policy actor-critic RL algorithm for continuous action spaces, applied to portfolio weight optimization. Handles continuous allocation decisions naturally.",
       "key_reference": "https://arxiv.org/abs/2011.09607",
-      "tools": ["FinRL", "Stable Baselines3", "Ray RLlib"],
+      "tools": [
+        "FinRL",
+        "Stable Baselines3",
+        "Ray RLlib"
+      ],
       "verified": true,
       "verification_notes": "FinRL framework confirmed at NeurIPS 2020 DRL Workshop. Supports DDPG, PPO, A2C, SAC, TD3."
     },
@@ -15,7 +19,11 @@
       "name": "Proximal Policy Optimization (PPO) for Trading",
       "description": "On-policy RL algorithm with clipped surrogate objective, providing stable training for portfolio optimization. Often preferred over DDPG for its training stability.",
       "key_reference": "https://arxiv.org/abs/2011.09607",
-      "tools": ["FinRL", "Stable Baselines3", "OpenAI Gym"],
+      "tools": [
+        "FinRL",
+        "Stable Baselines3",
+        "OpenAI Gym"
+      ],
       "verified": true,
       "verification_notes": "Widely used in RL-based trading. FinRL library provides implementations."
     },
@@ -23,7 +31,10 @@
       "name": "Model-Based RL for Portfolio Management",
       "description": "RL approaches that first learn a model of market dynamics before optimizing policy, improving sample efficiency 3-5x over model-free methods.",
       "key_reference": "https://arxiv.org/abs/2112.04553",
-      "tools": ["PyTorch", "FinRL"],
+      "tools": [
+        "PyTorch",
+        "FinRL"
+      ],
       "verified": true,
       "verification_notes": "Hambly et al. (2023) survey in Mathematical Finance confirms model-based RL advantages. Sample efficiency claims are directionally correct."
     },
@@ -31,7 +42,10 @@
       "name": "Meta-Learning (MAML) for Regime Adaptation",
       "description": "Model-Agnostic Meta-Learning for rapid adaptation of trading strategies to new market regimes with few gradient steps.",
       "key_reference": "https://arxiv.org/abs/1703.03400",
-      "tools": ["learn2learn", "PyTorch"],
+      "tools": [
+        "learn2learn",
+        "PyTorch"
+      ],
       "verified": true,
       "verification_notes": "MAML concept verified. Financial applications are an active research area but less mature than standard RL approaches."
     },
@@ -39,7 +53,11 @@
       "name": "PyPortfolioOpt - Classical Portfolio Optimization",
       "description": "Python library for classical mean-variance optimization, Black-Litterman allocation, and Hierarchical Risk Parity. scikit-learn-inspired modular design. scipy/sklearn backend. Best for rapid prototyping.",
       "key_reference": "https://github.com/PyPortfolio/PyPortfolioOpt",
-      "tools": ["PyPortfolioOpt", "scipy", "scikit-learn"],
+      "tools": [
+        "PyPortfolioOpt",
+        "scipy",
+        "scikit-learn"
+      ],
       "verified": true,
       "verification_notes": "Verified on GitHub with 4.5k+ stars. Supports MVO, Black-Litterman, HRP, covariance shrinkage."
     },
@@ -47,7 +65,11 @@
       "name": "Riskfolio-Lib - Advanced Risk-Based Optimization",
       "description": "Comprehensive portfolio optimization library built on CVXPY. 24 convex risk measures, 4 objective functions (Min Risk, Max Return, Max Utility, Max Risk-Adjusted Return). Supports Kelly Criterion. v7.2.1 (Feb 2026).",
       "key_reference": "https://github.com/dcajasn/Riskfolio-Lib",
-      "tools": ["Riskfolio-Lib", "CVXPY", "MOSEK"],
+      "tools": [
+        "Riskfolio-Lib",
+        "CVXPY",
+        "MOSEK"
+      ],
       "verified": true,
       "verification_notes": "Verified on PyPI and GitHub. 24 risk measures confirmed in documentation. Version 7.2.1 confirmed for 2026."
     },
@@ -55,11 +77,19 @@
       "name": "skfolio - scikit-learn Compatible Portfolio Optimization",
       "description": "Newer library built on scikit-learn for portfolio optimization. Enables cross-validation and stress-testing of portfolio models. Bridges gap between PyPortfolioOpt and Riskfolio-Lib.",
       "key_reference": "https://skfolio.org/",
-      "tools": ["skfolio", "scikit-learn"],
+      "tools": [
+        "skfolio",
+        "scikit-learn"
+      ],
       "verified": true,
       "verification_notes": "Verified on GitHub and official docs. Actively maintained."
     }
   ],
-  "last_updated": "2026-03-10",
-  "contributing_teams": ["TEAM-1", "TEAM-2", "TEAM-3", "TEAM-4"]
+  "contributing_teams": [
+    "TEAM-1",
+    "TEAM-2",
+    "TEAM-3",
+    "TEAM-4"
+  ],
+  "date": "2026-03-10"
 }

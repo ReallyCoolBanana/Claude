@@ -1,7 +1,6 @@
 {
   "team": "beta-2",
   "mission": "code-tool-processing",
-  "timestamp": "2026-03-11T00:00:00Z",
   "scripts": {
     "total_count": 28,
     "by_language": {
@@ -139,7 +138,11 @@
           "name": "staleness-detector",
           "file": "staleness_detector.py",
           "purpose": "Repository health checker with 6 checks: stale statuses, regressions, unaddressed handoffs, broken references, index mismatches, orphan files. Outputs scored health report.",
-          "dependencies": ["SCR-0012", "SCR-0014", "SCR-0019"],
+          "dependencies": [
+            "SCR-0012",
+            "SCR-0014",
+            "SCR-0019"
+          ],
           "input": "Repository root",
           "output": "Scored health report",
           "status": "functional",
@@ -174,7 +177,13 @@
           "name": "data-gathering-benchmark",
           "file": "data-gathering/benchmark_runner.py",
           "purpose": "Benchmark harness running all data gathering methods against test query, timing them, calculating quality scores based on result count, source diversity, information density.",
-          "dependencies": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010"],
+          "dependencies": [
+            "SCR-0006",
+            "SCR-0007",
+            "SCR-0008",
+            "SCR-0009",
+            "SCR-0010"
+          ],
           "input": "Test query string",
           "output": "Benchmark results JSON with speed and quality scores",
           "status": "functional",
@@ -200,7 +209,10 @@
           "purpose": "Wikipedia API deep extraction with DuckDuckGo fallback. Extracts summaries, sections, references, categories.",
           "dependencies": [],
           "status": "partially functional",
-          "known_bugs": ["Silent HTTP 403 error", "Non-compliant User-Agent"],
+          "known_bugs": [
+            "Silent HTTP 403 error",
+            "Non-compliant User-Agent"
+          ],
           "avg_duration_seconds": 1.47,
           "quality_score": 10,
           "team": "TEAM-0003"
@@ -221,7 +233,11 @@
           "name": "data-gathering-hybrid",
           "file": "data-gathering/methods/method_hybrid.py",
           "purpose": "Hybrid multi-source aggregation combining 5 methods (web, Wikipedia, arXiv, OpenAlex, Wikidata). Parallel execution, credibility tiers, TF-IDF deduplication, weighted corroboration scoring.",
-          "dependencies": ["SCR-0006", "SCR-0007", "SCR-0008"],
+          "dependencies": [
+            "SCR-0006",
+            "SCR-0007",
+            "SCR-0008"
+          ],
           "status": "functional (4 of 5 sub-sources active)",
           "avg_duration_seconds": 5.11,
           "quality_score": 92,
@@ -261,7 +277,9 @@
           "name": "data-gathering-openalex",
           "file": "data-gathering/methods/method_openalex.py",
           "purpose": "OpenAlex academic search via REST API. Searches 250M+ works, extracts metadata including citation counts, DOIs, open access status. Polite pool for higher rate limits.",
-          "dependencies": ["SCR-0022"],
+          "dependencies": [
+            "SCR-0022"
+          ],
           "status": "functional",
           "avg_duration_seconds": 0.5,
           "quality_score": 65,
@@ -272,7 +290,9 @@
           "name": "data-gathering-hackernews",
           "file": "data-gathering/methods/method_hackernews.py",
           "purpose": "Hacker News search via Algolia API plus Firebase top stories. Extracts titles, URLs, authors, points, comment counts. Deduplicates across both sources.",
-          "dependencies": ["SCR-0022"],
+          "dependencies": [
+            "SCR-0022"
+          ],
           "status": "functional",
           "team": "TEAM-0010"
         },
@@ -281,7 +301,10 @@
           "name": "data-gathering-guardian",
           "file": "data-gathering/methods/method_guardian.py",
           "purpose": "Guardian news search via Open Platform API. Extracts headlines, body text, sections, publication dates. Falls back to DuckDuckGo site-scoped search if API fails.",
-          "dependencies": ["SCR-0021", "SCR-0022"],
+          "dependencies": [
+            "SCR-0021",
+            "SCR-0022"
+          ],
           "status": "functional",
           "team": "TEAM-0010"
         },
@@ -290,7 +313,9 @@
           "name": "data-gathering-semantic-scholar",
           "file": "data-gathering/methods/method_semantic_scholar.py",
           "purpose": "Semantic Scholar paper search via Academic Graph API. Extracts titles, authors, abstracts, TLDRs, citation counts, fields of study, open access links. 1 req/sec rate limit.",
-          "dependencies": ["SCR-0022"],
+          "dependencies": [
+            "SCR-0022"
+          ],
           "status": "new (untested)",
           "team": "TEAM-0010"
         },
@@ -299,7 +324,9 @@
           "name": "data-gathering-wikidata",
           "file": "data-gathering/methods/method_wikidata.py",
           "purpose": "Wikidata knowledge graph search. Two-phase: searches entities then fetches full details including labels, descriptions, key properties, Wikipedia sitelinks.",
-          "dependencies": ["SCR-0022"],
+          "dependencies": [
+            "SCR-0022"
+          ],
           "status": "new (untested)",
           "team": "TEAM-0010"
         },
@@ -308,7 +335,9 @@
           "name": "data-gathering-github",
           "file": "data-gathering/methods/method_github.py",
           "purpose": "GitHub repository and code search via REST API. Searches repos by stars, extracts descriptions, languages, topics, licenses, fork counts. Graceful rate-limit handling.",
-          "dependencies": ["SCR-0022"],
+          "dependencies": [
+            "SCR-0022"
+          ],
           "status": "new (untested)",
           "team": "TEAM-0010"
         }
@@ -325,7 +354,9 @@
         "description": "Multi-agent research system using Claude Sonnet. Supports variable sub-agents, request queuing, priority scheduling, result sorting, and automated import into repo storage.",
         "category": "integration",
         "auth_type": "api-key (ANTHROPIC_API_KEY env var)",
-        "requires": ["anthropic"],
+        "requires": [
+          "anthropic"
+        ],
         "entry_point": "orchestrator.py",
         "modules": {
           "config.py": {
@@ -374,31 +405,79 @@
     "by_category": {
       "financial": {
         "count": 7,
-        "sources": ["SRC-0001 Alpha Vantage", "SRC-0002 Yahoo Finance", "SRC-0003 FRED", "SRC-0004 CoinGecko", "SRC-0005 Twelve Data", "SRC-0006 Exchange Rates", "SRC-0007 Finnhub"]
+        "sources": [
+          "SRC-0001 Alpha Vantage",
+          "SRC-0002 Yahoo Finance",
+          "SRC-0003 FRED",
+          "SRC-0004 CoinGecko",
+          "SRC-0005 Twelve Data",
+          "SRC-0006 Exchange Rates",
+          "SRC-0007 Finnhub"
+        ]
       },
       "news": {
         "count": 4,
-        "sources": ["SRC-0008 NewsAPI", "SRC-0009 GNews", "SRC-0010 The Guardian", "SRC-0011 Hacker News"]
+        "sources": [
+          "SRC-0008 NewsAPI",
+          "SRC-0009 GNews",
+          "SRC-0010 The Guardian",
+          "SRC-0011 Hacker News"
+        ]
       },
       "scientific": {
         "count": 10,
-        "sources": ["SRC-0012 OpenAlex", "SRC-0013 Semantic Scholar", "SRC-0014 Wikidata", "SRC-0015 CORE", "SRC-0016 CrossRef", "SRC-0017 DBpedia", "SRC-0018 Papers With Code", "SRC-0031 Hugging Face Hub", "SRC-0034 ConceptNet", "SRC-0035 Wikipedia REST"]
+        "sources": [
+          "SRC-0012 OpenAlex",
+          "SRC-0013 Semantic Scholar",
+          "SRC-0014 Wikidata",
+          "SRC-0015 CORE",
+          "SRC-0016 CrossRef",
+          "SRC-0017 DBpedia",
+          "SRC-0018 Papers With Code",
+          "SRC-0031 Hugging Face Hub",
+          "SRC-0034 ConceptNet",
+          "SRC-0035 Wikipedia REST"
+        ]
       },
       "government": {
         "count": 5,
-        "sources": ["SRC-0003 FRED", "SRC-0019 US Census Bureau", "SRC-0020 Data.gov CKAN", "SRC-0023 BLS", "SRC-0024 World Bank"]
+        "sources": [
+          "SRC-0003 FRED",
+          "SRC-0019 US Census Bureau",
+          "SRC-0020 Data.gov CKAN",
+          "SRC-0023 BLS",
+          "SRC-0024 World Bank"
+        ]
       },
       "geospatial": {
         "count": 3,
-        "sources": ["SRC-0021 Open-Meteo", "SRC-0022 OpenWeatherMap", "SRC-0030 Nominatim"]
+        "sources": [
+          "SRC-0021 Open-Meteo",
+          "SRC-0022 OpenWeatherMap",
+          "SRC-0030 Nominatim"
+        ]
       },
       "general": {
         "count": 11,
-        "sources": ["SRC-0011 Hacker News", "SRC-0014 Wikidata", "SRC-0017 DBpedia", "SRC-0025 GitHub REST API", "SRC-0026 PyPI", "SRC-0027 npm Registry", "SRC-0029 Stack Exchange", "SRC-0031 Hugging Face Hub", "SRC-0032 Free Dictionary", "SRC-0033 Datamuse", "SRC-0035 Wikipedia REST"]
+        "sources": [
+          "SRC-0011 Hacker News",
+          "SRC-0014 Wikidata",
+          "SRC-0017 DBpedia",
+          "SRC-0025 GitHub REST API",
+          "SRC-0026 PyPI",
+          "SRC-0027 npm Registry",
+          "SRC-0029 Stack Exchange",
+          "SRC-0031 Hugging Face Hub",
+          "SRC-0032 Free Dictionary",
+          "SRC-0033 Datamuse",
+          "SRC-0035 Wikipedia REST"
+        ]
       },
       "social-media": {
         "count": 1,
-        "sources": ["SRC-0028 Reddit"]
+        "sources": [
+          "SRC-0028 Reddit"
+        ]
       }
     },
     "by_access_type": {
@@ -428,27 +507,46 @@
     "modules": {
       "core.py": {
         "lines": 358,
-        "classes": ["CommDir", "AgentIdentity", "CommConfig"],
-        "functions": ["setup_comm_environment"],
+        "classes": [
+          "CommDir",
+          "AgentIdentity",
+          "CommConfig"
+        ],
+        "functions": [
+          "setup_comm_environment"
+        ],
         "quality": "excellent",
         "notes": "Clean separation of concerns. Thorough validation including /tmp rejection (EN-4), NFS detection (EN-5), canonical path enforcement (SB-1/SB-2), write permission checks (EN-1)."
       },
       "bus.py": {
         "lines": 198,
-        "classes": ["Message", "BusWriter", "BusReader"],
-        "functions": ["repair_bus_file"],
+        "classes": [
+          "Message",
+          "BusWriter",
+          "BusReader"
+        ],
+        "functions": [
+          "repair_bus_file"
+        ],
         "quality": "excellent",
         "notes": "POSIX atomic writes via O_WRONLY|O_APPEND|O_CREAT. Message size limit enforced at 4096 bytes. Reader tracks offset for incremental polling. Handles partial lines correctly. repair_bus_file for corrupt line removal."
       },
       "state.py": {
         "lines": 263,
-        "classes": ["SharedState"],
+        "classes": [
+          "SharedState"
+        ],
         "quality": "excellent",
         "notes": "WAL mode with configurable busy_timeout. _retry_on_busy decorator for SQLITE_BUSY handling. BEGIN IMMEDIATE in reserve_api_call prevents TOCTOU (RC-4 fix). Proper transaction isolation."
       },
       "coordinator.py": {
         "lines": 605,
-        "classes": ["EpochRotator", "Coordinator", "CoordinatorWatchdog", "Worker"],
+        "classes": [
+          "EpochRotator",
+          "Coordinator",
+          "CoordinatorWatchdog",
+          "Worker"
+        ],
         "quality": "very good",
         "notes": "Full lifecycle management. Coordinator with heartbeat loop, agent health monitoring, phase transitions, blocker handling. Worker with watchdog integration. EpochRotator prevents unbounded JSONL growth (RE-1)."
       }
@@ -577,31 +675,54 @@
   "integration_opportunities": [
     {
       "description": "Data-gathering methods could use Proto A's SharedState rate limiting instead of ad-hoc sleep-based rate limiting",
-      "scripts_involved": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0021", "SCR-0023", "SCR-0024", "SCR-0025", "SCR-0026", "SCR-0027", "SCR-0028"],
+      "scripts_involved": [
+        "SCR-0006",
+        "SCR-0007",
+        "SCR-0008",
+        "SCR-0021",
+        "SCR-0023",
+        "SCR-0024",
+        "SCR-0025",
+        "SCR-0026",
+        "SCR-0027",
+        "SCR-0028"
+      ],
       "benefit": "Centralized, atomic rate limiting across all concurrent agents",
       "priority": "high"
     },
     {
       "description": "Sonnet Research API orchestrator could use Proto A Coordinator/Worker pattern for multi-agent research coordination",
-      "scripts_involved": ["TOOL-0001"],
+      "scripts_involved": [
+        "TOOL-0001"
+      ],
       "benefit": "Heartbeat monitoring, phase transitions, coordinator death detection for long research sessions",
       "priority": "high"
     },
     {
       "description": "Benchmark runner and stress tests could publish results to Proto A bus for real-time monitoring",
-      "scripts_involved": ["SCR-0011"],
+      "scripts_involved": [
+        "SCR-0011"
+      ],
       "benefit": "Live dashboarding of benchmark progress",
       "priority": "medium"
     },
     {
       "description": "KB validator, index rebuilder, and cross-ref checker could be orchestrated as a Proto A team for automated repo health checks",
-      "scripts_involved": ["SCR-0012", "SCR-0013", "SCR-0014", "SCR-0020"],
+      "scripts_involved": [
+        "SCR-0012",
+        "SCR-0013",
+        "SCR-0014",
+        "SCR-0020"
+      ],
       "benefit": "Automated health monitoring with blocker escalation",
       "priority": "medium"
     },
     {
       "description": "fast_cache (Go) could be used as the backing store for request_cache.py (Python) for better performance",
-      "scripts_involved": ["SCR-0017", "SCR-0022"],
+      "scripts_involved": [
+        "SCR-0017",
+        "SCR-0022"
+      ],
       "benefit": "Sub-millisecond cache hits vs Python file I/O",
       "priority": "low"
     }
@@ -706,5 +827,6 @@
     ],
     "language": "JavaScript",
     "note": "Not indexed in scripts/index.json"
-  }
+  },
+  "date": "2026-03-11T00:00:00"
 }

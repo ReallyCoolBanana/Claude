@@ -1,0 +1,444 @@
+{
+  "metadata": {
+    "team": "A1-Beta",
+    "date": "2026-03-11",
+    "objective": "Research and compile best naming conventions for AI agent knowledge repository",
+    "repo_analyzed": "/home/user/Claude",
+    "sources_consulted": 15
+  },
+
+  "external_conventions": [
+    {
+      "source": "CrewAI",
+      "framework": "crewai (crewAIInc/crewAI)",
+      "patterns": [
+        "snake_case for all Python files and directories (crew.py, custom_tool.py)",
+        "Declarative YAML config separated from code (agents.yaml, tasks.yaml)",
+        "src/<project_name>/ nested structure",
+        "config/ subdirectory for agent/task definitions",
+        "tools/ subdirectory for custom tools",
+        "Single entry point: main.py"
+      ],
+      "strengths": [
+        "Clean separation of config (YAML) from implementation (Python)",
+        "Consistent snake_case throughout",
+        "Shallow directory depth (max 3 levels)",
+        "Descriptive filenames that match their purpose"
+      ],
+      "weaknesses": [
+        "No numeric ID system for tracking/referencing",
+        "No versioning in filenames",
+        "No index.json or manifest for discovery"
+      ]
+    },
+    {
+      "source": "AutoGPT",
+      "framework": "Significant-Gravitas/AutoGPT",
+      "patterns": [
+        "snake_case for Python directories (autogpt_platform/)",
+        "UPPERCASE for documentation (README.md, AGENTS.md, CONTRIBUTING.md)",
+        "Dot-prefixed config files (.branchlet.json, .pre-commit-config.yaml)",
+        "classic/ vs autogpt_platform/ for versioned architecture separation",
+        "AGENTS.md for machine-readable agent instructions"
+      ],
+      "strengths": [
+        "AGENTS.md adoption for AI-readable project context",
+        "Clear separation of legacy (classic/) vs current platform code",
+        "Standard GitHub conventions for human-facing docs"
+      ],
+      "weaknesses": [
+        "Mixed naming styles across project evolution",
+        "Deep nesting in platform subdirectories",
+        "No systematic ID-based file naming"
+      ]
+    },
+    {
+      "source": "LangChain",
+      "framework": "langchain-ai/langchain",
+      "patterns": [
+        "snake_case for all Python modules",
+        "Monorepo with libs/ directory for sub-packages (langchain-core, langchain-community)",
+        "kebab-case for package names in monorepo",
+        "PascalCase for class names, snake_case for functions/files",
+        "Standard Python packaging (pyproject.toml, __init__.py)"
+      ],
+      "strengths": [
+        "Follows PEP 8 strictly",
+        "Monorepo structure scales well with many integrations",
+        "Clear package boundaries"
+      ],
+      "weaknesses": [
+        "Deep directory trees (5+ levels common)",
+        "No knowledge management or KB-style file organization",
+        "Package proliferation makes discovery hard"
+      ]
+    },
+    {
+      "source": "MetaGPT",
+      "framework": "geekan/MetaGPT",
+      "patterns": [
+        "snake_case for files and directories",
+        "Role-based organization (roles/, actions/, tools/)",
+        "SOP-driven workflow encoded in code structure",
+        "Config files in YAML format"
+      ],
+      "strengths": [
+        "SOP-as-code approach aligns with this repo's coordination SOPs",
+        "Role-based directory organization maps to agent responsibilities",
+        "Clear input/output contracts between roles"
+      ],
+      "weaknesses": [
+        "Tightly coupled to software development domain",
+        "No generalizable knowledge management structure"
+      ]
+    },
+    {
+      "source": "llms.txt Standard",
+      "framework": "llms.txt specification (Jeremy Howard / FastAI)",
+      "patterns": [
+        "llms.txt at project root: lightweight summary with one-sentence descriptions",
+        "llms-full.txt: complete content with resolved specs",
+        "Markdown over HTML for AI consumption",
+        "Token-optimized structured text format"
+      ],
+      "strengths": [
+        "Purpose-built for LLM token efficiency",
+        "600+ websites adopted by mid-2025",
+        "Two-tier approach: summary index + full content",
+        "Adopted by Anthropic, Stripe, Cloudflare"
+      ],
+      "weaknesses": [
+        "Web-focused, not directly applicable to repo organization",
+        "No established standard for internal knowledge repos yet"
+      ]
+    },
+    {
+      "source": "AGENTS.md / CLAUDE.md Convention",
+      "framework": "Cross-framework standard (GitHub, Anthropic, Cursor)",
+      "patterns": [
+        "AGENTS.md or CLAUDE.md at repo root",
+        "Machine-readable project instructions for coding agents",
+        "Setup commands, testing workflows, coding style preferences",
+        "60,000+ public repos adopted this pattern by 2026"
+      ],
+      "strengths": [
+        "Industry-wide convergence on agent instruction files",
+        "Proven to improve agent task success by ~4 percentage points (developer-written files)",
+        "Low overhead to maintain"
+      ],
+      "weaknesses": [
+        "ETH Zurich study found LLM-generated context files reduce success in 5/8 settings",
+        "Comprehensive architecture-heavy files add 20-23% inference cost",
+        "Best when limited to non-inferable details only"
+      ]
+    },
+    {
+      "source": "Controlled Vocabulary Best Practices (Springer/Taxonomy Literature)",
+      "framework": "Information Architecture / Knowledge Management",
+      "patterns": [
+        "Preferred terms vs variant terms for consistent indexing",
+        "Hierarchical taxonomy for categorization",
+        "Faceted classification (category + type + domain)",
+        "Metadata fields: some controlled-vocabulary, some free-text"
+      ],
+      "strengths": [
+        "Proven approach for large-scale knowledge retrieval",
+        "Reduces ambiguity in search and cross-referencing",
+        "Supports both human and machine consumers"
+      ],
+      "weaknesses": [
+        "Requires governance overhead to maintain vocabulary",
+        "Can be overly rigid for fast-evolving AI projects",
+        "Vocabulary maintenance is itself a task that must be automated"
+      ]
+    }
+  ],
+
+  "implicit_repo_rules": [
+    {
+      "resource_type": "knowledge_base_entries",
+      "observed_pattern": "KB-NNNN.md (zero-padded 4-digit numeric ID, Markdown with YAML frontmatter)",
+      "compliance_rate": "100% (31/31 entries follow this pattern)",
+      "examples": ["KB-0001.md", "KB-0015.md", "KB-0031.md"],
+      "notes": "Sequential IDs, no gaps except KB-0011 which is a placeholder. Title is in frontmatter, not filename. Category and tags in frontmatter."
+    },
+    {
+      "resource_type": "team_session_logs",
+      "observed_pattern": "TEAM-NNNN.md (zero-padded 4-digit numeric ID, Markdown with YAML frontmatter)",
+      "compliance_rate": "93% (27/29 follow pattern; TEAM-0011 missing, TEAM-0026 present but no TEAM-0011)",
+      "examples": ["TEAM-0001.md", "TEAM-0022.md", "TEAM-0029.md"],
+      "notes": "Matches KB entry IDs loosely (TEAM-0001 -> KB-0001) but not always (TEAM-0027 -> KB-0026). Some non-standard team files exist at teams/ root: TEAM-0022-comm, TEAM-0022-config.json, TEAM-0022-pipeline.py, SOPs.md, PROPOSAL-data-reform.md"
+    },
+    {
+      "resource_type": "sops",
+      "observed_pattern": "sop_NNN_descriptive_name.json (underscore-separated, 3-digit ID, snake_case description, JSON format)",
+      "compliance_rate": "85% (17/20 files follow; 3 non-SOP files in directory: efficiency_guide.json, future_team_data_strategy.json, tool_sops.json)",
+      "examples": ["sop_011_central_commander_launch.json", "sop_023_anti_recursion.json"],
+      "notes": "Versioning via _v2 suffix (sop_012_monitoring_intervention_v2.json, sop_016_cross_team_data_flow_v2.json). IDs start at 011, not 001. Non-SOP files lack the sop_ prefix but sit in the same directory."
+    },
+    {
+      "resource_type": "data_sources",
+      "observed_pattern": "SRC-NNNN-descriptive-name.json (UPPERCASE prefix, 4-digit ID, kebab-case description, JSON)",
+      "compliance_rate": "100% (41/41 source files follow pattern)",
+      "examples": ["SRC-0001-openalex.json", "SRC-0025-github-api.json", "SRC-0044-coinpaprika.json"],
+      "notes": "Most consistent naming in the repo. Gap in sequence: SRC-0009 through SRC-0011 missing. Descriptive suffix is the API/service name in kebab-case."
+    },
+    {
+      "resource_type": "scripts",
+      "observed_pattern": "MIXED: both kebab-case (validate-storage.py) and snake_case (grade_research.py)",
+      "compliance_rate": "55% snake_case, 35% kebab-case, 10% other",
+      "examples": ["validate-storage.py", "grade_research.py", "build-cross-ref-index.py", "kb_validator.py", "viz_data_flow.js"],
+      "notes": "Most inconsistent naming in the repo. Index uses kebab-case 'name' field but actual filenames vary. Some scripts have report files mixed in (stress-test-read-report.md, integrity-test-report.md). JavaScript visualization scripts use snake_case with viz_ prefix."
+    },
+    {
+      "resource_type": "coordination_modules",
+      "observed_pattern": "snake_case.py (standard Python module naming)",
+      "compliance_rate": "100% (14/14 Python modules follow snake_case)",
+      "examples": ["coordinator_hub.py", "help_protocol.py", "work_stealing.py", "sdk_launcher.py"],
+      "notes": "Most Python-conventional area. Prefix grouping: sdk_* for SDK-related, bus_* for message bus. No numeric IDs."
+    },
+    {
+      "resource_type": "api_tools",
+      "observed_pattern": "TOOL-NNNN ID in index.json, actual paths are directories or single files",
+      "compliance_rate": "100% in index, but tool paths vary (sonnet-research-api/ dir vs doc_parser.py file)",
+      "examples": ["TOOL-0001 -> sonnet-research-api/", "TOOL-0002 -> doc_parser.py"],
+      "notes": "Directory names use kebab-case, Python files use snake_case. IDs in index but not in filenames."
+    },
+    {
+      "resource_type": "index_files",
+      "observed_pattern": "index.json at each directory level with version, count, and item array",
+      "compliance_rate": "100% (found in knowledge-base/, teams/sessions/, storage/scripts/, storage/sources/, storage/api-tools/, storage/coordination/sops/, market-research/picks/)",
+      "examples": ["knowledge-base/index.json", "storage/sources/index.json"],
+      "notes": "All share common schema: {version, last_updated, items[]}. This is the repo's primary discovery mechanism. Consistent and well-maintained."
+    },
+    {
+      "resource_type": "templates",
+      "observed_pattern": "TEMPLATE.md or TEMPLATE.json (UPPERCASE name, extension matches format)",
+      "compliance_rate": "100% (found in knowledge-base/, teams/, market-research/picks/, storage/sources/)",
+      "examples": ["knowledge-base/TEMPLATE.md", "storage/sources/TEMPLATE.json"],
+      "notes": "Consistent convention. Always at directory root alongside index.json."
+    },
+    {
+      "resource_type": "readme_files",
+      "observed_pattern": "README.md (standard GitHub convention)",
+      "compliance_rate": "100%",
+      "examples": ["knowledge-base/README.md", "storage/scripts/README.md", "market-research/README.md"],
+      "notes": "Present in most top-level directories. CLAUDE.md at repo root serves as the primary agent instruction file."
+    },
+    {
+      "resource_type": "market_research_methods",
+      "observed_pattern": "lowercase-single-word.md (no prefix, no ID, just topic name)",
+      "compliance_rate": "100% (4/4 method files)",
+      "examples": ["fundamental.md", "quantitative.md", "sentiment.md", "technical.md"],
+      "notes": "Simplest naming in repo. No IDs or prefixes. ai-quant-techniques/ subdirectory also present."
+    }
+  ],
+
+  "best_practices": [
+    {
+      "category": "file_naming_case",
+      "recommendation": "Use snake_case for all filenames universally. Reserve kebab-case only for URL-facing paths or package names.",
+      "rationale": "snake_case is the dominant convention in Python/AI ecosystems (PEP 8), is used by all major AI frameworks (CrewAI, LangChain, MetaGPT), allows double-click selection of full names in most editors, and this repo's most consistent areas (coordination modules) already use it. The scripts directory's mixed kebab/snake is the repo's biggest naming inconsistency.",
+      "token_impact": "neutral (snake_case and kebab-case have identical token counts; consistency reduces cognitive tokens for agents parsing filenames)"
+    },
+    {
+      "category": "id_prefixes",
+      "recommendation": "Maintain the current PREFIX-NNNN pattern (KB-0001, SRC-0001, TEAM-0001, SOP-011, TOOL-0001) for all indexed resources. Standardize to 4-digit zero-padded IDs across all resource types.",
+      "rationale": "The PREFIX-NNNN pattern is the repo's strongest convention: 100% compliance in KB entries, sources, and teams. It enables unambiguous cross-referencing (builds_on: [KB-0001]), grep-ability, and sequential ordering. SOP IDs should migrate from 3-digit to 4-digit for consistency (SOP-0011 not SOP-011).",
+      "token_impact": "low (~2-4 extra tokens per reference for the prefix, but massive savings in disambiguation and search specificity)"
+    },
+    {
+      "category": "filename_structure",
+      "recommendation": "For indexed resources, include the ID in the filename: {PREFIX}_{NNNN}_{short_descriptor}.{ext}. Example: kb_0001_storage_stress_test.md, sop_0011_commander_launch.json, src_0001_openalex.json",
+      "rationale": "Current KB and TEAM files use ID-only filenames (KB-0001.md) which require opening the file or consulting the index to know what they contain. Including a short descriptor (3-5 words max) in the filename enables faster discovery without loading file content. SOP files and SRC files already do this well. The descriptor should be max 32 chars and use the most discriminating terms.",
+      "token_impact": "moderate savings — agents can identify file relevance from ls output alone without reading file content, saving 200-2000 tokens per file that would otherwise need to be opened to check relevance"
+    },
+    {
+      "category": "directory_depth",
+      "recommendation": "Maximum 3 levels of nesting from repo root. Current structure is already close to optimal. Flatten any paths deeper than 3 levels.",
+      "rationale": "Current deepest paths are 4 levels (storage/coordination/sops/sop_011... and storage/coordination/teams/a1-beta/output/). Research shows: (1) deeper nesting increases token cost for path strings, (2) AI agents struggle with navigation beyond 3 levels, (3) CrewAI and MetaGPT both cap at 3 levels. The coordination/ directory could be promoted to top-level to reduce depth.",
+      "token_impact": "saves 3-8 tokens per file reference by reducing path length; compounds across hundreds of references in a session"
+    },
+    {
+      "category": "versioning",
+      "recommendation": "Use _v{N} suffix in filenames for superseded documents (sop_0012_monitoring_v2.json). Do NOT use version numbers for the current/active version — only add _v{N} when a new version supersedes. Track version history in the index.json, not in filenames.",
+      "rationale": "The repo already uses _v2 suffix in SOPs (sop_012_monitoring_intervention_v2.json). This is preferable to date-based versioning (which inflates filenames) or directory-based versioning (which increases depth). The current convention of keeping both v1 and v2 files is good for auditability but the index should clearly mark superseded status.",
+      "token_impact": "neutral for current version; adds 3 tokens per versioned reference but avoids the cost of version-directory nesting"
+    },
+    {
+      "category": "metadata_placement",
+      "recommendation": "Put in FILENAME: ID, short descriptor, version suffix. Put in FILE CONTENT: title, full description, date, author/team, category, tags, status, confidence, builds_on references, and all substantive content.",
+      "rationale": "Filenames should contain just enough metadata for an agent to decide whether to open the file (the 'index card' function). Everything else belongs in structured frontmatter (YAML for Markdown) or top-level fields (for JSON). This repo's YAML frontmatter in KB entries and TEAM logs is excellent — the pattern should be extended to all resource types.",
+      "token_impact": "high savings — agents can filter files by ls/glob without opening, then only read files they need; estimated 40-60% reduction in exploratory file reads"
+    },
+    {
+      "category": "index_files",
+      "recommendation": "Continue the index.json convention at every directory containing indexed resources. Add a top-level manifest.json or llms.txt at repo root that lists all index files and provides a 1-line description of each directory.",
+      "rationale": "The index.json pattern is the repo's most successful convention (100% adoption, consistent schema). A root-level manifest would let agents discover the entire repo structure in a single read, reducing the multi-step directory traversal currently required. This aligns with the llms.txt two-tier approach (summary index -> detailed content).",
+      "token_impact": "very high savings — single-read repo discovery instead of recursive ls/glob; estimated 500-1500 tokens saved per new agent session"
+    },
+    {
+      "category": "separator_consistency",
+      "recommendation": "Use underscore (_) as the sole word separator in filenames. Use hyphen (-) only in ID prefixes (KB-0001) and kebab-case directory names that are already established. Never mix separators within a single filename.",
+      "rationale": "The repo currently mixes separators inconsistently: scripts use both (validate-storage.py vs grade_research.py), SOPs use underscore (sop_011_...), sources use hyphen in the descriptor (SRC-0001-openalex). Standardizing to underscore for word separation and hyphen only in the ID prefix (KB-0001) would create a clear, parseable pattern: {PREFIX}-{NNNN}_{descriptor}.{ext}.",
+      "token_impact": "neutral per-file but reduces parsing complexity for automated tools and agents"
+    },
+    {
+      "category": "controlled_vocabulary_for_categories",
+      "recommendation": "Formalize the existing implicit category vocabulary and enforce it via validation scripts. Current categories: methodology, integration, optimization, debugging, testing, tool-usage, market-research. Add: configuration, architecture, reference.",
+      "rationale": "The KB index already uses a fixed set of categories, but they emerged organically and are not documented as a controlled vocabulary. Formalizing them would enable automated categorization, reduce tag drift, and make cross-referencing more reliable. The existing validate-storage.py script could be extended to enforce the vocabulary.",
+      "token_impact": "moderate savings — consistent categories enable faster filtered searches; reduces false-positive file opens by 20-30%"
+    },
+    {
+      "category": "tag_naming",
+      "recommendation": "Tags should be kebab-case, 1-3 words, from a curated but extensible vocabulary. Avoid tags that duplicate the category. Limit to 3-7 tags per entry. Add tag aliases to index for common synonyms.",
+      "rationale": "Current tags are already kebab-case and mostly well-formed, but some are redundant with categories (e.g., tag 'methodology' on a methodology-category entry), some are overly specific ('sop-improvements'), and some are inconsistent (both 'sops' and 'SOPs' appear in tags). A tag alias system would handle synonyms (e.g., 'multi-agent' = 'multi-team').",
+      "token_impact": "low direct savings; high indirect savings through more precise search results"
+    },
+    {
+      "category": "file_format_selection",
+      "recommendation": "Use JSON for structured data, machine-to-machine configs, and indexed resources. Use Markdown with YAML frontmatter for knowledge entries and logs (human-readable + machine-parseable). Avoid pure YAML files for complex nested data.",
+      "rationale": "The repo already follows this well: SOPs and sources are JSON (highly structured), KB entries and team logs are Markdown+YAML (narrative + metadata). JSON is 40-70% more token-expensive than equivalent CSV/compact formats, but the trade-off is worth it for the structured access patterns agents use. For tabular data specifically, consider CSV.",
+      "token_impact": "JSON costs ~40% more tokens than CSV for tabular data, but structured access patterns justify it for this repo's use cases"
+    },
+    {
+      "category": "descriptive_filename_length",
+      "recommendation": "Keep filename descriptors to 3-5 words (15-30 characters). Use the most discriminating terms first. Abbreviate common terms (e.g., 'coord' for coordination, 'cfg' for configuration, 'proto' for prototype).",
+      "rationale": "SOP filenames are currently good length (sop_011_central_commander_launch = 5 words). SRC filenames are excellent (SRC-0001-openalex = 1 word descriptor). KB filenames are too short (KB-0001 = no descriptor). Aim for the sweet spot where an agent can determine relevance from the filename alone.",
+      "token_impact": "adds 2-5 tokens per filename but saves 200+ tokens per avoided file read; net positive for repos with 30+ files"
+    }
+  ],
+
+  "controlled_vocabulary": {
+    "prefixes": [
+      {"prefix": "KB", "resource_type": "knowledge_base_entry", "format": "KB-NNNN", "example": "KB-0001"},
+      {"prefix": "TEAM", "resource_type": "team_session_log", "format": "TEAM-NNNN", "example": "TEAM-0015"},
+      {"prefix": "SOP", "resource_type": "standard_operating_procedure", "format": "SOP-NNNN", "example": "SOP-0011"},
+      {"prefix": "SRC", "resource_type": "data_source", "format": "SRC-NNNN", "example": "SRC-0025"},
+      {"prefix": "TOOL", "resource_type": "api_tool", "format": "TOOL-NNNN", "example": "TOOL-0001"},
+      {"prefix": "SCR", "resource_type": "script", "format": "SCR-NNNN", "example": "SCR-0004"},
+      {"prefix": "PICK", "resource_type": "market_pick", "format": "PICK-NNNN", "example": "PICK-0001"}
+    ],
+    "suffixes": [
+      {"suffix": "_v{N}", "meaning": "version number for superseded documents", "example": "sop_0012_monitoring_v2"},
+      {"suffix": "_draft", "meaning": "work in progress, not yet validated", "example": "kb_0032_new_finding_draft"},
+      {"suffix": "_archived", "meaning": "no longer active, kept for reference", "example": "sop_0001_legacy_archived"}
+    ],
+    "separators": [
+      {"char": "-", "usage": "ID prefix separator (KB-0001) and kebab-case descriptors in source filenames", "context": "between prefix and numeric ID"},
+      {"char": "_", "usage": "word separator within descriptive filename portions and Python modules", "context": "between words in descriptors and all Python filenames"}
+    ],
+    "abbreviations": {
+      "coord": "coordination",
+      "cfg": "configuration",
+      "proto": "prototype",
+      "mgmt": "management",
+      "auth": "authentication",
+      "api": "application programming interface",
+      "sop": "standard operating procedure",
+      "kb": "knowledge base",
+      "src": "source",
+      "scr": "script",
+      "cli": "command-line interface",
+      "sdk": "software development kit",
+      "db": "database",
+      "idx": "index",
+      "ref": "reference",
+      "xref": "cross-reference",
+      "ops": "operations",
+      "perf": "performance",
+      "viz": "visualization",
+      "val": "validation",
+      "dedup": "deduplication"
+    },
+    "categories": [
+      "methodology",
+      "integration",
+      "optimization",
+      "debugging",
+      "testing",
+      "tool-usage",
+      "market-research",
+      "configuration",
+      "architecture",
+      "reference"
+    ],
+    "statuses": [
+      "active",
+      "validated",
+      "experimental",
+      "deprecated",
+      "superseded",
+      "reconstructed",
+      "draft"
+    ],
+    "confidence_levels": [
+      "very-high",
+      "high",
+      "medium",
+      "low"
+    ]
+  },
+
+  "summary": {
+    "key_findings": [
+      "The repo has strong conventions in some areas (KB entries, sources, index.json pattern) but significant inconsistencies in others (scripts directory mixing kebab-case and snake_case, SOPs using 3-digit IDs while everything else uses 4-digit).",
+      "All major AI frameworks (CrewAI, LangChain, MetaGPT, AutoGPT) use snake_case for Python files — this repo should standardize on it.",
+      "The PREFIX-NNNN ID system is the repo's strongest pattern and should be extended to all resource types consistently with 4-digit zero-padding.",
+      "Index.json at each directory is an excellent discovery mechanism already at 100% adoption — adding a root manifest would complete the picture.",
+      "KB and TEAM filenames are too terse (just the ID, no descriptor) — adding a short descriptor would save agents hundreds of tokens per session by enabling filename-based filtering.",
+      "The llms.txt standard and AGENTS.md/CLAUDE.md convention are converging as industry norms; this repo's CLAUDE.md is well-aligned.",
+      "JSON's token cost is 40-70% higher than compact formats but justified for this repo's structured access patterns.",
+      "ETH Zurich research shows that developer-written context files help but LLM-generated ones often hurt — keep CLAUDE.md focused on non-inferable details.",
+      "Maximum directory depth should be 3 levels; current storage/coordination/sops/ at 3 levels is at the limit."
+    ],
+    "top_recommendations": [
+      {
+        "priority": 1,
+        "action": "Add short descriptors to KB and TEAM filenames",
+        "current": "KB-0001.md",
+        "proposed": "KB-0001_storage_stress_test.md",
+        "effort": "medium (rename 31 KB files + 29 TEAM files, update all references)",
+        "impact": "high (agents can filter by filename instead of opening files)"
+      },
+      {
+        "priority": 2,
+        "action": "Standardize scripts directory to snake_case",
+        "current": "mixed: validate-storage.py, grade_research.py",
+        "proposed": "all snake_case: validate_storage.py, grade_research.py",
+        "effort": "low (rename ~15 files, update index.json)",
+        "impact": "medium (eliminates the repo's biggest naming inconsistency)"
+      },
+      {
+        "priority": 3,
+        "action": "Normalize SOP IDs to 4-digit zero-padded format",
+        "current": "SOP-011, SOP-012",
+        "proposed": "SOP-0011, SOP-0012",
+        "effort": "low (rename ~20 files, update index and references)",
+        "impact": "medium (consistency with KB-NNNN, SRC-NNNN, TEAM-NNNN patterns)"
+      },
+      {
+        "priority": 4,
+        "action": "Create root-level manifest.json listing all index.json files and directory purposes",
+        "current": "agents must traverse directories to discover structure",
+        "proposed": "single manifest.json at repo root for one-read discovery",
+        "effort": "low (create one file)",
+        "impact": "high (saves 500-1500 tokens per new agent session)"
+      },
+      {
+        "priority": 5,
+        "action": "Formalize controlled vocabulary for categories, tags, and statuses",
+        "current": "implicit conventions, some drift (sops vs SOPs in tags)",
+        "proposed": "documented vocabulary in a schema file, enforced by validation scripts",
+        "effort": "medium (create schema, extend validate-storage.py)",
+        "impact": "medium (reduces tag drift, improves search precision)"
+      }
+    ],
+    "estimated_token_savings": {
+      "per_session": "800-2500 tokens saved per agent session through filename-based filtering and root manifest",
+      "per_file_reference": "3-8 tokens saved per path reference through reduced directory depth",
+      "per_search_operation": "200-500 tokens saved per search through controlled vocabulary consistency",
+      "annual_estimate": "At current usage of ~30 agent sessions/day: approximately 24,000-75,000 tokens saved daily"
+    }
+  }
+}

@@ -16,8 +16,8 @@
         "description": "Comprehensive validation tool for the storage system. Checks schema validation, referential integrity, file existence, orphan detection, ID format, date format, required fields, duplicates, version validation, and length limits.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0003"
+        "added_by": "TEAM-0003",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0002",
@@ -28,8 +28,8 @@
         "description": "Edge case and boundary testing suite (35 tests) for the storage system.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0003"
+        "added_by": "TEAM-0003",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0003",
@@ -40,8 +40,8 @@
         "description": "Automated repair tool for common storage system issues. Supports --dry-run mode.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0003"
+        "added_by": "TEAM-0003",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0004",
@@ -52,8 +52,8 @@
         "description": "Evaluates research JSON quality across five dimensions: citation count/quality, coverage breadth, depth, and specificity.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0005"
+        "added_by": "TEAM-0005",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0005",
@@ -64,8 +64,8 @@
         "description": "Merges multiple team research JSON files by topic category with deduplication.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0005"
+        "added_by": "TEAM-0005",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0006",
@@ -76,8 +76,8 @@
         "description": "Multi-query web search via DuckDuckGo. Generates 3-5 query variants and deduplicates results.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0003"
+        "added_by": "TEAM-0003",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0007",
@@ -88,8 +88,8 @@
         "description": "Wikipedia API deep extraction with DuckDuckGo fallback.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0003"
+        "added_by": "TEAM-0003",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0008",
@@ -100,8 +100,8 @@
         "description": "arXiv academic paper search with DuckDuckGo fallback.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0003"
+        "added_by": "TEAM-0003",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0009",
@@ -110,10 +110,14 @@
         "language": "python",
         "category": "data-collection",
         "description": "Hybrid multi-source aggregation combining web search, Wikipedia, and arXiv.",
-        "dependencies": ["SCR-0006", "SCR-0007", "SCR-0008"],
+        "dependencies": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008"
+        ],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0003"
+        "added_by": "TEAM-0003",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0010",
@@ -124,8 +128,8 @@
         "description": "Iterative deepening search doing 3 rounds of progressively deeper DuckDuckGo queries.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0003"
+        "added_by": "TEAM-0003",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0011",
@@ -134,10 +138,16 @@
         "language": "python",
         "category": "analysis",
         "description": "Benchmark harness that runs all data gathering methods and calculates quality scores.",
-        "dependencies": ["SCR-0006", "SCR-0007", "SCR-0008", "SCR-0009", "SCR-0010"],
+        "dependencies": [
+          "SCR-0006",
+          "SCR-0007",
+          "SCR-0008",
+          "SCR-0009",
+          "SCR-0010"
+        ],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0003"
+        "added_by": "TEAM-0003",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0012",
@@ -148,8 +158,8 @@
         "description": "Validates knowledge base entries and index.json consistency.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0006"
+        "added_by": "TEAM-0006",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0013",
@@ -160,8 +170,8 @@
         "description": "Auto-generates index.json files by scanning KB entries and team sessions. Supports --dry-run and --fix.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0006"
+        "added_by": "TEAM-0006",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0014",
@@ -172,8 +182,8 @@
         "description": "Validates all cross-references across the repository. Detects cycles, orphans, and dangling entries.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0006"
+        "added_by": "TEAM-0006",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0015",
@@ -184,9 +194,9 @@
         "description": "High-speed full-text search index compiled in Go. Query time <5ms. Supports exact match, multi-word AND, and phrase search.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
         "added_by": "TEAM-0008",
-        "compiled_binary": "storage/scripts/fast_search/fast_search"
+        "compiled_binary": "storage/scripts/fast_search/fast_search",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0016",
@@ -197,9 +207,9 @@
         "description": "High-speed repository structure validator compiled in Go. Completes in <2ms.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
         "added_by": "TEAM-0008",
-        "compiled_binary": "storage/scripts/fast_validate/fast_validate"
+        "compiled_binary": "storage/scripts/fast_validate/fast_validate",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0017",
@@ -210,9 +220,9 @@
         "description": "High-speed file-based key-value cache for API responses. SHA-256 keys, TTL support, sub-millisecond cache hits.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
         "added_by": "TEAM-0008",
-        "compiled_binary": "storage/scripts/fast_cache/fast_cache"
+        "compiled_binary": "storage/scripts/fast_cache/fast_cache",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0018",
@@ -223,8 +233,8 @@
         "description": "Full-text search across KB entries, team logs, and script metadata using TF-IDF ranking.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0008"
+        "added_by": "TEAM-0008",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0019",
@@ -235,8 +245,8 @@
         "description": "Parses Handoff Notes from team session logs and tracks action item resolution.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0008"
+        "added_by": "TEAM-0008",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0020",
@@ -245,10 +255,14 @@
         "language": "python",
         "category": "utility",
         "description": "Repository health checker with 6 checks: stale statuses, regressions, unaddressed handoffs, broken references, index mismatches, orphan files.",
-        "dependencies": ["SCR-0012", "SCR-0014", "SCR-0019"],
+        "dependencies": [
+          "SCR-0012",
+          "SCR-0014",
+          "SCR-0019"
+        ],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0008"
+        "added_by": "TEAM-0008",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0021",
@@ -259,8 +273,8 @@
         "description": "Shared DuckDuckGo search utilities with rate limiting (0.5s between requests).",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0007"
+        "added_by": "TEAM-0007",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0022",
@@ -271,8 +285,8 @@
         "description": "File-based HTTP response cache with SHA-256 keys, base64 storage, configurable TTL.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0007"
+        "added_by": "TEAM-0007",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0023",
@@ -281,10 +295,12 @@
         "language": "python",
         "category": "data-collection",
         "description": "OpenAlex academic search via REST API. Searches 250M+ scholarly works.",
-        "dependencies": ["SCR-0022"],
+        "dependencies": [
+          "SCR-0022"
+        ],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0010"
+        "added_by": "TEAM-0010",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0024",
@@ -293,10 +309,12 @@
         "language": "python",
         "category": "data-collection",
         "description": "Hacker News search via Algolia API plus Firebase top stories.",
-        "dependencies": ["SCR-0022"],
+        "dependencies": [
+          "SCR-0022"
+        ],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0010"
+        "added_by": "TEAM-0010",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0025",
@@ -305,10 +323,13 @@
         "language": "python",
         "category": "data-collection",
         "description": "Guardian news search via Open Platform API with DuckDuckGo fallback.",
-        "dependencies": ["SCR-0021", "SCR-0022"],
+        "dependencies": [
+          "SCR-0021",
+          "SCR-0022"
+        ],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0010"
+        "added_by": "TEAM-0010",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0026",
@@ -317,10 +338,12 @@
         "language": "python",
         "category": "data-collection",
         "description": "Semantic Scholar paper search via Academic Graph API.",
-        "dependencies": ["SCR-0022"],
+        "dependencies": [
+          "SCR-0022"
+        ],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0010"
+        "added_by": "TEAM-0010",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0027",
@@ -329,10 +352,12 @@
         "language": "python",
         "category": "data-collection",
         "description": "Wikidata knowledge graph search. Two-phase: search entities then fetch full details.",
-        "dependencies": ["SCR-0022"],
+        "dependencies": [
+          "SCR-0022"
+        ],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0010"
+        "added_by": "TEAM-0010",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-0028",
@@ -341,10 +366,12 @@
         "language": "python",
         "category": "data-collection",
         "description": "GitHub repository and code search via REST API.",
-        "dependencies": ["SCR-0022"],
+        "dependencies": [
+          "SCR-0022"
+        ],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0010"
+        "added_by": "TEAM-0010",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-UNREG-01",
@@ -355,9 +382,9 @@
         "description": "TF-IDF-based similarity scoring, deduplication, and source merging utilities.",
         "dependencies": [],
         "status": "working",
-        "added": "2026-03-10",
         "added_by": "unknown",
-        "note": "Not registered in scripts index.json"
+        "note": "Not registered in scripts index.json",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-UNREG-02",
@@ -368,8 +395,8 @@
         "description": "Builds a master cross-reference index at storage/cross-references.json.",
         "dependencies": [],
         "status": "unknown",
-        "added": "unknown",
-        "note": "Not registered in scripts index.json"
+        "note": "Not registered in scripts index.json",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-UNREG-03",
@@ -380,8 +407,8 @@
         "description": "Unified Search and Discovery Tool for the storage system.",
         "dependencies": [],
         "status": "unknown",
-        "added": "unknown",
-        "note": "Not registered in scripts index.json"
+        "note": "Not registered in scripts index.json",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-UNREG-04",
@@ -390,10 +417,12 @@
         "language": "javascript",
         "category": "visualization",
         "description": "D3.js v7 left-to-right flow diagram showing script-to-source data connections.",
-        "dependencies": ["d3.js v7"],
+        "dependencies": [
+          "d3.js v7"
+        ],
         "status": "untested",
-        "added": "unknown",
-        "note": "Not registered in scripts index.json"
+        "note": "Not registered in scripts index.json",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-UNREG-05",
@@ -402,10 +431,12 @@
         "language": "javascript",
         "category": "visualization",
         "description": "D3.js v7 top-down layered DAG of Knowledge Base entry dependencies.",
-        "dependencies": ["d3.js v7"],
+        "dependencies": [
+          "d3.js v7"
+        ],
         "status": "untested",
-        "added": "unknown",
-        "note": "Not registered in scripts index.json"
+        "note": "Not registered in scripts index.json",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-UNREG-06",
@@ -414,10 +445,12 @@
         "language": "javascript",
         "category": "visualization",
         "description": "D3.js v7 force-directed graph showing team hierarchy, agent membership, and knowledge dependencies.",
-        "dependencies": ["d3.js v7"],
+        "dependencies": [
+          "d3.js v7"
+        ],
         "status": "untested",
-        "added": "unknown",
-        "note": "Not registered in scripts index.json"
+        "note": "Not registered in scripts index.json",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-UNREG-07",
@@ -428,8 +461,8 @@
         "description": "Stress test for storage system write operations.",
         "dependencies": [],
         "status": "working",
-        "added": "unknown",
-        "note": "Not registered in scripts index.json"
+        "note": "Not registered in scripts index.json",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-UNREG-08",
@@ -440,8 +473,8 @@
         "description": "Stress test for storage system reads by ID.",
         "dependencies": [],
         "status": "working",
-        "added": "unknown",
-        "note": "Not registered in scripts index.json"
+        "note": "Not registered in scripts index.json",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-UNREG-09",
@@ -452,8 +485,8 @@
         "description": "Stress test for storage system reads by category.",
         "dependencies": [],
         "status": "working",
-        "added": "unknown",
-        "note": "Not registered in scripts index.json"
+        "note": "Not registered in scripts index.json",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-UNREG-10",
@@ -464,8 +497,8 @@
         "description": "Stress test for storage system cross-reference reads.",
         "dependencies": [],
         "status": "working",
-        "added": "unknown",
-        "note": "Not registered in scripts index.json"
+        "note": "Not registered in scripts index.json",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-UNREG-11",
@@ -476,8 +509,8 @@
         "description": "Setup script for storage stress test read operations.",
         "dependencies": [],
         "status": "working",
-        "added": "unknown",
-        "note": "Not registered in scripts index.json"
+        "note": "Not registered in scripts index.json",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-UNREG-12",
@@ -488,8 +521,8 @@
         "description": "Test suite for cross-reference functionality.",
         "dependencies": [],
         "status": "working",
-        "added": "unknown",
-        "note": "Not registered in scripts index.json"
+        "note": "Not registered in scripts index.json",
+        "date": "2026-03-10"
       },
       {
         "id": "SCR-UNREG-13",
@@ -500,8 +533,8 @@
         "description": "Benchmark runner within methods directory (distinct from SCR-0011).",
         "dependencies": [],
         "status": "working",
-        "added": "unknown",
-        "note": "Not registered in scripts index.json"
+        "note": "Not registered in scripts index.json",
+        "date": "2026-03-10"
       }
     ],
     "api_integrations": [
@@ -511,68 +544,503 @@
         "location": "storage/api-tools/sonnet-research-api/",
         "description": "Multi-agent research system using Claude Sonnet. Supports variable sub-agents, request queuing, priority scheduling, result sorting, and automated import into repo storage.",
         "entry_point": "orchestrator.py",
-        "modules": ["client.py", "config.py", "queue_manager.py", "researcher.py", "orchestrator.py", "sorter.py", "data_importer.py"],
+        "modules": [
+          "client.py",
+          "config.py",
+          "queue_manager.py",
+          "researcher.py",
+          "orchestrator.py",
+          "sorter.py",
+          "data_importer.py"
+        ],
         "auth_type": "api-key",
-        "requires": ["anthropic"],
+        "requires": [
+          "anthropic"
+        ],
         "status": "working",
-        "added": "2026-03-10",
-        "added_by": "TEAM-0002"
+        "added_by": "TEAM-0002",
+        "date": "2026-03-10"
       }
     ],
     "data_sources": [
-      {"id": "SRC-0001", "name": "Alpha Vantage", "url": "https://www.alphavantage.co/query", "data_types": ["financial"], "access_type": "freemium", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0038-alpha-vantage.json", "status": "available"},
-      {"id": "SRC-0002", "name": "Yahoo Finance", "url": "https://query1.finance.yahoo.com/v8/finance", "data_types": ["financial"], "access_type": "free", "has_detailed_spec": false, "status": "available"},
-      {"id": "SRC-0003", "name": "FRED", "url": "https://api.stlouisfed.org/fred", "data_types": ["financial", "government"], "access_type": "api-key-required", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0018-fred.json", "status": "available"},
-      {"id": "SRC-0004", "name": "CoinGecko", "url": "https://api.coingecko.com/api/v3", "data_types": ["financial"], "access_type": "freemium", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0041-coingecko.json", "status": "available"},
-      {"id": "SRC-0005", "name": "Twelve Data", "url": "https://api.twelvedata.com", "data_types": ["financial"], "access_type": "freemium", "has_detailed_spec": false, "status": "available"},
-      {"id": "SRC-0006", "name": "Exchange Rates", "url": "https://api.exchangerate.host", "data_types": ["financial"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0042-exchangerate-api.json", "status": "available"},
-      {"id": "SRC-0007", "name": "Finnhub", "url": "https://finnhub.io/api/v1", "data_types": ["financial"], "access_type": "freemium", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0040-finnhub.json", "status": "available"},
-      {"id": "SRC-0008", "name": "NewsAPI", "url": "https://newsapi.org/v2", "data_types": ["news"], "access_type": "freemium", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0012-newsapi-org.json", "status": "available"},
-      {"id": "SRC-0009", "name": "GNews", "url": "https://gnews.io/api/v4", "data_types": ["news"], "access_type": "freemium", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0014-gnews.json", "status": "available"},
-      {"id": "SRC-0010", "name": "The Guardian", "url": "https://content.guardianapis.com", "data_types": ["news"], "access_type": "api-key-required", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0013-guardian-api.json", "status": "available"},
-      {"id": "SRC-0011", "name": "Hacker News", "url": "https://hacker-news.firebaseio.com/v0", "data_types": ["news", "general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0030-hn-firebase.json", "status": "available"},
-      {"id": "SRC-0012", "name": "OpenAlex", "url": "https://api.openalex.org", "data_types": ["scientific"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0001-openalex.json", "status": "available"},
-      {"id": "SRC-0013", "name": "Semantic Scholar", "url": "https://api.semanticscholar.org/graph/v1", "data_types": ["scientific"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0002-semantic-scholar.json", "status": "available"},
-      {"id": "SRC-0014", "name": "Wikidata", "url": "https://www.wikidata.org/w/api.php", "data_types": ["scientific", "general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0005-wikidata.json", "status": "available"},
-      {"id": "SRC-0015", "name": "CORE", "url": "https://api.core.ac.uk/v3", "data_types": ["scientific"], "access_type": "api-key-required", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0007-core.json", "status": "available"},
-      {"id": "SRC-0016", "name": "CrossRef", "url": "https://api.crossref.org", "data_types": ["scientific"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0004-crossref.json", "status": "available"},
-      {"id": "SRC-0017", "name": "DBpedia", "url": "https://dbpedia.org/sparql", "data_types": ["scientific", "general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0008-dbpedia.json", "status": "available"},
-      {"id": "SRC-0018", "name": "Papers With Code", "url": "https://paperswithcode.com/api/v1", "data_types": ["scientific"], "access_type": "free", "has_detailed_spec": false, "status": "available"},
-      {"id": "SRC-0019", "name": "US Census Bureau", "url": "https://api.census.gov/data", "data_types": ["government"], "access_type": "api-key-required", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0019-census.json", "status": "available"},
-      {"id": "SRC-0020", "name": "Data.gov CKAN", "url": "https://catalog.data.gov/api/3", "data_types": ["government"], "access_type": "free", "has_detailed_spec": false, "status": "available"},
-      {"id": "SRC-0021", "name": "Open-Meteo", "url": "https://api.open-meteo.com/v1", "data_types": ["geospatial"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0022-open-meteo.json", "status": "available"},
-      {"id": "SRC-0022", "name": "OpenWeatherMap", "url": "https://api.openweathermap.org/data/2.5", "data_types": ["geospatial"], "access_type": "freemium", "has_detailed_spec": false, "status": "available"},
-      {"id": "SRC-0023", "name": "BLS", "url": "https://api.bls.gov/publicAPI/v2", "data_types": ["government"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0020-bls.json", "status": "available"},
-      {"id": "SRC-0024", "name": "World Bank", "url": "https://api.worldbank.org/v2", "data_types": ["government"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0023-world-bank.json", "status": "available"},
-      {"id": "SRC-0025", "name": "GitHub REST API", "url": "https://api.github.com", "data_types": ["general"], "access_type": "freemium", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0025-github-api.json", "status": "available"},
-      {"id": "SRC-0026", "name": "PyPI", "url": "https://pypi.org/pypi", "data_types": ["general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0027-pypi-api.json", "status": "available"},
-      {"id": "SRC-0027", "name": "npm Registry", "url": "https://registry.npmjs.org", "data_types": ["general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0026-npm-registry.json", "status": "available"},
-      {"id": "SRC-0028", "name": "Reddit", "url": "https://www.reddit.com", "data_types": ["social-media"], "access_type": "free", "has_detailed_spec": false, "status": "available"},
-      {"id": "SRC-0029", "name": "Stack Exchange", "url": "https://api.stackexchange.com/2.3", "data_types": ["general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0031-stackexchange-api.json", "status": "available"},
-      {"id": "SRC-0030", "name": "Nominatim", "url": "https://nominatim.openstreetmap.org", "data_types": ["geospatial"], "access_type": "free", "has_detailed_spec": false, "status": "available"},
-      {"id": "SRC-0031", "name": "Hugging Face Hub", "url": "https://huggingface.co/api", "data_types": ["scientific", "general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0035-huggingface-inference.json", "status": "available"},
-      {"id": "SRC-0032", "name": "Free Dictionary", "url": "https://api.dictionaryapi.dev/api/v2/entries", "data_types": ["general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0032-free-dictionary.json", "status": "available"},
-      {"id": "SRC-0033", "name": "Datamuse", "url": "https://api.datamuse.com", "data_types": ["general"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0033-datamuse.json", "status": "available"},
-      {"id": "SRC-0034", "name": "ConceptNet", "url": "https://api.conceptnet.io", "data_types": ["scientific"], "access_type": "free", "has_detailed_spec": true, "spec_file": "storage/sources/SRC-0034-conceptnet.json", "status": "available"},
-      {"id": "SRC-0035", "name": "Wikipedia REST", "url": "https://en.wikipedia.org/api/rest_v1", "data_types": ["general", "scientific"], "access_type": "free", "has_detailed_spec": false, "status": "available"},
+      {
+        "id": "SRC-0001",
+        "name": "Alpha Vantage",
+        "url": "https://www.alphavantage.co/query",
+        "data_types": [
+          "financial"
+        ],
+        "access_type": "freemium",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0038-alpha-vantage.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0002",
+        "name": "Yahoo Finance",
+        "url": "https://query1.finance.yahoo.com/v8/finance",
+        "data_types": [
+          "financial"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": false,
+        "status": "available"
+      },
+      {
+        "id": "SRC-0003",
+        "name": "FRED",
+        "url": "https://api.stlouisfed.org/fred",
+        "data_types": [
+          "financial",
+          "government"
+        ],
+        "access_type": "api-key-required",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0018-fred.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0004",
+        "name": "CoinGecko",
+        "url": "https://api.coingecko.com/api/v3",
+        "data_types": [
+          "financial"
+        ],
+        "access_type": "freemium",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0041-coingecko.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0005",
+        "name": "Twelve Data",
+        "url": "https://api.twelvedata.com",
+        "data_types": [
+          "financial"
+        ],
+        "access_type": "freemium",
+        "has_detailed_spec": false,
+        "status": "available"
+      },
+      {
+        "id": "SRC-0006",
+        "name": "Exchange Rates",
+        "url": "https://api.exchangerate.host",
+        "data_types": [
+          "financial"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0042-exchangerate-api.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0007",
+        "name": "Finnhub",
+        "url": "https://finnhub.io/api/v1",
+        "data_types": [
+          "financial"
+        ],
+        "access_type": "freemium",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0040-finnhub.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0008",
+        "name": "NewsAPI",
+        "url": "https://newsapi.org/v2",
+        "data_types": [
+          "news"
+        ],
+        "access_type": "freemium",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0012-newsapi-org.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0009",
+        "name": "GNews",
+        "url": "https://gnews.io/api/v4",
+        "data_types": [
+          "news"
+        ],
+        "access_type": "freemium",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0014-gnews.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0010",
+        "name": "The Guardian",
+        "url": "https://content.guardianapis.com",
+        "data_types": [
+          "news"
+        ],
+        "access_type": "api-key-required",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0013-guardian-api.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0011",
+        "name": "Hacker News",
+        "url": "https://hacker-news.firebaseio.com/v0",
+        "data_types": [
+          "news",
+          "general"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0030-hn-firebase.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0012",
+        "name": "OpenAlex",
+        "url": "https://api.openalex.org",
+        "data_types": [
+          "scientific"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0001-openalex.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0013",
+        "name": "Semantic Scholar",
+        "url": "https://api.semanticscholar.org/graph/v1",
+        "data_types": [
+          "scientific"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0002-semantic-scholar.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0014",
+        "name": "Wikidata",
+        "url": "https://www.wikidata.org/w/api.php",
+        "data_types": [
+          "scientific",
+          "general"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0005-wikidata.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0015",
+        "name": "CORE",
+        "url": "https://api.core.ac.uk/v3",
+        "data_types": [
+          "scientific"
+        ],
+        "access_type": "api-key-required",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0007-core.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0016",
+        "name": "CrossRef",
+        "url": "https://api.crossref.org",
+        "data_types": [
+          "scientific"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0004-crossref.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0017",
+        "name": "DBpedia",
+        "url": "https://dbpedia.org/sparql",
+        "data_types": [
+          "scientific",
+          "general"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0008-dbpedia.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0018",
+        "name": "Papers With Code",
+        "url": "https://paperswithcode.com/api/v1",
+        "data_types": [
+          "scientific"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": false,
+        "status": "available"
+      },
+      {
+        "id": "SRC-0019",
+        "name": "US Census Bureau",
+        "url": "https://api.census.gov/data",
+        "data_types": [
+          "government"
+        ],
+        "access_type": "api-key-required",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0019-census.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0020",
+        "name": "Data.gov CKAN",
+        "url": "https://catalog.data.gov/api/3",
+        "data_types": [
+          "government"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": false,
+        "status": "available"
+      },
+      {
+        "id": "SRC-0021",
+        "name": "Open-Meteo",
+        "url": "https://api.open-meteo.com/v1",
+        "data_types": [
+          "geospatial"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0022-open-meteo.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0022",
+        "name": "OpenWeatherMap",
+        "url": "https://api.openweathermap.org/data/2.5",
+        "data_types": [
+          "geospatial"
+        ],
+        "access_type": "freemium",
+        "has_detailed_spec": false,
+        "status": "available"
+      },
+      {
+        "id": "SRC-0023",
+        "name": "BLS",
+        "url": "https://api.bls.gov/publicAPI/v2",
+        "data_types": [
+          "government"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0020-bls.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0024",
+        "name": "World Bank",
+        "url": "https://api.worldbank.org/v2",
+        "data_types": [
+          "government"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0023-world-bank.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0025",
+        "name": "GitHub REST API",
+        "url": "https://api.github.com",
+        "data_types": [
+          "general"
+        ],
+        "access_type": "freemium",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0025-github-api.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0026",
+        "name": "PyPI",
+        "url": "https://pypi.org/pypi",
+        "data_types": [
+          "general"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0027-pypi-api.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0027",
+        "name": "npm Registry",
+        "url": "https://registry.npmjs.org",
+        "data_types": [
+          "general"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0026-npm-registry.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0028",
+        "name": "Reddit",
+        "url": "https://www.reddit.com",
+        "data_types": [
+          "social-media"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": false,
+        "status": "available"
+      },
+      {
+        "id": "SRC-0029",
+        "name": "Stack Exchange",
+        "url": "https://api.stackexchange.com/2.3",
+        "data_types": [
+          "general"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0031-stackexchange-api.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0030",
+        "name": "Nominatim",
+        "url": "https://nominatim.openstreetmap.org",
+        "data_types": [
+          "geospatial"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": false,
+        "status": "available"
+      },
+      {
+        "id": "SRC-0031",
+        "name": "Hugging Face Hub",
+        "url": "https://huggingface.co/api",
+        "data_types": [
+          "scientific",
+          "general"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0035-huggingface-inference.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0032",
+        "name": "Free Dictionary",
+        "url": "https://api.dictionaryapi.dev/api/v2/entries",
+        "data_types": [
+          "general"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0032-free-dictionary.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0033",
+        "name": "Datamuse",
+        "url": "https://api.datamuse.com",
+        "data_types": [
+          "general"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0033-datamuse.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0034",
+        "name": "ConceptNet",
+        "url": "https://api.conceptnet.io",
+        "data_types": [
+          "scientific"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": true,
+        "spec_file": "storage/sources/SRC-0034-conceptnet.json",
+        "status": "available"
+      },
+      {
+        "id": "SRC-0035",
+        "name": "Wikipedia REST",
+        "url": "https://en.wikipedia.org/api/rest_v1",
+        "data_types": [
+          "general",
+          "scientific"
+        ],
+        "access_type": "free",
+        "has_detailed_spec": false,
+        "status": "available"
+      },
       {
         "id": "SRC-DETAIL-ONLY",
         "note": "The following sources have detailed spec files in storage/sources/ but are NOT in the sources index.json",
         "sources": [
-          {"file": "SRC-0003-arxiv.json", "name": "arXiv API"},
-          {"file": "SRC-0006-wikipedia.json", "name": "Wikipedia API"},
-          {"file": "SRC-0015-gdelt.json", "name": "GDELT"},
-          {"file": "SRC-0016-mediastack.json", "name": "Mediastack"},
-          {"file": "SRC-0017-rss2json.json", "name": "RSS2JSON"},
-          {"file": "SRC-0021-nws-weather.json", "name": "NWS Weather"},
-          {"file": "SRC-0024-treasury-fiscal.json", "name": "Treasury Fiscal Data"},
-          {"file": "SRC-0028-ip-api.json", "name": "IP-API"},
-          {"file": "SRC-0029-hn-algolia.json", "name": "HN Algolia"},
-          {"file": "SRC-0036-gemini-embeddings.json", "name": "Gemini Embeddings"},
-          {"file": "SRC-0037-roboflow.json", "name": "Roboflow"},
-          {"file": "SRC-0039-fred.json", "name": "FRED (duplicate spec)"},
-          {"file": "SRC-0043-fawazahmed0-exchange.json", "name": "Fawaz Ahmed Exchange Rates"},
-          {"file": "SRC-0044-coinpaprika.json", "name": "Coinpaprika"}
+          {
+            "file": "SRC-0003-arxiv.json",
+            "name": "arXiv API"
+          },
+          {
+            "file": "SRC-0006-wikipedia.json",
+            "name": "Wikipedia API"
+          },
+          {
+            "file": "SRC-0015-gdelt.json",
+            "name": "GDELT"
+          },
+          {
+            "file": "SRC-0016-mediastack.json",
+            "name": "Mediastack"
+          },
+          {
+            "file": "SRC-0017-rss2json.json",
+            "name": "RSS2JSON"
+          },
+          {
+            "file": "SRC-0021-nws-weather.json",
+            "name": "NWS Weather"
+          },
+          {
+            "file": "SRC-0024-treasury-fiscal.json",
+            "name": "Treasury Fiscal Data"
+          },
+          {
+            "file": "SRC-0028-ip-api.json",
+            "name": "IP-API"
+          },
+          {
+            "file": "SRC-0029-hn-algolia.json",
+            "name": "HN Algolia"
+          },
+          {
+            "file": "SRC-0036-gemini-embeddings.json",
+            "name": "Gemini Embeddings"
+          },
+          {
+            "file": "SRC-0037-roboflow.json",
+            "name": "Roboflow"
+          },
+          {
+            "file": "SRC-0039-fred.json",
+            "name": "FRED (duplicate spec)"
+          },
+          {
+            "file": "SRC-0043-fawazahmed0-exchange.json",
+            "name": "Fawaz Ahmed Exchange Rates"
+          },
+          {
+            "file": "SRC-0044-coinpaprika.json",
+            "name": "Coinpaprika"
+          }
         ]
       }
     ],
@@ -585,10 +1053,22 @@
         "production_status": "PRODUCTION",
         "description": "Primary inter-agent communication system. JSONL append-only message bus with SQLite WAL shared state.",
         "modules": [
-          {"name": "core.py", "description": "Core message types and constants"},
-          {"name": "bus.py", "description": "JSONL append-only message bus with POSIX atomic writes"},
-          {"name": "state.py", "description": "SQLite WAL shared state (agent registry, rate limiting, phase signals, findings)"},
-          {"name": "coordinator.py", "description": "Coordinator that bridges bus and state layers"}
+          {
+            "name": "core.py",
+            "description": "Core message types and constants"
+          },
+          {
+            "name": "bus.py",
+            "description": "JSONL append-only message bus with POSIX atomic writes"
+          },
+          {
+            "name": "state.py",
+            "description": "SQLite WAL shared state (agent registry, rate limiting, phase signals, findings)"
+          },
+          {
+            "name": "coordinator.py",
+            "description": "Coordinator that bridges bus and state layers"
+          }
         ],
         "tested": true,
         "last_validation": "2026-03-11"
@@ -601,10 +1081,22 @@
         "production_status": "ARCHIVED",
         "description": "Alternative communication system using mmap and FIFOs. Archived after comparative testing showed Proto A was superior.",
         "modules": [
-          {"name": "core.py", "description": "Core message types and constants"},
-          {"name": "bus.py", "description": "Alternative bus implementation"},
-          {"name": "state.py", "description": "Alternative state management"},
-          {"name": "coordinator.py", "description": "Alternative coordinator"}
+          {
+            "name": "core.py",
+            "description": "Core message types and constants"
+          },
+          {
+            "name": "bus.py",
+            "description": "Alternative bus implementation"
+          },
+          {
+            "name": "state.py",
+            "description": "Alternative state management"
+          },
+          {
+            "name": "coordinator.py",
+            "description": "Alternative coordinator"
+          }
         ],
         "tested": true,
         "last_validation": "2026-03-11",
@@ -718,47 +1210,401 @@
       }
     ],
     "knowledge_base": [
-      {"id": "KB-0001", "title": "Storage System Stress Test & Improvement Results", "team": "TEAM-0001", "category": "optimization", "status": "validated", "confidence": "high", "builds_on": []},
-      {"id": "KB-0002", "title": "Sonnet Research API -- Multi-Agent Research System", "team": "TEAM-0002", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0001"]},
-      {"id": "KB-0003", "title": "Multi-Team Competitive Research: Quantitative Stock Analysis with AI", "team": "TEAM-0003", "category": "market-research", "status": "validated", "confidence": "high", "builds_on": ["KB-0001", "KB-0002"]},
-      {"id": "KB-0004", "title": "Data Gathering Methods: Iteration 1 Benchmarks & Findings", "team": "TEAM-0004", "category": "methodology", "status": "validated", "confidence": "high", "builds_on": ["KB-0003"]},
-      {"id": "KB-0005", "title": "Data Gathering Iteration 2: Parallel Hybrid Methods & Academic APIs", "team": "TEAM-0005", "category": "methodology", "status": "validated", "confidence": "high", "builds_on": ["KB-0004"]},
-      {"id": "KB-0006", "title": "Archive Tools for Knowledge Base System", "team": "TEAM-0006", "category": "tool-usage", "status": "validated", "confidence": "high", "builds_on": ["KB-0001"]},
-      {"id": "KB-0007", "title": "Research Team Configuration Testing & System Improvements", "team": "TEAM-0007", "category": "methodology", "status": "validated", "confidence": "high", "builds_on": ["KB-0004", "KB-0005", "KB-0006"]},
-      {"id": "KB-0008", "title": "Data Storage Methods & AI-Optimized Storage Research", "team": "TEAM-0008", "category": "methodology", "status": "validated", "confidence": "high", "builds_on": ["KB-0001", "KB-0007"]},
-      {"id": "KB-0009", "title": "Multi-Team Operation 3: Archive Optimization, High-Speed Tools & Coordinated Improvement", "team": "TEAM-0009", "category": "optimization", "status": "validated", "confidence": "high", "builds_on": ["KB-0006", "KB-0007", "KB-0008"]},
-      {"id": "KB-0010", "title": "Free Public APIs for AI/ML Self-Improvement", "team": "TEAM-0012", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0004", "KB-0005", "KB-0008"]},
-      {"id": "KB-0012", "title": "Free Public APIs for Developer Tools & General-Purpose Data", "team": "TEAM-0010", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0004", "KB-0005"]},
-      {"id": "KB-0013", "title": "Free Public APIs for Government and Open Data", "team": "TEAM-0013", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0004", "KB-0005"]},
-      {"id": "KB-0014", "title": "Operation 4: Public Data API Tool Development", "team": "TEAM-0014", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0004", "KB-0005", "KB-0009", "KB-0010"]},
-      {"id": "KB-0015", "title": "JSONL Message Bus: Technical Reference for Inter-Agent Communication", "team": "TEAM-0015", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0009"]},
-      {"id": "KB-0016", "title": "SQLite WAL Shared State: Technical Reference for Inter-Agent Coordination", "team": "TEAM-0016", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0009"]},
-      {"id": "KB-0017", "title": "Failure Mode Analysis: JSONL Bus + SQLite Shared State", "team": "TEAM-0017", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0015", "KB-0016", "KB-0009"]},
-      {"id": "KB-0018", "title": "Multi-Agent Communication Prototype: Dual Implementation & Test Results", "team": "TEAM-0018", "category": "methodology", "status": "validated", "confidence": "high", "builds_on": ["KB-0015", "KB-0016", "KB-0017"]},
-      {"id": "KB-0019", "title": "Architecture & Integration Analysis: Live Communication System", "team": "TEAM-0019", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0015", "KB-0016", "KB-0009"]},
-      {"id": "KB-0020", "title": "Live Prototype Testing: Data Gathering Benchmark Results", "team": "TEAM-0020", "category": "methodology", "status": "validated", "confidence": "high", "builds_on": ["KB-0018", "KB-0019"]},
-      {"id": "KB-0021", "title": "Think Tank Efficiency Analysis: Proto A Communication vs No Communication", "team": "TEAM-0021", "category": "methodology", "status": "validated", "confidence": "very-high", "builds_on": ["KB-0020", "KB-0018", "KB-0019"]},
-      {"id": "KB-0022", "title": "Multi-Team Production Deployment: 18-Agent Coordination Results", "team": "TEAM-0022", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0018", "KB-0019", "KB-0020", "KB-0021"]},
-      {"id": "KB-0023", "title": "Dynamic Team Coordination: Help Protocol, Work Stealing, Direct Channels", "team": "TEAM-0023", "category": "integration", "status": "validated", "confidence": "high", "builds_on": ["KB-0022"]},
-      {"id": "KB-0024", "title": "Stress Testing, SOPs, and Knowledge Preservation for Coordination System", "team": "TEAM-0024", "category": "testing", "status": "validated", "confidence": "high", "builds_on": ["KB-0023", "KB-0022"]},
-      {"id": "KB-0025", "title": "Bug Fixes, Coordinator Hub, and Central Commander SOPs", "team": "TEAM-0025", "category": "debugging", "status": "validated", "confidence": "high", "builds_on": ["KB-0024"]}
+      {
+        "id": "KB-0001",
+        "title": "Storage System Stress Test & Improvement Results",
+        "team": "TEAM-0001",
+        "category": "optimization",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": []
+      },
+      {
+        "id": "KB-0002",
+        "title": "Sonnet Research API -- Multi-Agent Research System",
+        "team": "TEAM-0002",
+        "category": "integration",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0001"
+        ]
+      },
+      {
+        "id": "KB-0003",
+        "title": "Multi-Team Competitive Research: Quantitative Stock Analysis with AI",
+        "team": "TEAM-0003",
+        "category": "market-research",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0001",
+          "KB-0002"
+        ]
+      },
+      {
+        "id": "KB-0004",
+        "title": "Data Gathering Methods: Iteration 1 Benchmarks & Findings",
+        "team": "TEAM-0004",
+        "category": "methodology",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0003"
+        ]
+      },
+      {
+        "id": "KB-0005",
+        "title": "Data Gathering Iteration 2: Parallel Hybrid Methods & Academic APIs",
+        "team": "TEAM-0005",
+        "category": "methodology",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0004"
+        ]
+      },
+      {
+        "id": "KB-0006",
+        "title": "Archive Tools for Knowledge Base System",
+        "team": "TEAM-0006",
+        "category": "tool-usage",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0001"
+        ]
+      },
+      {
+        "id": "KB-0007",
+        "title": "Research Team Configuration Testing & System Improvements",
+        "team": "TEAM-0007",
+        "category": "methodology",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0004",
+          "KB-0005",
+          "KB-0006"
+        ]
+      },
+      {
+        "id": "KB-0008",
+        "title": "Data Storage Methods & AI-Optimized Storage Research",
+        "team": "TEAM-0008",
+        "category": "methodology",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0001",
+          "KB-0007"
+        ]
+      },
+      {
+        "id": "KB-0009",
+        "title": "Multi-Team Operation 3: Archive Optimization, High-Speed Tools & Coordinated Improvement",
+        "team": "TEAM-0009",
+        "category": "optimization",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0006",
+          "KB-0007",
+          "KB-0008"
+        ]
+      },
+      {
+        "id": "KB-0010",
+        "title": "Free Public APIs for AI/ML Self-Improvement",
+        "team": "TEAM-0012",
+        "category": "integration",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0004",
+          "KB-0005",
+          "KB-0008"
+        ]
+      },
+      {
+        "id": "KB-0012",
+        "title": "Free Public APIs for Developer Tools & General-Purpose Data",
+        "team": "TEAM-0010",
+        "category": "integration",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0004",
+          "KB-0005"
+        ]
+      },
+      {
+        "id": "KB-0013",
+        "title": "Free Public APIs for Government and Open Data",
+        "team": "TEAM-0013",
+        "category": "integration",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0004",
+          "KB-0005"
+        ]
+      },
+      {
+        "id": "KB-0014",
+        "title": "Operation 4: Public Data API Tool Development",
+        "team": "TEAM-0014",
+        "category": "integration",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0004",
+          "KB-0005",
+          "KB-0009",
+          "KB-0010"
+        ]
+      },
+      {
+        "id": "KB-0015",
+        "title": "JSONL Message Bus: Technical Reference for Inter-Agent Communication",
+        "team": "TEAM-0015",
+        "category": "integration",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0009"
+        ]
+      },
+      {
+        "id": "KB-0016",
+        "title": "SQLite WAL Shared State: Technical Reference for Inter-Agent Coordination",
+        "team": "TEAM-0016",
+        "category": "integration",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0009"
+        ]
+      },
+      {
+        "id": "KB-0017",
+        "title": "Failure Mode Analysis: JSONL Bus + SQLite Shared State",
+        "team": "TEAM-0017",
+        "category": "integration",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0015",
+          "KB-0016",
+          "KB-0009"
+        ]
+      },
+      {
+        "id": "KB-0018",
+        "title": "Multi-Agent Communication Prototype: Dual Implementation & Test Results",
+        "team": "TEAM-0018",
+        "category": "methodology",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0015",
+          "KB-0016",
+          "KB-0017"
+        ]
+      },
+      {
+        "id": "KB-0019",
+        "title": "Architecture & Integration Analysis: Live Communication System",
+        "team": "TEAM-0019",
+        "category": "integration",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0015",
+          "KB-0016",
+          "KB-0009"
+        ]
+      },
+      {
+        "id": "KB-0020",
+        "title": "Live Prototype Testing: Data Gathering Benchmark Results",
+        "team": "TEAM-0020",
+        "category": "methodology",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0018",
+          "KB-0019"
+        ]
+      },
+      {
+        "id": "KB-0021",
+        "title": "Think Tank Efficiency Analysis: Proto A Communication vs No Communication",
+        "team": "TEAM-0021",
+        "category": "methodology",
+        "status": "validated",
+        "confidence": "very-high",
+        "builds_on": [
+          "KB-0020",
+          "KB-0018",
+          "KB-0019"
+        ]
+      },
+      {
+        "id": "KB-0022",
+        "title": "Multi-Team Production Deployment: 18-Agent Coordination Results",
+        "team": "TEAM-0022",
+        "category": "integration",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0018",
+          "KB-0019",
+          "KB-0020",
+          "KB-0021"
+        ]
+      },
+      {
+        "id": "KB-0023",
+        "title": "Dynamic Team Coordination: Help Protocol, Work Stealing, Direct Channels",
+        "team": "TEAM-0023",
+        "category": "integration",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0022"
+        ]
+      },
+      {
+        "id": "KB-0024",
+        "title": "Stress Testing, SOPs, and Knowledge Preservation for Coordination System",
+        "team": "TEAM-0024",
+        "category": "testing",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0023",
+          "KB-0022"
+        ]
+      },
+      {
+        "id": "KB-0025",
+        "title": "Bug Fixes, Coordinator Hub, and Central Commander SOPs",
+        "team": "TEAM-0025",
+        "category": "debugging",
+        "status": "validated",
+        "confidence": "high",
+        "builds_on": [
+          "KB-0024"
+        ]
+      }
     ],
     "sops": [
-      {"id": "SOP-001", "title": "Help Protocol SOP", "tool": "help_protocol", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
-      {"id": "SOP-002", "title": "Direct Channels SOP", "tool": "direct_channels", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
-      {"id": "SOP-003", "title": "Work Stealing SOP", "tool": "work_stealing", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
-      {"id": "SOP-004", "title": "Pipeline Management SOP", "tool": "pipeline_manager", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
-      {"id": "SOP-005", "title": "Scratchpad SOP", "tool": "scratchpad", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
-      {"id": "SOP-006", "title": "Bus CLI SOP", "tool": "bus_cli", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
-      {"id": "SOP-007", "title": "Multi-Team Runner SOP", "tool": "multi_team_runner", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
-      {"id": "SOP-008", "title": "Think Tank Convergence SOP", "tool": "think_tank", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
-      {"id": "SOP-009", "title": "Dashboard SOP", "tool": "dashboard", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
-      {"id": "SOP-010", "title": "New Team Onboarding SOP", "tool": "new_team_onboarding", "location": "storage/coordination/sops/tool_sops.json", "status": "working"},
-      {"id": "SOP-011", "title": "Central Commander Launch Protocol", "location": "storage/coordination/sops/sop_011_central_commander_launch.json", "status": "working", "added_by": "TEAM-0025"},
-      {"id": "SOP-012", "title": "Real-Time Monitoring and Intervention Protocol", "location": "storage/coordination/sops/sop_012_monitoring_intervention.json", "status": "working", "added_by": "TEAM-0025"},
-      {"id": "SOP-013", "title": "Agent Prompt Engineering and Context Distribution", "location": "storage/coordination/sops/sop_013_prompt_engineering.json", "status": "working", "added_by": "TEAM-0025"},
-      {"id": "SOP-EFF", "title": "Efficiency Guide", "location": "storage/coordination/sops/efficiency_guide.json", "description": "Efficiency patterns and anti-patterns for multi-team AI coordination", "status": "working"},
-      {"id": "SOP-DATA", "title": "Future Team Data Strategy", "location": "storage/coordination/sops/future_team_data_strategy.json", "description": "Data storage strategy and knowledge transfer protocol for future AI teams", "status": "working"}
+      {
+        "id": "SOP-001",
+        "title": "Help Protocol SOP",
+        "tool": "help_protocol",
+        "location": "storage/coordination/sops/tool_sops.json",
+        "status": "working"
+      },
+      {
+        "id": "SOP-002",
+        "title": "Direct Channels SOP",
+        "tool": "direct_channels",
+        "location": "storage/coordination/sops/tool_sops.json",
+        "status": "working"
+      },
+      {
+        "id": "SOP-003",
+        "title": "Work Stealing SOP",
+        "tool": "work_stealing",
+        "location": "storage/coordination/sops/tool_sops.json",
+        "status": "working"
+      },
+      {
+        "id": "SOP-004",
+        "title": "Pipeline Management SOP",
+        "tool": "pipeline_manager",
+        "location": "storage/coordination/sops/tool_sops.json",
+        "status": "working"
+      },
+      {
+        "id": "SOP-005",
+        "title": "Scratchpad SOP",
+        "tool": "scratchpad",
+        "location": "storage/coordination/sops/tool_sops.json",
+        "status": "working"
+      },
+      {
+        "id": "SOP-006",
+        "title": "Bus CLI SOP",
+        "tool": "bus_cli",
+        "location": "storage/coordination/sops/tool_sops.json",
+        "status": "working"
+      },
+      {
+        "id": "SOP-007",
+        "title": "Multi-Team Runner SOP",
+        "tool": "multi_team_runner",
+        "location": "storage/coordination/sops/tool_sops.json",
+        "status": "working"
+      },
+      {
+        "id": "SOP-008",
+        "title": "Think Tank Convergence SOP",
+        "tool": "think_tank",
+        "location": "storage/coordination/sops/tool_sops.json",
+        "status": "working"
+      },
+      {
+        "id": "SOP-009",
+        "title": "Dashboard SOP",
+        "tool": "dashboard",
+        "location": "storage/coordination/sops/tool_sops.json",
+        "status": "working"
+      },
+      {
+        "id": "SOP-010",
+        "title": "New Team Onboarding SOP",
+        "tool": "new_team_onboarding",
+        "location": "storage/coordination/sops/tool_sops.json",
+        "status": "working"
+      },
+      {
+        "id": "SOP-011",
+        "title": "Central Commander Launch Protocol",
+        "location": "storage/coordination/sops/sop_011_central_commander_launch.json",
+        "status": "working",
+        "added_by": "TEAM-0025"
+      },
+      {
+        "id": "SOP-012",
+        "title": "Real-Time Monitoring and Intervention Protocol",
+        "location": "storage/coordination/sops/sop_012_monitoring_intervention.json",
+        "status": "working",
+        "added_by": "TEAM-0025"
+      },
+      {
+        "id": "SOP-013",
+        "title": "Agent Prompt Engineering and Context Distribution",
+        "location": "storage/coordination/sops/sop_013_prompt_engineering.json",
+        "status": "working",
+        "added_by": "TEAM-0025"
+      },
+      {
+        "id": "SOP-EFF",
+        "title": "Efficiency Guide",
+        "location": "storage/coordination/sops/efficiency_guide.json",
+        "description": "Efficiency patterns and anti-patterns for multi-team AI coordination",
+        "status": "working"
+      },
+      {
+        "id": "SOP-DATA",
+        "title": "Future Team Data Strategy",
+        "location": "storage/coordination/sops/future_team_data_strategy.json",
+        "description": "Data storage strategy and knowledge transfer protocol for future AI teams",
+        "status": "working"
+      }
     ],
     "test_suites": [
       {
@@ -920,10 +1766,26 @@
         "name": "Analysis Methods",
         "location": "market-research/methods/",
         "items": [
-          {"name": "Fundamental Analysis", "file": "fundamental.md", "status": "working"},
-          {"name": "Technical Analysis", "file": "technical.md", "status": "working"},
-          {"name": "Sentiment Analysis", "file": "sentiment.md", "status": "working"},
-          {"name": "Quantitative Analysis", "file": "quantitative.md", "status": "working"}
+          {
+            "name": "Fundamental Analysis",
+            "file": "fundamental.md",
+            "status": "working"
+          },
+          {
+            "name": "Technical Analysis",
+            "file": "technical.md",
+            "status": "working"
+          },
+          {
+            "name": "Sentiment Analysis",
+            "file": "sentiment.md",
+            "status": "working"
+          },
+          {
+            "name": "Quantitative Analysis",
+            "file": "quantitative.md",
+            "status": "working"
+          }
         ]
       },
       {
@@ -932,14 +1794,38 @@
         "location": "market-research/methods/ai-quant-techniques/",
         "description": "Master index of 47 categorized AI/ML techniques across 8 categories for quantitative stock analysis. 72 references, 50 tools catalogued.",
         "categories": [
-          {"name": "ML Trading Strategies", "technique_count": 6},
-          {"name": "AI Portfolio Optimization", "technique_count": 7},
-          {"name": "AI Risk Management", "technique_count": 5},
-          {"name": "Data Pipelines & Infrastructure", "technique_count": 6},
-          {"name": "Alternative Data Sources", "technique_count": 6},
-          {"name": "High-Frequency Trading", "technique_count": 5},
-          {"name": "NLP & Sentiment Analysis", "technique_count": 4},
-          {"name": "Explainable AI & Governance", "technique_count": 8}
+          {
+            "name": "ML Trading Strategies",
+            "technique_count": 6
+          },
+          {
+            "name": "AI Portfolio Optimization",
+            "technique_count": 7
+          },
+          {
+            "name": "AI Risk Management",
+            "technique_count": 5
+          },
+          {
+            "name": "Data Pipelines & Infrastructure",
+            "technique_count": 6
+          },
+          {
+            "name": "Alternative Data Sources",
+            "technique_count": 6
+          },
+          {
+            "name": "High-Frequency Trading",
+            "technique_count": 5
+          },
+          {
+            "name": "NLP & Sentiment Analysis",
+            "technique_count": 4
+          },
+          {
+            "name": "Explainable AI & Governance",
+            "technique_count": 8
+          }
         ],
         "status": "working",
         "total_techniques": 47,

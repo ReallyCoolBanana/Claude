@@ -1,0 +1,112 @@
+{
+  "team": "november",
+  "wave": 3,
+  "timestamp": "2026-03-12T00:00:00Z",
+  "agents": ["november-lead", "november-dev-1", "november-dev-2"],
+  "mission": "Implement capability discovery, load-aware assignment, and message ordering",
+  "status": "complete",
+  "deliverables": [
+    {
+      "task": 1,
+      "agent": "november-lead",
+      "title": "Capability Discovery Protocol",
+      "file": "storage/coordination/capability_discovery.py",
+      "status": "complete",
+      "description": "CapabilityRegistry class for auto-registering and discovering agent capabilities with intelligent work matching. SQLite-backed with WAL mode, thread-safe with retry-on-busy.",
+      "key_features": [
+        "register_agent() - Register agent with proficiency-scored capabilities (1-5 scale)",
+        "update_capabilities() - Dynamic skill updates during session",
+        "find_best_match() - Score-based matching: sum proficiency for matched caps, penalize missing ones",
+        "get_team_capabilities() - Aggregate view of team skills",
+        "get_capability_matrix() - Full cross-team capability comparison",
+        "match_work_to_team() - Best team for a work item, with idle_teams constraint support",
+        "deregister_agent() - Cleanup on agent shutdown",
+        "get_all_capabilities() - List all registered capability names"
+      ],
+      "scoring_algorithm": "Sum of max proficiency scores per matching capability per team. Missing required capabilities penalized by 3 points each. Teams with score <= 0 excluded. Sorted descending by score.",
+      "integration_points": [
+        "help_protocol.py auto_assign_idle_teams() - replaces random assignment with capability matching",
+        "work_stealing.py - can query capabilities before assigning stolen work"
+      ]
+    },
+    {
+      "task": 2,
+      "agent": "november-dev-1",
+      "title": "Load-Aware Work Distribution",
+      "file": "storage/coordination/load_balancer.py",
+      "status": "complete",
+      "description": "LoadBalancer class for tracking per-team load metrics and distributing work to least-loaded capable teams. Includes backpressure signaling to stop overloading busy teams.",
+      "key_features": [
+        "update_load() - Report active_tasks and queue_depth per team",
+        "record_completion() - Track completion rate (completions/minute)",
+        "get_load() - Query current load for a specific team",
+        "get_least_loaded() - Find least loaded among capable teams (excludes backpressured)",
+        "is_overloaded() - Check if team exceeds task threshold",
+        "signal_backpressure() / clear_backpressure() - Stop/resume work assignment",
+        "get_distribution_report() - Full load overview with totals and averages",
+        "Auto-expiry of stale load data (default 5 minutes)"
+      ],
+      "load_scoring": "active_tasks + (queue_depth * 0.5). Lower is better. Backpressured teams excluded entirely.",
+      "integration_points": [
+        "work_stealing.py - check load before assigning stolen work",
+        "help_protocol.py - factor load into auto_assign decisions",
+        "Any coordinator can report team load and query distribution"
+      ]
+    },
+    {
+      "task": 3,
+      "agent": "november-dev-2",
+      "title": "Vector Clocks for Message Ordering",
+      "file": "prototype/agent_comm/vector_clock.py",
+      "status": "complete",
+      "description": "VectorClock class implementing Lamport-style vector clocks for establishing causal ordering between messages. Lightweight JSON-dict storage compatible with bus.py Message format.",
+      "key_features": [
+        "tick() - Increment local counter, return vector for outgoing message",
+        "merge() - Merge received vector with local (element-wise max)",
+        "is_before() - Check if v1 happened-before v2 (causal ordering)",
+        "is_concurrent() - Check if events are causally unrelated",
+        "detect_out_of_order() - Find messages delivered out of causal order",
+        "causal_sort() - Topological sort of messages by causal order",
+        "to_json() / from_json() - Serialization for persistence",
+        "Lightweight: vector stored as JSON dict in message body"
+      ],
+      "protocol": "On send: tick() and attach vector. On receive: merge(received_vector). is_before/is_concurrent for ordering checks.",
+      "integration_points": [
+        "bus.py Message dataclass - optional vector_clock field in body",
+        "BusWriter.publish() - can auto-attach vector clock if VectorClock instance provided",
+        "Pipeline stages can verify correct processing order using detect_out_of_order()"
+      ]
+    }
+  ],
+  "tests_passed": {
+    "capability_discovery": [
+      "register_agent with proficiency scores",
+      "find_best_match scoring and ranking",
+      "get_team_capabilities aggregation",
+      "get_capability_matrix full view",
+      "match_work_to_team with and without idle_teams constraint",
+      "exclude_teams filtering"
+    ],
+    "load_balancer": [
+      "update_load metric tracking",
+      "get_least_loaded selection",
+      "is_overloaded threshold check",
+      "signal_backpressure excludes team from assignment",
+      "get_distribution_report summary"
+    ],
+    "vector_clock": [
+      "tick increments local counter",
+      "merge takes element-wise max and increments",
+      "is_before detects causal ordering",
+      "is_concurrent detects parallel events",
+      "detect_out_of_order finds violated causal order"
+    ]
+  },
+  "architecture_notes": {
+    "pattern": "All three modules follow Proto A patterns: SQLite WAL mode, threading.Lock, _retry_on_busy decorator, context manager support",
+    "thread_safety": "All DB operations protected by threading.Lock with retry-on-busy for SQLITE_BUSY resilience",
+    "staleness": "LoadBalancer auto-expires stale load data after configurable timeout (default 5 min)",
+    "scoring": "CapabilityRegistry uses proficiency-weighted scoring with missing-cap penalties. LoadBalancer uses active_tasks + 0.5*queue_depth composite score.",
+    "vector_clocks": "Stateless comparison functions (is_before, is_concurrent) are static methods usable without instantiation. VectorClock instances track per-agent state."
+  }
+}

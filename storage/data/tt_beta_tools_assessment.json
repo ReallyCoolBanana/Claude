@@ -1,0 +1,554 @@
+{
+  "assessment_id": "TT-BETA-TOOLS-2026-03-11",
+  "generated_by": "THINK_TANK_BETA",
+  "date": "2026-03-11",
+  "mission": "What tools, APIs, and capabilities should we build or adopt?",
+  "guiding_principle": "SOP-023: Tools should ENABLE DOMAIN OUTPUT (market picks, research, data analysis), not more coordination infrastructure.",
+
+  "current_state_summary": {
+    "total_scripts": 54,
+    "total_api_tools": 2,
+    "total_cataloged_sources": 44,
+    "data_gathering_methods": 11,
+    "mcp_servers": 2,
+    "categories": {
+      "data_collection": 16,
+      "analysis": 8,
+      "automation": 3,
+      "utility": 27
+    },
+    "observation": "The repo is heavily weighted toward utility/infrastructure (27 utility scripts) vs domain-output tools (8 analysis, 16 data-collection). Only 2 actual API tools exist despite 44 cataloged sources. The gap between cataloged sources and usable tools is the primary bottleneck for domain output."
+  },
+
+  "missing_tools_ranked": [
+    {
+      "name": "pick_logger",
+      "priority": 1,
+      "domain_enabling": true,
+      "effort": "small",
+      "description": "Structured logging of market research picks with entry price, thesis, confidence, and timestamps. Enables tracking pick performance over time.",
+      "recommendation": "BUILD IMMEDIATELY. This is the single most domain-enabling missing tool. Without it, market picks are scattered across session logs with no structured tracking. Uses the existing market-research/picks/ directory and TEMPLATE.md. Estimated: 2-3 hours.",
+      "category": "domain-output"
+    },
+    {
+      "name": "cost_tracker",
+      "priority": 2,
+      "domain_enabling": true,
+      "effort": "small",
+      "description": "Tracks API call costs and token usage across sessions. Essential for managing free-tier API rate limits and budgeting paid API usage for financial data.",
+      "recommendation": "BUILD. Directly enables sustainable use of financial data APIs (Alpha Vantage 25 calls/day, Finnhub limits, etc.). Without cost awareness, teams will burn through free tiers. Estimated: 3-4 hours.",
+      "category": "enabler"
+    },
+    {
+      "name": "context_budget_monitor",
+      "priority": 3,
+      "domain_enabling": true,
+      "effort": "small",
+      "description": "Monitors context window usage to prevent truncation of critical domain data during analysis sessions.",
+      "recommendation": "BUILD. When analyzing financial statements or large datasets, context overflow silently degrades output quality. This tool protects domain output quality. Estimated: 2-3 hours.",
+      "category": "enabler"
+    },
+    {
+      "name": "dedup_checker",
+      "priority": 4,
+      "domain_enabling": true,
+      "effort": "small",
+      "description": "Checks if a KB entry, finding, or pick already exists before creating duplicates.",
+      "recommendation": "BUILD. We already have SCR-0041 (finding_dedup.py) for fuzzy matching. Extend it to work as a pre-creation check for KB entries and picks. Prevents redundant research. Estimated: 2 hours.",
+      "category": "enabler"
+    },
+    {
+      "name": "auto_briefing",
+      "priority": 5,
+      "domain_enabling": false,
+      "effort": "medium",
+      "description": "Automatically generates briefing documents from recent session logs, KB entries, and market picks for new teams.",
+      "recommendation": "DEFER. The MCP kb-search server already provides searchable access to all KB content. Auto-briefing is nice-to-have but the current onboarding prompt in the MCP repo server covers this. Focus on domain tools first.",
+      "category": "infrastructure"
+    },
+    {
+      "name": "session_planner",
+      "priority": 6,
+      "domain_enabling": false,
+      "effort": "medium",
+      "description": "Plans session work based on prior team outputs, open handoff items, and repository health.",
+      "recommendation": "DEFER. This is coordination infrastructure, not domain-enabling. The think_tank.py and multi_team_runner.py already coordinate sessions. Adding another planner adds complexity without domain output.",
+      "category": "infrastructure"
+    },
+    {
+      "name": "sop_consolidator",
+      "priority": 7,
+      "domain_enabling": false,
+      "effort": "medium",
+      "description": "Merges and deduplicates SOPs that have accumulated (28+ SOPs).",
+      "recommendation": "SKIP. Pure infrastructure housekeeping. Per SOP-023, this is exactly the kind of recursive coordination tool to avoid. SOPs can be manually reviewed.",
+      "category": "infrastructure"
+    },
+    {
+      "name": "trace_propagator",
+      "priority": 8,
+      "domain_enabling": false,
+      "effort": "large",
+      "description": "Propagates trace IDs across multi-agent coordination for debugging.",
+      "recommendation": "SKIP. Pure debugging infrastructure. Only useful if coordination system has bugs, which is a sign of over-complexity, not under-tooling.",
+      "category": "infrastructure"
+    },
+    {
+      "name": "zombie_reclaimer",
+      "priority": 9,
+      "domain_enabling": false,
+      "effort": "medium",
+      "description": "Reclaims resources from zombie agent processes.",
+      "recommendation": "SKIP. The coordination system already has heartbeat monitoring in multi_team_runner.py. Building a separate zombie reclaimer is infrastructure recursion.",
+      "category": "infrastructure"
+    }
+  ],
+
+  "api_gaps_ranked": [
+    {
+      "name": "SEC EDGAR",
+      "priority": 1,
+      "free": true,
+      "rate_limits": "10 requests/second, no API key required",
+      "domain_value": "critical",
+      "source_status": "NOT cataloged - new discovery",
+      "recommendation": "BUILD data-gathering tool immediately. SEC EDGAR provides free access to all public company financial filings (10-K, 10-Q, 8-K), XBRL financial data, and submission histories. This is THE foundational data source for any market pick. No authentication needed. Build method_sec_edgar.py following existing pattern.",
+      "effort": "medium"
+    },
+    {
+      "name": "FRED (Federal Reserve Economic Data)",
+      "priority": 2,
+      "free": true,
+      "rate_limits": "120 requests/minute, free API key required",
+      "domain_value": "high",
+      "source_status": "Cataloged as SRC-0018 and SRC-0039 (duplicate!)",
+      "recommendation": "BUILD data-gathering tool. FRED has 820,000+ economic time series (GDP, unemployment, interest rates, inflation). Essential for macro analysis that contextualizes stock picks. Build method_fred.py.",
+      "effort": "small"
+    },
+    {
+      "name": "Alpha Vantage",
+      "priority": 3,
+      "free": true,
+      "rate_limits": "25 calls/day (free tier, reduced from 500 in late 2024)",
+      "domain_value": "high",
+      "source_status": "Cataloged as SRC-0038",
+      "recommendation": "BUILD data-gathering tool. Covers real-time stock prices, 50+ technical indicators, fundamental data. The 25 calls/day limit is restrictive but sufficient for targeted analysis. Build method_alphavantage.py. Consider also setting up the Alpha Vantage MCP server (official, free).",
+      "effort": "small"
+    },
+    {
+      "name": "Finnhub",
+      "priority": 4,
+      "free": true,
+      "rate_limits": "60 calls/minute (free tier)",
+      "domain_value": "high",
+      "source_status": "Cataloged as SRC-0040",
+      "recommendation": "BUILD data-gathering tool. Real-time stock data, company fundamentals, economic data, alternative data. More generous free tier than Alpha Vantage. Build method_finnhub.py.",
+      "effort": "small"
+    },
+    {
+      "name": "CoinGecko",
+      "priority": 5,
+      "free": true,
+      "rate_limits": "10-30 calls/minute (free tier)",
+      "domain_value": "medium",
+      "source_status": "Cataloged as SRC-0041",
+      "recommendation": "BUILD if crypto analysis is in scope. Comprehensive crypto market data, historical prices, trending coins. Build method_coingecko.py.",
+      "effort": "small"
+    },
+    {
+      "name": "Financial Modeling Prep (FMP)",
+      "priority": 6,
+      "free": true,
+      "rate_limits": "250 requests/day (free tier)",
+      "domain_value": "high",
+      "source_status": "NOT cataloged - new discovery",
+      "recommendation": "CATALOG and BUILD. Financial statements, DCF valuations, stock screener, earnings calendars. More generous free tier than Alpha Vantage. Excellent for fundamental analysis. Build method_fmp.py.",
+      "effort": "small"
+    },
+    {
+      "name": "CrossRef",
+      "priority": 7,
+      "free": true,
+      "rate_limits": "50 requests/second (polite pool with email)",
+      "domain_value": "medium",
+      "source_status": "Cataloged as SRC-0004",
+      "recommendation": "BUILD data-gathering tool. Useful for academic research validation, but we already have OpenAlex and Semantic Scholar which overlap significantly. Lower priority than financial APIs.",
+      "effort": "small"
+    },
+    {
+      "name": "PyPI/npm",
+      "priority": 8,
+      "free": true,
+      "rate_limits": "Generous, no key required",
+      "domain_value": "low-medium",
+      "source_status": "Cataloged as SRC-0027 (PyPI) and SRC-0026 (npm)",
+      "recommendation": "ALREADY COVERED by version_tracker.py (SCR-0047). No additional tool needed.",
+      "effort": "none"
+    },
+    {
+      "name": "StackOverflow/StackExchange",
+      "priority": 9,
+      "free": true,
+      "rate_limits": "300 requests/day without key, 10,000/day with key",
+      "domain_value": "low",
+      "source_status": "Cataloged as SRC-0031",
+      "recommendation": "LOW PRIORITY. Useful for technical research but not domain-output enabling for market picks or financial analysis.",
+      "effort": "small"
+    },
+    {
+      "name": "PubMed",
+      "priority": 10,
+      "free": true,
+      "rate_limits": "3 requests/second without key, 10/second with key",
+      "domain_value": "low",
+      "source_status": "NOT cataloged",
+      "recommendation": "LOW PRIORITY. Biomedical/life sciences research. Only relevant for pharma stock analysis. We already have OpenAlex and Semantic Scholar for academic papers.",
+      "effort": "small"
+    },
+    {
+      "name": "Reddit",
+      "priority": 11,
+      "free": false,
+      "rate_limits": "Reddit API now requires paid access for most use cases (changed 2023)",
+      "domain_value": "medium",
+      "source_status": "NOT cataloged",
+      "recommendation": "SKIP. Reddit API pricing changes in 2023 made it expensive. Sentiment data can be obtained via other sources (news APIs, HackerNews which we already have).",
+      "effort": "medium"
+    },
+    {
+      "name": "Hugging Face Hub",
+      "priority": 12,
+      "free": true,
+      "rate_limits": "Generous for metadata, inference API has limits",
+      "domain_value": "low",
+      "source_status": "Cataloged as SRC-0035 (inference API)",
+      "recommendation": "LOW PRIORITY. Useful for ML model discovery but not directly domain-enabling for market research.",
+      "effort": "small"
+    },
+    {
+      "name": "ConceptNet",
+      "priority": 13,
+      "free": true,
+      "rate_limits": "Generous",
+      "domain_value": "low",
+      "source_status": "Cataloged as SRC-0034",
+      "recommendation": "SKIP. Common-sense knowledge graph. Not relevant to market research or financial analysis.",
+      "effort": "small"
+    },
+    {
+      "name": "Open-Meteo",
+      "priority": 14,
+      "free": true,
+      "rate_limits": "10,000 requests/day",
+      "domain_value": "low",
+      "source_status": "Cataloged as SRC-0022",
+      "recommendation": "SKIP. Weather data has minimal relevance to core market research mission.",
+      "effort": "small"
+    }
+  ],
+
+  "new_financial_apis_discovered": [
+    {
+      "name": "SEC EDGAR API",
+      "url": "https://data.sec.gov",
+      "free": true,
+      "no_auth": true,
+      "value": "critical - free company financials for all US public companies",
+      "rate_limit": "10 req/sec with User-Agent header"
+    },
+    {
+      "name": "Financial Modeling Prep (FMP)",
+      "url": "https://financialmodelingprep.com",
+      "free": true,
+      "value": "high - financial statements, DCF, screener, 250 req/day free",
+      "rate_limit": "250/day free tier"
+    },
+    {
+      "name": "EODHD (End of Day Historical Data)",
+      "url": "https://eodhd.com",
+      "free": true,
+      "value": "medium - historical EOD data, 20 req/day free tier",
+      "rate_limit": "20/day free tier"
+    },
+    {
+      "name": "Twelve Data",
+      "url": "https://twelvedata.com",
+      "free": true,
+      "value": "medium - intraday and historical stock prices",
+      "rate_limit": "800 req/day free tier"
+    }
+  ],
+
+  "new_techniques": [
+    {
+      "name": "LightRAG",
+      "source": "https://github.com/HKUDS/LightRAG",
+      "description": "Graph-enhanced RAG framework that builds a lightweight knowledge graph during ingestion. Entities become nodes, relationships become edges. Dual-level retrieval (specific entities + broader themes). Published at EMNLP 2025.",
+      "applicability": "HIGH. Our knowledge base of 40+ KB entries with builds_on chains is a natural graph structure. LightRAG could dramatically improve KB retrieval by understanding entity relationships (tools -> APIs -> data sources -> picks). Would replace simple TF-IDF search (SCR-0018) with graph-aware retrieval.",
+      "effort": "medium"
+    },
+    {
+      "name": "MCP Financial Data Servers",
+      "source": "Multiple vendors (Alpha Vantage, Financial Datasets, FMP, EODHD, Yahoo Finance/Stockflow)",
+      "description": "Pre-built MCP servers that expose financial data as callable tools. Alpha Vantage has an official MCP server. Financial Datasets MCP supports OAuth (no API key needed for interactive use). Yahoo Finance Stockflow requires no auth at all.",
+      "applicability": "CRITICAL. Instead of building custom data-gathering scripts for each financial API, we can add existing MCP servers to .mcp.json and immediately have financial data tools available. This is the single highest-leverage adoption opportunity.",
+      "effort": "small"
+    },
+    {
+      "name": "Claude Agent SDK (agent-sdk)",
+      "source": "https://github.com/anthropics/claude-agent-sdk-demos",
+      "description": "Production agent runtime with built-in tools (Read, Write, Bash, Grep, Glob, WebFetch, WebSearch), MCP integration, Agent Skills (.skill.md), subagent spawning, and sandbox execution. Python v0.1.48, TypeScript v0.2.71.",
+      "applicability": "HIGH. We are already running inside this SDK. Key underutilized capability: Agent Skills - we could package our market research workflow, data gathering pipeline, and pick analysis as reusable skills. Also: subagent spawning could replace our custom coordination system.",
+      "effort": "medium"
+    },
+    {
+      "name": "Agent Skills (agentskills.io)",
+      "source": "https://agentskills.io",
+      "description": "Open standard published December 2025 for packaging agent capabilities as SKILL.md files. Works across Claude.ai, Claude Code, and Agent SDK. A skill is a directory with instructions, scripts, and reference material.",
+      "applicability": "HIGH. We should package our key domain workflows as skills: market-research-pick, financial-analysis, data-gathering-pipeline. This makes our tools reusable outside this specific repo.",
+      "effort": "small"
+    },
+    {
+      "name": "MCP Apps (Interactive UI Extension)",
+      "source": "https://blog.modelcontextprotocol.io/posts/2026-mcp-roadmap/",
+      "description": "Official MCP extension (live 2026) where tools return interactive UI components: dashboards, forms, visualizations, multi-step workflows rendered directly in conversation.",
+      "applicability": "MEDIUM. Could enable interactive stock screener dashboards, portfolio visualization, or pick performance charts rendered in conversation. Future-looking but worth monitoring.",
+      "effort": "large"
+    },
+    {
+      "name": "GraphRAG / LazyGraphRAG",
+      "source": "Microsoft Research, multiple papers (ICLR 2026, NeurIPS 2025)",
+      "description": "Full GraphRAG extracts entities/relationships from documents into hierarchical communities. LazyGraphRAG reduces indexing cost to 0.1% of full GraphRAG while maintaining quality.",
+      "applicability": "MEDIUM. More heavyweight than LightRAG. LazyGraphRAG variant is interesting for large-scale document analysis but our corpus is small enough that LightRAG is more appropriate.",
+      "effort": "large"
+    }
+  ],
+
+  "mcp_expansion": [
+    {
+      "tool_name": "Alpha Vantage MCP Server",
+      "description": "Official MCP server for stock market data, technical indicators, fundamentals. Uses Progressive Tool Discovery to minimize token usage.",
+      "value": "critical",
+      "free": true,
+      "install": "Add to .mcp.json - official package available",
+      "effort": "small"
+    },
+    {
+      "tool_name": "Yahoo Finance (Stockflow) MCP Server",
+      "description": "Lightweight, no-auth financial data server. Real-time prices, historical data, company info.",
+      "value": "high",
+      "free": true,
+      "install": "npm package, add to .mcp.json, no API key needed",
+      "effort": "small"
+    },
+    {
+      "tool_name": "Financial Datasets MCP Server",
+      "description": "Income statements, balance sheets, cash flow, stock/crypto prices, SEC filings. OAuth for interactive, API key for programmatic.",
+      "value": "high",
+      "free": true,
+      "install": "Available on GitHub, add to .mcp.json",
+      "effort": "small"
+    },
+    {
+      "tool_name": "Market Research Skill (custom)",
+      "description": "Package our pick-making workflow as an Agent Skill: gather financial data -> analyze fundamentals -> check technicals -> generate pick with thesis -> log via pick_logger.",
+      "value": "high",
+      "free": true,
+      "install": "Create .skill.md in repo with workflow instructions",
+      "effort": "medium"
+    },
+    {
+      "tool_name": "LightRAG MCP wrapper (custom)",
+      "description": "Wrap LightRAG graph-based retrieval as an MCP server for our knowledge base. Replace or augment current kb-search MCP server with graph-aware retrieval.",
+      "value": "medium",
+      "free": true,
+      "install": "Build custom MCP server using LightRAG library + our KB corpus",
+      "effort": "medium"
+    }
+  ],
+
+  "build_vs_adopt": [
+    {
+      "item": "Financial data access (stock prices, fundamentals)",
+      "decision": "ADOPT",
+      "reasoning": "Multiple production MCP servers already exist (Alpha Vantage, Yahoo Finance/Stockflow, FMP). Adding them to .mcp.json takes minutes. Building custom method_*.py scripts for each API is redundant when MCP servers provide the same data with better integration."
+    },
+    {
+      "item": "SEC EDGAR data gathering",
+      "decision": "BUILD",
+      "reasoning": "No MCP server exists for SEC EDGAR specifically. The API is free, no-auth, and critical for fundamental analysis. Build method_sec_edgar.py following our established pattern. Also consider the sec-api Python package."
+    },
+    {
+      "item": "FRED economic data",
+      "decision": "BUILD",
+      "reasoning": "No well-known MCP server for FRED. We have the source cataloged (SRC-0018/SRC-0039). Build method_fred.py - straightforward REST API with free key."
+    },
+    {
+      "item": "pick_logger",
+      "decision": "BUILD",
+      "reasoning": "Domain-specific to our market-research workflow. No external tool exists for this. Build as a simple Python script that creates structured pick entries in market-research/picks/."
+    },
+    {
+      "item": "cost_tracker / API budget monitor",
+      "decision": "BUILD",
+      "reasoning": "Needs to be integrated with our specific API usage patterns and free-tier limits. Simple wrapper around request_cache.py (SCR-0022) that counts calls per API per day."
+    },
+    {
+      "item": "Knowledge graph retrieval",
+      "decision": "ADOPT (LightRAG)",
+      "reasoning": "LightRAG is mature (EMNLP 2025 publication, active development through Nov 2025). Building our own graph retrieval would be wasteful. Install LightRAG, index our KB corpus, and optionally wrap as MCP server."
+    },
+    {
+      "item": "Agent Skills packaging",
+      "decision": "BUILD",
+      "reasoning": "Agent Skills are just .skill.md files with structured instructions. We need to create skills specific to our domain workflows. This is a content creation task, not a software development task."
+    },
+    {
+      "item": "dedup_checker",
+      "decision": "EXTEND",
+      "reasoning": "SCR-0041 (finding_dedup.py) already does fuzzy matching. Extend it with a pre-creation check mode rather than building a new tool."
+    },
+    {
+      "item": "context_budget_monitor",
+      "decision": "BUILD",
+      "reasoning": "Simple token counting utility. No external tool fits our specific context window management needs."
+    },
+    {
+      "item": "sop_consolidator / trace_propagator / zombie_reclaimer",
+      "decision": "SKIP",
+      "reasoning": "Per SOP-023 anti-recursion protocol, these are infrastructure tools that do not enable domain output. They address coordination complexity that should be reduced, not managed."
+    }
+  ],
+
+  "top_5_recommendations": [
+    {
+      "rank": 1,
+      "item": "Add financial MCP servers to .mcp.json",
+      "impact": "critical",
+      "effort": "small (hours)",
+      "justification": "Instant access to stock prices, fundamentals, and financial statements by adding 2-3 pre-built MCP servers (Alpha Vantage, Yahoo Finance/Stockflow, Financial Datasets). This is the highest-leverage action: minutes of configuration yields production-grade financial data tools. Enables market picks immediately.",
+      "specific_actions": [
+        "Add Alpha Vantage MCP server (official, free API key)",
+        "Add Yahoo Finance Stockflow MCP (no auth needed)",
+        "Add Financial Datasets MCP (OAuth for interactive use)"
+      ]
+    },
+    {
+      "rank": 2,
+      "item": "Build SEC EDGAR data-gathering tool",
+      "impact": "critical",
+      "effort": "medium (1 day)",
+      "justification": "SEC EDGAR is the only free, no-auth source of comprehensive US public company financial data. No MCP server exists for it. Every serious market pick requires fundamental analysis of financial statements (10-K, 10-Q). Build method_sec_edgar.py + catalog as SRC entry.",
+      "specific_actions": [
+        "Build method_sec_edgar.py following method_*.py pattern",
+        "Support company lookup by ticker/CIK",
+        "Extract XBRL financial data (revenue, earnings, etc.)",
+        "Catalog as new SRC entry"
+      ]
+    },
+    {
+      "rank": 3,
+      "item": "Build pick_logger tool",
+      "impact": "high",
+      "effort": "small (hours)",
+      "justification": "Without structured pick logging, market research output is scattered and untrackable. This tool closes the loop from research -> pick -> performance tracking. Uses existing market-research/picks/ infrastructure.",
+      "specific_actions": [
+        "Build pick_logger.py that creates structured pick entries",
+        "Include: ticker, entry_price, thesis, confidence, date, data_sources_used",
+        "Auto-generate next pick ID",
+        "Update market-research/picks/index.json"
+      ]
+    },
+    {
+      "rank": 4,
+      "item": "Build FRED data-gathering tool",
+      "impact": "high",
+      "effort": "small (hours)",
+      "justification": "Macro-economic context (interest rates, GDP, unemployment, inflation) is essential for contextualizing stock picks. FRED has 820,000+ time series. Free API key, 120 req/min. No MCP server available.",
+      "specific_actions": [
+        "Build method_fred.py following established pattern",
+        "Support series search and data retrieval",
+        "Key series: GDP, CPI, UNRATE, DFF, T10Y2Y (yield curve)",
+        "Deduplicate SRC-0018 and SRC-0039 entries"
+      ]
+    },
+    {
+      "rank": 5,
+      "item": "Adopt LightRAG for knowledge graph retrieval",
+      "impact": "medium-high",
+      "effort": "medium (2-3 days)",
+      "justification": "Our KB has 40+ entries with builds_on chains forming a natural graph. Current search is TF-IDF (SCR-0018) or FTS5 (MCP kb-search). LightRAG would enable relationship-aware queries like 'what tools relate to market research' by understanding entity connections. This improves the quality of briefings and prevents redundant work.",
+      "specific_actions": [
+        "Install LightRAG Python package",
+        "Index all KB entries, team logs, and script metadata",
+        "Build MCP server wrapper (or extend existing kb-search MCP)",
+        "Test with multi-hop queries across KB entries"
+      ]
+    }
+  ],
+
+  "anti_recommendations": [
+    {
+      "item": "Do NOT build sop_consolidator, trace_propagator, or zombie_reclaimer",
+      "reason": "These are infrastructure-recursive tools. Per SOP-023, the coordination system should be simplified, not managed with more tools. If 28 SOPs are too many, delete some rather than building a tool to manage them."
+    },
+    {
+      "item": "Do NOT build a Reddit data-gathering tool",
+      "reason": "Reddit API pricing changes (2023) make it expensive. Sentiment data is available through HackerNews (already built, SCR-0024) and news APIs."
+    },
+    {
+      "item": "Do NOT build custom financial data scripts when MCP servers exist",
+      "reason": "Alpha Vantage, Yahoo Finance, and Financial Datasets all have production MCP servers. Using them via .mcp.json is faster and more reliable than building method_*.py scripts for the same APIs."
+    },
+    {
+      "item": "Do NOT pursue ConceptNet or Open-Meteo tools",
+      "reason": "Neither is relevant to the core market research and financial analysis mission."
+    }
+  ],
+
+  "implementation_roadmap": {
+    "week_1_immediate": [
+      "Add 2-3 financial MCP servers to .mcp.json (Alpha Vantage, Stockflow, Financial Datasets)",
+      "Build pick_logger.py",
+      "Build cost_tracker.py (API usage counting)"
+    ],
+    "week_2_short_term": [
+      "Build method_sec_edgar.py",
+      "Build method_fred.py",
+      "Build method_finnhub.py (if not covered by MCP server)",
+      "Extend finding_dedup.py with pre-creation check mode",
+      "Deduplicate SRC-0018/SRC-0039 FRED entries"
+    ],
+    "week_3_medium_term": [
+      "Evaluate and integrate LightRAG for KB retrieval",
+      "Package market-research workflow as Agent Skill (.skill.md)",
+      "Build context_budget_monitor.py",
+      "Catalog FMP as new SRC entry and build method_fmp.py"
+    ],
+    "future_monitoring": [
+      "MCP Apps (interactive UI) - monitor for production readiness",
+      "MCP Tasks primitive improvements - for long-running financial analysis",
+      "LazyGraphRAG - if our corpus grows significantly"
+    ]
+  },
+
+  "key_insight": "The biggest gap is not in tools or infrastructure -- it is in the ratio of domain-output tools to coordination tools. We have 54 scripts but only 2 API tools and zero financial data integrations usable in real-time. Adding 2-3 financial MCP servers to .mcp.json would instantly transform our capability to produce market picks, taking us from 'can research topics' to 'can analyze stocks with real financial data' in hours, not weeks.",
+
+  "sources": [
+    "https://www.alphavantage.co/",
+    "https://finnhub.io/",
+    "https://site.financialmodelingprep.com/developer/docs",
+    "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+    "https://fred.stlouisfed.org/docs/api/fred/",
+    "https://mcp.alphavantage.co/",
+    "https://github.com/financial-datasets/mcp-server",
+    "https://www.pulsemcp.com/servers/twolven-stockflow",
+    "https://eodhd.com/financial-apis/mcp-server-for-financial-data-by-eodhd",
+    "https://github.com/HKUDS/LightRAG",
+    "https://modelcontextprotocol.io/specification/2025-11-25",
+    "https://blog.modelcontextprotocol.io/posts/2026-mcp-roadmap/",
+    "https://www.anthropic.com/engineering/building-agents-with-the-claude-agent-sdk",
+    "https://github.com/anthropics/claude-agent-sdk-demos",
+    "https://hackernoon.com/12-must-have-financial-market-apis-for-real-time-insights-in-2026"
+  ]
+}

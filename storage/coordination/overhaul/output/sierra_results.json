@@ -1,0 +1,58 @@
+{
+  "team": "SIERRA",
+  "wave": 4,
+  "completed_at": "2026-03-12",
+  "mission": "Wire ack_protocol and vector_clock into critical message paths",
+  "tasks": [
+    {
+      "id": "sierra-lead",
+      "title": "Wire ack into help_protocol.py",
+      "status": "completed",
+      "file": "storage/coordination/help_protocol.py",
+      "notes": "Found already wired by prior team. Verified: ack_protocol param in __init__, send_no_wait in request_help/offer_help/fulfill_help, check_unacked_requests method present. Backwards compatible (ack_protocol defaults to None)."
+    },
+    {
+      "id": "sierra-dev-1",
+      "title": "Wire vector clocks into work_stealing.py pipelines",
+      "status": "completed",
+      "file": "storage/coordination/work_stealing.py",
+      "changes": [
+        "Added optional vector_clock parameter to PipelineManager.__init__",
+        "Added _stage_vectors dict to track per-stage vector clock snapshots",
+        "start_stage(): accepts incoming_vector_clock param, merges it before processing, attaches vc to bus notification",
+        "complete_stage(): ticks vector clock on completion, attaches vc snapshot to bus notification",
+        "trigger_downstream(): attaches completed stage's vector clock to stage-ready notifications for downstream consumption",
+        "Added verify_ordering() method that checks pipeline stage vector clocks respect causal dependencies",
+        "Full backwards compatibility: all new params optional, no behavior change when vector_clock=None"
+      ]
+    },
+    {
+      "id": "sierra-dev-2",
+      "title": "Wire ack into coordinator_hub.py instructions",
+      "status": "completed",
+      "file": "storage/coordination/coordinator_hub.py",
+      "changes": [
+        "Added optional ack_protocol parameter to CoordinatorDashboard.__init__",
+        "Added _CRITICAL_INSTRUCTION_TYPES class constant: redirect, reassign, shutdown",
+        "send_instruction(): uses ack_protocol.send_no_wait for critical instruction types, falls back to plain bus on failure",
+        "broadcast_instruction(): uses ack_protocol.send_no_wait per-agent for critical instruction types, falls back to plain bus on failure",
+        "Added get_unacknowledged_instructions() method: queries ack_protocol.get_unacked filtered to instruction msg_type",
+        "AgentReporter: added optional ack_protocol parameter",
+        "AgentReporter.check_instructions(): auto-acks received instructions via ack_protocol when available",
+        "Full backwards compatibility: all new params optional, no behavior change when ack_protocol=None"
+      ]
+    }
+  ],
+  "deliverables": [
+    "storage/coordination/help_protocol.py",
+    "storage/coordination/work_stealing.py",
+    "storage/coordination/coordinator_hub.py"
+  ],
+  "backwards_compatible": true,
+  "integration_notes": {
+    "ack_protocol_import": "from prototype.agent_comm.ack_protocol import AckProtocol",
+    "vector_clock_import": "from prototype.agent_comm.vector_clock import VectorClock",
+    "usage_example_ack": "dashboard = CoordinatorDashboard(db_path, ack_protocol=ack_instance)",
+    "usage_example_vc": "pipeline_mgr = PipelineManager(db_path, bus_dir, team, agent_id, vector_clock=vc_instance)"
+  }
+}

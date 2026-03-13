@@ -1,0 +1,319 @@
+{
+  "team": "research-gamma",
+  "date": "2026-03-11",
+  "topic": "AI Frontier Techniques and Future Tools",
+  "findings": [
+    {
+      "area": "MCP (Model Context Protocol)",
+      "current_state": "MCP is now the universal standard for AI-tool integration. Introduced by Anthropic Nov 2024, adopted by OpenAI (March 2025), Google DeepMind (April 2025), and donated to Linux Foundation's Agentic AI Foundation (Dec 2025). Over 97M monthly SDK downloads, 10,000+ active servers. Current spec (Nov 2025) supports async operations, Streamable HTTP transport, OAuth 2.1, server-side .well-known discovery, and tool annotations. SDKs available in Python, TypeScript, C#, and Java.",
+      "key_insights": [
+        "MCP uses JSON-RPC 2.0 with three primitives: tools (executable actions), resources (structured data), and prompts (reusable workflows)",
+        "Building a custom MCP server in Python requires under 50 lines using FastMCP framework with @mcp.tool() decorators",
+        "OpenAI deprecated Assistants API in favor of MCP, signaling industry-wide convergence",
+        "Security is a major concern: tool poisoning, credential theft, prompt injection attacks through malicious MCP servers",
+        "MCP roadmap includes agent-to-agent communication standards for multi-agent workflows",
+        "1200+ quality-verified servers available via mcp-awesome.com directory"
+      ],
+      "implementation_path": "Build custom MCP servers to expose our knowledge base, coordination system, and data pipelines as MCP tools. Use Python FastMCP SDK. Start with a read-only KB search server, then add coordination tools. This would let any MCP-compatible client (Claude, ChatGPT, Cursor, Copilot) access our system.",
+      "complexity": "medium",
+      "impact": "high",
+      "sources": [
+        "https://github.com/modelcontextprotocol/servers",
+        "https://modelcontextprotocol.io/specification/2025-11-25",
+        "https://modelcontextprotocol.io/docs/develop/build-server",
+        "https://mcp-awesome.com/",
+        "https://github.com/modelcontextprotocol/typescript-sdk",
+        "https://www.chanl.ai/blog/mcp-explained-build-first-server-typescript-python"
+      ],
+      "recommendations": [
+        "Build an MCP server wrapping our SQLite FTS5 knowledge base search",
+        "Create MCP tools for the coordination system (post messages, read channels, check heartbeats)",
+        "Add MCP resource endpoints for browsing KB entries and team logs",
+        "Use Streamable HTTP transport for remote access by other agents",
+        "Implement tool annotations (read-only vs mutating) for safety"
+      ]
+    },
+    {
+      "area": "Claude Agent SDK",
+      "current_state": "Renamed from Claude Code SDK to Claude Agent SDK. Available in Python and TypeScript. Provides the same agent loop, tools, and context management that powers Claude Code. Supports built-in tools (file read/write, bash, search), custom MCP tools as in-process servers, hooks (pre/post tool use), subagents, structured output via JSON Schema, and permission modes. Deployable via Anthropic API, AWS Bedrock, Google Vertex AI, and Azure Foundry.",
+      "key_insights": [
+        "The SDK's core philosophy is 'give agents a computer' - file system, terminal, and web access as first-class capabilities",
+        "Custom tools are implemented as in-process MCP servers, eliminating need for separate processes",
+        "Subagent pattern allows creating specialized agents for subtasks within a main agent",
+        "Hooks enable custom validation and control logic before/after tool execution",
+        "query() for one-shot, ClaudeSDKClient for interactive bidirectional conversations",
+        "Demo repo includes a multi-agent research system with coordinated subagents"
+      ],
+      "implementation_path": "Use Agent SDK to build specialized agents that plug into our coordination system. Each agent gets custom MCP tools for KB access, coordination bus messaging, and data gathering. Subagent pattern maps directly to our hub-and-spoke architecture.",
+      "complexity": "medium",
+      "impact": "high",
+      "sources": [
+        "https://platform.claude.com/docs/en/agent-sdk/overview",
+        "https://github.com/anthropics/claude-agent-sdk-python",
+        "https://www.anthropic.com/engineering/building-agents-with-the-claude-agent-sdk",
+        "https://github.com/anthropics/claude-agent-sdk-demos",
+        "https://nader.substack.com/p/the-complete-guide-to-building-agents"
+      ],
+      "recommendations": [
+        "Prototype a KB-aware agent using Agent SDK with custom MCP tools for our knowledge base",
+        "Use subagent pattern for team-based workflows (research, analysis, writing)",
+        "Implement hooks for logging all tool calls to our coordination bus",
+        "Build structured output schemas for knowledge base entries and team logs",
+        "Explore multi-agent demo repo for patterns applicable to our system"
+      ]
+    },
+    {
+      "area": "RAG Advances (GraphRAG, RAPTOR, Hybrid Search, Agentic RAG)",
+      "current_state": "RAG has evolved from simple vector-search-plus-prompt to sophisticated architectures. GraphRAG (Microsoft, 2024) constructs entity-relation graphs with hierarchical communities. RAPTOR builds recursive tree summaries for multi-level retrieval. Agentic RAG uses LLM agents to plan multi-step retrieval with self-correction. Hybrid search (semantic + keyword + graph traversal) consistently outperforms single-method pipelines. Key variants: LightRAG (10x token reduction vs GraphRAG), LazyGraphRAG (0.1% indexing cost), HippoRAG (hippocampal-inspired PageRank). State-of-the-art includes multimodal RAG and state-aware retrieval.",
+      "key_insights": [
+        "GraphRAG excels at complex multi-hop queries requiring synthesis across sources; overkill for simple lookups",
+        "LightRAG achieves comparable accuracy to GraphRAG with 10x token reduction - best cost/performance ratio",
+        "Hybrid retrieval (semantic + BM25 + graph) consistently outperforms any single retrieval method",
+        "Agentic RAG lets the LLM decide retrieval strategy dynamically, self-correct on poor results",
+        "RAPTOR's hierarchical summarization enables answering both granular and thematic questions",
+        "Cross-encoder re-ranking in multi-stage retrieval pipelines significantly boosts precision",
+        "Our existing FTS5 search is a strong BM25 component; adding semantic search would create a hybrid system"
+      ],
+      "implementation_path": "Upgrade our KB search from pure FTS5 to hybrid retrieval: add vector embeddings alongside existing FTS5. Consider LightRAG for graph-based retrieval given its low cost. Implement a simple re-ranking step. Long-term: Agentic RAG where the agent plans its own retrieval strategy.",
+      "complexity": "medium",
+      "impact": "high",
+      "sources": [
+        "https://ragflow.io/blog/rag-at-the-crossroads-mid-2025-reflections-on-ai-evolution",
+        "https://datanucleus.dev/rag-and-agentic-ai/what-is-rag-enterprise-guide-2025",
+        "https://arxiv.org/abs/2501.00309",
+        "https://squirro.com/squirro-blog/state-of-rag-genai",
+        "https://pub.towardsai.net/building-a-modern-rag-pipeline-in-2026-qwen3-embeddings-and-vector-database-in-qdrant-ebeca2bbe338"
+      ],
+      "recommendations": [
+        "Add embedding-based semantic search to complement existing FTS5 (hybrid retrieval)",
+        "Evaluate LightRAG for graph-based knowledge relationships across KB entries",
+        "Implement cross-encoder re-ranking as a second-stage filter on search results",
+        "Consider Agentic RAG pattern where agents plan multi-step retrieval",
+        "Build entity-relation extraction into KB entry ingestion pipeline"
+      ]
+    },
+    {
+      "area": "Agentic Coding Tools Landscape",
+      "current_state": "2026 is the era of agentic IDEs. Claude Code leads developer satisfaction (46% most loved). Cursor is the most popular IDE (1M+ users) with background agents. GitHub Copilot has 20M users and 90% Fortune 100 adoption. Windsurf (acquired by Cognition AI) is budget-friendly at $15/mo. Key patterns: parallel agent workflows, memory/persistence across sessions, skills/institutional knowledge (skills.md), and tiered tool combinations. The role of developers is shifting toward architecture, system design, prompt engineering, and quality judgment.",
+      "key_insights": [
+        "Skills.md pattern (institutional knowledge encoded as prompts) is becoming standard across tools",
+        "Background/parallel agents allow supervising multiple AI workers simultaneously",
+        "Memory persistence between sessions is the #1 developer frustration and opportunity",
+        "Tiered approach (Copilot for all + Cursor/Claude Code for seniors) cuts costs 40-50%",
+        "Claude Code's 1M token context + Opus models give deepest reasoning capability",
+        "Our CLAUDE.md already implements the skills/institutional knowledge pattern"
+      ],
+      "implementation_path": "Our multi-agent coordination system already implements many of these patterns (parallel agents, coordination, shared knowledge). Key opportunity: build MCP servers so our system works with all major agentic IDEs. Enhance our CLAUDE.md as a skills file.",
+      "complexity": "low",
+      "impact": "medium",
+      "sources": [
+        "https://www.lushbinary.com/blog/ai-coding-agents-comparison-cursor-windsurf-claude-copilot-kiro-2026/",
+        "https://dev.to/pockit_tools/cursor-vs-windsurf-vs-claude-code-in-2026-the-honest-comparison-after-using-all-three-3gof",
+        "https://redmonk.com/kholterhoff/2025/12/22/10-things-developers-want-from-their-agentic-ides-in-2025/",
+        "https://www.nxcode.io/resources/news/cursor-vs-windsurf-vs-claude-code-2026"
+      ],
+      "recommendations": [
+        "Build MCP servers for our KB so any agentic IDE can access our knowledge system",
+        "Enhance CLAUDE.md with more structured skills definitions",
+        "Document our multi-agent patterns as reusable templates for other projects",
+        "Implement session memory persistence using knowledge graph or vector DB"
+      ]
+    },
+    {
+      "area": "Prompt Engineering 2025-2026",
+      "current_state": "Prompt engineering has grown into a $1.5B market (2026). Chain-of-Thought improves reasoning 30-50% on benchmarks. Self-consistency (multiple reasoning paths, pick most consistent) and Tree-of-Thought (explore multiple branches) are now standard techniques. Structured output formatting reduces variability by 35%. Dynamic few-shot prompting adapts examples in real-time. Meta-prompting structures and organizes LLM responses. Prompt libraries, governance frameworks, and automated prompt optimization are emerging enterprise practices.",
+      "key_insights": [
+        "CoT + self-consistency (generate multiple reasoning paths, select most consistent) is the highest-performing prompting strategy",
+        "Structured output (JSON, tables) enables reliable tool integration and reduces parsing errors",
+        "Dynamic few-shot prompting adapts examples based on model's previous outputs",
+        "Function calling, tool integration, and debugging agentic systems are now core prompt engineering competencies",
+        "Prompt optimization tools can automatically iterate and improve prompts",
+        "Example ordering shifts accuracy 40+ points in few-shot settings - order matters enormously"
+      ],
+      "implementation_path": "Apply structured output patterns to our agent communication (JSON schemas for messages). Use self-consistency for critical decisions in our coordination system. Build prompt templates library for common agent tasks (research, analysis, writing).",
+      "complexity": "low",
+      "impact": "medium",
+      "sources": [
+        "https://www.lakera.ai/blog/prompt-engineering-guide",
+        "https://www.k2view.com/blog/prompt-engineering-techniques/",
+        "https://www.promptingguide.ai/techniques/cot",
+        "https://orq.ai/blog/what-is-chain-of-thought-prompting"
+      ],
+      "recommendations": [
+        "Build a prompt templates library in storage/ for common agent operations",
+        "Implement self-consistency for critical multi-agent decisions (multiple reasoning paths, vote)",
+        "Use structured JSON output schemas for all inter-agent communication",
+        "Add Tree-of-Thought for complex planning tasks in the coordination system",
+        "Document effective prompting patterns in knowledge base for team reuse"
+      ]
+    },
+    {
+      "area": "Vector Databases for Agent Systems",
+      "current_state": "No single market leader - choice is case-by-case. LanceDB is the 'SQLite for AI' (embedded, serverless, multimodal, Rust-based). Qdrant offers high-performance open-source with powerful filtering (Rust). ChromaDB got a Rust rewrite (4x faster) but doesn't scale past ~50M vectors. Pinecone is fully managed enterprise-grade. PostgreSQL pgvector blurs lines between traditional and vector DBs. Counter-trend: some agent systems skip vector DBs entirely, using LLM-driven memory consolidation instead.",
+      "key_insights": [
+        "LanceDB is ideal for our use case: embedded, zero-config, works like SQLite, supports Python/TypeScript/Rust",
+        "LanceDB natively integrates with LangChain, LlamaIndex, Pandas, DuckDB",
+        "AnythingLLM uses LanceDB by default so embeddings never leave the application",
+        "Qdrant excels at hybrid search with metadata filtering - good for structured KB queries",
+        "ChromaDB is great for prototyping but teams outgrow it and migrate to Qdrant/Pinecone",
+        "pgvector lets you add vector search to existing PostgreSQL - but we use SQLite",
+        "Hugging Face Hub now natively supports Lance format (Feb 2026)"
+      ],
+      "implementation_path": "Add LanceDB as our vector storage alongside SQLite FTS5. LanceDB's embedded design mirrors our SQLite approach - no server needed. Store embeddings for KB entries, team logs, and coordination messages. Use hybrid search (FTS5 for keyword + LanceDB for semantic).",
+      "complexity": "low",
+      "impact": "high",
+      "sources": [
+        "https://lancedb.com/",
+        "https://github.com/lancedb/lancedb",
+        "https://www.firecrawl.dev/blog/best-vector-databases",
+        "https://liquidmetal.ai/casesAndBlogs/vector-comparison/",
+        "https://www.shakudo.io/blog/top-9-vector-databases"
+      ],
+      "recommendations": [
+        "Adopt LanceDB as embedded vector DB (matches our SQLite-first architecture)",
+        "Generate embeddings for all KB entries and store in LanceDB",
+        "Build hybrid search: FTS5 keyword results + LanceDB semantic results, merged and re-ranked",
+        "Use LanceDB for agent memory - store conversation embeddings for cross-session recall",
+        "Consider Qdrant if we need remote/distributed vector search later"
+      ]
+    },
+    {
+      "area": "Knowledge Graphs for Agents",
+      "current_state": "Knowledge graphs provide structured, persistent, queryable memory that addresses LLM limitations (stateless, context-window bound, hallucination-prone). Graphiti by Zep is the leading open-source framework for temporal knowledge graphs for agent memory. It stores entities and relationships with validity windows (when facts became true/superseded). Achieves 94.8% on Deep Memory Retrieval benchmark, P95 latency of 300ms. Uses hybrid retrieval (semantic + BM25 + graph traversal) with no LLM calls during retrieval. Neo4j LLM Knowledge Graph Builder extracts entities/relationships from documents. FalkorDB achieves 90% hallucination reduction vs traditional RAG.",
+      "key_insights": [
+        "Graphiti's temporal facts model (validity windows) is perfect for evolving knowledge bases",
+        "Hybrid search (semantic + BM25 + graph traversal) with zero LLM calls at query time = fast retrieval",
+        "LLMs can now build knowledge graphs from unstructured text via few-shot prompting, matching supervised models",
+        "AGENTiGraph enables natural language interaction with domain-specific knowledge graphs",
+        "Graphiti supports Neo4j, FalkorDB, Kuzu, and Amazon Neptune backends",
+        "graphiti-core v0.28.1 on PyPI (Feb 2026) - actively maintained",
+        "Our KB entries already have entity-like structure (tags, categories, builds_on) that maps to a graph"
+      ],
+      "implementation_path": "Integrate Graphiti to build a temporal knowledge graph from our KB entries and team logs. Entities = concepts, tools, techniques. Relationships = builds_on, relates_to, supersedes. Temporal tracking captures when knowledge was added/updated. This gives agents a structured memory layer beyond text search.",
+      "complexity": "high",
+      "impact": "high",
+      "sources": [
+        "https://github.com/getzep/graphiti",
+        "https://arxiv.org/abs/2501.13956",
+        "https://neo4j.com/blog/developer/graphiti-knowledge-graph-memory/",
+        "https://www.getzep.com/product/open-source/",
+        "https://zbrain.ai/knowledge-graphs-for-agentic-ai/"
+      ],
+      "recommendations": [
+        "Evaluate Graphiti for building temporal knowledge graph from KB entries",
+        "Extract entities and relationships from existing 33 KB entries as a proof of concept",
+        "Use Graphiti's hybrid search to replace/augment our current FTS5 search",
+        "Track temporal validity of facts (when learned, when superseded by new info)",
+        "Consider Kuzu as lightweight graph DB backend (embedded, like our SQLite approach)"
+      ]
+    },
+    {
+      "area": "Agent Evaluation Frameworks",
+      "current_state": "Agent evaluation has moved beyond simple accuracy to multi-dimensional assessment. CLEAR framework measures Cost, Latency, Efficacy, Assurance, Reliability. Key benchmarks: GAIA (tool-use reasoning), AgentBench (8 environments), SWE-bench (coding), WebArena (web tasks), BFCL (function calling). Top platforms: Maxim AI, Langfuse (open-source tracing), Arize, LangSmith, Galileo. Amazon released a comprehensive agentic evaluation framework. Systematic evaluation reduces production failures by 60% (Stanford). GitHub compendium catalogs 50+ agent benchmarks.",
+      "key_insights": [
+        "Multi-dimensional evaluation (cost, latency, safety, reliability) is essential - accuracy alone is insufficient",
+        "Langfuse is the leading open-source observability/tracing platform for agent evaluation",
+        "Trajectory analysis (evaluating intermediate steps, not just final output) catches failure modes early",
+        "Token usage, completion time, and tool call counts are key efficiency metrics",
+        "85% of companies experiment with gen AI but few deploy agents in production - evaluation gap is the bottleneck",
+        "Our coordination system already logs heartbeats and messages - could be enhanced for evaluation"
+      ],
+      "implementation_path": "Add evaluation metrics to our coordination system: track token usage, task completion rates, error rates per agent. Implement trajectory logging (record each step, not just outcomes). Build a simple dashboard for agent performance metrics. Long-term: integrate Langfuse for open-source observability.",
+      "complexity": "medium",
+      "impact": "medium",
+      "sources": [
+        "https://o-mega.ai/articles/the-best-ai-agent-evals-and-benchmarks-full-2025-guide",
+        "https://aws.amazon.com/blogs/machine-learning/evaluating-ai-agents-real-world-lessons-from-building-agentic-systems-at-amazon/",
+        "https://www.evidentlyai.com/blog/ai-agent-benchmarks",
+        "https://github.com/philschmid/ai-agent-benchmark-compendium",
+        "https://arxiv.org/html/2511.14136v1"
+      ],
+      "recommendations": [
+        "Add token usage and task completion tracking to coordination system",
+        "Implement trajectory logging for all agent tool calls and decisions",
+        "Build simple CLEAR-style metrics dashboard (Cost, Latency, Efficacy, Assurance, Reliability)",
+        "Evaluate Langfuse integration for open-source agent observability",
+        "Create internal benchmarks based on our actual agent tasks and workflows"
+      ]
+    }
+  ],
+  "future_tools": [
+    {
+      "name": "LanceDB (Embedded Vector Database)",
+      "description": "Embedded, serverless vector database built on Lance columnar format. Zero-config, works like SQLite for vectors. Python/TypeScript/Rust SDKs. Supports multimodal data and hybrid search.",
+      "maturity": "production",
+      "integration_effort": "low",
+      "expected_benefit": "Adds semantic search to our knowledge base without infrastructure overhead. Hybrid search (FTS5 + LanceDB) would dramatically improve retrieval quality."
+    },
+    {
+      "name": "Graphiti (Temporal Knowledge Graph Engine)",
+      "description": "Open-source framework by Zep for building temporal knowledge graphs. Tracks when facts became true and when superseded. Hybrid retrieval (semantic + BM25 + graph traversal) with no LLM calls at query time. P95 latency 300ms.",
+      "maturity": "stable",
+      "integration_effort": "high",
+      "expected_benefit": "Structured agent memory with temporal awareness. Agents could query what was known at any point in time, track knowledge evolution, and perform multi-hop reasoning across KB entries."
+    },
+    {
+      "name": "MCP Server (Custom Knowledge Base)",
+      "description": "Build a custom MCP server exposing our KB search, coordination system, and data pipelines as standardized tools. Any MCP-compatible client (Claude, ChatGPT, Cursor, Copilot) could then access our system.",
+      "maturity": "production",
+      "integration_effort": "medium",
+      "expected_benefit": "Universal access to our knowledge system from any AI tool. Standardized interface that won't break as tools evolve."
+    },
+    {
+      "name": "Claude Agent SDK (Multi-Agent Orchestration)",
+      "description": "Anthropic's SDK for building agents with the same capabilities as Claude Code. Supports custom MCP tools, hooks, subagents, and structured output. Python and TypeScript.",
+      "maturity": "production",
+      "integration_effort": "medium",
+      "expected_benefit": "Programmatic control over agent creation and orchestration. Could replace our bash-based launcher with SDK-native agent management including hooks and subagents."
+    },
+    {
+      "name": "LightRAG (Cost-Efficient Graph RAG)",
+      "description": "Achieves comparable accuracy to Microsoft's GraphRAG with 10x token reduction. Combines knowledge graphs with vector retrieval for both local and global search. 65-80% cost savings on large document sets.",
+      "maturity": "stable",
+      "integration_effort": "medium",
+      "expected_benefit": "Graph-based retrieval over our KB at fraction of GraphRAG cost. Better answers to complex questions that span multiple KB entries."
+    },
+    {
+      "name": "Langfuse (Open-Source Agent Observability)",
+      "description": "Open-source LLM observability platform with tracing, analytics, and evaluation. Tracks token usage, latency, tool calls, and conversation flows. Self-hostable.",
+      "maturity": "production",
+      "integration_effort": "medium",
+      "expected_benefit": "Visibility into agent performance, cost, and failure modes. Data-driven optimization of our multi-agent workflows."
+    },
+    {
+      "name": "FastMCP (Python MCP Framework)",
+      "description": "Decorator-based Python framework for building MCP servers in under 50 lines. Part of the official MCP Python SDK. @mcp.tool(), @mcp.resource(), @mcp.prompt() decorators.",
+      "maturity": "production",
+      "integration_effort": "low",
+      "expected_benefit": "Rapid prototyping of MCP servers for our tools. Could wrap existing Python utilities as MCP-accessible tools in minutes."
+    },
+    {
+      "name": "Kuzu (Embedded Graph Database)",
+      "description": "Embedded graph database (like SQLite for graphs). Supported by Graphiti. No server needed. Lightweight and fast for local graph queries.",
+      "maturity": "stable",
+      "integration_effort": "medium",
+      "expected_benefit": "Local-first graph database that matches our SQLite architecture. Could store KB entity-relationship graph without running Neo4j."
+    }
+  ],
+  "cross_team_notes": [
+    "ALPHA TEAM: MCP servers could standardize how data gathering pipelines expose their capabilities. Consider wrapping your web scrapers and API tools as MCP servers for universal access.",
+    "BETA TEAM: Knowledge base search could be dramatically improved with hybrid retrieval (add LanceDB semantic search alongside FTS5). LightRAG could enable graph-based queries across KB entries.",
+    "ALL TEAMS: The Claude Agent SDK provides a programmatic alternative to our bash-based launcher. Its subagent pattern maps directly to our hub-and-spoke coordination architecture.",
+    "ALL TEAMS: Graphiti's temporal knowledge graph model would let us track when knowledge was learned and superseded, solving the 'stale information' problem in our KB.",
+    "ALL TEAMS: Skills.md / CLAUDE.md pattern is now industry-standard for institutional knowledge. Our CLAUDE.md is already doing this right - consider expanding it with more structured skills definitions.",
+    "ALL TEAMS: Agent evaluation is a critical gap. We should track token usage, task completion rates, and error rates per agent to optimize our workflows.",
+    "ALL TEAMS: MCP is now backed by Linux Foundation with Anthropic, OpenAI, and Google support - it's safe to build on as a long-term standard."
+  ],
+  "roadmap_suggestions": [
+    "1. [LOW EFFORT, HIGH IMPACT] Add LanceDB for semantic search alongside FTS5 - creates hybrid retrieval with minimal infrastructure",
+    "2. [LOW EFFORT, HIGH IMPACT] Build an MCP server for KB search using FastMCP - under 50 lines of Python, instant access from any MCP client",
+    "3. [LOW EFFORT, MEDIUM IMPACT] Create prompt templates library for common agent operations (research, analysis, writing, coordination)",
+    "4. [MEDIUM EFFORT, HIGH IMPACT] Build MCP servers for coordination system (messages, channels, heartbeats, work queues)",
+    "5. [MEDIUM EFFORT, HIGH IMPACT] Integrate Claude Agent SDK for programmatic agent orchestration with hooks and subagents",
+    "6. [MEDIUM EFFORT, MEDIUM IMPACT] Add evaluation metrics (token usage, latency, completion rates) to coordination system",
+    "7. [MEDIUM EFFORT, HIGH IMPACT] Implement LightRAG for graph-based retrieval across KB entries",
+    "8. [HIGH EFFORT, HIGH IMPACT] Integrate Graphiti for temporal knowledge graph with entity-relationship extraction from all KB entries",
+    "9. [MEDIUM EFFORT, MEDIUM IMPACT] Integrate Langfuse for open-source agent observability and tracing",
+    "10. [HIGH EFFORT, HIGH IMPACT] Build full Agentic RAG system where agents plan their own multi-step retrieval strategies"
+  ]
+}

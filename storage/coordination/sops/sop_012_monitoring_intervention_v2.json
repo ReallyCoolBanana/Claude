@@ -1,0 +1,142 @@
+{
+  "id": "SOP-012-v2",
+  "version": "2.0",
+  "updated": "2026-03-11",
+  "updated_by": "ANALYSIS-001",
+  "title": "Real-Time Monitoring and Intervention Protocol (v2)",
+  "changelog": "v2: Added proactive alerting, idle detection integration, automatic escalation timers, and evidence-based polling intervals from T24-T27 data",
+  "builds_on": [
+    "SOP-001",
+    "SOP-010",
+    "EFF-005",
+    "EFF-001"
+  ],
+  "improvements_over_v1": [
+    "Added proactive alerting thresholds (v1 was reactive-only)",
+    "Integrated with HelpProtocol idle detection for automatic work reassignment",
+    "Added progress velocity tracking (not just point-in-time snapshot)",
+    "Added automatic escalation timers that fire without coordinator polling",
+    "Tightened CP-1 to 15-30s based on T27 data (90s full audit proves fast starts)",
+    "Added CP-1.5 at 2 minutes for early blocker detection",
+    "Added team-size-aware monitoring (different intervals for 3-agent vs 15-agent teams)"
+  ],
+  "section_1_proactive_alerting": {
+    "title": "Proactive Alert System",
+    "description": "Instead of relying solely on coordinator polling, agents self-report anomalies. Reduces coordinator monitoring overhead by 40-60%.",
+    "agent_self_alerts": {
+      "description": "Agents append alert entries to the bus when they detect issues with their own progress.",
+      "alert_types": [
+        {
+          "type": "STALL_ALERT",
+          "trigger": "Agent has not made measurable progress in 3+ minutes",
+          "auto_action": "Agent writes alert to bus; coordinator receives on next poll",
+          "format": {
+            "agent_id": "string",
+            "alert_type": "STALL_ALERT",
+            "stalled_since_ts": "number",
+            "current_task": "string",
+            "attempted_actions": "array"
+          }
+        },
+        {
+          "type": "SCOPE_DRIFT_ALERT",
+          "trigger": "Agent realizes it's working outside its assigned scope",
+          "auto_action": "Agent pauses and requests guidance",
+          "format": {
+            "agent_id": "string",
+            "alert_type": "SCOPE_DRIFT_ALERT",
+            "assigned_scope": "string",
+            "actual_work": "string"
+          }
+        },
+        {
+          "type": "DEPENDENCY_TIMEOUT_ALERT",
+          "trigger": "Agent has waited 5+ minutes for another agent's output",
+          "auto_action": "Agent falls back to independent work or requests reassignment",
+          "format": {
+            "agent_id": "string",
+            "alert_type": "DEPENDENCY_TIMEOUT_ALERT",
+            "waiting_for": "string",
+            "waited_seconds": "number"
+          }
+        }
+      ]
+    },
+    "velocity_tracking": {
+      "description": "Track progress rate, not just progress level. A team at 30% after 5 minutes is fine; at 30% after 25 minutes is concerning.",
+      "metric": "progress_pct / elapsed_minutes",
+      "thresholds": {
+        "healthy": "> 3% per minute for first 50%",
+        "slow": "1-3% per minute (investigate at next checkpoint)",
+        "stalled": "< 1% per minute for 5+ minutes (intervene immediately)"
+      }
+    }
+  },
+  "section_2_team_size_aware_monitoring": {
+    "title": "Team-Size-Aware Polling Schedule",
+    "description": "Based on analysis of T05 (1 agent), T06 (3 agents), T24 (8 agents), T25 (15 agents), T27 (5 agents).",
+    "small_team_1_to_3": {
+      "cp1_post_launch": "15 seconds (fast starts proven by T27)",
+      "cp2_early_progress": "2 minutes",
+      "cp3_mid_session": "When 40% elapsed",
+      "cp4_completion": "On first completion event",
+      "rationale": "Small teams finish fast. T27 did full audit in 90s. Check early, intervene fast."
+    },
+    "medium_team_4_to_9": {
+      "cp1_post_launch": "30 seconds",
+      "cp1_5_early_blocker": "2 minutes (new: catch import errors, missing files)",
+      "cp2_early_progress": "5 minutes",
+      "cp3_mid_session": "When 40% elapsed",
+      "cp4_completion": "On first completion event",
+      "rationale": "Optimal team size per analysis. Standard monitoring works well."
+    },
+    "large_team_10_plus": {
+      "cp1_post_launch": "30 seconds",
+      "cp1_5_early_blocker": "2 minutes",
+      "cp2_early_progress": "5 minutes",
+      "cp2_5_coordination_check": "8 minutes (new: check for duplicate work, resource conflicts)",
+      "cp3_mid_session": "When 30% elapsed (earlier due to higher coordination overhead)",
+      "cp4_completion": "On first completion event",
+      "cp4_5_redistribution": "When 50% of agents complete (new: actively redistribute remaining work)",
+      "rationale": "Large teams have 25-30% coordination overhead. Earlier/more frequent checks catch issues before they compound."
+    }
+  },
+  "section_3_automatic_escalation_timers": {
+    "title": "Automatic Escalation Timers",
+    "description": "Set timers at launch that fire automatically, reducing coordinator cognitive load.",
+    "timers": [
+      {
+        "timer": "BLOCKER_ESCALATION",
+        "delay": "3 minutes after any agent reports blocked",
+        "action": "If still blocked, auto-trigger HelpProtocol.auto_assign_idle_teams()",
+        "rationale": "T25 data: blocked agents that waited >3 min for coordinator intervention wasted 100% of remaining time"
+      },
+      {
+        "timer": "IDLE_AGENT_REASSIGNMENT",
+        "delay": "1 minute after any agent reports complete",
+        "action": "Check for incomplete agents; if any, auto-reassign idle agent via WorkStealing queue",
+        "rationale": "T27 achieved zero idle time by immediately reassigning completers"
+      },
+      {
+        "timer": "SESSION_MIDPOINT_REVIEW",
+        "delay": "At 50% of expected session duration",
+        "action": "Mandatory progress review regardless of other checkpoints",
+        "rationale": "Catches slow-burning issues that individual checkpoints miss"
+      }
+    ]
+  },
+  "section_4_idle_detection_integration": {
+    "title": "Integration with HelpProtocol Idle Detection",
+    "description": "Uses existing HelpProtocol.get_idle_teams() and auto_assign_idle_teams() for automatic work redistribution.",
+    "workflow": [
+      "1. At each checkpoint, call HelpProtocol.get_idle_teams()",
+      "2. For each idle team, check WorkStealing queue for available work",
+      "3. If work available: auto-assign via WorkStealing.steal_work()",
+      "4. If no queued work but other teams struggling: create ad-hoc help request",
+      "5. If no work at all: assign knowledge documentation tasks (write KB entries, update indexes)"
+    ],
+    "never_leave_agents_idle": "T27 proved that zero idle time is achievable with 5 agents. The key is pre-loading the work queue with fallback tasks so every completer has something to pick up immediately."
+  },
+  "note": "The full v1 content (status file design, intervention actions, completion handling) remains valid and is inherited. This v2 adds the proactive layer on top.",
+  "date": "2026-03-11"
+}

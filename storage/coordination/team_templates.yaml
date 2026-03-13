@@ -1,0 +1,210 @@
+# Team Templates for Multi-Agent SDK Launcher
+#
+# This file defines reusable team configurations for the coordination system.
+# Load with:
+#   from sdk_config import load_named_config
+#   config = load_named_config("team_templates.yaml", "standard_dev_team")
+#
+# Or load a standalone section directly with load_config() after extracting
+# the desired configuration block.
+
+# Shared defaults inherited by all configurations unless overridden.
+defaults:
+  bus_path: ""          # empty = auto-resolve to coordination/bus/
+  db_path: ""           # empty = auto-resolve to coordination/db/state.db
+  log_dir: ""           # empty = auto-resolve to coordination/logs/
+  max_restarts: 3
+  health_check_interval: 30.0
+  heartbeat_interval: 30.0
+  dead_agent_timeout: 120.0
+  cleanup_interval: 600.0
+
+configurations:
+
+  # -------------------------------------------------------------------
+  # Standard Development Team
+  # 3 teams: coding (3 agents), testing (2), review (2)  = 7 agents
+  # -------------------------------------------------------------------
+  standard_dev_team:
+    teams:
+      - team_name: coding
+        agent_count: 3
+        role: worker
+        system_prompt: >
+          You are a software development agent. Write clean, tested code
+          following project conventions. Coordinate with your team lead
+          and report progress regularly.
+        allowed_tools:
+          - Read
+          - Write
+          - Edit
+          - Bash
+          - Glob
+          - Grep
+
+      - team_name: testing
+        agent_count: 2
+        role: worker
+        system_prompt: >
+          You are a testing agent. Write and run tests for code produced
+          by the coding team. Report test results, coverage gaps, and any
+          bugs found.
+        allowed_tools:
+          - Read
+          - Bash
+          - Glob
+          - Grep
+
+      - team_name: review
+        agent_count: 2
+        role: reviewer
+        system_prompt: >
+          You are a code review agent. Review code changes for correctness,
+          style, security issues, and adherence to project standards.
+          Provide actionable feedback.
+        allowed_tools:
+          - Read
+          - Glob
+          - Grep
+
+  # -------------------------------------------------------------------
+  # Research Team
+  # 2 teams: research (3 agents), synthesis (2)  = 5 agents
+  # -------------------------------------------------------------------
+  research_team:
+    health_check_interval: 45.0
+    max_restarts: 2
+    teams:
+      - team_name: research
+        agent_count: 3
+        role: researcher
+        system_prompt: >
+          You are a research agent. Investigate the assigned topic
+          thoroughly using available tools. Document findings with
+          sources and report to the team lead.
+        allowed_tools:
+          - Read
+          - Bash
+          - Glob
+          - Grep
+          - WebFetch
+          - WebSearch
+
+      - team_name: synthesis
+        agent_count: 2
+        role: think_tank
+        system_prompt: >
+          You are a synthesis agent in the think tank. Combine findings
+          from research agents into coherent analyses. Identify patterns,
+          contradictions, and gaps in the research.
+        allowed_tools:
+          - Read
+          - Write
+          - Glob
+          - Grep
+
+  # -------------------------------------------------------------------
+  # Review / Audit Team
+  # 2 teams: audit (3 agents), reporting (1)  = 4 agents
+  # -------------------------------------------------------------------
+  review_team:
+    max_restarts: 2
+    teams:
+      - team_name: audit
+        agent_count: 3
+        role: reviewer
+        system_prompt: >
+          You are an audit agent. Systematically review the assigned
+          codebase or documents for quality, security, and correctness
+          issues. Produce a structured report of findings.
+        allowed_tools:
+          - Read
+          - Glob
+          - Grep
+          - Bash
+
+      - team_name: reporting
+        agent_count: 1
+        role: leader
+        system_prompt: >
+          You are the reporting lead. Collect findings from audit agents,
+          deduplicate, prioritize, and produce a final consolidated report.
+        allowed_tools:
+          - Read
+          - Write
+          - Glob
+          - Grep
+
+  # -------------------------------------------------------------------
+  # Full Production Setup
+  # 5 teams: coding (4), testing (2), review (2), research (2),
+  #          think-tank (2)  = 12 agents
+  # -------------------------------------------------------------------
+  full_production_team:
+    max_restarts: 5
+    health_check_interval: 20.0
+    teams:
+      - team_name: coding
+        agent_count: 4
+        role: worker
+        system_prompt: >
+          You are a software development agent on the coding team.
+          Implement features and fixes as directed by your team lead.
+          Follow project conventions and coordinate with other teams.
+        allowed_tools:
+          - Read
+          - Write
+          - Edit
+          - Bash
+          - Glob
+          - Grep
+
+      - team_name: testing
+        agent_count: 2
+        role: worker
+        system_prompt: >
+          You are a testing agent. Write and run tests, report results
+          and coverage. Flag regressions and untested code paths.
+        allowed_tools:
+          - Read
+          - Bash
+          - Glob
+          - Grep
+
+      - team_name: review
+        agent_count: 2
+        role: reviewer
+        system_prompt: >
+          You are a code review agent. Review all changes for correctness,
+          security, and style. Provide clear, actionable feedback.
+        allowed_tools:
+          - Read
+          - Glob
+          - Grep
+
+      - team_name: research
+        agent_count: 2
+        role: researcher
+        system_prompt: >
+          You are a research agent. Investigate technical questions and
+          provide well-sourced answers to support the development team.
+        allowed_tools:
+          - Read
+          - Bash
+          - Glob
+          - Grep
+          - WebFetch
+          - WebSearch
+
+      - team_name: think-tank
+        agent_count: 2
+        role: think_tank
+        system_prompt: >
+          You are a think tank agent. Synthesize findings across all
+          teams, identify cross-cutting concerns, and propose
+          architectural decisions.
+        allowed_tools:
+          - Read
+          - Write
+          - Glob
+          - Grep

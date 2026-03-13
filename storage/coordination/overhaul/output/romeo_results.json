@@ -1,0 +1,54 @@
+{
+  "team": "romeo",
+  "wave": 4,
+  "completed_at": "2026-03-12T00:00:00Z",
+  "status": "complete",
+  "tasks": {
+    "task_1_direct_channels": {
+      "status": "complete",
+      "file": "storage/coordination/direct_channels.py",
+      "summary": "PartitionedStore support was already wired in by a previous wave. DirectChannels.__init__() accepts optional partitioned_store parameter. When provided, uses partitioned_store.comms.conn for channels, presence, progress, read_offsets tables. Tracks connection ownership via _owns_conn flag (False when using shared partition connection). close() only closes the connection when _owns_conn is True. Full backwards compatibility: without partitioned_store, creates its own WAL-mode SQLite connection to db_path.",
+      "changes": "Verified existing implementation is correct and complete. No additional changes needed."
+    },
+    "task_2_work_stealing": {
+      "status": "complete",
+      "file": "storage/coordination/work_stealing.py",
+      "summary": "PartitionedStore support was already wired in by a previous wave for all three classes. WorkStealing and PipelineManager route to partitioned_store.queue.conn (queue partition for work_queue, pipelines, pipeline_stages). Scratchpad routes to partitioned_store.findings.conn (findings partition for scratchpad table). All three classes track _owns_conn and only close connections they own. Zombie reclaim thread works correctly with partitioned connections. Full backwards compatibility maintained.",
+      "changes": "Verified existing implementation is correct and complete. No additional changes needed."
+    },
+    "task_3_multi_team_runner": {
+      "status": "complete",
+      "file": "storage/coordination/multi_team_runner.py",
+      "summary": "Wired PartitionedStore into multi_team_runner.py. init_environment() now creates a PartitionedStore instance and passes it to all coordination module constructors. stop() cleanly closes all coordination modules and the PartitionedStore. Added --partitioned (default: enabled) and --legacy-db CLI flags.",
+      "changes": [
+        "Added import blocks for PartitionedStore, CoordinatorDashboard, HelpProtocol, DirectChannels, WorkStealing/PipelineManager/Scratchpad with try/except fallbacks",
+        "MultiTeamRunner.__init__() now accepts partitioned=True parameter, stores enable_partitioned flag",
+        "Added instance attributes for all coordination modules (_partitioned_store, _coordinator_dashboard, _help_protocol, _direct_channels, _work_stealing, _pipeline_manager, _scratchpad)",
+        "init_environment() creates PartitionedStore(db_dir=_DB_DIR) when partitioned mode enabled, passes ps to all module constructors",
+        "stop() closes all coordination modules and PartitionedStore before closing the legacy shared connection",
+        "Added --partitioned and --legacy-db CLI arguments",
+        "main() passes args.partitioned to MultiTeamRunner constructor",
+        "Bus event 'environment-initialised' now includes partitioned flag"
+      ]
+    }
+  },
+  "partition_routing": {
+    "hub": ["agent_status", "coordinator_instructions"],
+    "queue": ["work_queue", "pipelines", "pipeline_stages"],
+    "comms": ["channels", "presence", "progress", "read_offsets", "messages"],
+    "findings": ["team_findings", "think_tank", "scratchpad", "work_items", "help_requests", "team_capabilities", "team_status"]
+  },
+  "module_to_partition": {
+    "CoordinatorDashboard": "hub",
+    "HelpProtocol": "findings",
+    "DirectChannels": "comms",
+    "WorkStealing": "queue",
+    "PipelineManager": "queue",
+    "Scratchpad": "findings"
+  },
+  "backwards_compatibility": "All modules maintain full backwards compatibility. When partitioned_store is None, each module creates its own connection to db_path (monolithic mode). Connection ownership is tracked via _owns_conn flag to prevent double-close issues.",
+  "cli_flags": {
+    "--partitioned": "Enable partitioned database mode (default: enabled)",
+    "--legacy-db": "Fall back to monolithic single-database mode"
+  }
+}

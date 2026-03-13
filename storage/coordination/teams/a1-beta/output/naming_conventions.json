@@ -1,0 +1,573 @@
+{
+  "metadata": {
+    "team": "A1-Beta Phase 2",
+    "date": "2026-03-11",
+    "version": "1.0",
+    "inputs": [
+      "a1-alpha/output/file_pattern_audit.json",
+      "a1-beta/output/convention_research.json",
+      "think-tank-alpha/output/op_ideas.json",
+      "think-tank-beta/output/op_ideas.json"
+    ],
+    "design_principles": [
+      "Maximize convention-over-configuration: ID -> path should be deterministic",
+      "Minimize migration cost: keep what works, fix what is broken",
+      "Token efficiency: shorter paths and filenames where practical",
+      "Single source of truth: source files are canonical, indexes are generated"
+    ]
+  },
+
+  "directory_rules": [
+    {
+      "path": "knowledge-base/",
+      "convention": "Keep as-is (no rename)",
+      "rename_from": null,
+      "rationale": "Well-established, referenced in CLAUDE.md, 100% naming compliance. Renaming to kb/ saves 10 chars per path but breaks all existing references and CLAUDE.md. Cost exceeds benefit."
+    },
+    {
+      "path": "knowledge-base/entries/",
+      "convention": "Keep as-is",
+      "rename_from": null,
+      "rationale": "Contains all KB-NNNN.md files. Clean structure."
+    },
+    {
+      "path": "teams/",
+      "convention": "Keep as-is. Flatten sessions/ into teams/ root",
+      "rename_from": "teams/sessions/ -> teams/ (move files up)",
+      "rationale": "The sessions/ subdirectory adds unnecessary nesting. TEAM-NNNN.md files should live directly in teams/. The index.json moves up too."
+    },
+    {
+      "path": "market-research/",
+      "convention": "Keep as-is",
+      "rename_from": null,
+      "rationale": "Clear naming, low file count, not frequently referenced in agent paths."
+    },
+    {
+      "path": "storage/",
+      "convention": "Keep as-is (do NOT flatten to top-level)",
+      "rename_from": null,
+      "rationale": "TT-Alpha suggested eliminating storage/ as wrapper. However, moving scripts/, api-tools/, sources/ to top-level adds 4 new top-level dirs, cluttering the root. storage/ provides useful grouping. Keep it."
+    },
+    {
+      "path": "storage/scripts/",
+      "convention": "Keep as-is",
+      "rename_from": null,
+      "rationale": "Established directory. File naming inside needs standardization (see file_naming_rules)."
+    },
+    {
+      "path": "storage/api-tools/",
+      "convention": "Keep as-is",
+      "rename_from": null,
+      "rationale": "Only 2 tools. Low-churn area."
+    },
+    {
+      "path": "storage/sources/",
+      "convention": "Keep as-is",
+      "rename_from": null,
+      "rationale": "100% naming compliance. Best-named area in the repo."
+    },
+    {
+      "path": "storage/coordination/",
+      "convention": "Keep as-is",
+      "rename_from": null,
+      "rationale": "TT-Alpha suggested shortening to coord/. However, this is a Python package with __init__.py-style imports. Renaming breaks import paths. The 13 extra chars per path reference is acceptable given the migration cost."
+    },
+    {
+      "path": "storage/coordination/sops/",
+      "convention": "Keep as-is",
+      "rename_from": null,
+      "rationale": "Well-established. SOP files inside need standardization."
+    },
+    {
+      "path": "storage/coordination/teams/",
+      "convention": "Keep as-is. Standardize subdirectory naming to kebab-case",
+      "rename_from": null,
+      "rationale": "Team work directories. Subdirs should use consistent kebab-case (a1-alpha, b2-beta, think-tank-alpha)."
+    },
+    {
+      "path": "storage/coordination/teams/*/output/",
+      "convention": "Keep as-is. All output files use snake_case.json",
+      "rename_from": null,
+      "rationale": "Already 100% consistent. Good pattern."
+    },
+    {
+      "path": "prototype/",
+      "convention": "Keep as-is. snake_case for Python package dirs",
+      "rename_from": null,
+      "rationale": "Python packages with __init__.py use snake_case per PEP 8."
+    },
+    {
+      "path": ".claude/",
+      "convention": "Keep as-is (system directory)",
+      "rename_from": null,
+      "rationale": "Claude Code configuration. Do not modify."
+    }
+  ],
+
+  "file_naming_rules": [
+    {
+      "resource_type": "knowledge_base_entry",
+      "pattern": "KB-NNNN.md",
+      "regex": "^KB-\\d{4}\\.md$",
+      "examples": ["KB-0001.md", "KB-0032.md"],
+      "migration_notes": "No changes needed. 100% compliant already. ID-only filenames are kept (no descriptive suffix). Title lives in YAML frontmatter. TT-Alpha suggested adding descriptors (KB-0001_storage_stress.md) but this would require renaming all 31 files and updating all builds_on references for marginal benefit since agents typically use the index for discovery."
+    },
+    {
+      "resource_type": "team_session_log",
+      "pattern": "TEAM-NNNN.md",
+      "regex": "^TEAM-\\d{4}\\.md$",
+      "examples": ["TEAM-0001.md", "TEAM-0030.md"],
+      "migration_notes": "Already compliant. Move files from teams/sessions/ to teams/. Remove orphan reference to TEAM-0011 from index."
+    },
+    {
+      "resource_type": "sop",
+      "pattern": "SOP-NNNN.json (4-digit zero-padded, no descriptive suffix in filename)",
+      "regex": "^SOP-\\d{4}\\.json$",
+      "examples": ["SOP-0011.json", "SOP-0023.json"],
+      "migration_notes": "BREAKING CHANGE. Current pattern is sop_NNN_descriptive_name.json. Rename all to SOP-NNNN.json format: sop_011_central_commander_launch.json -> SOP-0011.json, efficiency_guide.json -> SOP-0026.json, etc. Descriptive name moves to a 'title' field inside the JSON. Versioned files: sop_012_monitoring_intervention_v2.json -> SOP-0012.json (keep only latest active version as canonical filename; superseded versions get _v1 suffix: SOP-0012_v1.json)."
+    },
+    {
+      "resource_type": "data_source",
+      "pattern": "SRC-NNNN.json (no descriptive suffix)",
+      "regex": "^SRC-\\d{4}\\.json$",
+      "examples": ["SRC-0001.json", "SRC-0025.json"],
+      "migration_notes": "Minor change. Current pattern SRC-NNNN-descriptive-name.json drops the descriptive suffix. SRC-0001-openalex.json -> SRC-0001.json. The name ('openalex') is already in the JSON content. This enables deterministic ID-to-path resolution without index lookup. 41 files to rename."
+    },
+    {
+      "resource_type": "script",
+      "pattern": "snake_case.ext (no kebab-case allowed for scripts)",
+      "regex": "^[a-z][a-z0-9_]*\\.(py|js|go|sh)$",
+      "examples": ["validate_storage.py", "build_cross_ref_index.py", "kb_search.py"],
+      "migration_notes": "Rename 11 kebab-case scripts to snake_case: build-cross-ref-index.py -> build_cross_ref_index.py, repair-storage.py -> repair_storage.py, search-storage.py -> search_storage.py, validate-storage.py -> validate_storage.py, stress-test-reads-category.py -> stress_test_reads_category.py, stress-test-reads-cross.py -> stress_test_reads_cross.py, stress-test-reads-id.py -> stress_test_reads_id.py, stress-test-setup-reads.py -> stress_test_setup_reads.py, stress-test-writes.py -> stress_test_writes.py, test-cross-references.py -> test_cross_references.py, test-edge-cases.py -> test_edge_cases.py. Update storage/scripts/index.json accordingly."
+    },
+    {
+      "resource_type": "api_tool",
+      "pattern": "TOOL-NNNN for ID in index. Actual files follow their type convention (snake_case.py for Python, kebab-case for directories)",
+      "regex": "^TOOL-\\d{4}$",
+      "examples": ["TOOL-0001 (sonnet-research-api/)", "TOOL-0002 (doc_parser.py)"],
+      "migration_notes": "No file renames needed. IDs are already in the index. Directory names keep kebab-case. Python files keep snake_case."
+    },
+    {
+      "resource_type": "coordination_module",
+      "pattern": "snake_case.py (standard Python module naming)",
+      "regex": "^[a-z][a-z0-9_]*\\.py$",
+      "examples": ["coordinator_hub.py", "help_protocol.py", "work_stealing.py"],
+      "migration_notes": "No changes needed. 100% compliant."
+    },
+    {
+      "resource_type": "coordination_test",
+      "pattern": "test_*.py (pytest convention)",
+      "regex": "^test_[a-z0-9_]+\\.py$",
+      "examples": ["test_coordinator.py", "test_stress_concurrent.py"],
+      "migration_notes": "No changes needed. 100% compliant."
+    },
+    {
+      "resource_type": "template",
+      "pattern": "TEMPLATE.md or TEMPLATE.json (UPPER_CASE, matches parent format)",
+      "regex": "^TEMPLATE\\.(md|json)$",
+      "examples": ["knowledge-base/TEMPLATE.md", "storage/sources/TEMPLATE.json"],
+      "migration_notes": "Rename teams/TEAM_LOG_TEMPLATE.md -> teams/TEMPLATE.md for consistency."
+    },
+    {
+      "resource_type": "index",
+      "pattern": "index.json (lowercase, one per directory with indexed resources)",
+      "regex": "^index\\.json$",
+      "examples": ["knowledge-base/index.json", "storage/sources/index.json"],
+      "migration_notes": "No filename changes. Schema standardization needed (see index_schema_standard)."
+    },
+    {
+      "resource_type": "readme",
+      "pattern": "README.md (standard GitHub convention)",
+      "regex": "^README\\.md$",
+      "examples": ["README.md", "knowledge-base/README.md"],
+      "migration_notes": "No changes needed."
+    },
+    {
+      "resource_type": "markdown_doc",
+      "pattern": "kebab-case.md for documentation files, UPPER_CASE.md for root-level docs",
+      "regex": "^([A-Z][A-Z_]*|[a-z][a-z0-9-]*)\\.md$",
+      "examples": ["CLAUDE.md", "REFERENCE.md", "cross-ref-improvement-report.md"],
+      "migration_notes": "Fix snake_case .md files in storage/coordination/: bug_report_coordination.md -> bug-report-coordination.md, sdk_migration_risks.md -> sdk-migration-risks.md. Fix in storage/coordination/research/: architecture_map.md -> architecture-map.md, data_flow_map.md -> data-flow-map.md, etc."
+    },
+    {
+      "resource_type": "json_data",
+      "pattern": "kebab-case.json for standalone data files",
+      "regex": "^[a-z][a-z0-9-]*\\.json$",
+      "examples": ["cross-references.json", "benchmark-results.json"],
+      "migration_notes": "Fix snake_case .json data files where they exist outside of Python module directories."
+    },
+    {
+      "resource_type": "team_output",
+      "pattern": "snake_case.json (inside */output/ directories)",
+      "regex": "^[a-z][a-z0-9_]*\\.json$",
+      "examples": ["file_pattern_audit.json", "convention_research.json", "naming_conventions.json"],
+      "migration_notes": "No changes. Already 100% consistent."
+    },
+    {
+      "resource_type": "market_research_method",
+      "pattern": "lowercase-single-word.md (topic name only)",
+      "regex": "^[a-z]+\\.md$",
+      "examples": ["fundamental.md", "technical.md", "sentiment.md"],
+      "migration_notes": "No changes needed."
+    }
+  ],
+
+  "controlled_vocabulary": {
+    "prefixes": {
+      "KB": {"resource": "Knowledge Base Entry", "format": "KB-NNNN", "id_width": 4, "example": "KB-0001"},
+      "TEAM": {"resource": "Team Session Log", "format": "TEAM-NNNN", "id_width": 4, "example": "TEAM-0022"},
+      "SOP": {"resource": "Standard Operating Procedure", "format": "SOP-NNNN", "id_width": 4, "example": "SOP-0011"},
+      "SRC": {"resource": "Data Source", "format": "SRC-NNNN", "id_width": 4, "example": "SRC-0025"},
+      "SCR": {"resource": "Script", "format": "SCR-NNNN", "id_width": 4, "example": "SCR-0004"},
+      "TOOL": {"resource": "API Tool", "format": "TOOL-NNNN", "id_width": 4, "example": "TOOL-0001"},
+      "PICK": {"resource": "Market Pick", "format": "PICK-NNNN", "id_width": 4, "example": "PICK-0001"},
+      "DG": {"resource": "Data Gathering Method", "format": "DG-NNNN", "id_width": 4, "example": "DG-0001"}
+    },
+    "abbreviations": {
+      "coord": "coordination",
+      "cfg": "configuration",
+      "proto": "prototype",
+      "mgmt": "management",
+      "auth": "authentication",
+      "api": "application programming interface",
+      "sop": "standard operating procedure",
+      "kb": "knowledge base",
+      "src": "source",
+      "scr": "script",
+      "cli": "command-line interface",
+      "sdk": "software development kit",
+      "db": "database",
+      "idx": "index",
+      "ref": "reference",
+      "xref": "cross-reference",
+      "ops": "operations",
+      "perf": "performance",
+      "viz": "visualization",
+      "val": "validation",
+      "dedup": "deduplication",
+      "mkt": "market-research"
+    },
+    "separators": {
+      "id_separator": {
+        "char": "-",
+        "usage": "Between prefix and numeric ID in resource identifiers",
+        "examples": ["KB-0001", "SOP-0011", "SRC-0025"]
+      },
+      "filename_word_separator": {
+        "char": "_",
+        "usage": "Between words in Python filenames and snake_case contexts",
+        "examples": ["validate_storage.py", "coordinator_hub.py"]
+      },
+      "doc_word_separator": {
+        "char": "-",
+        "usage": "Between words in Markdown and JSON data filenames (kebab-case)",
+        "examples": ["cross-ref-report.md", "benchmark-results.json"]
+      },
+      "version_separator": {
+        "char": "_v",
+        "usage": "Before version number for superseded files",
+        "examples": ["SOP-0012_v1.json"]
+      }
+    },
+    "forbidden": [
+      "Spaces in filenames",
+      "camelCase in filenames (use snake_case or kebab-case per type)",
+      "UPPER_SNAKE_CASE in filenames (except CROSS_REFERENCES.md which should be renamed)",
+      "Mixed separators within one filename (e.g., my-script_name.py)",
+      "Descriptive suffixes on ID-based files (use SOP-0011.json not SOP-0011-commander-launch.json)",
+      "3-digit IDs (always use 4-digit zero-padded: 0011 not 011)",
+      "Uppercase extensions (.JSON, .MD, .PY)",
+      "Leading dots except for system files (.gitignore, .claude/)",
+      "Double underscores in filenames (reserved for Python __init__.py, __pycache__/)"
+    ],
+    "canonical_terms": {
+      "entry": "A single KB item (NOT: record, item, document)",
+      "finding": "A discrete discovery from research (NOT: result, insight)",
+      "team": "A group of agents working together (NOT: crew, squad)",
+      "agent": "A single AI instance (NOT: worker, bot)",
+      "session": "One team's work period (NOT: run, execution)",
+      "operation": "A multi-team coordinated effort (NOT: project, mission)",
+      "index": "A metadata listing of entries in a directory (NOT: registry, catalog, manifest)"
+    },
+    "categories": [
+      "methodology",
+      "integration",
+      "optimization",
+      "debugging",
+      "testing",
+      "tool-usage",
+      "market-research",
+      "configuration",
+      "architecture",
+      "reference"
+    ],
+    "statuses": [
+      "active",
+      "validated",
+      "experimental",
+      "deprecated",
+      "superseded",
+      "draft"
+    ],
+    "confidence_levels": [
+      "very-high",
+      "high",
+      "medium",
+      "low"
+    ],
+    "tag_rules": {
+      "format": "kebab-case, 1-3 words",
+      "max_per_entry": 7,
+      "min_per_entry": 2,
+      "forbidden_tags": ["sops (use 'sop')", "SOPs (use 'sop')", "sop-improvements (too specific)"],
+      "tag_aliases": {
+        "multi-agent": ["multi-team"],
+        "sqlite": ["sqlite3"],
+        "perf": ["performance"],
+        "coord": ["coordination"]
+      }
+    }
+  },
+
+  "index_schema_standard": {
+    "description": "All index.json files MUST use this unified schema. The array key is always 'entries'. The count field is always 'entry_count'. Attribution is always 'team'.",
+    "universal_fields": [
+      {"field": "version", "type": "string", "required": true, "description": "Schema version (e.g., '2.0')", "replaces": ["schema"]},
+      {"field": "last_updated", "type": "string (ISO 8601 date)", "required": true, "description": "Date of last modification", "replaces": ["generated"]},
+      {"field": "entry_count", "type": "integer", "required": true, "description": "Number of entries in the array", "replaces": ["source_count", "sop_count", "session_count", "total_picks", "total_entries"]},
+      {"field": "entries", "type": "array", "required": true, "description": "Array of entry objects", "replaces": ["tools", "scripts", "sources", "sops", "sessions", "methods", "picks", "pointer_files"]}
+    ],
+    "entry_fields": [
+      {"field": "id", "type": "string", "required": true, "description": "Unique prefixed ID (KB-0001, SOP-0011, etc.)"},
+      {"field": "title", "type": "string", "required": true, "description": "Human-readable title, max 80 chars"},
+      {"field": "file", "type": "string", "required": true, "description": "Relative path to the file from the index directory", "replaces": ["filename", "path"]},
+      {"field": "date", "type": "string (ISO 8601)", "required": true, "description": "Creation or last-modified date", "replaces": ["added", "date_added", "created"]},
+      {"field": "team", "type": "string", "required": true, "description": "Team that created/owns this entry", "replaces": ["added_by_team", "populated_by"]},
+      {"field": "category", "type": "string", "required": false, "description": "One of the canonical categories"},
+      {"field": "tags", "type": "array of strings", "required": false, "description": "Kebab-case tags, 2-7 per entry"},
+      {"field": "status", "type": "string", "required": false, "description": "One of the canonical statuses", "replaces": ["superseded_by (use status='superseded' instead)"]}
+    ],
+    "optional_type_specific_fields": {
+      "knowledge_base": ["confidence", "builds_on"],
+      "sop": ["version_number", "supersedes"],
+      "source": ["url", "access_type", "data_types"],
+      "script": ["language", "dependencies"],
+      "tool": ["auth_type", "modules", "entry_point"]
+    },
+    "removed_sections": [
+      {"section": "tag_index", "reason": "Derivable from entries[].tags. Generate on demand, do not store in index."},
+      {"section": "categories", "reason": "Derivable from entries[].category. Generate on demand."},
+      {"section": "by_data_type", "reason": "Derivable from entries. Generate on demand."},
+      {"section": "by_access_type", "reason": "Derivable from entries. Generate on demand."},
+      {"section": "language_index", "reason": "Derivable from entries[].language. Generate on demand."},
+      {"section": "id_to_pointer_file", "reason": "REGISTRY.json-specific. Eliminate with unified index."}
+    ],
+    "example": {
+      "version": "2.0",
+      "last_updated": "2026-03-11",
+      "entry_count": 2,
+      "entries": [
+        {
+          "id": "KB-0001",
+          "title": "Storage System Stress Testing Results",
+          "file": "entries/KB-0001.md",
+          "date": "2026-03-10",
+          "team": "TEAM-0001",
+          "category": "testing",
+          "tags": ["stress-testing", "storage", "performance"],
+          "status": "validated",
+          "confidence": "high",
+          "builds_on": []
+        },
+        {
+          "id": "KB-0002",
+          "title": "Cross-Reference Architecture",
+          "file": "entries/KB-0002.md",
+          "date": "2026-03-10",
+          "team": "TEAM-0002",
+          "category": "architecture",
+          "tags": ["cross-reference", "indexing"],
+          "status": "validated",
+          "confidence": "high",
+          "builds_on": ["KB-0001"]
+        }
+      ]
+    },
+    "estimated_token_savings": "Removing derived sections (tag_index, categories, by_* lookups) saves ~3,500 tokens (~57%) from KB index.json alone. Unified field names eliminate agent confusion when switching between index files."
+  },
+
+  "migration_plan": {
+    "phase_1_renames": {
+      "description": "Low-risk renames with no cross-reference breakage. Do these first.",
+      "actions": [
+        {
+          "action": "Rename 11 kebab-case scripts to snake_case",
+          "files": [
+            {"from": "storage/scripts/build-cross-ref-index.py", "to": "storage/scripts/build_cross_ref_index.py"},
+            {"from": "storage/scripts/repair-storage.py", "to": "storage/scripts/repair_storage.py"},
+            {"from": "storage/scripts/search-storage.py", "to": "storage/scripts/search_storage.py"},
+            {"from": "storage/scripts/validate-storage.py", "to": "storage/scripts/validate_storage.py"},
+            {"from": "storage/scripts/stress-test-reads-category.py", "to": "storage/scripts/stress_test_reads_category.py"},
+            {"from": "storage/scripts/stress-test-reads-cross.py", "to": "storage/scripts/stress_test_reads_cross.py"},
+            {"from": "storage/scripts/stress-test-reads-id.py", "to": "storage/scripts/stress_test_reads_id.py"},
+            {"from": "storage/scripts/stress-test-setup-reads.py", "to": "storage/scripts/stress_test_setup_reads.py"},
+            {"from": "storage/scripts/stress-test-writes.py", "to": "storage/scripts/stress_test_writes.py"},
+            {"from": "storage/scripts/test-cross-references.py", "to": "storage/scripts/test_cross_references.py"},
+            {"from": "storage/scripts/test-edge-cases.py", "to": "storage/scripts/test_edge_cases.py"}
+          ],
+          "index_update": "Update storage/scripts/index.json filenames",
+          "risk": "low"
+        },
+        {
+          "action": "Rename TEAM_LOG_TEMPLATE.md to TEMPLATE.md",
+          "files": [
+            {"from": "teams/TEAM_LOG_TEMPLATE.md", "to": "teams/TEMPLATE.md"}
+          ],
+          "risk": "low"
+        },
+        {
+          "action": "Rename snake_case .md files to kebab-case in coordination/",
+          "files": [
+            {"from": "storage/coordination/bug_report_coordination.md", "to": "storage/coordination/bug-report-coordination.md"},
+            {"from": "storage/coordination/sdk_migration_risks.md", "to": "storage/coordination/sdk-migration-risks.md"}
+          ],
+          "risk": "low"
+        },
+        {
+          "action": "Rename snake_case .md files in coordination/research/",
+          "files": [
+            {"from": "storage/coordination/research/architecture_map.md", "to": "storage/coordination/research/architecture-map.md"},
+            {"from": "storage/coordination/research/data_flow_map.md", "to": "storage/coordination/research/data-flow-map.md"},
+            {"from": "storage/coordination/research/sdk_architecture.md", "to": "storage/coordination/research/sdk-architecture.md"},
+            {"from": "storage/coordination/research/sdk_data_flow.md", "to": "storage/coordination/research/sdk-data-flow.md"},
+            {"from": "storage/coordination/research/test_strategy.md", "to": "storage/coordination/research/test-strategy.md"}
+          ],
+          "risk": "low"
+        },
+        {
+          "action": "Rename CROSS_REFERENCES.md to CROSS-REFERENCES.md",
+          "files": [
+            {"from": "storage/CROSS_REFERENCES.md", "to": "storage/CROSS-REFERENCES.md"}
+          ],
+          "risk": "low"
+        }
+      ]
+    },
+    "phase_2_renames": {
+      "description": "Medium-risk renames that require updating cross-references in index files and other documents.",
+      "actions": [
+        {
+          "action": "Rename SOPs to SOP-NNNN.json format (4-digit, no descriptive suffix)",
+          "files": [
+            {"from": "storage/coordination/sops/sop_011_central_commander_launch.json", "to": "storage/coordination/sops/SOP-0011.json"},
+            {"from": "storage/coordination/sops/sop_012_monitoring_intervention.json", "to": "storage/coordination/sops/SOP-0012_v1.json"},
+            {"from": "storage/coordination/sops/sop_012_monitoring_intervention_v2.json", "to": "storage/coordination/sops/SOP-0012.json"},
+            {"from": "storage/coordination/sops/sop_013_prompt_engineering.json", "to": "storage/coordination/sops/SOP-0013.json"},
+            {"from": "storage/coordination/sops/sop_014_simultaneous_project_management.json", "to": "storage/coordination/sops/SOP-0014.json"},
+            {"from": "storage/coordination/sops/sop_015_infrastructure_audit.json", "to": "storage/coordination/sops/SOP-0015.json"},
+            {"from": "storage/coordination/sops/sop_016_cross_team_data_flow.json", "to": "storage/coordination/sops/SOP-0016_v1.json"},
+            {"from": "storage/coordination/sops/sop_016_cross_team_data_flow_v2.json", "to": "storage/coordination/sops/SOP-0016.json"},
+            {"from": "storage/coordination/sops/sop_017_data_gathering_operations.json", "to": "storage/coordination/sops/SOP-0017.json"},
+            {"from": "storage/coordination/sops/sop_018_market_research_operations.json", "to": "storage/coordination/sops/SOP-0018.json"},
+            {"from": "storage/coordination/sops/sop_019_environment_setup.json", "to": "storage/coordination/sops/SOP-0019.json"},
+            {"from": "storage/coordination/sops/sop_020_bug_fix_workflow.json", "to": "storage/coordination/sops/SOP-0020.json"},
+            {"from": "storage/coordination/sops/sop_021_failure_recovery_runbook.json", "to": "storage/coordination/sops/SOP-0021.json"},
+            {"from": "storage/coordination/sops/sop_022_team_sizing.json", "to": "storage/coordination/sops/SOP-0022.json"},
+            {"from": "storage/coordination/sops/sop_023_anti_recursion.json", "to": "storage/coordination/sops/SOP-0023.json"},
+            {"from": "storage/coordination/sops/sop_024_sop_lifecycle.json", "to": "storage/coordination/sops/SOP-0024.json"},
+            {"from": "storage/coordination/sops/sop_025_proto_a_dev_pipeline.json", "to": "storage/coordination/sops/SOP-0025.json"},
+            {"from": "storage/coordination/sops/efficiency_guide.json", "to": "storage/coordination/sops/SOP-0026.json"},
+            {"from": "storage/coordination/sops/future_team_data_strategy.json", "to": "storage/coordination/sops/SOP-0027.json"},
+            {"from": "storage/coordination/sops/tool_sops.json", "to": "storage/coordination/sops/SOP-0028.json"}
+          ],
+          "index_update": "Rebuild storage/coordination/sops/index.json with unified schema",
+          "risk": "medium",
+          "notes": "SOP references in CLAUDE.md, KB entries, and team logs use SOP-NNN format which maps cleanly to SOP-NNNN. Internal references within SOP JSON files may need updating."
+        },
+        {
+          "action": "Remove descriptive suffixes from SRC files",
+          "files_pattern": "SRC-NNNN-*.json -> SRC-NNNN.json",
+          "count": 41,
+          "index_update": "Rebuild storage/sources/index.json with unified schema",
+          "risk": "medium",
+          "notes": "The descriptive suffix (e.g., -openalex) is already stored as 'name' field inside each JSON file. Removing it from the filename enables deterministic path resolution from ID alone."
+        },
+        {
+          "action": "Flatten teams/sessions/ into teams/",
+          "description": "Move all TEAM-NNNN.md from teams/sessions/ to teams/. Move index.json up. Remove sessions/ subdirectory.",
+          "risk": "medium",
+          "notes": "Update CLAUDE.md path references. Existing internal references use TEAM-NNNN IDs, not paths, so most cross-references are unaffected."
+        },
+        {
+          "action": "Standardize all index.json files to unified schema",
+          "files": [
+            "knowledge-base/index.json",
+            "storage/sources/index.json",
+            "storage/scripts/index.json",
+            "storage/api-tools/index.json",
+            "storage/coordination/sops/index.json",
+            "teams/sessions/index.json (-> teams/index.json after flatten)",
+            "market-research/picks/index.json"
+          ],
+          "risk": "medium",
+          "notes": "All must adopt unified schema: version, last_updated, entry_count, entries[]. Remove all derived sections (tag_index, categories, by_* lookups). Scripts that read index files may need updating."
+        }
+      ]
+    },
+    "phase_3_cleanup": {
+      "description": "Post-migration cleanup tasks.",
+      "actions": [
+        "Remove REGISTRY.json (replaced by unified indexes)",
+        "Remove knowledge-base/.pointer.json (if superseded by unified discovery)",
+        "Deduplicate KB-0012/KB-0013 (identical titles)",
+        "Deduplicate SRC-0018/SRC-0039 (both FRED API)",
+        "Add __pycache__ to .gitignore and remove committed __pycache__ directories",
+        "Remove orphan TEAM-0011 reference from teams index",
+        "Clean empty team directories in storage/coordination/teams/",
+        "Update CLAUDE.md to reflect new conventions"
+      ]
+    },
+    "backward_compat_notes": [
+      "Phase 1 renames are safe: no other files reference script filenames by path (they use SCR-NNNN IDs)",
+      "Phase 2 SOP renames require updating any code that uses sop_NNN_ filename patterns to find SOPs",
+      "Phase 2 SRC renames: existing code referencing SRC-NNNN-name.json paths needs updating to SRC-NNNN.json",
+      "The SOP index.json must be regenerated to reflect new filenames",
+      "All index.json schema changes should be done atomically (one commit per index file migration)",
+      "Symlinks from old paths to new paths are NOT recommended (they add complexity with minimal benefit since migration is a one-time event)",
+      "The coordination system Python imports (coordinator_hub, help_protocol, etc.) are NOT affected by any rename",
+      "CLAUDE.md references to directory paths (knowledge-base/, storage/coordination/sops/) remain valid (no directory renames)"
+    ]
+  },
+
+  "summary": {
+    "total_rules": 15,
+    "total_file_naming_rules": 15,
+    "total_directory_rules": 14,
+    "total_vocabulary_entries": 22,
+    "breaking_changes": [
+      "SOP files renamed from sop_NNN_descriptive.json to SOP-NNNN.json (20 files)",
+      "SRC files renamed from SRC-NNNN-name.json to SRC-NNNN.json (41 files)",
+      "teams/sessions/ flattened into teams/ (~26 files moved)",
+      "All index.json schemas unified (10 index files rewritten)",
+      "11 kebab-case scripts renamed to snake_case"
+    ],
+    "non_breaking_changes": [
+      "TEMPLATE file rename (1 file)",
+      "snake_case .md files renamed to kebab-case (~7 files)",
+      "CROSS_REFERENCES.md renamed (1 file)"
+    ],
+    "estimated_token_savings": {
+      "index_schema_unification": "~3,500 tokens saved per KB index read by removing derived sections (tag_index, categories). Similar savings across other indexes.",
+      "deterministic_path_resolution": "~50 tokens saved per SOP/SRC lookup by eliminating need to consult index for filename. Agents construct path from ID directly.",
+      "naming_consistency": "Reduces agent confusion and retry costs. Estimated 200-500 tokens saved per session from fewer exploratory reads.",
+      "total_per_session": "~1,000-2,500 tokens saved per agent session"
+    },
+    "design_decisions": {
+      "no_directory_renames": "All directories keep current names. The token savings from shorter paths (knowledge-base/ -> kb/) do not justify the migration cost of updating CLAUDE.md, all documentation, and all hardcoded paths. The repo is not large enough for path length to be a significant token cost.",
+      "id_only_filenames_for_indexed_resources": "SOP and SRC files drop descriptive suffixes from filenames. This enables convention-over-configuration: knowing the ID is sufficient to construct the file path. KB and TEAM files already follow this pattern successfully.",
+      "keep_yaml_frontmatter": "TT-Alpha suggested replacing YAML frontmatter with inline JSON headers. This is rejected because: (1) YAML frontmatter is a GitHub-standard pattern with rendering support, (2) 100% of KB entries already use it, (3) migration cost exceeds token savings, (4) YAML is more human-readable than JSON for metadata.",
+      "keep_json_indexes": "TT-Alpha suggested .manifest (TSV) or NDJSON formats. JSON indexes are kept because: (1) they are the established pattern at 100% adoption, (2) all existing tooling (generate_registry.py, kb_validator.py) reads JSON, (3) the schema unification alone provides the majority of the token savings.",
+      "unified_entries_key": "All indexes use 'entries' as the array key. This is a breaking change from 'tools', 'scripts', 'sources', etc. but eliminates the cognitive overhead of remembering different keys per resource type."
+    }
+  }
+}

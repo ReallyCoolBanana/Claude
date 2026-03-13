@@ -1,0 +1,52 @@
+{
+  "team": "G",
+  "wave": 2,
+  "mission": "Reconcile import paths between ALPHA and EPSILON teams; wire bus compaction into multi-team runner",
+  "status": "complete",
+  "changes": [
+    {
+      "file": "storage/coordination/overhaul/validate_overhaul.py",
+      "description": "Fixed PartitionManager -> PartitionedStore in status messages (lines 837, 840) to match DELTA's actual class name in db_partition.py. Rate limiter import path was already correct (prototype.agent_comm.rate_limiter.RateLimiter). Bus compaction import was already correct (prototype.agent_comm.compactor.BusCompactor).",
+      "issues_fixed": [
+        "EPSILON referenced 'PartitionManager' in status messages but DELTA named the class 'PartitionedStore'"
+      ]
+    },
+    {
+      "file": "storage/coordination/overhaul/benchmark_overhaul.py",
+      "description": "Replaced fallback import chain (prototype.agent_comm.state, storage.coordination.rate_limiter) with direct import from prototype.agent_comm.rate_limiter. Rewrote benchmark_rate_limiter() to use the real RateLimiter(db_path) constructor with .configure() and .check_and_reserve() API instead of the nonexistent RateLimiter(max_requests=, window_seconds=) constructor with .check() method.",
+      "issues_fixed": [
+        "Wrong import paths: tried prototype.agent_comm.state and storage.coordination.rate_limiter before correct path",
+        "Constructor mismatch: used RateLimiter(max_requests=1000, window_seconds=60) but actual is RateLimiter(db_path)",
+        "Method mismatch: called rl.check(agent_id) but actual API is rl.check_and_reserve(endpoint, agent_id)"
+      ]
+    },
+    {
+      "file": "storage/coordination/multi_team_runner.py",
+      "description": "Wired BusCompactor from prototype.agent_comm.compactor into the multi-team runner. Added: (1) optional import with _HAS_COMPACTOR flag, (2) compactor/offset store initialization in init_environment(), (3) periodic compaction thread with configurable interval (default disabled), (4) final compaction in stop() shutdown sequence, (5) --compaction-interval CLI argument, (6) config JSON support for compaction_interval key.",
+      "issues_fixed": [
+        "Bus compaction was not integrated into the multi-team runner shutdown sequence",
+        "No periodic compaction option existed"
+      ]
+    }
+  ],
+  "integration_gaps_resolved": [
+    {
+      "gap": "EPSILON validate_overhaul.py referenced PartitionManager instead of PartitionedStore",
+      "resolution": "Updated string references in validation messages to use PartitionedStore"
+    },
+    {
+      "gap": "benchmark_overhaul.py tried wrong import paths for RateLimiter and used incompatible constructor/method signatures",
+      "resolution": "Direct import from prototype.agent_comm.rate_limiter with correct SQLite-backed API (db_path constructor, configure(), check_and_reserve())"
+    },
+    {
+      "gap": "Bus compaction not wired into multi_team_runner.py",
+      "resolution": "Added BusCompactor.compact_all() to shutdown sequence and optional periodic compaction loop"
+    }
+  ],
+  "files_modified": [
+    "storage/coordination/overhaul/validate_overhaul.py",
+    "storage/coordination/overhaul/benchmark_overhaul.py",
+    "storage/coordination/multi_team_runner.py"
+  ],
+  "date": "2026-03-12T00:00:00"
+}

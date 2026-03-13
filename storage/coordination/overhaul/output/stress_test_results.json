@@ -1,0 +1,456 @@
+{
+  "overall_passed": true,
+  "total_duration_ms": 892.69,
+  "phases": {
+    "setup": {
+      "name": "setup",
+      "duration_ms": 34.9,
+      "passed": true,
+      "checks": [
+        {
+          "name": "partitioned_store_init",
+          "passed": true,
+          "detail": "4 partitions created"
+        },
+        {
+          "name": "circuit_breaker_init",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "deadlock_detector_init",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "escalation_timer_init",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "quality_gate_init",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "coordinator_dashboard_init",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "pipeline_manager_init",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "scratchpad_init",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "bus_dir_exists",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "partition_hub_exists",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "partition_queue_exists",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "partition_comms_exists",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "partition_findings_exists",
+          "passed": true,
+          "detail": ""
+        }
+      ],
+      "errors": []
+    },
+    "registration": {
+      "name": "registration",
+      "duration_ms": 14.96,
+      "passed": true,
+      "checks": [
+        {
+          "name": "capabilities_alpha",
+          "passed": true,
+          "detail": "Registered: ['coding', 'testing']"
+        },
+        {
+          "name": "capabilities_beta",
+          "passed": true,
+          "detail": "Registered: ['research', 'analysis']"
+        },
+        {
+          "name": "capabilities_gamma",
+          "passed": true,
+          "detail": "Registered: ['data-gathering']"
+        },
+        {
+          "name": "direct_channels_created",
+          "passed": true,
+          "detail": "3 direct channels"
+        },
+        {
+          "name": "all_agents_registered",
+          "passed": true,
+          "detail": "Expected 10 agents, got 10"
+        },
+        {
+          "name": "agent_count",
+          "passed": true,
+          "detail": "Registered 10"
+        },
+        {
+          "name": "dashboard_summary",
+          "passed": true,
+          "detail": "Total=10, Active=10"
+        },
+        {
+          "name": "bus_messages_received",
+          "passed": true,
+          "detail": "Received 32 bus messages"
+        }
+      ],
+      "errors": []
+    },
+    "distribution": {
+      "name": "distribution",
+      "duration_ms": 11.27,
+      "passed": true,
+      "checks": [
+        {
+          "name": "work_items_created",
+          "passed": true,
+          "detail": "Created 20 work items"
+        },
+        {
+          "name": "stealable_work_enqueued",
+          "passed": true,
+          "detail": "Enqueued 5 stealable items"
+        },
+        {
+          "name": "work_stolen_by_beta",
+          "passed": true,
+          "detail": "Stole work id=1 priority=1"
+        },
+        {
+          "name": "work_stolen_by_gamma",
+          "passed": true,
+          "detail": "Stole id=5"
+        },
+        {
+          "name": "queue_depth_after_steal",
+          "passed": true,
+          "detail": "Remaining queued: 3"
+        },
+        {
+          "name": "help_request_created",
+          "passed": true,
+          "detail": "Help request id=1"
+        },
+        {
+          "name": "scratchpad_cross_team",
+          "passed": true,
+          "detail": "Scratchpad value: {'version': '1.0', 'env': 'test'}"
+        },
+        {
+          "name": "direct_message_sent",
+          "passed": true,
+          "detail": ""
+        }
+      ],
+      "errors": []
+    },
+    "execution": {
+      "name": "execution",
+      "duration_ms": 13.81,
+      "passed": true,
+      "checks": [
+        {
+          "name": "pipeline_created_data-processing-pipeline",
+          "passed": true,
+          "detail": "Pipeline id=1"
+        },
+        {
+          "name": "pipeline_created_feature-development-pipeline",
+          "passed": true,
+          "detail": "Pipeline id=2"
+        },
+        {
+          "name": "gate_defined_data-processing-pipeline_data-ingestion",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "gate_defined_data-processing-pipeline_data-analysis",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "gate_defined_feature-development-pipeline_implementation",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "stage_data-ingestion",
+          "passed": true,
+          "detail": "Completed, gate score=1.0, triggered 1 downstream"
+        },
+        {
+          "name": "stage_data-analysis",
+          "passed": true,
+          "detail": "Completed, gate score=1.0, triggered 1 downstream"
+        },
+        {
+          "name": "stage_report-generation",
+          "passed": true,
+          "detail": "Completed, gate score=1.0, triggered 0 downstream"
+        },
+        {
+          "name": "pipeline_1_complete",
+          "passed": true,
+          "detail": "Status: completed"
+        },
+        {
+          "name": "stage_requirements-gathering",
+          "passed": true,
+          "detail": "Completed, gate score=1.0, triggered 1 downstream"
+        },
+        {
+          "name": "stage_implementation",
+          "passed": true,
+          "detail": "Completed, gate score=1.0, triggered 1 downstream"
+        },
+        {
+          "name": "stage_quality-assurance",
+          "passed": true,
+          "detail": "Completed, gate score=1.0, triggered 0 downstream"
+        },
+        {
+          "name": "pipeline_2_complete",
+          "passed": true,
+          "detail": "Status: completed"
+        }
+      ],
+      "errors": []
+    },
+    "failure_injection": {
+      "name": "failure_injection",
+      "duration_ms": 208.07,
+      "passed": true,
+      "checks": [
+        {
+          "name": "escalation_timer_fired",
+          "passed": true,
+          "detail": "Fired 1 timer(s) for stalled agent"
+        },
+        {
+          "name": "stale_agent_detected",
+          "passed": true,
+          "detail": "Found 1 stale agent(s)"
+        },
+        {
+          "name": "circuit_breaker_opened",
+          "passed": true,
+          "detail": "State: open, failures: 4"
+        },
+        {
+          "name": "circuit_breaker_rejects",
+          "passed": true,
+          "detail": "Calls correctly rejected while circuit is open"
+        },
+        {
+          "name": "deadlock_detected",
+          "passed": true,
+          "detail": "Found 1 cycle(s)"
+        },
+        {
+          "name": "deadlock_resolved",
+          "passed": true,
+          "detail": "Broke node: stage-A"
+        },
+        {
+          "name": "zombie_work_reclaimed",
+          "passed": true,
+          "detail": "Reclaimed 1 zombie item(s)"
+        },
+        {
+          "name": "zero_message_loss",
+          "passed": true,
+          "detail": "Sent 10, received 10"
+        }
+      ],
+      "errors": []
+    },
+    "recovery": {
+      "name": "recovery",
+      "duration_ms": 603.32,
+      "passed": true,
+      "checks": [
+        {
+          "name": "circuit_breaker_half_open",
+          "passed": true,
+          "detail": "Call allowed after recovery timeout"
+        },
+        {
+          "name": "circuit_breaker_closed",
+          "passed": true,
+          "detail": "State: closed"
+        },
+        {
+          "name": "agent_recovery",
+          "passed": true,
+          "detail": "Agent alpha-dev-2 recovered, cancelled 0 timer(s)"
+        },
+        {
+          "name": "no_stale_agents",
+          "passed": true,
+          "detail": "Stale agents remaining: 0"
+        },
+        {
+          "name": "deadlock_resolution_logged",
+          "passed": true,
+          "detail": "Scan result: 1 total deadlocks"
+        },
+        {
+          "name": "health_check_ran",
+          "passed": true,
+          "detail": "Healthy: False"
+        },
+        {
+          "name": "all_circuits_closed",
+          "passed": true,
+          "detail": "Open circuits: 0"
+        }
+      ],
+      "errors": []
+    },
+    "verification": {
+      "name": "verification",
+      "duration_ms": 5.39,
+      "passed": true,
+      "checks": [
+        {
+          "name": "pipeline_data-processing-pipeline_final",
+          "passed": true,
+          "detail": "Status: completed"
+        },
+        {
+          "name": "pipeline_feature-development-pipeline_final",
+          "passed": true,
+          "detail": "Status: completed"
+        },
+        {
+          "name": "message_consistency",
+          "passed": true,
+          "detail": "Sent=25, Received=42"
+        },
+        {
+          "name": "all_circuits_closed_final",
+          "passed": true,
+          "detail": "Open circuits: 0"
+        },
+        {
+          "name": "escalation_summary",
+          "passed": true,
+          "detail": "Active=0, Fired=1, Cancelled=0"
+        },
+        {
+          "name": "quality_gates_all_passed",
+          "passed": true,
+          "detail": "Passed=6 / Total=3"
+        },
+        {
+          "name": "work_items_created",
+          "passed": true,
+          "detail": "Created=20"
+        },
+        {
+          "name": "dashboard_functional",
+          "passed": true,
+          "detail": "Total agents: 10"
+        },
+        {
+          "name": "scratchpad_persistence",
+          "passed": true,
+          "detail": "Value: {'version': '1.0', 'env': 'test'}"
+        },
+        {
+          "name": "presence_alpha",
+          "passed": true,
+          "detail": "Status: available"
+        },
+        {
+          "name": "presence_beta",
+          "passed": true,
+          "detail": "Status: available"
+        },
+        {
+          "name": "presence_gamma",
+          "passed": true,
+          "detail": "Status: available"
+        },
+        {
+          "name": "bus_integrity",
+          "passed": true,
+          "detail": "Total bus messages: 96, parse errors: 0"
+        },
+        {
+          "name": "zombie_reclaim_verified",
+          "passed": true,
+          "detail": "Reclaimed: 1"
+        },
+        {
+          "name": "deadlock_handling",
+          "passed": true,
+          "detail": "Detected=1, Resolved=1"
+        },
+        {
+          "name": "all_agents_complete",
+          "passed": true,
+          "detail": "Complete=10, Errors=0"
+        }
+      ],
+      "errors": []
+    }
+  },
+  "counters": {
+    "messages_sent": 25,
+    "messages_received": 42,
+    "messages_acked": 10,
+    "work_items_created": 20,
+    "work_items_completed": 8,
+    "work_items_stolen": 2,
+    "pipeline_stages_passed": 6,
+    "pipeline_stages_total": 6,
+    "quality_gates_passed": 6,
+    "quality_gates_total": 3,
+    "escalation_timers_fired": 1,
+    "circuit_breakers_opened": 1,
+    "circuit_breakers_recovered": 1,
+    "deadlocks_detected": 1,
+    "deadlocks_resolved": 1,
+    "zombie_work_reclaimed": 1
+  },
+  "timestamp": "2026-03-12T03:38:13Z",
+  "verification_summary": {
+    "total_checks": 73,
+    "passed_checks": 73,
+    "failed_checks": 0,
+    "pass_rate": 100.0,
+    "zero_message_loss": true,
+    "zero_remaining_deadlocks": true,
+    "all_circuits_closed": true,
+    "all_pipelines_complete": true
+  }
+}

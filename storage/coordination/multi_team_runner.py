@@ -46,6 +46,77 @@ import time
 import uuid
 
 # ---------------------------------------------------------------------------
+# Bus compaction — optional integration from prototype.agent_comm.compactor
+# ---------------------------------------------------------------------------
+
+try:
+    from prototype.agent_comm.compactor import BusCompactor, OffsetStore
+    _HAS_COMPACTOR = True
+except ImportError:
+    _HAS_COMPACTOR = False
+
+try:
+    from storage.coordination.escalation_timers import EscalationTimerManager
+    _HAS_ESCALATION = True
+except ImportError:
+    try:
+        # Fallback: relative import for when run as part of the package
+        from .escalation_timers import EscalationTimerManager
+        _HAS_ESCALATION = True
+    except ImportError:
+        _HAS_ESCALATION = False
+
+try:
+    from storage.coordination.db_partition import PartitionedStore
+    _HAS_PARTITIONED = True
+except ImportError:
+    try:
+        from .db_partition import PartitionedStore
+        _HAS_PARTITIONED = True
+    except ImportError:
+        _HAS_PARTITIONED = False
+
+try:
+    from storage.coordination.coordinator_hub import CoordinatorDashboard
+    _HAS_COORDINATOR_HUB = True
+except ImportError:
+    try:
+        from .coordinator_hub import CoordinatorDashboard
+        _HAS_COORDINATOR_HUB = True
+    except ImportError:
+        _HAS_COORDINATOR_HUB = False
+
+try:
+    from storage.coordination.help_protocol import HelpProtocol
+    _HAS_HELP_PROTOCOL = True
+except ImportError:
+    try:
+        from .help_protocol import HelpProtocol
+        _HAS_HELP_PROTOCOL = True
+    except ImportError:
+        _HAS_HELP_PROTOCOL = False
+
+try:
+    from storage.coordination.direct_channels import DirectChannels
+    _HAS_DIRECT_CHANNELS = True
+except ImportError:
+    try:
+        from .direct_channels import DirectChannels
+        _HAS_DIRECT_CHANNELS = True
+    except ImportError:
+        _HAS_DIRECT_CHANNELS = False
+
+try:
+    from storage.coordination.work_stealing import WorkStealing, PipelineManager, Scratchpad
+    _HAS_WORK_STEALING = True
+except ImportError:
+    try:
+        from .work_stealing import WorkStealing, PipelineManager, Scratchpad
+        _HAS_WORK_STEALING = True
+    except ImportError:
+        _HAS_WORK_STEALING = False
+
+# ---------------------------------------------------------------------------
 # Paths — resolve relative to this script's location
 # ---------------------------------------------------------------------------
 
@@ -396,32 +467,156 @@ class MultiTeamRunner:
     - Write operational logs to the JSONL bus
     """
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: dict, partitioned: bool = True) -> None:
         self.config = config
         self.teams: list[dict] = config["teams"]
         self.heartbeat_interval: float = config.get("heartbeat_interval", 30.0)
         self.dead_agent_timeout: float = config.get("dead_agent_timeout", 120.0)
         self.cleanup_interval: float = config.get("cleanup_interval", 600.0)
+        self.compaction_interval: float = config.get("compaction_interval", 0.0)
+        self.enable_escalation: bool = config.get("enable_escalation", True)
+        self.enable_partitioned: bool = partitioned and _HAS_PARTITIONED
 
         self._stop_event = threading.Event()
         self._hb_thread: threading.Thread | None = None
         self._cleanup_thread: threading.Thread | None = None
+        self._compaction_thread: threading.Thread | None = None
+        self._compactor: BusCompactor | None = None
+        self._offset_store: OffsetStore | None = None
+        self._escalation_manager: EscalationTimerManager | None = None if _HAS_ESCALATION else None
+        self._partitioned_store: PartitionedStore | None = None if _HAS_PARTITIONED else None
+        self._coordinator_dashboard: CoordinatorDashboard | None = None if _HAS_COORDINATOR_HUB else None
+        self._help_protocol: HelpProtocol | None = None if _HAS_HELP_PROTOCOL else None
+        self._direct_channels: DirectChannels | None = None if _HAS_DIRECT_CHANNELS else None
+        self._work_stealing: WorkStealing | None = None if _HAS_WORK_STEALING else None
+        self._pipeline_manager: PipelineManager | None = None if _HAS_WORK_STEALING else None
+        self._scratchpad: Scratchpad | None = None if _HAS_WORK_STEALING else None
         self._started_at: float | None = None
         self._phase = "init"
+        # Track which agents already have active escalation timers to avoid
+        # creating duplicate timers on every health-check cycle.
+        self._agent_blocker_timers: dict[str, str] = {}   # agent_id -> timer_id
+        self._agent_idle_timers: dict[str, str] = {}       # agent_id -> timer_id
 
     # -- initialisation -----------------------------------------------------
 
     def init_environment(self) -> None:
-        """Create directories and initialise the database schema."""
+        """Create directories and initialise the database schema.
+
+        When partitioned mode is enabled (default), creates a PartitionedStore
+        with 4 partition databases (hub, queue, comms, findings) and passes it
+        to all coordination module constructors.  When disabled (--legacy-db),
+        uses the monolithic single-database approach.
+        """
         os.makedirs(_BUS_DIR, exist_ok=True)
         os.makedirs(_DB_DIR, exist_ok=True)
         os.makedirs(_TEAMS_DIR, exist_ok=True)
         _init_db()
-        log.info("Coordination environment initialised")
+
+        # Initialise PartitionedStore when partitioned mode is enabled
+        ps = None
+        if self.enable_partitioned:
+            ps = PartitionedStore(db_dir=_DB_DIR)
+            self._partitioned_store = ps
+            log.info(
+                "PartitionedStore initialised with 4 partitions in %s "
+                "(hub.db, queue.db, comms.db, findings.db)",
+                _DB_DIR,
+            )
+
+        # Wire coordination modules with PartitionedStore when available
+        if _HAS_COORDINATOR_HUB:
+            self._coordinator_dashboard = CoordinatorDashboard(
+                db_path=_DB_PATH,
+                bus_dir=_BUS_DIR,
+                partitioned_store=ps,
+            )
+            log.info(
+                "CoordinatorDashboard initialised (partitioned=%s)",
+                ps is not None,
+            )
+
+        if _HAS_HELP_PROTOCOL:
+            self._help_protocol = HelpProtocol(
+                db_path=_DB_PATH,
+                bus_dir=_BUS_DIR,
+                team="system",
+                agent_id="runner",
+                partitioned_store=ps,
+            )
+            log.info(
+                "HelpProtocol initialised (partitioned=%s)",
+                ps is not None,
+            )
+
+        if _HAS_DIRECT_CHANNELS:
+            self._direct_channels = DirectChannels(
+                db_path=_DB_PATH,
+                bus_dir=_BUS_DIR,
+                team="system",
+                agent_id="runner",
+                partitioned_store=ps,
+            )
+            log.info(
+                "DirectChannels initialised (partitioned=%s)",
+                ps is not None,
+            )
+
+        if _HAS_WORK_STEALING:
+            self._work_stealing = WorkStealing(
+                db_path=_DB_PATH,
+                bus_dir=_BUS_DIR,
+                team="system",
+                agent_id="runner",
+                partitioned_store=ps,
+            )
+            self._pipeline_manager = PipelineManager(
+                db_path=_DB_PATH,
+                bus_dir=_BUS_DIR,
+                team="system",
+                agent_id="runner",
+                partitioned_store=ps,
+            )
+            self._scratchpad = Scratchpad(
+                db_path=_DB_PATH,
+                team="system",
+                agent_id="runner",
+                partitioned_store=ps,
+            )
+            log.info(
+                "WorkStealing, PipelineManager, Scratchpad initialised (partitioned=%s)",
+                ps is not None,
+            )
+
+        # Initialise bus compactor if available
+        if _HAS_COMPACTOR:
+            offsets_db = os.path.join(_DB_DIR, "bus_offsets.db")
+            self._offset_store = OffsetStore(offsets_db)
+            self._compactor = BusCompactor(_BUS_DIR, self._offset_store)
+            log.info("Bus compactor initialised (offsets db: %s)", offsets_db)
+
+        # Initialise escalation timer manager if available and enabled
+        if _HAS_ESCALATION and self.enable_escalation:
+            escalation_db = os.path.join(_DB_DIR, "escalation.db")
+            self._escalation_manager = EscalationTimerManager(
+                db_path=escalation_db,
+                bus_dir=_BUS_DIR,
+            )
+            self._escalation_manager.start_monitor_thread(check_interval=10.0)
+            log.info(
+                "Escalation timer manager initialised (db: %s)",
+                escalation_db,
+            )
+
+        log.info(
+            "Coordination environment initialised (partitioned=%s)",
+            self.enable_partitioned,
+        )
         _bus_write("global", "runner", "system", "info", {
             "event": "environment-initialised",
             "bus_dir": _BUS_DIR,
             "db_path": _DB_PATH,
+            "partitioned": self.enable_partitioned,
         })
 
     def register_all_agents(self) -> int:
@@ -472,6 +667,19 @@ class MultiTeamRunner:
         )
         self._cleanup_thread.start()
 
+        # Periodic bus compaction thread (if compactor available and interval > 0)
+        if self._compactor and self.compaction_interval > 0:
+            self._compaction_thread = threading.Thread(
+                target=self._compaction_loop,
+                name="runner-compaction",
+                daemon=True,
+            )
+            self._compaction_thread.start()
+            log.info(
+                "Periodic bus compaction enabled (interval=%.0fs)",
+                self.compaction_interval,
+            )
+
         _bus_write("global", "runner", "system", "info", {
             "event": "runner-started",
             "pid": os.getpid(),
@@ -489,7 +697,7 @@ class MultiTeamRunner:
         )
 
     def stop(self) -> None:
-        """Graceful shutdown: stop threads and broadcast shutdown message."""
+        """Graceful shutdown: stop threads, compact bus, broadcast shutdown message."""
         log.info("Shutting down multi-team runner...")
         self._phase = "shutdown"
         self._stop_event.set()
@@ -498,6 +706,61 @@ class MultiTeamRunner:
             self._hb_thread.join(timeout=self.heartbeat_interval + 2)
         if self._cleanup_thread is not None:
             self._cleanup_thread.join(timeout=5)
+        if self._compaction_thread is not None:
+            self._compaction_thread.join(timeout=5)
+
+        # Run final bus compaction during clean shutdown
+        if self._compactor is not None:
+            log.info("Running final bus compaction before shutdown...")
+            try:
+                results = self._compactor.compact_all()
+                total_before = sum(r.get("messages_before", 0) for r in results)
+                total_after = sum(r.get("messages_after", 0) for r in results)
+                log.info(
+                    "Shutdown compaction complete: %d channels, %d -> %d messages",
+                    len(results), total_before, total_after,
+                )
+            except Exception:
+                log.exception("Shutdown bus compaction failed")
+
+        # Close the offset store
+        if self._offset_store is not None:
+            try:
+                self._offset_store.close()
+            except Exception:
+                pass
+
+        # Clean shutdown of escalation timer manager
+        if self._escalation_manager is not None:
+            log.info("Stopping escalation timer manager...")
+            try:
+                self._escalation_manager.close()
+            except Exception:
+                log.exception("Escalation timer manager shutdown failed")
+            self._escalation_manager = None
+
+        # Close coordination modules (they only close connections they own,
+        # i.e. non-partitioned connections; partitioned connections are owned
+        # by the PartitionedStore and closed below).
+        for attr_name in ("_coordinator_dashboard", "_help_protocol",
+                          "_direct_channels", "_work_stealing",
+                          "_pipeline_manager", "_scratchpad"):
+            obj = getattr(self, attr_name, None)
+            if obj is not None:
+                try:
+                    obj.close()
+                except Exception:
+                    log.exception("Failed to close %s", attr_name)
+                setattr(self, attr_name, None)
+
+        # Close PartitionedStore (closes all partition connections)
+        if self._partitioned_store is not None:
+            log.info("Closing PartitionedStore...")
+            try:
+                self._partitioned_store.close()
+            except Exception:
+                log.exception("PartitionedStore shutdown failed")
+            self._partitioned_store = None
 
         _bus_write("global", "runner", "system", "info", {
             "event": "runner-stopped",
@@ -523,7 +786,7 @@ class MultiTeamRunner:
             self._stop_event.wait(self.heartbeat_interval)
 
     def _check_agent_health(self) -> None:
-        """Detect dead agents and log warnings to the bus."""
+        """Detect dead agents, manage escalation timers for blocked/idle agents."""
         dead = _get_dead_agents(timeout=self.dead_agent_timeout)
         for agent in dead:
             elapsed = time.time() - agent["last_heartbeat"]
@@ -538,6 +801,107 @@ class MultiTeamRunner:
                 "last_heartbeat": agent["last_heartbeat"],
                 "elapsed": round(elapsed, 1),
             })
+
+        # Escalation timer integration: create timers for blocked/idle agents
+        if self._escalation_manager is not None:
+            self._manage_escalation_timers()
+
+    def _manage_escalation_timers(self) -> None:
+        """Create/cancel escalation timers based on current agent statuses.
+
+        Called from _check_agent_health() when escalation is enabled.
+        - Blocked agents get a BLOCKER_ESCALATION timer (if not already active).
+        - Idle/complete agents get an IDLE_AGENT_REASSIGNMENT timer.
+        - When an agent transitions out of blocked/idle, its timer is cancelled.
+        """
+        mgr = self._escalation_manager
+        if mgr is None:
+            return
+
+        conn = _get_connection()
+        with _shared_conn_lock:
+            try:
+                rows = conn.execute(
+                    "SELECT agent_id, team, status FROM agents WHERE status = 'alive'"
+                ).fetchall()
+            except sqlite3.OperationalError:
+                return
+
+        # Also check the coordinator_hub agent_status table for richer status
+        # info, but fall back gracefully if it doesn't exist.
+        agent_hub_status: dict[str, str] = {}
+        with _shared_conn_lock:
+            try:
+                hub_rows = conn.execute(
+                    "SELECT agent_id, status, blockers FROM agent_status"
+                ).fetchall()
+                for hr in hub_rows:
+                    agent_hub_status[hr["agent_id"]] = {
+                        "status": hr["status"],
+                        "blockers": hr["blockers"],
+                    }
+            except sqlite3.OperationalError:
+                pass  # agent_status table may not exist
+
+        for agent in rows:
+            aid = agent["agent_id"]
+            team = agent["team"]
+
+            # Check hub status for richer blocked/complete info
+            hub = agent_hub_status.get(aid, {})
+            hub_status = hub.get("status", "")
+
+            # --- Blocked agents: create BLOCKER_ESCALATION timer ---
+            if hub_status == "blocked":
+                if aid not in self._agent_blocker_timers:
+                    try:
+                        timer_id = mgr.start_timer(
+                            timer_type="BLOCKER_ESCALATION",
+                            agent_id=aid,
+                            team=team,
+                            context={"blockers": hub.get("blockers", "")},
+                        )
+                        self._agent_blocker_timers[aid] = timer_id
+                        log.info(
+                            "Escalation timer BLOCKER_ESCALATION started for %s (timer=%s)",
+                            aid, timer_id,
+                        )
+                    except Exception:
+                        log.exception("Failed to start blocker escalation for %s", aid)
+            else:
+                # Agent is no longer blocked — cancel any active blocker timer
+                if aid in self._agent_blocker_timers:
+                    try:
+                        mgr.cancel_timer(self._agent_blocker_timers[aid])
+                    except Exception:
+                        pass
+                    del self._agent_blocker_timers[aid]
+
+            # --- Complete/idle agents: create IDLE_AGENT_REASSIGNMENT timer ---
+            if hub_status == "complete":
+                if aid not in self._agent_idle_timers:
+                    try:
+                        timer_id = mgr.start_timer(
+                            timer_type="IDLE_AGENT_REASSIGNMENT",
+                            agent_id=aid,
+                            team=team,
+                            context={"reason": "agent_completed"},
+                        )
+                        self._agent_idle_timers[aid] = timer_id
+                        log.info(
+                            "Escalation timer IDLE_AGENT_REASSIGNMENT started for %s (timer=%s)",
+                            aid, timer_id,
+                        )
+                    except Exception:
+                        log.exception("Failed to start idle escalation for %s", aid)
+            else:
+                # Agent is no longer idle — cancel any active idle timer
+                if aid in self._agent_idle_timers:
+                    try:
+                        mgr.cancel_timer(self._agent_idle_timers[aid])
+                    except Exception:
+                        pass
+                    del self._agent_idle_timers[aid]
 
     def _cleanup_loop(self) -> None:
         """Periodically clean up expired data."""
@@ -568,6 +932,25 @@ class MultiTeamRunner:
             conn.commit()
         if total:
             log.info("Cleanup: removed %d expired rows", total)
+
+    def _compaction_loop(self) -> None:
+        """Periodically compact JSONL bus files to reclaim space."""
+        while not self._stop_event.is_set():
+            self._stop_event.wait(self.compaction_interval)
+            if self._stop_event.is_set():
+                break
+            if self._compactor is not None:
+                try:
+                    results = self._compactor.compact_all()
+                    total_before = sum(r.get("messages_before", 0) for r in results)
+                    total_after = sum(r.get("messages_after", 0) for r in results)
+                    if total_before > 0:
+                        log.info(
+                            "Periodic compaction: %d channels, %d -> %d messages",
+                            len(results), total_before, total_after,
+                        )
+                except Exception:
+                    log.exception("Periodic bus compaction failed")
 
     # -- phase management ---------------------------------------------------
 
@@ -740,6 +1123,34 @@ def main() -> None:
         help="Run in non-foreground mode.  The caller must keep the process "
              "alive (e.g. by importing this module as a library).",
     )
+    parser.add_argument(
+        "--compaction-interval", type=float, default=0,
+        help="Interval in seconds for periodic bus compaction (0 = disabled, "
+             "default: 0).  Requires prototype.agent_comm.compactor.",
+    )
+    parser.add_argument(
+        "--enable-escalation", action="store_true", default=True,
+        dest="enable_escalation",
+        help="Enable automatic escalation timers for blocked/idle agents "
+             "(default: enabled).",
+    )
+    parser.add_argument(
+        "--disable-escalation", action="store_false",
+        dest="enable_escalation",
+        help="Disable automatic escalation timers.",
+    )
+    parser.add_argument(
+        "--partitioned", action="store_true", default=True,
+        dest="partitioned",
+        help="Enable partitioned database mode with 4 separate SQLite files "
+             "(hub.db, queue.db, comms.db, findings.db).  This is the default.",
+    )
+    parser.add_argument(
+        "--legacy-db", action="store_false", dest="partitioned",
+        help="Use legacy monolithic single-database mode instead of "
+             "partitioned databases.  Useful for debugging or backwards "
+             "compatibility.",
+    )
 
     args = parser.parse_args()
 
@@ -755,9 +1166,14 @@ def main() -> None:
     config = _load_config(
         args.config, args.teams, args.agents_per_team,
     )
+    # Apply CLI compaction interval override
+    if args.compaction_interval > 0:
+        config["compaction_interval"] = args.compaction_interval
+    # Apply escalation flag from CLI
+    config["enable_escalation"] = args.enable_escalation
 
     # Create and start runner
-    runner = MultiTeamRunner(config)
+    runner = MultiTeamRunner(config, partitioned=args.partitioned)
     _runner_instance = runner
 
     signal.signal(signal.SIGINT, _signal_handler)

@@ -1,0 +1,254 @@
+{
+  "id": "SOP-034",
+  "title": "SQLite Contention Management",
+  "version": "1.0",
+  "status": "active",
+  "category": "infrastructure",
+  "purpose": "Prevent SQLite WAL write contention from becoming the coordination bottleneck. Empirical benchmarks show a hard efficiency cliff at 4 concurrent writers (throughput drops to 36% of single-thread) and p99 latency explodes from 0ms at 1 thread to 230ms at 32 threads. This SOP defines maximum writer limits, partitioning strategies, backoff procedures, and monitoring thresholds to keep operations within safe contention bounds.",
+  "scope": "All multi-agent operations using SQLite WAL for coordination state (hub databases, work queues, scratchpads, channel stores). Applies to coordinator_hub.py, help_protocol.py, work_stealing.py, and direct_channels.py.",
+  "builds_on": [
+    "SOP-032",
+    "SOP-033",
+    "SOP-021"
+  ],
+  "key_findings": {
+    "contention_curve": {
+      "1_thread": {
+        "ops_per_sec": 3611,
+        "efficiency_pct": 100,
+        "p50_ms": 0.247,
+        "p95_ms": 0.506,
+        "p99_ms": 0
+      },
+      "2_threads": {
+        "ops_per_sec": 2384,
+        "efficiency_pct": 66.0,
+        "p50_ms": 0.221,
+        "p95_ms": 0.342,
+        "p99_ms": 19.1
+      },
+      "4_threads": {
+        "ops_per_sec": 1285,
+        "efficiency_pct": 35.6,
+        "p50_ms": 0.236,
+        "p95_ms": 0.363,
+        "p99_ms": 34.1
+      },
+      "8_threads": {
+        "ops_per_sec": 578,
+        "efficiency_pct": 16.0,
+        "p50_ms": 0.234,
+        "p95_ms": 0.391,
+        "p99_ms": 54.5
+      },
+      "16_threads": {
+        "ops_per_sec": 202,
+        "efficiency_pct": 5.6,
+        "p50_ms": 0.244,
+        "p95_ms": 0.589,
+        "p99_ms": 129.7
+      },
+      "32_threads": {
+        "ops_per_sec": 120,
+        "efficiency_pct": 3.3,
+        "p50_ms": 0.226,
+        "p95_ms": 0.538,
+        "p99_ms": 229.9
+      }
+    },
+    "key_observation": "p50 latency stays constant at ~0.24ms across all thread counts. The problem is SQLite WAL write serialization causing extreme TAIL latency (p99). Median operations are fast; it is the contention-caused retries that destroy throughput.",
+    "cliff_at_4_threads": "At 4 concurrent writers, throughput drops to 36% and p99 hits 34ms. This is the practical maximum for a single database.",
+    "cliff_at_8_threads": "At 8 concurrent writers, only 16% throughput remains. Each additional writer beyond 4 yields diminishing returns.",
+    "thundering_herd": "10 threads competing for 50 work items: p95 jumps to 79ms vs 0.66ms single-thread (120x amplification). Work stealing is double-steal safe but latency-expensive.",
+    "cross_reference": "Combined with SOP-032 optimal team size of 5-8 agents, teams of 5-8 MUST use partitioned write access or a coordinator proxy to avoid the 4-thread cliff."
+  },
+  "procedures": [
+    {
+      "step": 1,
+      "title": "Determine Writer Count Per Database",
+      "action": "Before operation start, count the maximum number of agents that will write concurrently to each SQLite database. Include the coordinator as a writer.",
+      "rules": {
+        "safe_zone": "1-3 concurrent writers. Throughput remains above 36%. p99 stays under 35ms.",
+        "caution_zone": "4 concurrent writers. Throughput at 36%. p99 at 34ms. This is the absolute maximum for a single database without partitioning.",
+        "danger_zone": "5-8 concurrent writers. Throughput at 16%. p99 at 55ms. Requires immediate partitioning.",
+        "critical_zone": "9+ concurrent writers. Throughput below 6%. p99 above 130ms. Operations will experience severe degradation."
+      },
+      "output": "Writer count per database documented in operation plan"
+    },
+    {
+      "step": 2,
+      "title": "Partition Databases for Teams of 5+",
+      "action": "For any team with 5+ agents writing to a shared database, partition into multiple databases with no more than 4 writers each.",
+      "partitioning_strategies": {
+        "sub_coordinator_pattern": {
+          "description": "Split team into sub-groups of 3-4 agents, each with its own coordinator and database. A top-level coordinator reads from all sub-databases.",
+          "example": "8-agent team -> 2 sub-coordinators of 4 agents each, each with own hub DB. Top coordinator reads both.",
+          "best_for": "Build teams, mixed operations"
+        },
+        "single_writer_proxy": {
+          "description": "All agents send write requests to a single coordinator agent who serializes writes to one database. Agents only read (which is contention-free in WAL mode).",
+          "example": "7-agent team -> 1 coordinator writes all status updates. 6 agents read status but never write directly.",
+          "best_for": "Status reporting, dashboard operations"
+        },
+        "functional_partitioning": {
+          "description": "Separate databases by function: one for hub/status, one for work queues, one for channels. Each database has fewer writers.",
+          "example": "research-hub.db (coordinator writes), build-queue.db (3 build agents write), test-channels.db (4 test agents write)",
+          "best_for": "Mixed operations with distinct functional areas"
+        }
+      },
+      "output": "Database partitioning plan with writer assignments"
+    },
+    {
+      "step": 3,
+      "title": "Configure Retry and Backoff Parameters",
+      "action": "Set appropriate retry budgets based on expected contention level.",
+      "retry_configuration": {
+        "1_to_4_writers": {
+          "_MAX_RETRIES": 5,
+          "backoff_strategy": "Default exponential backoff",
+          "rationale": "Standard configuration handles contention at this level"
+        },
+        "5_to_8_writers": {
+          "_MAX_RETRIES": 7,
+          "backoff_strategy": "Exponential backoff with jitter",
+          "rationale": "Higher retry count accommodates increased tail latency. Jitter prevents synchronized retries."
+        },
+        "9_to_16_writers": {
+          "_MAX_RETRIES": 10,
+          "backoff_strategy": "Exponential backoff with jitter, base delay 50ms",
+          "rationale": "p99 exceeds 130ms at 16 threads. Need more retries and longer delays to avoid cascading failures."
+        },
+        "17_plus_writers": {
+          "_MAX_RETRIES": 15,
+          "backoff_strategy": "Exponential backoff with jitter, base delay 100ms",
+          "rationale": "Extreme contention. Should not occur if partitioning is applied correctly. This is a safety net.",
+          "warning": "If you need this configuration, your partitioning strategy has failed. Revisit step 2."
+        }
+      },
+      "output": "Retry configuration applied to all database connections"
+    },
+    {
+      "step": 4,
+      "title": "Implement Work Stealing Safeguards",
+      "action": "When using work stealing queues, apply single-consumer optimization to avoid thundering herd amplification.",
+      "rules": [
+        "Prefer single-consumer steal pattern: one agent checks the queue, claims an item, then the next agent checks. Sequential claiming avoids 120x tail latency amplification.",
+        "If multi-consumer is required (for speed), accept p95 of ~80ms per steal operation.",
+        "Work stealing is confirmed double-steal safe (empirically validated with 10 threads, 50 items). Correctness is guaranteed; latency is the concern.",
+        "For pipeline work items, use the pipeline module rather than raw work stealing to maintain stage ordering."
+      ],
+      "output": "Work stealing pattern documented (single-consumer or multi-consumer with latency acceptance)"
+    },
+    {
+      "step": 5,
+      "title": "Monitor Contention During Operation",
+      "action": "Track SQLite operation latency during the operation. Escalate if thresholds are breached.",
+      "monitoring_thresholds": {
+        "green": "p99 < 35ms. Normal operation with 1-4 writers.",
+        "yellow": "p99 35-55ms. Contention increasing. Check if writer count has exceeded plan.",
+        "orange": "p99 55-130ms. Significant contention. Consider partitioning or reducing writers.",
+        "red": "p99 > 130ms. Severe contention. Immediate action required: partition database, reduce concurrent writers, or switch to single-writer proxy."
+      },
+      "monitoring_method": "Coordinator checks operation latency every 30 seconds via dashboard. Log p99 values per database.",
+      "output": "Contention health logged per monitoring interval"
+    },
+    {
+      "step": 6,
+      "title": "Handle Zombie Work Items",
+      "action": "Implement timeout-based reclaim for in-progress work items to prevent deadlocks from crashed agents.",
+      "configuration": {
+        "default_timeout_minutes": 30,
+        "check_frequency_seconds": 60,
+        "reclaim_action": "Mark stale in_progress items as 'available' with a note indicating reclaim reason",
+        "notification": "Log reclaimed items and notify coordinator via hub status update"
+      },
+      "rationale": "No existing timeout-based reclaim exists (identified as weak link #3, severity: high). A crashed agent permanently blocks its assigned work without this safeguard.",
+      "output": "Zombie reclaim configured and active"
+    }
+  ],
+  "anti_patterns": [
+    {
+      "name": "The Shared Database",
+      "description": "All agents in a 10+ agent team writing to a single SQLite database.",
+      "why_wrong": "At 10 concurrent writers, throughput is 5.6% of single-thread. p99 latency exceeds 130ms. The coordination system becomes the bottleneck instead of the work.",
+      "fix": "Partition into databases of max 4 writers each. Use sub-coordinator or single-writer proxy pattern."
+    },
+    {
+      "name": "Retry Without Jitter",
+      "description": "Using fixed-delay retries without randomization under contention.",
+      "why_wrong": "Synchronized retries create periodic contention spikes. All agents retry at the same time, amplifying the thundering herd effect.",
+      "fix": "Always use exponential backoff WITH jitter. Add random delay of 0-50% of the backoff interval."
+    },
+    {
+      "name": "Ignoring Tail Latency",
+      "description": "Monitoring only p50 or mean latency, which stays constant at ~0.24ms regardless of contention.",
+      "why_wrong": "p50 is misleading. It stays flat at all thread counts. The real problem shows in p99: 0ms at 1 thread to 230ms at 32 threads.",
+      "fix": "Always monitor p99 latency. Use p99 thresholds for escalation, not p50 or mean."
+    },
+    {
+      "name": "Unprotected Pipeline Work Items",
+      "description": "Running pipelines without zombie work item reclaim.",
+      "why_wrong": "A crashed agent permanently blocks its work item. Downstream pipeline stages wait forever. Silent deadlock.",
+      "fix": "Enable timeout-based reclaim (default 30 minutes). Check for stale items every 60 seconds."
+    }
+  ],
+  "quick_reference": {
+    "max_writers_per_db": 4,
+    "partition_trigger": "5+ concurrent writers to same database",
+    "default_max_retries": "5 (1-4 writers), 7 (5-8), 10 (9-16), 15 (17+)",
+    "zombie_timeout_minutes": 30,
+    "monitoring_interval_seconds": 30,
+    "escalation_threshold_p99_ms": 130,
+    "work_stealing_single_consumer_p95_ms": 0.66,
+    "work_stealing_thundering_herd_p95_ms": 79
+  },
+  "references": [
+    {
+      "source": "storage/data/final_analysis.json",
+      "section": "optimal_agent_to_subagent_ratio",
+      "data_points": "6 contention levels, throughput and latency measurements"
+    },
+    {
+      "source": "storage/data/empirical_benchmarks.json",
+      "section": "contention_analysis",
+      "data_points": "1-32 threads, ops/s, p50/p95/p99 latency"
+    },
+    {
+      "source": "storage/data/empirical_benchmarks.json",
+      "section": "work_stealing",
+      "data_points": "Thundering herd validation, 10 threads x 50 items"
+    },
+    {
+      "source": "storage/data/unified_benchmarks.json",
+      "section": "coordination_benchmarks.sqlite_contention_scaling",
+      "data_points": "Independent contention benchmark confirming cliff at 4 threads"
+    },
+    {
+      "source": "storage/coordination/teams/think-tank-convergence.json",
+      "section": "finding_3_weak_links",
+      "data_points": "SQLite contention identified as primary scaling bottleneck"
+    },
+    {
+      "source": "storage/data/final_analysis.json",
+      "section": "weak_links",
+      "data_points": "Zombie work items ranked #3 severity high"
+    }
+  ],
+  "metrics": {
+    "compliance_indicators": [
+      "No database has more than 4 concurrent writers without documented partitioning plan",
+      "Retry configuration matches writer count tier",
+      "Zombie work item reclaim is enabled for all pipeline operations",
+      "p99 latency monitored and logged per database every 30 seconds",
+      "Work stealing uses single-consumer pattern unless multi-consumer latency is accepted"
+    ],
+    "performance_targets": {
+      "database_p99_ms": "< 35 (1-4 writers), < 55 (partitioned 5-8), < 130 (partitioned 9-16)",
+      "throughput_efficiency_pct": "> 35 (stays above 4-thread cliff)",
+      "zombie_reclaim_check_interval_s": 60,
+      "zero_deadlocked_pipelines": true
+    },
+    "measurement_method": "Log p99 latency and ops/sec per database per 30-second monitoring interval. Compare against contention curve. Flag any database operating above its writer-count tier threshold."
+  },
+  "date": "2026-03-11"
+}

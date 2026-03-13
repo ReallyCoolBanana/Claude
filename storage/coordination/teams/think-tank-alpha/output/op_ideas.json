@@ -1,0 +1,367 @@
+{
+  "team": "think-tank-alpha",
+  "context": {
+    "repo_stats": {
+      "kb_entries": 31,
+      "team_logs": 29,
+      "sop_files": 21,
+      "source_files": 41,
+      "json_files_top3": 64,
+      "md_files_top3": 97,
+      "kb_index_bytes": 24373,
+      "sources_index_bytes": 27744,
+      "kb_index_lines": 1228,
+      "sources_index_lines": 1417
+    },
+    "key_problems_from_kb31": [
+      "5-10 file reads to orient at session start",
+      "6+ separate index formats with no cross-system search",
+      "dual-store drift between frontmatter and index",
+      "sources index catastrophically broken",
+      "tag_index in kb/index.json alone is 500+ lines"
+    ]
+  },
+  "perspectives": [
+    {
+      "name": "Structural Efficiency",
+      "ideas_for_a1": [
+        {
+          "id": "A1-SE01",
+          "title": "Shorten top-level directory names",
+          "description": "Rename knowledge-base/ to kb/, market-research/ to mkt/, storage/coordination/ to coord/. Current paths like storage/coordination/sops/sop_011_central_commander_launch.json are 60+ chars. kb/entries/KB-0031.md is 24 chars. Savings: ~40% fewer path tokens across every file reference in CLAUDE.md, index files, and agent conversations. Establish an aliases.json at root mapping short names to legacy names for any backward compatibility.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-SE02",
+          "title": "Flat file IDs instead of nested paths",
+          "description": "Replace deeply nested paths with flat ID-based lookups. Instead of storage/coordination/sops/sop_011_central_commander_launch.json, use sops/SOP-011.json. Instead of storage/sources/SRC-0001-openalex.json, use src/SRC-0001.json. The descriptive suffix (e.g., -openalex) moves into the file metadata, not the filename. Agents reference SOP-011 or SRC-0001 as atomic IDs, not paths.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-SE03",
+          "title": "Eliminate storage/ as a wrapper directory",
+          "description": "The storage/ directory adds a useless nesting layer. scripts/, api-tools/, sources/, and coordination/ should be top-level or grouped differently. storage/scripts/ becomes scripts/, storage/api-tools/ becomes tools/, storage/sources/ becomes src/. Saves 8 chars per path reference and removes a conceptually empty grouping.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-SE04",
+          "title": "Standardize file naming to ID-only pattern",
+          "description": "Current naming is inconsistent: KB entries use KB-NNNN.md (good), SOPs use sop_NNN_long_description.json (wasteful), sources use SRC-NNNN-name.json (mixed). Standardize all to PREFIX-NNNN.ext with no description in filename. SOP-011.json, SRC-0001.json, SCR-0042.py. Human-readable titles live exclusively in file metadata. This cuts average filename length by 40-60%.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "A1-SE05",
+          "title": "Collapse teams/ directory structure",
+          "description": "Team logs are currently split across teams/ and teams/sessions/ with 5 known duplicates (per KB-0031). Consolidate to a single flat directory teams/ with files named TEAM-NNNN.md. Remove the sessions/ subdirectory. Deduplicate existing files. This simplifies discovery from 2 directories to 1 and eliminates ambiguity about which copy is canonical.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "A1-SE06",
+          "title": "Version-controlled directory manifest files",
+          "description": "Each directory gets a .manifest file (not index.json) that is auto-generated from file contents. The manifest is a single-line-per-entry format: ID<TAB>title<TAB>date<TAB>tags. This is grep-friendly, diff-friendly, and costs ~1/5 the tokens of the current JSON indexes. Agents can scan a manifest in a single read without parsing JSON.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-SE07",
+          "title": "Establish a .repo-map at root for instant orientation",
+          "description": "Create a single file .repo-map that lists every directory and its purpose in 1-2 lines, plus counts of files. Total size: ~30 lines. Agents read this one file instead of CLAUDE.md (64 lines) + multiple index.json files. Updated automatically by a pre-commit hook or generation script. Reduces orientation from 5-10 reads to 1.",
+          "impact": "high",
+          "effort": "low"
+        }
+      ],
+      "ideas_for_b2": [
+        {
+          "id": "B2-SE01",
+          "title": "SQLite as the single query layer for all metadata",
+          "description": "Instead of 6+ JSON index files, maintain one SQLite database (repo.db) with tables: kb_entries, team_logs, sops, sources, scripts, tools. Each table has id, title, date, tags (JSON column), category, status. Agents query with SQL via a CLI tool: ./q 'SELECT id,title FROM kb WHERE tags LIKE \"%coordination%\"'. SQLite is already used for coordination; extend it to be the metadata store. Token cost per query: ~50 tokens for the command vs ~1200 tokens to read and parse index.json.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-SE02",
+          "title": "Projection queries: return only requested fields",
+          "description": "Current pattern: agent reads entire index.json (1228 lines) to find one entry's tags. With a query layer, agents request only what they need: ./q kb KB-0031 --fields id,title,tags returns 3 lines instead of 1228. Implement field projection in any query tool (SQL, CLI wrapper, or MCP). Estimated 95% token reduction for targeted lookups.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "B2-SE03",
+          "title": "Delta-based index updates instead of full rewrites",
+          "description": "Currently, adding a KB entry means rewriting the entire index.json (1228 lines). With SQLite or append-only NDJSON, inserting one entry costs ~5 lines of output. For NDJSON: append one line. For SQLite: one INSERT. Eliminates the O(n) rewrite cost that scales with repository size. Critical for multi-agent scenarios where concurrent index writes cause conflicts.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-SE04",
+          "title": "Chunked file reads via byte-range addressing",
+          "description": "Large files (like the 1417-line sources index) force agents to read everything even when they need one entry. Store a lightweight offset table (ID -> byte offset, length) so agents can request a specific byte range. Alternatively, split monolithic files at known boundaries. This is the database-I/O approach applied to flat files.",
+          "impact": "medium",
+          "effort": "high"
+        },
+        {
+          "id": "B2-SE05",
+          "title": "Pre-computed views for common queries",
+          "description": "Agents frequently ask: 'what are the latest 5 KB entries?', 'what SOPs exist?', 'what tags relate to coordination?'. Pre-compute these as small cached files (latest.json, sop-list.json, tag-cloud.json) that are regenerated on commit. Each view is <20 lines. Agents read the view instead of querying the full index. Similar to database materialized views.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "B2-SE06",
+          "title": "Binary-packed tag index with O(1) lookup",
+          "description": "The tag_index section of kb/index.json is 500+ lines mapping tag strings to arrays of KB IDs. Replace with a compact binary format or a SQLite FTS5 index. Query: ./q tags coordination -> [KB-0016, KB-0022, KB-0025, KB-0027, KB-0028]. Token cost drops from scanning 500 lines to reading 1 line of output. FTS5 also enables fuzzy matching and ranking.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-SE07",
+          "title": "Scratchpad-based session cache for repeated lookups",
+          "description": "Within a multi-agent session, the same KB entries and indexes are read repeatedly by different agents. Use the existing Scratchpad (from the coordination system) to cache parsed metadata. First agent reads and caches; subsequent agents read from scratchpad (in-memory SQLite) instead of re-reading files. Reduces aggregate I/O by 60-80% in multi-team sessions.",
+          "impact": "medium",
+          "effort": "low"
+        }
+      ]
+    },
+    {
+      "name": "Format Optimization",
+      "ideas_for_a1": [
+        {
+          "id": "A1-FO01",
+          "title": "Replace YAML frontmatter with inline JSON header",
+          "description": "YAML frontmatter in KB entries (11 lines of ---delimited YAML) is parsed differently by every tool and causes the dual-store drift problem (KB-0031 finding #2). Replace with a single-line JSON comment at the top of each .md file: <!-- {\"id\":\"KB-0031\",\"date\":\"2026-03-11\",\"tags\":[\"data-reform\"]} -->. This is machine-parseable, eliminates YAML ambiguity, and reduces frontmatter from 11 lines to 1. The markdown remains human-readable.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-FO02",
+          "title": "Centralized schema definitions with per-file conformance",
+          "description": "Currently each KB entry, SOP, source file, and team log repeats its full structure. Define schemas once in schemas/ directory (kb.schema.json, sop.schema.json, etc.). Individual files reference the schema version but do not repeat structural fields that have default values. Reduces per-file boilerplate by 30-50%. Agents know the schema and only need to read the non-default fields.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-FO03",
+          "title": "NDJSON for append-friendly collections",
+          "description": "Replace array-based JSON files (index.json with entries array) with NDJSON (one JSON object per line). Benefits: append-only writes (no full rewrite), line-addressable (grep for an ID returns one line), stream-parseable, git-diff-friendly (one line changed, not array reindented). Convert index.json to index.ndjson where each line is a complete entry record.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "A1-FO04",
+          "title": "Compact SOP format: structured markdown instead of verbose JSON",
+          "description": "SOPs like efficiency_guide.json are 170 lines of deeply nested JSON with long description strings. Convert to structured markdown with a thin JSON header. The markdown is more readable, diffable, and compressible. A 170-line JSON SOP becomes ~80 lines of markdown with the same information. Agents parse section headers rather than JSON keys.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "A1-FO05",
+          "title": "Source files: merge metadata into a single TSV catalog",
+          "description": "41 separate SRC-*.json files each contain ~30-50 lines of structured metadata (name, URL, auth, endpoints, rate limits). For discovery, agents need to scan all 41 files. Instead, generate a single sources.tsv with columns: id, name, url, auth_type, rate_limit, tags. Full details remain in individual files for when an agent needs endpoint specifics. Discovery drops from 41 file reads to 1.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "A1-FO06",
+          "title": "Eliminate redundant fields across related files",
+          "description": "The KB index.json repeats every entry's full tag list, category, and builds_on -- all of which already exist in the entry's frontmatter. Under the 'source files as truth' principle (KB-0031 recommendation), the index should contain only id + title + date (for sorting/filtering) and be auto-generated. The tag_index and categories sections are derived views, not source data. Removing redundancy cuts index.json by ~70%.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-FO07",
+          "title": "Use TOML for configuration, JSON for data, Markdown for knowledge",
+          "description": "Establish a clear format policy: TOML for config files (human-edited, rarely machine-queried), JSON/NDJSON for structured data (machine-queried, auto-generated indexes), Markdown for knowledge content (human-readable, agent-consumed). Currently JSON is used for everything including configuration (SOPs), which forces verbose quoting and no comments. TOML supports comments and is more compact for config use cases.",
+          "impact": "low",
+          "effort": "medium"
+        }
+      ],
+      "ideas_for_b2": [
+        {
+          "id": "B2-FO01",
+          "title": "Columnar storage for high-cardinality metadata queries",
+          "description": "When agents query 'all entries with tag X', they need to scan every entry's tag field. In columnar format, tags are stored separately: tags.idx maps tag -> [list of entry IDs]. This is what tag_index already attempts, but it is embedded in a 1228-line file. Extract columnar indexes into separate tiny files: tags.idx, categories.idx, dates.idx. Each is <50 lines and self-contained.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "B2-FO02",
+          "title": "Compressed entry summaries for bulk scanning",
+          "description": "Agents often need to scan all KB entries to find relevant ones. Full entries are 50-200 lines each. Create a summaries.ndjson where each line is: {id, title, date, tags, one_line_summary}. An agent reads 31 lines instead of 31 files (each 50-200 lines). The one_line_summary is auto-generated from the ## Context section. Token reduction: ~95% for discovery scans.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "B2-FO03",
+          "title": "Streaming JSONL for coordination data instead of polling SQLite",
+          "description": "For real-time coordination data (heartbeats, status, progress), JSONL append-only logs are more token-efficient than SQL queries. An agent tails the log from its last-known offset (tracked in bytes) and gets only new entries. No query formatting overhead, no result set parsing. Already partially implemented in Proto A; extend to all coordination metadata.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "B2-FO04",
+          "title": "Deduplicate tag vocabulary with integer encoding",
+          "description": "Tags like 'inter-agent-communication' (26 chars) appear across many entries. Create a tag dictionary: {1: 'inter-agent-communication', 2: 'coordination', ...}. Entries store tag IDs [1, 2, 5] instead of full strings. At 31 entries averaging 6 tags each, this saves ~3000 characters across the index. More importantly, query responses are shorter. Dictionary is loaded once per session.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-FO05",
+          "title": "Structured diff format for incremental updates",
+          "description": "When an index is updated, agents currently re-read the entire file. Instead, maintain a changelog.ndjson that records each mutation: {op: 'add', id: 'KB-0032', fields: {...}}. Agents that have previously read the index only need to read new changelog lines (by byte offset) to stay current. Reduces repeated I/O from O(n) to O(delta).",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-FO06",
+          "title": "Template-free file creation via CLI tool",
+          "description": "Currently agents read TEMPLATE.md (28 lines), mentally substitute values, then write the new file. Create a CLI tool: ./new kb --title 'My Entry' --tags coord,testing --team TEAM-030 that generates the file with correct ID, date, frontmatter, and section headers. Agent output: 1 command (~30 tokens) instead of writing 50+ lines (~200 tokens). The tool also updates indexes atomically.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-FO07",
+          "title": "Response-budget-aware query results",
+          "description": "Query tools should accept a --budget flag (e.g., --budget 100 tokens) that truncates or summarizes results to fit. If an agent queries for all entries tagged 'coordination' with --budget 50, it gets IDs only. With --budget 200, it gets IDs + titles. With --budget 500, it gets IDs + titles + summaries. This lets agents control I/O cost per query dynamically.",
+          "impact": "medium",
+          "effort": "high"
+        }
+      ]
+    },
+    {
+      "name": "Indexing & Discovery",
+      "ideas_for_a1": [
+        {
+          "id": "A1-ID01",
+          "title": "Tiered index: directory-level summary -> entry-level detail",
+          "description": "Replace monolithic index.json with a two-tier system. Tier 1: ROOT.idx at repo root (~30 lines) lists each directory with entry count, date range, and top tags. Tier 2: per-directory .idx files (~20-50 lines each) list entries in that directory. Agent workflow: read ROOT.idx (30 tokens) -> identify relevant directory -> read that directory's .idx (50 tokens) -> read specific file. Total: ~80 tokens for discovery vs ~1200 tokens for current index.json.",
+          "impact": "high",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-ID02",
+          "title": "Naming convention encodes discoverability metadata",
+          "description": "File names should encode the most-queried metadata without requiring a file read. Pattern: PREFIX-NNNN_CATEGORY_DATE.ext. Example: KB-0031_meth_20260311.md tells agents the category (methodology) and date without opening the file. For SOPs: SOP-011_launch_v2.json encodes the topic and version. Agents can glob for KB-*_meth_* to find all methodology entries without any index.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "A1-ID03",
+          "title": "Auto-generated LATEST.md file per directory",
+          "description": "Each directory gets a LATEST.md that lists the 5 most recently modified files with one-line descriptions. Auto-generated by a post-commit hook. New agents read LATEST.md first to see what has changed recently, which is the most common orientation need. Cost: ~10 lines per directory. Much cheaper than reading an index to find 'what is new'.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "A1-ID04",
+          "title": "Convention-over-configuration: predictable paths eliminate lookups",
+          "description": "If an agent knows the ID KB-0031, it should be able to construct the path deterministically: kb/entries/KB-0031.md. No index lookup needed. Currently this partially works, but not for SOPs (sop_011_central_commander_launch.json requires index lookup to find). Standardize all naming to ID-only (A1-SE04) so that ID -> path is always a trivial string format operation.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "A1-ID05",
+          "title": "Create a .well-known/ directory for agent orientation",
+          "description": "Borrow the .well-known convention from web standards. Place standard discovery files at .well-known/: repo-map.json (directory structure), conventions.json (naming rules, format rules), status.json (latest state, counts, health). Any agent entering the repo reads .well-known/repo-map.json as its first action. This is a documented, predictable entry point that never moves.",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "A1-ID06",
+          "title": "SOP index creation and CLAUDE.md registration",
+          "description": "KB-0031 found that 20+ SOP files have no index and are not mentioned in CLAUDE.md. Create sops/index.ndjson listing all SOPs with id, title, and trigger conditions. Add a SOPs section to CLAUDE.md referencing this index. Without this, SOPs are effectively invisible to agents -- they exist but are never discovered or followed.",
+          "impact": "high",
+          "effort": "low"
+        }
+      ],
+      "ideas_for_b2": [
+        {
+          "id": "B2-ID01",
+          "title": "Bloom filter for fast negative lookups",
+          "description": "When agents search for entries by tag, most tags will not match most entries. A bloom filter (serialized as a base64 string, ~200 bytes for 31 entries and 100 tags) can instantly answer 'does any entry have this tag?' with zero false negatives. If the bloom filter says no, the agent skips the full index read entirely. Saves ~1200 tokens per negative lookup. Regenerated on index update.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-ID02",
+          "title": "Hash-based direct entry lookup table",
+          "description": "Create a lookup.json that maps entry IDs to minimal metadata: {\"KB-0031\": {\"title\": \"Data Reform...\", \"path\": \"kb/entries/KB-0031.md\", \"tags\": [\"data-reform\",\"mcp\"]}}. Flat key-value structure means agents can request a specific key without scanning. With SQLite, this becomes a primary key lookup: O(1). Current approach requires scanning the entries array: O(n).",
+          "impact": "high",
+          "effort": "low"
+        },
+        {
+          "id": "B2-ID03",
+          "title": "Inverted index for full-text search across all entries",
+          "description": "Build an inverted word index (word -> [entry IDs with positions]) for all KB entry titles and section headers. Store in SQLite FTS5 or a compact JSON file. Agents search for concepts ('coordination failure') and get ranked results without reading any entry files. Current approach: read index.json, scan tags (which may not include the concept), then read individual files to check content.",
+          "impact": "high",
+          "effort": "high"
+        },
+        {
+          "id": "B2-ID04",
+          "title": "Semantic similarity cache for related-entry discovery",
+          "description": "Pre-compute pairwise similarity scores between all KB entries based on tag overlap, builds_on graph, and title similarity. Store as a sparse matrix: {\"KB-0031\": [{\"id\": \"KB-0026\", \"score\": 0.85}, {\"id\": \"KB-0030\", \"score\": 0.78}]}. Agents finding related work do one lookup instead of scanning all entries. The builds_on graph already encodes explicit relationships; this adds implicit ones.",
+          "impact": "medium",
+          "effort": "medium"
+        },
+        {
+          "id": "B2-ID05",
+          "title": "Query routing layer: natural language to structured query",
+          "description": "Create a thin CLI tool that accepts natural language queries and routes them to the appropriate index: ./ask 'what do we know about SQLite coordination?' parses to a tag search on [sqlite, coordination] against the KB index, returns top 3 matches with titles. Saves agents from knowing which index to query and how to structure the query. Token cost: ~20 tokens in, ~30 tokens out vs ~1200 to read index.json.",
+          "impact": "high",
+          "effort": "high"
+        },
+        {
+          "id": "B2-ID06",
+          "title": "Dependency graph index for builds_on traversal",
+          "description": "The builds_on field creates a DAG across KB entries. Pre-compute and store the full graph as an adjacency list: graph.json with forward links (builds_on) and reverse links (built_upon_by). Agents can traverse the knowledge chain in either direction without reading individual entries. Useful for understanding lineage: 'what led to KB-0031?' becomes a single graph traversal.",
+          "impact": "medium",
+          "effort": "low"
+        },
+        {
+          "id": "B2-ID07",
+          "title": "Session-aware index with read tracking",
+          "description": "Track which entries each agent has already read in the current session (via scratchpad). When an agent queries the index, already-read entries are deprioritized or filtered out. This avoids agents re-reading the same entries and focuses their attention budget on new material. The coordination system's scratchpad already supports this with namespace-scoped key-value storage.",
+          "impact": "medium",
+          "effort": "medium"
+        }
+      ]
+    }
+  ],
+  "cross_cutting_ideas": [
+    {
+      "id": "CC-001",
+      "title": "Unified CLI toolkit: ./repo (query, create, update, validate)",
+      "description": "A single entry-point CLI tool that handles all repository operations: './repo query kb --tag coordination' for discovery, './repo new kb --title ...' for creation, './repo validate' for checking consistency, './repo stats' for orientation. This unifies ideas A1-SE07, B2-SE02, B2-FO06, and B2-ID05 into one tool. Agents learn one interface instead of multiple file formats and index locations. Estimated token savings: 60-80% across all repository I/O operations."
+    },
+    {
+      "id": "CC-002",
+      "title": "Generation-over-duplication principle",
+      "description": "Adopt the principle that all indexes, manifests, and derived views are generated artifacts, never manually edited. Source files (markdown entries, JSON source definitions) are the single source of truth. A generate.py script rebuilds all derived files. Pre-commit hooks validate consistency. This eliminates the dual-store drift problem (KB-0031 finding #2) and the broken sources index (finding #1) permanently. Applies to both A1 (file creation uses generation) and B2 (indexes are always consistent because they are generated)."
+    },
+    {
+      "id": "CC-003",
+      "title": "Token budget accounting framework",
+      "description": "Establish a formal token budget for repository operations. Define target costs: orientation <100 tokens, single-entry lookup <50 tokens, discovery query <200 tokens, file creation <100 tokens output. Measure current costs against these targets. Every new feature or format change must show it meets or reduces the token budget. This makes efficiency a first-class design constraint rather than an afterthought."
+    },
+    {
+      "id": "CC-004",
+      "title": "Migration-first implementation order",
+      "description": "Per KB-0031 recommendation, start with data quality fixes (Phase 0) before any structural changes. Concrete order: (1) Fix broken sources index, (2) Deduplicate team logs, (3) Fix KB frontmatter/index drift, (4) Standardize filenames to ID-only, (5) Build generation script, (6) Deploy CLI toolkit. Each step is independently valuable and reduces risk for subsequent steps. Do not build new infrastructure on broken data."
+    },
+    {
+      "id": "CC-005",
+      "title": "Backward compatibility via symlinks during migration",
+      "description": "When renaming directories (knowledge-base/ to kb/) or files (sop_011_central_commander_launch.json to SOP-011.json), create symlinks from old paths to new paths. Existing scripts and references continue working. Symlinks are removed after a transition period (e.g., 5 sessions). This allows incremental migration without breaking existing agents or documentation."
+    },
+    {
+      "id": "CC-006",
+      "title": "Self-documenting convention: CONVENTIONS.md at root",
+      "description": "Create a single CONVENTIONS.md that documents all naming rules, format choices, and path patterns. Any agent creating a new file reads this one document to know exactly what to name it, where to put it, and what format to use. Currently this knowledge is scattered across CLAUDE.md, TEMPLATE.md, and tribal knowledge from team logs. Reduces creation errors and eliminates format inconsistency."
+    }
+  ],
+  "date": "2026-03-11"
+}

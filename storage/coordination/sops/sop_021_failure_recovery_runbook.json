@@ -1,7 +1,6 @@
 {
   "id": "SOP-021",
   "version": "1.0",
-  "created": "2026-03-11",
   "team": "doc-team-4",
   "title": "Failure Recovery Runbook",
   "purpose": "Comprehensive runbook for recovering from common failure modes in the multi-agent coordination system. Covers agent crashes, SQLite lock contention, bus file corruption, coordinator failures, and network/resource failures. Each section provides detection, diagnosis, and recovery procedures with concrete commands.",
@@ -342,5 +341,6 @@
     "bus_corruption": "repair_bus_file → manual repair → backup and recreate → notify teams",
     "coordinator_down": "Backup DB → integrity check → restart hub → verify reconnection",
     "network_failure": "Exponential backoff with jitter → circuit breaker after 5 failures → fail fast and report"
-  }
+  },
+  "date": "2026-03-11"
 }

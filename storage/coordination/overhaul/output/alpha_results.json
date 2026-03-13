@@ -1,0 +1,95 @@
+{
+  "team": "ALPHA",
+  "mission": "Fix Proto A Rate Limiter + Implement Bus Compaction",
+  "completed_at": "2026-03-12",
+  "status": "COMPLETE",
+  "tasks": {
+    "task_1_diagnosis": {
+      "status": "COMPLETE",
+      "agent": "alpha-lead",
+      "summary": "Diagnosed root cause of 64.6% denial rate",
+      "root_cause": "The rate limiter in state.py (SharedState.reserve_api_call) counts ALL agents' calls globally against a single per-endpoint limit. With N agents sharing the same endpoint limit of M calls/window, each agent effectively gets only M/N calls instead of M calls. For example, with 5 agents and a limit of 10 calls/60s, the global counter hits 10 after just 2 calls per agent, denying all subsequent requests. This explains the 64.6% denial rate (11,916 of 18,442 checks denied).",
+      "secondary_issues": [
+        "Bus read amplification (7.5x) caused by in-memory-only offsets lost on restart",
+        "JSONL files grow unbounded with no TTL enforcement on disk",
+        "No compaction mechanism to reclaim space from expired messages"
+      ]
+    },
+    "task_2_rate_limiter_fix": {
+      "status": "COMPLETE",
+      "agent": "alpha-dev-1",
+      "file": "prototype/agent_comm/rate_limiter.py",
+      "changes": [
+        "New RateLimiter class with per-agent per-endpoint sliding window",
+        "SQLite-backed with BEGIN IMMEDIATE transactions to prevent TOCTOU",
+        "Exponential backoff retry on SQLITE_BUSY (SOP-034 compliant)",
+        "Per-agent config overrides on top of default endpoint limits",
+        "Automatic pruning of expired call records (every 60s opportunistic)",
+        "Usage introspection via get_usage() method"
+      ],
+      "before": {
+        "denial_rate": "64.6% (global counter shared across all agents)",
+        "query": "SELECT COUNT(*) FROM rate_limits WHERE api_endpoint = ? AND called_at > ?"
+      },
+      "after": {
+        "denial_rate": "0% under normal per-agent quotas (each agent gets its own limit)",
+        "query": "SELECT COUNT(*) FROM rl_calls WHERE endpoint = ? AND agent_id = ? AND called_at > ?"
+      },
+      "backwards_compatible": true
+    },
+    "task_3_bus_compaction": {
+      "status": "COMPLETE",
+      "agent": "alpha-dev-2",
+      "files": {
+        "compactor.py": "New file: OffsetStore + BusCompactor classes",
+        "bus.py": "Updated BusReader with optional offset persistence"
+      },
+      "compactor_features": [
+        "TTL-based message expiration (configurable default_ttl, per-message override)",
+        "Atomic compaction via os.replace() (write temp file, then atomic rename)",
+        "Read offset persistence in SQLite (per-agent per-channel byte offsets)",
+        "Automatic offset adjustment after compaction (readers at EOF -> new EOF, mid-file -> reset to 0)",
+        "Compaction stats logging to SQLite compaction_log table",
+        "compact_channel() for single channel, compact_all() for all .jsonl files"
+      ],
+      "bus_reader_changes": [
+        "Optional agent_id and offset_store parameters (backwards-compatible)",
+        "Restores byte offset from SQLite on construction",
+        "Validates saved offset against current file size (handles compaction truncation)",
+        "Persists offset after each successful poll via _persist_offset()",
+        "New .offset property for inspection"
+      ],
+      "before": {
+        "read_amplification": "7.5x (full re-read of entire bus history on restart)",
+        "disk_growth": "Unbounded at 318 bytes/message, no TTL enforcement on disk"
+      },
+      "after": {
+        "read_amplification": "1.0x (readers resume from persisted byte offset)",
+        "disk_growth": "Bounded by compaction interval (expired messages removed atomically)"
+      }
+    }
+  },
+  "files_modified": [
+    "prototype/agent_comm/rate_limiter.py",
+    "prototype/agent_comm/compactor.py",
+    "prototype/agent_comm/bus.py",
+    "prototype/agent_comm/state.py",
+    "prototype/agent_comm/__init__.py"
+  ],
+  "test_results": {
+    "all_passed": true,
+    "tests_run": [
+      "Per-agent rate limiting isolation (agent A quota independent of agent B)",
+      "Offset persistence eliminates re-reads across BusReader restarts",
+      "Bus compaction removes expired messages and shrinks file size",
+      "Backwards compatibility (BusReader works without offset store)"
+    ]
+  },
+  "constraints_followed": {
+    "SOP-034": "Max 4 concurrent SQLite writers per DB - all writes use BEGIN IMMEDIATE with retry",
+    "SOP-035": "Before/after expectations documented in this results file",
+    "backwards_compatible": "BusReader new params are optional; old callers unchanged",
+    "begin_immediate": "All rate_limiter.py and compactor.py writes use BEGIN IMMEDIATE",
+    "sqlite_busy_retry": "Exponential backoff (0.1s doubling, 5 retries) on all write operations"
+  }
+}
