@@ -1,0 +1,1247 @@
+{
+  "meta": {
+    "agent": "p4-helper-3",
+    "task": "hybrid-pathfinding",
+    "timestamp": "2026-03-13T00:17:02.117456+00:00",
+    "description": "Hybrid pathfinding: greedy best-first on pointer network with 3 weight configs",
+    "configs": {
+      "A": {
+        "w1": 0.4,
+        "w2": 0.3,
+        "w3": 0.3
+      },
+      "B": {
+        "w1": 0.5,
+        "w2": 0.25,
+        "w3": 0.25
+      },
+      "C": {
+        "w1": 0.33,
+        "w2": 0.33,
+        "w3": 0.33
+      }
+    },
+    "scoring": "hybrid_score = w1*weight_norm + w2*strength_score + w3*tag_coherence",
+    "algorithm": "greedy_best_first_with_target_preference",
+    "max_hops": 10,
+    "scenarios": 10,
+    "source_sops": [
+      "SOP-017",
+      "SOP-019",
+      "SOP-020",
+      "SOP-023",
+      "SOP-028"
+    ]
+  },
+  "scenarios": [
+    {
+      "scenario_id": "SOP-017-to-SCR",
+      "start": "SOP-017",
+      "target_prefix": "SCR-",
+      "configs": {
+        "A": {
+          "path": [
+            "SOP-017",
+            "SCR-0023"
+          ],
+          "reached_target": true,
+          "target_node": "SCR-0023",
+          "hops": 1,
+          "total_hybrid_score": 0.62,
+          "avg_hybrid_score": 0.62,
+          "hop_details": [
+            {
+              "from": "SOP-017",
+              "to": "SCR-0023",
+              "weight": 8,
+              "strength": "primary",
+              "hybrid_score": 0.62
+            }
+          ]
+        },
+        "B": {
+          "path": [
+            "SOP-017",
+            "SCR-0023"
+          ],
+          "reached_target": true,
+          "target_node": "SCR-0023",
+          "hops": 1,
+          "total_hybrid_score": 0.65,
+          "avg_hybrid_score": 0.65,
+          "hop_details": [
+            {
+              "from": "SOP-017",
+              "to": "SCR-0023",
+              "weight": 8,
+              "strength": "primary",
+              "hybrid_score": 0.65
+            }
+          ]
+        },
+        "C": {
+          "path": [
+            "SOP-017",
+            "SCR-0023"
+          ],
+          "reached_target": true,
+          "target_node": "SCR-0023",
+          "hops": 1,
+          "total_hybrid_score": 0.594,
+          "avg_hybrid_score": 0.594,
+          "hop_details": [
+            {
+              "from": "SOP-017",
+              "to": "SCR-0023",
+              "weight": 8,
+              "strength": "primary",
+              "hybrid_score": 0.594
+            }
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "SOP-017-to-SRC",
+      "start": "SOP-017",
+      "target_prefix": "SRC-",
+      "configs": {
+        "A": {
+          "path": [
+            "SOP-017",
+            "SCR-0023",
+            "SRC-0001"
+          ],
+          "reached_target": true,
+          "target_node": "SRC-0001",
+          "hops": 2,
+          "total_hybrid_score": 1.32,
+          "avg_hybrid_score": 0.66,
+          "hop_details": [
+            {
+              "from": "SOP-017",
+              "to": "SCR-0023",
+              "weight": 8,
+              "strength": "primary",
+              "hybrid_score": 0.62
+            },
+            {
+              "from": "SCR-0023",
+              "to": "SRC-0001",
+              "weight": 10,
+              "strength": "primary",
+              "hybrid_score": 0.7
+            }
+          ]
+        },
+        "B": {
+          "path": [
+            "SOP-017",
+            "SCR-0023",
+            "SRC-0001"
+          ],
+          "reached_target": true,
+          "target_node": "SRC-0001",
+          "hops": 2,
+          "total_hybrid_score": 1.4,
+          "avg_hybrid_score": 0.7,
+          "hop_details": [
+            {
+              "from": "SOP-017",
+              "to": "SCR-0023",
+              "weight": 8,
+              "strength": "primary",
+              "hybrid_score": 0.65
+            },
+            {
+              "from": "SCR-0023",
+              "to": "SRC-0001",
+              "weight": 10,
+              "strength": "primary",
+              "hybrid_score": 0.75
+            }
+          ]
+        },
+        "C": {
+          "path": [
+            "SOP-017",
+            "SCR-0023",
+            "SRC-0001"
+          ],
+          "reached_target": true,
+          "target_node": "SRC-0001",
+          "hops": 2,
+          "total_hybrid_score": 1.254,
+          "avg_hybrid_score": 0.627,
+          "hop_details": [
+            {
+              "from": "SOP-017",
+              "to": "SCR-0023",
+              "weight": 8,
+              "strength": "primary",
+              "hybrid_score": 0.594
+            },
+            {
+              "from": "SCR-0023",
+              "to": "SRC-0001",
+              "weight": 10,
+              "strength": "primary",
+              "hybrid_score": 0.66
+            }
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "SOP-019-to-SCR",
+      "start": "SOP-019",
+      "target_prefix": "SCR-",
+      "configs": {
+        "A": {
+          "path": [
+            "SOP-019",
+            "SCR-0033"
+          ],
+          "reached_target": true,
+          "target_node": "SCR-0033",
+          "hops": 1,
+          "total_hybrid_score": 0.27,
+          "avg_hybrid_score": 0.27,
+          "hop_details": [
+            {
+              "from": "SOP-019",
+              "to": "SCR-0033",
+              "weight": 3,
+              "strength": "related",
+              "hybrid_score": 0.27
+            }
+          ]
+        },
+        "B": {
+          "path": [
+            "SOP-019",
+            "SCR-0033"
+          ],
+          "reached_target": true,
+          "target_node": "SCR-0033",
+          "hops": 1,
+          "total_hybrid_score": 0.275,
+          "avg_hybrid_score": 0.275,
+          "hop_details": [
+            {
+              "from": "SOP-019",
+              "to": "SCR-0033",
+              "weight": 3,
+              "strength": "related",
+              "hybrid_score": 0.275
+            }
+          ]
+        },
+        "C": {
+          "path": [
+            "SOP-019",
+            "SCR-0033"
+          ],
+          "reached_target": true,
+          "target_node": "SCR-0033",
+          "hops": 1,
+          "total_hybrid_score": 0.264,
+          "avg_hybrid_score": 0.264,
+          "hop_details": [
+            {
+              "from": "SOP-019",
+              "to": "SCR-0033",
+              "weight": 3,
+              "strength": "related",
+              "hybrid_score": 0.264
+            }
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "SOP-019-to-SRC",
+      "start": "SOP-019",
+      "target_prefix": "SRC-",
+      "configs": {
+        "A": {
+          "path": [
+            "SOP-019",
+            "SCR-0033",
+            "SRC-0050"
+          ],
+          "reached_target": true,
+          "target_node": "SRC-0050",
+          "hops": 2,
+          "total_hybrid_score": 0.695,
+          "avg_hybrid_score": 0.3475,
+          "hop_details": [
+            {
+              "from": "SOP-019",
+              "to": "SCR-0033",
+              "weight": 3,
+              "strength": "related",
+              "hybrid_score": 0.27
+            },
+            {
+              "from": "SCR-0033",
+              "to": "SRC-0050",
+              "weight": 5,
+              "strength": "supporting",
+              "hybrid_score": 0.425
+            }
+          ]
+        },
+        "B": {
+          "path": [
+            "SOP-019",
+            "SCR-0033",
+            "SRC-0050"
+          ],
+          "reached_target": true,
+          "target_node": "SRC-0050",
+          "hops": 2,
+          "total_hybrid_score": 0.7125,
+          "avg_hybrid_score": 0.3563,
+          "hop_details": [
+            {
+              "from": "SOP-019",
+              "to": "SCR-0033",
+              "weight": 3,
+              "strength": "related",
+              "hybrid_score": 0.275
+            },
+            {
+              "from": "SCR-0033",
+              "to": "SRC-0050",
+              "weight": 5,
+              "strength": "supporting",
+              "hybrid_score": 0.4375
+            }
+          ]
+        },
+        "C": {
+          "path": [
+            "SOP-019",
+            "SCR-0033",
+            "SRC-0050"
+          ],
+          "reached_target": true,
+          "target_node": "SRC-0050",
+          "hops": 2,
+          "total_hybrid_score": 0.6765,
+          "avg_hybrid_score": 0.3382,
+          "hop_details": [
+            {
+              "from": "SOP-019",
+              "to": "SCR-0033",
+              "weight": 3,
+              "strength": "related",
+              "hybrid_score": 0.264
+            },
+            {
+              "from": "SCR-0033",
+              "to": "SRC-0050",
+              "weight": 5,
+              "strength": "supporting",
+              "hybrid_score": 0.4125
+            }
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "SOP-020-to-SCR",
+      "start": "SOP-020",
+      "target_prefix": "SCR-",
+      "configs": {
+        "A": {
+          "path": [
+            "SOP-020",
+            "SCR-0001"
+          ],
+          "reached_target": true,
+          "target_node": "SCR-0001",
+          "hops": 1,
+          "total_hybrid_score": 0.115,
+          "avg_hybrid_score": 0.115,
+          "hop_details": [
+            {
+              "from": "SOP-020",
+              "to": "SCR-0001",
+              "weight": 1,
+              "strength": "tangential",
+              "hybrid_score": 0.115
+            }
+          ]
+        },
+        "B": {
+          "path": [
+            "SOP-020",
+            "SCR-0001"
+          ],
+          "reached_target": true,
+          "target_node": "SCR-0001",
+          "hops": 1,
+          "total_hybrid_score": 0.1125,
+          "avg_hybrid_score": 0.1125,
+          "hop_details": [
+            {
+              "from": "SOP-020",
+              "to": "SCR-0001",
+              "weight": 1,
+              "strength": "tangential",
+              "hybrid_score": 0.1125
+            }
+          ]
+        },
+        "C": {
+          "path": [
+            "SOP-020",
+            "SCR-0001"
+          ],
+          "reached_target": true,
+          "target_node": "SCR-0001",
+          "hops": 1,
+          "total_hybrid_score": 0.1155,
+          "avg_hybrid_score": 0.1155,
+          "hop_details": [
+            {
+              "from": "SOP-020",
+              "to": "SCR-0001",
+              "weight": 1,
+              "strength": "tangential",
+              "hybrid_score": 0.1155
+            }
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "SOP-020-to-SRC",
+      "start": "SOP-020",
+      "target_prefix": "SRC-",
+      "configs": {
+        "A": {
+          "path": [
+            "SOP-020",
+            "KB-0025",
+            "KB-0024",
+            "TEAM-0025",
+            "SCR-0033",
+            "SRC-0050"
+          ],
+          "reached_target": true,
+          "target_node": "SRC-0050",
+          "hops": 5,
+          "total_hybrid_score": 2.44,
+          "avg_hybrid_score": 0.488,
+          "hop_details": [
+            {
+              "from": "SOP-020",
+              "to": "KB-0025",
+              "weight": 2,
+              "strength": "related",
+              "hybrid_score": 0.23
+            },
+            {
+              "from": "KB-0025",
+              "to": "KB-0024",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.465
+            },
+            {
+              "from": "KB-0024",
+              "to": "TEAM-0025",
+              "weight": 8,
+              "strength": "primary",
+              "hybrid_score": 0.62
+            },
+            {
+              "from": "TEAM-0025",
+              "to": "SCR-0033",
+              "weight": 10,
+              "strength": "primary",
+              "hybrid_score": 0.7
+            },
+            {
+              "from": "SCR-0033",
+              "to": "SRC-0050",
+              "weight": 5,
+              "strength": "supporting",
+              "hybrid_score": 0.425
+            }
+          ]
+        },
+        "B": {
+          "path": [
+            "SOP-020",
+            "KB-0025",
+            "KB-0024",
+            "TEAM-0025",
+            "SCR-0033",
+            "SRC-0050"
+          ],
+          "reached_target": true,
+          "target_node": "SRC-0050",
+          "hops": 5,
+          "total_hybrid_score": 2.55,
+          "avg_hybrid_score": 0.51,
+          "hop_details": [
+            {
+              "from": "SOP-020",
+              "to": "KB-0025",
+              "weight": 2,
+              "strength": "related",
+              "hybrid_score": 0.225
+            },
+            {
+              "from": "KB-0025",
+              "to": "KB-0024",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.4875
+            },
+            {
+              "from": "KB-0024",
+              "to": "TEAM-0025",
+              "weight": 8,
+              "strength": "primary",
+              "hybrid_score": 0.65
+            },
+            {
+              "from": "TEAM-0025",
+              "to": "SCR-0033",
+              "weight": 10,
+              "strength": "primary",
+              "hybrid_score": 0.75
+            },
+            {
+              "from": "SCR-0033",
+              "to": "SRC-0050",
+              "weight": 5,
+              "strength": "supporting",
+              "hybrid_score": 0.4375
+            }
+          ]
+        },
+        "C": {
+          "path": [
+            "SOP-020",
+            "KB-0025",
+            "KB-0024",
+            "TEAM-0025",
+            "SCR-0033",
+            "SRC-0050"
+          ],
+          "reached_target": true,
+          "target_node": "SRC-0050",
+          "hops": 5,
+          "total_hybrid_score": 2.343,
+          "avg_hybrid_score": 0.4686,
+          "hop_details": [
+            {
+              "from": "SOP-020",
+              "to": "KB-0025",
+              "weight": 2,
+              "strength": "related",
+              "hybrid_score": 0.231
+            },
+            {
+              "from": "KB-0025",
+              "to": "KB-0024",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.4455
+            },
+            {
+              "from": "KB-0024",
+              "to": "TEAM-0025",
+              "weight": 8,
+              "strength": "primary",
+              "hybrid_score": 0.594
+            },
+            {
+              "from": "TEAM-0025",
+              "to": "SCR-0033",
+              "weight": 10,
+              "strength": "primary",
+              "hybrid_score": 0.66
+            },
+            {
+              "from": "SCR-0033",
+              "to": "SRC-0050",
+              "weight": 5,
+              "strength": "supporting",
+              "hybrid_score": 0.4125
+            }
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "SOP-023-to-SCR",
+      "start": "SOP-023",
+      "target_prefix": "SCR-",
+      "configs": {
+        "A": {
+          "path": [
+            "SOP-023",
+            "SCR-0023"
+          ],
+          "reached_target": true,
+          "target_node": "SCR-0023",
+          "hops": 1,
+          "total_hybrid_score": 0.66,
+          "avg_hybrid_score": 0.66,
+          "hop_details": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0023",
+              "weight": 9,
+              "strength": "primary",
+              "hybrid_score": 0.66
+            }
+          ]
+        },
+        "B": {
+          "path": [
+            "SOP-023",
+            "SCR-0023"
+          ],
+          "reached_target": true,
+          "target_node": "SCR-0023",
+          "hops": 1,
+          "total_hybrid_score": 0.7,
+          "avg_hybrid_score": 0.7,
+          "hop_details": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0023",
+              "weight": 9,
+              "strength": "primary",
+              "hybrid_score": 0.7
+            }
+          ]
+        },
+        "C": {
+          "path": [
+            "SOP-023",
+            "SCR-0023"
+          ],
+          "reached_target": true,
+          "target_node": "SCR-0023",
+          "hops": 1,
+          "total_hybrid_score": 0.627,
+          "avg_hybrid_score": 0.627,
+          "hop_details": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0023",
+              "weight": 9,
+              "strength": "primary",
+              "hybrid_score": 0.627
+            }
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "SOP-023-to-SRC",
+      "start": "SOP-023",
+      "target_prefix": "SRC-",
+      "configs": {
+        "A": {
+          "path": [
+            "SOP-023",
+            "SOP-024",
+            "SOP-028",
+            "SOP-029",
+            "SOP-012",
+            "SOP-014",
+            "SOP-013",
+            "SOP-G01",
+            "KB-0023",
+            "TEAM-0024",
+            "KB-0022"
+          ],
+          "reached_target": false,
+          "target_node": null,
+          "hops": 10,
+          "total_hybrid_score": 6.325,
+          "avg_hybrid_score": 0.6325,
+          "hop_details": [
+            {
+              "from": "SOP-023",
+              "to": "SOP-024",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.665
+            },
+            {
+              "from": "SOP-024",
+              "to": "SOP-028",
+              "weight": 3,
+              "strength": "related",
+              "hybrid_score": 0.37
+            },
+            {
+              "from": "SOP-028",
+              "to": "SOP-029",
+              "weight": 9,
+              "strength": "primary",
+              "hybrid_score": 0.885
+            },
+            {
+              "from": "SOP-029",
+              "to": "SOP-012",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.76
+            },
+            {
+              "from": "SOP-012",
+              "to": "SOP-014",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.69
+            },
+            {
+              "from": "SOP-014",
+              "to": "SOP-013",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.765
+            },
+            {
+              "from": "SOP-013",
+              "to": "SOP-G01",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.645
+            },
+            {
+              "from": "SOP-G01",
+              "to": "KB-0023",
+              "weight": 4,
+              "strength": "supporting",
+              "hybrid_score": 0.385
+            },
+            {
+              "from": "KB-0023",
+              "to": "TEAM-0024",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.58
+            },
+            {
+              "from": "TEAM-0024",
+              "to": "KB-0022",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.58
+            }
+          ]
+        },
+        "B": {
+          "path": [
+            "SOP-023",
+            "SCR-0023",
+            "SRC-0001"
+          ],
+          "reached_target": true,
+          "target_node": "SRC-0001",
+          "hops": 2,
+          "total_hybrid_score": 1.45,
+          "avg_hybrid_score": 0.725,
+          "hop_details": [
+            {
+              "from": "SOP-023",
+              "to": "SCR-0023",
+              "weight": 9,
+              "strength": "primary",
+              "hybrid_score": 0.7
+            },
+            {
+              "from": "SCR-0023",
+              "to": "SRC-0001",
+              "weight": 10,
+              "strength": "primary",
+              "hybrid_score": 0.75
+            }
+          ]
+        },
+        "C": {
+          "path": [
+            "SOP-023",
+            "SOP-024",
+            "SOP-028",
+            "SOP-029",
+            "SOP-012",
+            "SOP-014",
+            "SOP-013",
+            "SOP-G01",
+            "KB-0023",
+            "TEAM-0024",
+            "KB-0022"
+          ],
+          "reached_target": false,
+          "target_node": null,
+          "hops": 10,
+          "total_hybrid_score": 6.2865,
+          "avg_hybrid_score": 0.6287,
+          "hop_details": [
+            {
+              "from": "SOP-023",
+              "to": "SOP-024",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.6655
+            },
+            {
+              "from": "SOP-024",
+              "to": "SOP-028",
+              "weight": 3,
+              "strength": "related",
+              "hybrid_score": 0.374
+            },
+            {
+              "from": "SOP-028",
+              "to": "SOP-029",
+              "weight": 9,
+              "strength": "primary",
+              "hybrid_score": 0.8745
+            },
+            {
+              "from": "SOP-029",
+              "to": "SOP-012",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.759
+            },
+            {
+              "from": "SOP-012",
+              "to": "SOP-014",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.693
+            },
+            {
+              "from": "SOP-014",
+              "to": "SOP-013",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.7755
+            },
+            {
+              "from": "SOP-013",
+              "to": "SOP-G01",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.6435
+            },
+            {
+              "from": "SOP-G01",
+              "to": "KB-0023",
+              "weight": 4,
+              "strength": "supporting",
+              "hybrid_score": 0.3795
+            },
+            {
+              "from": "KB-0023",
+              "to": "TEAM-0024",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.561
+            },
+            {
+              "from": "TEAM-0024",
+              "to": "KB-0022",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.561
+            }
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "SOP-028-to-SCR",
+      "start": "SOP-028",
+      "target_prefix": "SCR-",
+      "configs": {
+        "A": {
+          "path": [
+            "SOP-028",
+            "SCR-0051"
+          ],
+          "reached_target": true,
+          "target_node": "SCR-0051",
+          "hops": 1,
+          "total_hybrid_score": 0.385,
+          "avg_hybrid_score": 0.385,
+          "hop_details": [
+            {
+              "from": "SOP-028",
+              "to": "SCR-0051",
+              "weight": 4,
+              "strength": "supporting",
+              "hybrid_score": 0.385
+            }
+          ]
+        },
+        "B": {
+          "path": [
+            "SOP-028",
+            "SCR-0051"
+          ],
+          "reached_target": true,
+          "target_node": "SCR-0051",
+          "hops": 1,
+          "total_hybrid_score": 0.3875,
+          "avg_hybrid_score": 0.3875,
+          "hop_details": [
+            {
+              "from": "SOP-028",
+              "to": "SCR-0051",
+              "weight": 4,
+              "strength": "supporting",
+              "hybrid_score": 0.3875
+            }
+          ]
+        },
+        "C": {
+          "path": [
+            "SOP-028",
+            "SCR-0051"
+          ],
+          "reached_target": true,
+          "target_node": "SCR-0051",
+          "hops": 1,
+          "total_hybrid_score": 0.3795,
+          "avg_hybrid_score": 0.3795,
+          "hop_details": [
+            {
+              "from": "SOP-028",
+              "to": "SCR-0051",
+              "weight": 4,
+              "strength": "supporting",
+              "hybrid_score": 0.3795
+            }
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "SOP-028-to-SRC",
+      "start": "SOP-028",
+      "target_prefix": "SRC-",
+      "configs": {
+        "A": {
+          "path": [
+            "SOP-028",
+            "SOP-029",
+            "SOP-012",
+            "SOP-014",
+            "SOP-013",
+            "SOP-G01",
+            "KB-0023",
+            "TEAM-0024",
+            "KB-0022",
+            "TEAM-0023",
+            "SOP-G03"
+          ],
+          "reached_target": false,
+          "target_node": null,
+          "hops": 10,
+          "total_hybrid_score": 6.255,
+          "avg_hybrid_score": 0.6255,
+          "hop_details": [
+            {
+              "from": "SOP-028",
+              "to": "SOP-029",
+              "weight": 9,
+              "strength": "primary",
+              "hybrid_score": 0.885
+            },
+            {
+              "from": "SOP-029",
+              "to": "SOP-012",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.76
+            },
+            {
+              "from": "SOP-012",
+              "to": "SOP-014",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.69
+            },
+            {
+              "from": "SOP-014",
+              "to": "SOP-013",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.765
+            },
+            {
+              "from": "SOP-013",
+              "to": "SOP-G01",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.645
+            },
+            {
+              "from": "SOP-G01",
+              "to": "KB-0023",
+              "weight": 4,
+              "strength": "supporting",
+              "hybrid_score": 0.385
+            },
+            {
+              "from": "KB-0023",
+              "to": "TEAM-0024",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.58
+            },
+            {
+              "from": "TEAM-0024",
+              "to": "KB-0022",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.58
+            },
+            {
+              "from": "KB-0022",
+              "to": "TEAM-0023",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.58
+            },
+            {
+              "from": "TEAM-0023",
+              "to": "SOP-G03",
+              "weight": 4,
+              "strength": "supporting",
+              "hybrid_score": 0.385
+            }
+          ]
+        },
+        "B": {
+          "path": [
+            "SOP-028",
+            "SOP-029",
+            "SOP-012",
+            "SOP-014",
+            "SOP-013",
+            "SOP-G01",
+            "KB-0023",
+            "TEAM-0024",
+            "KB-0022",
+            "TEAM-0023",
+            "SOP-G03"
+          ],
+          "reached_target": false,
+          "target_node": null,
+          "hops": 10,
+          "total_hybrid_score": 6.2625,
+          "avg_hybrid_score": 0.6262,
+          "hop_details": [
+            {
+              "from": "SOP-028",
+              "to": "SOP-029",
+              "weight": 9,
+              "strength": "primary",
+              "hybrid_score": 0.8875
+            },
+            {
+              "from": "SOP-029",
+              "to": "SOP-012",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.75
+            },
+            {
+              "from": "SOP-012",
+              "to": "SOP-014",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.675
+            },
+            {
+              "from": "SOP-014",
+              "to": "SOP-013",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.7375
+            },
+            {
+              "from": "SOP-013",
+              "to": "SOP-G01",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.6375
+            },
+            {
+              "from": "SOP-G01",
+              "to": "KB-0023",
+              "weight": 4,
+              "strength": "supporting",
+              "hybrid_score": 0.3875
+            },
+            {
+              "from": "KB-0023",
+              "to": "TEAM-0024",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.6
+            },
+            {
+              "from": "TEAM-0024",
+              "to": "KB-0022",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.6
+            },
+            {
+              "from": "KB-0022",
+              "to": "TEAM-0023",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.6
+            },
+            {
+              "from": "TEAM-0023",
+              "to": "SOP-G03",
+              "weight": 4,
+              "strength": "supporting",
+              "hybrid_score": 0.3875
+            }
+          ]
+        },
+        "C": {
+          "path": [
+            "SOP-028",
+            "SOP-029",
+            "SOP-012",
+            "SOP-014",
+            "SOP-013",
+            "SOP-G01",
+            "KB-0023",
+            "TEAM-0024",
+            "KB-0022",
+            "TEAM-0023",
+            "SOP-G03"
+          ],
+          "reached_target": false,
+          "target_node": null,
+          "hops": 10,
+          "total_hybrid_score": 6.1875,
+          "avg_hybrid_score": 0.6188,
+          "hop_details": [
+            {
+              "from": "SOP-028",
+              "to": "SOP-029",
+              "weight": 9,
+              "strength": "primary",
+              "hybrid_score": 0.8745
+            },
+            {
+              "from": "SOP-029",
+              "to": "SOP-012",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.759
+            },
+            {
+              "from": "SOP-012",
+              "to": "SOP-014",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.693
+            },
+            {
+              "from": "SOP-014",
+              "to": "SOP-013",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.7755
+            },
+            {
+              "from": "SOP-013",
+              "to": "SOP-G01",
+              "weight": 6,
+              "strength": "supporting",
+              "hybrid_score": 0.6435
+            },
+            {
+              "from": "SOP-G01",
+              "to": "KB-0023",
+              "weight": 4,
+              "strength": "supporting",
+              "hybrid_score": 0.3795
+            },
+            {
+              "from": "KB-0023",
+              "to": "TEAM-0024",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.561
+            },
+            {
+              "from": "TEAM-0024",
+              "to": "KB-0022",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.561
+            },
+            {
+              "from": "KB-0022",
+              "to": "TEAM-0023",
+              "weight": 7,
+              "strength": "primary",
+              "hybrid_score": 0.561
+            },
+            {
+              "from": "TEAM-0023",
+              "to": "SOP-G03",
+              "weight": 4,
+              "strength": "supporting",
+              "hybrid_score": 0.3795
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "summary": {
+    "config_stats": {
+      "A": {
+        "avg_total_score": 1.9085,
+        "max_total_score": 6.325,
+        "min_total_score": 0.115,
+        "success_count": 8,
+        "success_rate": 80.0
+      },
+      "B": {
+        "avg_total_score": 1.45,
+        "max_total_score": 6.2625,
+        "min_total_score": 0.1125,
+        "success_count": 9,
+        "success_rate": 90.0
+      },
+      "C": {
+        "avg_total_score": 1.8727,
+        "max_total_score": 6.2865,
+        "min_total_score": 0.1155,
+        "success_count": 8,
+        "success_rate": 80.0
+      }
+    },
+    "best_config": "B",
+    "total_routes_logged": 30
+  }
+}

@@ -1,0 +1,552 @@
+{
+  "run_id": "run006_pathfinding_p2_batch3",
+  "agent": "p2-helper-3",
+  "task": "strength-pathfinding",
+  "timestamp": "2026-03-13",
+  "method": "dijkstra_strength_priority",
+  "edge_costs": {
+    "primary": 0,
+    "supporting": 1,
+    "related": 2,
+    "tangential": 3,
+    "unclassified": 4
+  },
+  "tiebreaker": "higher_weight_preferred",
+  "max_hops": 3,
+  "scenarios": [
+    {
+      "id": "SOP-017->SCR-0006",
+      "source": "SOP-017",
+      "target": "SCR-0006",
+      "target_type": "SCR",
+      "strength_path": {
+        "route": "SOP-017 -> SCR-0023 -> SOP-023 -> SCR-0006",
+        "hops": 3,
+        "total_cost": 2,
+        "total_weight": 20,
+        "edges": [
+          {
+            "from": "SOP-017",
+            "to": "SCR-0023",
+            "strength": "primary",
+            "weight": 8,
+            "cost": 0
+          },
+          {
+            "from": "SCR-0023",
+            "to": "SOP-023",
+            "strength": "primary",
+            "weight": 9,
+            "cost": 0
+          },
+          {
+            "from": "SOP-023",
+            "to": "SCR-0006",
+            "strength": "related",
+            "weight": 3,
+            "cost": 2
+          }
+        ],
+        "outcome": "success"
+      },
+      "maxweight_baseline": {
+        "route": "SOP-017 -> SCR-0023 -> SRC-0001 -> SCR-0006",
+        "hops": 3,
+        "total_cost": 3,
+        "total_weight": 19,
+        "edges": [
+          {
+            "from": "SOP-017",
+            "to": "SCR-0023",
+            "strength": "primary",
+            "weight": 8
+          },
+          {
+            "from": "SCR-0023",
+            "to": "SRC-0001",
+            "strength": "primary",
+            "weight": 10
+          },
+          {
+            "from": "SRC-0001",
+            "to": "SCR-0006",
+            "strength": "tangential",
+            "weight": 1
+          }
+        ],
+        "outcome": "success"
+      },
+      "comparison": "strength_wins",
+      "comparison_detail": {
+        "strength_cost": 2,
+        "baseline_cost": 3,
+        "strength_weight": 20,
+        "baseline_weight": 19,
+        "same_path": false
+      }
+    },
+    {
+      "id": "SOP-017->SRC-0001",
+      "source": "SOP-017",
+      "target": "SRC-0001",
+      "target_type": "SRC",
+      "strength_path": {
+        "route": "SOP-017 -> SCR-0023 -> SRC-0001",
+        "hops": 2,
+        "total_cost": 0,
+        "total_weight": 18,
+        "edges": [
+          {
+            "from": "SOP-017",
+            "to": "SCR-0023",
+            "strength": "primary",
+            "weight": 8,
+            "cost": 0
+          },
+          {
+            "from": "SCR-0023",
+            "to": "SRC-0001",
+            "strength": "primary",
+            "weight": 10,
+            "cost": 0
+          }
+        ],
+        "outcome": "success"
+      },
+      "maxweight_baseline": {
+        "route": "SOP-017 -> SCR-0023 -> SRC-0001",
+        "hops": 2,
+        "total_cost": 0,
+        "total_weight": 18,
+        "edges": [
+          {
+            "from": "SOP-017",
+            "to": "SCR-0023",
+            "strength": "primary",
+            "weight": 8
+          },
+          {
+            "from": "SCR-0023",
+            "to": "SRC-0001",
+            "strength": "primary",
+            "weight": 10
+          }
+        ],
+        "outcome": "success"
+      },
+      "comparison": "tie_strength_equal_or_better",
+      "comparison_detail": {
+        "strength_cost": 0,
+        "baseline_cost": 0,
+        "strength_weight": 18,
+        "baseline_weight": 18,
+        "same_path": true
+      }
+    },
+    {
+      "id": "SOP-019->SCR-0019",
+      "source": "SOP-019",
+      "target": "SCR-0019",
+      "target_type": "SCR",
+      "strength_path": {
+        "route": "SOP-019 -> SCR-0019",
+        "hops": 1,
+        "total_cost": 2,
+        "total_weight": 2,
+        "edges": [
+          {
+            "from": "SOP-019",
+            "to": "SCR-0019",
+            "strength": "related",
+            "weight": 2,
+            "cost": 2
+          }
+        ],
+        "outcome": "success"
+      },
+      "maxweight_baseline": {
+        "route": "SOP-019 -> SCR-0033 -> TEAM-0025 -> SCR-0019",
+        "hops": 3,
+        "total_cost": 4,
+        "total_weight": 16,
+        "edges": [
+          {
+            "from": "SOP-019",
+            "to": "SCR-0033",
+            "strength": "related",
+            "weight": 3
+          },
+          {
+            "from": "SCR-0033",
+            "to": "TEAM-0025",
+            "strength": "primary",
+            "weight": 10
+          },
+          {
+            "from": "TEAM-0025",
+            "to": "SCR-0019",
+            "strength": "related",
+            "weight": 3
+          }
+        ],
+        "outcome": "success"
+      },
+      "comparison": "strength_wins",
+      "comparison_detail": {
+        "strength_cost": 2,
+        "baseline_cost": 4,
+        "strength_weight": 2,
+        "baseline_weight": 16,
+        "same_path": false
+      }
+    },
+    {
+      "id": "SOP-019->SRC-0006",
+      "source": "SOP-019",
+      "target": "SRC-0006",
+      "target_type": "SRC",
+      "strength_path": {
+        "route": "SOP-019 -> SCR-0033 -> SCR-0057 -> SRC-0006",
+        "hops": 3,
+        "total_cost": 4,
+        "total_weight": 12,
+        "edges": [
+          {
+            "from": "SOP-019",
+            "to": "SCR-0033",
+            "strength": "related",
+            "weight": 3,
+            "cost": 2
+          },
+          {
+            "from": "SCR-0033",
+            "to": "SCR-0057",
+            "strength": "supporting",
+            "weight": 4,
+            "cost": 1
+          },
+          {
+            "from": "SCR-0057",
+            "to": "SRC-0006",
+            "strength": "supporting",
+            "weight": 5,
+            "cost": 1
+          }
+        ],
+        "outcome": "success"
+      },
+      "maxweight_baseline": {
+        "outcome": "no_path_found"
+      }
+    },
+    {
+      "id": "SOP-020->SCR-0001",
+      "source": "SOP-020",
+      "target": "SCR-0001",
+      "target_type": "SCR",
+      "strength_path": {
+        "route": "SOP-020 -> SCR-0001",
+        "hops": 1,
+        "total_cost": 3,
+        "total_weight": 1,
+        "edges": [
+          {
+            "from": "SOP-020",
+            "to": "SCR-0001",
+            "strength": "tangential",
+            "weight": 1,
+            "cost": 3
+          }
+        ],
+        "outcome": "success"
+      },
+      "maxweight_baseline": {
+        "route": "SOP-020 -> KB-0025 -> SOP-020 -> SCR-0001",
+        "hops": 3,
+        "total_cost": 7,
+        "total_weight": 5,
+        "edges": [
+          {
+            "from": "SOP-020",
+            "to": "KB-0025",
+            "strength": "related",
+            "weight": 2
+          },
+          {
+            "from": "KB-0025",
+            "to": "SOP-020",
+            "strength": "related",
+            "weight": 2
+          },
+          {
+            "from": "SOP-020",
+            "to": "SCR-0001",
+            "strength": "tangential",
+            "weight": 1
+          }
+        ],
+        "outcome": "success"
+      },
+      "comparison": "strength_wins",
+      "comparison_detail": {
+        "strength_cost": 3,
+        "baseline_cost": 7,
+        "strength_weight": 1,
+        "baseline_weight": 5,
+        "same_path": false
+      }
+    },
+    {
+      "id": "SOP-020->SRC-0001",
+      "source": "SOP-020",
+      "target": "SRC-0001",
+      "target_type": "SRC",
+      "strength_path": {
+        "route": "SOP-020 -> SCR-0001 -> SRC-0001",
+        "hops": 2,
+        "total_cost": 4,
+        "total_weight": 6,
+        "edges": [
+          {
+            "from": "SOP-020",
+            "to": "SCR-0001",
+            "strength": "tangential",
+            "weight": 1,
+            "cost": 3
+          },
+          {
+            "from": "SCR-0001",
+            "to": "SRC-0001",
+            "strength": "supporting",
+            "weight": 5,
+            "cost": 1
+          }
+        ],
+        "outcome": "success"
+      },
+      "maxweight_baseline": {
+        "outcome": "no_path_found"
+      }
+    },
+    {
+      "id": "SOP-023->SCR-0006",
+      "source": "SOP-023",
+      "target": "SCR-0006",
+      "target_type": "SCR",
+      "strength_path": {
+        "route": "SOP-023 -> SCR-0023 -> SOP-023 -> SCR-0006",
+        "hops": 3,
+        "total_cost": 2,
+        "total_weight": 21,
+        "edges": [
+          {
+            "from": "SOP-023",
+            "to": "SCR-0023",
+            "strength": "primary",
+            "weight": 9,
+            "cost": 0
+          },
+          {
+            "from": "SCR-0023",
+            "to": "SOP-023",
+            "strength": "primary",
+            "weight": 9,
+            "cost": 0
+          },
+          {
+            "from": "SOP-023",
+            "to": "SCR-0006",
+            "strength": "related",
+            "weight": 3,
+            "cost": 2
+          }
+        ],
+        "outcome": "success"
+      },
+      "maxweight_baseline": {
+        "route": "SOP-023 -> SCR-0023 -> SRC-0001 -> SCR-0006",
+        "hops": 3,
+        "total_cost": 3,
+        "total_weight": 20,
+        "edges": [
+          {
+            "from": "SOP-023",
+            "to": "SCR-0023",
+            "strength": "primary",
+            "weight": 9
+          },
+          {
+            "from": "SCR-0023",
+            "to": "SRC-0001",
+            "strength": "primary",
+            "weight": 10
+          },
+          {
+            "from": "SRC-0001",
+            "to": "SCR-0006",
+            "strength": "tangential",
+            "weight": 1
+          }
+        ],
+        "outcome": "success"
+      },
+      "comparison": "strength_wins",
+      "comparison_detail": {
+        "strength_cost": 2,
+        "baseline_cost": 3,
+        "strength_weight": 21,
+        "baseline_weight": 20,
+        "same_path": false
+      }
+    },
+    {
+      "id": "SOP-023->SRC-0001",
+      "source": "SOP-023",
+      "target": "SRC-0001",
+      "target_type": "SRC",
+      "strength_path": {
+        "route": "SOP-023 -> SCR-0023 -> SRC-0001",
+        "hops": 2,
+        "total_cost": 0,
+        "total_weight": 19,
+        "edges": [
+          {
+            "from": "SOP-023",
+            "to": "SCR-0023",
+            "strength": "primary",
+            "weight": 9,
+            "cost": 0
+          },
+          {
+            "from": "SCR-0023",
+            "to": "SRC-0001",
+            "strength": "primary",
+            "weight": 10,
+            "cost": 0
+          }
+        ],
+        "outcome": "success"
+      },
+      "maxweight_baseline": {
+        "route": "SOP-023 -> SCR-0023 -> SRC-0001",
+        "hops": 2,
+        "total_cost": 0,
+        "total_weight": 19,
+        "edges": [
+          {
+            "from": "SOP-023",
+            "to": "SCR-0023",
+            "strength": "primary",
+            "weight": 9
+          },
+          {
+            "from": "SCR-0023",
+            "to": "SRC-0001",
+            "strength": "primary",
+            "weight": 10
+          }
+        ],
+        "outcome": "success"
+      },
+      "comparison": "tie_strength_equal_or_better",
+      "comparison_detail": {
+        "strength_cost": 0,
+        "baseline_cost": 0,
+        "strength_weight": 19,
+        "baseline_weight": 19,
+        "same_path": true
+      }
+    },
+    {
+      "id": "SOP-028->SCR-0013",
+      "source": "SOP-028",
+      "target": "SCR-0013",
+      "target_type": "SCR",
+      "strength_path": {
+        "route": "SOP-028 -> SOP-029 -> SOP-028 -> SCR-0013",
+        "hops": 3,
+        "total_cost": 2,
+        "total_weight": 22,
+        "edges": [
+          {
+            "from": "SOP-028",
+            "to": "SOP-029",
+            "strength": "primary",
+            "weight": 9,
+            "cost": 0
+          },
+          {
+            "from": "SOP-029",
+            "to": "SOP-028",
+            "strength": "primary",
+            "weight": 10,
+            "cost": 0
+          },
+          {
+            "from": "SOP-028",
+            "to": "SCR-0013",
+            "strength": "related",
+            "weight": 3,
+            "cost": 2
+          }
+        ],
+        "outcome": "success"
+      },
+      "maxweight_baseline": {
+        "route": "SOP-028 -> SOP-029 -> SOP-028 -> SCR-0013",
+        "hops": 3,
+        "total_cost": 2,
+        "total_weight": 22,
+        "edges": [
+          {
+            "from": "SOP-028",
+            "to": "SOP-029",
+            "strength": "primary",
+            "weight": 9
+          },
+          {
+            "from": "SOP-029",
+            "to": "SOP-028",
+            "strength": "primary",
+            "weight": 10
+          },
+          {
+            "from": "SOP-028",
+            "to": "SCR-0013",
+            "strength": "related",
+            "weight": 3
+          }
+        ],
+        "outcome": "success"
+      },
+      "comparison": "tie_strength_equal_or_better",
+      "comparison_detail": {
+        "strength_cost": 2,
+        "baseline_cost": 2,
+        "strength_weight": 22,
+        "baseline_weight": 22,
+        "same_path": true
+      }
+    },
+    {
+      "id": "SOP-028->SRC-0001",
+      "source": "SOP-028",
+      "target": "SRC-0001",
+      "target_type": "SRC",
+      "strength_path": {
+        "outcome": "no_path_found"
+      },
+      "maxweight_baseline": {
+        "outcome": "no_path_found"
+      }
+    }
+  ],
+  "summary": {
+    "total_scenarios": 10,
+    "successful_paths": 9,
+    "strength_wins": 4,
+    "baseline_wins": 0,
+    "ties": 3,
+    "strength_win_rate": "40.0%"
+  }
+}
