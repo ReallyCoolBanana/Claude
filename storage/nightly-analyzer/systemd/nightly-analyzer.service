@@ -1,0 +1,78 @@
+# =============================================================================
+# Step 3.2: systemd Service Unit
+# =============================================================================
+# This service is triggered by nightly-analyzer.timer.
+# It runs the nightly orchestrator script with a hard timeout of 8 hours.
+#
+# Install:
+#   sudo cp nightly-analyzer.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#
+# Test:
+#   sudo systemctl start nightly-analyzer.service
+#   journalctl -u nightly-analyzer.service -f
+#
+# Check status:
+#   systemctl status nightly-analyzer.service
+#
+# Expected output when running:
+#   Active: active (running) since Mon 2026-03-24 01:00:05 UTC; 2h 30min ago
+#   Main PID: 12345 (python3)
+#   Tasks: 4 (limit: 4915)
+#   Memory: 24.5G
+#   CPU: 1h 15min 30s
+# =============================================================================
+
+[Unit]
+Description=Nightly Memory Analyzer
+Documentation=file:///home/user/Claude/storage/nightly-analyzer/README.md
+# Wait for Neo4j and network to be available
+After=neo4j.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nemo
+Group=nemo
+
+# Working directory
+WorkingDirectory=/home/user/Claude/storage/nightly-analyzer
+
+# Environment
+Environment=NEO4J_PASSWORD=password
+Environment=PYTHONPATH=/home/user/Claude/storage/nightly-analyzer/src
+Environment=CUDA_VISIBLE_DEVICES=0
+
+# Main command
+ExecStart=/usr/bin/python3 /home/user/Claude/storage/nightly-analyzer/src/nightly_orchestrator.py \
+    --config /home/user/Claude/storage/nightly-analyzer/config/nightly_config.yaml
+
+# Hard timeout: 8 hours (the nightly window)
+TimeoutStopSec=60
+RuntimeMaxSec=28800
+
+# Graceful shutdown: send SIGTERM, wait 60s, then SIGKILL
+KillMode=mixed
+KillSignal=SIGTERM
+FinalKillSignal=SIGKILL
+
+# Restart policy: don't restart on failure (nightly job, not a daemon)
+Restart=no
+
+# Resource limits
+MemoryMax=110G
+CPUQuota=800%
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nightly-analyzer
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/nvme /home/user/Claude/storage/nightly-analyzer
+ProtectHome=false
+
+[Install]
+WantedBy=multi-user.target
