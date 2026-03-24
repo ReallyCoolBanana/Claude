@@ -1,0 +1,41 @@
+# =============================================================================
+# Step 3.2: systemd Timer Unit
+# =============================================================================
+# Install:
+#   sudo cp nightly-analyzer.timer /etc/systemd/system/
+#   sudo cp nightly-analyzer.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable nightly-analyzer.timer
+#   sudo systemctl start nightly-analyzer.timer
+#
+# Verify:
+#   systemctl status nightly-analyzer.timer
+#   systemctl list-timers | grep nightly
+#
+# Expected output of list-timers:
+#   NEXT                         LEFT     LAST  PASSED  UNIT                    ACTIVATES
+#   Mon 2026-03-24 01:00:00 UTC  23h left  -     -      nightly-analyzer.timer  nightly-analyzer.service
+#
+# To trigger manually for testing:
+#   sudo systemctl start nightly-analyzer.service
+#
+# To view logs:
+#   journalctl -u nightly-analyzer.service -f
+# =============================================================================
+
+[Unit]
+Description=Nightly Memory Analyzer Timer
+Documentation=file:///home/user/Claude/storage/nightly-analyzer/README.md
+
+[Timer]
+# Run at 1:00 AM local time every day
+OnCalendar=*-*-* 01:00:00
+# If the system was off at 1 AM, run when it next boots
+Persistent=true
+# Random delay up to 5 minutes to avoid thundering herd
+RandomizedDelaySec=300
+# Accuracy: wake up within 1 minute of scheduled time
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

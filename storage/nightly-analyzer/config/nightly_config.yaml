@@ -1,0 +1,166 @@
+# =============================================================================
+# Nightly Analyzer Configuration
+# =============================================================================
+# DGX Spark: 128GB unified memory, 4TB NVMe, Blackwell GB10
+# Always-resident: Nemotron Nano 4B (~3GB) + embedding model (~1.5GB)
+# Nightly model: Nemotron-3-Nano-30B-A3B-NVFP4 (~20GB)
+# Available for nightly: ~100GB
+
+model:
+  # HuggingFace repository for the nightly model
+  repo_id: "nvidia/Nemotron-3-Nano-30B-A3B-Instruct-NVFP4"
+  # Local path on NVMe for fast loading
+  local_path: "/nvme/models/nemotron-30b-a3b-nvfp4"
+  # vLLM server configuration
+  vllm_port: 8001
+  vllm_host: "127.0.0.1"
+  # Maximum GPU memory to use (fraction)
+  gpu_memory_utilization: 0.65
+  # Tensor parallel size (1 for single GB10)
+  tensor_parallel_size: 1
+  # Maximum model length in tokens
+  max_model_len: 8192
+  # Expected load time from NVMe in seconds
+  expected_load_time_s: 45
+  # Maximum load time before failure
+  max_load_time_s: 120
+
+schedule:
+  # 8-hour window
+  start_hour: 1   # 1:00 AM
+  end_hour: 9     # 9:00 AM
+  # Time allocations in minutes
+  tasks:
+    edge_decay:
+      start_offset_min: 0
+      duration_min: 30
+      hard_deadline_min: 40
+    llm_edge_analysis:
+      start_offset_min: 30
+      duration_min: 60
+      hard_deadline_min: 90
+    causal_inference:
+      start_offset_min: 120
+      duration_min: 60
+      hard_deadline_min: 75
+    path_optimization:
+      start_offset_min: 180
+      duration_min: 45
+      hard_deadline_min: 55
+    condensation:
+      start_offset_min: 225
+      duration_min: 60
+      hard_deadline_min: 75
+    emergence_detection:
+      start_offset_min: 285
+      duration_min: 45
+      hard_deadline_min: 55
+    lora_prep:
+      start_offset_min: 330
+      duration_min: 30
+      hard_deadline_min: 40
+
+neo4j:
+  uri: "bolt://localhost:7687"
+  user: "neo4j"
+  password_env: "NEO4J_PASSWORD"  # Read from environment variable
+  database: "neo4j"
+  # Snapshot directory
+  snapshot_dir: "/nvme/neo4j-snapshots"
+  # Max snapshots to retain
+  max_snapshots: 7
+
+lancedb:
+  path: "/nvme/lancedb"
+  table_name: "memories"
+
+decay:
+  # Decay factors per edge type (applied per day since last access)
+  rates:
+    STRUCTURAL: 0.995    # slowest decay, ~50% after 138 days
+    SEMANTIC: 0.990      # ~50% after 69 days
+    CAUSAL: 0.992        # ~50% after 86 days
+    TEMPORAL: 0.980      # fastest decay, ~50% after 34 days
+  # Below this weight, edges are candidates for pruning
+  min_weight_threshold: 0.05
+  # Batch size for Cypher transactions
+  batch_size: 1500
+  # Score boost multiplier (applied to accumulated /score feedback)
+  score_boost_multiplier: 0.1
+
+llm_edge_analysis:
+  # Number of edges to analyze per night
+  target_edges_per_night: 2000
+  # Batch size per LLM call (edges per prompt)
+  batch_size: 5
+  # Maximum retries for malformed LLM responses
+  max_retries: 3
+  # Temperature for weight analysis
+  temperature: 0.3
+  max_tokens: 512
+
+causal_inference:
+  # Number of causal chains to process per night
+  target_chains_per_night: 800
+  # Minimum temporal correlation threshold
+  correlation_threshold: 0.6
+  # Confidence threshold for creating new edges
+  min_confidence: 0.4
+  temperature: 0.4
+  max_tokens: 768
+
+path_optimization:
+  # Number of paths to optimize per night
+  target_paths_per_night: 3000
+  # Number of LanceDB vectors to consider per endpoint
+  vector_candidates: 20
+  # Maximum path pointers per edge
+  max_pointers_per_edge: 10
+
+condensation:
+  # Number of node clusters to process per night
+  target_clusters_per_night: 800
+  # Minimum cluster size to consider
+  min_cluster_size: 3
+  # Maximum cluster size for a single condensation
+  max_cluster_size: 15
+  # Similarity threshold for clustering
+  similarity_threshold: 0.75
+  temperature: 0.5
+  max_tokens: 1024
+
+emergence:
+  # Number of neighborhoods to analyze per night
+  target_neighborhoods_per_night: 600
+  # Minimum independent paths for convergence
+  min_convergence_paths: 3
+  # Minimum nodes in neighborhood
+  min_neighborhood_size: 5
+  temperature: 0.6
+  max_tokens: 1024
+
+thermal:
+  # GPU temperature threshold in Celsius
+  max_gpu_temp_c: 82
+  # Pause duration when threshold exceeded (seconds)
+  pause_duration_s: 60
+  # Check interval (seconds)
+  check_interval_s: 30
+  # Shutdown threshold
+  critical_temp_c: 90
+
+logging:
+  # Structured log file
+  log_file: "/nvme/logs/nightly-analyzer.jsonl"
+  # Summary report
+  report_file: "/nvme/logs/nightly-report-{date}.json"
+  # Log level
+  level: "INFO"
+
+consistency:
+  # Write-ahead log for all graph mutations
+  wal_path: "/nvme/logs/nightly-wal-{date}.jsonl"
+  # Maximum orphan nodes allowed (0 = strict)
+  max_orphan_nodes: 0
+  # Enable cycle detection on TEMPORAL edges
+  check_temporal_cycles: true
